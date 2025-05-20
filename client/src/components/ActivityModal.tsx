@@ -66,35 +66,8 @@ export default function ActivityModal({
     defaultValues,
   });
   
-  const locationName = watch("locationName");
-  
-  // Geocode the location when it changes with improved feedback
-  useEffect(() => {
-    if (locationName && locationName.length > 3) {
-      const timer = setTimeout(async () => {
-        try {
-          const result = await geocodeLocation(locationName);
-          if (result) {
-            setValue("latitude", result.longitude.toString());
-            setValue("longitude", result.latitude.toString());
-            
-            // Show success message for found location
-            if (result.fullAddress) {
-              toast({
-                title: "Location found",
-                description: result.fullAddress,
-                duration: 3000,
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Error geocoding location:", error);
-        }
-      }, 800); // Reduced delay for better responsiveness
-      
-      return () => clearTimeout(timer);
-    }
-  }, [locationName, geocodeLocation, setValue, toast]);
+  // We're now using the PlacesSearch component for location search
+  // which directly updates the form values with the selected location
   
   const createActivity = useMutation({
     mutationFn: async (data: ActivityFormValues) => {
@@ -257,25 +230,28 @@ export default function ActivityModal({
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Location</label>
-              <div className="relative">
-                <Input
-                  {...register("locationName")}
-                  placeholder="Search for a place (e.g., 'Empire State Building, NYC')"
-                  className={errors.locationName ? "border-[hsl(var(--destructive))]" : ""}
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[hsl(var(--muted-foreground))]">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
-              {errors.locationName ? (
+              <PlacesSearch
+                initialValue={watch("locationName") || ""}
+                placeholder="Search for a place (e.g., 'Leo House')"
+                onPlaceSelected={(place) => {
+                  setValue("locationName", place.name);
+                  setValue("latitude", place.location.lat.toString());
+                  setValue("longitude", place.location.lng.toString());
+                  
+                  // Show success toast for found location
+                  toast({
+                    title: "Location found",
+                    description: place.formattedAddress,
+                    duration: 3000,
+                  });
+                }}
+              />
+              {errors.locationName && (
                 <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.locationName.message}</p>
-              ) : (
-                <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                  For best results, include city name (e.g., "Leo House, NYC")
-                </p>
               )}
+              <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                Type the name of a landmark, hotel, or address - our AI will help find it
+              </p>
               
               {/* Quick location buttons for common NYC landmarks */}
               <div className="mt-2 flex flex-wrap gap-2">
@@ -293,7 +269,7 @@ export default function ActivityModal({
                 <button
                   type="button"
                   onClick={() => {
-                    setValue("locationName", "Empire State Building, NYC");
+                    setValue("locationName", "Empire State Building");
                     setValue("latitude", "40.7484");
                     setValue("longitude", "-73.9857");
                   }}
@@ -304,7 +280,7 @@ export default function ActivityModal({
                 <button
                   type="button"
                   onClick={() => {
-                    setValue("locationName", "Central Park, NYC");
+                    setValue("locationName", "Central Park");
                     setValue("latitude", "40.7812");
                     setValue("longitude", "-73.9665");
                   }}

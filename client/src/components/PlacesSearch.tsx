@@ -147,17 +147,12 @@ export default function PlacesSearch({
     }
   }
 
-  // Handle search submission
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (inputValue.length >= 3) {
-      refetch();
-    }
-  }
+  // No longer need a form submission handler
+  // as we've implemented the search with button click and keyboard events
 
   return (
     <div className={`relative w-full ${className}`}>
-      <form onSubmit={handleSubmit} className="relative">
+      <div className="relative">
         <Input
           ref={inputRef}
           type="text"
@@ -165,13 +160,22 @@ export default function PlacesSearch({
           onChange={handleInputChange}
           placeholder={placeholder}
           className="pr-10"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (inputValue.length >= 3) {
+                refetch();
+              }
+            }
+          }}
         />
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : (
             <Button
-              type="submit"
+              type="button"
+              onClick={() => inputValue.length >= 3 && refetch()}
               variant="ghost"
               size="icon"
               className="h-6 w-6 p-0"
@@ -180,7 +184,7 @@ export default function PlacesSearch({
             </Button>
           )}
         </div>
-      </form>
+      </div>
 
       {/* Loading Indicator and Results */}
       {showResults && (
