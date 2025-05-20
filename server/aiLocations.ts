@@ -6,7 +6,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 /**
  * Finds a location using AI to handle fuzzy search and returns detailed address information
  */
-export async function findLocation(searchQuery: string): Promise<{
+export async function findLocation(searchQuery: string, cityContext?: string): Promise<{
   name: string;
   address?: string;
   fullAddress?: string;
@@ -17,10 +17,17 @@ export async function findLocation(searchQuery: string): Promise<{
   error?: string;
 }> {
   try {
-    // Default to NYC context if not specified
-    const context = searchQuery.toLowerCase().includes("nyc") || 
-                    searchQuery.toLowerCase().includes("new york") ? 
-                    "" : "in New York City";
+    // Use the provided city context or default to an empty string
+    let context = "";
+    
+    // If a city is provided and not already in the search query, add it as context
+    if (cityContext && !searchQuery.toLowerCase().includes(cityContext.toLowerCase())) {
+      context = `in ${cityContext}`;
+    }
+    // Special case for NYC - if no city specified, default to NYC
+    else if (!cityContext && !searchQuery.toLowerCase().includes("nyc") && !searchQuery.toLowerCase().includes("new york")) {
+      context = "in New York City";
+    }
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

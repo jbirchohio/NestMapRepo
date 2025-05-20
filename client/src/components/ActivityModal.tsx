@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import useMapbox from "@/hooks/useMapbox";
 import PlacesSearch from "@/components/PlacesSearch";
 import { Search } from "lucide-react";
+import useTrip from "@/hooks/useTrip";
 
 interface ActivityModalProps {
   tripId: number;
@@ -46,6 +47,7 @@ export default function ActivityModal({
 }: ActivityModalProps) {
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
+  const { trip } = useTrip(tripId);
   const [selectedTag, setSelectedTag] = useState<string | undefined>(
     activity?.tag === null ? undefined : activity?.tag
   );
