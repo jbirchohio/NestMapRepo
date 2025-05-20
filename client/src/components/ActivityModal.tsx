@@ -241,11 +241,12 @@ export default function ActivityModal({
                   type="button"
                   variant="outline"
                   className="whitespace-nowrap px-3"
-                  onClick={() => {
+                  onClick={async () => {
                     const locationName = watch("locationName");
+                    if (!locationName) return;
                     
                     // Handle special cases
-                    if (locationName.toLowerCase().includes("leo")) {
+                    if (locationName.toLowerCase().includes("leo house")) {
                       setValue("locationName", "Leo House", { shouldValidate: true });
                       setValue("latitude", "40.7453");
                       setValue("longitude", "-73.9977");
@@ -253,14 +254,52 @@ export default function ActivityModal({
                         title: "Location found",
                         description: "Leo House, 332 W 23rd St, New York",
                       });
-                    } else {
-                      // Simply validate and use default coordinates
+                      return;
+                    }
+                    
+                    try {
+                      // Use Mapbox geocoding directly for better results
+                      const searchTerm = locationName.includes("new york") ? 
+                        locationName : 
+                        `${locationName}, New York City`;
+                        
+                      const response = await fetch(
+                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&limit=1`
+                      );
+                      
+                      if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.features && data.features.length > 0) {
+                          const feature = data.features[0];
+                          
+                          // Set values in the form
+                          setValue("locationName", feature.text, { shouldValidate: true });
+                          setValue("latitude", feature.center[1].toString());
+                          setValue("longitude", feature.center[0].toString());
+                          
+                          toast({
+                            title: "Location found",
+                            description: feature.place_name,
+                          });
+                        } else {
+                          throw new Error("No locations found");
+                        }
+                      } else {
+                        throw new Error("Error searching for location");
+                      }
+                    } catch (error) {
+                      console.error("Error geocoding:", error);
+                      
+                      // Fallback to entered name with NYC coordinates
                       setValue("locationName", locationName, { shouldValidate: true });
-                      setValue("latitude", "40.7580");
+                      setValue("latitude", "40.7580");  // Midtown Manhattan
                       setValue("longitude", "-73.9855");
+                      
                       toast({
-                        title: "Location added",
-                        description: "Using New York coordinates",
+                        title: "Using default location",
+                        description: "Geocoding failed, using New York coordinates",
+                        variant: "destructive"
                       });
                     }
                   }}
