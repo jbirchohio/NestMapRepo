@@ -89,11 +89,13 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
         </div>
       </div>
       
-      <div className={`
-        bg-white dark:bg-[hsl(var(--card))] border rounded-lg shadow-sm hover:shadow p-3 cursor-pointer
-        ${activity.conflict ? 'border-[hsl(var(--destructive))]' : ''}
-        relative
-      `}>
+      <div 
+        className={`
+          bg-white dark:bg-[hsl(var(--card))] border rounded-lg shadow-sm hover:shadow p-3 cursor-pointer
+          ${activity.conflict ? 'border-[hsl(var(--destructive))]' : ''}
+          relative
+        `}
+      >
         {/* Delete button visible on hover */}
         <div 
           className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
