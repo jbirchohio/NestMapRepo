@@ -245,15 +245,47 @@ export default function ActivityModal({
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Location</label>
-              <Input
-                {...register("locationName")}
-                placeholder="Search for a place"
-                className={errors.locationName ? "border-[hsl(var(--destructive))]" : ""}
-              />
+              <div className="relative">
+                <Input
+                  {...register("locationName", {
+                    onChange: async (e) => {
+                      const value = e.target.value;
+                      if (value && value.length > 3) {
+                        // Attempt to geocode after user types at least 3 characters
+                        const location = await geocodeLocation(value);
+                        if (location) {
+                          // Set latitude and longitude silently in the form
+                          setValue("latitude", location.longitude.toString());
+                          setValue("longitude", location.latitude.toString());
+                          
+                          // Show success message for found location
+                          if (location.fullAddress) {
+                            toast({
+                              title: "Location found",
+                              description: location.fullAddress,
+                              duration: 2000,
+                            });
+                          }
+                        }
+                      }
+                    }
+                  })}
+                  placeholder="Search for a place (e.g., 'Central Park, NYC')"
+                  className={errors.locationName ? "border-[hsl(var(--destructive))]" : ""}
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[hsl(var(--muted-foreground))]">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
               {errors.locationName ? (
                 <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.locationName.message}</p>
               ) : (
-                <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">Start typing to auto-pin on map</p>
+                <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                  Enter a specific location (like "Empire State Building" or "123 Main St, New York"). 
+                  For best results, include city name.
+                </p>
               )}
             </div>
             

@@ -183,17 +183,36 @@ export default function useMapbox() {
     });
   }, [isInitialized]);
 
-  // Geocode a location name to coordinates
-  const geocodeLocation = useCallback(async (locationName: string): Promise<{ longitude: number, latitude: number } | null> => {
+  // Geocode a location name to coordinates with improved accuracy
+  const geocodeLocation = useCallback(async (locationName: string): Promise<{ longitude: number, latitude: number, fullAddress?: string } | null> => {
     try {
-      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName)}.json?access_token=${MAPBOX_TOKEN}&limit=1`;
+      // Add parameters to improve geocoding accuracy
+      // types=address focuses on real addresses rather than POIs
+      // fuzzyMatch=false requires more exact matches
+      // autocomplete=true allows partial matches for better usability
+      // limit=5 returns more results to choose from
+      // proximity helps bias results toward a location (using NYC as default)
+      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName)}.json?access_token=${MAPBOX_TOKEN}&limit=5&types=address,poi,place&autocomplete=true&fuzzyMatch=true&proximity=-74.0060,40.7128`;
       
       const response = await fetch(endpoint);
       const data = await response.json();
       
       if (data.features && data.features.length > 0) {
-        const [longitude, latitude] = data.features[0].center;
-        return { longitude, latitude };
+        // Get the first (most relevant) result
+        const feature = data.features[0];
+        const [longitude, latitude] = feature.center;
+        
+        // Extract the full address for better user feedback
+        const fullAddress = feature.place_name;
+        
+        console.log("Location found:", { 
+          input: locationName,
+          matched: fullAddress,
+          coordinates: [longitude, latitude],
+          allResults: data.features.map(f => f.place_name)
+        });
+        
+        return { longitude, latitude, fullAddress };
       }
       
       return null;
