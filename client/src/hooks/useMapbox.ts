@@ -4,6 +4,7 @@ import { MapMarker, MapRoute } from "@/lib/types";
 import { MAPBOX_STYLE_URL } from "@/lib/constants";
 
 // Mapbox access token from environment variables
+// Access the environment variable that was added through Replit secrets
 const MAPBOX_TOKEN = import.meta.env.MAPBOX_TOKEN;
 
 export default function useMapbox() {

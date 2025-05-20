@@ -140,7 +140,7 @@ export default function ItinerarySidebar({
               
               <TabsContent value="itinerary" className="space-y-4">
                 {/* Day Selection */}
-                <div className="overflow-x-auto scrollbar-hide mb-4">
+                <div className="overflow-x-auto scrollbar-hide mb-4 day-button-container">
                   <div className="flex space-x-2 w-max">
                     {trip.days?.map((day, index) => (
                       <button
@@ -149,7 +149,7 @@ export default function ItinerarySidebar({
                           day.toDateString() === activeDay.toDateString() 
                             ? 'bg-[hsl(var(--primary))] text-white' 
                             : 'bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]'
-                        } rounded-md flex-shrink-0`}
+                        } rounded-md flex-shrink-0 day-button`}
                         onClick={() => onChangeDayClick(day)}
                       >
                         Day {index + 1} - {formatDate(day)}
