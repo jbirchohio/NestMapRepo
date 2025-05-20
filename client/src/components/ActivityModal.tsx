@@ -399,13 +399,13 @@ export default function ActivityModal({
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Type</label>
                 <div className="flex flex-wrap gap-2">
-                  {ACTIVITY_TAGS.map((tag) => (
+                  {Object.values(ACTIVITY_TAGS).map((tag) => (
                     <Button
-                      key={tag.value}
+                      key={tag.id}
                       type="button"
-                      variant={selectedTag === tag.value ? "default" : "outline"}
+                      variant={selectedTag === tag.id ? "default" : "outline"}
                       className="px-3 py-1 h-8"
-                      onClick={() => handleTagChange(tag.value)}
+                      onClick={() => handleTagChange(tag.id)}
                     >
                       {tag.icon && <span className="mr-1">{tag.icon}</span>}
                       {tag.label}
