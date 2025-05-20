@@ -54,6 +54,16 @@ export default function ActivityModal({
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 1000); // 1 second delay
   const searchInProgress = useRef(false);
+  const [locationResults, setLocationResults] = useState<Array<{
+    name: string;
+    address?: string;
+    city: string;
+    region?: string;
+    country?: string;
+    description?: string;
+    latitude?: string;
+    longitude?: string;
+  }>>([]);
   
   // Selected tag state
   const [selectedTag, setSelectedTag] = useState<string | undefined>(

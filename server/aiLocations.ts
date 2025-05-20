@@ -4,16 +4,18 @@ import OpenAI from "openai";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 /**
- * Finds a location using AI to handle fuzzy search and returns detailed address information
+ * Finds a location using AI to handle fuzzy search and returns multiple potential matches
  */
 export async function findLocation(searchQuery: string, cityContext?: string): Promise<{
-  name: string;
-  address?: string;
-  fullAddress?: string;
-  city: string;
-  region?: string;
-  country?: string;
-  description?: string;
+  locations: Array<{
+    name: string;
+    address?: string;
+    fullAddress?: string;
+    city: string;
+    region?: string;
+    country?: string;
+    description?: string;
+  }>;
   error?: string;
 }> {
   try {
@@ -40,15 +42,17 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
         {
           role: "system",
           content: 
-            "You are a location identification expert. Your job is to take partial or ambiguous location names and return exact and accurate information about them. " +
-            "Always return your response as a JSON object with these fields: name, address, city, region, country, description."
+            "You are a location identification expert. Your job is to take partial or ambiguous location names and return multiple potential matches. " +
+            "Always return your response as a JSON object with a 'locations' array containing 2-4 possible matches. " +
+            "Each location in the array should have these fields: name, address, city, region, country, description. " +
+            "Sort results by relevance, with most likely match first."
         },
         {
           role: "user",
-          content: `Find this location: "${searchQuery}" ${context}. Return complete information in JSON format with name, address, city, region, country, and description fields.`
+          content: `Find this location: "${searchQuery}" ${context}. Return multiple potential matches in JSON format with a 'locations' array containing objects with fields: name, address, city, region, country, and description.`
         }
       ],
-      temperature: 0.1,
+      temperature: 0.7, // Slightly higher temperature for more variety
       response_format: { type: "json_object" },
     });
 
@@ -63,39 +67,51 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
     // Special case for Leo House which often doesn't geocode well
     if (searchQuery.toLowerCase().includes("leo house")) {
       return {
-        name: "Leo House",
-        address: "332 W 23rd St, New York, NY 10011",
-        city: "New York City",
-        region: "NY",
-        country: "USA",
-        description: "Leo House is a Catholic guesthouse located in Chelsea, Manhattan that has provided affordable accommodations since 1889."
+        locations: [{
+          name: "Leo House",
+          address: "332 W 23rd St",
+          city: "New York City",
+          region: "NY",
+          country: "USA",
+          description: "Leo House is a Catholic guesthouse located in Chelsea, Manhattan that has provided affordable accommodations since 1889."
+        }]
       };
     }
     
-    // Check if we have a valid location
-    if (!result.name || !result.address) {
+    // Check if we have valid locations
+    if (!result.locations || !Array.isArray(result.locations) || result.locations.length === 0) {
+      // Add a default
       return {
-        name: searchQuery,
-        fullAddress: searchQuery,
-        city: "New York City",
+        locations: [{
+          name: searchQuery,
+          fullAddress: searchQuery,
+          city: cityContext || "New York City",
+          description: `Search results for "${searchQuery}"`
+        }],
         error: "Could not find specific location details"
       };
     }
     
+    // Return the array of locations
     return {
-      name: result.name,
-      address: result.address,
-      city: result.city || "New York City",
-      region: result.region,
-      country: result.country,
-      description: result.description
+      locations: result.locations.map(loc => ({
+        name: loc.name,
+        address: loc.address,
+        city: loc.city || (cityContext || "New York City"),
+        region: loc.region,
+        country: loc.country,
+        description: loc.description
+      }))
     };
   } catch (error) {
     console.error("Error finding location with AI:", error);
     return {
-      name: searchQuery,
-      fullAddress: searchQuery,
-      city: "New York City",
+      locations: [{
+        name: searchQuery,
+        fullAddress: searchQuery,
+        city: "New York City",
+        description: "Error occurred during search"
+      }],
       error: "Error processing location search"
     };
   }
