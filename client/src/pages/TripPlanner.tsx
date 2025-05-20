@@ -174,7 +174,7 @@ export default function TripPlanner() {
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
       <div className="flex flex-col md:flex-row w-full h-[calc(100vh-70px)] overflow-hidden">
-        <div className="w-full md:w-[350px] min-w-[300px] max-w-[400px] flex-shrink-0 overflow-y-auto border-r bg-white dark:bg-[hsl(var(--background))]">
+        <div className="w-full md:w-[450px] flex-shrink-0 overflow-y-auto border-r bg-white dark:bg-[hsl(var(--background))]">
           <ItinerarySidebar
             trip={trip}
             activities={activities}
