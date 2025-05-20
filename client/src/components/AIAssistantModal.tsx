@@ -363,8 +363,28 @@ export default function AIAssistantModal({
               }
             }
             
-            // Now add the activity
-            await addActivity.mutateAsync(activity);
+            // Format the activity data properly to match what the API expects
+            const formattedActivity = {
+              tripId: trip.id,
+              title: activity.title,
+              // Convert ISO date string to Date object
+              date: new Date(activity.date),
+              time: activity.time,
+              locationName: activity.locationName || "Unknown location",
+              latitude: activity.latitude || null,
+              longitude: activity.longitude || null,
+              notes: activity.notes || "",
+              tag: activity.tag || "Event",
+              // Add missing required fields
+              order: (await queryClient.fetchQuery({
+                queryKey: [API_ENDPOINTS.TRIPS, trip.id, "activities"],
+                queryFn: () => apiRequest(API_ENDPOINTS.TRIPS + '/' + trip.id + '/activities')
+              })).length + addedCount,
+              assignedTo: ""
+            };
+            
+            console.log("Adding formatted activity:", formattedActivity);
+            await addActivity.mutateAsync(formattedActivity);
             addedCount++;
             return { success: true, activity };
           } catch (error) {
