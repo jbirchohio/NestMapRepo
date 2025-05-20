@@ -34,7 +34,7 @@ export default function TripPlanner() {
   // State for currently active day
   const [activeDay, setActiveDay] = useState<Date | null>(null);
   
-  // Set active day when trip data loads
+  // Set active day when trip data loads and store trip destination info for geocoding
   useEffect(() => {
     if (trip && trip.startDate && !activeDay) {
       setActiveDay(new Date(trip.startDate));
@@ -47,8 +47,20 @@ export default function TripPlanner() {
       
       // Add days array to trip object
       trip.days = days;
+      
+      // Store trip destination info in localStorage for geocoding context
+      // This helps the map search find more relevant POIs within the trip's context
+      try {
+        localStorage.setItem(`trip_${tripId}`, JSON.stringify({
+          city: trip.city || "New York City", // Default to NYC if no city specified
+          latitude: trip.latitude,
+          longitude: trip.longitude
+        }));
+      } catch (e) {
+        console.error("Error saving trip geocoding context:", e);
+      }
     }
-  }, [trip, activeDay]);
+  }, [trip, activeDay, tripId]);
   
   // Show errors
   useEffect(() => {

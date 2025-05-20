@@ -183,77 +183,163 @@ export default function useMapbox() {
     });
   }, [isInitialized]);
 
-  // Geocode a location name to coordinates with improved accuracy and bias toward US/NYC locations
-  const geocodeLocation = useCallback(async (locationName: string): Promise<{ longitude: number, latitude: number, fullAddress?: string } | null> => {
-    try {
-      // Add NYC to search if it might be a NYC landmark
-      let searchTerm = locationName;
-      if (!searchTerm.toLowerCase().includes("nyc") && !searchTerm.toLowerCase().includes("new york")) {
-        // For hotel names and short queries, try to bias search toward NYC
-        if (searchTerm.toLowerCase().includes("hotel") || 
-            searchTerm.split(" ").length <= 3) {
-          searchTerm = `${searchTerm}, NYC`;
+  // Get trip destination coordinates for better geocoding context
+  const getTripDestinationCoordinates = useCallback((): { longitude?: number, latitude?: number, city?: string } => {
+    // Try to get coordinates from URL if we're in a trip view
+    const path = window.location.pathname;
+    const tripMatch = path.match(/\/trip\/(\d+)/);
+    
+    // If we're in a trip view with a trip ID
+    if (tripMatch && tripMatch[1]) {
+      // Check if the trip data is in localStorage (we'll store it there in the TripPlanner component)
+      const tripData = localStorage.getItem(`trip_${tripMatch[1]}`);
+      if (tripData) {
+        try {
+          const trip = JSON.parse(tripData);
+          if (trip.longitude && trip.latitude) {
+            return {
+              longitude: parseFloat(trip.longitude), 
+              latitude: parseFloat(trip.latitude),
+              city: trip.city
+            };
+          }
+        } catch (e) {
+          console.error("Error parsing trip data from localStorage:", e);
         }
       }
-
-      // First try with POI focus and NYC proximity bias
-      const queryNYC = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${MAPBOX_TOKEN}&proximity=-73.9857,40.7484&limit=5&types=poi&country=us&language=en`;
+    }
+    
+    // Default to NYC if no trip context available
+    return { longitude: -73.9857, latitude: 40.7484, city: "New York City" };
+  }, []);
+  
+  // Geocode a location name to coordinates with improved accuracy for POIs and landmarks
+  const geocodeLocation = useCallback(async (locationName: string): Promise<{ longitude: number, latitude: number, fullAddress?: string } | null> => {
+    try {
+      // Get trip context for better geocoding
+      const tripContext = getTripDestinationCoordinates();
       
-      // Second try with broader US focus
-      const queryUS = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${MAPBOX_TOKEN}&country=us&limit=5&language=en`;
-      
-      // Last resort, global search with more results
-      const queryGlobal = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${MAPBOX_TOKEN}&limit=10&language=en`;
-      
-      // Try the NYC proximity search first for better results with hotels and landmarks
-      let response = await fetch(queryNYC);
-      let data = await response.json();
-      
-      // If no good NYC results, try US-wide search
-      if (!data.features || data.features.length === 0) {
-        response = await fetch(queryUS);
-        data = await response.json();
+      // Augment the search term if it doesn't already include the city
+      let searchTerm = locationName;
+      if (tripContext.city) {
+        const cityTerms = tripContext.city.toLowerCase().split(/[ ,]+/);
+        const searchLower = searchTerm.toLowerCase();
+        
+        // Check if search already includes city name
+        const hasCityReference = cityTerms.some(term => 
+          term.length > 2 && searchLower.includes(term)
+        );
+        
+        // If search doesn't have city reference, append city
+        if (!hasCityReference && searchTerm.split(",").length === 1) {
+          searchTerm = `${searchTerm}, ${tripContext.city}`;
+        }
       }
       
-      // If still no results, try global search as last resort
+      // Define bounding box (bbox) around trip destination for more relevant results
+      // Format: [min_longitude, min_latitude, max_longitude, max_latitude]
+      let bbox = undefined;
+      if (tripContext.longitude && tripContext.latitude) {
+        // Create a bbox that's roughly 20km on each side of the destination
+        const offset = 0.18; // ~20km at most latitudes
+        bbox = [
+          tripContext.longitude - offset,
+          tripContext.latitude - offset,
+          tripContext.longitude + offset,
+          tripContext.latitude + offset
+        ].join(',');
+      }
+      
+      // Query specifically for POIs first with destination proximity
+      const queryParams = new URLSearchParams({
+        access_token: MAPBOX_TOKEN,
+        types: 'poi,place,landmark', // Focus on points of interest
+        limit: '5',
+        language: 'en'
+      });
+      
+      // Add bbox if available for more precise contextual results
+      if (bbox) {
+        queryParams.append('bbox', bbox);
+      } 
+      // Otherwise use proximity if we have coordinates
+      else if (tripContext.longitude && tripContext.latitude) {
+        queryParams.append('proximity', `${tripContext.longitude},${tripContext.latitude}`);
+      }
+      
+      // First query - focused on POIs near the trip destination
+      const poiQuery = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?${queryParams.toString()}`;
+      
+      // Second query - fall back to address search if no POIs found
+      const fallbackParams = new URLSearchParams({
+        access_token: MAPBOX_TOKEN,
+        types: 'address,locality,neighborhood,poi,place',
+        limit: '8',
+        language: 'en'
+      });
+      
+      if (tripContext.longitude && tripContext.latitude) {
+        fallbackParams.append('proximity', `${tripContext.longitude},${tripContext.latitude}`);
+      }
+      
+      const fallbackQuery = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?${fallbackParams.toString()}`;
+      
+      // Try POI search first
+      let response = await fetch(poiQuery);
+      let data = await response.json();
+      
+      // If no POIs found, try broader search
       if (!data.features || data.features.length === 0) {
-        response = await fetch(queryGlobal);
+        response = await fetch(fallbackQuery);
         data = await response.json();
       }
       
       if (data.features && data.features.length > 0) {
-        const features = data.features;
-        
-        // Score features based on relevance to search
-        const scoredFeatures = features.map((feature: any) => {
+        // Score and rank the features based on relevance
+        const scoredFeatures = data.features.map((feature: any) => {
           let score = 0;
           
-          // Prefer New York locations for better defaults
-          if (feature.place_name.toLowerCase().includes("new york")) {
-            score += 10;
-          }
+          // Parse search words, ignoring common terms
+          const searchWords = searchTerm.toLowerCase()
+            .replace(/\b(the|a|an|in|of|at|by|for|with|hotel|inn|motel)\b/g, '')
+            .split(/[ ,]+/)
+            .filter((w: string) => w.length > 2);
           
-          // Prefer POIs over addresses for landmark searches
-          if (feature.place_type && feature.place_type.includes("poi")) {
-            score += 5;
-          }
-          
-          // Prefer exact name matches (case insensitive)
+          // Get feature name and type
           const featureName = feature.text.toLowerCase();
-          const searchWords = searchTerm.toLowerCase().split(/[ ,]+/);
+          const featureType = feature.place_type?.[0] || '';
           
-          // Check how many search terms match the feature name
-          searchWords.forEach(word => {
-            if (word.length > 2 && featureName.includes(word)) {
-              score += 3;
+          // Strongly prefer POIs
+          if (featureType === 'poi') score += 25;
+          if (featureType === 'place') score += 15;
+          
+          // Prefer items with relevance higher than 0.8 (Mapbox score)
+          if (feature.relevance > 0.8) score += feature.relevance * 20;
+          
+          // Prefer landmarks or known places
+          if (feature.properties?.category?.includes('landmark')) score += 20;
+          
+          // Prefer exact name matches (e.g., "Empire State Building")
+          searchWords.forEach((word: string) => {
+            if (featureName.includes(word)) {
+              score += 5;
+              
+              // Extra points for words at the beginning
+              if (featureName.startsWith(word)) score += 10;
             }
           });
+          
+          // Slightly prefer results in the same city as trip context
+          if (tripContext.city && 
+              feature.place_name.toLowerCase().includes(tripContext.city.toLowerCase())) {
+            score += 10;
+          }
           
           return { feature, score };
         });
         
         // Sort by score descending
-        scoredFeatures.sort((a, b) => b.score - a.score);
+        scoredFeatures.sort((a: any, b: any) => b.score - a.score);
         
         // Use the highest scoring feature
         const bestMatch = scoredFeatures[0].feature;
@@ -265,7 +351,8 @@ export default function useMapbox() {
           input: searchTerm,
           matched: fullAddress,
           coordinates: [longitude, latitude],
-          allResults: features.slice(0, 5).map((f: any) => f.place_name)
+          allResults: data.features.slice(0, 5).map((f: any) => f.place_name),
+          score: scoredFeatures[0].score
         });
         
         return { longitude, latitude, fullAddress };
@@ -276,7 +363,7 @@ export default function useMapbox() {
       console.error("Error geocoding location:", error);
       return null;
     }
-  }, []);
+  }, [getTripDestinationCoordinates]);
 
   // Fly to a location
   const flyToLocation = useCallback((center: [number, number], zoom: number): void => {
