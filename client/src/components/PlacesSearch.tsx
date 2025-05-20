@@ -24,7 +24,8 @@ interface PlacesSearchProps {
 
 interface AILocationResponse {
   name: string;
-  fullAddress: string;
+  address?: string;
+  fullAddress?: string;
   city: string;
   region?: string;
   country?: string;
@@ -93,15 +94,24 @@ export default function PlacesSearch({
   useEffect(() => {
     const getLocationDetails = async () => {
       if (data && !data.error && !isLoading) {
+        // Build full address from data parts
+        const fullAddress = data.address || 
+                           (data.name + ", " + 
+                           (data.city || "New York City") + ", " + 
+                           (data.region || "NY"));
+        
+        console.log("Looking up coordinates for:", fullAddress);
+        
         // Get coordinates for the resolved address
-        const coords = await getCoordinates(data.fullAddress);
+        const coords = await getCoordinates(fullAddress);
         
         if (coords) {
           const [lat, lng] = coords;
+          
           // Create a Place object from the AI and Mapbox data
           const place: Place = {
             name: data.name,
-            formattedAddress: data.fullAddress,
+            formattedAddress: fullAddress,
             location: {
               lat,
               lng
