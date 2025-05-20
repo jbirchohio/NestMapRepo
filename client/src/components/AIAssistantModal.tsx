@@ -367,18 +367,18 @@ export default function AIAssistantModal({
             const nextOrder = addedCount;
             
             // Format the activity data properly to match what the API expects
+            // Use the exact same format as our successful test
             const formattedActivity = {
               tripId: trip.id,
               title: activity.title,
-              // Convert ISO date string to Date object
-              date: new Date(activity.date),
+              // Must be string in ISO format, not a Date object
+              date: activity.date,
               time: activity.time,
               locationName: activity.locationName || "Unknown location",
               latitude: activity.latitude || null,
               longitude: activity.longitude || null,
               notes: activity.notes || "",
               tag: activity.tag || "Event",
-              // Add missing required fields - this is what was causing the error
               order: nextOrder,
               assignedTo: ""
             };
