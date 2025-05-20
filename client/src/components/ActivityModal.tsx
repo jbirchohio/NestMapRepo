@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,7 @@ import useMapbox from "@/hooks/useMapbox";
 import PlacesSearch from "@/components/PlacesSearch";
 import { Search } from "lucide-react";
 import useTrip from "@/hooks/useTrip";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface ActivityModalProps {
   tripId: number;
@@ -48,6 +49,20 @@ export default function ActivityModal({
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
   const { trip } = useTrip(tripId);
+  const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 1000); // 1 second delay
+  const searchInProgress = useRef(false);
+  
+  // Auto-search when debounced value changes (user has stopped typing)
+  useEffect(() => {
+    // Only search if there's a term and it's at least 3 characters
+    if (debouncedSearchTerm && debouncedSearchTerm.length >= 3) {
+      console.log("Auto-searching for completed term:", debouncedSearchTerm);
+      // Update the form with the finalized search term
+      setValue("locationName", debouncedSearchTerm);
+      // Don't auto-trigger the search - let the user click the button when ready
+    }
+  }, [debouncedSearchTerm, setValue]);
   const [selectedTag, setSelectedTag] = useState<string | undefined>(
     activity?.tag === null ? undefined : activity?.tag
   );
@@ -238,14 +253,19 @@ export default function ActivityModal({
                   {...register("locationName", { required: true })}
                   placeholder="Search for a place (e.g., 'Leo House')"
                   className={errors.locationName ? "border-[hsl(var(--destructive))]" : ""}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <Button 
                   type="button"
                   variant="outline"
                   className="whitespace-nowrap px-3"
                   onClick={async () => {
-                    const locationName = watch("locationName");
+                    // Force use the current input value (not the debounced one)
+                    const locationName = searchTerm || watch("locationName");
                     if (!locationName) return;
+                    
+                    // Show what we're actually searching for in the logs
+                    console.log("Executing search for:", locationName);
                     
                     try {
                       // Step 1: Use our AI-powered location API to get structured data with trip city context
