@@ -119,7 +119,7 @@ export default function ItinerarySidebar({
   
   return (
     <>
-      <aside id="sidebar" className="w-full md:w-96 flex-shrink-0 bg-white dark:bg-[hsl(var(--card))] border-r dark:border-[hsl(var(--border))] overflow-y-auto itinerary-container">
+      <aside id="sidebar" className="w-full md:w-[450px] flex-shrink-0 bg-white dark:bg-[hsl(var(--card))] border-r dark:border-[hsl(var(--border))] overflow-y-auto itinerary-container">
         <ScrollArea className="h-full">
           <div className="p-4">
             {/* Trip Title */}
@@ -141,15 +141,15 @@ export default function ItinerarySidebar({
               <TabsContent value="itinerary" className="space-y-4">
                 {/* Day Selection */}
                 <div className="overflow-x-auto scrollbar-hide mb-4 day-button-container">
-                  <div className="flex space-x-2 w-max">
+                  <div className="flex flex-wrap md:flex-nowrap gap-2">
                     {trip.days?.map((day, index) => (
                       <button
                         key={day.toISOString()}
-                        className={`px-4 py-2 ${
+                        className={`px-3 py-2 ${
                           day.toDateString() === activeDay.toDateString() 
                             ? 'bg-[hsl(var(--primary))] text-white' 
                             : 'bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]'
-                        } rounded-md flex-shrink-0 day-button`}
+                        } rounded-md flex-shrink-0 whitespace-nowrap text-sm md:text-base day-button`}
                         onClick={() => onChangeDayClick(day)}
                       >
                         Day {index + 1} - {formatDate(day)}
