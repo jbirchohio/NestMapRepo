@@ -183,49 +183,86 @@ export default function useMapbox() {
     });
   }, [isInitialized]);
 
-  // Geocode a location name to coordinates with improved accuracy
+  // Geocode a location name to coordinates with improved accuracy and bias toward US/NYC locations
   const geocodeLocation = useCallback(async (locationName: string): Promise<{ longitude: number, latitude: number, fullAddress?: string } | null> => {
     try {
-      // Use two different geocoding queries to improve results
-      // First try with more focused parameters
-      const queryPrecise = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName)}.json?access_token=${MAPBOX_TOKEN}&limit=5&types=poi,address&autocomplete=true&fuzzyMatch=false&language=en`;
+      // Add NYC to search if it might be a NYC landmark
+      let searchTerm = locationName;
+      if (!searchTerm.toLowerCase().includes("nyc") && !searchTerm.toLowerCase().includes("new york")) {
+        // For hotel names and short queries, try to bias search toward NYC
+        if (searchTerm.toLowerCase().includes("hotel") || 
+            searchTerm.split(" ").length <= 3) {
+          searchTerm = `${searchTerm}, NYC`;
+        }
+      }
+
+      // First try with POI focus and NYC proximity bias
+      const queryNYC = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${MAPBOX_TOKEN}&proximity=-73.9857,40.7484&limit=5&types=poi&country=us&language=en`;
       
-      // Second try with broader parameters if the first one doesn't find a good match
-      const queryBroad = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName)}.json?access_token=${MAPBOX_TOKEN}&limit=10&autocomplete=true&language=en`;
+      // Second try with broader US focus
+      const queryUS = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${MAPBOX_TOKEN}&country=us&limit=5&language=en`;
       
-      // Try the precise query first
-      let response = await fetch(queryPrecise);
+      // Last resort, global search with more results
+      const queryGlobal = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${MAPBOX_TOKEN}&limit=10&language=en`;
+      
+      // Try the NYC proximity search first for better results with hotels and landmarks
+      let response = await fetch(queryNYC);
       let data = await response.json();
       
-      // If no good results, try the broader query
+      // If no good NYC results, try US-wide search
       if (!data.features || data.features.length === 0) {
-        response = await fetch(queryBroad);
+        response = await fetch(queryUS);
+        data = await response.json();
+      }
+      
+      // If still no results, try global search as last resort
+      if (!data.features || data.features.length === 0) {
+        response = await fetch(queryGlobal);
         data = await response.json();
       }
       
       if (data.features && data.features.length > 0) {
         const features = data.features;
         
-        // Check if any place name starts with the text the user entered
-        // This often gives better matches for specific buildings or landmarks
-        const exactNameMatches = features.filter((f: any) => {
-          const nameParts = f.text.toLowerCase().split(" ");
-          const searchParts = locationName.toLowerCase().split(" ");
+        // Score features based on relevance to search
+        const scoredFeatures = features.map((feature: any) => {
+          let score = 0;
           
-          // Check for significant word matches at the beginning
-          return searchParts.some(searchWord => 
-            nameParts.some(nameWord => nameWord.startsWith(searchWord))
-          );
+          // Prefer New York locations for better defaults
+          if (feature.place_name.toLowerCase().includes("new york")) {
+            score += 10;
+          }
+          
+          // Prefer POIs over addresses for landmark searches
+          if (feature.place_type && feature.place_type.includes("poi")) {
+            score += 5;
+          }
+          
+          // Prefer exact name matches (case insensitive)
+          const featureName = feature.text.toLowerCase();
+          const searchWords = searchTerm.toLowerCase().split(/[ ,]+/);
+          
+          // Check how many search terms match the feature name
+          searchWords.forEach(word => {
+            if (word.length > 2 && featureName.includes(word)) {
+              score += 3;
+            }
+          });
+          
+          return { feature, score };
         });
         
-        // Use exact match if available, otherwise use the first result
-        const bestMatch = exactNameMatches.length > 0 ? exactNameMatches[0] : features[0];
+        // Sort by score descending
+        scoredFeatures.sort((a, b) => b.score - a.score);
+        
+        // Use the highest scoring feature
+        const bestMatch = scoredFeatures[0].feature;
         
         const [longitude, latitude] = bestMatch.center;
         const fullAddress = bestMatch.place_name;
         
         console.log("Location found:", { 
-          input: locationName,
+          input: searchTerm,
           matched: fullAddress,
           coordinates: [longitude, latitude],
           allResults: features.slice(0, 5).map((f: any) => f.place_name)
