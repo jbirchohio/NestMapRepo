@@ -70,6 +70,11 @@ export default function ActivityModal({
     activity?.tag === null ? undefined : activity?.tag
   );
   
+  // Format date to string in YYYY-MM-DD format for input
+  const formatDateForInput = (date: Date): string => {
+    return date.toISOString().split('T')[0];
+  };
+
   // Set form default values
   const defaultFormValues: ActivityFormValues = {
     title: activity?.title || "",
@@ -176,8 +181,8 @@ export default function ActivityModal({
   };
   
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div className="bg-background rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 pt-4 md:pt-16 md:items-center">
+      <div className="bg-background rounded-lg w-full max-w-md max-h-[96vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">
@@ -207,6 +212,7 @@ export default function ActivityModal({
                   <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Date</label>
                   <Input
                     type="date"
+                    defaultValue={formatDateForInput(date)}
                     {...register("date", { valueAsDate: true })}
                     className={errors.date ? "border-[hsl(var(--destructive))]" : ""}
                   />
