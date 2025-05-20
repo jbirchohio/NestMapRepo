@@ -34,6 +34,9 @@ export default function TripPlanner() {
   // State for currently active day
   const [activeDay, setActiveDay] = useState<Date | null>(null);
   
+  // State for mobile view toggle (map or itinerary)
+  const [mobileView, setMobileView] = useState<'itinerary' | 'map'>('itinerary');
+  
   // Set active day when trip data loads and store trip destination info for geocoding
   useEffect(() => {
     if (trip && trip.startDate && !activeDay) {
@@ -171,10 +174,38 @@ export default function TripPlanner() {
     );
   }
   
+  // Toggle view function for mobile
+  const toggleMobileView = () => {
+    setMobileView(mobileView === 'itinerary' ? 'map' : 'itinerary');
+  };
+
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
-      <div className="flex flex-col md:flex-row w-full h-[calc(100vh-70px)] overflow-hidden">
-        <div className="w-full md:w-[450px] flex-shrink-0 overflow-y-auto border-r bg-white dark:bg-[hsl(var(--background))]">
+      {/* Mobile View Toggle */}
+      <div className="md:hidden sticky top-0 z-10 bg-white dark:bg-[hsl(var(--background))] p-2 flex border-b">
+        <div className="flex w-full rounded-md overflow-hidden border">
+          <button
+            className={`flex-1 py-2 text-center ${mobileView === 'itinerary' ? 'bg-[hsl(var(--primary))] text-white' : 'bg-[hsl(var(--muted))]'}`}
+            onClick={() => setMobileView('itinerary')}
+          >
+            Itinerary
+          </button>
+          <button
+            className={`flex-1 py-2 text-center ${mobileView === 'map' ? 'bg-[hsl(var(--primary))] text-white' : 'bg-[hsl(var(--muted))]'}`}
+            onClick={() => setMobileView('map')}
+          >
+            Map
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col md:flex-row w-full h-[calc(100vh-70px)] md:h-[calc(100vh-70px)] overflow-hidden">
+        {/* Itinerary Sidebar - hidden on mobile when map view is active */}
+        <div className={`
+          w-full md:w-1/2 flex-shrink-0 overflow-y-auto border-r 
+          bg-white dark:bg-[hsl(var(--background))]
+          ${mobileView === 'map' ? 'hidden md:block' : ''}
+        `}>
           <ItinerarySidebar
             trip={trip}
             activities={activities}
@@ -186,7 +217,11 @@ export default function TripPlanner() {
           />
         </div>
         
-        <div className="w-full flex-1 relative md:h-full overflow-hidden">
+        {/* Map View - hidden on mobile when itinerary view is active */}
+        <div className={`
+          w-full md:w-1/2 flex-1 relative h-full overflow-hidden
+          ${mobileView === 'itinerary' ? 'hidden md:block' : ''}
+        `}>
           <MapView
             markers={mapMarkers}
             routes={mapRoutes}
