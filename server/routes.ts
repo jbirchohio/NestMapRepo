@@ -429,8 +429,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const response = await openai.tripAssistant(question, tripContext || {});
-      res.json({ answer: response });
+      
+      // Check if the response includes activities (from a parsed itinerary)
+      if (typeof response === 'object' && response.answer && response.activities) {
+        // This is a parsed itinerary with activities to add
+        console.log("Parsed itinerary activities:", response.activities.length);
+        
+        // For each activity, try to get coordinates using our location search
+        for (let i = 0; i < response.activities.length; i++) {
+          const activity = response.activities[i];
+          
+          if (!activity.locationName) continue;
+          
+          try {
+            // Search for the location to get coordinates
+            console.log(`Finding location: ${activity.locationName} in ${tripContext.trip?.city || 'New York City'}`);
+            const locationResult = await aiLocations.findLocation(
+              activity.locationName, 
+              tripContext.trip?.city || 'New York City'
+            );
+            
+            // If we found coordinates, add them to the activity
+            if (locationResult.locations && locationResult.locations.length > 0) {
+              const bestMatch = locationResult.locations[0];
+              
+              // Get coordinates using Mapbox
+              const mapboxToken = "pk.eyJ1IjoicmV0bW91c2VyIiwiYSI6ImNtOXJtOHZ0MjA0dTgycG9ocDA3dXNpMGIifQ.WHYwcRzR3g8djNiBsVw1vg";
+              const addressStr = encodeURIComponent(
+                `${bestMatch.name}, ${bestMatch.city}, ${bestMatch.region || ''}`
+              );
+              
+              const mapboxResponse = await fetch(
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${addressStr}.json?access_token=${mapboxToken}&limit=1`
+              );
+              
+              if (mapboxResponse.ok) {
+                const mapboxData = await mapboxResponse.json();
+                
+                if (mapboxData.features && mapboxData.features.length > 0) {
+                  const feature = mapboxData.features[0];
+                  
+                  // Add coordinates to the activity
+                  response.activities[i].latitude = feature.center[1].toString();
+                  response.activities[i].longitude = feature.center[0].toString();
+                  
+                  console.log(`Found coordinates for ${activity.locationName}: [${feature.center[1]}, ${feature.center[0]}]`);
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error finding location for activity ${activity.title}:`, error);
+          }
+        }
+        
+        res.json(response);
+      } else {
+        // Regular text response
+        res.json({ answer: response });
+      }
     } catch (error) {
+      console.error("Error in assistant endpoint:", error);
       res.status(500).json({ message: "Could not get assistant response" });
     }
   });

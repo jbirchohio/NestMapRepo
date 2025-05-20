@@ -197,11 +197,28 @@ export default function AIAssistantModal({
       return res.json() as Promise<AIResponse>;
     },
     onSuccess: (data, variables) => {
-      setConversation(prev => [
-        ...prev,
-        { role: 'user', content: variables },
-        { role: 'assistant', content: data.answer || "I couldn't answer that question." }
-      ]);
+      // Check if this is a parsed itinerary with activities
+      if (data.activities && Array.isArray(data.activities) && data.activities.length > 0) {
+        // This is a parsed itinerary
+        console.log("Received parsed itinerary with activities:", data.activities);
+        
+        // Add the answer to conversation
+        setConversation(prev => [
+          ...prev,
+          { role: 'user', content: variables },
+          { role: 'assistant', content: data.answer || "I've processed your itinerary and extracted activities." }
+        ]);
+        
+        // Process each activity to create it in the database
+        handleAddActivities(data.activities);
+      } else {
+        // Regular conversation response
+        setConversation(prev => [
+          ...prev,
+          { role: 'user', content: variables },
+          { role: 'assistant', content: data.answer || "I couldn't answer that question." }
+        ]);
+      }
       setQuestion("");
     },
     onError: (error) => {
