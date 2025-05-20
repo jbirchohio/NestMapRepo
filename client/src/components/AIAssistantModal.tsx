@@ -2,9 +2,8 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { APIResponse } from "@tanstack/react-query";
-import { ClientActivity, ClientTrip, AIResponse } from "@/lib/types";
-import { apiRequest } from "@/lib/queryClient";
+import { ClientActivity, ClientTrip, AIResponse, ParsedActivity } from "@/lib/types";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 
@@ -202,15 +201,23 @@ export default function AIAssistantModal({
         // This is a parsed itinerary
         console.log("Received parsed itinerary with activities:", data.activities);
         
-        // Add the answer to conversation
+        // First, add the initial response to the conversation
         setConversation(prev => [
           ...prev,
           { role: 'user', content: variables },
-          { role: 'assistant', content: data.answer || "I've processed your itinerary and extracted activities." }
+          { 
+            role: 'assistant', 
+            content: data.answer + "\n\nI'm now processing these activities to add them to your trip. Please wait..." 
+          }
         ]);
         
-        // Process each activity to create it in the database
-        handleAddActivities(data.activities);
+        // Then process each activity to create it in the database
+        // We'll use setTimeout to allow the conversation update to render first
+        setTimeout(() => {
+          if (data.activities && Array.isArray(data.activities)) {
+            handleAddActivities(data.activities);
+          }
+        }, 500);
       } else {
         // Regular conversation response
         setConversation(prev => [
@@ -268,39 +275,132 @@ export default function AIAssistantModal({
   /**
    * Process multiple activities from a parsed itinerary
    */
-  const handleAddActivities = async (activities: any[]) => {
+  const handleAddActivities = async (activities: ParsedActivity[]) => {
     let addedCount = 0;
     const errors: string[] = [];
     
-    // Add a delay between activity additions to prevent rate limiting
-    for (const activity of activities) {
-      try {
-        await addActivity.mutateAsync(activity);
-        addedCount++;
-        
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
-        console.error("Error adding activity:", error);
-        errors.push(activity.title || "Unnamed activity");
+    // Add a status update in the conversation
+    setConversation(prev => [
+      ...prev,
+      { 
+        role: 'assistant', 
+        content: `Found ${activities.length} activities in your itinerary. Creating them now...`
       }
+    ]);
+    
+    // Show processing in progress
+    toast({
+      title: "Processing Itinerary",
+      description: `Creating ${activities.length} activities from your schedule...`,
+    });
+    
+    // Process activities in chunks to prevent overwhelming the API
+    const chunks = [];
+    const chunkSize = 5; // Process 5 activities at a time
+    
+    for (let i = 0; i < activities.length; i += chunkSize) {
+      chunks.push(activities.slice(i, i + chunkSize));
     }
     
-    // Notify the user
+    // Process each chunk
+    for (const [chunkIndex, chunk] of chunks.entries()) {
+      // Add a processing status update periodically
+      if (chunkIndex > 0 && chunkIndex % 1 === 0) {
+        const progress = Math.min(100, Math.round((chunkIndex * chunkSize / activities.length) * 100));
+        setConversation(prev => [
+          ...prev,
+          { 
+            role: 'assistant', 
+            content: `Progress: ${progress}% complete (${Math.min(chunkIndex * chunkSize, activities.length)} of ${activities.length} activities)`
+          }
+        ]);
+      }
+      
+      // Process activities in this chunk in parallel
+      const results = await Promise.all(
+        chunk.map(async (activity) => {
+          try {
+            // Format date properly - using trip dates if needed
+            if (!activity.date || activity.date === "") {
+              // Default to first day of trip
+              activity.date = new Date(trip.startDate).toISOString().split('T')[0];
+            }
+            
+            // Format time properly - default to morning if missing
+            if (!activity.time || activity.time === "") {
+              activity.time = "10:00";
+            }
+            
+            // Add a proper tag if missing
+            if (!activity.tag || activity.tag === "") {
+              // Determine tag based on title/description
+              if (activity.title.toLowerCase().includes("breakfast") || 
+                  activity.title.toLowerCase().includes("lunch") || 
+                  activity.title.toLowerCase().includes("dinner") ||
+                  activity.title.toLowerCase().includes("restaurant") ||
+                  activity.title.toLowerCase().includes("café") ||
+                  activity.title.toLowerCase().includes("cafe")) {
+                activity.tag = "Food";
+              } else if (activity.title.toLowerCase().includes("museum") ||
+                         activity.title.toLowerCase().includes("gallery") ||
+                         activity.title.toLowerCase().includes("theater") ||
+                         activity.title.toLowerCase().includes("theatre") ||
+                         activity.title.toLowerCase().includes("park")) {
+                activity.tag = "Culture";
+              } else if (activity.title.toLowerCase().includes("shopping") ||
+                         activity.title.toLowerCase().includes("store") ||
+                         activity.title.toLowerCase().includes("mall") ||
+                         activity.title.toLowerCase().includes("market")) {
+                activity.tag = "Shop";
+              } else if (activity.title.toLowerCase().includes("leave") ||
+                         activity.title.toLowerCase().includes("arrive") ||
+                         activity.title.toLowerCase().includes("drive") ||
+                         activity.title.toLowerCase().includes("metro") ||
+                         activity.title.toLowerCase().includes("subway")) {
+                activity.tag = "Transport";
+              } else {
+                activity.tag = "Event";
+              }
+            }
+            
+            // Now add the activity
+            await addActivity.mutateAsync(activity);
+            addedCount++;
+            return { success: true, activity };
+          } catch (error) {
+            console.error("Error adding activity:", error, activity);
+            return { success: false, activity };
+          }
+        })
+      );
+      
+      // Collect any errors
+      results.filter(r => !r.success).forEach(result => {
+        errors.push(result.activity.title || "Unnamed activity");
+      });
+      
+      // Add a small delay between chunks to prevent overwhelming the server
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    
+    // Query invalidation to refresh activities
+    queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id, "activities"] });
+    
+    // Notify the user of completion
     if (addedCount > 0) {
       toast({
         title: "Itinerary Imported",
         description: `Successfully added ${addedCount} activities to your trip.${errors.length > 0 ? ' Some activities could not be added.' : ''}`,
       });
       
-      // Add a confirmation message to the conversation
+      // Add a final confirmation message to the conversation
       setConversation(prev => [
         ...prev,
         { 
           role: 'assistant', 
-          content: `I've added ${addedCount} activities to your trip from the itinerary.${errors.length > 0 ? 
-            ` I had trouble with: ${errors.join(', ')}. Please check those manually.` : 
-            ' They should now appear in your schedule.'}`
+          content: `✅ Import complete! I've added ${addedCount} activities to your trip from the itinerary.${errors.length > 0 ? 
+            `\n\n⚠️ I had trouble with ${errors.length} activities: ${errors.join(', ')}. Please check those manually.` : 
+            '\n\nAll activities have been added and should now appear in your schedule with the correct times and locations.'}`
         }
       ]);
     } else if (errors.length > 0) {
@@ -309,6 +409,14 @@ export default function AIAssistantModal({
         description: "Could not add any activities from the itinerary.",
         variant: "destructive",
       });
+      
+      setConversation(prev => [
+        ...prev,
+        { 
+          role: 'assistant', 
+          content: `❌ I wasn't able to add any activities from your itinerary. There may be an issue with the format or connection. Please try again or add activities manually.`
+        }
+      ]);
     }
   };
   
