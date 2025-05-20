@@ -220,5 +220,177 @@ export class MemStorage implements IStorage {
   }
 }
 
+// Database storage implementation
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+  
+  // Trip operations
+  async getTrip(id: number): Promise<Trip | undefined> {
+    const [trip] = await db.select().from(trips).where(eq(trips.id, id));
+    return trip || undefined;
+  }
+
+  async getTripsByUserId(userId: number): Promise<Trip[]> {
+    const tripList = await db.select().from(trips).where(eq(trips.userId, userId));
+    return tripList;
+  }
+
+  async createTrip(insertTrip: InsertTrip): Promise<Trip> {
+    const [trip] = await db
+      .insert(trips)
+      .values(insertTrip)
+      .returning();
+    return trip;
+  }
+
+  async updateTrip(id: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
+    const [updatedTrip] = await db
+      .update(trips)
+      .set(tripData)
+      .where(eq(trips.id, id))
+      .returning();
+    return updatedTrip || undefined;
+  }
+
+  async deleteTrip(id: number): Promise<boolean> {
+    const result = await db
+      .delete(trips)
+      .where(eq(trips.id, id))
+      .returning({ id: trips.id });
+    return result.length > 0;
+  }
+  
+  // Activity operations
+  async getActivity(id: number): Promise<Activity | undefined> {
+    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
+    return activity || undefined;
+  }
+
+  async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
+    const activityList = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.tripId, tripId))
+      .orderBy(activities.order);
+    return activityList;
+  }
+
+  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+    const [activity] = await db
+      .insert(activities)
+      .values(insertActivity)
+      .returning();
+    return activity;
+  }
+
+  async updateActivity(id: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
+    const [updatedActivity] = await db
+      .update(activities)
+      .set(activityData)
+      .where(eq(activities.id, id))
+      .returning();
+    return updatedActivity || undefined;
+  }
+
+  async deleteActivity(id: number): Promise<boolean> {
+    const result = await db
+      .delete(activities)
+      .where(eq(activities.id, id))
+      .returning({ id: activities.id });
+    return result.length > 0;
+  }
+  
+  // Todo operations
+  async getTodo(id: number): Promise<Todo | undefined> {
+    const [todo] = await db.select().from(todos).where(eq(todos.id, id));
+    return todo || undefined;
+  }
+
+  async getTodosByTripId(tripId: number): Promise<Todo[]> {
+    const todoList = await db.select().from(todos).where(eq(todos.tripId, tripId));
+    return todoList;
+  }
+
+  async createTodo(insertTodo: InsertTodo): Promise<Todo> {
+    const [todo] = await db
+      .insert(todos)
+      .values(insertTodo)
+      .returning();
+    return todo;
+  }
+
+  async updateTodo(id: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined> {
+    const [updatedTodo] = await db
+      .update(todos)
+      .set(todoData)
+      .where(eq(todos.id, id))
+      .returning();
+    return updatedTodo || undefined;
+  }
+
+  async deleteTodo(id: number): Promise<boolean> {
+    const result = await db
+      .delete(todos)
+      .where(eq(todos.id, id))
+      .returning({ id: todos.id });
+    return result.length > 0;
+  }
+  
+  // Note operations
+  async getNote(id: number): Promise<Note | undefined> {
+    const [note] = await db.select().from(notes).where(eq(notes.id, id));
+    return note || undefined;
+  }
+
+  async getNotesByTripId(tripId: number): Promise<Note[]> {
+    const noteList = await db.select().from(notes).where(eq(notes.tripId, tripId));
+    return noteList;
+  }
+
+  async createNote(insertNote: InsertNote): Promise<Note> {
+    const [note] = await db
+      .insert(notes)
+      .values(insertNote)
+      .returning();
+    return note;
+  }
+
+  async updateNote(id: number, noteData: Partial<InsertNote>): Promise<Note | undefined> {
+    const [updatedNote] = await db
+      .update(notes)
+      .set(noteData)
+      .where(eq(notes.id, id))
+      .returning();
+    return updatedNote || undefined;
+  }
+
+  async deleteNote(id: number): Promise<boolean> {
+    const result = await db
+      .delete(notes)
+      .where(eq(notes.id, id))
+      .returning({ id: notes.id });
+    return result.length > 0;
+  }
+}
+
 // Create and export storage instance
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
