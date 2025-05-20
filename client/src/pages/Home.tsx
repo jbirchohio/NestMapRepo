@@ -39,10 +39,11 @@ export default function Home() {
     const endDate = new Date();
     endDate.setDate(today.getDate() + 3);
     
+    // Convert dates to ISO strings which can be properly parsed by the server
     createTrip.mutate({
       title: "New Trip",
-      startDate: today,
-      endDate: endDate,
+      startDate: today.toISOString(),
+      endDate: endDate.toISOString(),
       userId,
       collaborators: []
     });
