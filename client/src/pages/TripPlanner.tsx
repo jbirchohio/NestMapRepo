@@ -212,7 +212,7 @@ export default function TripPlanner() {
         {/* Itinerary panel - full width on mobile when selected, exactly 50% on desktop */}
         <div 
           className={`
-            w-full md:w-1/2 md:block 
+            w-full md:w-[50%] md:min-w-[500px] md:block 
             ${mobileView === 'map' ? 'hidden' : 'block'} 
             h-full overflow-y-auto border-r border-gray-200
           `}
@@ -231,7 +231,7 @@ export default function TripPlanner() {
         {/* Map panel - full width on mobile when selected, exactly 50% on desktop */}
         <div 
           className={`
-            w-full md:w-1/2 md:block 
+            w-full md:w-[50%] md:block 
             ${mobileView === 'itinerary' ? 'hidden' : 'block'} 
             h-full
           `}
