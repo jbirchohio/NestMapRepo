@@ -93,12 +93,6 @@
     height: calc(100vh - 64px);
     width: 100%;
   }
-  .itinerary-container {
-    height: calc(100vh - 64px);
-    width: 500px !important;
-    min-width: 500px;
-    max-width: 500px;
-  }
 }
 
 /* Mobile responsive adjustments */
