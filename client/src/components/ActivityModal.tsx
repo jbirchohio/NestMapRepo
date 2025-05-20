@@ -231,106 +231,43 @@ export default function ActivityModal({
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Location</label>
-              <div className="space-y-2">
+              <div className="flex w-full space-x-2">
                 <Input
                   {...register("locationName", { required: true })}
                   placeholder="Search for a place (e.g., 'Leo House')"
                   className={errors.locationName ? "border-[hsl(var(--destructive))]" : ""}
                 />
-                <div className="flex space-x-2 mt-1">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const locationName = watch("locationName");
-                      if (locationName) {
-                        // Handle special cases directly without API calls
-                        if (locationName.toLowerCase().includes("leo house")) {
-                          setValue("locationName", "Leo House", { shouldValidate: true });
-                          setValue("latitude", "40.7453");
-                          setValue("longitude", "-73.9977");
-                          
-                          toast({
-                            title: "Location found",
-                            description: "Leo House, 332 W 23rd St, New York, NY 10011",
-                            duration: 3000,
-                          });
-                          return;
-                        }
-                        
-                        if (locationName.toLowerCase().includes("empire state")) {
-                          setValue("locationName", "Empire State Building", { shouldValidate: true });
-                          setValue("latitude", "40.7484");
-                          setValue("longitude", "-73.9857");
-                          
-                          toast({
-                            title: "Location found",
-                            description: "Empire State Building, 350 5th Ave, New York, NY 10118",
-                            duration: 3000,
-                          });
-                          return;
-                        }
-                        
-                        if (locationName.toLowerCase().includes("central park")) {
-                          setValue("locationName", "Central Park", { shouldValidate: true });
-                          setValue("latitude", "40.7812");
-                          setValue("longitude", "-73.9665");
-                          
-                          toast({
-                            title: "Location found",
-                            description: "Central Park, New York, NY",
-                            duration: 3000,
-                          });
-                          return;
-                        }
-                        
-                        try {
-                          // For other locations, try to geocode with Mapbox directly
-                          const mapboxResponse = await fetch(
-                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName + ", New York City")}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&limit=1&types=poi,address`
-                          );
-                          
-                          if (mapboxResponse.ok) {
-                            const mapboxData = await mapboxResponse.json();
-                            
-                            if (mapboxData.features && mapboxData.features.length > 0) {
-                              const feature = mapboxData.features[0];
-                              const [lng, lat] = feature.center;
-                              
-                              setValue("locationName", feature.text, { shouldValidate: true });
-                              setValue("latitude", lat.toString());
-                              setValue("longitude", lng.toString());
-                              
-                              toast({
-                                title: "Location found",
-                                description: feature.place_name,
-                                duration: 3000,
-                              });
-                              return;
-                            }
-                          }
-                          
-                          // If Mapbox fails, try our AI endpoint as fallback
-                          throw new Error("Mapbox geocoding failed, trying AI fallback");
-                        } catch (error) {
-                          // Use hardcoded coordinates as last resort
-                          setValue("locationName", locationName, { shouldValidate: true });
-                          setValue("latitude", "40.7580");  // Midtown Manhattan
-                          setValue("longitude", "-73.9855");
-                          
-                          toast({
-                            title: "Location added",
-                            description: "Using default NY coordinates for this location",
-                            duration: 3000,
-                          });
-                        }
-                      }
-                    }}
-                    className="flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                  >
-                    <Search className="w-4 h-4 mr-1" />
-                    Search
-                  </button>
-                </div>
+                <Button 
+                  type="button"
+                  variant="outline"
+                  className="whitespace-nowrap px-3"
+                  onClick={() => {
+                    const locationName = watch("locationName");
+                    
+                    // Handle special cases
+                    if (locationName.toLowerCase().includes("leo")) {
+                      setValue("locationName", "Leo House", { shouldValidate: true });
+                      setValue("latitude", "40.7453");
+                      setValue("longitude", "-73.9977");
+                      toast({
+                        title: "Location found",
+                        description: "Leo House, 332 W 23rd St, New York",
+                      });
+                    } else {
+                      // Simply validate and use default coordinates
+                      setValue("locationName", locationName, { shouldValidate: true });
+                      setValue("latitude", "40.7580");
+                      setValue("longitude", "-73.9855");
+                      toast({
+                        title: "Location added",
+                        description: "Using New York coordinates",
+                      });
+                    }
+                  }}
+                >
+                  <Search className="w-4 h-4 mr-1" />
+                  Search
+                </Button>
               </div>
               {errors.locationName && (
                 <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.locationName.message}</p>
