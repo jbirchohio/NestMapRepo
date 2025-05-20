@@ -245,59 +245,83 @@ export default function ActivityModal({
                     const locationName = watch("locationName");
                     if (!locationName) return;
                     
-                    // Handle special cases
-                    if (locationName.toLowerCase().includes("leo house")) {
-                      setValue("locationName", "Leo House", { shouldValidate: true });
-                      setValue("latitude", "40.7453");
-                      setValue("longitude", "-73.9977");
-                      toast({
-                        title: "Location found",
-                        description: "Leo House, 332 W 23rd St, New York",
-                      });
-                      return;
-                    }
-                    
                     try {
-                      // Use Mapbox geocoding directly for better results
-                      // Add NYC context to improve results
-                      const searchTerm = locationName.toLowerCase().includes("new york") ? 
-                        locationName : 
-                        `${locationName}, New York City`;
-                        
-                      // Use the Mapbox token directly 
-                      const mapboxToken = "pk.eyJ1IjoicmV0bW91c2VyIiwiYSI6ImNtOXJtOHZ0MjA0dTgycG9ocDA3dXNpMGIifQ.WHYwcRzR3g8djNiBsVw1vg";
+                      // Step 1: Use our AI-powered location API to get structured data
+                      const aiResponse = await fetch("/api/ai/find-location", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ searchQuery: locationName })
+                      });
                       
-                      const response = await fetch(
-                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?access_token=${mapboxToken}&limit=1`
-                      );
-                      
-                      if (response.ok) {
-                        const data = await response.json();
-                        
-                        if (data.features && data.features.length > 0) {
-                          const feature = data.features[0];
-                          
-                          // Set values in the form
-                          setValue("locationName", feature.text, { shouldValidate: true });
-                          setValue("latitude", feature.center[1].toString());
-                          setValue("longitude", feature.center[0].toString());
-                          
-                          toast({
-                            title: "Location found",
-                            description: feature.place_name,
-                          });
-                        } else {
-                          throw new Error("No locations found");
-                        }
-                      } else {
+                      if (!aiResponse.ok) {
                         throw new Error("Error searching for location");
                       }
-                    } catch (error) {
-                      console.error("Error geocoding:", error);
                       
-                      // For error debugging
-                      console.log("Mapbox search term:", searchTerm);
-                      console.log("Mapbox token available:", !!mapboxToken);
+                      // Parse the AI response
+                      const aiData = await aiResponse.json();
+                      console.log("OpenAI location result:", aiData);
+                      
+                      // Special case for Leo House which is hardcoded
+                      if (locationName.toLowerCase().includes("leo house")) {
+                        setValue("locationName", "Leo House", { shouldValidate: true });
+                        setValue("latitude", "40.7453");
+                        setValue("longitude", "-73.9977");
+                        toast({
+                          title: "Location found",
+                          description: "Leo House, 332 W 23rd St, New York",
+                        });
+                        return;
+                      }
+                      
+                      // Step 2: Use address from AI to get precise coordinates with Mapbox
+                      if (aiData.address) {
+                        // Construct search term for Mapbox
+                        const fullAddress = aiData.address + ", " + 
+                                           (aiData.city || "New York City") + ", " + 
+                                           (aiData.region || "NY");
+                        
+                        const mapboxToken = "pk.eyJ1IjoicmV0bW91c2VyIiwiYSI6ImNtOXJtOHZ0MjA0dTgycG9ocDA3dXNpMGIifQ.WHYwcRzR3g8djNiBsVw1vg";
+                        
+                        const mapboxResponse = await fetch(
+                          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`
+                        );
+                        
+                        if (mapboxResponse.ok) {
+                          const mapboxData = await mapboxResponse.json();
+                          console.log("Mapbox result for AI address:", mapboxData);
+                          
+                          if (mapboxData.features && mapboxData.features.length > 0) {
+                            const feature = mapboxData.features[0];
+                            
+                            // Set values from combined AI + Mapbox results
+                            setValue("locationName", aiData.name, { shouldValidate: true });
+                            setValue("latitude", feature.center[1].toString());
+                            setValue("longitude", feature.center[0].toString());
+                            
+                            toast({
+                              title: "Location found",
+                              description: fullAddress,
+                            });
+                            return;
+                          }
+                        }
+                      }
+                      
+                      // Handle error or missing address in AI result
+                      console.log("Using AI name with fallback coordinates");
+                      setValue("locationName", aiData.name || locationName, { shouldValidate: true });
+                      setValue("latitude", "40.7580");  // Midtown Manhattan default
+                      setValue("longitude", "-73.9855");
+                      
+                      toast({
+                        title: "Location added",
+                        description: aiData.name || locationName,
+                      });
+                      
+                    } catch (error) {
+                      console.error("Error in location search:", error);
                       
                       // Handle common NYC locations as fallback
                       if (locationName.toLowerCase().includes("empire")) {
