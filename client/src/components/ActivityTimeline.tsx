@@ -67,17 +67,16 @@ export default function ActivityTimeline({
         ))
       )}
       
-      {sortedActivities.length > 0 && (
-        <button 
-          className="w-full py-2 flex items-center justify-center text-[hsl(var(--primary))] hover:bg-blue-50 rounded-md border border-dashed border-[hsl(var(--primary))]"
-          onClick={handleAddActivity}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          Add Activity
-        </button>
-      )}
+            {/* Always show the Add Activity button - but make it bigger when no activities */}
+      <Button 
+        className={`w-full ${sortedActivities.length === 0 ? 'text-base py-5 mt-4' : 'text-sm'} bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90`}
+        onClick={handleAddActivity}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+        Add Activity
+      </Button>
       
       {isModalOpen && (
         <ActivityModal

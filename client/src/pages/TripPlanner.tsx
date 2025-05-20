@@ -186,14 +186,16 @@ export default function TripPlanner() {
           />
         </div>
         
-        <div className="w-full flex-grow">
-          <MapView
-            markers={mapMarkers}
-            routes={mapRoutes}
-            center={mapCenter}
-            zoom={13}
-            onMarkerClick={handleMarkerClick}
-          />
+        <div className="w-full flex-grow relative">
+          <div className="absolute inset-0">
+            <MapView
+              markers={mapMarkers}
+              routes={mapRoutes}
+              center={mapCenter}
+              zoom={13}
+              onMarkerClick={handleMarkerClick}
+            />
+          </div>
         </div>
       </div>
     </AppShell>
