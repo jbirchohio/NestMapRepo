@@ -274,6 +274,7 @@ export default function AIAssistantModal({
   
   /**
    * Process multiple activities from a parsed itinerary
+   * Using a sequential approach instead of parallel processing
    */
   const handleAddActivities = async (activities: ParsedActivity[]) => {
     let addedCount = 0;
@@ -284,7 +285,7 @@ export default function AIAssistantModal({
       ...prev,
       { 
         role: 'assistant', 
-        content: `Found ${activities.length} activities in your itinerary. Creating them now...`
+        content: `Found ${activities.length} activities in your itinerary. Creating them one by one...`
       }
     ]);
     
@@ -294,114 +295,109 @@ export default function AIAssistantModal({
       description: `Creating ${activities.length} activities from your schedule...`,
     });
     
-    // Process activities in chunks to prevent overwhelming the API
-    const chunks = [];
-    const chunkSize = 5; // Process 5 activities at a time
-    
-    for (let i = 0; i < activities.length; i += chunkSize) {
-      chunks.push(activities.slice(i, i + chunkSize));
-    }
-    
-    // Process each chunk
-    for (const [chunkIndex, chunk] of chunks.entries()) {
-      // Add a processing status update periodically
-      if (chunkIndex > 0 && chunkIndex % 1 === 0) {
-        const progress = Math.min(100, Math.round((chunkIndex * chunkSize / activities.length) * 100));
+    // Process activities one at a time
+    for (let i = 0; i < activities.length; i++) {
+      const activity = activities[i];
+      
+      // Add a progress update every few activities
+      if (i > 0 && i % 5 === 0) {
+        const progress = Math.min(100, Math.round((i / activities.length) * 100));
         setConversation(prev => [
           ...prev,
           { 
             role: 'assistant', 
-            content: `Progress: ${progress}% complete (${Math.min(chunkIndex * chunkSize, activities.length)} of ${activities.length} activities)`
+            content: `Progress: ${progress}% complete (${i} of ${activities.length} activities)`
           }
         ]);
       }
       
-      // Process activities in this chunk in parallel
-      const results = await Promise.all(
-        chunk.map(async (activity) => {
-          try {
-            // Format date properly - using trip dates if needed
-            if (!activity.date || activity.date === "") {
-              // Default to first day of trip
-              activity.date = new Date(trip.startDate).toISOString().split('T')[0];
-            }
-            
-            // Format time properly - default to morning if missing
-            if (!activity.time || activity.time === "") {
-              activity.time = "10:00";
-            }
-            
-            // Add a proper tag if missing
-            if (!activity.tag || activity.tag === "") {
-              // Determine tag based on title/description
-              if (activity.title.toLowerCase().includes("breakfast") || 
-                  activity.title.toLowerCase().includes("lunch") || 
-                  activity.title.toLowerCase().includes("dinner") ||
-                  activity.title.toLowerCase().includes("restaurant") ||
-                  activity.title.toLowerCase().includes("café") ||
-                  activity.title.toLowerCase().includes("cafe")) {
-                activity.tag = "Food";
-              } else if (activity.title.toLowerCase().includes("museum") ||
-                         activity.title.toLowerCase().includes("gallery") ||
-                         activity.title.toLowerCase().includes("theater") ||
-                         activity.title.toLowerCase().includes("theatre") ||
-                         activity.title.toLowerCase().includes("park")) {
-                activity.tag = "Culture";
-              } else if (activity.title.toLowerCase().includes("shopping") ||
-                         activity.title.toLowerCase().includes("store") ||
-                         activity.title.toLowerCase().includes("mall") ||
-                         activity.title.toLowerCase().includes("market")) {
-                activity.tag = "Shop";
-              } else if (activity.title.toLowerCase().includes("leave") ||
-                         activity.title.toLowerCase().includes("arrive") ||
-                         activity.title.toLowerCase().includes("drive") ||
-                         activity.title.toLowerCase().includes("metro") ||
-                         activity.title.toLowerCase().includes("subway")) {
-                activity.tag = "Transport";
-              } else {
-                activity.tag = "Event";
-              }
-            }
-            
-            // Simply use a hardcoded order value based on the addedCount for now
-            const nextOrder = addedCount;
-            
-            // Format the activity data properly to match what the API expects
-            // Use the exact same format as our successful test
-            const formattedActivity = {
-              tripId: trip.id,
-              title: activity.title,
-              // Must be string in ISO format, not a Date object
-              date: activity.date,
-              time: activity.time,
-              locationName: activity.locationName || "Unknown location",
-              latitude: activity.latitude || null,
-              longitude: activity.longitude || null,
-              notes: activity.notes || "",
-              tag: activity.tag || "Event",
-              order: nextOrder,
-              assignedTo: ""
-            };
-            
-            console.log("Adding formatted activity:", formattedActivity);
-            await addActivity.mutateAsync(formattedActivity);
-            addedCount++;
-            return { success: true, activity };
-          } catch (error) {
-            // Show the full error details
-            console.error("Error adding activity:", JSON.stringify(error), JSON.stringify(activity));
-            return { success: false, activity };
+      try {
+        // Format date properly - using trip dates if needed
+        if (!activity.date || activity.date === "") {
+          // Default to first day of trip
+          activity.date = new Date(trip.startDate).toISOString().split('T')[0];
+        }
+        
+        // Format time properly - default to morning if missing
+        if (!activity.time || activity.time === "") {
+          activity.time = "10:00";
+        }
+        
+        // Add a proper tag if missing
+        if (!activity.tag || activity.tag === "") {
+          // Determine tag based on title/description
+          if (activity.title.toLowerCase().includes("breakfast") || 
+              activity.title.toLowerCase().includes("lunch") || 
+              activity.title.toLowerCase().includes("dinner") ||
+              activity.title.toLowerCase().includes("restaurant") ||
+              activity.title.toLowerCase().includes("café") ||
+              activity.title.toLowerCase().includes("cafe")) {
+            activity.tag = "Food";
+          } else if (activity.title.toLowerCase().includes("museum") ||
+                     activity.title.toLowerCase().includes("gallery") ||
+                     activity.title.toLowerCase().includes("theater") ||
+                     activity.title.toLowerCase().includes("theatre") ||
+                     activity.title.toLowerCase().includes("park")) {
+            activity.tag = "Culture";
+          } else if (activity.title.toLowerCase().includes("shopping") ||
+                     activity.title.toLowerCase().includes("store") ||
+                     activity.title.toLowerCase().includes("mall") ||
+                     activity.title.toLowerCase().includes("market")) {
+            activity.tag = "Shop";
+          } else if (activity.title.toLowerCase().includes("leave") ||
+                     activity.title.toLowerCase().includes("arrive") ||
+                     activity.title.toLowerCase().includes("drive") ||
+                     activity.title.toLowerCase().includes("metro") ||
+                     activity.title.toLowerCase().includes("subway")) {
+            activity.tag = "Transport";
+          } else {
+            activity.tag = "Event";
           }
-        })
-      );
+        }
+        
+        // Create direct API request using fetch instead of the mutation
+        // This gives us more control over the process
+        const formattedActivity = {
+          tripId: trip.id,
+          title: activity.title,
+          date: activity.date,
+          time: activity.time,
+          locationName: activity.locationName || "Unknown location",
+          latitude: activity.latitude || null,
+          longitude: activity.longitude || null,
+          notes: activity.notes || "",
+          tag: activity.tag || "Event",
+          // Use the index directly as the order to ensure uniqueness
+          order: i,
+          assignedTo: ""
+        };
+        
+        console.log(`Adding activity ${i+1}/${activities.length}:`, formattedActivity);
+        
+        // Make a direct API call
+        const response = await fetch('/api/activities', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formattedActivity)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(`Error creating activity ${i+1}:`, errorData);
+          errors.push(activity.title || "Unnamed activity");
+        } else {
+          addedCount++;
+          console.log(`Successfully added activity ${i+1}: ${activity.title}`);
+        }
+      } catch (error) {
+        console.error(`Error processing activity ${i+1}:`, error);
+        errors.push(activity.title || "Unnamed activity");
+      }
       
-      // Collect any errors
-      results.filter(r => !r.success).forEach(result => {
-        errors.push(result.activity.title || "Unnamed activity");
-      });
-      
-      // Add a small delay between chunks to prevent overwhelming the server
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Add a small delay between activities to prevent overwhelming the server
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
     
     // Query invalidation to refresh activities
