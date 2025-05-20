@@ -68,9 +68,9 @@ export default function MapView({
   };
 
   return (
-    <section className="flex-1 relative map-container">
-      <div className="absolute inset-0 bg-[hsl(var(--muted))]">
-        <div className="w-full h-full overflow-hidden" ref={mapContainer} id="map">
+    <section className="relative w-full h-full overflow-hidden map-container">
+      <div className="w-full h-full bg-[hsl(var(--muted))]">
+        <div className="w-full h-full" ref={mapContainer} id="map">
           {/* Mapbox map will be rendered here */}
         </div>
 

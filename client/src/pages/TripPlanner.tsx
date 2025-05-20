@@ -173,8 +173,8 @@ export default function TripPlanner() {
   
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
-      <div className="flex flex-col md:flex-row w-full h-full">
-        <div className="w-full md:w-[450px] flex-shrink-0">
+      <div className="flex flex-col md:flex-row w-full h-[calc(100vh-70px)]">
+        <div className="w-full md:w-[450px] flex-shrink-0 overflow-y-auto border-r">
           <ItinerarySidebar
             trip={trip}
             activities={activities}
@@ -186,16 +186,14 @@ export default function TripPlanner() {
           />
         </div>
         
-        <div className="w-full flex-grow relative">
-          <div className="absolute inset-0">
-            <MapView
-              markers={mapMarkers}
-              routes={mapRoutes}
-              center={mapCenter}
-              zoom={13}
-              onMarkerClick={handleMarkerClick}
-            />
-          </div>
+        <div className="w-full flex-1 relative md:h-full">
+          <MapView
+            markers={mapMarkers}
+            routes={mapRoutes}
+            center={mapCenter}
+            zoom={13}
+            onMarkerClick={handleMarkerClick}
+          />
         </div>
       </div>
     </AppShell>
