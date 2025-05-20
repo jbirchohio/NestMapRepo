@@ -163,8 +163,15 @@ export async function generateThemedItinerary(
  */
 export async function tripAssistant(question: string, tripContext: any): Promise<string | { answer: string, activities?: any[] }> {
   try {
+    // Check if user is explicitly requesting to import an itinerary
+    const isExplicitImportRequest = 
+      question.toLowerCase().includes("import my itinerary") || 
+      question.toLowerCase().includes("add these activities") ||
+      question.toLowerCase().includes("add this schedule") ||
+      question.toLowerCase().includes("create activities from") ||
+      question.toLowerCase().includes("parse this itinerary");
+    
     // Check if this looks like a pasted itinerary - look for multiple time patterns
-    // This is a more flexible approach that detects various itinerary formats
     const hasTimePatterns = (question.match(/\d{1,2}[\s]*[:-][\s]*\d{2}/g) || []).length > 2 ||  // 9:30, 10-30 formats
                            (question.match(/\d{1,2}[\s]*[AP]M/g) || []).length > 2;  // 9AM, 10 PM formats
     
@@ -176,8 +183,14 @@ export async function tripAssistant(question: string, tripContext: any): Promise
                           
     const hasMultipleLines = question.split('\n').length > 5;
     
+    // Check for activity-like patterns
+    const hasActivityPatterns = 
+      (question.match(/visit|museum|park|breakfast|lunch|dinner|check[ -]in|arrive|leave|drive|walk/gi) || []).length > 3;
+    
     // Detect itineraries with multiple time entries and sufficient length
-    const isItinerary = hasTimePatterns && hasMultipleLines && question.length > 100;
+    const isItinerary = (isExplicitImportRequest || 
+                         (hasTimePatterns && hasMultipleLines && hasActivityPatterns)) && 
+                        question.length > 100;
     
     if (isItinerary) {
       return await parseItinerary(question, tripContext);
@@ -218,38 +231,42 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
     const tripEndDate = tripContext.trip?.endDate ? new Date(tripContext.trip.endDate) : new Date(tripStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
     
     const prompt = `
-    You are a travel itinerary parser that can handle many different formats. The user has pasted a travel itinerary text. 
-    Your job is to convert it into structured activities for their trip planning app.
+    You are an expert itinerary parser and ACTIVITY CREATOR for a travel planning app. The user wants you to CREATE ACTUAL ACTIVITIES from their pasted itinerary.
     
     Trip Information:
     - City: ${city}
     - Trip Start Date: ${tripStartDate.toISOString().split('T')[0]}
     - Trip End Date: ${tripEndDate.toISOString().split('T')[0]}
     
-    Itinerary Text to Parse:
+    Itinerary Text:
     ${itineraryText}
     
-    CRITICAL INSTRUCTIONS:
-    1. Detect the structure and format of this itinerary - it could be organized by days, dates, or simply as a sequence of activities
-    2. Identify patterns for dates and times, which may appear in various formats (9-10AM, 9:00-10:00, 9AM-10AM, etc.)
-    3. Extract each activity with as much detail as possible, especially:
-       - Which day or date the activity is scheduled for
-       - The start time of the activity
-       - The exact name of the location or venue
-    4. If dates aren't explicitly mentioned, infer them from context like "Wednesday" or "Day 1" based on the trip start date
-    5. Assume activities happen in chronological order within each day
+    EXTREMELY IMPORTANT INSTRUCTIONS:
+    1. You MUST create structured activities that will be ADDED TO THE DATABASE. This is NOT just a summary - these will become real activities in the app.
+    2. EACH activity needs a specific date, time, title and real location name that can be found on a map.
+    3. For days of the week (Wednesday, Thursday, etc.), calculate the actual YYYY-MM-DD dates based on the trip start/end dates.
+    4. Extract START times only (not time ranges) and convert to 24-hour format (e.g., "14:30" not "2:30 PM").
+    5. For location names, use OFFICIAL, PRECISE names as they appear on maps (e.g., "The Metropolitan Museum of Art" not "the art museum").
+    6. Every activity MUST have a date and time.
+    
+    DO NOT:
+    - Do not just summarize or rephrase the itinerary
+    - Do not use vague location names - be VERY specific
+    - Do not skip activities or combine multiple activities
     
     Format your response as a JSON object with:
-    1. A brief "answer" explaining what you've parsed, including any date inference you've made
+    1. A brief "answer" explaining that you are CREATING ACTUAL ACTIVITIES, not just summarizing
     2. An "activities" array with objects containing:
-       - title (string): Clear activity name (e.g., "Visit Metropolitan Museum of Art", not just "Museum")
-       - time (string): Start time in 24-hour format like "14:30" (convert AM/PM times)
-       - date (string): In YYYY-MM-DD format (infer from context if needed)
-       - locationName (string): The EXACT location name as it would appear on a map search (e.g., "Metropolitan Museum of Art", not "the museum")
-       - notes (string): Any additional details about the activity
-       - tag (string): Category tag (one of: "Food", "Culture", "Shop", "Rest", "Transport", "Event")
+       - title (string, required): Clear, specific activity name
+       - time (string, required): Start time in 24-hour format like "14:30"
+       - date (string, required): In YYYY-MM-DD format
+       - locationName (string, required): EXACT, searchable location name
+       - notes (string): Any additional details
+       - tag (string): One of: "Food", "Culture", "Shop", "Rest", "Transport", "Event"
     
-    For location names, be very precise - use the full, proper name of venues, attractions, and businesses as they would appear in a map search.
+    DOUBLE-CHECK that each activity has a proper date and time, and that location names are specific enough to be found on a map.
+    
+    This is CREATING REAL DATABASE ENTRIES, not just a summary. The system will take your response and create actual activities in the app.
     `;
 
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
