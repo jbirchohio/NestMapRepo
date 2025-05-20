@@ -388,7 +388,8 @@ export default function AIAssistantModal({
             addedCount++;
             return { success: true, activity };
           } catch (error) {
-            console.error("Error adding activity:", error, activity);
+            // Show the full error details
+            console.error("Error adding activity:", JSON.stringify(error), JSON.stringify(activity));
             return { success: false, activity };
           }
         })
