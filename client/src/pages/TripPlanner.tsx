@@ -173,9 +173,8 @@ export default function TripPlanner() {
   
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
-      <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] h-[calc(100vh-70px)]">
-        {/* Left sidebar - fixed width */}
-        <div className="bg-white overflow-auto border-r">
+      <div className="flex flex-col md:flex-row w-full h-[calc(100vh-70px)]">
+        <div className="w-full md:w-[450px] flex-shrink-0 overflow-y-auto border-r">
           <ItinerarySidebar
             trip={trip}
             activities={activities}
@@ -187,8 +186,7 @@ export default function TripPlanner() {
           />
         </div>
         
-        {/* Right map area - flexible width */}
-        <div className="h-full relative">
+        <div className="w-full flex-1 relative md:h-full">
           <MapView
             markers={mapMarkers}
             routes={mapRoutes}

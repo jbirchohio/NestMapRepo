@@ -119,9 +119,9 @@ export default function ItinerarySidebar({
   
   return (
     <>
-      <aside id="sidebar" className="w-full h-full bg-white dark:bg-[hsl(var(--card))] border-r dark:border-[hsl(var(--border))] itinerary-container">
+      <aside id="sidebar" className="w-full md:w-[450px] flex-shrink-0 bg-white dark:bg-[hsl(var(--card))] border-r dark:border-[hsl(var(--border))] overflow-y-auto itinerary-container">
         <ScrollArea className="h-full">
-          <div className="p-4 pb-20">
+          <div className="p-4">
             {/* Trip Title */}
             <div className="mb-6">
               <h2 className="text-2xl font-semibold">{trip.title}</h2>
