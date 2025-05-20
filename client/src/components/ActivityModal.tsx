@@ -44,7 +44,9 @@ export default function ActivityModal({
 }: ActivityModalProps) {
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
-  const [selectedTag, setSelectedTag] = useState<string | undefined>(activity?.tag);
+  const [selectedTag, setSelectedTag] = useState<string | undefined>(
+    activity?.tag === null ? undefined : activity?.tag
+  );
   
   const defaultValues: ActivityFormValues = {
     title: activity?.title || "",
@@ -52,10 +54,10 @@ export default function ActivityModal({
     time: activity?.time || "12:00",
     locationName: activity?.locationName || "",
     notes: activity?.notes || "",
-    tag: activity?.tag,
-    latitude: activity?.latitude,
-    longitude: activity?.longitude,
-    assignedTo: activity?.assignedTo,
+    tag: activity?.tag || undefined,
+    latitude: activity?.latitude || undefined,
+    longitude: activity?.longitude || undefined,
+    assignedTo: activity?.assignedTo || undefined,
   };
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ActivityFormValues>({
@@ -65,24 +67,33 @@ export default function ActivityModal({
   
   const locationName = watch("locationName");
   
-  // Geocode the location when it changes
+  // Geocode the location when it changes with improved feedback
   useEffect(() => {
     if (locationName && locationName.length > 3) {
       const timer = setTimeout(async () => {
         try {
           const result = await geocodeLocation(locationName);
           if (result) {
-            setValue("latitude", result.latitude.toString());
-            setValue("longitude", result.longitude.toString());
+            setValue("latitude", result.longitude.toString());
+            setValue("longitude", result.latitude.toString());
+            
+            // Show success message for found location
+            if (result.fullAddress) {
+              toast({
+                title: "Location found",
+                description: result.fullAddress,
+                duration: 3000,
+              });
+            }
           }
         } catch (error) {
           console.error("Error geocoding location:", error);
         }
-      }, 1000);
+      }, 800); // Reduced delay for better responsiveness
       
       return () => clearTimeout(timer);
     }
-  }, [locationName, geocodeLocation, setValue]);
+  }, [locationName, geocodeLocation, setValue, toast]);
   
   const createActivity = useMutation({
     mutationFn: async (data: ActivityFormValues) => {
@@ -247,29 +258,7 @@ export default function ActivityModal({
               <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Location</label>
               <div className="relative">
                 <Input
-                  {...register("locationName", {
-                    onChange: async (e) => {
-                      const value = e.target.value;
-                      if (value && value.length > 3) {
-                        // Attempt to geocode after user types at least 3 characters
-                        const location = await geocodeLocation(value);
-                        if (location) {
-                          // Set latitude and longitude silently in the form
-                          setValue("latitude", location.longitude.toString());
-                          setValue("longitude", location.latitude.toString());
-                          
-                          // Show success message for found location
-                          if (location.fullAddress) {
-                            toast({
-                              title: "Location found",
-                              description: location.fullAddress,
-                              duration: 2000,
-                            });
-                          }
-                        }
-                      }
-                    }
-                  })}
+                  {...register("locationName")}
                   placeholder="Search for a place (e.g., 'Central Park, NYC')"
                   className={errors.locationName ? "border-[hsl(var(--destructive))]" : ""}
                 />
