@@ -209,12 +209,12 @@ export default function TripPlanner() {
 
       {/* Main content container */}
       <div className="w-full flex flex-col md:flex-row md:h-[calc(100vh-70px)] overflow-hidden">
-        {/* Itinerary panel - full width on mobile when selected, exactly 50% on desktop */}
+        {/* Itinerary panel - full width on mobile when selected */}
         <div 
           className={`
-            w-full md:w-[50%] md:min-w-[500px] md:block 
+            w-full md:block 
             ${mobileView === 'map' ? 'hidden' : 'block'} 
-            h-full overflow-y-auto border-r border-gray-200
+            h-full
           `}
         >
           <ItinerarySidebar
@@ -228,10 +228,10 @@ export default function TripPlanner() {
           />
         </div>
         
-        {/* Map panel - full width on mobile when selected, exactly 50% on desktop */}
+        {/* Map panel - full width on mobile when selected, flex-grow on desktop */}
         <div 
           className={`
-            w-full md:w-[50%] md:block 
+            w-full md:flex-1 md:block 
             ${mobileView === 'itinerary' ? 'hidden' : 'block'} 
             h-full
           `}
