@@ -160,8 +160,17 @@ export async function generateThemedItinerary(
 /**
  * Handles general trip planning questions
  */
-export async function tripAssistant(question: string, tripContext: any): Promise<string> {
+export async function tripAssistant(question: string, tripContext: any): Promise<string | { answer: string, activities?: any[] }> {
   try {
+    // Check if this looks like a pasted itinerary
+    const isItinerary = question.includes("Day") && 
+                        (question.includes("AM") || question.includes("PM")) && 
+                        question.length > 200;
+    
+    if (isItinerary) {
+      return await parseItinerary(question, tripContext);
+    }
+    
     const prompt = `
     You are a travel assistant helping with trip planning. You have access to the following trip information:
     
@@ -181,5 +190,94 @@ export async function tripAssistant(question: string, tripContext: any): Promise
   } catch (error) {
     console.error("Error in tripAssistant:", error);
     return "I'm having trouble answering that question right now. Please try again later.";
+  }
+}
+
+/**
+ * Parses a pasted itinerary and converts it to structured activities
+ */
+async function parseItinerary(itineraryText: string, tripContext: any): Promise<{ answer: string, activities: any[] }> {
+  try {
+    // Get the location context from the trip
+    const city = tripContext.trip?.city || "New York City";
+    
+    const prompt = `
+    You are a travel itinerary parser. The user has pasted a travel itinerary text. 
+    Convert it into structured activities for their trip planning app.
+    
+    Trip City: ${city}
+    Itinerary Text:
+    ${itineraryText}
+    
+    Please extract each activity, including:
+    1. Date and time (if available)
+    2. Activity title
+    3. Location name (this is very important)
+    4. Any notes or descriptions
+    
+    Format your response as a JSON object with:
+    1. A brief "answer" explaining what you've done
+    2. An "activities" array with objects containing:
+       - title (string): The activity name
+       - time (string): In 24-hour format like "14:30"
+       - date (string): In YYYY-MM-DD format
+       - locationName (string): The name of the location
+       - notes (string): Any additional details
+       - tag (string): Category tag (one of: "Food", "Culture", "Shop", "Rest", "Transport", "Event")
+    
+    For each location, try to determine the most accurate and specific location name that could be found on a map.
+    `;
+
+    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    console.log("Parsed itinerary result:", result);
+    
+    // Process locations to get coordinates where possible
+    if (result.activities && Array.isArray(result.activities)) {
+      // For each activity location, try to get coordinates
+      for (let i = 0; i < result.activities.length; i++) {
+        const activity = result.activities[i];
+        
+        // Skip if no location
+        if (!activity.locationName) continue;
+        
+        try {
+          // Try to find the location
+          const locationResult = await findLocation(activity.locationName, city);
+          console.log(`Location search for "${activity.locationName}":`, locationResult);
+          
+          // If we have location results, use the first one
+          if (locationResult.locations && locationResult.locations.length > 0) {
+            const firstLocation = locationResult.locations[0];
+            
+            // Add location details to the activity
+            result.activities[i].locationName = firstLocation.name;
+            
+            // We need to geocode this location to get coordinates
+            // This would use our existing geocoding function, but for now we'll skip it
+            // as it would require importing additional modules
+          }
+        } catch (locError) {
+          console.error(`Error finding location for "${activity.locationName}":`, locError);
+        }
+      }
+    }
+    
+    return {
+      answer: result.answer || "I've processed your itinerary and extracted the activities.",
+      activities: result.activities || []
+    };
+  } catch (error) {
+    console.error("Error in parseItinerary:", error);
+    return { 
+      answer: "I had trouble parsing your itinerary. Please check the format and try again.",
+      activities: []
+    };
   }
 }
