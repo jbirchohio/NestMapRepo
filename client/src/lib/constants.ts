@@ -1,0 +1,81 @@
+// API endpoints
+export const API_ENDPOINTS = {
+  TRIPS: "/api/trips",
+  ACTIVITIES: "/api/activities",
+  TODOS: "/api/todos",
+  NOTES: "/api/notes",
+  AI: {
+    SUMMARIZE_DAY: "/api/ai/summarize-day",
+    SUGGEST_FOOD: "/api/ai/suggest-food",
+    DETECT_CONFLICTS: "/api/ai/detect-conflicts",
+    THEMED_ITINERARY: "/api/ai/themed-itinerary",
+    ASSISTANT: "/api/ai/assistant",
+  },
+};
+
+// Activity tags
+export const ACTIVITY_TAGS = {
+  CULTURE: {
+    id: "culture",
+    label: "Culture",
+    color: "bg-[hsl(var(--tag-culture))]",
+    icon: "🎨",
+  },
+  FOOD: {
+    id: "food",
+    label: "Food",
+    color: "bg-[hsl(var(--tag-food))]",
+    icon: "🍴",
+  },
+  EVENT: {
+    id: "event",
+    label: "Event",
+    color: "bg-[hsl(var(--tag-event))]",
+    icon: "🎭",
+  },
+  REST: {
+    id: "rest",
+    label: "Rest",
+    color: "bg-[hsl(var(--tag-rest))]",
+    icon: "💆‍♀️",
+  },
+  SHOP: {
+    id: "shop",
+    label: "Shop",
+    color: "bg-[hsl(var(--primary))]",
+    icon: "🛍️",
+  },
+};
+
+// Format functions
+export const formatDateRange = (start: Date, end: Date): string => {
+  const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  return `${start.toLocaleDateString("en-US", options)} - ${end.toLocaleDateString("en-US", options)}`;
+};
+
+export const formatDate = (date: Date): string => {
+  const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  return date.toLocaleDateString("en-US", options);
+};
+
+// Helper function to get days between two dates
+export const getDaysBetweenDates = (startDate: Date, endDate: Date): Date[] => {
+  const days: Date[] = [];
+  const currentDate = new Date(startDate);
+  
+  while (currentDate <= endDate) {
+    days.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  return days;
+};
+
+// Default map settings
+export const DEFAULT_MAP_SETTINGS = {
+  center: [-74.0060, 40.7128], // New York City coordinates
+  zoom: 12,
+};
+
+// Map style URL
+export const MAPBOX_STYLE_URL = "mapbox://styles/mapbox/streets-v12";
