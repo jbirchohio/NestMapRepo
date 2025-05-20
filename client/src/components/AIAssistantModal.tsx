@@ -346,6 +346,31 @@ export default function AIAssistantModal({
             <h4 className="font-medium mb-2">How can I help with your trip?</h4>
             <div className="grid grid-cols-2 gap-3">
               <button 
+                className="p-3 border rounded-lg bg-blue-50 border-blue-200 text-left col-span-2"
+                onClick={() => {
+                  // Add a prompt to help users understand how to import itineraries
+                  setConversation(prev => [
+                    ...prev,
+                    { 
+                      role: 'assistant', 
+                      content: "To import your itinerary, paste your full schedule below and I'll create activities with all the correct locations and times. I can handle many formats including day-by-day schedules, time ranges, and bulleted lists."
+                    }
+                  ]);
+                  setQuestion("I'd like to import my itinerary:\n\n");
+                  // Focus the textarea after a short delay
+                  setTimeout(() => {
+                    const textarea = document.querySelector('textarea[name="question"]');
+                    if (textarea) {
+                      (textarea as HTMLTextAreaElement).focus();
+                    }
+                  }, 100);
+                }}
+              >
+                <span className="block font-medium text-blue-700">Import Itinerary</span>
+                <span className="text-sm text-blue-600">Paste your schedule to add all activities to your trip</span>
+              </button>
+              
+              <button 
                 className="p-3 border rounded-lg hover:bg-blue-50 hover:border-blue-200 text-left"
                 onClick={() => summarizeDay.mutate()}
                 disabled={summarizeDay.isPending}
