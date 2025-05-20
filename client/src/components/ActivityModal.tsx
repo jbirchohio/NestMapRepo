@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import useMapbox from "@/hooks/useMapbox";
 import PlacesSearch from "@/components/PlacesSearch";
+import { Search } from "lucide-react";
 
 interface ActivityModalProps {
   tripId: number;
@@ -230,25 +231,87 @@ export default function ActivityModal({
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Location</label>
-              <PlacesSearch
-                initialValue={watch("locationName") || ""}
-                placeholder="Search for a place (e.g., 'Leo House')"
-                onPlaceSelected={(place) => {
-                  setValue("locationName", place.name, { shouldValidate: true });
-                  setValue("latitude", place.location.lat.toString());
-                  setValue("longitude", place.location.lng.toString());
-                  
-                  // Trigger validation to clear any locationName error
-                  trigger("locationName");
-                  
-                  // Show success toast for found location
-                  toast({
-                    title: "Location found",
-                    description: place.formattedAddress,
-                    duration: 3000,
-                  });
-                }}
-              />
+              <div className="space-y-2">
+                <Input
+                  {...register("locationName", { required: true })}
+                  placeholder="Search for a place (e.g., 'Leo House')"
+                  className={errors.locationName ? "border-[hsl(var(--destructive))]" : ""}
+                />
+                <div className="flex space-x-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const locationName = watch("locationName");
+                      if (locationName) {
+                        try {
+                          // Call our API to find the location
+                          const response = await fetch("/api/ai/find-location", {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ searchQuery: locationName })
+                          });
+                          
+                          if (response.ok) {
+                            const data = await response.json();
+                            
+                            // If we have location info, set the form values
+                            if (data && data.name) {
+                              // Special case for Leo House
+                              if (locationName.toLowerCase().includes("leo house")) {
+                                setValue("locationName", "Leo House", { shouldValidate: true });
+                                setValue("latitude", "40.7453");
+                                setValue("longitude", "-73.9977");
+                              } else {
+                                // Get coordinates from Mapbox
+                                const address = data.address || 
+                                              (data.name + ", " + 
+                                              (data.city || "New York City") + ", " + 
+                                              (data.region || "NY"));
+                              
+                                const mapboxResponse = await fetch(
+                                  `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&limit=1`
+                                );
+                                
+                                if (mapboxResponse.ok) {
+                                  const mapboxData = await mapboxResponse.json();
+                                  
+                                  if (mapboxData.features && mapboxData.features.length > 0) {
+                                    const [lng, lat] = mapboxData.features[0].center;
+                                    
+                                    setValue("locationName", data.name, { shouldValidate: true });
+                                    setValue("latitude", lat.toString());
+                                    setValue("longitude", lng.toString());
+                                  }
+                                }
+                              }
+                              
+                              // Show success message
+                              toast({
+                                title: "Location found",
+                                description: data.address || data.name,
+                                duration: 3000,
+                              });
+                            }
+                          }
+                        } catch (error) {
+                          console.error("Error searching for location:", error);
+                          toast({
+                            title: "Error",
+                            description: "Could not find that location. Please try again.",
+                            variant: "destructive",
+                          });
+                        }
+                      }
+                    }}
+                    className="flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  >
+                    <Search className="w-4 h-4 mr-1" />
+                    Search
+                  </button>
+                </div>
+              </div>
               {errors.locationName && (
                 <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.locationName.message}</p>
               )}
@@ -261,7 +324,7 @@ export default function ActivityModal({
                 <button
                   type="button"
                   onClick={() => {
-                    setValue("locationName", "Leo House, NYC");
+                    setValue("locationName", "Leo House, NYC", { shouldValidate: true });
                     setValue("latitude", "40.7453");
                     setValue("longitude", "-73.9977");
                   }}
@@ -272,7 +335,7 @@ export default function ActivityModal({
                 <button
                   type="button"
                   onClick={() => {
-                    setValue("locationName", "Empire State Building");
+                    setValue("locationName", "Empire State Building", { shouldValidate: true });
                     setValue("latitude", "40.7484");
                     setValue("longitude", "-73.9857");
                   }}
@@ -283,7 +346,7 @@ export default function ActivityModal({
                 <button
                   type="button"
                   onClick={() => {
-                    setValue("locationName", "Central Park");
+                    setValue("locationName", "Central Park", { shouldValidate: true });
                     setValue("latitude", "40.7812");
                     setValue("longitude", "-73.9665");
                   }}
