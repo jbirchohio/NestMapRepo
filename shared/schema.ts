@@ -26,21 +26,18 @@ export const trips = pgTable("trips", {
   collaborators: jsonb("collaborators").default([]),
 });
 
-export const insertTripSchema = createInsertSchema(trips)
-  .pick({
-    title: true,
-    startDate: true,
-    endDate: true,
-    userId: true,
-    collaborators: true,
-  })
-  .transform((data) => {
-    return {
-      ...data,
-      startDate: data.startDate instanceof Date ? data.startDate : new Date(data.startDate),
-      endDate: data.endDate instanceof Date ? data.endDate : new Date(data.endDate),
-    };
-  });
+// Create a custom schema that properly handles dates as strings from JSON
+export const insertTripSchema = z.object({
+  title: z.string(),
+  startDate: z.string().or(z.date()).transform(val => 
+    val instanceof Date ? val : new Date(val)
+  ),
+  endDate: z.string().or(z.date()).transform(val => 
+    val instanceof Date ? val : new Date(val)
+  ),
+  userId: z.number(),
+  collaborators: z.array(z.any()).default([]),
+});
 
 // Activity schema
 export const activities = pgTable("activities", {
@@ -58,26 +55,22 @@ export const activities = pgTable("activities", {
   order: integer("order").notNull(),
 });
 
-export const insertActivitySchema = createInsertSchema(activities)
-  .pick({
-    tripId: true,
-    title: true,
-    date: true,
-    time: true,
-    locationName: true,
-    latitude: true,
-    longitude: true,
-    notes: true,
-    tag: true,
-    assignedTo: true,
-    order: true,
-  })
-  .transform((data) => {
-    return {
-      ...data,
-      date: data.date instanceof Date ? data.date : new Date(data.date),
-    };
-  });
+// Create a custom schema that properly handles dates as strings from JSON
+export const insertActivitySchema = z.object({
+  tripId: z.number(),
+  title: z.string(),
+  date: z.string().or(z.date()).transform(val => 
+    val instanceof Date ? val : new Date(val)
+  ),
+  time: z.string(),
+  locationName: z.string(),
+  latitude: z.string().nullable().optional(),
+  longitude: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  tag: z.string().nullable().optional(),
+  assignedTo: z.string().nullable().optional(),
+  order: z.number(),
+});
 
 // Todo schema
 export const todos = pgTable("todos", {
