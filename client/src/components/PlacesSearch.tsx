@@ -222,7 +222,14 @@ export default function PlacesSearch({
                 <MapPin className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0 text-blue-500" />
                 <div>
                   <div className="font-medium">{data.name}</div>
-                  <div className="text-sm text-muted-foreground">{data.fullAddress}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {data.address || data.fullAddress || `${data.city}, ${data.region || 'NY'}`}
+                  </div>
+                  {data.description && (
+                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {data.description}
+                    </div>
+                  )}
                 </div>
               </div>
             )

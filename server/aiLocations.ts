@@ -28,17 +28,15 @@ export async function findLocation(searchQuery: string): Promise<{
         {
           role: "system",
           content: 
-            "You are a location identification expert that specializes in finding exact addresses from vague or partial descriptions. " +
-            "Focus on real places that exist. If the location appears to be a landmark, hotel, restaurant, museum, etc., " +
-            "provide the most accurate information about the real place. " +
-            "Format your response as a JSON object with fields: name, address, city, region, country and description."
+            "You are a location identification expert. Your job is to take partial or ambiguous location names and return exact and accurate information about them. " +
+            "Always return your response as a JSON object with these fields: name, address, city, region, country, description."
         },
         {
           role: "user",
-          content: `Find this location: "${searchQuery}" ${context}. If it's a landmark, business, or known place, provide its real information. Return ONLY the JSON result.`
+          content: `Find this location: "${searchQuery}" ${context}. Return complete information in JSON format with name, address, city, region, country, and description fields.`
         }
       ],
-      temperature: 0.2,
+      temperature: 0.1,
       response_format: { type: "json_object" },
     });
 
