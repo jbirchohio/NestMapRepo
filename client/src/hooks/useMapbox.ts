@@ -4,7 +4,7 @@ import { MapMarker, MapRoute } from "@/lib/types";
 import { MAPBOX_STYLE_URL } from "@/lib/constants";
 
 // Mapbox access token from environment variables
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || "pk.eyJ1IjoibmVzdG1hcHVzZXIiLCJhIjoiY2wxMjM0NTY3ODkwazNrcGp5NnZ0OXFociJ9.abcdefghijk123456";
+const MAPBOX_TOKEN = import.meta.env.MAPBOX_TOKEN;
 
 export default function useMapbox() {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
