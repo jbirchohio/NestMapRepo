@@ -13,7 +13,10 @@ export default function AppShell({ children, trip, onOpenShare }: AppShellProps)
     <div className="flex flex-col h-screen">
       <Header trip={trip} onOpenShare={onOpenShare} />
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden main-content">
-        {children}
+        {/* We wrap the children in a div with a specific layout to control the sidebar and map */}
+        <div className="flex flex-col md:flex-row w-full">
+          {children}
+        </div>
       </main>
     </div>
   );

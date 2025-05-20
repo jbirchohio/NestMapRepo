@@ -161,23 +161,29 @@ export default function TripPlanner() {
   
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
-      <ItinerarySidebar
-        trip={trip}
-        activities={activities}
-        todos={todos}
-        notes={notes}
-        activeDay={activeDay}
-        onChangeDayClick={setActiveDay}
-        onActivitiesUpdated={refetchActivities}
-      />
-      
-      <MapView
-        markers={mapMarkers}
-        routes={mapRoutes}
-        center={mapCenter}
-        zoom={13}
-        onMarkerClick={handleMarkerClick}
-      />
+      <div className="flex flex-col md:flex-row w-full h-full">
+        <div className="w-full md:w-[450px] flex-shrink-0">
+          <ItinerarySidebar
+            trip={trip}
+            activities={activities}
+            todos={todos}
+            notes={notes}
+            activeDay={activeDay}
+            onChangeDayClick={setActiveDay}
+            onActivitiesUpdated={refetchActivities}
+          />
+        </div>
+        
+        <div className="w-full flex-grow">
+          <MapView
+            markers={mapMarkers}
+            routes={mapRoutes}
+            center={mapCenter}
+            zoom={13}
+            onMarkerClick={handleMarkerClick}
+          />
+        </div>
+      </div>
     </AppShell>
   );
 }
