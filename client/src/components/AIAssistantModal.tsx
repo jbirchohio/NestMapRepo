@@ -231,6 +231,87 @@ export default function AIAssistantModal({
     },
   });
   
+  /**
+   * Adds activities from a parsed itinerary
+   */
+  const addActivity = useMutation({
+    mutationFn: async (activityData: any) => {
+      // Format the activity data properly for the API
+      const formattedActivity = {
+        title: activityData.title,
+        date: activityData.date || currentDate.toISOString().split('T')[0],
+        time: activityData.time || "12:00",
+        locationName: activityData.locationName,
+        notes: activityData.notes || "",
+        tag: activityData.tag || "Event", 
+        tripId: trip.id,
+        latitude: activityData.latitude,
+        longitude: activityData.longitude,
+      };
+      
+      const res = await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, formattedActivity);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      console.log("Activity created:", data);
+    },
+    onError: (error) => {
+      console.error("Error creating activity:", error);
+      toast({
+        title: "Error",
+        description: "Could not create activity from itinerary.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  /**
+   * Process multiple activities from a parsed itinerary
+   */
+  const handleAddActivities = async (activities: any[]) => {
+    let addedCount = 0;
+    const errors: string[] = [];
+    
+    // Add a delay between activity additions to prevent rate limiting
+    for (const activity of activities) {
+      try {
+        await addActivity.mutateAsync(activity);
+        addedCount++;
+        
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error("Error adding activity:", error);
+        errors.push(activity.title || "Unnamed activity");
+      }
+    }
+    
+    // Notify the user
+    if (addedCount > 0) {
+      toast({
+        title: "Itinerary Imported",
+        description: `Successfully added ${addedCount} activities to your trip.${errors.length > 0 ? ' Some activities could not be added.' : ''}`,
+      });
+      
+      // Add a confirmation message to the conversation
+      setConversation(prev => [
+        ...prev,
+        { 
+          role: 'assistant', 
+          content: `I've added ${addedCount} activities to your trip from the itinerary.${errors.length > 0 ? 
+            ` I had trouble with: ${errors.join(', ')}. Please check those manually.` : 
+            ' They should now appear in your schedule.'}`
+        }
+      ]);
+    } else if (errors.length > 0) {
+      toast({
+        title: "Import Failed",
+        description: "Could not add any activities from the itinerary.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   const handleSubmitQuestion = (e: React.FormEvent) => {
     e.preventDefault();
     if (question.trim()) {

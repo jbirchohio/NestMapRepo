@@ -42,6 +42,8 @@ export interface AIResponse {
   conflicts?: Conflict[];
   themedItinerary?: ThemedItinerary;
   answer?: string;
+  // For itinerary import
+  activities?: ParsedActivity[];
 }
 
 export interface FoodSuggestion {
@@ -72,6 +74,17 @@ export interface ThemedActivity {
   location: string;
   description: string;
   tag: string;
+}
+
+export interface ParsedActivity {
+  title: string;
+  time: string;
+  date: string;
+  locationName: string;
+  notes?: string;
+  tag?: string;
+  latitude?: string;
+  longitude?: string;
 }
 
 // Form types
