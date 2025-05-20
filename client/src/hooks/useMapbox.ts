@@ -186,52 +186,40 @@ export default function useMapbox() {
   // Geocode a location name to coordinates with improved accuracy
   const geocodeLocation = useCallback(async (locationName: string): Promise<{ longitude: number, latitude: number, fullAddress?: string } | null> => {
     try {
-      // Handle special case for Leo House in NYC
-      if (locationName.toLowerCase().includes("leo house") && 
-          (locationName.toLowerCase().includes("nyc") || 
-           locationName.toLowerCase().includes("new york"))) {
-        // Leo House Hotel in NYC coordinates (actual location)
-        const longitude = -73.9977;
-        const latitude = 40.7453;
-        const fullAddress = "Leo House, 332 W 23rd St, New York, NY 10011";
-        
-        console.log("Special location found:", { 
-          input: locationName,
-          matched: fullAddress,
-          coordinates: [longitude, latitude]
-        });
-        
-        return { longitude, latitude, fullAddress };
+      // Use two different geocoding queries to improve results
+      // First try with more focused parameters
+      const queryPrecise = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName)}.json?access_token=${MAPBOX_TOKEN}&limit=5&types=poi,address&autocomplete=true&fuzzyMatch=false&language=en`;
+      
+      // Second try with broader parameters if the first one doesn't find a good match
+      const queryBroad = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName)}.json?access_token=${MAPBOX_TOKEN}&limit=10&autocomplete=true&language=en`;
+      
+      // Try the precise query first
+      let response = await fetch(queryPrecise);
+      let data = await response.json();
+      
+      // If no good results, try the broader query
+      if (!data.features || data.features.length === 0) {
+        response = await fetch(queryBroad);
+        data = await response.json();
       }
       
-      // Add parameters to improve geocoding accuracy
-      // types parameter includes more specific types
-      // country parameter restricts to USA
-      // proximity helps bias results toward NYC as default
-      // limit=5 returns more results to choose from
-      const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName)}.json?access_token=${MAPBOX_TOKEN}&limit=5&types=address,poi,place,locality,neighborhood&country=us&autocomplete=true&fuzzyMatch=true&proximity=-74.0060,40.7128&language=en`;
-      
-      const response = await fetch(endpoint);
-      const data = await response.json();
-      
       if (data.features && data.features.length > 0) {
-        // Get the features array
         const features = data.features;
         
-        // Try to find more specific matches if input contains city name
-        let bestMatch = features[0];
-        if (locationName.toLowerCase().includes("nyc") || 
-            locationName.toLowerCase().includes("new york")) {
-          // Try to find a match in New York
-          const nycMatch = features.find(f => 
-            f.place_name.toLowerCase().includes("new york") || 
-            f.place_name.toLowerCase().includes("nyc")
-          );
+        // Check if any place name starts with the text the user entered
+        // This often gives better matches for specific buildings or landmarks
+        const exactNameMatches = features.filter((f: any) => {
+          const nameParts = f.text.toLowerCase().split(" ");
+          const searchParts = locationName.toLowerCase().split(" ");
           
-          if (nycMatch) {
-            bestMatch = nycMatch;
-          }
-        }
+          // Check for significant word matches at the beginning
+          return searchParts.some(searchWord => 
+            nameParts.some(nameWord => nameWord.startsWith(searchWord))
+          );
+        });
+        
+        // Use exact match if available, otherwise use the first result
+        const bestMatch = exactNameMatches.length > 0 ? exactNameMatches[0] : features[0];
         
         const [longitude, latitude] = bestMatch.center;
         const fullAddress = bestMatch.place_name;
@@ -240,7 +228,7 @@ export default function useMapbox() {
           input: locationName,
           matched: fullAddress,
           coordinates: [longitude, latitude],
-          allResults: features.map((f: any) => f.place_name)
+          allResults: features.slice(0, 5).map((f: any) => f.place_name)
         });
         
         return { longitude, latitude, fullAddress };
