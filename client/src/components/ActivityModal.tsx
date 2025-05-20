@@ -249,6 +249,9 @@ export default function ActivityModal({
                       console.log("Executing search for:", locationName);
                       
                       try {
+                        // Clear existing location results
+                        setLocationResults([]);
+                        
                         // Step 1: Use our AI-powered location API to get structured data with trip city context
                         // Print full trip object to debug
                         console.log("Trip details for location search:", trip);
@@ -286,55 +289,105 @@ export default function ActivityModal({
                         
                         // Special case for Leo House which is hardcoded
                         if (locationName.toLowerCase().includes("leo house")) {
-                          setValue("locationName", "Leo House", { shouldValidate: true });
-                          setValue("latitude", "40.7453");
-                          setValue("longitude", "-73.9977");
-                          toast({
-                            title: "Location found",
-                            description: "Leo House, 332 W 23rd St, New York",
-                          });
+                          setLocationResults([{
+                            name: "Leo House",
+                            address: "332 W 23rd St",
+                            city: "New York City",
+                            region: "NY",
+                            country: "USA",
+                            description: "Catholic guesthouse located in Chelsea, Manhattan",
+                            latitude: "40.7453",
+                            longitude: "-73.9977"
+                          }]);
                           return;
                         }
                         
-                        // Step 2: Use address from AI to get precise coordinates with Mapbox
-                        if (aiData.address) {
-                          // Construct search term for Mapbox
-                          const fullAddress = aiData.address + ", " + 
-                                           (aiData.city || "New York City") + ", " + 
-                                           (aiData.region || "NY");
-                          
+                        // Process the multiple locations returned by the API
+                        if (aiData.locations && Array.isArray(aiData.locations)) {
                           const mapboxToken = "pk.eyJ1IjoicmV0bW91c2VyIiwiYSI6ImNtOXJtOHZ0MjA0dTgycG9ocDA3dXNpMGIifQ.WHYwcRzR3g8djNiBsVw1vg";
                           
-                          const mapboxResponse = await fetch(
-                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`
+                          // Process each location to get coordinates
+                          const processedLocations = await Promise.all(
+                            aiData.locations.map(async (loc: any) => {
+                              try {
+                                // Format address for geocoding
+                                const fullAddress = (loc.address || loc.name) + ", " + 
+                                                 (loc.city || "New York City") + ", " + 
+                                                 (loc.region || "NY");
+                                
+                                // Try geocoding with Mapbox
+                                const mapboxResponse = await fetch(
+                                  `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`
+                                );
+                                
+                                if (mapboxResponse.ok) {
+                                  const mapboxData = await mapboxResponse.json();
+                                  console.log("Mapbox result:", mapboxData);
+                                  
+                                  if (mapboxData.features && mapboxData.features.length > 0) {
+                                    const feature = mapboxData.features[0];
+                                    
+                                    // Return location with coordinates
+                                    return {
+                                      ...loc,
+                                      latitude: feature.center[1].toString(),
+                                      longitude: feature.center[0].toString()
+                                    };
+                                  }
+                                }
+                                
+                                // Return the original location without valid coordinates
+                                return loc;
+                              } catch (e) {
+                                console.error("Error geocoding location:", e);
+                                return loc;
+                              }
+                            })
                           );
                           
-                          if (mapboxResponse.ok) {
-                            const mapboxData = await mapboxResponse.json();
-                            console.log("Mapbox result for AI address:", mapboxData);
+                          // Filter out locations without coordinates
+                          const validLocations = processedLocations.filter(loc => 
+                            loc.latitude && loc.longitude
+                          );
+                          
+                          if (validLocations.length > 0) {
+                            setLocationResults(validLocations);
+                            toast({
+                              title: "Search results",
+                              description: `Found ${validLocations.length} matching locations`,
+                            });
+                          } else {
+                            // If no valid locations found, create a default entry with the original search term
+                            setLocationResults([{
+                              name: locationName,
+                              address: "",
+                              city: cityContext,
+                              description: "Approximate location",
+                              latitude: "40.7580",  // Midtown Manhattan default
+                              longitude: "-73.9855"
+                            }]);
                             
-                            if (mapboxData.features && mapboxData.features.length > 0) {
-                              const feature = mapboxData.features[0];
-                              
-                              // Set values from combined AI + Mapbox results
-                              setValue("locationName", aiData.name, { shouldValidate: true });
-                              setValue("latitude", feature.center[1].toString());
-                              setValue("longitude", feature.center[0].toString());
-                              
-                              toast({
-                                title: "Location found",
-                                description: fullAddress,
-                              });
-                              return;
-                            }
+                            toast({
+                              title: "Location added",
+                              description: "Using approximate coordinates",
+                            });
                           }
+                          
+                          return;
                         }
                         
-                        // Handle error or missing address in AI result
-                        console.log("Using AI name with fallback coordinates");
-                        setValue("locationName", aiData.name || locationName, { shouldValidate: true });
-                        setValue("latitude", "40.7580");  // Midtown Manhattan default
-                        setValue("longitude", "-73.9855");
+                        // Fallback for old API response format or errors
+                        console.log("Using default location with fallback coordinates");
+                        setLocationResults([{
+                          name: aiData.name || locationName,
+                          address: aiData.address || "",
+                          city: aiData.city || cityContext,
+                          region: aiData.region,
+                          country: aiData.country,
+                          description: aiData.description || "Location details not available",
+                          latitude: "40.7580",  // Midtown Manhattan default
+                          longitude: "-73.9855"
+                        }]);
                         
                         toast({
                           title: "Location added",
@@ -392,6 +445,45 @@ export default function ActivityModal({
                 </div>
                 {errors.locationName && (
                   <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.locationName.message}</p>
+                )}
+                
+                {/* Location search results */}
+                {locationResults.length > 0 && (
+                  <div className="mt-2 bg-muted rounded-md max-h-[250px] overflow-y-auto">
+                    <h4 className="px-3 pt-2 text-sm font-medium">Select a location:</h4>
+                    <div className="p-2 space-y-1">
+                      {locationResults.map((location, i) => (
+                        <div 
+                          key={i}
+                          className="p-2 rounded-md text-sm cursor-pointer hover:bg-accent"
+                          onClick={() => {
+                            // Select this location
+                            setValue("locationName", location.name, { shouldValidate: true });
+                            setValue("latitude", location.latitude || "");
+                            setValue("longitude", location.longitude || "");
+                            
+                            // Clear results after selection
+                            setLocationResults([]);
+                            
+                            toast({
+                              title: "Location selected",
+                              description: location.name
+                            });
+                          }}
+                        >
+                          <div className="font-medium">{location.name}</div>
+                          <div className="text-xs opacity-80">
+                            {location.address ? `${location.address}, ` : ''}
+                            {location.city}{location.region ? `, ${location.region}` : ''}
+                            {location.country ? `, ${location.country}` : ''}
+                          </div>
+                          {location.description && (
+                            <div className="text-xs opacity-70 mt-1 italic">{location.description}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
               

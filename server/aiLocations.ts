@@ -94,7 +94,7 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
     
     // Return the array of locations
     return {
-      locations: result.locations.map(loc => ({
+      locations: result.locations.map((loc: any) => ({
         name: loc.name,
         address: loc.address,
         city: loc.city || (cityContext || "New York City"),
