@@ -250,10 +250,10 @@ export default function useMapbox() {
         ].join(',');
       }
       
-      // Query specifically for POIs first with destination proximity
+      // Create a more focused query specifically for POIs
       const queryParams = new URLSearchParams({
         access_token: MAPBOX_TOKEN,
-        types: 'poi,place,landmark', // Focus on points of interest
+        types: 'poi', // Focus strictly on points of interest first
         limit: '5',
         language: 'en'
       });
@@ -270,12 +270,16 @@ export default function useMapbox() {
       // First query - focused on POIs near the trip destination
       const poiQuery = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?${queryParams.toString()}`;
       
-      // Second query - fall back to address search if no POIs found
+      // Second query - include more specific searches for places like Leo House that might not register as POIs
       const fallbackParams = new URLSearchParams({
         access_token: MAPBOX_TOKEN,
-        types: 'address,locality,neighborhood,poi,place',
+        types: 'poi,place,address',
         limit: '8',
-        language: 'en'
+        language: 'en',
+        // Ensure the geocoder knows we want exact matches
+        fuzzyMatch: 'false',
+        // Set a higher autocomplete value for better prediction
+        autocomplete: 'true'
       });
       
       if (tripContext.longitude && tripContext.latitude) {
@@ -284,14 +288,40 @@ export default function useMapbox() {
       
       const fallbackQuery = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?${fallbackParams.toString()}`;
       
+      // Debug the queries being sent
+      console.log("GEOCODE DEBUG - POI Query:", {
+        searchTerm,
+        url: poiQuery,
+        params: Object.fromEntries(queryParams.entries()),
+        tripContext
+      });
+      
       // Try POI search first
       let response = await fetch(poiQuery);
       let data = await response.json();
       
+      console.log("GEOCODE RESPONSE - POI Result:", {
+        features: data.features?.length || 0,
+        firstResult: data.features?.length > 0 ? data.features[0].place_name : 'none',
+        allTypes: data.features?.map((f: any) => f.place_type).flat().filter((v: any, i: number, a: any) => a.indexOf(v) === i) || []
+      });
+      
       // If no POIs found, try broader search
       if (!data.features || data.features.length === 0) {
+        console.log("GEOCODE DEBUG - Fallback Query:", {
+          searchTerm, 
+          url: fallbackQuery,
+          params: Object.fromEntries(fallbackParams.entries()),
+        });
+        
         response = await fetch(fallbackQuery);
         data = await response.json();
+        
+        console.log("GEOCODE RESPONSE - Fallback Result:", {
+          features: data.features?.length || 0,
+          firstResult: data.features?.length > 0 ? data.features[0].place_name : 'none',
+          allTypes: data.features?.map((f: any) => f.place_type).flat().filter((v: any, i: number, a: any) => a.indexOf(v) === i) || []
+        });
       }
       
       if (data.features && data.features.length > 0) {
