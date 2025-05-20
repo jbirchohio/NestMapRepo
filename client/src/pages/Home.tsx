@@ -41,8 +41,8 @@ export default function Home() {
     
     createTrip.mutate({
       title: "New Trip",
-      startDate: today.toISOString(),
-      endDate: endDate.toISOString(),
+      startDate: today,
+      endDate: endDate,
       userId,
       collaborators: []
     });
