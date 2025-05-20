@@ -163,10 +163,21 @@ export async function generateThemedItinerary(
  */
 export async function tripAssistant(question: string, tripContext: any): Promise<string | { answer: string, activities?: any[] }> {
   try {
-    // Check if this looks like a pasted itinerary
-    const isItinerary = question.includes("Day") && 
-                        (question.includes("AM") || question.includes("PM")) && 
-                        question.length > 200;
+    // Check if this looks like a pasted itinerary - look for multiple time patterns
+    // This is a more flexible approach that detects various itinerary formats
+    const hasTimePatterns = (question.match(/\d{1,2}[\s]*[:-][\s]*\d{2}/g) || []).length > 2 ||  // 9:30, 10-30 formats
+                           (question.match(/\d{1,2}[\s]*[AP]M/g) || []).length > 2;  // 9AM, 10 PM formats
+    
+    const hasDayPatterns = question.includes("Day") || 
+                          question.includes("Monday") || question.includes("Tuesday") || 
+                          question.includes("Wednesday") || question.includes("Thursday") || 
+                          question.includes("Friday") || question.includes("Saturday") || 
+                          question.includes("Sunday");
+                          
+    const hasMultipleLines = question.split('\n').length > 5;
+    
+    // Detect itineraries with multiple time entries and sufficient length
+    const isItinerary = hasTimePatterns && hasMultipleLines && question.length > 100;
     
     if (isItinerary) {
       return await parseItinerary(question, tripContext);
@@ -202,31 +213,43 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
     // Get the location context from the trip
     const city = tripContext.trip?.city || "New York City";
     
-    const prompt = `
-    You are a travel itinerary parser. The user has pasted a travel itinerary text. 
-    Convert it into structured activities for their trip planning app.
+    // Get trip date range to help with date inference
+    const tripStartDate = tripContext.trip?.startDate ? new Date(tripContext.trip.startDate) : new Date();
+    const tripEndDate = tripContext.trip?.endDate ? new Date(tripContext.trip.endDate) : new Date(tripStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
     
-    Trip City: ${city}
-    Itinerary Text:
+    const prompt = `
+    You are a travel itinerary parser that can handle many different formats. The user has pasted a travel itinerary text. 
+    Your job is to convert it into structured activities for their trip planning app.
+    
+    Trip Information:
+    - City: ${city}
+    - Trip Start Date: ${tripStartDate.toISOString().split('T')[0]}
+    - Trip End Date: ${tripEndDate.toISOString().split('T')[0]}
+    
+    Itinerary Text to Parse:
     ${itineraryText}
     
-    Please extract each activity, including:
-    1. Date and time (if available)
-    2. Activity title
-    3. Location name (this is very important)
-    4. Any notes or descriptions
+    CRITICAL INSTRUCTIONS:
+    1. Detect the structure and format of this itinerary - it could be organized by days, dates, or simply as a sequence of activities
+    2. Identify patterns for dates and times, which may appear in various formats (9-10AM, 9:00-10:00, 9AM-10AM, etc.)
+    3. Extract each activity with as much detail as possible, especially:
+       - Which day or date the activity is scheduled for
+       - The start time of the activity
+       - The exact name of the location or venue
+    4. If dates aren't explicitly mentioned, infer them from context like "Wednesday" or "Day 1" based on the trip start date
+    5. Assume activities happen in chronological order within each day
     
     Format your response as a JSON object with:
-    1. A brief "answer" explaining what you've done
+    1. A brief "answer" explaining what you've parsed, including any date inference you've made
     2. An "activities" array with objects containing:
-       - title (string): The activity name
-       - time (string): In 24-hour format like "14:30"
-       - date (string): In YYYY-MM-DD format
-       - locationName (string): The name of the location
-       - notes (string): Any additional details
+       - title (string): Clear activity name (e.g., "Visit Metropolitan Museum of Art", not just "Museum")
+       - time (string): Start time in 24-hour format like "14:30" (convert AM/PM times)
+       - date (string): In YYYY-MM-DD format (infer from context if needed)
+       - locationName (string): The EXACT location name as it would appear on a map search (e.g., "Metropolitan Museum of Art", not "the museum")
+       - notes (string): Any additional details about the activity
        - tag (string): Category tag (one of: "Food", "Culture", "Shop", "Rest", "Transport", "Event")
     
-    For each location, try to determine the most accurate and specific location name that could be found on a map.
+    For location names, be very precise - use the full, proper name of venues, attractions, and businesses as they would appear in a map search.
     `;
 
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
