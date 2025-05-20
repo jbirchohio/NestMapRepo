@@ -427,18 +427,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI-powered location search endpoint
   app.post("/api/ai/find-location", async (req: Request, res: Response) => {
     try {
-      const { searchQuery } = req.body;
+      const { searchQuery, cityContext } = req.body;
       if (!searchQuery || typeof searchQuery !== 'string') {
         return res.status(400).json({ message: "Valid search query is required" });
       }
       
-      const locationData = await aiLocations.findLocation(searchQuery);
+      const locationData = await aiLocations.findLocation(searchQuery, cityContext);
       res.json(locationData);
     } catch (error) {
       console.error("Error in /api/ai/find-location:", error);
       res.status(500).json({ 
         message: "Could not process location search",
-        error: error.message
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });

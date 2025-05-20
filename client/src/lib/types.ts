@@ -4,6 +4,8 @@ import { Trip, Activity, Todo, Note } from "@shared/schema";
 // Extended types with additional client-side properties
 export interface ClientTrip extends Trip {
   days?: Date[];
+  city?: string;
+  location?: string;
 }
 
 export interface ClientActivity extends Activity {

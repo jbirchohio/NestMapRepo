@@ -248,13 +248,19 @@ export default function ActivityModal({
                     if (!locationName) return;
                     
                     try {
-                      // Step 1: Use our AI-powered location API to get structured data
+                      // Step 1: Use our AI-powered location API to get structured data with trip city context
+                      const cityContext = trip?.location || trip?.title || "New York City";
+                      console.log("Using city context for search:", cityContext);
+                      
                       const aiResponse = await fetch("/api/ai/find-location", {
                         method: "POST",
                         headers: {
                           "Content-Type": "application/json",
                         },
-                        body: JSON.stringify({ searchQuery: locationName })
+                        body: JSON.stringify({ 
+                          searchQuery: locationName,
+                          cityContext
+                        })
                       });
                       
                       if (!aiResponse.ok) {
