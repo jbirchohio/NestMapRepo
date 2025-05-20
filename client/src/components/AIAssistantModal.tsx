@@ -363,6 +363,19 @@ export default function AIAssistantModal({
               }
             }
             
+            // Get current activities to determine next order value
+            let nextOrder = 0;
+            try {
+              const currentActivities = await apiRequest<Activity[]>(
+                API_ENDPOINTS.TRIPS + '/' + trip.id + '/activities'
+              );
+              nextOrder = (currentActivities?.length || 0) + addedCount;
+            } catch (err) {
+              console.error("Error fetching activities:", err);
+              // If we can't fetch activities, just use addedCount as fallback
+              nextOrder = addedCount;
+            }
+            
             // Format the activity data properly to match what the API expects
             const formattedActivity = {
               tripId: trip.id,
@@ -375,11 +388,8 @@ export default function AIAssistantModal({
               longitude: activity.longitude || null,
               notes: activity.notes || "",
               tag: activity.tag || "Event",
-              // Add missing required fields
-              order: (await queryClient.fetchQuery({
-                queryKey: [API_ENDPOINTS.TRIPS, trip.id, "activities"],
-                queryFn: () => apiRequest(API_ENDPOINTS.TRIPS + '/' + trip.id + '/activities')
-              })).length + addedCount,
+              // Add missing required fields - this is what was causing the error
+              order: nextOrder,
               assignedTo: ""
             };
             
