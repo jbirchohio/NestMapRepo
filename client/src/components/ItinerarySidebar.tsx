@@ -158,10 +158,11 @@ export default function ItinerarySidebar({
                   </div>
                 </div>
 
-                {/* Buttons for adding activities and AI */}
-                <div className="flex gap-2 mb-4">
+                {/* Split buttons into separate containers */}
+                <div className="space-y-2 mb-4">
+                  {/* Add Activity Button */}
                   <button 
-                    className="flex-1 py-3 px-4 bg-[hsl(var(--primary))] text-white rounded-md flex items-center justify-center"
+                    className="w-full py-3 px-4 bg-[hsl(var(--primary))] text-white rounded-md flex items-center justify-center"
                     onClick={() => {
                       // Call the function from ActivityTimeline component
                       const timeline = document.querySelector(".timeline-container");
@@ -177,8 +178,9 @@ export default function ItinerarySidebar({
                     Add Activity
                   </button>
                   
+                  {/* AI Assistant Button */}
                   <button 
-                    className="flex-1 py-3 px-4 bg-blue-50 dark:bg-blue-900/20 text-[hsl(var(--primary))] rounded-md border border-blue-100 dark:border-blue-900/40 flex items-center justify-center"
+                    className="w-full py-3 px-4 bg-blue-50 dark:bg-blue-900/20 text-[hsl(var(--primary))] rounded-md border border-blue-100 dark:border-blue-900/40 flex items-center justify-center"
                     onClick={() => setIsAIModalOpen(true)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
