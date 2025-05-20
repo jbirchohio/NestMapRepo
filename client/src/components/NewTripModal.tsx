@@ -96,16 +96,19 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId }: New
   
   const createTrip = useMutation({
     mutationFn: async (data: TripFormValues) => {
-      const res = await apiRequest("POST", API_ENDPOINTS.TRIPS, {
+      // Prepare the trip data with proper location information
+      const tripData = {
         title: data.title,
         startDate: data.startDate.toISOString(),
         endDate: data.endDate.toISOString(),
         userId,
-        city: data.city,
-        latitude: data.cityLatitude,
-        longitude: data.cityLongitude,
+        city: data.city, // This is the primary field we use for location search
+        location: data.city, // Also store in location field for backward compatibility
         collaborators: []
-      });
+      };
+      
+      console.log("Creating trip with data:", tripData);
+      const res = await apiRequest("POST", API_ENDPOINTS.TRIPS, tripData);
       return res.json();
     },
     onSuccess: (data) => {

@@ -70,13 +70,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/trips", async (req: Request, res: Response) => {
     try {
+      // Log the incoming data to help with debugging
+      console.log("Creating trip with data:", req.body);
+      
       const tripData = insertTripSchema.parse(req.body);
+      
+      // Ensure the location fields are properly included
+      if (req.body.city) tripData.city = req.body.city;
+      if (req.body.country) tripData.country = req.body.country;
+      if (req.body.location) tripData.location = req.body.location;
+      
+      console.log("Processed trip data:", tripData);
       const trip = await storage.createTrip(tripData);
       res.status(201).json(trip);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
       }
+      console.error("Error creating trip:", error);
       res.status(500).json({ message: "Could not create trip" });
     }
   });

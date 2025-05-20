@@ -17,16 +17,21 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
   error?: string;
 }> {
   try {
+    // Debug to see what's being received
+    console.log("AI Location search:", { searchQuery, cityContext });
+    
     // Use the provided city context or default to an empty string
     let context = "";
     
     // If a city is provided and not already in the search query, add it as context
-    if (cityContext && !searchQuery.toLowerCase().includes(cityContext.toLowerCase())) {
+    if (cityContext && cityContext.trim() !== "") {
       context = `in ${cityContext}`;
+      console.log(`Using provided city context: ${context}`);
     }
     // Special case for NYC - if no city specified, default to NYC
-    else if (!cityContext && !searchQuery.toLowerCase().includes("nyc") && !searchQuery.toLowerCase().includes("new york")) {
+    else {
       context = "in New York City";
+      console.log("No city context provided, defaulting to NYC");
     }
     
     const response = await openai.chat.completions.create({

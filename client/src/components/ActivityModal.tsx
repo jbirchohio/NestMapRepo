@@ -249,8 +249,20 @@ export default function ActivityModal({
                     
                     try {
                       // Step 1: Use our AI-powered location API to get structured data with trip city context
-                      const cityContext = trip?.city || trip?.location || "New York City";
-                      console.log("Using city context for search:", cityContext);
+                      // Print full trip object to debug
+                      console.log("Trip details for location search:", trip);
+                      
+                      // Extract city from trip - try multiple properties
+                      let cityContext = "New York City"; // Default
+                      if (trip?.city && trip.city !== "") {
+                        cityContext = trip.city;
+                        console.log("Using trip city for search:", cityContext);
+                      } else if (trip?.location && trip.location !== "") {
+                        cityContext = trip.location;
+                        console.log("Using trip location for search:", cityContext);
+                      } else {
+                        console.log("No city found in trip, using default:", cityContext);
+                      }
                       
                       const aiResponse = await fetch("/api/ai/find-location", {
                         method: "POST",
