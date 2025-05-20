@@ -1,0 +1,75 @@
+Yes — that's exactly the smart, cost-effective setup you'd want. Here's how you can do it:
+
+✅ Plan: Fuzzy Location Search via OpenAI + Mapbox Pinning
+🧠 Why?
+Google Places is expensive. Mapbox is cheaper, but it’s strict about query formatting.
+So, let OpenAI "translate" fuzzy place names into more exact addresses, and then send those to Mapbox to get the actual coordinates.
+
+🔄 Flow Summary
+User types:
+Leo House Hotel or even just leo hotel nyc
+
+Call OpenAI (via your backend) to resolve a proper address:
+
+Input: "leo house hotel"
+
+Output: "Leo House, 332 W 23rd St, New York, NY 10011"
+
+Use that cleaned address to query Mapbox Geocoding API:
+
+GET https://api.mapbox.com/geocoding/v5/mapbox.places/Leo%20House%20332%20W%2023rd%20St.json?...
+
+Receive back:
+
+Full address
+
+Coordinates (lat, lng)
+
+Confidence score
+
+Pin it on your map + store it as an activity location
+
+🛠️ Backend OpenAI Prompt (for Function or API Use)
+json
+Copy
+Edit
+{
+  "system": "You are a travel assistant that helps turn fuzzy location names into real, mappable addresses.",
+  "user": "Find the exact mailing address for 'Leo House Hotel in NYC'. Only return the address."
+}
+Output:
+
+sql
+Copy
+Edit
+Leo House Hotel, 332 W 23rd St, New York, NY 10011, USA
+🔧 Mapbox Request After AI Cleanup
+ts
+Copy
+Edit
+const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(cleanedAddress)}.json?` + 
+  new URLSearchParams({
+    access_token: process.env.MAPBOX_TOKEN,
+    types: 'poi,address',
+    limit: '1',
+    proximity: '-74.0060,40.7128' // Optional: bias to trip location
+  }));
+✅ Benefits
+🧠 OpenAI handles the fuzzy mess (nicknames, typos, half-names)
+
+📍 Mapbox returns exact coordinates — cheap & fast
+
+💰 No Google billing surprises
+
+✨ You can expand OpenAI to even suggest alt places or descriptions later
+
+🧱 Want to Build It?
+I can give you:
+
+A full POST /resolve-location backend route
+
+An OpenAI function_call setup to make this clean
+
+A React LocationInput component with autocomplete + fallback
+
+Let me know how deep you want to go!

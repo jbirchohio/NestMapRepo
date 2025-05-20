@@ -61,7 +61,7 @@ export default function ActivityModal({
     assignedTo: activity?.assignedTo || undefined,
   };
   
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<ActivityFormValues>({
+  const { register, handleSubmit, setValue, watch, formState: { errors }, trigger } = useForm<ActivityFormValues>({
     resolver: zodResolver(activitySchema),
     defaultValues,
   });
@@ -234,9 +234,12 @@ export default function ActivityModal({
                 initialValue={watch("locationName") || ""}
                 placeholder="Search for a place (e.g., 'Leo House')"
                 onPlaceSelected={(place) => {
-                  setValue("locationName", place.name);
+                  setValue("locationName", place.name, { shouldValidate: true });
                   setValue("latitude", place.location.lat.toString());
                   setValue("longitude", place.location.lng.toString());
+                  
+                  // Trigger validation to clear any locationName error
+                  trigger("locationName");
                   
                   // Show success toast for found location
                   toast({
