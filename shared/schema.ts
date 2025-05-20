@@ -24,6 +24,10 @@ export const trips = pgTable("trips", {
   endDate: timestamp("end_date").notNull(),
   userId: integer("user_id").notNull(),
   collaborators: jsonb("collaborators").default([]),
+  // Location information
+  city: text("city"),
+  country: text("country"),
+  location: text("location"),
 });
 
 // Create a custom schema that properly handles dates as strings from JSON
@@ -37,6 +41,10 @@ export const insertTripSchema = z.object({
   ),
   userId: z.number(),
   collaborators: z.array(z.any()).default([]),
+  // Location fields are optional
+  city: z.string().optional(),
+  country: z.string().optional(),
+  location: z.string().optional(),
 });
 
 // Activity schema

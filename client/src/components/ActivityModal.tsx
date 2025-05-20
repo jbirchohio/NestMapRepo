@@ -249,7 +249,7 @@ export default function ActivityModal({
                     
                     try {
                       // Step 1: Use our AI-powered location API to get structured data with trip city context
-                      const cityContext = trip?.location || trip?.title || "New York City";
+                      const cityContext = trip?.city || trip?.location || "New York City";
                       console.log("Using city context for search:", cityContext);
                       
                       const aiResponse = await fetch("/api/ai/find-location", {
