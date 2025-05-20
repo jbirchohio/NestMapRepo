@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
+import NewTripModal from "@/components/NewTripModal";
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   
   // Demo user ID - in a real app, this would come from authentication
   const userId = 1;
@@ -23,34 +24,24 @@ export default function Home() {
     }
   });
   
-  const createTrip = useMutation({
-    mutationFn: async (newTrip: any) => {
-      const res = await apiRequest("POST", API_ENDPOINTS.TRIPS, newTrip);
-      return res.json();
-    },
-    onSuccess: (data) => {
-      setLocation(`/trip/${data.id}`);
-    }
-  });
-  
   const handleCreateNewTrip = () => {
-    // Create a default new trip for demo purposes
-    const today = new Date();
-    const endDate = new Date();
-    endDate.setDate(today.getDate() + 3);
-    
-    // Convert dates to ISO strings which can be properly parsed by the server
-    createTrip.mutate({
-      title: "New Trip",
-      startDate: today.toISOString(),
-      endDate: endDate.toISOString(),
-      userId,
-      collaborators: []
-    });
+    setIsNewTripModalOpen(true);
+  };
+  
+  const handleTripCreated = (tripId: number) => {
+    setIsNewTripModalOpen(false);
+    setLocation(`/trip/${tripId}`);
   };
   
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
+      <NewTripModal 
+        isOpen={isNewTripModalOpen} 
+        onClose={() => setIsNewTripModalOpen(false)} 
+        onSuccess={handleTripCreated}
+        userId={userId}
+      />
+      
       <header className="bg-white dark:bg-[hsl(var(--card))] shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center">
