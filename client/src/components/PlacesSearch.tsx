@@ -1,7 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2, Search, MapPin } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface Place {
   name: string;
@@ -19,162 +22,201 @@ interface PlacesSearchProps {
   className?: string;
 }
 
+interface AILocationResponse {
+  name: string;
+  fullAddress: string;
+  city: string;
+  region?: string;
+  country?: string;
+  description?: string;
+  error?: string;
+}
+
 export default function PlacesSearch({
   onPlaceSelected,
   initialValue = "",
   placeholder = "Search for a place",
-  className = ""
+  className = "",
 }: PlacesSearchProps) {
-  const [searchTerm, setSearchTerm] = useState(initialValue);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<Place[]>([]);
+  const [inputValue, setInputValue] = useState(initialValue);
+  const [showResults, setShowResults] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+  const debouncedSearchTerm = useDebounce(inputValue, 500);
 
-  // Function to handle direct address search
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
-    
-    setIsSearching(true);
+  // Get coordinates from Mapbox using the AI-provided address
+  async function getCoordinates(address: string): Promise<[number, number] | null> {
     try {
-      // For demo purposes, create a hardcoded dataset of NYC landmarks
-      const nycLandmarks = [
-        {
-          name: "Empire State Building",
-          formattedAddress: "350 Fifth Avenue, New York, NY 10118",
-          location: { lat: 40.7484, lng: -73.9857 }
-        },
-        {
-          name: "Statue of Liberty",
-          formattedAddress: "Liberty Island, New York, NY 10004",
-          location: { lat: 40.6892, lng: -74.0445 }
-        },
-        {
-          name: "Central Park",
-          formattedAddress: "Central Park, New York, NY",
-          location: { lat: 40.7812, lng: -73.9665 }
-        },
-        {
-          name: "Times Square",
-          formattedAddress: "Times Square, New York, NY 10036",
-          location: { lat: 40.7580, lng: -73.9855 }
-        },
-        {
-          name: "Brooklyn Bridge",
-          formattedAddress: "Brooklyn Bridge, New York, NY 10038",
-          location: { lat: 40.7061, lng: -73.9969 }
-        },
-        {
-          name: "Leo House",
-          formattedAddress: "332 W 23rd St, New York, NY 10011",
-          location: { lat: 40.7453, lng: -73.9977 }
-        },
-        {
-          name: "One World Trade Center",
-          formattedAddress: "285 Fulton St, New York, NY 10007",
-          location: { lat: 40.7127, lng: -74.0134 }
-        },
-        {
-          name: "Metropolitan Museum of Art",
-          formattedAddress: "1000 5th Ave, New York, NY 10028",
-          location: { lat: 40.7794, lng: -73.9632 }
-        },
-        {
-          name: "The High Line",
-          formattedAddress: "The High Line, New York, NY 10011",
-          location: { lat: 40.7480, lng: -74.0048 }
-        }
-      ];
-      
-      // Filter based on search term
-      const searchTermLower = searchTerm.toLowerCase();
-      const results = nycLandmarks.filter(landmark => 
-        landmark.name.toLowerCase().includes(searchTermLower) ||
-        landmark.formattedAddress.toLowerCase().includes(searchTermLower)
+      const encodedAddress = encodeURIComponent(address);
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}&limit=1`
       );
+      const data = await response.json();
       
-      setSearchResults(results);
-      
-      // If we found an exact match, select it automatically
-      const exactMatch = results.find(r => 
-        r.name.toLowerCase() === searchTermLower
-      );
-      
-      if (exactMatch) {
-        handleSelectPlace(exactMatch);
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+        return [lat, lng]; // Return as [lat, lng] for consistency
       }
+      return null;
     } catch (error) {
-      console.error("Error searching for places:", error);
-      toast({
-        title: "Error",
-        description: "Failed to search for places. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
+      console.error("Error getting coordinates:", error);
+      return null;
     }
-  };
+  }
 
-  // Select a place from results
-  const handleSelectPlace = (place: Place) => {
-    setSearchTerm(place.name);
-    setSearchResults([]);
-    onPlaceSelected(place);
-    
-    // Show confirmation toast
-    toast({
-      title: "Location selected",
-      description: place.formattedAddress,
-      duration: 3000,
-    });
-  };
-
-  // Auto-search on term change
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchTerm.length > 2) {
-        handleSearch();
+  // Call our AI location search API
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["locationSearch", debouncedSearchTerm],
+    queryFn: async () => {
+      if (!debouncedSearchTerm || debouncedSearchTerm.length < 3) {
+        return null;
       }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+      
+      const response = await fetch("/api/ai/find-location", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ searchQuery: debouncedSearchTerm })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to find location");
+      }
+      
+      return await response.json() as AILocationResponse;
+    },
+    enabled: debouncedSearchTerm.length >= 3,
+  });
+
+  // When AI location data is available, get coordinates from Mapbox
+  useEffect(() => {
+    const getLocationDetails = async () => {
+      if (data && !data.error && !isLoading) {
+        // Get coordinates for the resolved address
+        const coords = await getCoordinates(data.fullAddress);
+        
+        if (coords) {
+          const [lat, lng] = coords;
+          // Create a Place object from the AI and Mapbox data
+          const place: Place = {
+            name: data.name,
+            formattedAddress: data.fullAddress,
+            location: {
+              lat,
+              lng
+            }
+          };
+          
+          onPlaceSelected(place);
+          setShowResults(false);
+        }
+      }
+    };
+    
+    if (showResults && data && !isLoading) {
+      getLocationDetails();
+    }
+  }, [data, isLoading, showResults]);
+
+  // Close results when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        resultsRef.current && 
+        !resultsRef.current.contains(event.target as Node) &&
+        !inputRef.current?.contains(event.target as Node)
+      ) {
+        setShowResults(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Handle input changes
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setInputValue(e.target.value);
+    if (e.target.value.length >= 3) {
+      setShowResults(true);
+    } else {
+      setShowResults(false);
+    }
+  }
+
+  // Handle search submission
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (inputValue.length >= 3) {
+      refetch();
+    }
+  }
 
   return (
-    <div className={`relative ${className}`}>
-      <div className="flex">
+    <div className={`relative w-full ${className}`}>
+      <form onSubmit={handleSubmit} className="relative">
         <Input
           ref={inputRef}
           type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={inputValue}
+          onChange={handleInputChange}
           placeholder={placeholder}
-          className="w-full"
+          className="pr-10"
         />
-        <Button 
-          type="button"
-          variant="outline" 
-          className="ml-2"
-          onClick={handleSearch}
-          disabled={isSearching || !searchTerm.trim()}
+        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          ) : (
+            <Button
+              type="submit"
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 p-0"
+            >
+              <Search className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          )}
+        </div>
+      </form>
+
+      {/* Loading Indicator and Results */}
+      {showResults && (
+        <div 
+          ref={resultsRef}
+          className="absolute z-10 mt-1 w-full rounded-md border border-input bg-background shadow-md"
         >
-          {isSearching ? "..." : "Search"}
-        </Button>
-      </div>
-      
-      {searchResults.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[hsl(var(--card))] rounded-md shadow-lg max-h-60 overflow-auto">
-          <ul className="py-1">
-            {searchResults.map((place, index) => (
-              <li 
-                key={index}
-                className="px-4 py-2 hover:bg-[hsl(var(--muted))] cursor-pointer"
-                onClick={() => handleSelectPlace(place)}
+          {isLoading ? (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mr-2" />
+              <span className="text-sm text-muted-foreground">
+                Finding location...
+              </span>
+            </div>
+          ) : data ? (
+            data.error ? (
+              <div className="p-3 text-sm text-muted-foreground">
+                Couldn't find that location. Try adding more details.
+              </div>
+            ) : (
+              <div 
+                className="p-3 flex items-start cursor-pointer hover:bg-muted"
+                onClick={() => refetch()}
               >
-                <div className="font-medium">{place.name}</div>
-                <div className="text-xs text-[hsl(var(--muted-foreground))]">{place.formattedAddress}</div>
-              </li>
-            ))}
-          </ul>
+                <MapPin className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0 text-blue-500" />
+                <div>
+                  <div className="font-medium">{data.name}</div>
+                  <div className="text-sm text-muted-foreground">{data.fullAddress}</div>
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="p-3 text-sm text-muted-foreground">
+              Type at least 3 characters to search
+            </div>
+          )}
         </div>
       )}
     </div>

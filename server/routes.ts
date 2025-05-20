@@ -10,6 +10,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import * as openai from "./openai";
+import * as aiLocations from "./aiLocations";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes
@@ -420,6 +421,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ answer: response });
     } catch (error) {
       res.status(500).json({ message: "Could not get assistant response" });
+    }
+  });
+  
+  // AI-powered location search endpoint
+  app.post("/api/ai/find-location", async (req: Request, res: Response) => {
+    try {
+      const { searchQuery } = req.body;
+      if (!searchQuery || typeof searchQuery !== 'string') {
+        return res.status(400).json({ message: "Valid search query is required" });
+      }
+      
+      const locationData = await aiLocations.findLocation(searchQuery);
+      res.json(locationData);
+    } catch (error) {
+      console.error("Error in /api/ai/find-location:", error);
+      res.status(500).json({ 
+        message: "Could not process location search",
+        error: error.message
+      });
     }
   });
 
