@@ -269,14 +269,125 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
     This is CREATING REAL DATABASE ENTRIES, not just a summary. The system will take your response and create actual activities in the app.
     `;
 
+    // Define the schema for the activity parsing function
+    const parseItineraryFunction = {
+      name: "parse_itinerary_to_activities",
+      description: "Extract structured trip activities from a pasted itinerary. Do not summarize - only return exact structured activities.",
+      parameters: {
+        type: "object",
+        properties: {
+          activities: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                date: { 
+                  type: "string", 
+                  description: "Date of activity in YYYY-MM-DD format. If day of week is given, calculate the actual date based on trip start date."
+                },
+                time: { 
+                  type: "string", 
+                  description: "Time of the activity in 24-hour format (14:30). Extract only start time if a range is given."
+                },
+                title: { 
+                  type: "string", 
+                  description: "Clear title of the activity" 
+                },
+                locationName: { 
+                  type: "string", 
+                  description: "Exact location name as it would appear on a map search" 
+                },
+                notes: { 
+                  type: "string", 
+                  description: "Any extra details or instructions" 
+                },
+                tag: {
+                  type: "string",
+                  description: "Category tag (one of: 'Food', 'Culture', 'Shop', 'Rest', 'Transport', 'Event')"
+                }
+              },
+              required: ["date", "time", "title", "locationName"]
+            }
+          }
+        },
+        required: ["activities"]
+      }
+    };
+    
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
+      messages: [
+        { 
+          role: "system", 
+          content: `You are a travel assistant that converts freeform pasted itineraries into a list of structured activities.
+
+DO NOT summarize or paraphrase. Instead, extract each activity into a structured format with date, time, title, location, and optional notes.
+
+The date should be in YYYY-MM-DD format. If only days of the week are mentioned (e.g., "Wednesday"), calculate the actual date based on:
+- Trip Start Date: ${tripStartDate.toISOString().split('T')[0]}
+- Trip End Date: ${tripEndDate.toISOString().split('T')[0]}
+
+The time should be in 24-hour format (e.g., "14:30" not "2:30 PM"). If a time range is given (e.g., "2:00-3:00 PM"), use the start time.
+
+The locationName should be the EXACT location name as it would appear on a map search (e.g., "The Metropolitan Museum of Art" not "the art museum").
+
+Example input:
+"Wednesday - Museum Day
+9 AM - Metropolitan Museum of Art
+2-4 PM - Natural History Museum
+Evening - Dinner at Le Bernardin"
+
+Expected output activities:
+[
+  { "date": "2025-05-21", "time": "09:00", "title": "Visit Art Museum", "locationName": "The Metropolitan Museum of Art", "tag": "Culture" },
+  { "date": "2025-05-21", "time": "14:00", "title": "Explore Natural History", "locationName": "American Museum of Natural History", "tag": "Culture" },
+  { "date": "2025-05-21", "time": "19:00", "title": "Dinner", "locationName": "Le Bernardin", "notes": "Fine dining restaurant", "tag": "Food" }
+]
+
+IMPORTANT: Each activity MUST have a specific locationName that can be found on a map, a date in YYYY-MM-DD format, and a time in 24-hour format.`
+        },
+        { 
+          role: "user", 
+          content: itineraryText 
+        }
+      ],
+      functions: [parseItineraryFunction],
+      function_call: { name: "parse_itinerary_to_activities" }
     });
 
-    const result = JSON.parse(response.choices[0].message.content || "{}");
+    // Handle the function call response format
+    let activities = [];
+    let answer = "I've processed your itinerary and extracted activities.";
+    
+    // Parse the function call arguments
+    if (response.choices[0].message.function_call) {
+      try {
+        const functionArgs = JSON.parse(response.choices[0].message.function_call.arguments || "{}");
+        activities = functionArgs.activities || [];
+        console.log(`Extracted ${activities.length} activities from itinerary using function call`);
+      } catch (error) {
+        console.error("Error parsing function call arguments:", error);
+      }
+    } 
+    // Fallback to old format if function call isn't available
+    else if (response.choices[0].message.content) {
+      try {
+        const result = JSON.parse(response.choices[0].message.content || "{}");
+        activities = result.activities || [];
+        answer = result.answer || answer;
+        console.log(`Extracted ${activities.length} activities from itinerary using content parsing`);
+      } catch (error) {
+        console.error("Error parsing content:", error);
+      }
+    }
+    
+    // Create a result object with both the answer and activities
+    const result = {
+      answer,
+      activities
+    };
+    
     console.log("Parsed itinerary result:", result);
     
     // Process locations to get coordinates where possible

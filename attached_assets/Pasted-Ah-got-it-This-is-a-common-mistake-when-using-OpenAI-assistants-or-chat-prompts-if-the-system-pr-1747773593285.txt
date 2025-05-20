@@ -1,0 +1,77 @@
+Ah — got it. This is a common mistake when using OpenAI assistants or chat prompts: if the system prompt or function schema is too vague, the model defaults to summarizing or paraphrasing instead of structuring data.
+
+You're trying to go from:
+
+🧾 Pasted freeform itinerary
+to
+📆 Structured activities[] like:
+
+ts
+Copy
+Edit
+{
+  time: "2:00 PM",
+  title: "Visit FIT Museum",
+  location: "FIT Museum, NYC"
+}
+✅ Fix This with a Structured Function Call
+You need to give the Assistant a very clear function schema, tell it not to summarize, and give examples in the system prompt.
+
+🔧 1. Define a Function Called parse_itinerary_to_activities
+ts
+Copy
+Edit
+{
+  "name": "parse_itinerary_to_activities",
+  "description": "Extract structured trip activities from a pasted itinerary. Do not summarize — only return exact structured activities.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "activities": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "time": { "type": "string", "description": "Time of the activity if available" },
+            "title": { "type": "string", "description": "Title of the activity" },
+            "location": { "type": "string", "description": "Location name if included" },
+            "notes": { "type": "string", "description": "Any extra details or instructions" }
+          },
+          "required": ["title"]
+        }
+      }
+    },
+    "required": ["activities"]
+  }
+}
+🧠 2. System Prompt Example
+txt
+Copy
+Edit
+You are a travel assistant that converts freeform pasted itineraries into a list of structured activities.
+
+DO NOT summarize or paraphrase. Instead, break it into a list of scheduled activities with time, title, location, and optional notes.
+
+Example input:
+"2 PM – FIT Museum (open until 8 PM)
+3 PM – Visit Chelsea Market
+Evening: Pick up tickets from Marjorie. Show at Majestic 7:30"
+
+Expected output:
+[
+  { "time": "2 PM", "title": "Visit FIT Museum", "location": "FIT Museum", "notes": "Open until 8 PM" },
+  { "time": "3 PM", "title": "Explore Chelsea Market", "location": "Chelsea Market" },
+  { "time": "Evening", "title": "Pick up tickets", "location": "", "notes": "From Marjorie" },
+  { "time": "7:30 PM", "title": "See Show", "location": "Majestic Theatre" }
+]
+🧪 3. Your API Call Setup
+Use functions mode (not just chat)
+
+Set function_call: "auto" or directly name the function
+
+Give the raw itinerary as user input
+
+Expect parse_itinerary_to_activities in response
+
+✅ Optional: Use AI Again for Address Resolution
+Once you’ve extracted the location: "FIT Museum" field, you can feed that into the next OpenAI step to resolve to a full address before geocoding with Mapbox.
