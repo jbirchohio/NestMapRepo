@@ -250,11 +250,11 @@ export default function useMapbox() {
         ].join(',');
       }
       
-      // Create a more focused query specifically for POIs
+      // Use a more comprehensive query for places 
       const queryParams = new URLSearchParams({
         access_token: MAPBOX_TOKEN,
-        types: 'poi', // Focus strictly on points of interest first
-        limit: '5',
+        types: 'poi,address', // Include both POIs and addresses in first query
+        limit: '10',
         language: 'en'
       });
       
