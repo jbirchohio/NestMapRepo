@@ -87,7 +87,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
       
-      const tripData = insertTripSchema.partial().parse(req.body);
+      // Create a partial schema with the same date transformation
+      const partialTripSchema = z.object({
+        title: z.string().optional(),
+        startDate: z.string().or(z.date()).optional().transform(val => val ? (val instanceof Date ? val : new Date(val)) : undefined),
+        endDate: z.string().or(z.date()).optional().transform(val => val ? (val instanceof Date ? val : new Date(val)) : undefined),
+        userId: z.number().optional(),
+        collaborators: z.array(z.any()).optional(),
+      });
+      
+      const tripData = partialTripSchema.parse(req.body);
       const updatedTrip = await storage.updateTrip(tripId, tripData);
       
       if (!updatedTrip) {
@@ -156,7 +165,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid activity ID" });
       }
       
-      const activityData = insertActivitySchema.partial().parse(req.body);
+      // Create a partial schema with the same date transformation
+      const partialActivitySchema = z.object({
+        tripId: z.number().optional(),
+        title: z.string().optional(),
+        date: z.string().or(z.date()).optional().transform(val => val ? (val instanceof Date ? val : new Date(val)) : undefined),
+        time: z.string().optional(),
+        locationName: z.string().optional(),
+        latitude: z.string().nullable().optional(),
+        longitude: z.string().nullable().optional(),
+        notes: z.string().nullable().optional(),
+        tag: z.string().nullable().optional(),
+        assignedTo: z.string().nullable().optional(),
+        order: z.number().optional(),
+      });
+      
+      const activityData = partialActivitySchema.parse(req.body);
       const updatedActivity = await storage.updateActivity(activityId, activityData);
       
       if (!updatedActivity) {

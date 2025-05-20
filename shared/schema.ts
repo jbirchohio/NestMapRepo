@@ -26,13 +26,21 @@ export const trips = pgTable("trips", {
   collaborators: jsonb("collaborators").default([]),
 });
 
-export const insertTripSchema = createInsertSchema(trips).pick({
-  title: true,
-  startDate: true,
-  endDate: true,
-  userId: true,
-  collaborators: true,
-});
+export const insertTripSchema = createInsertSchema(trips)
+  .pick({
+    title: true,
+    startDate: true,
+    endDate: true,
+    userId: true,
+    collaborators: true,
+  })
+  .transform((data) => {
+    return {
+      ...data,
+      startDate: data.startDate instanceof Date ? data.startDate : new Date(data.startDate),
+      endDate: data.endDate instanceof Date ? data.endDate : new Date(data.endDate),
+    };
+  });
 
 // Activity schema
 export const activities = pgTable("activities", {
@@ -50,19 +58,26 @@ export const activities = pgTable("activities", {
   order: integer("order").notNull(),
 });
 
-export const insertActivitySchema = createInsertSchema(activities).pick({
-  tripId: true,
-  title: true,
-  date: true,
-  time: true,
-  locationName: true,
-  latitude: true,
-  longitude: true,
-  notes: true,
-  tag: true,
-  assignedTo: true,
-  order: true,
-});
+export const insertActivitySchema = createInsertSchema(activities)
+  .pick({
+    tripId: true,
+    title: true,
+    date: true,
+    time: true,
+    locationName: true,
+    latitude: true,
+    longitude: true,
+    notes: true,
+    tag: true,
+    assignedTo: true,
+    order: true,
+  })
+  .transform((data) => {
+    return {
+      ...data,
+      date: data.date instanceof Date ? data.date : new Date(data.date),
+    };
+  });
 
 // Todo schema
 export const todos = pgTable("todos", {
