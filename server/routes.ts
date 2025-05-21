@@ -6,8 +6,11 @@ import {
   insertActivitySchema, 
   insertTodoSchema, 
   insertNoteSchema,
-  insertUserSchema
+  insertUserSchema,
+  activities
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import * as openai from "./openai";
 import * as aiLocations from "./aiLocations";
