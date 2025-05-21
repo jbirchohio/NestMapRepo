@@ -84,7 +84,7 @@ export default function useActivities(tripId: number) {
             parseFloat(activity.longitude)
           );
           
-          // Get travel speed based on travel mode
+          // Get travel speed based on travel mode and distance
           let speedKmh = 5; // Default walking speed (5 km/h)
           let modeName = "walking";
           
@@ -100,12 +100,24 @@ export default function useActivities(tripId: number) {
           // Use direct string comparison after converting to lowercase for consistency
           const travelMode = typeof activity.travelMode === 'string' ? activity.travelMode.toLowerCase() : 'walking';
           
+          // Calculate more accurate speeds based on distance
+          // For longer distances (intercity travel), speeds should be much higher
+          const isLongDistance = distance > 50; // More than 50km is considered long distance
+          
           if (travelMode === 'driving') {
-            speedKmh = 40; // Estimate for urban driving
+            // Highway speeds for long distances, urban speeds for short distances
+            speedKmh = isLongDistance ? 100 : 40; // 100 km/h for highways, 40 km/h for urban
             modeName = "driving";
           } else if (travelMode === 'transit') {
-            speedKmh = 20; // Estimate for public transit
+            // Faster transit for long distances (trains/buses between cities)
+            speedKmh = isLongDistance ? 80 : 20; // 80 km/h for intercity, 20 km/h for local
             modeName = "transit";
+          } else {
+            // Walking is not practical for long distances
+            if (isLongDistance) {
+              speedKmh = 80; // Default to transit speeds for very long walks
+              modeName = "walking (estimated)";
+            }
           }
           
           // Calculate travel time based on mode
