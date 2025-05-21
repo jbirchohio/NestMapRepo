@@ -232,17 +232,40 @@ export default function TripPlanner() {
           />
         </div>
         
-        {/* Map container - full screen on mobile when active */}
+        {/* Map container - true full screen on mobile when active */}
         <div 
           className={`
             ${mobileView === 'itinerary' ? 'hidden md:block' : ''}
-            ${mobileView === 'map' ? 'fixed inset-0 top-[106px] left-0 right-0 bottom-0 z-40 w-full md:static md:h-full md:z-auto' : 'h-full'}
+            ${mobileView === 'map' ? 'fixed inset-0 z-10 md:static md:h-full md:z-auto' : 'h-full'}
           `}
           style={{
-            height: mobileView === 'map' ? 'calc(100vh - 106px)' : '100%',
-            position: mobileView === 'map' ? 'fixed' : 'relative'
+            height: mobileView === 'map' ? '100vh' : '100%',
+            width: mobileView === 'map' ? '100vw' : '100%',
+            position: mobileView === 'map' ? 'fixed' : 'relative',
+            top: 0,
+            left: 0
           }}
         >
+          {/* Toggle button overlay for map view */}
+          {mobileView === 'map' && (
+            <div className="absolute top-0 left-0 right-0 z-20 p-2 bg-white/90 dark:bg-[hsl(var(--background))]/90">
+              <div className="flex border rounded-md overflow-hidden shadow-sm">
+                <button
+                  onClick={() => setMobileView('itinerary')}
+                  className="flex-1 py-3 px-4 font-medium bg-white dark:bg-[hsl(var(--card))]"
+                >
+                  Itinerary
+                </button>
+                <button
+                  onClick={() => setMobileView('map')}
+                  className="flex-1 py-3 px-4 font-medium bg-[hsl(var(--primary))] text-white"
+                >
+                  Map
+                </button>
+              </div>
+            </div>
+          )}
+          
           <MapView
             markers={mapMarkers}
             routes={mapRoutes}
