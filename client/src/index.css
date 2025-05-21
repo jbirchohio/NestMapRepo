@@ -11,14 +11,14 @@
   --background: 37 100% 98%; /* Light Sand: #FFFBF7 */
   --foreground: 0 0% 12%; /* Charcoal: #1F1F1F */
   
-  --muted: 22 42% 33%; /* Clay Gray: #6B4C3B */
-  --muted-foreground: 22 42% 87%; /* Light version of Clay Gray */
+  --muted: 22 20% 90%; /* Lighter muted background */
+  --muted-foreground: 22 42% 30%; /* Darker text for better contrast */
   
   --card: 37 100% 99%; /* Very Light Sand for cards */
   --card-foreground: 0 0% 12%; /* Charcoal: #1F1F1F */
   
-  --accent: 22 42% 95%; /* Light Clay accent */
-  --accent-foreground: 22 42% 33%; /* Clay Gray on accent */
+  --accent: 22 30% 92%; /* Light Clay accent, slightly darker for contrast */
+  --accent-foreground: 22 42% 25%; /* Darker Clay Gray for better readability */
   
   --border: 22 10% 90%; /* Light border color */
   
