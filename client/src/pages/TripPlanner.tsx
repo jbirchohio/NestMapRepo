@@ -207,13 +207,13 @@ export default function TripPlanner() {
         </div>
       </div>
 
-      {/* Redesigned main content layout */}
-      <div className="flex flex-col md:flex-row h-[calc(100vh-70px)] overflow-hidden">
-        {/* Itinerary sidebar - fixed width on desktop, full width on mobile when selected */}
+      {/* Simplified content layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(100vh-70px)]">
+        {/* Itinerary sidebar */}
         <div 
           className={`
             ${mobileView === 'map' ? 'hidden md:block' : 'block'}
-            md:w-[500px] md:flex-shrink-0 h-full
+            h-full overflow-y-auto
           `}
         >
           <ItinerarySidebar
@@ -227,12 +227,13 @@ export default function TripPlanner() {
           />
         </div>
         
-        {/* Map container - takes remaining space */}
+        {/* Map container */}
         <div 
           className={`
             ${mobileView === 'itinerary' ? 'hidden md:block' : 'block'}
-            flex-1 h-full
+            h-full
           `}
+          style={{ minHeight: '400px' }}
         >
           <MapView
             markers={mapMarkers}

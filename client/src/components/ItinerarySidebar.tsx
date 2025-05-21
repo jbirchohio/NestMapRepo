@@ -137,9 +137,9 @@ export default function ItinerarySidebar({
           </TabsList>
           
           <TabsContent value="itinerary" className="space-y-4">
-            {/* Day Selection */}
-            <div className="overflow-x-auto scrollbar-hide mb-4 day-button-container">
-              <div className="flex flex-wrap md:flex-nowrap gap-2">
+            {/* Day Selection - better stacking for days */}
+            <div className="mb-4">
+              <div className="grid grid-cols-2 gap-2">
                 {trip.days?.map((day, index) => (
                   <button
                     key={day.toISOString()}
@@ -147,7 +147,7 @@ export default function ItinerarySidebar({
                       day.toDateString() === activeDay.toDateString() 
                         ? 'bg-[hsl(var(--primary))] text-white' 
                         : 'bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]'
-                    } rounded-md flex-shrink-0 whitespace-nowrap text-sm md:text-base day-button`}
+                    } rounded-md text-sm md:text-base`}
                     onClick={() => onChangeDayClick(day)}
                   >
                     Day {index + 1} - {formatDate(day)}
