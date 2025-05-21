@@ -85,38 +85,54 @@ export default function useActivities(tripId: number) {
           );
           
           // Get travel speed based on travel mode and distance
-          let speedKmh = 5; // Default walking speed (5 km/h)
+          let speedKmh = 4.8; // Default walking speed - average person walks at 3-4 mph (4.8-6.4 km/h)
           let modeName = "walking";
-          
-          // Add detailed debug logging to track the travel mode issue
-          console.log(`Activity travel mode debug:
-            ID: ${activity.id}
-            Title: ${activity.title}
-            Travel Mode: ${activity.travelMode}
-            Travel Mode Type: ${typeof activity.travelMode}
-            Raw activity data: ${JSON.stringify(activity)}
-          `);
           
           // Use direct string comparison after converting to lowercase for consistency
           const travelMode = typeof activity.travelMode === 'string' ? activity.travelMode.toLowerCase() : 'walking';
           
           // Calculate more accurate speeds based on distance
-          // For longer distances (intercity travel), speeds should be much higher
           const isLongDistance = distance > 50; // More than 50km is considered long distance
+          const isMediumDistance = distance > 10 && distance <= 50; // 10-50km is medium distance
           
           if (travelMode === 'driving') {
-            // Highway speeds for long distances, urban speeds for short distances
-            speedKmh = isLongDistance ? 100 : 40; // 100 km/h for highways, 40 km/h for urban
+            if (isLongDistance) {
+              // Highway speeds for long distances (65 mph / 105 km/h)
+              speedKmh = 105; 
+            } else if (isMediumDistance) {
+              // Mix of highways and urban for medium distances
+              speedKmh = 70;
+            } else {
+              // Urban driving with traffic lights and congestion
+              speedKmh = 30;
+            }
             modeName = "driving";
           } else if (travelMode === 'transit') {
-            // Faster transit for long distances (trains/buses between cities)
-            speedKmh = isLongDistance ? 80 : 20; // 80 km/h for intercity, 20 km/h for local
+            if (isLongDistance) {
+              // Intercity trains or express buses
+              speedKmh = 90;
+            } else if (isMediumDistance) {
+              // Regional transit options
+              speedKmh = 50;
+            } else {
+              // Local buses, subways with stops
+              speedKmh = 20;
+            }
             modeName = "transit";
           } else {
-            // Walking is not practical for long distances
+            // Walking
             if (isLongDistance) {
-              speedKmh = 80; // Default to transit speeds for very long walks
+              // Very long walks aren't realistic, use transit as fallback
+              speedKmh = 90;
               modeName = "walking (estimated)";
+            } else if (isMediumDistance) {
+              // Medium distance walks also unlikely
+              speedKmh = 50;
+              modeName = "walking (estimated)";
+            } else {
+              // Reasonable walking distance
+              speedKmh = 4.8;
+              modeName = "walking";
             }
           }
           
@@ -140,9 +156,18 @@ export default function useActivities(tripId: number) {
             travelTime = `${travelTimeMinutes} min ${modeName}`;
           }
           
-          // Add artificial conflict if travel time is more than 30 minutes for walking
-          // or more than 60 minutes for other modes
-          const conflictThreshold = activity.travelMode === "walking" ? 30 : 60;
+          // Add artificial conflict if travel time exceeds reasonable thresholds
+          // Different thresholds based on travel mode and distance
+          let conflictThreshold = 30; // Default for walking (30 minutes)
+          
+          if (travelMode === 'driving') {
+            // More forgiving threshold for driving
+            conflictThreshold = isLongDistance ? 480 : 60; // 8 hours for long trips, 1 hour for urban
+          } else if (travelMode === 'transit') {
+            // Middle ground for transit
+            conflictThreshold = isLongDistance ? 360 : 45; // 6 hours for long trips, 45 min for urban
+          }
+          
           const conflict = travelTimeMinutes > conflictThreshold;
           
           // Add travel information to current activity
