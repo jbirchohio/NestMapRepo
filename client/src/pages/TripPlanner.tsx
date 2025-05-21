@@ -96,9 +96,14 @@ export default function TripPlanner() {
     return a.time.localeCompare(b.time);
   });
   
-  // Prepare map markers
+  // Prepare map markers - filter out completed activities so they don't show on the map
   const mapMarkers: MapMarker[] = sortedActivities
-    .filter(activity => activity.latitude && activity.longitude)
+    .filter(activity => 
+      // Only include activities with coordinates and that aren't marked as completed
+      activity.latitude && 
+      activity.longitude && 
+      !activity.completed
+    )
     .map((activity, index) => ({
       id: activity.id,
       latitude: parseFloat(activity.latitude || "0"),

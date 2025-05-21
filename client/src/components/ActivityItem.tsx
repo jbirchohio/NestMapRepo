@@ -9,9 +9,10 @@ interface ActivityItemProps {
   activity: ClientActivity;
   onClick: (activity: ClientActivity) => void;
   onDelete?: () => void;
+  onToggleComplete?: (activityId: number, completed: boolean) => void;
 }
 
-export default function ActivityItem({ activity, onClick, onDelete }: ActivityItemProps) {
+export default function ActivityItem({ activity, onClick, onDelete, onToggleComplete }: ActivityItemProps) {
   const { toast } = useToast();
   
   // Let's not log every activity to keep the console clean
@@ -60,6 +61,43 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
     return hour % 12 || 12;
   };
 
+  // Toggle activity completion
+  const toggleCompleteMutation = useMutation({
+    mutationFn: async (completed: boolean) => {
+      return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
+        completed: completed
+      });
+    },
+    onSuccess: (_, completed) => {
+      // Invalidate activities query to refresh the list
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] });
+      
+      toast({
+        title: completed ? "Activity Completed" : "Activity Marked Incomplete",
+        description: completed 
+          ? "The activity has been marked as completed and will be hidden from the map." 
+          : "The activity has been marked as incomplete and will appear on the map.",
+      });
+      
+      // Call parent component's onToggleComplete if provided
+      if (onToggleComplete) onToggleComplete(activity.id, completed);
+    },
+    onError: (error) => {
+      console.error("Error updating activity completion status:", error);
+      toast({
+        title: "Error",
+        description: "Could not update the activity status. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle completion toggle
+  const handleToggleComplete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the activity click
+    toggleCompleteMutation.mutate(!activity.completed);
+  };
+
   // Handle delete action
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering the activity click
@@ -96,15 +134,34 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
         className={`
           bg-white dark:bg-[hsl(var(--card))] border rounded-lg shadow-sm hover:shadow p-3 cursor-pointer
           ${activity.conflict ? 'border-[hsl(var(--destructive))]' : ''}
+          ${activity.completed ? 'opacity-60' : ''}
           relative
         `}
       >
-        {/* Delete button visible on hover */}
-        <div 
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={handleDelete}
-        >
-          <div className="bg-[hsl(var(--destructive))] text-white p-1 rounded-full hover:bg-[hsl(var(--destructive))/90] cursor-pointer">
+        {/* Action buttons visible on hover */}
+        <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Completion toggle checkbox */}
+          <div 
+            className="bg-[hsl(var(--primary))] text-white p-1 rounded-full hover:bg-[hsl(var(--primary))/90] cursor-pointer"
+            onClick={handleToggleComplete}
+            title={activity.completed ? "Mark as incomplete" : "Mark as completed"}
+          >
+            {activity.completed ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+          </div>
+          
+          {/* Delete button */}
+          <div 
+            className="bg-[hsl(var(--destructive))] text-white p-1 rounded-full hover:bg-[hsl(var(--destructive))/90] cursor-pointer"
+            onClick={handleDelete}
+          >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
