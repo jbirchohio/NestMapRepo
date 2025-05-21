@@ -83,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(trips);
     } catch (error) {
       console.error("Error fetching trips:", error);
-      res.status(500).json({ message: "Could not fetch trips", error: error.message });
+      res.status(500).json({ message: "Could not fetch trips", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -291,8 +291,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Parsed activity data:`, activityData);
       
       // Handle special fields that need direct assignment
-      if (req.body.travelMode) {
-        activityData.travelMode = req.body.travelMode;
+      if ('travelMode' in req.body) {
+        // If travelMode is null, explicitly set it to undefined to avoid type errors
+        activityData.travelMode = req.body.travelMode === null ? undefined : req.body.travelMode;
       }
       
       // Update the activity with all fields

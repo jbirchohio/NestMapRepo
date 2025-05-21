@@ -1,0 +1,90 @@
+✅ Final Checklist to Deliver a Clean NestMap Project via Replit
+📁 1. Project Structure + Clarity
+ Keep /client and /server folders clearly defined (if applicable)
+
+ Include README.md and SETUP_GUIDE.md at root
+
+ Add a /docs folder with screenshots, API.md, and license (if not already included)
+
+ Ensure schema.sql is located in /schema/ and referenced correctly
+
+🔐 2. Environment & Secrets
+ .env.example included
+
+ Ensure no .env is committed to Git
+
+ All required environment keys are listed:
+
+DATABASE_URL
+
+OPENAI_API_KEY
+
+MAPBOX_TOKEN
+
+VITE_MAPBOX_TOKEN
+
+VITE_SUPABASE_URL
+
+VITE_SUPABASE_ANON_KEY
+
+🧠 3. AI Integration (GPT-4o)
+ All assistant tools are accessible via UI
+
+ Assistant has error handling (e.g., "try again" state)
+
+ Model and temperature are configurable via .env
+
+ Use function_calling or tools with OpenAI for structure parsing
+
+🧭 4. Map Integration
+ Mapbox token scoped and secured via MAPBOX_TOKEN (server) and VITE_MAPBOX_TOKEN (client)
+
+ Map centers properly on trip region
+
+ Route and pin logic cleanly handles 1–20 stops
+
+ Fallbacks for location resolution failures
+
+📦 5. Supabase & Database
+ Supabase Auth works (login, session persist, logout)
+
+ Trips persist correctly across reload
+
+ Database schema (users, trips, activities, etc.) is normalized and exported
+
+ Include SQL dump or schema migration file (schema.sql already referenced)
+
+📱 6. UI Polish & Mobile Responsiveness
+ Mobile map full-screen toggle implemented
+
+ Add-Activity and Assistant buttons are visible on all viewports
+
+ Tab switching (Itinerary / Notes / Tasks) works smoothly
+
+ Fonts, paddings, z-index, and touch targets are optimized for mobile
+
+🚀 7. Deployment Readiness
+ Replit supports .replit or replit.nix
+
+ Replit secrets are referenced in production mode
+
+ Add npm run build and start scripts
+
+ Optional: add vercel.json or Render config for off-Replit hosting
+
+📦 8. Transfer-Ready Artifacts
+ README.md includes tech stack, setup, and features
+
+ SETUP_GUIDE.md includes full instructions
+
+ Include LICENSE file (MIT recommended)
+
+ Add a changelog or roadmap if continuing development
+
+ Include 3–5 clean demo screenshots in /docs/screenshots/
+
+📋 9. (Optional) Extras for Sellability
+ Add demo.mp4 or demo.gif to showcase assistant and map
+
+ Include SALES_NOTES.md for buyers (pricing ideas, roadmap, scaling)
+
