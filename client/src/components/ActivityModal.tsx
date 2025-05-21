@@ -35,6 +35,7 @@ const activitySchema = z.object({
   latitude: z.string().optional(),
   longitude: z.string().optional(),
   assignedTo: z.string().optional(),
+  travelMode: z.enum(["walking", "driving", "transit"]).default("walking"),
 });
 
 type ActivityFormValues = z.infer<typeof activitySchema>;
@@ -86,6 +87,7 @@ export default function ActivityModal({
     latitude: activity?.latitude || undefined,
     longitude: activity?.longitude || undefined,
     assignedTo: activity?.assignedTo || undefined,
+    travelMode: activity?.travelMode || "walking",
   };
   
   // Initialize form
