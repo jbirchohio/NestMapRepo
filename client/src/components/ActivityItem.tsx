@@ -14,8 +14,8 @@ interface ActivityItemProps {
 export default function ActivityItem({ activity, onClick, onDelete }: ActivityItemProps) {
   const { toast } = useToast();
   
-  // Debug logging to see what travel mode is coming from the server
-  console.log(`Activity ${activity.id} - ${activity.title} - Travel mode:`, activity.travelMode);
+  // Let's not log every activity to keep the console clean
+  // console.log(`Activity ${activity.id} - ${activity.title} - Travel mode:`, activity.travelMode);
   
   // Delete activity mutation
   const deleteActivity = useMutation({
@@ -124,22 +124,23 @@ export default function ActivityItem({ activity, onClick, onDelete }: ActivityIt
           
           {activity.travelTimeFromPrevious && (
             <div className="flex items-center text-xs text-[hsl(var(--muted-foreground))] mt-2">
-              {activity.travelMode === "walking" && (
+              {/* Use string comparison for reliability */}
+              {String(activity.travelMode).toLowerCase() === "walking" && (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M13 5c3 0 5 2 5 5 0 3-2 5-5 5M7 8l2 2M7 12l5 5M19 19l-5-5" />
                 </svg>
               )}
-              {activity.travelMode === "driving" && (
+              {String(activity.travelMode).toLowerCase() === "driving" && (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M7 17h10M5 11h14m-7-5h-2l-2 5H5l-2 3v2h18v-2l-2-3h-3l-2-5h-2zm2 8a1 1 0 11-2 0 1 1 0 012 0zm6 0a1 1 0 11-2 0 1 1 0 012 0z" />
                 </svg>
               )}
-              {activity.travelMode === "transit" && (
+              {String(activity.travelMode).toLowerCase() === "transit" && (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M15 5h-6a2 2 0 00-2 2v9a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2zm1 11h-8m8-5H8m4-5v10"></path>
                 </svg>
               )}
-              {!activity.travelMode && (
+              {(!activity.travelMode || String(activity.travelMode).toLowerCase() === "null") && (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

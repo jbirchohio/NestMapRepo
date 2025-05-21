@@ -281,16 +281,51 @@ export class DatabaseStorage implements IStorage {
   
   // Activity operations
   async getActivity(id: number): Promise<Activity | undefined> {
-    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
+    const [activity] = await db
+      .select({
+        id: activities.id,
+        tripId: activities.tripId,
+        title: activities.title,
+        date: activities.date,
+        time: activities.time,
+        locationName: activities.locationName,
+        latitude: activities.latitude,
+        longitude: activities.longitude,
+        notes: activities.notes,
+        tag: activities.tag,
+        assignedTo: activities.assignedTo,
+        order: activities.order,
+        travelMode: activities.travelMode,
+      })
+      .from(activities)
+      .where(eq(activities.id, id));
     return activity || undefined;
   }
 
   async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
     const activityList = await db
-      .select()
+      .select({
+        id: activities.id,
+        tripId: activities.tripId,
+        title: activities.title,
+        date: activities.date,
+        time: activities.time,
+        locationName: activities.locationName,
+        latitude: activities.latitude,
+        longitude: activities.longitude,
+        notes: activities.notes,
+        tag: activities.tag,
+        assignedTo: activities.assignedTo,
+        order: activities.order,
+        travelMode: activities.travelMode,
+      })
       .from(activities)
       .where(eq(activities.tripId, tripId))
       .orderBy(activities.order);
+    
+    // Debug log to see what's being retrieved from the database
+    console.log("Activities with travel modes:", activityList.map(a => ({id: a.id, title: a.title, travelMode: a.travelMode})));
+    
     return activityList;
   }
 
