@@ -22,7 +22,7 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
     // Debug to see what's being received
     console.log("AI Location search:", { searchQuery, cityContext });
     
-    // Use the provided city context or default to an empty string
+    // Use the provided city context but don't default to NYC
     let context = "";
     
     // If a city is provided and not already in the search query, add it as context
@@ -30,10 +30,9 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
       context = `in ${cityContext}`;
       console.log(`Using provided city context: ${context}`);
     }
-    // Special case for NYC - if no city specified, default to NYC
+    // No default city - will just search for the location as specified
     else {
-      context = "in New York City";
-      console.log("No city context provided, defaulting to NYC");
+      console.log("No city context provided, searching without city context");
     }
     
     const response = await openai.chat.completions.create({
@@ -64,16 +63,17 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
 
     const result = JSON.parse(content);
     
-    // Special case for Akron, directly handle it
-    if (searchQuery.toLowerCase().includes("akron")) {
+    // For queries that appear to be city names rather than specific locations
+    // Check if the query contains words that suggest it's a city name (like "City", "Ohio", etc.)
+    if (searchQuery.includes(",") || 
+        /\b(city|town|village|municipality)\b/i.test(searchQuery)) {
+      // This looks like a city name rather than a specific location
       return {
         locations: [{
-          name: "Akron",
-          address: "Akron",
-          city: "Akron",
-          region: "Ohio",
-          country: "USA",
-          description: "Akron is a city in Ohio, United States, known for its rubber and tire manufacturing history."
+          name: searchQuery,
+          fullAddress: searchQuery,
+          city: searchQuery.split(",")[0].trim(), // Use first part before comma as city name
+          description: `Location: ${searchQuery}`
         }]
       };
     }
