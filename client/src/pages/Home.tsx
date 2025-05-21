@@ -7,10 +7,14 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
 import NewTripModal from "@/components/NewTripModal";
+import SwipeableTrip from "@/components/SwipeableTrip";
+import RenameTripDialog from "@/components/RenameTripDialog";
 
 export default function Home() {
   const [, setLocation] = useLocation();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [tripToRename, setTripToRename] = useState<ClientTrip | null>(null);
   
   // Demo user ID - in a real app, this would come from authentication
   const userId = 1;
@@ -31,6 +35,20 @@ export default function Home() {
   const handleTripCreated = (tripId: number) => {
     setIsNewTripModalOpen(false);
     setLocation(`/trip/${tripId}`);
+  };
+  
+  const handleNavigateToTrip = (tripId: number) => {
+    setLocation(`/trip/${tripId}`);
+  };
+  
+  const handleOpenRenameDialog = (trip: ClientTrip) => {
+    setTripToRename(trip);
+    setIsRenameModalOpen(true);
+  };
+  
+  const handleCloseRenameDialog = () => {
+    setIsRenameModalOpen(false);
+    setTripToRename(null);
   };
   
   return (
@@ -136,19 +154,20 @@ export default function Home() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {trips.map((trip) => (
-                  <Card 
-                    key={trip.id} 
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => setLocation(`/trip/${trip.id}`)}
-                  >
-                    <CardContent className="p-4">
-                      <h3 className="font-medium text-lg">{trip.title}</h3>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                        {format(new Date(trip.startDate), 'MMM d')} - {format(new Date(trip.endDate), 'MMM d, yyyy')}
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <SwipeableTrip
+                    key={trip.id}
+                    trip={trip}
+                    onNavigate={handleNavigateToTrip}
+                    onRename={handleOpenRenameDialog}
+                  />
                 ))}
+                
+                {/* Rename Trip Dialog */}
+                <RenameTripDialog
+                  isOpen={isRenameModalOpen}
+                  onClose={handleCloseRenameDialog}
+                  trip={tripToRename}
+                />
                 
                 <Card 
                   className="border-dashed cursor-pointer hover:bg-[hsl(var(--muted))] transition-colors"
