@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Dialog,
@@ -31,11 +31,17 @@ export default function RenameTripDialog({
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   
-  // Update title when trip changes
-  // Using this pattern instead of useEffect
-  if (trip && isOpen && trip.title !== title) {
-    // Schedule a state update for the next render cycle
-    setTimeout(() => setTitle(trip.title), 0);
+  // Reset the title whenever the dialog opens with a new trip
+  // We use a separate flag to prevent infinite render loops
+  const titleSetRef = useRef(false);
+  if (trip && isOpen && !titleSetRef.current) {
+    setTitle(trip.title);
+    titleSetRef.current = true;
+  }
+  
+  // Reset the flag when dialog closes
+  if (!isOpen && titleSetRef.current) {
+    titleSetRef.current = false;
   }
   
   const renameTrip = useMutation({

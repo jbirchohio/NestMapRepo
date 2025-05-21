@@ -23,7 +23,7 @@ export default function SwipeableTrip({ trip, onNavigate, onRename }: SwipeableT
   const [swiped, setSwiped] = useState(false);
   const [longPress, setLongPress] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
-  const longPressDelay = 500; // milliseconds for long press
+  const longPressDelay = 300; // milliseconds for long press (reduced from 500ms)
 
   // Handle deletion mutation
   const deleteTrip = useMutation({
