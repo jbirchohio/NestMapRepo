@@ -7,7 +7,8 @@ import {
   insertTodoSchema, 
   insertNoteSchema,
   insertUserSchema,
-  activities
+  activities,
+  users
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -16,25 +17,55 @@ import * as openai from "./openai";
 import * as aiLocations from "./aiLocations";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Users routes
+  // Users routes for Supabase integration
   app.post("/api/users", async (req: Request, res: Response) => {
     try {
       const userData = insertUserSchema.parse(req.body);
-      const existingUser = await storage.getUserByUsername(userData.username);
       
-      if (existingUser) {
-        return res.status(409).json({ message: "Username already exists" });
+      // Check if user already exists by auth_id
+      const existingUser = await db
+        .select()
+        .from(users)
+        .where(eq(users.auth_id, userData.auth_id))
+        .limit(1);
+        
+      if (existingUser.length > 0) {
+        return res.status(409).json({ message: "User already exists" });
       }
       
       const user = await storage.createUser(userData);
-      // Don't return the password in the response
-      const { password, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
+      res.status(201).json(user);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid user data", errors: error.errors });
       }
+      console.error("Error creating user:", error);
       res.status(500).json({ message: "Could not create user" });
+    }
+  });
+  
+  // Get user by auth_id - used with Supabase
+  app.get("/api/users/auth/:authId", async (req: Request, res: Response) => {
+    try {
+      const authId = req.params.authId;
+      
+      if (!authId) {
+        return res.status(400).json({ message: "Auth ID is required" });
+      }
+      
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.auth_id, authId));
+        
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.status(200).json(user);
+    } catch (error) {
+      console.error("Error getting user by auth ID:", error);
+      res.status(500).json({ message: "Could not retrieve user" });
     }
   });
 

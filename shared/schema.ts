@@ -2,18 +2,23 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User schema
+// User schema - modified to work with Supabase auth
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
+  auth_id: text("auth_id").notNull().unique(), // Supabase auth ID
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
   email: text("email").notNull().unique(),
+  display_name: text("display_name"),
+  avatar_url: text("avatar_url"),
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
+  auth_id: true,
   username: true,
-  password: true,
   email: true,
+  display_name: true,
+  avatar_url: true,
 });
 
 // Trip schema
