@@ -235,8 +235,13 @@ export default function TripPlanner() {
         {/* Map container */}
         {mobileView === 'map' ? (
           <div 
-            className="fixed left-0 top-[56px] right-0 bottom-0 w-screen md:static md:h-full overflow-hidden touch-none"
-            style={{height: 'calc(100vh - 56px)'}}
+            className="fixed inset-0 z-50 md:static md:z-auto md:h-full"
+            style={{
+              top: '56px',
+              height: 'calc(100% - 56px)',
+              width: '100%',
+              position: 'fixed'
+            }}
           >
             <MapView
               markers={mapMarkers}
