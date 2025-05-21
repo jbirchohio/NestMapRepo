@@ -88,13 +88,16 @@ export default function useActivities(tripId: number) {
           let speedKmh = 5; // Default walking speed (5 km/h)
           let modeName = "walking";
           
-          // Added more robust travel mode detection - case insensitive matching 
-          const travelMode = activity.travelMode?.toLowerCase() || "walking";
+          // Added debug logging to see what travel mode is coming from the database
+          console.log(`Processing travel time for activity ${activity.id} (${activity.title}) with travel mode:`, activity.travelMode);
           
-          if (travelMode.includes("driv")) {
+          // Use direct string comparison after converting to lowercase for consistency
+          const travelMode = typeof activity.travelMode === 'string' ? activity.travelMode.toLowerCase() : 'walking';
+          
+          if (travelMode === 'driving') {
             speedKmh = 40; // Estimate for urban driving
             modeName = "driving";
-          } else if (travelMode.includes("transit") || travelMode.includes("public") || travelMode.includes("bus") || travelMode.includes("train")) {
+          } else if (travelMode === 'transit') {
             speedKmh = 20; // Estimate for public transit
             modeName = "transit";
           }
