@@ -237,8 +237,11 @@ export default function TripPlanner() {
           className={`
             ${mobileView === 'itinerary' ? 'hidden md:block' : 'block'}
             h-full
-            ${mobileView === 'map' ? 'fixed inset-0 z-40 pt-14 md:pt-0 md:relative md:z-auto' : ''}
+            ${mobileView === 'map' ? 'fixed inset-0 top-14 bottom-0 left-0 right-0 z-40 md:static md:z-auto' : ''}
           `}
+          style={{
+            height: mobileView === 'map' ? 'calc(100vh - 56px)' : '100%'
+          }}
         >
           <MapView
             markers={mapMarkers}
