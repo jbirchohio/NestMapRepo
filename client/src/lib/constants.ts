@@ -10,6 +10,9 @@ export const API_ENDPOINTS = {
     DETECT_CONFLICTS: "/api/ai/detect-conflicts",
     THEMED_ITINERARY: "/api/ai/themed-itinerary",
     ASSISTANT: "/api/ai/assistant",
+    WEATHER_ACTIVITIES: "/api/ai/weather-activities",
+    BUDGET_OPTIONS: "/api/ai/budget-options",
+    FIND_LOCATION: "/api/ai/find-location",
   },
 };
 

@@ -608,6 +608,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Weather-based activity suggestions endpoint
+  app.post("/api/ai/weather-activities", async (req: Request, res: Response) => {
+    try {
+      const { location, date, weatherCondition } = req.body;
+      
+      if (!location || !weatherCondition) {
+        return res.status(400).json({ message: "Location and weather condition are required" });
+      }
+      
+      const result = await openai.suggestWeatherBasedActivities(
+        location,
+        date || new Date().toISOString().split('T')[0],
+        weatherCondition
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error in weather activities endpoint:", error);
+      res.status(500).json({ message: "Could not get weather-based activity suggestions" });
+    }
+  });
+  
+  // Budget suggestions endpoint
+  app.post("/api/ai/budget-options", async (req: Request, res: Response) => {
+    try {
+      const { location, budgetLevel, activityType } = req.body;
+      
+      if (!location || !budgetLevel) {
+        return res.status(400).json({ 
+          message: "Location and budget level are required",
+          validBudgetLevels: ["low", "medium", "high"]
+        });
+      }
+      
+      // Validate budget level
+      if (!["low", "medium", "high"].includes(budgetLevel)) {
+        return res.status(400).json({ 
+          message: "Invalid budget level. Must be one of: low, medium, high"
+        });
+      }
+      
+      const result = await openai.suggestBudgetOptions(
+        location,
+        budgetLevel as "low" | "medium" | "high",
+        activityType
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error in budget options endpoint:", error);
+      res.status(500).json({ message: "Could not get budget suggestions" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
