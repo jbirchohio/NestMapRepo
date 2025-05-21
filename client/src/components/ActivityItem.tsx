@@ -140,9 +140,9 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
       >
         {/* Action buttons */}
         <div className="flex justify-between">
-          {/* Left-side completion toggle */}
+          {/* Left-side completion toggle - fixed hover behavior */}
           <div 
-            className="flex opacity-0 group-hover:opacity-100 transition-opacity ml-0"
+            className="flex opacity-0 group-hover:opacity-100 transition-opacity ml-0 z-10"
             onClick={handleToggleComplete}
           >
             <div
