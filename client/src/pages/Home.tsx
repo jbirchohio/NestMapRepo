@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,15 +9,23 @@ import { format } from "date-fns";
 import NewTripModal from "@/components/NewTripModal";
 import SwipeableTrip from "@/components/SwipeableTrip";
 import RenameTripDialog from "@/components/RenameTripDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthModal from "@/components/auth/AuthModal";
+import { UserRound, LogOut } from "lucide-react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [tripToRename, setTripToRename] = useState<ClientTrip | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authView, setAuthView] = useState<"login" | "signup">("login");
   
-  // Demo user ID - in a real app, this would come from authentication
-  const userId = 1;
+  const { user, signOut } = useAuth();
+  const queryClient = useQueryClient();
+  
+  // Get user ID from authentication or use demo ID
+  const userId = user?.id || 1;
   
   const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
     queryKey: [API_ENDPOINTS.TRIPS, { userId }],
@@ -25,10 +33,16 @@ export default function Home() {
       const res = await fetch(`${API_ENDPOINTS.TRIPS}?userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch trips");
       return res.json();
-    }
+    },
+    enabled: !!userId, // Only fetch if we have a userId
   });
   
   const handleCreateNewTrip = () => {
+    if (!user) {
+      setAuthView("signup");
+      setIsAuthModalOpen(true);
+      return;
+    }
     setIsNewTripModalOpen(true);
   };
   
@@ -51,6 +65,23 @@ export default function Home() {
     setTripToRename(null);
   };
   
+  const handleSignInClick = () => {
+    setAuthView("login");
+    setIsAuthModalOpen(true);
+  };
+  
+  const handleSignUpClick = () => {
+    setAuthView("signup");
+    setIsAuthModalOpen(true);
+  };
+  
+  const handleSignOut = async () => {
+    await signOut();
+    queryClient.invalidateQueries({
+      queryKey: [API_ENDPOINTS.TRIPS],
+    });
+  };
+  
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
       <NewTripModal 
@@ -60,17 +91,70 @@ export default function Home() {
         userId={userId}
       />
       
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        defaultView={authView}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+          queryClient.invalidateQueries({
+            queryKey: [API_ENDPOINTS.TRIPS],
+          });
+        }}
+      />
+
       <header className="bg-white dark:bg-[hsl(var(--card))] shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <div className="h-10 w-10 bg-[hsl(var(--secondary))] rounded-full flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[hsl(var(--foreground))]" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-              </svg>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="h-10 w-10 bg-[hsl(var(--secondary))] rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[hsl(var(--foreground))]" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h1 className="text-2xl font-bold">NestMap</h1>
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">Plan. Pin. Wander.</p>
+              </div>
             </div>
-            <div className="ml-3">
-              <h1 className="text-2xl font-bold">NestMap</h1>
-              <p className="text-sm text-[hsl(var(--muted-foreground))]">Plan. Pin. Wander.</p>
+            
+            {/* Authentication UI */}
+            <div className="flex items-center space-x-2">
+              {user ? (
+                <div className="flex items-center">
+                  <div className="mr-3 text-right hidden sm:block">
+                    <p className="font-medium">{user.user_metadata?.display_name || user.email}</p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="rounded-full"
+                      onClick={handleSignOut}
+                      title="Sign Out"
+                    >
+                      <LogOut className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="ghost" 
+                    onClick={handleSignInClick}
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    onClick={handleSignUpClick}
+                    className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]"
+                  >
+                    Sign Up
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
