@@ -232,13 +232,13 @@ export default function TripPlanner() {
           />
         </div>
         
-        {/* Map container */}
+        {/* Map container - full screen on mobile when active */}
         <div 
           className={`
             ${mobileView === 'itinerary' ? 'hidden md:block' : 'block'}
             h-full
+            ${mobileView === 'map' ? 'fixed inset-0 z-40 pt-14 md:pt-0 md:relative md:z-auto' : ''}
           `}
-          style={{ minHeight: '400px' }}
         >
           <MapView
             markers={mapMarkers}
