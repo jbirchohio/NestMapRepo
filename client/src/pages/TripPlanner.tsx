@@ -186,7 +186,7 @@ export default function TripPlanner() {
 
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
-      {/* Mobile view toggle buttons - only visible on mobile */}
+      {/* Mobile view toggle buttons - fixed at the top */}
       <div className="md:hidden sticky top-0 z-30 p-2 bg-white dark:bg-[hsl(var(--background))] border-b">
         <div className="flex border rounded-md overflow-hidden shadow-sm">
           <button
@@ -212,8 +212,8 @@ export default function TripPlanner() {
         </div>
       </div>
 
-      {/* Simplified content layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(100vh-70px)]">
+      {/* Content layout - with proper mobile map handling */}
+      <div className="grid grid-cols-1 md:grid-cols-2 h-[calc(100vh-110px)]">
         {/* Itinerary sidebar */}
         <div 
           className={`
@@ -232,48 +232,31 @@ export default function TripPlanner() {
           />
         </div>
         
-        {/* Map container - true full screen on mobile when active */}
-        <div 
-          className={`
-            ${mobileView === 'itinerary' ? 'hidden md:block' : ''}
-            ${mobileView === 'map' ? 'fixed inset-0 z-10 md:static md:h-full md:z-auto' : 'h-full'}
-          `}
-          style={{
-            height: mobileView === 'map' ? '100vh' : '100%',
-            width: mobileView === 'map' ? '100vw' : '100%',
-            position: mobileView === 'map' ? 'fixed' : 'relative',
-            top: 0,
-            left: 0
-          }}
-        >
-          {/* Toggle button overlay for map view */}
-          {mobileView === 'map' && (
-            <div className="absolute top-0 left-0 right-0 z-20 p-2 bg-white/90 dark:bg-[hsl(var(--background))]/90">
-              <div className="flex border rounded-md overflow-hidden shadow-sm">
-                <button
-                  onClick={() => setMobileView('itinerary')}
-                  className="flex-1 py-3 px-4 font-medium bg-white dark:bg-[hsl(var(--card))]"
-                >
-                  Itinerary
-                </button>
-                <button
-                  onClick={() => setMobileView('map')}
-                  className="flex-1 py-3 px-4 font-medium bg-[hsl(var(--primary))] text-white"
-                >
-                  Map
-                </button>
-              </div>
-            </div>
-          )}
-          
-          <MapView
-            markers={mapMarkers}
-            routes={mapRoutes}
-            center={mapCenter}
-            zoom={13}
-            onMarkerClick={handleMarkerClick}
-          />
-        </div>
+        {/* Map container */}
+        {mobileView === 'map' ? (
+          <div 
+            className="fixed left-0 top-[56px] right-0 bottom-0 w-screen md:static md:h-full overflow-hidden touch-none"
+            style={{height: 'calc(100vh - 56px)'}}
+          >
+            <MapView
+              markers={mapMarkers}
+              routes={mapRoutes}
+              center={mapCenter}
+              zoom={13}
+              onMarkerClick={handleMarkerClick}
+            />
+          </div>
+        ) : (
+          <div className={`${mobileView === 'itinerary' ? 'hidden md:block' : ''} h-full`}>
+            <MapView
+              markers={mapMarkers}
+              routes={mapRoutes}
+              center={mapCenter}
+              zoom={13}
+              onMarkerClick={handleMarkerClick}
+            />
+          </div>
+        )}
       </div>
     </AppShell>
   );
