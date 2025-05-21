@@ -193,7 +193,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tag: z.string().nullable().optional(),
         assignedTo: z.string().nullable().optional(),
         order: z.number().optional(),
-        travelMode: z.string().nullable().optional(), // Add travel mode to the schema
+        travelMode: z.string().nullable().optional(), 
+        completed: z.boolean().optional(), // Add completed field
       });
       
       // Get the existing activity to debug
@@ -203,10 +204,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activityData = partialActivitySchema.parse(req.body);
       console.log(`Parsed activity data:`, activityData);
       
-      // Force travel mode to be the one from the request body
+      // Ensure specific fields from the request body are properly handled
       if (req.body.travelMode) {
         activityData.travelMode = req.body.travelMode;
         console.log(`Forcing travel mode to: ${activityData.travelMode}`);
+      }
+      
+      // Handle completion status specifically if it exists in the request
+      if (typeof req.body.completed === 'boolean') {
+        activityData.completed = req.body.completed;
+        console.log(`Setting completed status to: ${activityData.completed}`);
       }
       
       const updatedActivity = await storage.updateActivity(activityId, activityData);
