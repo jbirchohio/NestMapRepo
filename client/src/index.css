@@ -2,55 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Warm Earth & Citrus Theme */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 47 100% 62%;
-  --secondary-foreground: 222 47% 11%;
-  --accent: 16 100% 50%;
-  --accent-foreground: 222 47% 11%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --ring: 221 83% 53%;
+  /* Base colors */
+  --primary: 25 91% 53%; /* Tangerine Orange: #F97316 */
+  --primary-foreground: 0 0% 98%; /* White text on primary */
+  
+  --background: 37 100% 98%; /* Light Sand: #FFFBF7 */
+  --foreground: 0 0% 12%; /* Charcoal: #1F1F1F */
+  
+  --muted: 22 42% 33%; /* Clay Gray: #6B4C3B */
+  --muted-foreground: 22 42% 87%; /* Light version of Clay Gray */
+  
+  --card: 37 100% 99%; /* Very Light Sand for cards */
+  --card-foreground: 0 0% 12%; /* Charcoal: #1F1F1F */
+  
+  --accent: 22 42% 95%; /* Light Clay accent */
+  --accent-foreground: 22 42% 33%; /* Clay Gray on accent */
+  
+  --border: 22 10% 90%; /* Light border color */
+  
+  --popover: 37 100% 99%;
+  --popover-foreground: 0 0% 12%;
+  
+  /* Status colors */
+  --success: 82 85% 35%; /* Olive Green: #65A30D */
+  --warning: 49 95% 53%; /* Amber: #FACC15 */
+  --destructive: 0 74% 51%; /* Brick Red: #DC2626 */
+  --destructive-foreground: 0 0% 98%; /* White text on destructive */
+  
+  /* Secondary color */
+  --secondary: 82 85% 35%; /* Olive Green as secondary color */
+  --secondary-foreground: 0 0% 98%; /* White text on secondary */
+  
+  /* Input and focus states */
+  --input: 22 10% 90%;
+  --ring: 25 91% 53%;
   --radius: 0.5rem;
   
-  /* Tag colors */
-  --tag-culture: 260 100% 67%;
-  --tag-food: 0 100% 71%;
-  --tag-event: 173 71% 55%;
-  --tag-rest: 142 61% 72%;
+  /* Tag colors - updated to match our new warm earth theme */
+  --tag-coral: 14 100% 65%;
+  --tag-olive: 82 40% 45%;
+  --tag-terracotta: 14 58% 45%;
+  --tag-marigold: 38 95% 50%;
+  --tag-fern: 142 60% 45%;
+  
+  /* Maintain backwards compatibility with old tag names */
+  --tag-culture: 14 58% 45%; /* Terracotta */
+  --tag-food: 14 100% 65%; /* Coral */
+  --tag-event: 38 95% 50%; /* Marigold */
+  --tag-rest: 82 40% 45%; /* Olive */
 }
 
 .dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 20% 65%;
-  --popover: 222 47% 11%;
-  --popover-foreground: 210 40% 98%;
-  --card: 222 47% 11%;
-  --card-foreground: 210 40% 98%;
-  --border: 217 33% 17%;
-  --input: 217 33% 17%;
-  --primary: 221 83% 53%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 47 100% 62%;
-  --secondary-foreground: 222 47% 11%;
-  --accent: 16 100% 50%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 210 40% 98%;
-  --ring: 224 76% 48%;
+  /* Dark mode adjustments */
+  --background: 20 20% 12%; /* Dark earthy background */
+  --foreground: 37 30% 96%; /* Light sand text */
+  
+  --muted: 22 25% 25%; /* Darker Clay Gray */
+  --muted-foreground: 22 25% 70%; /* Light Clay Gray for dark mode */
+  
+  --card: 20 20% 15%; /* Dark earthy card background */
+  --card-foreground: 37 30% 96%; /* Light sand text on cards */
+  
+  --accent: 22 20% 20%; /* Dark accent */
+  --accent-foreground: 22 20% 85%; /* Light text on accent */
+  
+  --border: 22 15% 25%; /* Dark border */
+  
+  --popover: 20 20% 15%;
+  --popover-foreground: 37 30% 96%;
+  
+  --input: 22 15% 25%;
 }
 
 @layer base {
