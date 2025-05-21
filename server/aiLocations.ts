@@ -64,6 +64,21 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
 
     const result = JSON.parse(content);
     
+    // Special case for departure/leaving activities
+    if (searchQuery.toLowerCase().includes("leave") || 
+        searchQuery.toLowerCase().includes("depart") || 
+        searchQuery.toLowerCase().includes("exit")) {
+      // For departure activities, don't use a default city
+      return {
+        locations: [{
+          name: searchQuery,
+          fullAddress: searchQuery,
+          city: cityContext || "", // No default city for departure
+          description: `Departure point: "${searchQuery}"`
+        }]
+      };
+    }
+    
     // Special case for Leo House which often doesn't geocode well
     if (searchQuery.toLowerCase().includes("leo house")) {
       return {
