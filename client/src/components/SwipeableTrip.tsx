@@ -81,12 +81,23 @@ export default function SwipeableTrip({ trip, onNavigate, onRename }: SwipeableT
       longPressTimer.current = null;
     }
     
-    // If it wasn't a long press and not in delete mode, navigate to trip
+    // Only navigate if it was a short tap (not a long press) and not in swipe mode
     if (!longPress && !swiped) {
       onNavigate(trip.id);
     }
     
-    setLongPress(false);
+    // Reset long press state
+    if (longPress) {
+      setLongPress(false);
+    }
+  };
+  
+  const handleMouseMove = () => {
+    // Cancel long press if user moves while pressing
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
   };
 
   // Clean up timer on unmount
@@ -157,8 +168,10 @@ export default function SwipeableTrip({ trip, onNavigate, onRename }: SwipeableT
           }`}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
           onTouchStart={handleMouseDown}
           onTouchEnd={handleMouseUp}
+          onTouchMove={handleMouseMove}
         >
           <CardContent className="p-4">
             <div className="flex justify-between items-start">

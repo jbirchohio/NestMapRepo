@@ -29,11 +29,13 @@ export default function RenameTripDialog({
 }: RenameTripDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [title, setTitle] = useState(trip?.title || "");
+  const [title, setTitle] = useState("");
   
-  // Reset title when trip changes
-  if (trip && trip.title !== title && isOpen) {
-    setTitle(trip.title);
+  // Update title when trip changes
+  // Using this pattern instead of useEffect
+  if (trip && isOpen && trip.title !== title) {
+    // Schedule a state update for the next render cycle
+    setTimeout(() => setTitle(trip.title), 0);
   }
   
   const renameTrip = useMutation({
