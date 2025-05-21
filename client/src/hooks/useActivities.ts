@@ -84,14 +84,28 @@ export default function useActivities(tripId: number) {
             parseFloat(activity.longitude)
           );
           
-          // Rough estimate: walking 5km/h
-          const travelTimeMinutes = Math.round(distance / 5 * 60);
+          // Get travel speed based on travel mode
+          let speedKmh = 5; // Default walking speed (5 km/h)
+          let modeName = "walking";
           
-          // Format travel time (simplified)
-          let travelTime = `${travelTimeMinutes} min walk`;
+          if (activity.travelMode === "driving") {
+            speedKmh = 40; // Estimate for urban driving
+            modeName = "driving";
+          } else if (activity.travelMode === "transit") {
+            speedKmh = 20; // Estimate for public transit
+            modeName = "transit";
+          }
           
-          // Add artificial conflict if travel time is more than 30 minutes
-          const conflict = travelTimeMinutes > 30;
+          // Calculate travel time based on mode
+          const travelTimeMinutes = Math.round(distance / speedKmh * 60);
+          
+          // Format travel time with appropriate mode name
+          let travelTime = `${travelTimeMinutes} min ${modeName}`;
+          
+          // Add artificial conflict if travel time is more than 30 minutes for walking
+          // or more than 60 minutes for other modes
+          const conflictThreshold = activity.travelMode === "walking" ? 30 : 60;
+          const conflict = travelTimeMinutes > conflictThreshold;
           
           // Add travel information to current activity
           processedActivities.push({
