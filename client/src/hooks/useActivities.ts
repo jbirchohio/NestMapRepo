@@ -112,7 +112,21 @@ export default function useActivities(tripId: number) {
           const travelTimeMinutes = Math.round(distance / speedKmh * 60);
           
           // Format travel time with appropriate mode name
-          let travelTime = `${travelTimeMinutes} min ${modeName}`;
+          let travelTime = "";
+          
+          // Format as hours and minutes for times over 60 minutes
+          if (travelTimeMinutes >= 60) {
+            const hours = Math.floor(travelTimeMinutes / 60);
+            const minutes = travelTimeMinutes % 60;
+            
+            if (minutes > 0) {
+              travelTime = `${hours} hr ${minutes} min ${modeName}`;
+            } else {
+              travelTime = `${hours} hr ${modeName}`;
+            }
+          } else {
+            travelTime = `${travelTimeMinutes} min ${modeName}`;
+          }
           
           // Add artificial conflict if travel time is more than 30 minutes for walking
           // or more than 60 minutes for other modes
