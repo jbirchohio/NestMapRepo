@@ -82,11 +82,12 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
     return `${formattedHour}:${minutes} ${period}`;
   };
 
-  // Get hour for the timeline circle
-  const getTimeHour = (time: string) => {
-    const [hours] = time.split(':');
+  // Get formatted time for the timeline circle
+  const getTimeDisplay = (time: string) => {
+    if (!time) return "--:--";
+    const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
-    return hour % 12 || 12;
+    return `${hour}:${minutes}`;
   };
 
   // Handle completion toggle
@@ -124,7 +125,7 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
       {/* Timeline point */}
       <div className="flex items-center absolute left-0 timeline-point">
         <div className="h-6 w-6 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center text-xs font-medium">
-          {getTimeHour(activity.time)}
+          {getTimeDisplay(activity.time)}
         </div>
       </div>
       

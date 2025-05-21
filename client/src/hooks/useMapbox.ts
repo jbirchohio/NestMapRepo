@@ -82,11 +82,13 @@ export default function useMapbox() {
     };
     
     // Add markers for each location
-    markers.forEach((marker) => {
+    markers.forEach((marker, index) => {
       const { id, latitude, longitude, label } = marker;
       
-      // Create custom marker element with label
-      const el = createMarkerElement(label || 'X');
+      // Use number (index + 1) instead of letter label
+      const markerNumber = (index + 1).toString();
+      // Create custom marker element with numeric index
+      const el = createMarkerElement(markerNumber);
       
       // Create the marker
       const mapboxMarker = new mapboxgl.Marker({ element: el })
