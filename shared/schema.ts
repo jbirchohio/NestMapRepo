@@ -53,6 +53,10 @@ export const insertTripSchema = z.object({
   ),
   userId: z.number(),
   collaborators: z.array(z.any()).default([]),
+  // Sharing and collaboration settings
+  isPublic: z.boolean().optional().default(false),
+  shareCode: z.string().optional(),
+  sharingEnabled: z.boolean().optional().default(false),
   // Location fields are optional
   city: z.string().optional(),
   country: z.string().optional(),
