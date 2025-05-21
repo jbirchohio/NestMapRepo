@@ -140,9 +140,9 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
       >
         {/* Action buttons */}
         <div className="flex justify-between">
-          {/* Left-side completion toggle - fixed hover behavior */}
+          {/* Left-side completion toggle - always visible */}
           <div 
-            className="flex opacity-0 group-hover:opacity-100 transition-opacity ml-0 z-10"
+            className="flex ml-0 z-10 absolute -left-6"
             onClick={handleToggleComplete}
           >
             <div
@@ -161,7 +161,7 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
             </div>
           </div>
           
-          {/* Right-side delete button */}
+          {/* Right-side delete button - only visible on hover */}
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <div 
               className="bg-[hsl(var(--destructive))] text-white p-1 rounded-full hover:bg-[hsl(var(--destructive))/90] cursor-pointer"
