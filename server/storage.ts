@@ -340,12 +340,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateActivity(id: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
-    const [updatedActivity] = await db
-      .update(activities)
-      .set(activityData)
-      .where(eq(activities.id, id))
-      .returning();
-    return updatedActivity || undefined;
+    try {
+      // Special handling for completion toggle
+      if (Object.keys(activityData).length === 1 && 'completed' in activityData) {
+        console.log(`Direct DB update for activity completion: ${id}, value: ${activityData.completed}`);
+        
+        // Direct SQL query to update just the completion field
+        const [updatedActivity] = await db
+          .update(activities)
+          .set({ completed: activityData.completed === true })
+          .where(eq(activities.id, id))
+          .returning();
+        
+        return updatedActivity;
+      }
+      
+      // Normal update for other cases
+      const [updatedActivity] = await db
+        .update(activities)
+        .set(activityData)
+        .where(eq(activities.id, id))
+        .returning();
+        
+      return updatedActivity || undefined;
+    } catch (error) {
+      console.error("Error in updateActivity:", error);
+      throw error;
+    }
   }
 
   async deleteActivity(id: number): Promise<boolean> {

@@ -189,13 +189,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Special handling for completion toggle - when that's the only thing being updated
       if (Object.keys(req.body).length === 1 && typeof req.body.completed === 'boolean') {
-        // Direct database update for completion status only
-        const updatedActivity = await storage.updateActivity(activityId, {
-          completed: req.body.completed
-        });
-        
-        console.log("Completion status updated successfully:", updatedActivity);
-        return res.json(updatedActivity);
+        try {
+          // Pass directly to storage layer which has special handling
+          const updatedActivity = await storage.updateActivity(activityId, {
+            completed: req.body.completed
+          });
+          
+          if (updatedActivity) {
+            console.log("Completion status updated successfully for activity ID:", activityId);
+            return res.json(updatedActivity);
+          } else {
+            return res.status(404).json({ message: "Activity not found" });
+          }
+        } catch (error) {
+          console.error("Error updating completion status:", error);
+          return res.status(500).json({ message: "Failed to update completion status" });
+        }
       }
       
       // For other updates, proceed with schema validation
