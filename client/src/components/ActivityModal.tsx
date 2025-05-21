@@ -35,7 +35,11 @@ const activitySchema = z.object({
   latitude: z.string().optional(),
   longitude: z.string().optional(),
   assignedTo: z.string().optional(),
-  travelMode: z.enum(["walking", "driving", "transit"]).default("walking"),
+  travelMode: z.union([
+    z.literal("walking"),
+    z.literal("driving"),
+    z.literal("transit")
+  ]).default("walking"),
 });
 
 type ActivityFormValues = z.infer<typeof activitySchema>;
@@ -77,6 +81,12 @@ export default function ActivityModal({
   };
 
   // Set form default values
+  // Check if travel mode is valid, if not default to walking
+  const validTravelModes = ["walking", "driving", "transit"];
+  const travelMode = activity?.travelMode && validTravelModes.includes(activity.travelMode) 
+    ? activity.travelMode as "walking" | "driving" | "transit" 
+    : "walking";
+  
   const defaultFormValues: ActivityFormValues = {
     title: activity?.title || "",
     date: date,
@@ -87,7 +97,7 @@ export default function ActivityModal({
     latitude: activity?.latitude || undefined,
     longitude: activity?.longitude || undefined,
     assignedTo: activity?.assignedTo || undefined,
-    travelMode: activity?.travelMode || "walking",
+    travelMode: travelMode,
   };
   
   // Initialize form
@@ -523,6 +533,46 @@ export default function ActivityModal({
                   ))}
                 </div>
                 <input type="hidden" {...register("tag")} value={selectedTag} />
+              </div>
+              
+              {/* Travel Mode Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Travel Mode (to this location)</label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={watch("travelMode") === "walking" ? "default" : "outline"}
+                    className="px-3 py-1 h-8"
+                    onClick={() => setValue("travelMode", "walking")}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M13 5c3 0 5 2 5 5 0 3-2 5-5 5M7 8l2 2M7 12l5 5M19 19l-5-5" />
+                    </svg>
+                    Walking
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={watch("travelMode") === "driving" ? "default" : "outline"}
+                    className="px-3 py-1 h-8"
+                    onClick={() => setValue("travelMode", "driving")}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M7 17h10M5 11h14m-7-5h-2l-2 5H5l-2 3v2h18v-2l-2-3h-3l-2-5h-2zm2 8a1 1 0 11-2 0 1 1 0 012 0zm6 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                    </svg>
+                    Driving
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={watch("travelMode") === "transit" ? "default" : "outline"}
+                    className="px-3 py-1 h-8"
+                    onClick={() => setValue("travelMode", "transit")}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 5h-6a2 2 0 00-2 2v9a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2zm1 11h-8m8-5H8m4-5v10"></path>
+                    </svg>
+                    Public Transit
+                  </Button>
+                </div>
               </div>
             </div>
             
