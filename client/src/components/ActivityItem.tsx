@@ -82,12 +82,14 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
     return `${formattedHour}:${minutes} ${period}`;
   };
 
-  // Get formatted time for the timeline circle
+  // Get formatted time for the timeline
   const getTimeDisplay = (time: string) => {
     if (!time) return "--:--";
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
-    return `${hour}:${minutes}`;
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${period}`;
   };
 
   // Handle completion toggle
@@ -122,10 +124,15 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
   
   return (
     <div className="pl-8 relative timeline-item group">
-      {/* Timeline point */}
+      {/* Time display above the card */}
+      <div className="mb-1 text-sm text-[hsl(var(--muted-foreground))] font-medium pl-8 text-center">
+        {getTimeDisplay(activity.time)}
+      </div>
+      
+      {/* Timeline point - now just shows an indicator */}
       <div className="flex items-center absolute left-0 timeline-point">
         <div className="h-6 w-6 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center text-xs font-medium">
-          {getTimeDisplay(activity.time)}
+          <div className="h-2 w-2 bg-white rounded-full"></div>
         </div>
       </div>
       
