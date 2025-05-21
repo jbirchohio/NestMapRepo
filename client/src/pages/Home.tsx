@@ -25,7 +25,7 @@ export default function Home() {
   const queryClient = useQueryClient();
   
   // Get user ID from authentication or use demo ID
-  const userId = user?.id || 1;
+  const userId = user ? Number(user.id) : 1;
   
   const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
     queryKey: [API_ENDPOINTS.TRIPS, { userId }],
