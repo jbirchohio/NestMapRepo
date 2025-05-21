@@ -140,26 +140,26 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
       >
         {/* Action buttons */}
         <div className="flex justify-between">
-          {/* Left-side completion toggle - always visible */}
-          <div 
-            className="flex ml-0 z-10 absolute -left-6"
-            onClick={handleToggleComplete}
+          {/* Left-side completion toggle - always visible and persistent */}
+          <button 
+            type="button"
+            className="absolute -left-6 z-10 w-5 h-5 flex items-center justify-center bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/90] text-white rounded-full cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation(); // Stop event propagation
+              handleToggleComplete();
+            }}
+            title={activity.completed ? "Mark as incomplete" : "Mark as completed"}
           >
-            <div
-              className="bg-[hsl(var(--primary))] text-white p-1 rounded-full hover:bg-[hsl(var(--primary))/90] cursor-pointer"
-              title={activity.completed ? "Mark as incomplete" : "Mark as completed"}
-            >
-              {activity.completed ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
-            </div>
-          </div>
+            {activity.completed ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            )}
+          </button>
           
           {/* Right-side delete button - only visible on hover */}
           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
