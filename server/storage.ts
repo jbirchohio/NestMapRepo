@@ -296,6 +296,7 @@ export class DatabaseStorage implements IStorage {
         assignedTo: activities.assignedTo,
         order: activities.order,
         travelMode: activities.travelMode,
+        completed: activities.completed,
       })
       .from(activities)
       .where(eq(activities.id, id));
@@ -318,6 +319,7 @@ export class DatabaseStorage implements IStorage {
         assignedTo: activities.assignedTo,
         order: activities.order,
         travelMode: activities.travelMode,
+        completed: activities.completed,
       })
       .from(activities)
       .where(eq(activities.tripId, tripId))

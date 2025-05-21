@@ -62,6 +62,7 @@ export const activities = pgTable("activities", {
   assignedTo: text("assigned_to"),
   order: integer("order").notNull(),
   travelMode: text("travel_mode").default("walking"),
+  completed: boolean("completed").default(false),
 });
 
 // Create a custom schema that properly handles dates as strings from JSON
@@ -80,6 +81,7 @@ export const insertActivitySchema = z.object({
   assignedTo: z.string().nullable().optional(),
   order: z.number(),
   travelMode: z.string().default("walking").optional(),
+  completed: z.boolean().optional().default(false),
 });
 
 // Todo schema
