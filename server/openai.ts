@@ -161,6 +161,118 @@ export async function generateThemedItinerary(
 /**
  * Handles general trip planning questions
  */
+/**
+ * Provides weather-based trip suggestions
+ */
+export async function suggestWeatherBasedActivities(
+  location: string,
+  date: string,
+  weatherCondition: string
+): Promise<any> {
+  try {
+    const prompt = `
+    You are a travel planning assistant recommending activities based on weather conditions.
+    
+    Location: ${location}
+    Date: ${date}
+    Weather Condition: ${weatherCondition}
+    
+    Please provide activity recommendations appropriate for the weather conditions.
+    Respond with a JSON object with the following structure:
+    {
+      "weather": {
+        "condition": "Brief summary of the weather condition",
+        "recommendation": "Overall advice for this weather"
+      },
+      "activities": [
+        {
+          "title": "Name of activity",
+          "category": "indoor" or "outdoor" or "either",
+          "description": "Brief description of the activity",
+          "locationName": "A specific location for this activity if applicable",
+          "tag": "One of: 'Culture', 'Food', 'Event', 'Rest', 'Shop'"
+        }
+      ]
+    }
+    `;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    return result;
+  } catch (error) {
+    console.error("Error in suggestWeatherBasedActivities:", error);
+    return { 
+      weather: {
+        condition: "Unknown weather condition",
+        recommendation: "Could not generate weather-based recommendations"
+      },
+      activities: [] 
+    };
+  }
+}
+
+/**
+ * Suggests budget-friendly options for a trip
+ */
+export async function suggestBudgetOptions(
+  location: string,
+  budgetLevel: "low" | "medium" | "high",
+  activityType?: string
+): Promise<any> {
+  try {
+    const prompt = `
+    You are a budget-conscious travel planning assistant.
+    
+    Location: ${location}
+    Budget Level: ${budgetLevel}
+    ${activityType ? `Activity Type: ${activityType}` : ''}
+    
+    Please suggest a variety of budget-friendly options for this trip.
+    Respond with a JSON object with the following structure:
+    {
+      "budgetInfo": {
+        "level": "${budgetLevel}",
+        "estimatedDailyBudget": "Rough estimate in USD for daily expenses",
+        "savingTips": ["2-3 tips for saving money in this location"]
+      },
+      "suggestions": [
+        {
+          "title": "Name of activity or place",
+          "category": "accommodation" or "food" or "transportation" or "activity",
+          "cost": "Estimated cost in USD",
+          "description": "Brief description",
+          "tip": "Money-saving tip for this suggestion"
+        }
+      ]
+    }
+    `;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    return result;
+  } catch (error) {
+    console.error("Error in suggestBudgetOptions:", error);
+    return { 
+      budgetInfo: {
+        level: budgetLevel,
+        estimatedDailyBudget: "Unknown",
+        savingTips: ["Could not generate budget recommendations"]
+      },
+      suggestions: [] 
+    };
+  }
+}
+
 export async function tripAssistant(question: string, tripContext: any): Promise<string | { answer: string, activities?: any[] }> {
   try {
     // Check if user is explicitly requesting to import an itinerary
@@ -196,6 +308,25 @@ export async function tripAssistant(question: string, tripContext: any): Promise
       return await parseItinerary(question, tripContext);
     }
     
+    // Detect weather-related queries
+    const isWeatherQuery = question.toLowerCase().includes("weather") ||
+                          question.toLowerCase().includes("rain") ||
+                          question.toLowerCase().includes("sunny") ||
+                          question.toLowerCase().includes("hot") ||
+                          question.toLowerCase().includes("cold") ||
+                          question.toLowerCase().includes("temperature") ||
+                          question.toLowerCase().includes("forecast");
+                          
+    // Detect budget-related queries
+    const isBudgetQuery = question.toLowerCase().includes("budget") ||
+                         question.toLowerCase().includes("cheap") ||
+                         question.toLowerCase().includes("expensive") ||
+                         question.toLowerCase().includes("cost") ||
+                         question.toLowerCase().includes("money") ||
+                         question.toLowerCase().includes("affordable") ||
+                         question.toLowerCase().includes("save") ||
+                         question.toLowerCase().includes("price");
+    
     const prompt = `
     You are a travel assistant helping with trip planning. You have access to the following trip information:
     
@@ -204,6 +335,9 @@ export async function tripAssistant(question: string, tripContext: any): Promise
     Question: ${question}
     
     Please provide a helpful, concise response to the user's question based on the trip information.
+    If the question is about weather, provide weather-appropriate activities.
+    If the question is about budget, suggest budget-friendly options.
+    Consider the location and dates of the trip when providing personalized recommendations.
     `;
 
     const response = await openai.chat.completions.create({
