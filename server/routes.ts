@@ -77,10 +77,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
+      console.log("Attempting to fetch trips for user ID:", userId);
       const trips = await storage.getTripsByUserId(userId);
+      console.log("Trips fetched successfully:", trips.length);
       res.json(trips);
     } catch (error) {
-      res.status(500).json({ message: "Could not fetch trips" });
+      console.error("Error fetching trips:", error);
+      res.status(500).json({ message: "Could not fetch trips", error: error.message });
     }
   });
 
