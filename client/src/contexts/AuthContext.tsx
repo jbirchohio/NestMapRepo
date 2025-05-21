@@ -94,10 +94,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       
+      // Create user in Supabase
       const { data, error } = await auth.signUp(email, password, metadata);
       
       if (error) {
         throw new Error(error.message);
+      }
+      
+      if (data.user) {
+        // Create user in our database
+        try {
+          const username = email.split('@')[0]; // Generate a simple username from email
+          const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              auth_id: data.user.id,
+              username: username,
+              email: email,
+              display_name: metadata.hasOwnProperty('display_name') ? metadata['display_name'] : username,
+              avatar_url: metadata.hasOwnProperty('avatar_url') ? metadata['avatar_url'] : null,
+            }),
+          });
+          
+          if (!response.ok) {
+            console.warn('User created in Supabase but failed to create in database:', await response.json());
+          }
+        } catch (dbError) {
+          console.error('Error creating user in database:', dbError);
+          // Don't block signup if DB insert fails, we'll handle it in the auth state change
+        }
       }
       
       setUser(data.user);

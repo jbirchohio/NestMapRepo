@@ -21,7 +21,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   avatar_url: true,
 });
 
-// Trip schema
+// Trip schema with enhanced sharing/collaboration features
 export const trips = pgTable("trips", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -29,10 +29,17 @@ export const trips = pgTable("trips", {
   endDate: timestamp("end_date").notNull(),
   userId: integer("user_id").notNull(),
   collaborators: jsonb("collaborators").default([]),
+  // Sharing and collaboration settings
+  isPublic: boolean("is_public").default(false),
+  shareCode: text("share_code").unique(),
+  sharingEnabled: boolean("sharing_enabled").default(false),
   // Location information
   city: text("city"),
   country: text("country"),
   location: text("location"),
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Create a custom schema that properly handles dates as strings from JSON
