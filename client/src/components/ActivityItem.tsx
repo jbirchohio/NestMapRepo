@@ -15,9 +15,6 @@ interface ActivityItemProps {
 export default function ActivityItem({ activity, onClick, onDelete, onToggleComplete }: ActivityItemProps) {
   const { toast } = useToast();
   
-  // Let's not log every activity to keep the console clean
-  // console.log(`Activity ${activity.id} - ${activity.title} - Travel mode:`, activity.travelMode);
-  
   // Delete activity mutation
   const deleteActivity = useMutation({
     mutationFn: async () => {
@@ -45,22 +42,6 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
     },
   });
   
-  // Convert 24-hour time to 12-hour format
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const formattedHour = hour % 12 || 12;
-    return `${formattedHour}:${minutes} ${period}`;
-  };
-
-  // Get hour for the timeline circle
-  const getTimeHour = (time: string) => {
-    const [hours] = time.split(':');
-    const hour = parseInt(hours);
-    return hour % 12 || 12;
-  };
-
   // Toggle activity completion
   const toggleCompleteMutation = useMutation({
     mutationFn: async (completed: boolean) => {
@@ -91,6 +72,22 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
       });
     },
   });
+
+  // Convert 24-hour time to 12-hour format
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${period}`;
+  };
+
+  // Get hour for the timeline circle
+  const getTimeHour = (time: string) => {
+    const [hours] = time.split(':');
+    const hour = parseInt(hours);
+    return hour % 12 || 12;
+  };
 
   // Handle completion toggle
   const handleToggleComplete = (e: React.MouseEvent) => {
@@ -124,12 +121,14 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
   
   return (
     <div className="pl-8 relative timeline-item group">
+      {/* Timeline point */}
       <div className="flex items-center absolute left-0 timeline-point">
         <div className="h-6 w-6 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center text-xs font-medium">
           {getTimeHour(activity.time)}
         </div>
       </div>
       
+      {/* Activity card */}
       <div 
         className={`
           bg-white dark:bg-[hsl(var(--card))] border rounded-lg shadow-sm hover:shadow p-3 cursor-pointer
@@ -138,56 +137,57 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
           relative
         `}
       >
-        {/* Action buttons */}
-        <div className="flex justify-between">
-          {/* Left-side completion toggle - always visible and persistent */}
-          <button 
-            type="button"
-            className="absolute -left-6 z-10 w-5 h-5 flex items-center justify-center bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/90] text-white rounded-full cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation(); // Stop event propagation
-              handleToggleComplete();
-            }}
-            title={activity.completed ? "Mark as incomplete" : "Mark as completed"}
+        {/* Completion toggle button - always visible */}
+        <div 
+          className="absolute left-2 top-2 z-10 w-5 h-5 flex items-center justify-center bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/90] text-white rounded-full cursor-pointer"
+          onClick={handleToggleComplete}
+          title={activity.completed ? "Mark as incomplete" : "Mark as completed"}
+        >
+          {activity.completed ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          )}
+        </div>
+        
+        {/* Delete button - only visible on hover */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div 
+            className="bg-[hsl(var(--destructive))] text-white p-1 rounded-full hover:bg-[hsl(var(--destructive))/90] cursor-pointer"
+            onClick={handleDelete}
           >
-            {activity.completed ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            )}
-          </button>
-          
-          {/* Right-side delete button - only visible on hover */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div 
-              className="bg-[hsl(var(--destructive))] text-white p-1 rounded-full hover:bg-[hsl(var(--destructive))/90] cursor-pointer"
-              onClick={handleDelete}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
           </div>
         </div>
         
-        <div onClick={() => onClick(activity)}>
+        {/* Activity content area - clickable to edit */}
+        <div 
+          onClick={() => onClick(activity)} 
+          className="pt-6"
+        >
+          {/* Title and tag row */}
           <div className="flex justify-between items-start">
             <h3 className="font-medium">{activity.title}</h3>
             {activity.tag && <TagBadge tag={activity.tag} />}
           </div>
+          
+          {/* Time */}
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">{formatTime(activity.time)}</p>
           
+          {/* Notes (if any) */}
           {activity.notes && (
             <div className="text-sm mt-2">{activity.notes}</div>
           )}
           
+          {/* Travel time indicator */}
           {activity.travelTimeFromPrevious && (
             <div className="flex items-center text-xs text-[hsl(var(--muted-foreground))] mt-2">
-              {/* Use string comparison for reliability */}
               {String(activity.travelMode).toLowerCase() === "walking" && (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M13 5c3 0 5 2 5 5 0 3-2 5-5 5M7 8l2 2M7 12l5 5M19 19l-5-5" />
@@ -212,6 +212,7 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
             </div>
           )}
 
+          {/* Conflict warning */}
           {activity.conflict && (
             <div className="flex items-center text-xs text-[hsl(var(--destructive))] mt-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
