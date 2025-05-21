@@ -64,7 +64,7 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
   // Toggle activity completion
   const toggleCompleteMutation = useMutation({
     mutationFn: async (completed: boolean) => {
-      return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
+      return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}/toggle-complete`, {
         completed: completed
       });
     },

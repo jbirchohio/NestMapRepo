@@ -170,6 +170,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dedicated endpoint for toggling activity completion
+  app.put("/api/activities/:id/toggle-complete", async (req: Request, res: Response) => {
+    try {
+      const activityId = Number(req.params.id);
+      if (isNaN(activityId)) {
+        return res.status(400).json({ message: "Invalid activity ID" });
+      }
+      
+      // Extract completion value from request body
+      const { completed } = req.body;
+      if (typeof completed !== 'boolean') {
+        return res.status(400).json({ message: "Missing or invalid 'completed' value" });
+      }
+      
+      console.log(`Toggling completion for activity ID ${activityId} to: ${completed}`);
+      
+      // Direct SQL query approach to update completion status
+      const [updatedActivity] = await db
+        .update(activities)
+        .set({ completed })
+        .where(eq(activities.id, activityId))
+        .returning();
+      
+      if (!updatedActivity) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
+      
+      console.log("Successfully updated completion status:", updatedActivity);
+      return res.json(updatedActivity);
+    } catch (error) {
+      console.error("Error toggling activity completion:", error);
+      return res.status(500).json({ message: "Failed to toggle completion status" });
+    }
+  });
+  
+  // Regular activity update endpoint
   app.put("/api/activities/:id", async (req: Request, res: Response) => {
     try {
       const activityId = Number(req.params.id);
@@ -187,24 +223,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.log(`Existing activity data:`, existingActivity);
       
-      // Special handling for completion toggle - when that's the only thing being updated
+      // Handle completed status updates through the dedicated endpoint
       if (Object.keys(req.body).length === 1 && typeof req.body.completed === 'boolean') {
-        try {
-          // Pass directly to storage layer which has special handling
-          const updatedActivity = await storage.updateActivity(activityId, {
-            completed: req.body.completed
-          });
-          
-          if (updatedActivity) {
-            console.log("Completion status updated successfully for activity ID:", activityId);
-            return res.json(updatedActivity);
-          } else {
-            return res.status(404).json({ message: "Activity not found" });
-          }
-        } catch (error) {
-          console.error("Error updating completion status:", error);
-          return res.status(500).json({ message: "Failed to update completion status" });
-        }
+        // Redirect to the dedicated endpoint
+        return res.status(400).json({ 
+          message: "Use the dedicated endpoint for toggling completion status",
+          endpoint: `/api/activities/${activityId}/toggle-complete`
+        });
       }
       
       // For other updates, proceed with schema validation
