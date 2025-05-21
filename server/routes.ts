@@ -180,7 +180,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the raw request body for debugging
       console.log(`Received activity update request for ID ${activityId}:`, req.body);
       
-      // Create a partial schema with the same date transformation
+      // Get the existing activity first
+      const existingActivity = await storage.getActivity(activityId);
+      if (!existingActivity) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
+      console.log(`Existing activity data:`, existingActivity);
+      
+      // Special handling for completion toggle - when that's the only thing being updated
+      if (Object.keys(req.body).length === 1 && typeof req.body.completed === 'boolean') {
+        // Direct database update for completion status only
+        const updatedActivity = await storage.updateActivity(activityId, {
+          completed: req.body.completed
+        });
+        
+        console.log("Completion status updated successfully:", updatedActivity);
+        return res.json(updatedActivity);
+      }
+      
+      // For other updates, proceed with schema validation
       const partialActivitySchema = z.object({
         tripId: z.number().optional(),
         title: z.string().optional(),
@@ -194,39 +212,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assignedTo: z.string().nullable().optional(),
         order: z.number().optional(),
         travelMode: z.string().nullable().optional(), 
-        completed: z.boolean().optional(), // Add completed field
+        completed: z.boolean().optional(),
       });
       
-      // Get the existing activity to debug
-      const existingActivity = await storage.getActivity(activityId);
-      console.log(`Existing activity data:`, existingActivity);
-      
+      // Parse and validate the rest of the data
       const activityData = partialActivitySchema.parse(req.body);
       console.log(`Parsed activity data:`, activityData);
       
-      // Ensure specific fields from the request body are properly handled
+      // Handle special fields that need direct assignment
       if (req.body.travelMode) {
         activityData.travelMode = req.body.travelMode;
-        console.log(`Forcing travel mode to: ${activityData.travelMode}`);
       }
       
-      // Handle completion status specifically if it exists in the request
-      if (typeof req.body.completed === 'boolean') {
-        activityData.completed = req.body.completed;
-        console.log(`Setting completed status to: ${activityData.completed}`);
-      }
-      
+      // Update the activity with all fields
       const updatedActivity = await storage.updateActivity(activityId, activityData);
-      
-      if (!updatedActivity) {
-        return res.status(404).json({ message: "Activity not found" });
-      }
-      
       res.json(updatedActivity);
+      
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
       }
+      console.error("Error updating activity:", error);
       res.status(500).json({ message: "Could not update activity" });
     }
   });
