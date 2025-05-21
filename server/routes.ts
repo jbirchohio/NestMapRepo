@@ -290,11 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activityData = partialActivitySchema.parse(req.body);
       console.log(`Parsed activity data:`, activityData);
       
-      // Handle special fields that need direct assignment
-      if ('travelMode' in req.body) {
-        // If travelMode is null, explicitly set it to undefined to avoid type errors
-        activityData.travelMode = req.body.travelMode === null ? undefined : req.body.travelMode;
-      }
+      // No need for special handling since our schema transform will handle null to undefined conversion
       
       // Update the activity with all fields
       const updatedActivity = await storage.updateActivity(activityId, activityData);
