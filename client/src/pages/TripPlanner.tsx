@@ -235,12 +235,12 @@ export default function TripPlanner() {
         {/* Map container - full screen on mobile when active */}
         <div 
           className={`
-            ${mobileView === 'itinerary' ? 'hidden md:block' : 'block'}
-            h-full
-            ${mobileView === 'map' ? 'fixed inset-0 top-14 bottom-0 left-0 right-0 z-40 md:static md:z-auto' : ''}
+            ${mobileView === 'itinerary' ? 'hidden md:block' : ''}
+            ${mobileView === 'map' ? 'fixed inset-0 top-[106px] left-0 right-0 bottom-0 z-40 w-full md:static md:h-full md:z-auto' : 'h-full'}
           `}
           style={{
-            height: mobileView === 'map' ? 'calc(100vh - 56px)' : '100%'
+            height: mobileView === 'map' ? 'calc(100vh - 106px)' : '100%',
+            position: mobileView === 'map' ? 'fixed' : 'relative'
           }}
         >
           <MapView
