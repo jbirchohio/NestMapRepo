@@ -31,8 +31,26 @@ See the [Setup Guide](SETUP_GUIDE.md) for detailed instructions on getting NestM
 1. Clone the repository
 2. Copy `.env.example` to `.env` and fill in your API keys
 3. Install dependencies: `npm install`
-4. Start the development server: `npm run dev`
-5. Access the application at http://localhost:5000
+4. Set up the database:
+   ```
+   npm run db:push
+   ```
+5. Start the development server:
+   ```
+   npm run dev
+   ```
+6. Access the application at http://localhost:5000
+
+### Deployment Options
+
+NestMap can be deployed to various platforms. See the [deployment documentation](docs/DEPLOYMENT.md) for instructions on deploying to:
+
+- Standard VPS/Dedicated servers
+- Docker environments
+- Cloud platforms (AWS, GCP, Azure)
+- PaaS providers (Heroku, Render, DigitalOcean App Platform)
+
+The deployment directory contains platform-agnostic configuration files for various hosting options.
 
 ## Technology Stack
 

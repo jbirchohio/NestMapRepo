@@ -1,0 +1,16 @@
+[Unit]
+Description=NestMap Application
+After=network.target
+
+[Service]
+Type=simple
+User=nodejs
+WorkingDirectory=/opt/nestmap
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+Environment=NODE_ENV=production
+Environment=PORT=5000
+# Add other environment variables from .env file
+
+[Install]
+WantedBy=multi-user.target
