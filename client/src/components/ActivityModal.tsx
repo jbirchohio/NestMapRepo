@@ -123,10 +123,12 @@ export default function ActivityModal({
   const createActivity = useMutation({
     mutationFn: async (data: ActivityFormValues) => {
       const order = activity?.order || 0;
+      // Make sure to explicitly include travelMode
       const res = await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, {
         ...data,
         tripId,
         order,
+        travelMode: data.travelMode || "walking", // Ensure travel mode is explicitly set
       });
       return res.json();
     },
@@ -156,6 +158,8 @@ export default function ActivityModal({
       const res = await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
         ...data,
         tripId,
+        order: activity.order, // Ensure we preserve the existing order
+        travelMode: data.travelMode, // Explicitly include travel mode
       });
       return res.json();
     },
