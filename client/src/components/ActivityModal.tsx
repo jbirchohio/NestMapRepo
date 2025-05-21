@@ -35,11 +35,7 @@ const activitySchema = z.object({
   latitude: z.string().optional(),
   longitude: z.string().optional(),
   assignedTo: z.string().optional(),
-  travelMode: z.union([
-    z.literal("walking"),
-    z.literal("driving"),
-    z.literal("transit")
-  ]).default("walking"),
+  travelMode: z.string().default("walking"),
 });
 
 type ActivityFormValues = z.infer<typeof activitySchema>;

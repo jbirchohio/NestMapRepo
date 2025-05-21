@@ -14,6 +14,9 @@ interface ActivityItemProps {
 export default function ActivityItem({ activity, onClick, onDelete }: ActivityItemProps) {
   const { toast } = useToast();
   
+  // Debug logging to see what travel mode is coming from the server
+  console.log(`Activity ${activity.id} - ${activity.title} - Travel mode:`, activity.travelMode);
+  
   // Delete activity mutation
   const deleteActivity = useMutation({
     mutationFn: async () => {

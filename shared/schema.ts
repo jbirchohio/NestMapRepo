@@ -79,7 +79,7 @@ export const insertActivitySchema = z.object({
   tag: z.string().nullable().optional(),
   assignedTo: z.string().nullable().optional(),
   order: z.number(),
-  travelMode: z.enum(["walking", "driving", "transit"]).default("walking").optional(),
+  travelMode: z.string().default("walking").optional(),
 });
 
 // Todo schema

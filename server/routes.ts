@@ -190,6 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tag: z.string().nullable().optional(),
         assignedTo: z.string().nullable().optional(),
         order: z.number().optional(),
+        travelMode: z.string().nullable().optional(), // Add travel mode to the schema
       });
       
       const activityData = partialActivitySchema.parse(req.body);
