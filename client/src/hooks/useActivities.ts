@@ -88,8 +88,14 @@ export default function useActivities(tripId: number) {
           let speedKmh = 5; // Default walking speed (5 km/h)
           let modeName = "walking";
           
-          // Added debug logging to see what travel mode is coming from the database
-          console.log(`Processing travel time for activity ${activity.id} (${activity.title}) with travel mode:`, activity.travelMode);
+          // Add detailed debug logging to track the travel mode issue
+          console.log(`Activity travel mode debug:
+            ID: ${activity.id}
+            Title: ${activity.title}
+            Travel Mode: ${activity.travelMode}
+            Travel Mode Type: ${typeof activity.travelMode}
+            Raw activity data: ${JSON.stringify(activity)}
+          `);
           
           // Use direct string comparison after converting to lowercase for consistency
           const travelMode = typeof activity.travelMode === 'string' ? activity.travelMode.toLowerCase() : 'walking';

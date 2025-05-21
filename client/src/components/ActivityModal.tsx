@@ -151,13 +151,30 @@ export default function ActivityModal({
     mutationFn: async (data: ActivityFormValues) => {
       if (!activity) return null;
       
-      const res = await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
-        ...data,
-        tripId,
-        order: activity.order, // Ensure we preserve the existing order
-        travelMode: data.travelMode, // Explicitly include travel mode
-      });
-      return res.json();
+      // Instead of spreading data which might lose properties, build a specific object
+      const updateData = {
+        title: data.title,
+        date: data.date,
+        time: data.time,
+        locationName: data.locationName,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        notes: data.notes,
+        tag: data.tag,
+        assignedTo: data.assignedTo,
+        tripId: tripId,
+        order: activity.order,
+        // Explicitly set travel mode as a string, not an enum value
+        travelMode: String(data.travelMode || 'walking')  
+      };
+      
+      console.log("Updating activity with explicit data:", updateData);
+      
+      const res = await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, updateData);
+      
+      const result = await res.json();
+      console.log("Server response after update:", result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });

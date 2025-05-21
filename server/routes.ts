@@ -177,6 +177,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid activity ID" });
       }
       
+      // Log the raw request body for debugging
+      console.log(`Received activity update request for ID ${activityId}:`, req.body);
+      
       // Create a partial schema with the same date transformation
       const partialActivitySchema = z.object({
         tripId: z.number().optional(),
@@ -193,7 +196,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         travelMode: z.string().nullable().optional(), // Add travel mode to the schema
       });
       
+      // Get the existing activity to debug
+      const existingActivity = await storage.getActivity(activityId);
+      console.log(`Existing activity data:`, existingActivity);
+      
       const activityData = partialActivitySchema.parse(req.body);
+      console.log(`Parsed activity data:`, activityData);
+      
+      // Force travel mode to be the one from the request body
+      if (req.body.travelMode) {
+        activityData.travelMode = req.body.travelMode;
+        console.log(`Forcing travel mode to: ${activityData.travelMode}`);
+      }
+      
       const updatedActivity = await storage.updateActivity(activityId, activityData);
       
       if (!updatedActivity) {
