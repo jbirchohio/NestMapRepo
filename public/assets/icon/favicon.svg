@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512px" height="512px" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g id="NestMap-Icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Background" fill="#4374CB" x="0" y="0" width="512" height="512" rx="96"></rect>
+        <g id="Map-Pin" transform="translate(106.000000, 64.000000)" fill="#FFFFFF">
+            <path d="M150,0 C232.84,0 300,67.16 300,150 C300,200 275,240 250,275 C225,310 175,350 150,384 C125,350 75,310 50,275 C25,240 0,200 0,150 C0,67.16 67.16,0 150,0 Z" id="Pin"></path>
+            <circle id="Center" fill="#4374CB" cx="150" cy="150" r="75"></circle>
+        </g>
+        <path d="M181,384 C206,350 250,310 275,275 C300,240 325,200 325,150 C325,118.67 315.83,89.67 300,64 L362,64 C418.02,64 464,109.98 464,166 L464,346 C464,402.02 418.02,448 362,448 L182,448 C125.98,448 80,402.02 80,346 L80,240 C92.67,258.67 108,277.33 126,296 C144,314.67 165,348 181,384 Z" id="Nest" fill="#FF9D42" opacity="0.9"></path>
+    </g>
+</svg>
