@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="2732px" height="2732px" viewBox="0 0 2732 2732" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g id="NestMap-Splash" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Background" fill="#FFFFFF" x="0" y="0" width="2732" height="2732"></rect>
+        <g id="Logo" transform="translate(566.000000, 566.000000)">
+            <rect id="Background" fill="#4374CB" x="0" y="0" width="1600" height="1600" rx="200"></rect>
+            <g id="Map-Pin" transform="translate(336.000000, 200.000000)" fill="#FFFFFF">
+                <path d="M464,0 C720.31,0 928,207.69 928,464 C928,618.67 848,742.4 772,850.67 C696,958.93 540,1080 464,1184 C388,1080 232,958.93 156,850.67 C80,742.4 0,618.67 0,464 C0,207.69 207.69,0 464,0 Z" id="Pin"></path>
+                <circle id="Center" fill="#4374CB" cx="464" cy="464" r="232"></circle>
+            </g>
+            <path d="M566,1200 C642,1080 772,958.93 848,850.67 C924,742.4 1004,618.67 1004,464 C1004,368.67 979.2,279.2 936,200 L1128,200 C1290.4,200 1424,333.6 1424,496 L1424,1104 C1424,1266.4 1290.4,1400 1128,1400 L568,1400 C405.6,1400 272,1266.4 272,1104 L272,752 C312,815.2 358.4,878.4 412,942.4 C465.6,1006.4 510.67,1095.2 566,1200 Z" id="Nest" fill="#FF9D42" opacity="0.9"></path>
+            <text id="NestMap" font-family="Arial-BoldMT, Arial" font-size="180" font-weight="bold" fill="#FFFFFF">
+                <tspan x="470" y="1300">NestMap</tspan>
+            </text>
+        </g>
+    </g>
+</svg>
