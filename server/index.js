@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve static files from the React build directory
-app.use(express.static(path.join(__dirname, "../dist")));
+app.use(express.static(path.join(__dirname, "../client/build")));
 
 // Health check endpoint for Railway
 app.get("/health", (req, res) => {
@@ -39,7 +39,7 @@ app.get("/api/users", (req, res) => {
 
 // Catch-all handler: send back React's index.html file for any non-API routes
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../dist/index.html"));
+  res.sendFile(path.join(__dirname, "../client/build/index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
