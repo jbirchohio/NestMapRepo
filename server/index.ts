@@ -53,7 +53,24 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Production static file serving with safe fallback for Railway deployment
+    const staticPath = process.env.STATIC_PATH || 
+      path.resolve(process.cwd(), "dist", "public");
+    
+    console.log("🚀 Serving static files from:", staticPath);
+    
+    if (fs.existsSync(staticPath)) {
+      app.use(express.static(staticPath));
+      
+      // Catch-all handler for React Router
+      app.get("*", (_req, res) => {
+        res.sendFile(path.join(staticPath, "index.html"));
+      });
+    } else {
+      console.error("❌ Static directory not found:", staticPath);
+      // Fallback to original serveStatic function
+      serveStatic(app);
+    }
   }
 
   // ALWAYS serve the app on port 5000
