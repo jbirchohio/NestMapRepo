@@ -24,8 +24,9 @@ export default function Home() {
   const { user, signOut } = useAuth();
   const queryClient = useQueryClient();
   
-  // Get user ID from authentication - require valid user
-  const userId = user?.id ? Number(user.id) : undefined;
+  // Get user ID from authentication or use guest mode
+  const userId = user?.id ? Number(user.id) : -1; // -1 indicates guest mode
+  const isGuestMode = userId === -1;
   
   const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
     queryKey: [API_ENDPOINTS.TRIPS, { userId }],
