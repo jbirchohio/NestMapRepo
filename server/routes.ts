@@ -196,10 +196,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/activities", async (req: Request, res: Response) => {
     try {
+      console.log("Creating activity with request body:", req.body);
       const activityData = insertActivitySchema.parse(req.body);
+      console.log("Parsed activity data:", activityData);
       const activity = await storage.createActivity(activityData);
+      console.log("Created activity successfully:", activity);
       res.status(201).json(activity);
     } catch (error) {
+      console.error("Error creating activity:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
       }
