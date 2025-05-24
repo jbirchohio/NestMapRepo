@@ -109,13 +109,13 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
     
     // Check if we have valid locations
     if (!result.locations || !Array.isArray(result.locations) || result.locations.length === 0) {
-      // Add a default
+      // Return error without default city
       return {
         locations: [{
           name: searchQuery,
           fullAddress: searchQuery,
-          city: cityContext || "New York City",
-          description: `Search results for "${searchQuery}"`
+          city: cityContext || "",
+          description: `Could not find location: "${searchQuery}"`
         }],
         error: "Could not find specific location details"
       };
@@ -138,7 +138,7 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
       locations: [{
         name: searchQuery,
         fullAddress: searchQuery,
-        city: "New York City",
+        city: "",
         description: "Error occurred during search"
       }],
       error: "Error processing location search"

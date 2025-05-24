@@ -420,8 +420,8 @@ export default function ActivityModal({
                           region: aiData.region,
                           country: aiData.country,
                           description: aiData.description || "Location details not available",
-                          latitude: "40.7580",  // Midtown Manhattan default
-                          longitude: "-73.9855"
+                          latitude: "",
+                          longitude: ""
                         }]);
                         
                         toast({
@@ -461,14 +461,15 @@ export default function ActivityModal({
                           });
                         }
                         else {
-                          // Fallback to entered name with NYC coordinates
+                          // Use entered name without default coordinates
                           setValue("locationName", locationName, { shouldValidate: true });
-                          setValue("latitude", "40.7580");  // Midtown Manhattan
-                          setValue("longitude", "-73.9855");
+                          setValue("latitude", "");
+                          setValue("longitude", "");
                           
                           toast({
-                            title: "Using default location",
-                            description: "Added with default New York coordinates",
+                            title: "Location added",
+                            description: "Added without coordinates - will not appear on map",
+                            variant: "destructive",
                           });
                         }
                       }
