@@ -332,11 +332,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
-    const [activity] = await db
-      .insert(activities)
-      .values(insertActivity)
-      .returning();
-    return activity;
+    try {
+      console.log("Creating activity with data:", insertActivity);
+      
+      // Ensure required fields are present and properly formatted
+      const activityData = {
+        tripId: insertActivity.tripId,
+        title: insertActivity.title,
+        date: insertActivity.date,
+        time: insertActivity.time,
+        locationName: insertActivity.locationName,
+        latitude: insertActivity.latitude || null,
+        longitude: insertActivity.longitude || null,
+        notes: insertActivity.notes || null,
+        tag: insertActivity.tag || null,
+        assignedTo: insertActivity.assignedTo || null,
+        order: insertActivity.order,
+        travelMode: insertActivity.travelMode || "walking",
+        completed: insertActivity.completed || false,
+      };
+      
+      console.log("Formatted activity data:", activityData);
+      
+      const [activity] = await db
+        .insert(activities)
+        .values(activityData)
+        .returning();
+      
+      console.log("Successfully created activity:", activity);
+      return activity;
+    } catch (error) {
+      console.error("Database error creating activity:", error);
+      throw error;
+    }
   }
 
   async updateActivity(id: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
