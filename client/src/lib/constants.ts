@@ -74,10 +74,10 @@ export const getDaysBetweenDates = (startDate: Date, endDate: Date): Date[] => {
   return days;
 };
 
-// Default map settings
+// Default map settings - centered on continental US
 export const DEFAULT_MAP_SETTINGS = {
-  center: [-74.0060, 40.7128], // New York City coordinates
-  zoom: 12,
+  center: [-98.5795, 39.8283], // Geographic center of continental US
+  zoom: 4, // Zoomed out to show full country
 };
 
 // Map style URL
