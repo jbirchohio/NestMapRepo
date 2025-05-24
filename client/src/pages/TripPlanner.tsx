@@ -55,7 +55,7 @@ export default function TripPlanner() {
       // This helps the map search find more relevant POIs within the trip's context
       try {
         localStorage.setItem(`trip_${tripId}`, JSON.stringify({
-          city: trip.city || "New York City", // Default to NYC if no city specified
+          city: trip.city || "", // No default city
           latitude: trip.latitude,
           longitude: trip.longitude
         }));

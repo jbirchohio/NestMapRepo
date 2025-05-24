@@ -211,8 +211,8 @@ export default function useMapbox() {
       }
     }
     
-    // Default to NYC if no trip context available
-    return { longitude: -73.9857, latitude: 40.7484, city: "New York City" };
+    // No default location - let Mapbox search globally
+    return {};
   }, []);
   
   // Geocode a location name to coordinates with improved accuracy for POIs and landmarks
