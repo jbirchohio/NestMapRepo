@@ -32,6 +32,9 @@ const tripSchema = z.object({
   city: z.string().min(1, "Please select a city"),
   cityLatitude: z.string().optional(),
   cityLongitude: z.string().optional(),
+  hotel: z.string().optional(),
+  hotelLatitude: z.string().optional(),
+  hotelLongitude: z.string().optional(),
 });
 
 type TripFormValues = z.infer<typeof tripSchema>;
@@ -60,6 +63,9 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
     city: "",
     cityLatitude: "",
     cityLongitude: "",
+    hotel: "",
+    hotelLatitude: "",
+    hotelLongitude: "",
   };
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<TripFormValues>({
@@ -68,6 +74,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
   });
   
   const city = watch("city");
+  const hotel = watch("hotel");
   
   // Look up city coordinates when city field changes
   useEffect(() => {
@@ -94,6 +101,33 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
       return () => clearTimeout(timer);
     }
   }, [city, geocodeLocation, setValue, toast]);
+
+  // Look up hotel coordinates when hotel field changes
+  useEffect(() => {
+    if (hotel && hotel.length > 3 && city) {
+      const timer = setTimeout(async () => {
+        try {
+          // Search for hotel in the context of the city
+          const searchTerm = hotel.includes(city) ? hotel : `${hotel}, ${city}`;
+          const result = await geocodeLocation(searchTerm);
+          if (result) {
+            setValue("hotelLatitude", result.latitude.toString());
+            setValue("hotelLongitude", result.longitude.toString());
+            
+            toast({
+              title: "Hotel found",
+              description: result.fullAddress,
+              duration: 2000,
+            });
+          }
+        } catch (error) {
+          console.error("Error geocoding hotel:", error);
+        }
+      }, 800);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hotel, city, geocodeLocation, setValue, toast]);
   
   const createTrip = useMutation({
     mutationFn: async (data: TripFormValues) => {
@@ -109,6 +143,10 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
         // Include city coordinates for map centering
         cityLatitude: data.cityLatitude,
         cityLongitude: data.cityLongitude,
+        // Include hotel information
+        hotel: data.hotel,
+        hotelLatitude: data.hotelLatitude,
+        hotelLongitude: data.hotelLongitude,
       };
       
       console.log("Creating trip with data:", tripData);
@@ -194,6 +232,18 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
               )}
               <p className="text-xs text-[hsl(var(--muted-foreground))]">
                 Enter your main destination city to center your trip map
+              </p>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="hotel">Hotel/Accommodation (Optional)</Label>
+              <Input
+                id="hotel"
+                {...register("hotel")}
+                placeholder="e.g., Hotel Name, Airbnb address"
+              />
+              <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                Where you're staying - this will appear as a pin on your map
               </p>
             </div>
             
