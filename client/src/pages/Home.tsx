@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,19 @@ export default function Home() {
       localStorage.setItem("nestmap_guest_trips", JSON.stringify(trips));
     }
   };
+
+  // Clear localStorage for testing
+  const clearGuestData = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("nestmap_guest_trips");
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS] });
+    }
+  };
+
+  // Auto-clear localStorage on page load for testing (temporary)
+  React.useEffect(() => {
+    clearGuestData();
+  }, []);
 
   const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
     queryKey: [API_ENDPOINTS.TRIPS, { userId }],
