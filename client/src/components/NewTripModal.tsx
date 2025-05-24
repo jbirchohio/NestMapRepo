@@ -76,6 +76,19 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
   const city = watch("city");
   const hotel = watch("hotel");
   
+  // Hotel search state
+  const [hotelSearchTerm, setHotelSearchTerm] = useState("");
+  const [hotelResults, setHotelResults] = useState<Array<{
+    name: string;
+    address?: string;
+    city: string;
+    region?: string;
+    country?: string;
+    description?: string;
+    latitude?: string;
+    longitude?: string;
+  }>>([]);
+  
   // Look up city coordinates when city field changes
   useEffect(() => {
     if (city && city.length > 3) {
@@ -237,11 +250,140 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
             
             <div className="grid gap-2">
               <Label htmlFor="hotel">Hotel/Accommodation (Optional)</Label>
-              <Input
-                id="hotel"
-                {...register("hotel")}
-                placeholder="e.g., Hotel Name, Airbnb address"
-              />
+              <div className="flex w-full space-x-2">
+                <Input
+                  id="hotel"
+                  {...register("hotel")}
+                  placeholder="e.g., Hotel Name, Airbnb address"
+                  onChange={(e) => setHotelSearchTerm(e.target.value)}
+                />
+                <Button 
+                  type="button"
+                  variant="outline"
+                  className="whitespace-nowrap px-3"
+                  onClick={async () => {
+                    const hotelName = hotelSearchTerm || watch("hotel");
+                    if (!hotelName || !city) return;
+                    
+                    try {
+                      setHotelResults([]);
+                      
+                      const aiResponse = await fetch("/api/ai/find-location", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ 
+                          searchQuery: hotelName,
+                          cityContext: city
+                        })
+                      });
+                      
+                      if (!aiResponse.ok) {
+                        throw new Error("Error searching for hotel");
+                      }
+                      
+                      const aiData = await aiResponse.json();
+                      
+                      if (aiData.locations && Array.isArray(aiData.locations)) {
+                        const mapboxToken = "pk.eyJ1IjoicmV0bW91c2VyIiwiYSI6ImNtOXJtOHZ0MjA0dTgycG9ocDA3dXNpMGIifQ.WHYwcRzR3g8djNiBsVw1vg";
+                        
+                        const processedLocations = await Promise.all(
+                          aiData.locations.map(async (loc: any) => {
+                            try {
+                              const fullAddress = (loc.address || loc.name) + ", " + 
+                                               (loc.city || city) + ", " + 
+                                               (loc.region || "");
+                              
+                              const mapboxResponse = await fetch(
+                                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`
+                              );
+                              
+                              if (mapboxResponse.ok) {
+                                const mapboxData = await mapboxResponse.json();
+                                
+                                if (mapboxData.features && mapboxData.features.length > 0) {
+                                  const feature = mapboxData.features[0];
+                                  
+                                  return {
+                                    ...loc,
+                                    latitude: feature.center[1].toString(),
+                                    longitude: feature.center[0].toString()
+                                  };
+                                }
+                              }
+                              
+                              return loc;
+                            } catch (e) {
+                              console.error("Error geocoding hotel:", e);
+                              return loc;
+                            }
+                          })
+                        );
+                        
+                        const validLocations = processedLocations.filter(loc => 
+                          loc.latitude && loc.longitude
+                        );
+                        
+                        if (validLocations.length > 0) {
+                          setHotelResults(validLocations);
+                          toast({
+                            title: "Hotel search results",
+                            description: `Found ${validLocations.length} matching hotels`,
+                          });
+                        } else {
+                          toast({
+                            title: "No hotels found",
+                            description: "Try a different search term",
+                            variant: "destructive",
+                          });
+                        }
+                      }
+                    } catch (error) {
+                      console.error("Error searching for hotel:", error);
+                      toast({
+                        title: "Search error",
+                        description: "Could not search for hotels. Please try again.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                >
+                  🔍 Search
+                </Button>
+              </div>
+              
+              {hotelResults.length > 0 && (
+                <div className="mt-2 max-h-40 overflow-y-auto border rounded-md">
+                  {hotelResults.map((hotel, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className="w-full p-2 text-left hover:bg-[hsl(var(--muted))] border-b last:border-b-0"
+                      onClick={() => {
+                        setValue("hotel", hotel.name, { shouldValidate: true });
+                        setValue("hotelLatitude", hotel.latitude);
+                        setValue("hotelLongitude", hotel.longitude);
+                        setHotelSearchTerm(hotel.name);
+                        setHotelResults([]);
+                        toast({
+                          title: "Hotel selected",
+                          description: hotel.address || hotel.name,
+                        });
+                      }}
+                    >
+                      <div className="font-medium">{hotel.name}</div>
+                      {hotel.address && (
+                        <div className="text-xs text-[hsl(var(--muted-foreground))]">{hotel.address}</div>
+                      )}
+                      {hotel.description && (
+                        <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">{hotel.description}</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
               <p className="text-xs text-[hsl(var(--muted-foreground))]">
                 Where you're staying - this will appear as a pin on your map
               </p>
