@@ -203,11 +203,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Created activity successfully:", activity);
       res.status(201).json(activity);
     } catch (error) {
-      console.error("Error creating activity:", error);
+      console.error("Full error creating activity:", error);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
       if (error instanceof z.ZodError) {
+        console.error("Zod validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
       }
-      res.status(500).json({ message: "Could not create activity" });
+      res.status(500).json({ message: "Could not create activity", error: error.message });
     }
   });
 
