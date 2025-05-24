@@ -117,6 +117,9 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
           ...tripData,
           userId: -1,
           createdAt: new Date().toISOString(),
+          // Include city coordinates for map centering
+          latitude: data.cityLatitude,
+          longitude: data.cityLongitude,
         };
         
         // Store in localStorage
