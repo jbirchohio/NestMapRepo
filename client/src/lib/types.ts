@@ -6,6 +6,16 @@ export interface ClientTrip extends Trip {
   days?: Date[];
   city?: string;
   location?: string;
+  // City coordinates for map centering
+  cityLatitude?: string;
+  cityLongitude?: string;
+  // Hotel/accommodation information
+  hotel?: string;
+  hotelLatitude?: string;
+  hotelLongitude?: string;
+  // Legacy coordinates (for backward compatibility)
+  latitude?: string;
+  longitude?: string;
 }
 
 export interface ClientActivity extends Activity {

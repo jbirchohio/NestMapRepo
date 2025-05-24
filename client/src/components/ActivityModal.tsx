@@ -271,6 +271,25 @@ export default function ActivityModal({
                     className={errors.locationName ? "border-[hsl(var(--destructive))]" : ""}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
+                  {trip?.hotel && trip?.hotelLatitude && trip?.hotelLongitude && (
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      className="whitespace-nowrap px-2 text-xs"
+                      onClick={() => {
+                        setValue("locationName", trip.hotel || "");
+                        setValue("latitude", trip.hotelLatitude || undefined);
+                        setValue("longitude", trip.hotelLongitude || undefined);
+                        setSearchTerm(trip.hotel || "");
+                        toast({
+                          title: "Hotel selected",
+                          description: "Using your hotel as the location",
+                        });
+                      }}
+                    >
+                      🏨 Hotel
+                    </Button>
+                  )}
                   <Button 
                     type="button"
                     variant="outline"

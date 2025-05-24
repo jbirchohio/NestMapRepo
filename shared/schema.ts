@@ -37,6 +37,13 @@ export const trips = pgTable("trips", {
   city: text("city"),
   country: text("country"),
   location: text("location"),
+  // City coordinates for map centering
+  cityLatitude: text("city_latitude"),
+  cityLongitude: text("city_longitude"),
+  // Hotel/accommodation information
+  hotel: text("hotel"),
+  hotelLatitude: text("hotel_latitude"),
+  hotelLongitude: text("hotel_longitude"),
   // Metadata
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
