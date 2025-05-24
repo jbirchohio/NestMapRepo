@@ -24,12 +24,15 @@ export default function Home() {
   const { user, signOut } = useAuth();
   const queryClient = useQueryClient();
   
-  // Get user ID from authentication or use demo ID
-  const userId = user ? Number(user.id) : 1;
+  // Get user ID from authentication - require valid user
+  const userId = user?.id ? Number(user.id) : undefined;
   
   const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
     queryKey: [API_ENDPOINTS.TRIPS, { userId }],
     queryFn: async () => {
+      if (!userId) {
+        return [];
+      }
       const res = await fetch(`${API_ENDPOINTS.TRIPS}?userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch trips");
       return res.json();
@@ -84,12 +87,14 @@ export default function Home() {
   
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
-      <NewTripModal 
-        isOpen={isNewTripModalOpen} 
-        onClose={() => setIsNewTripModalOpen(false)} 
-        onSuccess={handleTripCreated}
-        userId={userId}
-      />
+      {userId && (
+        <NewTripModal 
+          isOpen={isNewTripModalOpen} 
+          onClose={() => setIsNewTripModalOpen(false)} 
+          onSuccess={handleTripCreated}
+          userId={userId}
+        />
+      )}
       
       <AuthModal 
         isOpen={isAuthModalOpen}
