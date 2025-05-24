@@ -122,12 +122,14 @@ export default function TripPlanner() {
       }]
     : [];
   
-  // Calculate map center based on markers
+  // Calculate map center based on markers or trip city coordinates
   const mapCenter = mapMarkers.length > 0
     ? [
         mapMarkers.reduce((sum, marker) => sum + marker.longitude, 0) / mapMarkers.length,
         mapMarkers.reduce((sum, marker) => sum + marker.latitude, 0) / mapMarkers.length,
       ] as [number, number]
+    : (trip?.cityLatitude && trip?.cityLongitude)
+    ? [parseFloat(trip.cityLongitude), parseFloat(trip.cityLatitude)] as [number, number]
     : undefined;
   
   // Handle activity marker click

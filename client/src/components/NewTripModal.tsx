@@ -105,7 +105,10 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
         userId,
         city: data.city, // This is the primary field we use for location search
         location: data.city, // Also store in location field for backward compatibility
-        collaborators: []
+        collaborators: [],
+        // Include city coordinates for map centering
+        cityLatitude: data.cityLatitude,
+        cityLongitude: data.cityLongitude,
       };
       
       console.log("Creating trip with data:", tripData);
