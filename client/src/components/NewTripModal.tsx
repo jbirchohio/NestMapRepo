@@ -41,9 +41,10 @@ interface NewTripModalProps {
   onClose: () => void;
   onSuccess: (tripId: number) => void;
   userId: number;
+  isGuestMode?: boolean;
 }
 
-export default function NewTripModal({ isOpen, onClose, onSuccess, userId }: NewTripModalProps) {
+export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGuestMode = false }: NewTripModalProps) {
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
   
@@ -108,6 +109,25 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId }: New
       };
       
       console.log("Creating trip with data:", tripData);
+      
+      // Handle guest mode with localStorage
+      if (isGuestMode) {
+        const guestTrip = {
+          id: Date.now(), // Use timestamp as ID for guest trips
+          ...tripData,
+          userId: -1,
+          createdAt: new Date().toISOString(),
+        };
+        
+        // Store in localStorage
+        const existingTrips = JSON.parse(localStorage.getItem("nestmap_guest_trips") || "[]");
+        const updatedTrips = [...existingTrips, guestTrip];
+        localStorage.setItem("nestmap_guest_trips", JSON.stringify(updatedTrips));
+        
+        return guestTrip;
+      }
+      
+      // Regular authenticated user flow
       const res = await apiRequest("POST", API_ENDPOINTS.TRIPS, tripData);
       return res.json();
     },

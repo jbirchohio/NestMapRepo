@@ -28,24 +28,42 @@ export default function Home() {
   const userId = user?.id ? Number(user.id) : -1; // -1 indicates guest mode
   const isGuestMode = userId === -1;
   
+  // Guest trips storage in localStorage
+  const getGuestTrips = (): ClientTrip[] => {
+    if (typeof window === "undefined") return [];
+    const stored = localStorage.getItem("nestmap_guest_trips");
+    return stored ? JSON.parse(stored) : [];
+  };
+
+  const setGuestTrips = (trips: ClientTrip[]) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nestmap_guest_trips", JSON.stringify(trips));
+    }
+  };
+
   const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
     queryKey: [API_ENDPOINTS.TRIPS, { userId }],
     queryFn: async () => {
-      if (!userId) {
-        return [];
+      if (isGuestMode) {
+        return getGuestTrips();
       }
       const res = await fetch(`${API_ENDPOINTS.TRIPS}?userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch trips");
       return res.json();
     },
-    enabled: !!userId, // Only fetch if we have a userId
+    enabled: true, // Always enabled for both guest and authenticated users
   });
   
   const handleCreateNewTrip = () => {
-    if (!user) {
-      setAuthView("signup");
-      setIsAuthModalOpen(true);
-      return;
+    // Guest mode limitations for monetization
+    if (isGuestMode) {
+      const guestTrips = getGuestTrips();
+      if (guestTrips.length >= 2) {
+        // Limit guests to 2 trips max
+        setAuthView("signup");
+        setIsAuthModalOpen(true);
+        return;
+      }
     }
     setIsNewTripModalOpen(true);
   };
@@ -88,14 +106,13 @@ export default function Home() {
   
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
-      {userId && (
-        <NewTripModal 
-          isOpen={isNewTripModalOpen} 
-          onClose={() => setIsNewTripModalOpen(false)} 
-          onSuccess={handleTripCreated}
-          userId={userId}
-        />
-      )}
+      <NewTripModal 
+        isOpen={isNewTripModalOpen} 
+        onClose={() => setIsNewTripModalOpen(false)} 
+        onSuccess={handleTripCreated}
+        userId={userId}
+        isGuestMode={isGuestMode}
+      />
       
       <AuthModal 
         isOpen={isAuthModalOpen}
