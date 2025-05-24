@@ -187,12 +187,21 @@ export default function Home() {
         <div className="max-w-3xl mx-auto">
           <section className="mb-8">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Welcome to NestMap</h2>
+              <div>
+                <h2 className="text-xl font-semibold">
+                  {isGuestMode ? "Try NestMap Free" : "Welcome to NestMap"}
+                </h2>
+                {isGuestMode && (
+                  <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
+                    Create up to 2 trips • Limited features • No account required
+                  </p>
+                )}
+              </div>
               <Button 
                 onClick={handleCreateNewTrip} 
                 className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]"
               >
-                New Trip
+                {isGuestMode && trips.length >= 1 ? "Try One More" : "New Trip"}
               </Button>
             </div>
             
@@ -237,8 +246,46 @@ export default function Home() {
             </Card>
           </section>
           
+          {/* Guest Mode Upgrade Prompt */}
+          {isGuestMode && trips.length >= 1 && (
+            <section className="mb-8">
+              <Card className="border-[hsl(var(--primary))] bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--primary))] to-[hsl(var(--primary))] text-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Unlock Full Planning Power</h3>
+                      <p className="text-sm opacity-90 mb-3">
+                        You've used {trips.length} of 2 free trips. Sign up to create unlimited trips and unlock:
+                      </p>
+                      <ul className="text-sm space-y-1 opacity-90">
+                        <li>• Unlimited trips and collaborators</li>
+                        <li>• Advanced AI assistance with weather & budget tips</li>
+                        <li>• Trip sharing and real-time collaboration</li>
+                        <li>• Cloud sync across all your devices</li>
+                      </ul>
+                    </div>
+                    <div className="ml-6">
+                      <Button 
+                        variant="secondary"
+                        onClick={() => {
+                          setAuthView("signup");
+                          setIsAuthModalOpen(true);
+                        }}
+                        className="bg-white text-[hsl(var(--primary))] hover:bg-gray-100"
+                      >
+                        Sign Up Free
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          )}
+
           <section>
-            <h2 className="text-xl font-semibold mb-4">Your Trips</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Your Trips {isGuestMode && `(${trips.length}/2 Free)`}
+            </h2>
             
             {isLoading ? (
               <div className="text-center py-8">
