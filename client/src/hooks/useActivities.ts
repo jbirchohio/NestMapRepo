@@ -4,6 +4,16 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientActivity } from "@/lib/types";
 
 export default function useActivities(tripId: number) {
+  // Helper function to check if trip exists in localStorage (guest mode)
+  const getGuestTrip = (): any => {
+    if (typeof window === "undefined") return null;
+    const stored = localStorage.getItem("nestmap_guest_trips");
+    if (!stored) return null;
+    
+    const guestTrips = JSON.parse(stored);
+    return guestTrips.find((trip: any) => trip.id === tripId) || null;
+  };
+
   const {
     data: activities = [],
     isLoading,
@@ -13,6 +23,12 @@ export default function useActivities(tripId: number) {
     queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"],
     queryFn: async () => {
       if (!tripId) return [];
+      
+      // For guest trips, return empty activities for now
+      const guestTrip = getGuestTrip();
+      if (guestTrip) {
+        return [];
+      }
       
       const res = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}/activities`);
       if (!res.ok) throw new Error("Failed to fetch activities");
