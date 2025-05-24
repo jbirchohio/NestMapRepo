@@ -187,6 +187,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
       
+      // Check if this is guest mode (negative tripId indicates guest trip)
+      if (tripId < 0) {
+        console.log("Guest mode activities fetch detected for tripId:", tripId);
+        // For guest mode, return empty array since activities are stored in localStorage
+        return res.json([]);
+      }
+      
       const activities = await storage.getActivitiesByTripId(tripId);
       res.json(activities);
     } catch (error) {
@@ -199,18 +206,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Creating activity with request body:", req.body);
       const activityData = insertActivitySchema.parse(req.body);
       console.log("Parsed activity data:", activityData);
+      
+      // Check if this is guest mode (negative tripId indicates guest trip)
+      if (activityData.tripId < 0) {
+        console.log("Guest mode activity creation detected");
+        // For guest mode, return the activity data with a generated ID
+        const guestActivity = {
+          ...activityData,
+          id: Date.now(), // Use timestamp as unique ID for guest activities
+          date: activityData.date.toISOString(),
+        };
+        console.log("Created guest activity:", guestActivity);
+        return res.status(201).json(guestActivity);
+      }
+      
+      // For authenticated users, use database storage
       const activity = await storage.createActivity(activityData);
-      console.log("Created activity successfully:", activity);
+      console.log("Created database activity successfully:", activity);
       res.status(201).json(activity);
     } catch (error) {
       console.error("Full error creating activity:", error);
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
       if (error instanceof z.ZodError) {
         console.error("Zod validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
       }
-      res.status(500).json({ message: "Could not create activity", error: error.message });
+      res.status(500).json({ message: "Could not create activity" });
     }
   });
 

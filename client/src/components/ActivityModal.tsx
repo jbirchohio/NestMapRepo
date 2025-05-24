@@ -119,17 +119,41 @@ export default function ActivityModal({
   const createActivity = useMutation({
     mutationFn: async (data: ActivityFormValues) => {
       const order = activity?.order || 0;
-      // Make sure to explicitly include travelMode
-      const res = await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, {
+      const activityData = {
         ...data,
         tripId,
         order,
-        travelMode: data.travelMode || "walking", // Ensure travel mode is explicitly set
-      });
+        travelMode: data.travelMode || "walking",
+      };
+      
+      // Check if this is guest mode (negative tripId)
+      if (tripId < 0) {
+        // For guest mode, store in localStorage
+        const newActivity = {
+          ...activityData,
+          id: Date.now(),
+          date: data.date.toISOString(),
+        };
+        
+        // Get existing guest activities
+        const existingActivities = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
+        existingActivities.push(newActivity);
+        localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(existingActivities));
+        
+        return newActivity;
+      }
+      
+      // For authenticated users, use API
+      const res = await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, activityData);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
+      if (tripId < 0) {
+        // For guest mode, manually invalidate the query to refresh the UI
+        queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
+      }
       toast({
         title: "Activity created",
         description: "Your activity has been added to the trip.",

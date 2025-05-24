@@ -24,9 +24,18 @@ export default function useActivities(tripId: number) {
     queryFn: async () => {
       if (!tripId) return [];
       
-      // For guest trips, return empty activities for now
-      const guestTrip = getGuestTrip();
-      if (guestTrip) {
+      // Check if this is guest mode (negative tripId)
+      if (tripId < 0) {
+        // For guest trips, get activities from localStorage
+        const guestActivities = localStorage.getItem(`guest_activities_${tripId}`);
+        if (guestActivities) {
+          const activities = JSON.parse(guestActivities);
+          // Convert date strings back to Date objects for consistency
+          return activities.map((activity: any) => ({
+            ...activity,
+            date: new Date(activity.date)
+          }));
+        }
         return [];
       }
       
