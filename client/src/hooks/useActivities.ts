@@ -24,8 +24,11 @@ export default function useActivities(tripId: number) {
     queryFn: async () => {
       if (!tripId) return [];
       
-      // Check if this is guest mode (negative tripId)
-      if (tripId < 0) {
+      // Check if this is guest mode by looking for trip in localStorage
+      const guestTripsData = localStorage.getItem("nestmap_guest_trips");
+      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
+      
+      if (isGuestTrip) {
         // For guest trips, get activities from localStorage
         const guestActivities = localStorage.getItem(`guest_activities_${tripId}`);
         if (guestActivities) {

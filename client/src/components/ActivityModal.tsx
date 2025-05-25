@@ -126,8 +126,11 @@ export default function ActivityModal({
         travelMode: data.travelMode || "walking",
       };
       
-      // Check if this is guest mode (negative tripId)
-      if (tripId < 0) {
+      // Check if this is guest mode by looking for trip in localStorage
+      const guestTripsData = localStorage.getItem("nestmap_guest_trips");
+      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
+      
+      if (isGuestTrip) {
         // For guest mode, store in localStorage
         const newActivity = {
           ...activityData,
@@ -148,12 +151,8 @@ export default function ActivityModal({
       return res.json();
     },
     onSuccess: () => {
-      if (tripId < 0) {
-        // For guest mode, manually invalidate the query to refresh the UI
-        queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
-      } else {
-        queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
-      }
+      // Invalidate queries for both guest and authenticated users
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
       toast({
         title: "Activity created",
         description: "Your activity has been added to the trip.",
