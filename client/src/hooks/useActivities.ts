@@ -31,10 +31,11 @@ export default function useActivities(tripId: number) {
         if (guestActivities) {
           const activities = JSON.parse(guestActivities);
           // Convert date strings back to Date objects for consistency
-          return activities.map((activity: any) => ({
+          const processedActivities = activities.map((activity: any) => ({
             ...activity,
             date: new Date(activity.date)
           }));
+          return processActivities(processedActivities);
         }
         return [];
       }
