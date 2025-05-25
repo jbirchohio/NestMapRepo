@@ -51,6 +51,7 @@ export default function useActivities(tripId: number) {
       return processedActivities;
     },
     enabled: !!tripId,
+    staleTime: 0, // Always refetch for guest mode activities
   });
 
   // Process activities to add travel time information and detect conflicts
