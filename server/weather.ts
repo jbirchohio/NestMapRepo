@@ -136,7 +136,8 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
         temperature: Math.round(middayForecast.main.temp),
         description: middayForecast.weather[0].description,
         humidity: middayForecast.main.humidity,
-        windSpeed: middayForecast.wind.speed
+        windSpeed: middayForecast.wind.speed,
+        unit: units === 'imperial' ? 'F' : 'C'
       });
     }
 

@@ -43,6 +43,7 @@ interface WeatherData {
   description: string;
   humidity: number;
   windSpeed: number;
+  unit: 'C' | 'F';
 }
 
 interface WeatherForecastResponse {
@@ -285,7 +286,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold">{weather.temperature}°C</p>
+                    <p className="text-lg font-bold">{weather.temperature}°{weather.unit || 'C'}</p>
                     <p className="text-xs text-muted-foreground">{weather.humidity}% humidity</p>
                   </div>
                 </div>
