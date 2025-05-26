@@ -38,17 +38,14 @@ export default function MapView({
       const resizeObserver = new ResizeObserver(() => {
         // Trigger map resize after a small delay to ensure container is fully rendered
         setTimeout(() => {
-          const mapInstance = (window as any).mapboxMap;
-          if (mapInstance && mapInstance.resize) {
-            mapInstance.resize();
-          }
+          resizeMap();
         }, 100);
       });
 
       resizeObserver.observe(mapContainer.current);
       return () => resizeObserver.disconnect();
     }
-  }, [isMapReady]);
+  }, [isMapReady, resizeMap]);
 
   // Update markers when they change
   useEffect(() => {
