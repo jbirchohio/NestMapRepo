@@ -80,10 +80,10 @@ export default function SharedTrip() {
     if (permission === 'edit' && sharedTrip && (sharedTrip as any).id && !hasRedirected.current) {
       hasRedirected.current = true;
       console.log('Redirecting to edit mode for trip:', (sharedTrip as any).id);
-      // Use a more stable redirect
-      window.location.href = `/trip/${(sharedTrip as any).id}`;
+      // Use immediate redirect without setTimeout to prevent re-renders
+      window.location.replace(`/trip/${(sharedTrip as any).id}`);
     }
-  }, [permission, sharedTrip]);
+  }, [permission, (sharedTrip as any)?.id]); // Only depend on the ID, not the whole object
 
   // Read-only view
   const trip = sharedTrip as SharedTripData;
