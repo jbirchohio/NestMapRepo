@@ -258,33 +258,81 @@ export default function EnhancedAIAssistantModal({
                       }`}
                     >
                       <div className="whitespace-pre-line">{message.content}</div>
-                      {message.role === "assistant" && (message.content.includes("food and coffee suggestions") || message.content.includes("Here are some food")) && (
+                      {message.role === "assistant" && (message.content.toLowerCase().includes("food") || message.content.toLowerCase().includes("coffee") || message.content.toLowerCase().includes("restaurant") || message.content.toLowerCase().includes("cafe")) && (
                         <div className="mt-3 space-y-2">
-                          {/* Parse food suggestions and add buttons */}
-                          {message.content.match(/• (.+?) - (.+?)\n(.+?)\n\$ \| (.+?)(?=\n|$)/g)?.map((suggestion, index) => {
-                            const match = suggestion.match(/• (.+?) - (.+?)\n(.+?)\n\$ \| (.+)/);
-                            if (match) {
-                              const [, name, cuisine, description, walkTime] = match;
-                              return (
-                                <Button
-                                  key={index}
-                                  variant="outline"
-                                  size="sm"
-                                  className="mr-2 mb-2"
-                                  onClick={() => handleAddActivity({
-                                    title: name.trim(),
-                                    locationName: name.trim(),
-                                    tag: "food",
-                                    notes: `${cuisine} - ${description.trim()}`,
-                                    time: "12:00" // Default lunch time
-                                  })}
-                                >
-                                  + Add {name.trim()}
-                                </Button>
-                              );
+                          {/* Parse food suggestions and add buttons - multiple patterns */}
+                          {(() => {
+                            const suggestions = [];
+                            
+                            // Pattern 1: • Name - Description format
+                            const pattern1 = message.content.match(/• (.+?) - (.+?)(?=\n|$)/g);
+                            if (pattern1) {
+                              pattern1.forEach((suggestion, index) => {
+                                const match = suggestion.match(/• (.+?) - (.+)/);
+                                if (match) {
+                                  const [, name, description] = match;
+                                  suggestions.push({
+                                    key: `pattern1-${index}`,
+                                    name: name.trim(),
+                                    description: description.trim(),
+                                    notes: description.trim()
+                                  });
+                                }
+                              });
                             }
-                            return null;
-                          })}
+                            
+                            // Pattern 2: **Name** - Description format
+                            const pattern2 = message.content.match(/\*\*(.+?)\*\* - (.+?)(?=\n|$)/g);
+                            if (pattern2) {
+                              pattern2.forEach((suggestion, index) => {
+                                const match = suggestion.match(/\*\*(.+?)\*\* - (.+)/);
+                                if (match) {
+                                  const [, name, description] = match;
+                                  suggestions.push({
+                                    key: `pattern2-${index}`,
+                                    name: name.trim(),
+                                    description: description.trim(),
+                                    notes: description.trim()
+                                  });
+                                }
+                              });
+                            }
+                            
+                            // Pattern 3: 1. Name - Description format
+                            const pattern3 = message.content.match(/\d+\.\s+(.+?) - (.+?)(?=\n|$)/g);
+                            if (pattern3) {
+                              pattern3.forEach((suggestion, index) => {
+                                const match = suggestion.match(/\d+\.\s+(.+?) - (.+)/);
+                                if (match) {
+                                  const [, name, description] = match;
+                                  suggestions.push({
+                                    key: `pattern3-${index}`,
+                                    name: name.trim(),
+                                    description: description.trim(),
+                                    notes: description.trim()
+                                  });
+                                }
+                              });
+                            }
+                            
+                            return suggestions.map((suggestion) => (
+                              <Button
+                                key={suggestion.key}
+                                variant="outline"
+                                size="sm"
+                                className="mr-2 mb-2"
+                                onClick={() => handleAddActivity({
+                                  title: suggestion.name,
+                                  locationName: suggestion.name,
+                                  tag: "food",
+                                  notes: suggestion.notes,
+                                  time: "12:00" // Default lunch time
+                                })}
+                              >
+                                + Add {suggestion.name}
+                              </Button>
+                            ));
+                          })()}
                         </div>
                       )}
                     </div>
