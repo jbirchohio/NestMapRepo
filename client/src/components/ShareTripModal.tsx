@@ -75,10 +75,13 @@ export default function ShareTripModal({
       // Generate a share code if sharing is enabled
       const updates = {
         shareCode: generateShareCode(),
-        sharingEnabled: newValue
+        sharingEnabled: newValue,
+        sharePermission: sharePermission
       };
       try {
         await onSave(trip.id, updates);
+        const baseUrl = window.location.origin;
+        setShareLink(`${baseUrl}/share/${updates.shareCode}?permission=${sharePermission}`);
       } catch (error) {
         console.error("Error updating share settings:", error);
         toast({
@@ -109,6 +112,66 @@ export default function ShareTripModal({
         });
       }
     );
+  };
+
+  const handleNativeShare = async () => {
+    if (!trip) return;
+
+    const shareData = {
+      title: `Trip to ${trip.title}`,
+      text: `Check out our trip to ${trip.title}! ${sharePermission === 'edit' ? 'You can help plan activities and add suggestions.' : 'Take a look at our itinerary.'}`,
+      url: shareLink,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        toast({
+          title: "Shared successfully!",
+          description: "Trip shared using your device's sharing options.",
+        });
+      } else {
+        // Fallback to clipboard copy
+        copyToClipboard();
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        // User didn't cancel, so show error
+        toast({
+          title: "Share failed",
+          description: "Falling back to copying link to clipboard.",
+        });
+        copyToClipboard();
+      }
+    }
+  };
+
+  const handlePermissionChange = async (newPermission: "read-only" | "edit") => {
+    if (!trip) return;
+
+    setSharePermission(newPermission);
+    
+    try {
+      await onSave(trip.id, {
+        sharePermission: newPermission
+      });
+
+      // Update the share link with new permission
+      const baseUrl = window.location.origin;
+      const shareCode = trip.shareCode || '';
+      setShareLink(`${baseUrl}/share/${shareCode}?permission=${newPermission}`);
+      
+      toast({
+        title: "Permission updated",
+        description: `Share link now grants ${newPermission === 'edit' ? 'editing' : 'read-only'} access.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update permission. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddCollaborator = () => {
