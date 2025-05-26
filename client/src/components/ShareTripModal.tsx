@@ -157,13 +157,17 @@ export default function ShareTripModal({
     setSharePermission(newPermission);
     
     try {
+      // Ensure we have a share code - generate one if missing
+      const shareCode = trip.shareCode || generateShareCode();
+      
       await onSave(trip.id, {
-        sharePermission: newPermission
+        sharePermission: newPermission,
+        shareCode: shareCode,
+        sharingEnabled: true
       });
 
-      // Update the share link with new permission
+      // Update the share link with new permission and guaranteed share code
       const baseUrl = window.location.origin;
-      const shareCode = trip.shareCode || '';
       setShareLink(`${baseUrl}/share/${shareCode}?permission=${newPermission}`);
       
       toast({
