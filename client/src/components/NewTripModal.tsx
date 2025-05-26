@@ -184,6 +184,11 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
         return guestTrip;
       }
       
+      // For authenticated users, ensure we have a valid userId
+      if (!userId || userId === null) {
+        throw new Error("User must be authenticated to create trips");
+      }
+      
       // Regular authenticated user flow
       const res = await apiRequest("POST", API_ENDPOINTS.TRIPS, tripData);
       return res.json();
