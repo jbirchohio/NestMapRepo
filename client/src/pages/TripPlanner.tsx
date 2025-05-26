@@ -137,6 +137,14 @@ export default function TripPlanner() {
     : (trip?.cityLatitude && trip?.cityLongitude)
     ? [parseFloat(trip.cityLongitude), parseFloat(trip.cityLatitude)] as [number, number]
     : undefined;
+
+  // Debug map center calculation
+  console.log('Trip data for map:', {
+    cityLat: trip?.cityLatitude,
+    cityLng: trip?.cityLongitude, 
+    markersCount: mapMarkers.length,
+    calculatedCenter: mapCenter
+  });
   
   // Handle activity marker click
   const handleMarkerClick = (marker: MapMarker) => {
