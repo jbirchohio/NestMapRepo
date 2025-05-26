@@ -26,8 +26,12 @@ export default function MapView({
   // Initialize map
   useEffect(() => {
     if (mapContainer.current && !isMapReady) {
+      console.log("Initializing map with container:", mapContainer.current);
       initializeMap(mapContainer.current, center, zoom).then(() => {
+        console.log("Map initialization completed");
         setIsMapReady(true);
+      }).catch((error) => {
+        console.error("Map initialization failed:", error);
       });
     }
   }, [mapContainer, center, zoom, initializeMap, isMapReady]);
@@ -83,9 +87,9 @@ export default function MapView({
   };
 
   return (
-    <section className="relative w-full h-full overflow-hidden map-container" style={{height: '100%', minHeight: '400px', position: 'relative'}}>
-      <div className="w-full h-full bg-[hsl(var(--muted))]" style={{height: '100%', minHeight: '400px', position: 'relative'}}>
-        <div className="absolute inset-0" ref={mapContainer} id="map" style={{width: '100%', height: '100%', minHeight: '400px', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+    <section className="relative w-full h-full overflow-hidden map-container">
+      <div className="w-full h-full bg-[hsl(var(--muted))]">
+        <div className="w-full h-full" ref={mapContainer} id="map">
           {/* Mapbox map will be rendered here */}
         </div>
 
