@@ -52,6 +52,7 @@ export default function EnhancedAIAssistantModal({
     }
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [foodSuggestions, setFoodSuggestions] = useState<any[]>([]);
 
   const assistantMutation = useMutation({
     mutationFn: async (question: string) => {
@@ -149,6 +150,43 @@ export default function EnhancedAIAssistantModal({
           content: "I'm sorry, I had trouble processing that request. Could you try again?" 
         }
       ]);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleGetFoodSuggestions = async () => {
+    try {
+      setIsProcessing(true);
+      
+      const response = await apiRequest("POST", API_ENDPOINTS.AI.SUGGEST_FOOD, {
+        location: trip?.city || trip?.location || trip?.title || "your location",
+        foodType: "food"
+      });
+      
+      const result = await response.json();
+      
+      if (result.suggestions && result.suggestions.length > 0) {
+        setFoodSuggestions(result.suggestions);
+        setConversation(prev => [
+          ...prev,
+          { 
+            role: "user", 
+            content: "Can you suggest some good food and coffee places nearby?" 
+          },
+          { 
+            role: "assistant", 
+            content: `Here are some great food recommendations for ${trip?.city || trip?.location || trip?.title}:` 
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error("Error getting food suggestions:", error);
+      toast({
+        title: "Error",
+        description: "Could not get food suggestions. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
