@@ -315,6 +315,8 @@ export default function ActivityModal({
                     defaultValue={formatDateForInput(date)}
                     {...register("date", { valueAsDate: true })}
                     className={errors.date ? "border-[hsl(var(--destructive))]" : ""}
+                    min={trip?.startDate ? formatDateForInput(new Date(trip.startDate)) : undefined}
+                    max={trip?.endDate ? formatDateForInput(new Date(trip.endDate)) : undefined}
                   />
                   {errors.date && (
                     <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.date.message}</p>
