@@ -74,8 +74,10 @@ export default function SharedTrip() {
   }
 
   // If we have edit permission, show the full trip planner
-  if (permission === 'edit') {
-    return <TripPlanner />;
+  if (permission === 'edit' && sharedTrip) {
+    // For edit permission, redirect to the full trip planner with the trip ID
+    window.location.href = `/trip/${sharedTrip.id}`;
+    return null;
   }
 
   // Read-only view
