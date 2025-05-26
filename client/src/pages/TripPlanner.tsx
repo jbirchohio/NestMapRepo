@@ -102,7 +102,7 @@ export default function TripPlanner() {
   });
   
   // Prepare map markers - filter out completed activities so they don't show on the map
-  const mapMarkers: MapMarker[] = sortedActivities
+  const mapMarkers = sortedActivities
     .filter(activity => 
       // Only include activities with coordinates and that aren't marked as completed
       activity.latitude && 
@@ -110,10 +110,11 @@ export default function TripPlanner() {
       !activity.completed
     )
     .map((activity, index) => ({
-      id: activity.id,
+      id: String(activity.id),
       latitude: parseFloat(activity.latitude || "0"),
       longitude: parseFloat(activity.longitude || "0"),
-      label: String.fromCharCode(65 + index), // A, B, C, etc.
+      title: activity.title || activity.locationName || `Activity ${index + 1}`,
+      description: activity.notes || activity.locationName,
       activity,
     }));
   
