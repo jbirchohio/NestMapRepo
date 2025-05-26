@@ -16,6 +16,7 @@ export interface IStorage {
   // Trip operations
   getTrip(id: number): Promise<Trip | undefined>;
   getTripsByUserId(userId: number): Promise<Trip[]>;
+  getTripByShareCode(shareCode: string): Promise<Trip | undefined>;
   createTrip(trip: InsertTrip): Promise<Trip>;
   updateTrip(id: number, trip: Partial<InsertTrip>): Promise<Trip | undefined>;
   deleteTrip(id: number): Promise<boolean>;
@@ -252,6 +253,16 @@ export class DatabaseStorage implements IStorage {
   async getTripsByUserId(userId: number): Promise<Trip[]> {
     const tripList = await db.select().from(trips).where(eq(trips.userId, userId));
     return tripList;
+  }
+
+  async getTripByShareCode(shareCode: string): Promise<Trip | undefined> {
+    try {
+      const [trip] = await db.select().from(trips).where(eq(trips.shareCode, shareCode));
+      return trip || undefined;
+    } catch (error) {
+      console.error("Error fetching trip by share code:", error);
+      throw error;
+    }
   }
 
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
