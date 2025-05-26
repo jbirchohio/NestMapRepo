@@ -14,6 +14,9 @@ export const API_ENDPOINTS = {
     BUDGET_OPTIONS: "/api/ai/budget-options",
     FIND_LOCATION: "/api/ai/find-location",
   },
+  WEATHER: {
+    FORECAST: "/api/weather/forecast",
+  },
 };
 
 // Activity tags

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { ClientTrip } from "@/lib/types";
-import { CloudSun, Umbrella, ThermometerSun, Snowflake, Wind } from "lucide-react";
+import { CloudSun, Umbrella, ThermometerSun, Snowflake, Wind, Sparkles, MapPin } from "lucide-react";
 
 interface WeatherSuggestionsPanelProps {
   trip: ClientTrip;
@@ -35,12 +35,28 @@ interface WeatherResponse {
   activities: WeatherActivitySuggestion[];
 }
 
+interface WeatherData {
+  date: string;
+  condition: string;
+  temperature: number;
+  description: string;
+  humidity: number;
+  windSpeed: number;
+}
+
+interface WeatherForecastResponse {
+  forecast?: WeatherData[];
+  current?: WeatherData;
+}
+
 export default function WeatherSuggestionsPanel({ trip, onAddActivity }: WeatherSuggestionsPanelProps) {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
   const [weatherCondition, setWeatherCondition] = useState<WeatherCondition>("sunny");
+  const [autoWeatherData, setAutoWeatherData] = useState<WeatherData[]>([]);
+  const [isAutoDetected, setIsAutoDetected] = useState(false);
   
   const weatherIcons = {
     sunny: <CloudSun className="h-5 w-5 text-yellow-500" />,
@@ -58,6 +74,51 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
     windy: "Windy"
   };
 
+  // Auto weather detection
+  const autoWeatherMutation = useMutation({
+    mutationFn: async () => {
+      const tripDates = [];
+      if (trip.startDate) {
+        const start = new Date(trip.startDate);
+        const end = trip.endDate ? new Date(trip.endDate) : start;
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          tripDates.push(d.toISOString().split('T')[0]);
+        }
+      }
+      
+      const res = await apiRequest("POST", API_ENDPOINTS.WEATHER.FORECAST, {
+        location: trip.city || trip.location || trip.title,
+        dates: tripDates
+      });
+      return res.json() as Promise<WeatherForecastResponse>;
+    },
+    onSuccess: (data) => {
+      if (data.forecast && data.forecast.length > 0) {
+        setAutoWeatherData(data.forecast);
+        setIsAutoDetected(true);
+        toast({
+          title: "Weather detected!",
+          description: `Found weather data for ${data.forecast.length} days of your trip.`,
+        });
+      } else if (data.current) {
+        setAutoWeatherData([data.current]);
+        setIsAutoDetected(true);
+        toast({
+          title: "Current weather detected!",
+          description: "Found current weather for your location.",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Weather detection failed",
+        description: "Couldn't auto-detect weather. You can still use manual selection.",
+        variant: "destructive",
+      });
+      console.error("Error getting auto weather:", error);
+    },
+  });
+
   const weatherMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", API_ENDPOINTS.AI.WEATHER_ACTIVITIES, {
@@ -74,6 +135,27 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
         variant: "destructive",
       });
       console.error("Error getting weather suggestions:", error);
+    },
+  });
+
+  // General activity suggestions
+  const generalMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", API_ENDPOINTS.AI.THEMED_ITINERARY, {
+        location: trip.city || trip.location || trip.title,
+        theme: "general exploration",
+        days: 1,
+        preferences: "popular attractions and local experiences"
+      });
+      return res.json() as Promise<{ activities: WeatherActivitySuggestion[] }>;
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Could not get activity suggestions. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Error getting general suggestions:", error);
     },
   });
 

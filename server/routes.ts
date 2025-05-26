@@ -690,6 +690,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/weather/forecast", async (req: Request, res: Response) => {
+    try {
+      const { location, dates } = req.body;
+      if (!location) {
+        return res.status(400).json({ message: "Location is required" });
+      }
+      
+      const { getWeatherForecast, getCurrentWeather } = await import("./weather");
+      
+      if (dates && dates.length > 0) {
+        const forecast = await getWeatherForecast(location, dates);
+        res.json({ forecast });
+      } else {
+        const currentWeather = await getCurrentWeather(location);
+        res.json({ current: currentWeather });
+      }
+    } catch (error) {
+      console.error("Weather API error:", error);
+      res.status(500).json({ message: "Could not fetch weather data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
