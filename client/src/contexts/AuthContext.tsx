@@ -71,22 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadUser();
 
     // Set up auth state change listener
-    const { data: authListener } = auth.onAuthStateChange(async (event, session) => {
+    const { data: authListener } = auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
       setLoading(false);
       
-      // Only fetch database user if user exists and we don't already have userId
-      if (session?.user && !userId) {
-        try {
-          const response = await fetch(`/api/users/auth/${session.user.id}`);
-          if (response.ok) {
-            const dbUser = await response.json();
-            setUserId(dbUser.id);
-          }
-        } catch (error) {
-          console.error('Error fetching database user in auth listener:', error);
-        }
-      } else if (!session?.user) {
+      // Reset userId when user logs out
+      if (!session?.user) {
         setUserId(null);
       }
     });
