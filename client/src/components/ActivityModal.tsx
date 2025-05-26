@@ -179,7 +179,38 @@ export default function ActivityModal({
     mutationFn: async (data: ActivityFormValues) => {
       if (!activity) return null;
       
-      // Instead of spreading data which might lose properties, build a specific object
+      // Check if this is guest mode by looking for trip in localStorage
+      const guestTripsData = localStorage.getItem("nestmap_guest_trips");
+      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
+      
+      if (isGuestTrip) {
+        console.log("Updating guest activity:", activity.id);
+        // For guest mode, update in localStorage
+        const updatedActivity = {
+          ...activity,
+          title: data.title,
+          date: data.date.toISOString(),
+          time: data.time,
+          locationName: data.locationName,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          notes: data.notes,
+          tag: data.tag,
+          travelMode: String(data.travelMode || 'walking')
+        };
+        
+        // Get existing guest activities and update the specific one
+        const existingActivities = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
+        const updatedActivities = existingActivities.map((act: any) => 
+          act.id === activity.id ? updatedActivity : act
+        );
+        localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(updatedActivities));
+        console.log("Updated guest activity in localStorage");
+        
+        return updatedActivity;
+      }
+      
+      // For authenticated users, use API
       const updateData = {
         title: data.title,
         date: data.date,
@@ -192,7 +223,6 @@ export default function ActivityModal({
         assignedTo: data.assignedTo,
         tripId: tripId,
         order: activity.order,
-        // Explicitly set travel mode as a string, not an enum value
         travelMode: String(data.travelMode || 'walking')  
       };
       
