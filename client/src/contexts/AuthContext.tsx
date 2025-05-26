@@ -96,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message);
       }
       
+      console.log('ACTUAL SIGN-IN USER:', { id: data.user?.id, email: data.user?.email });
       setUser(data.user);
       
       // Get database user ID for the authenticated user
