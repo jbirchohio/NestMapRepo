@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ export default function SharedTrip() {
   const { shareCode } = useParams<{ shareCode: string }>();
   const [location] = useLocation();
   const [permission, setPermission] = useState<"read-only" | "edit">("read-only");
+  const hasRedirected = useRef(false);
 
   // Extract permission from URL parameters
   useEffect(() => {
@@ -74,15 +75,13 @@ export default function SharedTrip() {
     );
   }
 
-  // If we have edit permission, show the full trip planner
+  // If we have edit permission, redirect to the full trip planner
   useEffect(() => {
-    if (permission === 'edit' && sharedTrip && (sharedTrip as any).id) {
-      // For edit permission, redirect to the full trip planner with the trip ID
+    if (permission === 'edit' && sharedTrip && (sharedTrip as any).id && !hasRedirected.current) {
+      hasRedirected.current = true;
       console.log('Redirecting to edit mode for trip:', (sharedTrip as any).id);
-      // Add a small delay to ensure the page loads properly
-      setTimeout(() => {
-        window.location.href = `/trip/${(sharedTrip as any).id}`;
-      }, 100);
+      // Use a more stable redirect
+      window.location.href = `/trip/${(sharedTrip as any).id}`;
     }
   }, [permission, sharedTrip]);
 
