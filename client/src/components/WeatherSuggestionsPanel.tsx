@@ -53,11 +53,12 @@ interface WeatherForecastResponse {
 export default function WeatherSuggestionsPanel({ trip, onAddActivity }: WeatherSuggestionsPanelProps) {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   );
   const [weatherCondition, setWeatherCondition] = useState<WeatherCondition>("sunny");
   const [autoWeatherData, setAutoWeatherData] = useState<WeatherData[]>([]);
   const [isAutoDetected, setIsAutoDetected] = useState(false);
+  const [selectedDayWeather, setSelectedDayWeather] = useState<WeatherData | null>(null);
   
   const weatherIcons = {
     sunny: <CloudSun className="h-5 w-5 text-yellow-500" />,
@@ -122,10 +123,15 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
 
   const weatherMutation = useMutation({
     mutationFn: async () => {
+      // Use actual weather data if available, otherwise fall back to manual selection
+      const weatherToUse = selectedDayWeather ? 
+        selectedDayWeather.description : 
+        weatherLabels[weatherCondition];
+
       const res = await apiRequest("POST", API_ENDPOINTS.AI.WEATHER_ACTIVITIES, {
         location: trip.city || trip.location || trip.title,
         date: selectedDate,
-        weatherCondition: weatherLabels[weatherCondition]
+        weatherCondition: weatherToUse
       });
       return res.json() as Promise<WeatherResponse>;
     },
@@ -166,6 +172,27 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
       autoWeatherMutation.mutate();
     }
   }, []);
+
+  // Update selected day weather when date changes
+  useEffect(() => {
+    if (autoWeatherData.length > 0 && selectedDate) {
+      const dayWeather = autoWeatherData.find(weather => weather.date === selectedDate);
+      setSelectedDayWeather(dayWeather || null);
+    }
+  }, [selectedDate, autoWeatherData]);
+
+  // Handle date selection and trigger weather-based activities
+  const handleDateSelect = (dateString: string) => {
+    setSelectedDate(dateString);
+    
+    // Find weather for this day
+    const dayWeather = autoWeatherData.find(weather => weather.date === dateString);
+    if (dayWeather) {
+      setSelectedDayWeather(dayWeather);
+      // Auto-trigger weather activities for this day
+      weatherMutation.mutate();
+    }
+  };
 
   const handleGetSuggestions = () => {
     weatherMutation.mutate();
@@ -281,39 +308,42 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
               startDate={new Date(trip.startDate)}
               endDate={new Date(trip.endDate)}
               selectedDate={selectedDate}
-              onDateSelect={setSelectedDate}
+              onDateSelect={handleDateSelect}
               label="Select Trip Day"
             />
           )}
           
-          <div>
-            <Label htmlFor="weather">Weather Condition</Label>
-            <Select 
-              value={weatherCondition} 
-              onValueChange={(value) => setWeatherCondition(value as WeatherCondition)}
-            >
-              <SelectTrigger id="weather" className="mt-1">
-                <SelectValue placeholder="Select weather" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(weatherLabels).map(([key, label]) => (
-                  <SelectItem key={key} value={key} className="flex items-center">
-                    <div className="flex items-center gap-2">
-                      {weatherIcons[key as WeatherCondition]}
-                      <span>{label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Auto-detected Weather for Selected Day */}
+          {selectedDayWeather && (
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-lg border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {getWeatherIcon(selectedDayWeather.condition)}
+                  <div>
+                    <h4 className="font-medium text-blue-800 dark:text-blue-200">
+                      {selectedDayWeather.description.charAt(0).toUpperCase() + selectedDayWeather.description.slice(1)}
+                    </h4>
+                    <p className="text-sm text-blue-600 dark:text-blue-300">
+                      {new Date(selectedDayWeather.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">{selectedDayWeather.temperature}°C</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-300">{selectedDayWeather.humidity}% humidity</p>
+                </div>
+              </div>
+            </div>
+          )}
           
           <Button 
             onClick={handleGetSuggestions}
-            disabled={weatherMutation.isPending}
+            disabled={weatherMutation.isPending || !selectedDayWeather}
             className="w-full"
           >
-            {weatherMutation.isPending ? "Getting suggestions..." : "Get Weather-Based Activities"}
+            {weatherMutation.isPending ? "Getting suggestions..." : 
+             selectedDayWeather ? `Get Activities for ${selectedDayWeather.description}` : 
+             "Select a day to see weather activities"}
           </Button>
         </TabsContent>
 
