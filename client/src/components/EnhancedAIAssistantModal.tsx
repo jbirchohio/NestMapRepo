@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import WeatherSuggestionsPanel from "./WeatherSuggestionsPanel";
 import BudgetOptionsPanel from "./BudgetOptionsPanel";
-import { Sparkles, Calendar, Cloud, DollarSign, MessageSquare } from "lucide-react";
+import { Sparkles, Calendar, Cloud, DollarSign, MessageSquare, Utensils } from "lucide-react";
 
 interface EnhancedAIAssistantModalProps {
   isOpen: boolean;
@@ -185,6 +185,61 @@ export default function EnhancedAIAssistantModal({
           </div>
 
           <TabsContent value="chat" className="h-full flex flex-col p-6 pt-4">
+            {/* Quick Action Buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-left justify-start"
+                onClick={() => setQuestion("I'd like to import my itinerary. I'll paste my schedule and you can add all activities to my trip.")}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                <div>
+                  <div className="font-medium">Import Itinerary</div>
+                  <div className="text-xs text-muted-foreground">Paste your schedule to add activities</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-left justify-start"
+                onClick={() => setQuestion("Can you summarize my day and give me a brief overview?")}
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                <div>
+                  <div className="font-medium">Summarize Day</div>
+                  <div className="text-xs text-muted-foreground">Get a brief overview</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-left justify-start"
+                onClick={() => setQuestion("Can you suggest some good food and coffee places nearby?")}
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                <div>
+                  <div className="font-medium">Food Nearby</div>
+                  <div className="text-xs text-muted-foreground">Find places to eat</div>
+                </div>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-left justify-start"
+                onClick={() => setQuestion("Can you suggest some activities based on my interests and trip theme?")}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                <div>
+                  <div className="font-medium">Suggest Activities</div>
+                  <div className="text-xs text-muted-foreground">Based on interests</div>
+                </div>
+              </Button>
+            </div>
+            
             <ScrollArea className="flex-1 pr-4">
               <div className="space-y-4">
                 {conversation.map((message, index) => (

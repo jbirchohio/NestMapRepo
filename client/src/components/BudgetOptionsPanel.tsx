@@ -115,7 +115,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOption
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All categories</SelectItem>
+              <SelectItem value="all">All categories</SelectItem>
               <SelectItem value="accommodation">Accommodation</SelectItem>
               <SelectItem value="food">Food & Dining</SelectItem>
               <SelectItem value="transportation">Transportation</SelectItem>
