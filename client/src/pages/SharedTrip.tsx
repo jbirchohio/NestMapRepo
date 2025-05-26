@@ -26,7 +26,7 @@ export default function SharedTrip() {
   const [permission, setPermission] = useState<"read-only" | "edit">("read-only");
   const hasRedirected = useRef(false);
 
-  // Extract permission from URL parameters
+  // Extract permission from URL parameters once on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlPermission = urlParams.get('permission');
@@ -34,7 +34,7 @@ export default function SharedTrip() {
     if (urlPermission === 'edit' || urlPermission === 'read-only') {
       setPermission(urlPermission);
     }
-  }, [location]);
+  }, []); // Empty dependency array - only run once on mount
 
   const { data: sharedTrip, isLoading, error } = useQuery({
     queryKey: [`/api/share/${shareCode}`],
