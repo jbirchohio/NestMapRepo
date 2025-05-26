@@ -20,7 +20,7 @@ export default function MapView({
   onMarkerClick,
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const { initializeMap, addMarkers, addRoutes, flyToLocation } = useMapbox();
+  const { initializeMap, addMarkers, addRoutes, flyToLocation, resizeMap } = useMapbox();
   const [isMapReady, setIsMapReady] = useState(false);
 
   // Initialize map
@@ -31,6 +31,24 @@ export default function MapView({
       });
     }
   }, [mapContainer, center, zoom, initializeMap, isMapReady]);
+
+  // Force map resize when container dimensions change
+  useEffect(() => {
+    if (isMapReady && mapContainer.current) {
+      const resizeObserver = new ResizeObserver(() => {
+        // Trigger map resize after a small delay to ensure container is fully rendered
+        setTimeout(() => {
+          const mapInstance = (window as any).mapboxMap;
+          if (mapInstance && mapInstance.resize) {
+            mapInstance.resize();
+          }
+        }, 100);
+      });
+
+      resizeObserver.observe(mapContainer.current);
+      return () => resizeObserver.disconnect();
+    }
+  }, [isMapReady]);
 
   // Update markers when they change
   useEffect(() => {
@@ -68,9 +86,9 @@ export default function MapView({
   };
 
   return (
-    <section className="relative w-full h-full overflow-hidden map-container" style={{height: '100%', position: 'relative'}}>
-      <div className="w-full h-full bg-[hsl(var(--muted))]" style={{height: '100%', position: 'relative'}}>
-        <div className="absolute inset-0" ref={mapContainer} id="map" style={{height: '100%', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+    <section className="relative w-full h-full overflow-hidden map-container" style={{height: '100%', minHeight: '400px', position: 'relative'}}>
+      <div className="w-full h-full bg-[hsl(var(--muted))]" style={{height: '100%', minHeight: '400px', position: 'relative'}}>
+        <div className="absolute inset-0" ref={mapContainer} id="map" style={{width: '100%', height: '100%', minHeight: '400px', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
           {/* Mapbox map will be rendered here */}
         </div>
 
