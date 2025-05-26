@@ -75,15 +75,12 @@ export default function SharedTrip() {
     );
   }
 
-  // If we have edit permission, redirect to the full trip planner
-  useEffect(() => {
-    if (permission === 'edit' && sharedTrip && (sharedTrip as any).id && !hasRedirected.current) {
-      hasRedirected.current = true;
-      console.log('Redirecting to edit mode for trip:', (sharedTrip as any).id);
-      // Use immediate redirect without setTimeout to prevent re-renders
-      window.location.replace(`/trip/${(sharedTrip as any).id}`);
+  // Show edit option button instead of automatic redirect to prevent React errors
+  const handleEditRedirect = () => {
+    if (sharedTrip && (sharedTrip as any).id) {
+      window.location.href = `/trip/${(sharedTrip as any).id}`;
     }
-  }, [permission, (sharedTrip as any)?.id]); // Only depend on the ID, not the whole object
+  };
 
   // Read-only view
   const trip = sharedTrip as SharedTripData;
