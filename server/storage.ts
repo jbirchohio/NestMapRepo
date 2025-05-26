@@ -263,12 +263,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTrip(id: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
-    const [updatedTrip] = await db
-      .update(trips)
-      .set(tripData)
-      .where(eq(trips.id, id))
-      .returning();
-    return updatedTrip || undefined;
+    try {
+      console.log("Database updateTrip called with:", tripData);
+      const [updatedTrip] = await db
+        .update(trips)
+        .set(tripData)
+        .where(eq(trips.id, id))
+        .returning();
+      console.log("Database update result:", updatedTrip);
+      return updatedTrip || undefined;
+    } catch (error) {
+      console.error("Database update error:", error);
+      throw error;
+    }
   }
 
   async deleteTrip(id: number): Promise<boolean> {

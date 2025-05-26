@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         collaborators: z.array(z.any()).optional(),
         // Sharing and collaboration settings
         isPublic: z.boolean().optional(),
-        shareCode: z.string().optional().nullable(),
+        shareCode: z.string().nullable().optional(),
         sharingEnabled: z.boolean().optional(),
         // Location information
         city: z.string().optional(),
