@@ -285,32 +285,75 @@ export default function ShareTripModal({
             </div>
             
             {sharingEnabled && (
-              <div className="space-y-2">
-                <Label htmlFor="shareLink">Share link</Label>
-                <div className="flex items-center space-x-2">
-                  <div className="relative flex-1">
-                    <Input 
-                      id="shareLink" 
-                      value={shareLink} 
-                      readOnly 
-                      disabled={!sharingEnabled}
-                    />
-                    {copied && (
-                      <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
-                    )}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Link Permission</Label>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant={sharePermission === "read-only" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePermissionChange("read-only")}
+                      className="flex-1"
+                    >
+                      👀 View Only
+                    </Button>
+                    <Button
+                      variant={sharePermission === "edit" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePermissionChange("edit")}
+                      className="flex-1"
+                    >
+                      ✏️ Can Edit
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={copyToClipboard}
-                    disabled={!sharingEnabled}
+                  <p className="text-xs text-muted-foreground">
+                    {sharePermission === "edit" 
+                      ? "Recipients can add activities and make changes to your trip."
+                      : "Recipients can view your itinerary but cannot make changes."
+                    }
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="shareLink">Share link</Label>
+                  <div className="flex items-center space-x-2">
+                    <div className="relative flex-1">
+                      <Input 
+                        id="shareLink" 
+                        value={shareLink} 
+                        readOnly 
+                        disabled={!sharingEnabled}
+                      />
+                      {copied && (
+                        <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-500" />
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={copyToClipboard}
+                      disabled={!sharingEnabled}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button 
+                    onClick={handleNativeShare}
+                    disabled={!shareLink}
+                    className="w-full"
+                    variant="default"
                   >
-                    <Copy className="h-4 w-4" />
+                    <Share className="w-4 h-4 mr-2" />
+                    Share Trip
                   </Button>
                 </div>
+
                 <p className="text-sm text-muted-foreground">
-                  Anyone with this link can view your trip{isPublic ? ' and it may appear in search results' : ''}.
+                  Anyone with this link can {sharePermission === "edit" ? "edit" : "view"} your trip{isPublic ? ' and it may appear in search results' : ''}.
                 </p>
               </div>
             )}
