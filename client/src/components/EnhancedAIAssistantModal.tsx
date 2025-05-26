@@ -261,19 +261,6 @@ export default function EnhancedAIAssistantModal({
                 variant="outline"
                 size="sm"
                 className="text-left justify-start"
-                onClick={() => setActiveTab("food")}
-              >
-                <Utensils className="h-4 w-4 mr-2" />
-                <div>
-                  <div className="font-medium">Food Nearby</div>
-                  <div className="text-xs text-muted-foreground">Find places to eat</div>
-                </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-left justify-start"
                 onClick={() => setQuestion("Can you suggest some activities based on my interests and trip theme?")}
               >
                 <Sparkles className="h-4 w-4 mr-2" />
