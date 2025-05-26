@@ -156,7 +156,7 @@ export default function EnhancedAIAssistantModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-full h-[80vh] p-0">
+      <DialogContent className="max-w-4xl w-full h-[85vh] max-h-[600px] p-0 m-4">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center">
             <Sparkles className="h-5 w-5 mr-2 text-primary" />
