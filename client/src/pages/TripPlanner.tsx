@@ -290,6 +290,14 @@ export default function TripPlanner() {
           />
         </div>
       )}
+      
+      {/* Share Trip Modal */}
+      <ShareTripModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        trip={trip}
+        onSave={handleSaveShareSettings}
+      />
     </AppShell>
   );
 }
