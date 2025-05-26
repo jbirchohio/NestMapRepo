@@ -16,6 +16,7 @@ import PlacesSearch from "@/components/PlacesSearch";
 import { Search } from "lucide-react";
 import useTrip from "@/hooks/useTrip";
 import { useDebounce } from "@/hooks/use-debounce";
+import TripDatePicker from "@/components/TripDatePicker";
 
 interface ActivityModalProps {
   tripId: number;
@@ -83,6 +84,11 @@ export default function ActivityModal({
   const [selectedTag, setSelectedTag] = useState<string | undefined>(
     activity?.tag === null ? undefined : activity?.tag
   );
+
+  // Selected date state for trip day pills
+  const [selectedDate, setSelectedDate] = useState<string>(
+    activity?.date ? new Date(activity.date).toISOString().split('T')[0] : date.toISOString().split('T')[0]
+  );
   
   // Format date to string in YYYY-MM-DD format for input
   const formatDateForInput = (date: Date): string => {
@@ -98,7 +104,7 @@ export default function ActivityModal({
   
   const defaultFormValues: ActivityFormValues = {
     title: activity?.title || "",
-    date: date,
+    date: new Date(selectedDate),
     time: activity?.time || "12:00",
     locationName: activity?.locationName || "",
     notes: activity?.notes || "",

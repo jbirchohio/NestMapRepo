@@ -77,6 +77,23 @@ export const getDaysBetweenDates = (startDate: Date, endDate: Date): Date[] => {
   return days;
 };
 
+// Helper function to generate trip day pills
+export const getTripDayPills = (startDate: Date, endDate: Date): Array<{
+  dayNumber: number;
+  date: Date;
+  label: string;
+  value: string;
+}> => {
+  const days = getDaysBetweenDates(startDate, endDate);
+  
+  return days.map((date, index) => ({
+    dayNumber: index + 1,
+    date,
+    label: `Day ${index + 1} - ${formatDate(date)}`,
+    value: date.toISOString().split('T')[0]
+  }));
+};
+
 // Default map settings - centered on continental US
 export const DEFAULT_MAP_SETTINGS = {
   center: [-98.5795, 39.8283], // Geographic center of continental US
