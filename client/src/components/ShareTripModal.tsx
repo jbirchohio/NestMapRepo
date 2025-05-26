@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { ClientTrip } from "@/lib/types";
 import { nanoid } from 'nanoid';
-import { Copy, CheckCircle, Link } from "lucide-react";
+import { Copy, CheckCircle, Link, Share } from "lucide-react";
 
 interface ShareTripModalProps {
   isOpen: boolean;
