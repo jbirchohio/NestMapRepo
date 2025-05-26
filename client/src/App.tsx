@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Home from "@/pages/Home";
 import TripPlanner from "@/pages/TripPlanner";
+import SharedTrip from "@/pages/SharedTrip";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -13,6 +14,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/trip/:id" component={TripPlanner} />
+      <Route path="/share/:shareCode" component={SharedTrip} />
       <Route component={NotFound} />
     </Switch>
   );

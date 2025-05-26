@@ -729,6 +729,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Shared trip route
+  app.get("/api/share/:shareCode", async (req: Request, res: Response) => {
+    const { shareCode } = req.params;
+    
+    try {
+      // Find trip by share code
+      const trip = await storage.getTripByShareCode(shareCode);
+      
+      if (!trip || !trip.sharingEnabled) {
+        return res.status(404).json({ message: "Shared trip not found or sharing is disabled" });
+      }
+
+      // Get trip activities, notes, and todos
+      const [activities, notes, todos] = await Promise.all([
+        storage.getActivitiesByTripId(trip.id),
+        storage.getNotesByTripId(trip.id),
+        storage.getTodosByTripId(trip.id)
+      ]);
+
+      const sharedTripData = {
+        id: trip.id,
+        title: trip.title,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        city: trip.city,
+        sharePermission: trip.sharePermission || "read-only",
+        activities: activities || [],
+        notes: notes || [],
+        todos: todos || []
+      };
+
+      res.json(sharedTripData);
+    } catch (error) {
+      console.error("Error fetching shared trip:", error);
+      res.status(500).json({ message: "Failed to fetch shared trip" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
