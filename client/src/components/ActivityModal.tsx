@@ -285,6 +285,12 @@ export default function ActivityModal({
     setSelectedTag(tag);
     setValue("tag", tag);
   };
+
+  // Handle date selection from pills
+  const handleDateSelect = (dateString: string) => {
+    setSelectedDate(dateString);
+    setValue("date", new Date(dateString));
+  };
   
   return (
     <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 pt-4 md:pt-16 md:items-center">
@@ -313,32 +319,32 @@ export default function ActivityModal({
                 )}
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Date</label>
-                  <Input
-                    type="date"
-                    defaultValue={formatDateForInput(date)}
-                    {...register("date", { valueAsDate: true })}
-                    className={errors.date ? "border-[hsl(var(--destructive))]" : ""}
-                    min={trip?.startDate ? formatDateForInput(new Date(trip.startDate)) : undefined}
-                    max={trip?.endDate ? formatDateForInput(new Date(trip.endDate)) : undefined}
+              {/* Trip Date Pills */}
+              {trip?.startDate && trip?.endDate && (
+                <div className="mb-4">
+                  <TripDatePicker
+                    startDate={new Date(trip.startDate)}
+                    endDate={new Date(trip.endDate)}
+                    selectedDate={selectedDate}
+                    onDateSelect={handleDateSelect}
+                    label="Select Trip Day"
                   />
                   {errors.date && (
                     <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.date.message}</p>
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Time</label>
-                  <Input
-                    type="time"
-                    {...register("time")}
-                    className={errors.time ? "border-[hsl(var(--destructive))]" : ""}
-                  />
-                  {errors.time && (
-                    <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.time.message}</p>
-                  )}
-                </div>
+              )}
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">Time</label>
+                <Input
+                  type="time"
+                  {...register("time")}
+                  className={errors.time ? "border-[hsl(var(--destructive))]" : ""}
+                />
+                {errors.time && (
+                  <p className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.time.message}</p>
+                )}
               </div>
               
               <div className="mb-4">

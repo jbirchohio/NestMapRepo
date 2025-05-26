@@ -11,6 +11,7 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { ClientTrip } from "@/lib/types";
 import { CloudSun, Umbrella, ThermometerSun, Snowflake, Wind, Sparkles, MapPin } from "lucide-react";
+import TripDatePicker from "@/components/TripDatePicker";
 
 interface WeatherSuggestionsPanelProps {
   trip: ClientTrip;
@@ -274,39 +275,37 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
         </TabsList>
         
         <TabsContent value="weather-based" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="date">Date</Label>
-              <Input 
-                id="date" 
-                type="date" 
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="weather">Weather Condition</Label>
-              <Select 
-                value={weatherCondition} 
-                onValueChange={(value) => setWeatherCondition(value as WeatherCondition)}
-              >
-                <SelectTrigger id="weather" className="mt-1">
-                  <SelectValue placeholder="Select weather" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(weatherLabels).map(([key, label]) => (
-                    <SelectItem key={key} value={key} className="flex items-center">
-                      <div className="flex items-center gap-2">
-                        {weatherIcons[key as WeatherCondition]}
-                        <span>{label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Trip Date Pills */}
+          {trip.startDate && trip.endDate && (
+            <TripDatePicker
+              startDate={new Date(trip.startDate)}
+              endDate={new Date(trip.endDate)}
+              selectedDate={selectedDate}
+              onDateSelect={setSelectedDate}
+              label="Select Trip Day"
+            />
+          )}
+          
+          <div>
+            <Label htmlFor="weather">Weather Condition</Label>
+            <Select 
+              value={weatherCondition} 
+              onValueChange={(value) => setWeatherCondition(value as WeatherCondition)}
+            >
+              <SelectTrigger id="weather" className="mt-1">
+                <SelectValue placeholder="Select weather" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(weatherLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key} className="flex items-center">
+                    <div className="flex items-center gap-2">
+                      {weatherIcons[key as WeatherCondition]}
+                      <span>{label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <Button 
