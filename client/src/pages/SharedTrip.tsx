@@ -22,17 +22,15 @@ interface SharedTripData {
 
 export default function SharedTrip() {
   const { shareCode } = useParams<{ shareCode: string }>();
-  const [permission, setPermission] = useState<"read-only" | "edit">("read-only");
-
-  // Extract permission from URL parameters once on mount
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlPermission = urlParams.get('permission');
+  
+  // Extract permission from URL parameters and initialize state
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlPermission = urlParams.get('permission');
+  
+  const [permission] = useState<"read-only" | "edit">(() => {
     console.log('URL permission detected:', urlPermission);
-    if (urlPermission === 'edit' || urlPermission === 'read-only') {
-      setPermission(urlPermission);
-    }
-  }, []); // Empty dependency array - only run once on mount
+    return (urlPermission === 'edit' || urlPermission === 'read-only') ? urlPermission : "read-only";
+  });
 
   const { data: sharedTrip, isLoading, error } = useQuery({
     queryKey: [`/api/share/${shareCode}`],
