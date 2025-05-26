@@ -298,6 +298,23 @@ export default function EnhancedAIAssistantModal({
                               });
                             }
                             
+                            // Pattern 4: Numbered list with **Name** format (like your screenshot)
+                            const pattern4 = message.content.match(/\d+\.\s+\*\*(.+?)\*\*(.+?)(?=\n\d+\.|$)/gs);
+                            if (pattern4) {
+                              pattern4.forEach((suggestion, index) => {
+                                const match = suggestion.match(/\d+\.\s+\*\*(.+?)\*\*(.+)/s);
+                                if (match) {
+                                  const [, name, description] = match;
+                                  suggestions.push({
+                                    key: `pattern4-${index}`,
+                                    name: name.trim(),
+                                    description: description.replace(/\s*-\s*/, '').trim(),
+                                    notes: description.replace(/\s*-\s*/, '').trim()
+                                  });
+                                }
+                              });
+                            }
+                            
                             // Pattern 3: 1. Name - Description format
                             const pattern3 = message.content.match(/\d+\.\s+(.+?) - (.+?)(?=\n|$)/g);
                             if (pattern3) {
