@@ -133,10 +133,11 @@ export default function EnhancedAIAssistantModal({
         // Store the activities temporarily if needed
         // You could add a UI to confirm adding them to the itinerary
       } else {
-        // Regular text response
+        // Regular text response - extract the answer property
+        const responseText = typeof response === 'object' && response.answer ? response.answer : response.toString();
         setConversation(prev => [
           ...prev,
-          { role: "assistant", content: response.toString() }
+          { role: "assistant", content: responseText }
         ]);
       }
     } catch (error) {
