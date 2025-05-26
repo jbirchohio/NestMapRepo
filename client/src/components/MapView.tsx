@@ -33,23 +33,23 @@ export default function MapView({
       className="w-full h-full relative" 
       style={{ 
         backgroundColor: 'red',
-        minHeight: '600px',
+        minHeight: '100vh',
         border: '3px solid blue'
       }}
     >
-      <h2 style={{ color: 'white', padding: '20px' }}>MAP CONTAINER TEST</h2>
+      <h2 style={{ color: 'white', padding: '20px' }}>MAP CONTAINER - FULL HEIGHT TEST</h2>
       <div 
         id="map"
         style={{ 
           width: '100%',
-          height: '400px',
+          height: 'calc(100vh - 200px)',
           backgroundColor: 'green',
           border: '2px solid yellow'
         }}
       >
         {/* Mapbox map will be rendered here */}
         <p style={{ color: 'white', padding: '20px', textAlign: 'center' }}>
-          Container is visible! Now we can work on map rendering.
+          Container should now fill remaining screen height!
         </p>
       </div>
     </div>
