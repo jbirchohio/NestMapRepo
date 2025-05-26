@@ -21,12 +21,12 @@ export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("login");
   
-  const { user, signOut } = useAuth();
+  const { user, userId, signOut } = useAuth();
   const queryClient = useQueryClient();
   
   // Get user ID from authentication or use guest mode
-  const userId = user?.id ? Number(user.id) : -1; // -1 indicates guest mode
-  const isGuestMode = userId === -1;
+  const effectiveUserId = userId ?? -1; // Use database userId or -1 for guest mode
+  const isGuestMode = effectiveUserId === -1;
   
   // Guest trips storage in localStorage
   const getGuestTrips = (): ClientTrip[] => {
@@ -123,7 +123,7 @@ export default function Home() {
         isOpen={isNewTripModalOpen} 
         onClose={() => setIsNewTripModalOpen(false)} 
         onSuccess={handleTripCreated}
-        userId={userId}
+        userId={effectiveUserId}
         isGuestMode={isGuestMode}
       />
       
