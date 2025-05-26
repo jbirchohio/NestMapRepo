@@ -68,6 +68,13 @@ export const insertTripSchema = z.object({
   city: z.string().optional(),
   country: z.string().optional(),
   location: z.string().optional(),
+  // City coordinates for map centering
+  cityLatitude: z.string().optional(),
+  cityLongitude: z.string().optional(),
+  // Hotel/accommodation information
+  hotel: z.string().optional(),
+  hotelLatitude: z.string().optional(),
+  hotelLongitude: z.string().optional(),
 });
 
 // Activity schema
