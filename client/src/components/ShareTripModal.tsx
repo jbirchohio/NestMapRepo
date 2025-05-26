@@ -33,6 +33,7 @@ export default function ShareTripModal({
   const [shareLink, setShareLink] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [sharingEnabled, setSharingEnabled] = useState(false);
+  const [sharePermission, setSharePermission] = useState<"read-only" | "edit">("read-only");
   const [copied, setCopied] = useState(false);
   const [collaboratorEmail, setCollaboratorEmail] = useState("");
   const [collaborators, setCollaborators] = useState<string[]>([]);
@@ -44,11 +45,13 @@ export default function ShareTripModal({
     if (trip) {
       setIsPublic(trip.isPublic || false);
       setSharingEnabled(trip.sharingEnabled || false);
+      setSharePermission((trip as any).sharePermission || "read-only");
       
-      // Generate share link
+      // Generate share link with permission parameter
       const baseUrl = window.location.origin;
       const shareCode = trip.shareCode || '';
-      setShareLink(`${baseUrl}/share/${shareCode}`);
+      const permission = (trip as any).sharePermission || "read-only";
+      setShareLink(`${baseUrl}/share/${shareCode}?permission=${permission}`);
       
       // Set collaborators
       setCollaborators(trip.collaborators as string[] || []);

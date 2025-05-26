@@ -33,6 +33,7 @@ export const trips = pgTable("trips", {
   isPublic: boolean("is_public").default(false),
   shareCode: text("share_code").unique(),
   sharingEnabled: boolean("sharing_enabled").default(false),
+  sharePermission: text("share_permission").default("read-only"), // "read-only" or "edit"
   // Location information
   city: text("city"),
   country: text("country"),

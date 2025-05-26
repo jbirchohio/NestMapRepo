@@ -147,6 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isPublic: z.boolean().optional(),
         shareCode: z.string().nullable().optional(),
         sharingEnabled: z.boolean().optional(),
+        sharePermission: z.enum(["read-only", "edit"]).optional(),
         // Location information
         city: z.string().optional(),
         country: z.string().optional(),
