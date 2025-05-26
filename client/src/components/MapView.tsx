@@ -87,9 +87,19 @@ export default function MapView({
   };
 
   return (
-    <section className="relative w-full h-full overflow-hidden map-container">
-      <div className="w-full h-full bg-[hsl(var(--muted))]">
-        <div className="w-full h-full" ref={mapContainer} id="map">
+    <section className="relative w-full h-full overflow-hidden map-container" style={{ backgroundColor: '#f0f0f0', minHeight: '500px' }}>
+      <div className="w-full h-full bg-[hsl(var(--muted))]" style={{ minHeight: '500px' }}>
+        <div 
+          className="w-full h-full" 
+          ref={mapContainer} 
+          id="map"
+          style={{ 
+            minHeight: '500px',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#e0e0e0'
+          }}
+        >
           {/* Mapbox map will be rendered here */}
         </div>
 
