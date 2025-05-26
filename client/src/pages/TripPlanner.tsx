@@ -151,17 +151,26 @@ export default function TripPlanner() {
   };
 
   // Handle saving share settings
-  const handleSaveShareSettings = async (tripId: number, updates: Partial<typeof trip>) => {
+  const handleSaveShareSettings = async (tripId: number, updates: any) => {
     try {
-      await apiRequest(`/api/trips/${tripId}`, {
+      const response = await fetch(`/api/trips/${tripId}`, {
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(updates),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       toast({
         title: "Success",
         description: "Share settings updated successfully",
       });
     } catch (error) {
+      console.error("Error updating share settings:", error);
       toast({
         title: "Error",
         description: "Failed to update share settings",

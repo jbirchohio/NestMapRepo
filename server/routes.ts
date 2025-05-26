@@ -143,6 +143,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDate: z.string().or(z.date()).optional().transform(val => val ? (val instanceof Date ? val : new Date(val)) : undefined),
         userId: z.number().optional(),
         collaborators: z.array(z.any()).optional(),
+        // Sharing and collaboration settings
+        isPublic: z.boolean().optional(),
+        shareCode: z.string().optional().nullable(),
+        sharingEnabled: z.boolean().optional(),
+        // Location information
+        city: z.string().optional(),
+        country: z.string().optional(),
+        location: z.string().optional(),
+        cityLatitude: z.string().optional(),
+        cityLongitude: z.string().optional(),
+        hotel: z.string().optional(),
+        hotelLatitude: z.string().optional(),
+        hotelLongitude: z.string().optional(),
       });
       
       const tripData = partialTripSchema.parse(req.body);
