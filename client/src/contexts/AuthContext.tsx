@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const response = await fetch(`/api/users/auth/${user.id}`);
             if (response.ok) {
               const dbUser = await response.json();
+              console.log('Database user found:', dbUser);
               setUserId(dbUser.id);
             } else {
               console.warn('Database user not found for auth user:', user.id);

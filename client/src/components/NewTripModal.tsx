@@ -163,6 +163,8 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
       };
       
       console.log("Creating trip with data:", tripData);
+      console.log("Current userId from auth context:", userId);
+      console.log("Is guest mode:", isGuestMode);
       
       // Handle guest mode with localStorage
       if (isGuestMode) {
