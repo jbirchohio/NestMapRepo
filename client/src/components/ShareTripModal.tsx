@@ -71,17 +71,22 @@ export default function ShareTripModal({
     const newValue = !sharingEnabled;
     setSharingEnabled(newValue);
     
-    if (newValue && trip && !trip.shareCode) {
-      // Generate a share code if sharing is enabled
+    if (newValue && trip) {
+      // Generate a share code if sharing is enabled and none exists
+      const shareCode = trip.shareCode || generateShareCode();
       const updates = {
-        shareCode: generateShareCode(),
+        shareCode: shareCode,
         sharingEnabled: newValue,
         sharePermission: sharePermission
       };
       try {
         await onSave(trip.id, updates);
         const baseUrl = window.location.origin;
-        setShareLink(`${baseUrl}/share/${updates.shareCode}?permission=${sharePermission}`);
+        setShareLink(`${baseUrl}/share/${shareCode}?permission=${sharePermission}`);
+        toast({
+          title: "Sharing enabled",
+          description: "Your trip can now be shared with others.",
+        });
       } catch (error) {
         console.error("Error updating share settings:", error);
         toast({
