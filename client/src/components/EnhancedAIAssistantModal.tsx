@@ -202,11 +202,11 @@ export default function EnhancedAIAssistantModal({
                       }`}
                     >
                       <div className="whitespace-pre-line">{message.content}</div>
-                      {message.role === "assistant" && message.content.includes("food and coffee suggestions") && (
+                      {message.role === "assistant" && (message.content.includes("food and coffee suggestions") || message.content.includes("Here are some food")) && (
                         <div className="mt-3 space-y-2">
                           {/* Parse food suggestions and add buttons */}
-                          {message.content.match(/• (.+?) - (.+?)\n(.+?)\n\$\$ \| (.+?)(?=\n|$)/g)?.map((suggestion, index) => {
-                            const match = suggestion.match(/• (.+?) - (.+?)\n(.+?)\n\$\$ \| (.+)/);
+                          {message.content.match(/• (.+?) - (.+?)\n(.+?)\n\$ \| (.+?)(?=\n|$)/g)?.map((suggestion, index) => {
+                            const match = suggestion.match(/• (.+?) - (.+?)\n(.+?)\n\$ \| (.+)/);
                             if (match) {
                               const [, name, cuisine, description, walkTime] = match;
                               return (

@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatDateRange, formatDate } from "@/lib/constants";
 import { ClientTrip, ClientActivity, Todo } from "@/lib/types";
 import ActivityTimeline from "./ActivityTimeline";
-import AIAssistantModal from "./AIAssistantModal";
+import EnhancedAIAssistantModal from "./EnhancedAIAssistantModal";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -255,12 +255,15 @@ export default function ItinerarySidebar({
       </aside>
       
       {/* AI Assistant Modal */}
-      <AIAssistantModal
+      <EnhancedAIAssistantModal
         isOpen={isAIModalOpen}
         onClose={() => setIsAIModalOpen(false)}
         trip={trip}
         activities={activities}
         currentDate={activeDay}
+        onActivitiesUpdated={() => {
+          queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id, "activities"] });
+        }}
       />
     </>
   );
