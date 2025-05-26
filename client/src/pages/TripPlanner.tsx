@@ -258,7 +258,7 @@ export default function TripPlanner() {
           />
         </div>
         
-        <div className="flex-1 h-full">
+        <div className="w-full h-full" style={{ minWidth: 0, flex: 1 }}>
           <MapView
             markers={mapMarkers}
             routes={mapRoutes}
