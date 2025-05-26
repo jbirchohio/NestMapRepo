@@ -108,6 +108,12 @@ export default function SharedTrip() {
                 </>
               )}
             </Badge>
+            {permission === 'edit' && (
+              <Button onClick={handleEditRedirect} className="ml-auto">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Trip
+              </Button>
+            )}
           </div>
           
           <h1 className="text-3xl font-bold mb-2">{trip.title}</h1>
