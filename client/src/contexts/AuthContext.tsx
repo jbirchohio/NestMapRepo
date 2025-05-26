@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           } catch (dbError) {
             console.error('Error fetching database user:', dbError);
+            console.log('Auth user details:', { id: user.id, email: user.email });
             setUserId(null);
           }
         } else {
