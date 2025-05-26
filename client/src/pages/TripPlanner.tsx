@@ -245,7 +245,7 @@ export default function TripPlanner() {
       </div>
 
       {/* Desktop view: side-by-side layout */}
-      <div className="hidden md:flex h-[calc(100vh-110px)]">
+      <div className="hidden md:flex h-[calc(100vh-110px)] w-full">
         <div className="w-96 flex-shrink-0 h-full overflow-y-auto border-r">
           <ItinerarySidebar
             trip={trip}
@@ -258,7 +258,7 @@ export default function TripPlanner() {
           />
         </div>
         
-        <div className="flex-1 h-full">
+        <div className="flex-1 h-full w-full">
           <MapView
             markers={mapMarkers}
             routes={mapRoutes}
