@@ -58,8 +58,9 @@ export async function getCurrentWeather(location: string): Promise<WeatherData |
       return null;
     }
 
+    const units = getTemperatureUnit(location);
     const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${apiKey}&units=metric`
+      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${apiKey}&units=${units}`
     );
 
     if (!response.ok) {
@@ -68,12 +69,11 @@ export async function getCurrentWeather(location: string): Promise<WeatherData |
     }
 
     const data: OpenWeatherResponse = await response.json();
-    const units = getTemperatureUnit(location);
     
     return {
       date: new Date().toISOString().split('T')[0],
       condition: data.weather[0].main.toLowerCase(),
-      temperature: units === 'imperial' ? Math.round(data.main.temp * 9/5 + 32) : Math.round(data.main.temp),
+      temperature: Math.round(data.main.temp),
       description: data.weather[0].description,
       humidity: data.main.humidity,
       windSpeed: data.wind.speed,
@@ -96,9 +96,10 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
       return [];
     }
 
+    const units = getTemperatureUnit(location);
     // Get 5-day forecast (free tier limitation)
     const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(location)}&appid=${apiKey}&units=metric`
+      `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(location)}&appid=${apiKey}&units=${units}`
     );
 
     if (!response.ok) {
@@ -129,11 +130,10 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
         return Math.abs(currentHour - 12) < Math.abs(closestHour - 12) ? current : closest;
       });
 
-      const units = getTemperatureUnit(location);
       weatherData.push({
         date,
         condition: middayForecast.weather[0].main.toLowerCase(),
-        temperature: units === 'imperial' ? Math.round(middayForecast.main.temp * 9/5 + 32) : Math.round(middayForecast.main.temp),
+        temperature: Math.round(middayForecast.main.temp),
         description: middayForecast.weather[0].description,
         humidity: middayForecast.main.humidity,
         windSpeed: middayForecast.wind.speed,
