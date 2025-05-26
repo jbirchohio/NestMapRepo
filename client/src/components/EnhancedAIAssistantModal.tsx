@@ -168,18 +168,18 @@ export default function EnhancedAIAssistantModal({
 
         <Tabs defaultValue="chat" className="h-[calc(100%-80px)]" value={activeTab} onValueChange={setActiveTab}>
           <div className="px-6">
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="chat" className="flex items-center">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="chat">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 AI Chat
               </TabsTrigger>
-              <TabsTrigger value="weather" className="flex items-center">
+              <TabsTrigger value="weather">
                 <Cloud className="h-4 w-4 mr-2" />
-                Weather Suggestions
+                Weather
               </TabsTrigger>
-              <TabsTrigger value="budget" className="flex items-center">
+              <TabsTrigger value="budget">
                 <DollarSign className="h-4 w-4 mr-2" />
-                Budget Options
+                Budget
               </TabsTrigger>
             </TabsList>
           </div>
@@ -202,6 +202,35 @@ export default function EnhancedAIAssistantModal({
                       }`}
                     >
                       <div className="whitespace-pre-line">{message.content}</div>
+                      {message.role === "assistant" && message.content.includes("food and coffee suggestions") && (
+                        <div className="mt-3 space-y-2">
+                          {/* Parse food suggestions and add buttons */}
+                          {message.content.match(/• (.+?) - (.+?)\n(.+?)\n\$\$ \| (.+?)(?=\n|$)/g)?.map((suggestion, index) => {
+                            const match = suggestion.match(/• (.+?) - (.+?)\n(.+?)\n\$\$ \| (.+)/);
+                            if (match) {
+                              const [, name, cuisine, description, walkTime] = match;
+                              return (
+                                <Button
+                                  key={index}
+                                  variant="outline"
+                                  size="sm"
+                                  className="mr-2 mb-2"
+                                  onClick={() => handleAddActivity({
+                                    title: name.trim(),
+                                    locationName: name.trim(),
+                                    tag: "food",
+                                    notes: `${cuisine} - ${description.trim()}`,
+                                    time: "12:00" // Default lunch time
+                                  })}
+                                >
+                                  + Add {name.trim()}
+                                </Button>
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
