@@ -330,7 +330,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">{selectedDayWeather.temperature}°C</p>
+                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">{selectedDayWeather.temperature}°{selectedDayWeather.unit || 'C'}</p>
                   <p className="text-xs text-blue-600 dark:text-blue-300">{selectedDayWeather.humidity}% humidity</p>
                 </div>
               </div>
