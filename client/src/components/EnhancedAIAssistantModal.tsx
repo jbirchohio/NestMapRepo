@@ -156,8 +156,8 @@ export default function EnhancedAIAssistantModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl w-[95vw] h-[85vh] sm:w-[90vw] sm:h-[80vh] md:h-[75vh] p-0 overflow-hidden flex flex-col">
-        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
+      <DialogContent className="max-w-2xl w-[90vw] max-h-[90dvh] sm:w-[85vw] sm:max-h-[85dvh] md:max-h-[80vh] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b">
           <DialogTitle className="flex items-center">
             <Sparkles className="h-5 w-5 mr-2 text-primary" />
             NestMap AI Assistant
@@ -167,7 +167,7 @@ export default function EnhancedAIAssistantModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="chat" className="flex-1 flex flex-col overflow-hidden" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0" value={activeTab} onValueChange={setActiveTab}>
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="chat">
@@ -185,9 +185,9 @@ export default function EnhancedAIAssistantModal({
             </TabsList>
           </div>
 
-          <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden p-6 pt-4">
+          <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 p-6 pt-4">
             {/* Quick Action Buttons */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-3 mb-4 flex-shrink-0">
               <Button
                 variant="outline"
                 size="sm"
@@ -241,7 +241,7 @@ export default function EnhancedAIAssistantModal({
               </Button>
             </div>
             
-            <ScrollArea className="flex-1 min-h-0 pr-4">
+            <ScrollArea className="flex-1 min-h-0 overflow-hidden pr-4">
               <div className="space-y-4">
                 {conversation.map((message, index) => (
                   <div
@@ -305,13 +305,13 @@ export default function EnhancedAIAssistantModal({
               </div>
             </ScrollArea>
 
-            <div className="mt-4 flex items-end space-x-2">
+            <div className="mt-4 flex items-end space-x-2 flex-shrink-0">
               <div className="flex-1">
                 <Textarea
                   placeholder="Ask me anything about your trip..."
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  className="min-h-[80px] resize-none"
+                  className="min-h-[60px] max-h-[80px] resize-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
@@ -330,18 +330,22 @@ export default function EnhancedAIAssistantModal({
             </div>
           </TabsContent>
 
-          <TabsContent value="weather" className="h-full p-6 pt-4 overflow-auto">
-            <WeatherSuggestionsPanel 
-              trip={trip} 
-              onAddActivity={handleAddActivity} 
-            />
+          <TabsContent value="weather" className="flex-1 flex flex-col min-h-0 p-6 pt-4">
+            <div className="flex-1 min-h-0 overflow-auto">
+              <WeatherSuggestionsPanel 
+                trip={trip} 
+                onAddActivity={handleAddActivity} 
+              />
+            </div>
           </TabsContent>
 
-          <TabsContent value="budget" className="h-full p-6 pt-4 overflow-auto">
-            <BudgetOptionsPanel 
-              trip={trip} 
-              onAddActivity={handleAddActivity} 
-            />
+          <TabsContent value="budget" className="flex-1 flex flex-col min-h-0 p-6 pt-4">
+            <div className="flex-1 min-h-0 overflow-auto">
+              <BudgetOptionsPanel 
+                trip={trip} 
+                onAddActivity={handleAddActivity} 
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
