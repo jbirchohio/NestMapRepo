@@ -256,19 +256,6 @@ export default function EnhancedAIAssistantModal({
                   <div className="text-xs text-muted-foreground">Get a brief overview</div>
                 </div>
               </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-left justify-start"
-                onClick={() => setQuestion("Can you suggest some activities based on my interests and trip theme?")}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                <div>
-                  <div className="font-medium">Suggest Activities</div>
-                  <div className="text-xs text-muted-foreground">Based on interests</div>
-                </div>
-              </Button>
             </div>
             
             <ScrollArea className="flex-1 min-h-0 overflow-hidden pr-4">

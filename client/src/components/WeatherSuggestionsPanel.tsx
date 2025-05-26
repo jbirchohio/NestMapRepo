@@ -115,9 +115,9 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h3 className="text-lg font-medium">Weather-Based Suggestions</h3>
+        <h3 className="text-lg font-medium">Weather & Activity Suggestions</h3>
         <p className="text-sm text-muted-foreground">
-          Get activity recommendations based on weather conditions.
+          Get personalized activity recommendations based on weather conditions for {trip.city || trip.location || trip.title}.
         </p>
       </div>
       
