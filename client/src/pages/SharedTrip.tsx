@@ -1,6 +1,6 @@
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,6 @@ interface SharedTripData {
 
 export default function SharedTrip() {
   const { shareCode } = useParams<{ shareCode: string }>();
-  const [location] = useLocation();
   const [permission, setPermission] = useState<"read-only" | "edit">("read-only");
 
   // Extract permission from URL parameters once on mount
