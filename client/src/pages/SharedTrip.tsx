@@ -24,7 +24,6 @@ export default function SharedTrip() {
   const { shareCode } = useParams<{ shareCode: string }>();
   const [location] = useLocation();
   const [permission, setPermission] = useState<"read-only" | "edit">("read-only");
-  const hasRedirected = useRef(false);
 
   // Extract permission from URL parameters once on mount
   useEffect(() => {
