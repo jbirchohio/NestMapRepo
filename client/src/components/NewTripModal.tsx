@@ -188,7 +188,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
       
       // For authenticated users, ensure we have a valid userId
       if (!userId || userId === null) {
-        throw new Error("User must be authenticated to create trips");
+        throw new Error("Authentication not complete. Please wait a moment and try again.");
       }
       
       // Regular authenticated user flow

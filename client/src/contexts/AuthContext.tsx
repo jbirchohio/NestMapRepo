@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   userId: number | null; // Database user ID
   loading: boolean;
+  authReady: boolean; // Authentication and database user lookup complete
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, metadata?: any) => Promise<void>;
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -60,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError(err.message);
       } finally {
         setLoading(false);
+        setAuthReady(true); // Mark authentication as complete
       }
     }
 
@@ -99,15 +102,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const response = await fetch(`/api/users/auth/${data.user.id}`);
           if (response.ok) {
             const dbUser = await response.json();
+            console.log('Sign-in: Database user found:', dbUser);
             setUserId(dbUser.id);
+            setAuthReady(true);
           } else {
             console.warn('Database user not found for auth user:', data.user.id);
             setUserId(null);
+            setAuthReady(true);
           }
         } catch (dbError) {
           console.error('Error fetching database user on sign in:', dbError);
           setUserId(null);
+          setAuthReady(true);
         }
+      } else {
+        setAuthReady(true);
       }
       
       toast({
@@ -254,6 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     userId,
     loading,
+    authReady,
     error,
     signIn,
     signUp,
