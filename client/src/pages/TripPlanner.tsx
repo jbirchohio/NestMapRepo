@@ -258,14 +258,16 @@ export default function TripPlanner() {
           />
         </div>
         
-        <div className="flex-1 h-full">
-          <MapView
-            markers={mapMarkers}
-            routes={mapRoutes}
-            center={mapCenter}
-            zoom={13}
-            onMarkerClick={handleMarkerClick}
-          />
+        <div className="flex-1 h-full min-h-0">
+          <div className="w-full h-full">
+            <MapView
+              markers={mapMarkers}
+              routes={mapRoutes}
+              center={mapCenter}
+              zoom={13}
+              onMarkerClick={handleMarkerClick}
+            />
+          </div>
         </div>
       </div>
       
