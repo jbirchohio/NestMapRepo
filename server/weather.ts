@@ -9,6 +9,7 @@ interface WeatherData {
   description: string;
   humidity: number;
   windSpeed: number;
+  unit: 'C' | 'F';
 }
 
 interface OpenWeatherResponse {
@@ -31,6 +32,22 @@ interface ForecastResponse {
 }
 
 /**
+ * Detect preferred temperature unit based on location
+ */
+function getTemperatureUnit(location: string): 'metric' | 'imperial' {
+  const locationLower = location.toLowerCase();
+  // Countries that primarily use Fahrenheit
+  const fahrenheitCountries = ['united states', 'usa', 'us', 'america', 'belize', 'cayman islands', 'palau'];
+  
+  if (fahrenheitCountries.some(country => locationLower.includes(country))) {
+    return 'imperial';
+  }
+  
+  // Default to Celsius for most of the world
+  return 'metric';
+}
+
+/**
  * Get current weather for a location
  */
 export async function getCurrentWeather(location: string): Promise<WeatherData | null> {
@@ -41,8 +58,9 @@ export async function getCurrentWeather(location: string): Promise<WeatherData |
       return null;
     }
 
+    const units = getTemperatureUnit(location);
     const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${apiKey}&units=metric`
+      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${apiKey}&units=${units}`
     );
 
     if (!response.ok) {
@@ -58,7 +76,8 @@ export async function getCurrentWeather(location: string): Promise<WeatherData |
       temperature: Math.round(data.main.temp),
       description: data.weather[0].description,
       humidity: data.main.humidity,
-      windSpeed: data.wind.speed
+      windSpeed: data.wind.speed,
+      unit: units === 'imperial' ? 'F' : 'C'
     };
   } catch (error) {
     console.error("Error fetching current weather:", error);
@@ -77,9 +96,10 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
       return [];
     }
 
+    const units = getTemperatureUnit(location);
     // Get 5-day forecast (free tier limitation)
     const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(location)}&appid=${apiKey}&units=metric`
+      `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(location)}&appid=${apiKey}&units=${units}`
     );
 
     if (!response.ok) {
