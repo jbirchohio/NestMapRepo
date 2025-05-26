@@ -130,7 +130,10 @@ export default function ActivityModal({
       const guestTripsData = localStorage.getItem("nestmap_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
       
+      console.log("Guest mode check:", { tripId, guestTripsData: !!guestTripsData, isGuestTrip });
+      
       if (isGuestTrip) {
+        console.log("Creating guest activity:", activityData);
         // For guest mode, store in localStorage
         const newActivity = {
           ...activityData,
@@ -140,8 +143,10 @@ export default function ActivityModal({
         
         // Get existing guest activities
         const existingActivities = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
+        console.log("Existing guest activities:", existingActivities);
         existingActivities.push(newActivity);
         localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(existingActivities));
+        console.log("Saved guest activity, total activities:", existingActivities.length);
         
         return newActivity;
       }
