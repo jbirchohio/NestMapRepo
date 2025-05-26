@@ -158,8 +158,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hotelLongitude: z.string().optional(),
       });
       
+      console.log("Raw request body:", req.body);
       const tripData = partialTripSchema.parse(req.body);
-      console.log("Updating trip with data:", tripData);
+      console.log("Parsed trip data:", tripData);
       const updatedTrip = await storage.updateTrip(tripId, tripData);
       
       if (!updatedTrip) {
