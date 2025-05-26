@@ -27,8 +27,9 @@ export default function SharedTrip() {
 
   // Extract permission from URL parameters
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.split('?')[1] || '');
+    const urlParams = new URLSearchParams(window.location.search);
     const urlPermission = urlParams.get('permission');
+    console.log('URL permission detected:', urlPermission);
     if (urlPermission === 'edit' || urlPermission === 'read-only') {
       setPermission(urlPermission);
     }
@@ -74,11 +75,13 @@ export default function SharedTrip() {
   }
 
   // If we have edit permission, show the full trip planner
-  if (permission === 'edit' && sharedTrip) {
-    // For edit permission, redirect to the full trip planner with the trip ID
-    window.location.href = `/trip/${sharedTrip.id}`;
-    return null;
-  }
+  useEffect(() => {
+    if (permission === 'edit' && sharedTrip && (sharedTrip as any).id) {
+      // For edit permission, redirect to the full trip planner with the trip ID
+      console.log('Redirecting to edit mode for trip:', (sharedTrip as any).id);
+      window.location.href = `/trip/${(sharedTrip as any).id}`;
+    }
+  }, [permission, sharedTrip]);
 
   // Read-only view
   const trip = sharedTrip as SharedTripData;
