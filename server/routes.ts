@@ -159,6 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const tripData = partialTripSchema.parse(req.body);
+      console.log("Updating trip with data:", tripData);
       const updatedTrip = await storage.updateTrip(tripId, tripData);
       
       if (!updatedTrip) {
@@ -167,6 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedTrip);
     } catch (error) {
+      console.error("Error updating trip:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
       }
