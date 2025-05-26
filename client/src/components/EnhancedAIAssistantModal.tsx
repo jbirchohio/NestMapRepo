@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import WeatherSuggestionsPanel from "./WeatherSuggestionsPanel";
 import BudgetOptionsPanel from "./BudgetOptionsPanel";
+import FoodSuggestionsPanel from "./FoodSuggestionsPanel";
 import { Sparkles, Calendar, Cloud, DollarSign, MessageSquare, Utensils } from "lucide-react";
 
 interface EnhancedAIAssistantModalProps {
@@ -207,10 +208,14 @@ export default function EnhancedAIAssistantModal({
 
         <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0" value={activeTab} onValueChange={setActiveTab}>
           <div className="px-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="chat">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 AI Chat
+              </TabsTrigger>
+              <TabsTrigger value="food">
+                <Utensils className="h-4 w-4 mr-2" />
+                Food
               </TabsTrigger>
               <TabsTrigger value="weather">
                 <Cloud className="h-4 w-4 mr-2" />
@@ -256,9 +261,9 @@ export default function EnhancedAIAssistantModal({
                 variant="outline"
                 size="sm"
                 className="text-left justify-start"
-                onClick={() => setQuestion("Can you suggest some good food and coffee places nearby?")}
+                onClick={() => setActiveTab("food")}
               >
-                <DollarSign className="h-4 w-4 mr-2" />
+                <Utensils className="h-4 w-4 mr-2" />
                 <div>
                   <div className="font-medium">Food Nearby</div>
                   <div className="text-xs text-muted-foreground">Find places to eat</div>
@@ -430,6 +435,15 @@ export default function EnhancedAIAssistantModal({
               >
                 Send
               </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="food" className="flex-1 flex flex-col min-h-0 p-6 pt-4">
+            <div className="flex-1 min-h-0 overflow-auto">
+              <FoodSuggestionsPanel 
+                trip={trip} 
+                onAddActivity={handleAddActivity} 
+              />
             </div>
           </TabsContent>
 
