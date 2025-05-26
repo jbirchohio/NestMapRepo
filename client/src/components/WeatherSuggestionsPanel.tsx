@@ -159,8 +159,39 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
     },
   });
 
+  // Auto-detect weather when component mounts
+  useEffect(() => {
+    if (trip.startDate && (trip.city || trip.location || trip.title)) {
+      autoWeatherMutation.mutate();
+    }
+  }, []);
+
   const handleGetSuggestions = () => {
     weatherMutation.mutate();
+  };
+
+  const handleGeneralSuggestions = () => {
+    generalMutation.mutate();
+  };
+
+  const getWeatherIcon = (condition: string) => {
+    const conditionLower = condition.toLowerCase();
+    if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
+      return <Umbrella className="h-5 w-5 text-blue-500" />;
+    }
+    if (conditionLower.includes('snow')) {
+      return <Snowflake className="h-5 w-5 text-blue-300" />;
+    }
+    if (conditionLower.includes('sun') || conditionLower.includes('clear')) {
+      return <CloudSun className="h-5 w-5 text-yellow-500" />;
+    }
+    if (conditionLower.includes('cloud')) {
+      return <CloudSun className="h-5 w-5 text-gray-500" />;
+    }
+    if (conditionLower.includes('wind')) {
+      return <Wind className="h-5 w-5 text-gray-600" />;
+    }
+    return <CloudSun className="h-5 w-5 text-gray-500" />;
   };
 
   const handleAddActivity = async (activitySuggestion: WeatherActivitySuggestion) => {
@@ -197,55 +228,113 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h3 className="text-lg font-medium">Weather & Activity Suggestions</h3>
+        <h3 className="text-lg font-medium flex items-center gap-2">
+          <Sparkles className="h-5 w-5" />
+          Weather & Activity Hub
+        </h3>
         <p className="text-sm text-muted-foreground">
-          Get personalized activity recommendations based on weather conditions for {trip.city || trip.location || trip.title}.
+          Get real-time weather data and personalized activity recommendations for {trip.city || trip.location || trip.title}.
         </p>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="date">Date</Label>
-          <Input 
-            id="date" 
-            type="date" 
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="mt-1"
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="weather">Weather Condition</Label>
-          <Select 
-            value={weatherCondition} 
-            onValueChange={(value) => setWeatherCondition(value as WeatherCondition)}
-          >
-            <SelectTrigger id="weather" className="mt-1">
-              <SelectValue placeholder="Select weather" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(weatherLabels).map(([key, label]) => (
-                <SelectItem key={key} value={key} className="flex items-center">
+
+      {/* Auto-detected Weather Section */}
+      {isAutoDetected && autoWeatherData.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-lg border">
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin className="h-4 w-4 text-blue-600" />
+            <h4 className="font-medium text-blue-800 dark:text-blue-200">Live Weather Data</h4>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {autoWeatherData.slice(0, 6).map((weather, index) => (
+              <div key={index} className="bg-white dark:bg-gray-800 p-3 rounded-md border">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {weatherIcons[key as WeatherCondition]}
-                    <span>{label}</span>
+                    {getWeatherIcon(weather.condition)}
+                    <div>
+                      <p className="text-sm font-medium">{new Date(weather.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{weather.description}</p>
+                    </div>
                   </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  <div className="text-right">
+                    <p className="text-lg font-bold">{weather.temperature}°C</p>
+                    <p className="text-xs text-muted-foreground">{weather.humidity}% humidity</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      <Tabs defaultValue="weather-based" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="weather-based">Weather-Based</TabsTrigger>
+          <TabsTrigger value="general">Popular Activities</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="weather-based" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="date">Date</Label>
+              <Input 
+                id="date" 
+                type="date" 
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="weather">Weather Condition</Label>
+              <Select 
+                value={weatherCondition} 
+                onValueChange={(value) => setWeatherCondition(value as WeatherCondition)}
+              >
+                <SelectTrigger id="weather" className="mt-1">
+                  <SelectValue placeholder="Select weather" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(weatherLabels).map(([key, label]) => (
+                    <SelectItem key={key} value={key} className="flex items-center">
+                      <div className="flex items-center gap-2">
+                        {weatherIcons[key as WeatherCondition]}
+                        <span>{label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <Button 
+            onClick={handleGetSuggestions}
+            disabled={weatherMutation.isPending}
+            className="w-full"
+          >
+            {weatherMutation.isPending ? "Getting suggestions..." : "Get Weather-Based Activities"}
+          </Button>
+        </TabsContent>
+
+        <TabsContent value="general" className="space-y-4">
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <p className="text-sm text-muted-foreground mb-3">
+              Discover popular attractions and local experiences perfect for any weather condition.
+            </p>
+            <Button 
+              onClick={handleGeneralSuggestions}
+              disabled={generalMutation.isPending}
+              className="w-full"
+            >
+              {generalMutation.isPending ? "Finding activities..." : "Get Popular Activities"}
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
       
-      <Button 
-        onClick={handleGetSuggestions}
-        disabled={weatherMutation.isPending}
-        className="w-full"
-      >
-        {weatherMutation.isPending ? "Getting suggestions..." : "Get Weather-Based Suggestions"}
-      </Button>
-      
+      {/* Weather-based activity suggestions */}
       {weatherMutation.isSuccess && weatherMutation.data && (
         <div className="mt-4 space-y-4">
           <div className="bg-muted p-4 rounded-md">
@@ -256,7 +345,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
             <p className="text-sm mt-1">{weatherMutation.data.weather.recommendation}</p>
           </div>
           
-          <h4 className="font-medium">Suggested Activities</h4>
+          <h4 className="font-medium">Weather-Based Activities</h4>
           <div className="space-y-3">
             {weatherMutation.data.activities.map((activity, index) => (
               <Card key={index} className="overflow-hidden">
@@ -283,7 +372,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
                       onClick={() => handleAddActivity(activity)}
                       className="ml-2 flex-shrink-0"
                     >
-                      Add
+                      Add to Trip
                     </Button>
                   </div>
                 </CardContent>
@@ -292,6 +381,53 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
             
             {weatherMutation.data.activities.length === 0 && (
               <p className="text-sm text-muted-foreground">No activities found for this weather condition.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* General activity suggestions */}
+      {generalMutation.isSuccess && generalMutation.data && (
+        <div className="mt-4 space-y-4">
+          <h4 className="font-medium flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            Popular Activities
+          </h4>
+          <div className="space-y-3">
+            {generalMutation.data.activities.map((activity, index) => (
+              <Card key={index} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h5 className="font-medium">{activity.title}</h5>
+                      <div className="flex items-center text-sm text-muted-foreground mt-1">
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${
+                          activity.category === 'indoor' 
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' 
+                            : activity.category === 'outdoor'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                        }`}>
+                          {activity.category || 'general'}
+                        </span>
+                        <span className="ml-2">{activity.locationName}</span>
+                      </div>
+                      <p className="text-sm mt-2">{activity.description}</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleAddActivity(activity)}
+                      className="ml-2 flex-shrink-0"
+                    >
+                      Add to Trip
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {generalMutation.data.activities.length === 0 && (
+              <p className="text-sm text-muted-foreground">No popular activities found for this location.</p>
             )}
           </div>
         </div>
