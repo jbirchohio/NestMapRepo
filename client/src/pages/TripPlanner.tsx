@@ -102,7 +102,7 @@ export default function TripPlanner() {
   });
   
   // Prepare map markers - filter out completed activities so they don't show on the map
-  const mapMarkers = sortedActivities
+  const mapMarkers: MapMarker[] = sortedActivities
     .filter(activity => 
       // Only include activities with coordinates and that aren't marked as completed
       activity.latitude && 
@@ -110,11 +110,10 @@ export default function TripPlanner() {
       !activity.completed
     )
     .map((activity, index) => ({
-      id: String(activity.id),
+      id: activity.id,
       latitude: parseFloat(activity.latitude || "0"),
       longitude: parseFloat(activity.longitude || "0"),
-      title: activity.title || activity.locationName || `Activity ${index + 1}`,
-      description: activity.notes || activity.locationName,
+      label: String.fromCharCode(65 + index), // A, B, C, etc.
       activity,
     }));
   
@@ -137,14 +136,6 @@ export default function TripPlanner() {
     : (trip?.cityLatitude && trip?.cityLongitude)
     ? [parseFloat(trip.cityLongitude), parseFloat(trip.cityLatitude)] as [number, number]
     : undefined;
-
-  // Debug map center calculation
-  console.log('Trip data for map:', {
-    cityLat: trip?.cityLatitude,
-    cityLng: trip?.cityLongitude, 
-    markersCount: mapMarkers.length,
-    calculatedCenter: mapCenter
-  });
   
   // Handle activity marker click
   const handleMarkerClick = (marker: MapMarker) => {
@@ -254,8 +245,8 @@ export default function TripPlanner() {
       </div>
 
       {/* Desktop view: side-by-side layout */}
-      <div className="hidden md:flex h-[calc(100vh-110px)] w-full">
-        <div className="w-96 flex-shrink-0 h-full overflow-y-auto border-r">
+      <div className="hidden md:grid md:grid-cols-2 h-[calc(100vh-110px)]">
+        <div className="h-full overflow-y-auto">
           <ItinerarySidebar
             trip={trip}
             activities={activities}
@@ -267,7 +258,7 @@ export default function TripPlanner() {
           />
         </div>
         
-        <div className="flex-1 h-full w-full">
+        <div className="h-full">
           <MapView
             markers={mapMarkers}
             routes={mapRoutes}

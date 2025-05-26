@@ -408,13 +408,6 @@ export default function useMapbox() {
     });
   }, [isInitialized]);
 
-  // Resize map when container dimensions change
-  const resizeMap = useCallback((): void => {
-    if (mapInstance.current && isInitialized) {
-      mapInstance.current.resize();
-    }
-  }, [isInitialized]);
-
   // Clean up on unmount
   useEffect(() => {
     return () => {
@@ -431,7 +424,6 @@ export default function useMapbox() {
     addRoutes,
     geocodeLocation,
     flyToLocation,
-    resizeMap,
     isInitialized,
   };
 }
