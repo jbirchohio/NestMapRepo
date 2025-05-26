@@ -36,10 +36,28 @@ interface ForecastResponse {
  */
 function getTemperatureUnit(location: string): 'metric' | 'imperial' {
   const locationLower = location.toLowerCase();
+  
   // Countries that primarily use Fahrenheit
   const fahrenheitCountries = ['united states', 'usa', 'us', 'america', 'belize', 'cayman islands', 'palau'];
   
+  // US states and common US location indicators
+  const usStates = [
+    'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut', 'delaware',
+    'florida', 'georgia', 'hawaii', 'idaho', 'illinois', 'indiana', 'iowa', 'kansas', 'kentucky',
+    'louisiana', 'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota', 'mississippi',
+    'missouri', 'montana', 'nebraska', 'nevada', 'new hampshire', 'new jersey', 'new mexico',
+    'new york', 'north carolina', 'north dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania',
+    'rhode island', 'south carolina', 'south dakota', 'tennessee', 'texas', 'utah', 'vermont',
+    'virginia', 'washington', 'west virginia', 'wisconsin', 'wyoming'
+  ];
+  
+  // Check for direct country mentions
   if (fahrenheitCountries.some(country => locationLower.includes(country))) {
+    return 'imperial';
+  }
+  
+  // Check for US states
+  if (usStates.some(state => locationLower.includes(state))) {
     return 'imperial';
   }
   
