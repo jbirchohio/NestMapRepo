@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setUserId(dbUser.id);
             } else {
               console.warn('Database user not found for auth user:', user.id);
+              console.log('Missing database user for auth ID:', user.id, 'Email:', user.email);
               setUserId(null);
             }
           } catch (dbError) {
