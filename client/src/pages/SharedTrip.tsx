@@ -79,7 +79,10 @@ export default function SharedTrip() {
     if (permission === 'edit' && sharedTrip && (sharedTrip as any).id) {
       // For edit permission, redirect to the full trip planner with the trip ID
       console.log('Redirecting to edit mode for trip:', (sharedTrip as any).id);
-      window.location.href = `/trip/${(sharedTrip as any).id}`;
+      // Add a small delay to ensure the page loads properly
+      setTimeout(() => {
+        window.location.href = `/trip/${(sharedTrip as any).id}`;
+      }, 100);
     }
   }, [permission, sharedTrip]);
 
