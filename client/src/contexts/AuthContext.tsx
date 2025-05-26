@@ -35,6 +35,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         setUser(user);
+        
+        // If user is authenticated, get their database user ID
+        if (user) {
+          try {
+            const response = await fetch(`/api/users/auth/${user.id}`);
+            if (response.ok) {
+              const dbUser = await response.json();
+              setUserId(dbUser.id);
+            } else {
+              console.warn('Database user not found for auth user:', user.id);
+              setUserId(null);
+            }
+          } catch (dbError) {
+            console.error('Error fetching database user:', dbError);
+            setUserId(null);
+          }
+        } else {
+          setUserId(null);
+        }
       } catch (err: any) {
         console.error('Error loading user:', err);
         setError(err.message);
@@ -72,6 +91,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       setUser(data.user);
+      
+      // Get database user ID for the authenticated user
+      if (data.user) {
+        try {
+          const response = await fetch(`/api/users/auth/${data.user.id}`);
+          if (response.ok) {
+            const dbUser = await response.json();
+            setUserId(dbUser.id);
+          } else {
+            console.warn('Database user not found for auth user:', data.user.id);
+            setUserId(null);
+          }
+        } catch (dbError) {
+          console.error('Error fetching database user on sign in:', dbError);
+          setUserId(null);
+        }
+      }
+      
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
@@ -91,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Sign up function
-  const signUp = async (email: string, password: string, metadata = {}) => {
+  const signUp = async (email: string, password: string, metadata: any = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -116,8 +153,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               auth_id: data.user.id,
               username: username,
               email: email,
-              display_name: metadata.hasOwnProperty('display_name') ? metadata['display_name'] : username,
-              avatar_url: metadata.hasOwnProperty('avatar_url') ? metadata['avatar_url'] : null,
+              display_name: metadata?.display_name || username,
+              avatar_url: metadata?.avatar_url || null,
             }),
           });
           
@@ -214,6 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Create context value
   const value: AuthContextType = {
     user,
+    userId,
     loading,
     error,
     signIn,
