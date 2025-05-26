@@ -4,10 +4,12 @@ import { useToast } from "@/hooks/use-toast";
 import AppShell from "@/components/AppShell";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import MapView from "@/components/MapView";
+import ShareTripModal from "@/components/ShareTripModal";
 import useTrip from "@/hooks/useTrip";
 import useActivities from "@/hooks/useActivities";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function TripPlanner() {
   const [, params] = useRoute("/trip/:id");
@@ -36,6 +38,9 @@ export default function TripPlanner() {
   
   // State for mobile view toggle (map or itinerary)
   const [mobileView, setMobileView] = useState<'itinerary' | 'map'>('itinerary');
+  
+  // State for share modal
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   
   // Set active day when trip data loads and store trip destination info for geocoding
   useEffect(() => {
@@ -140,12 +145,30 @@ export default function TripPlanner() {
     }
   };
   
-  // Handle share modal (not implemented for simplicity)
+  // Handle share modal
   const handleOpenShare = () => {
-    toast({
-      title: "Share",
-      description: "Sharing functionality would open here.",
-    });
+    setShareModalOpen(true);
+  };
+
+  // Handle saving share settings
+  const handleSaveShareSettings = async (tripId: number, updates: Partial<typeof trip>) => {
+    try {
+      await apiRequest(`/api/trips/${tripId}`, {
+        method: "PUT",
+        body: JSON.stringify(updates),
+      });
+      toast({
+        title: "Success",
+        description: "Share settings updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update share settings",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
   
   // Loading state
