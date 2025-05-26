@@ -51,6 +51,19 @@ export default function ActivityModal({
   const { geocodeLocation } = useMapbox();
   const { trip } = useTrip(tripId);
   
+  // Debug hotel data
+  useEffect(() => {
+    if (trip) {
+      console.log("ActivityModal - Trip data:", {
+        id: trip.id,
+        hotel: trip.hotel,
+        hotelLatitude: trip.hotelLatitude,
+        hotelLongitude: trip.hotelLongitude,
+        hasHotelButton: !!(trip.hotel && trip.hotelLatitude && trip.hotelLongitude)
+      });
+    }
+  }, [trip]);
+  
   // State variables for location search
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 1000); // 1 second delay
