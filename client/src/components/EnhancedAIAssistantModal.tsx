@@ -156,8 +156,8 @@ export default function EnhancedAIAssistantModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl w-[90vw] h-[70vh] p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
+      <DialogContent className="max-w-2xl w-[95vw] h-[85vh] sm:w-[90vw] sm:h-[80vh] md:h-[75vh] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <DialogTitle className="flex items-center">
             <Sparkles className="h-5 w-5 mr-2 text-primary" />
             NestMap AI Assistant
@@ -167,7 +167,7 @@ export default function EnhancedAIAssistantModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="chat" className="h-[calc(100%-80px)]" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue="chat" className="flex-1 flex flex-col overflow-hidden" value={activeTab} onValueChange={setActiveTab}>
           <div className="px-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="chat">
@@ -185,7 +185,7 @@ export default function EnhancedAIAssistantModal({
             </TabsList>
           </div>
 
-          <TabsContent value="chat" className="h-full flex flex-col p-6 pt-4">
+          <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden p-6 pt-4">
             {/* Quick Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <Button
@@ -241,7 +241,7 @@ export default function EnhancedAIAssistantModal({
               </Button>
             </div>
             
-            <ScrollArea className="flex-1 pr-4">
+            <ScrollArea className="flex-1 min-h-0 pr-4">
               <div className="space-y-4">
                 {conversation.map((message, index) => (
                   <div
