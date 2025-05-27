@@ -244,6 +244,16 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       .as('users_with_activities')
     );
 
+    // Users with completed trips
+    const [usersWithCompletedTripsResult] = await db.select({
+      count: count()
+    }).from(
+      db.selectDistinct({ userId: trips.userId })
+      .from(trips)
+      .where(eq(trips.completed, true))
+      .as('users_with_completed_trips')
+    );
+
     // For exports, we'll estimate based on users with multiple trips (proxy for engagement)
     const estimatedExportUsers = Math.round(usersWithMultipleTripsResult.count * 0.3);
 
@@ -275,7 +285,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
         totalUsers: totalUsersResult.count,
         usersWithTrips: usersWithTripsResult.count,
         usersWithActivities: usersWithActivitiesResult.count,
-        usersWithCompletedTrips: tripsWithCompletedActivitiesResult.count,
+        usersWithCompletedTrips: usersWithCompletedTripsResult.count,
         usersWithExports: estimatedExportUsers
       }
     };
