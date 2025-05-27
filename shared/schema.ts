@@ -43,6 +43,21 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   display_name: true,
   avatar_url: true,
+  role: true,
+  organization_id: true,
+});
+
+export const insertOrganizationSchema = createInsertSchema(organizations).pick({
+  name: true,
+  domain: true,
+  plan: true,
+});
+
+export const insertTripCollaboratorSchema = createInsertSchema(tripCollaborators).pick({
+  trip_id: true,
+  user_id: true,
+  role: true,
+  invited_by: true,
 });
 
 // Trip schema with enhanced sharing/collaboration features
@@ -170,9 +185,36 @@ export const insertNoteSchema = createInsertSchema(notes).pick({
   content: true,
 });
 
+// RBAC constants
+export const USER_ROLES = {
+  ADMIN: 'admin',
+  MANAGER: 'manager', 
+  USER: 'user',
+  GUEST: 'guest'
+} as const;
+
+export const TRIP_ROLES = {
+  ADMIN: 'admin',
+  EDITOR: 'editor',
+  VIEWER: 'viewer',
+  COMMENTER: 'commenter'
+} as const;
+
+export const ORGANIZATION_PLANS = {
+  FREE: 'free',
+  TEAM: 'team',
+  ENTERPRISE: 'enterprise'
+} as const;
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+
+export type TripCollaborator = typeof tripCollaborators.$inferSelect;
+export type InsertTripCollaborator = z.infer<typeof insertTripCollaboratorSchema>;
 
 export type Trip = typeof trips.$inferSelect;
 export type InsertTrip = z.infer<typeof insertTripSchema>;
@@ -185,3 +227,8 @@ export type InsertTodo = z.infer<typeof insertTodoSchema>;
 
 export type Note = typeof notes.$inferSelect;
 export type InsertNote = z.infer<typeof insertNoteSchema>;
+
+// RBAC utility types
+export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
+export type TripRole = typeof TRIP_ROLES[keyof typeof TRIP_ROLES];
+export type OrganizationPlan = typeof ORGANIZATION_PLANS[keyof typeof ORGANIZATION_PLANS];
