@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { format } from "date-fns";
@@ -12,7 +13,7 @@ import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
-import { UserRound, LogOut, BarChart3 } from "lucide-react";
+import { UserRound, LogOut, BarChart3, CheckCircle, Clock } from "lucide-react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -306,6 +307,69 @@ export default function Home() {
             <h2 className="text-xl font-semibold mb-4">
               Your Trips {isGuestMode && `(${trips.length}/2 Free)`}
             </h2>
+            
+            {trips.length > 0 && (
+              <Tabs defaultValue="active" className="mb-4">
+                <TabsList>
+                  <TabsTrigger value="active" className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Active ({trips.filter(trip => !trip.completed).length})
+                  </TabsTrigger>
+                  <TabsTrigger value="completed" className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    Completed ({trips.filter(trip => trip.completed).length})
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="active">
+                  {trips.filter(trip => !trip.completed).length === 0 ? (
+                    <Card>
+                      <CardContent className="py-8 text-center">
+                        <Clock className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))] mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No active trips</h3>
+                        <p className="text-[hsl(var(--muted-foreground))]">All your trips are completed! Create a new one to start planning.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {trips.filter(trip => !trip.completed).map((trip) => (
+                        <SwipeableTrip
+                          key={trip.id}
+                          trip={trip}
+                          onNavigate={handleNavigateToTrip}
+                          onRename={handleOpenRenameDialog}
+                          isGuestMode={isGuestMode}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="completed">
+                  {trips.filter(trip => trip.completed).length === 0 ? (
+                    <Card>
+                      <CardContent className="py-8 text-center">
+                        <CheckCircle className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))] mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No completed trips yet</h3>
+                        <p className="text-[hsl(var(--muted-foreground))]">Mark trips as complete when you finish them to see them here.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {trips.filter(trip => trip.completed).map((trip) => (
+                        <SwipeableTrip
+                          key={trip.id}
+                          trip={trip}
+                          onNavigate={handleNavigateToTrip}
+                          onRename={handleOpenRenameDialog}
+                          isGuestMode={isGuestMode}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
             
             {isLoading ? (
               <div className="text-center py-8">
