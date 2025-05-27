@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
 import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
@@ -7,6 +8,14 @@ import { setupVite, serveStatic, log } from "./vite";
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Add session middleware for OAuth flow
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'nestmap-calendar-sync-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true in production with HTTPS
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
