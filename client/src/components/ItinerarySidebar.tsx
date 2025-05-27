@@ -187,6 +187,9 @@ export default function ItinerarySidebar({
                 </svg>
                 AI Assistant
               </button>
+              
+              {/* Calendar Export Button */}
+              <CalendarIntegration trip={trip} activities={activities} />
             </div>
 
             {/* Itinerary Timeline */}
