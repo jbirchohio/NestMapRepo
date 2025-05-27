@@ -348,7 +348,7 @@ export default function EnhancedAIAssistantModal({
                               });
                             }
                             
-                            return suggestions.map((suggestion) => (
+                            return (suggestions as any[]).map((suggestion) => (
                               <Button
                                 key={suggestion.key}
                                 variant="outline"
