@@ -162,7 +162,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Raw request body:", req.body);
       const tripData = partialTripSchema.parse(req.body);
       console.log("Parsed trip data:", tripData);
-      const updatedTrip = await storage.updateTrip(tripId, tripData);
+      // Convert null values to undefined for storage compatibility
+      const cleanedTripData = Object.fromEntries(
+        Object.entries(tripData).map(([key, value]) => [key, value === null ? undefined : value])
+      );
+      const updatedTrip = await storage.updateTrip(tripId, cleanedTripData);
       
       if (!updatedTrip) {
         return res.status(404).json({ message: "Trip not found" });
