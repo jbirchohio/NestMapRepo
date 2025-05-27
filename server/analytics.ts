@@ -1,6 +1,6 @@
 import { db } from "./db-connection";
 import { trips, activities, todos, notes, users } from "@shared/schema";
-import { sql, count, avg, desc, asc } from "drizzle-orm";
+import { sql, count, avg, desc, asc, eq } from "drizzle-orm";
 
 export interface AnalyticsData {
   overview: {
@@ -173,7 +173,12 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       .as('user_trip_counts')
     );
 
-    // Completion rate (trips with at least one completed activity)
+    // Trip completion metrics
+    const [completedTripsResult] = await db.select({
+      count: count()
+    }).from(trips).where(eq(trips.completed, true));
+
+    // Activity completion rate (trips with at least one completed activity)
     const [tripsWithCompletedActivitiesResult] = await db.select({
       count: count()
     }).from(
@@ -183,7 +188,12 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       .as('trips_with_completed')
     );
 
-    const completionRate = totalTripsResult.count > 0 ? 
+    // Overall trip completion rate (trips marked as complete)
+    const tripCompletionRate = totalTripsResult.count > 0 ? 
+      Math.round((completedTripsResult.count / totalTripsResult.count) * 100) : 0;
+
+    // Activity engagement rate
+    const activityCompletionRate = totalTripsResult.count > 0 ? 
       Math.round((tripsWithCompletedActivitiesResult.count / totalTripsResult.count) * 100) : 0;
 
     // Recent activity (last 7 days)
@@ -251,7 +261,8 @@ export async function getAnalytics(): Promise<AnalyticsData> {
         usersWithTrips: usersWithTripsResult.count,
         usersWithMultipleTrips: usersWithMultipleTripsResult.count,
         averageTripsPerUser: Math.round(Number(avgTripsPerUserResult.avgTrips) || 0),
-        completionRate
+        tripCompletionRate,
+        activityCompletionRate
       },
       recentActivity: {
         newTripsLast7Days: newTripsLast7DaysResult.count,
