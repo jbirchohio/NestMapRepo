@@ -89,7 +89,26 @@ export default function useActivities(tripId: number) {
     const processedActivities: ClientActivity[] = [];
     
     Object.values(activitiesByDay).forEach(dayActivities => {
-      // Add travel time estimates
+      // First pass: detect time overlap conflicts
+      dayActivities.forEach((activity, index) => {
+        let hasTimeConflict = false;
+        
+        // Check if this activity's time overlaps with any other activity on the same day
+        for (let i = 0; i < dayActivities.length; i++) {
+          if (i !== index) {
+            const otherActivity = dayActivities[i];
+            if (activity.time === otherActivity.time) {
+              hasTimeConflict = true;
+              break;
+            }
+          }
+        }
+        
+        // Add time conflict flag to activity
+        activity.timeConflict = hasTimeConflict;
+      });
+      
+      // Second pass: Add travel time estimates
       dayActivities.forEach((activity, index) => {
         if (index === 0) {
           // First activity of the day has no previous activity

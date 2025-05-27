@@ -25,6 +25,7 @@ export interface ClientActivity extends Activity {
   travelTimeFromPrevious?: string;
   travelDistanceFromPrevious?: string;
   conflict?: boolean;
+  timeConflict?: boolean; // For identical time conflicts
 }
 
 export interface DayActivities {
