@@ -403,7 +403,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid todo data", errors: error.errors });
       }
-      res.status(500).json({ message: "Could not create todo" });
+      console.error("Error creating todo:", error);
+      res.status(500).json({ message: "Could not create todo", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -426,7 +427,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid todo data", errors: error.errors });
       }
-      res.status(500).json({ message: "Could not update todo" });
+      console.error("Error updating todo:", error);
+      res.status(500).json({ message: "Could not update todo", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -444,7 +446,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).end();
     } catch (error) {
-      res.status(500).json({ message: "Could not delete todo" });
+      console.error("Error deleting todo:", error);
+      res.status(500).json({ message: "Could not delete todo", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -459,7 +462,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const notes = await storage.getNotesByTripId(tripId);
       res.json(notes);
     } catch (error) {
-      res.status(500).json({ message: "Could not fetch notes" });
+      console.error("Error fetching notes:", error);
+      res.status(500).json({ message: "Could not fetch notes", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -472,7 +476,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid note data", errors: error.errors });
       }
-      res.status(500).json({ message: "Could not create note" });
+      console.error("Error creating note:", error);
+      res.status(500).json({ message: "Could not create note", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -495,7 +500,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid note data", errors: error.errors });
       }
-      res.status(500).json({ message: "Could not update note" });
+      console.error("Error updating note:", error);
+      res.status(500).json({ message: "Could not update note", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
