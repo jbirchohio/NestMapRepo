@@ -90,61 +90,55 @@ END:VCALENDAR`;
     }
   };
 
-  const openGoogleCalendar = async () => {
+  const syncWithGoogleCalendar = async () => {
     try {
-      const response = await fetch(`/api/trips/${trip.id}/calendar/google`);
+      const response = await fetch(`/api/calendar/google/auth?tripId=${trip.id}`);
       if (!response.ok) {
-        throw new Error('Failed to generate calendar URLs');
+        throw new Error('Failed to get auth URL');
       }
       
-      const { urls } = await response.json();
+      const { authUrl } = await response.json();
       
-      // Open each URL with a small delay to prevent browser blocking
-      urls.forEach((url: string, index: number) => {
-        setTimeout(() => {
-          window.open(url, '_blank');
-        }, index * 500);
-      });
+      // Open OAuth window
+      window.open(authUrl, '_blank', 'width=500,height=600');
       
       toast({
-        title: "Opening Google Calendar",
-        description: `${urls.length} tabs will open, one for each activity.`,
+        title: "Syncing with Google Calendar",
+        description: "Please authorize access to sync your trip activities.",
       });
+      setIsOpen(false);
     } catch (error) {
-      console.error("Error opening Google Calendar:", error);
+      console.error("Error syncing with Google Calendar:", error);
       toast({
-        title: "Error",
-        description: "Could not open Google Calendar. Please try again.",
+        title: "Sync failed",
+        description: "Could not connect to Google Calendar. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const openOutlookCalendar = async () => {
+  const syncWithOutlookCalendar = async () => {
     try {
-      const response = await fetch(`/api/trips/${trip.id}/calendar/outlook`);
+      const response = await fetch(`/api/calendar/microsoft/auth?tripId=${trip.id}`);
       if (!response.ok) {
-        throw new Error('Failed to generate calendar URLs');
+        throw new Error('Failed to get auth URL');
       }
       
-      const { urls } = await response.json();
+      const { authUrl } = await response.json();
       
-      // Open each URL with a small delay to prevent browser blocking
-      urls.forEach((url: string, index: number) => {
-        setTimeout(() => {
-          window.open(url, '_blank');
-        }, index * 500);
-      });
+      // Open OAuth window
+      window.open(authUrl, '_blank', 'width=500,height=600');
       
       toast({
-        title: "Opening Outlook Calendar",
-        description: `${urls.length} tabs will open, one for each activity.`,
+        title: "Syncing with Outlook Calendar",
+        description: "Please authorize access to sync your trip activities.",
       });
+      setIsOpen(false);
     } catch (error) {
-      console.error("Error opening Outlook Calendar:", error);
+      console.error("Error syncing with Outlook Calendar:", error);
       toast({
-        title: "Error",
-        description: "Could not open Outlook Calendar. Please try again.",
+        title: "Sync failed",
+        description: "Could not connect to Outlook Calendar. Please try again.",
         variant: "destructive",
       });
     }
@@ -169,21 +163,21 @@ END:VCALENDAR`;
           
           <div className="grid gap-3">
             <Button 
-              onClick={openGoogleCalendar}
+              onClick={syncWithGoogleCalendar}
               variant="outline" 
               className="justify-start"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Google Calendar
+              Sync with Google Calendar
             </Button>
             
             <Button 
-              onClick={openOutlookCalendar}
+              onClick={syncWithOutlookCalendar}
               variant="outline" 
               className="justify-start"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Outlook Calendar
+              Sync with Outlook Calendar
             </Button>
             
             <Button 

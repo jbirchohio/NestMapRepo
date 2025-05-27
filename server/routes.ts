@@ -859,6 +859,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Calendar sync OAuth routes
+  app.get("/api/calendar/google/auth", async (req: Request, res: Response) => {
+    try {
+      const { tripId } = req.query;
+      const authUrl = getGoogleAuthUrl();
+      
+      // Store tripId in session for callback
+      req.session.tripId = tripId;
+      
+      res.json({ authUrl });
+    } catch (error) {
+      console.error("Error generating Google auth URL:", error);
+      res.status(500).json({ message: "Could not generate auth URL" });
+    }
+  });
+
+  app.get("/api/calendar/microsoft/auth", async (req: Request, res: Response) => {
+    try {
+      const { tripId } = req.query;
+      const authUrl = getMicrosoftAuthUrl();
+      
+      // Store tripId in session for callback
+      req.session.tripId = tripId;
+      
+      res.json({ authUrl });
+    } catch (error) {
+      console.error("Error generating Microsoft auth URL:", error);
+      res.status(500).json({ message: "Could not generate auth URL" });
+    }
+  });
+
+  app.get("/api/auth/google/callback", async (req: Request, res: Response) => {
+    try {
+      const { code } = req.query;
+      const tripId = req.session.tripId;
+      
+      if (!code || !tripId) {
+        return res.status(400).send("Missing authorization code or trip ID");
+      }
+      
+      const accessToken = await exchangeGoogleCodeForToken(code as string);
+      
+      const trip = await storage.getTrip(parseInt(tripId as string));
+      const activities = await storage.getActivitiesByTripId(parseInt(tripId as string));
+      
+      const results = await syncToGoogleCalendar(trip!, activities, accessToken);
+      
+      // Clear session
+      delete req.session.tripId;
+      
+      // Redirect to success page with results
+      res.redirect(`/sync-success?provider=google&events=${results.filter(r => r.success).length}&total=${results.length}`);
+    } catch (error) {
+      console.error("Error syncing to Google Calendar:", error);
+      res.redirect(`/sync-error?provider=google&error=${encodeURIComponent("Sync failed")}`);
+    }
+  });
+
+  app.get("/api/auth/microsoft/callback", async (req: Request, res: Response) => {
+    try {
+      const { code } = req.query;
+      const tripId = req.session.tripId;
+      
+      if (!code || !tripId) {
+        return res.status(400).send("Missing authorization code or trip ID");
+      }
+      
+      const accessToken = await exchangeMicrosoftCodeForToken(code as string);
+      
+      const trip = await storage.getTrip(parseInt(tripId as string));
+      const activities = await storage.getActivitiesByTripId(parseInt(tripId as string));
+      
+      const results = await syncToOutlookCalendar(trip!, activities, accessToken);
+      
+      // Clear session
+      delete req.session.tripId;
+      
+      // Redirect to success page with results
+      res.redirect(`/sync-success?provider=outlook&events=${results.filter(r => r.success).length}&total=${results.length}`);
+    } catch (error) {
+      console.error("Error syncing to Outlook Calendar:", error);
+      res.redirect(`/sync-error?provider=outlook&error=${encodeURIComponent("Sync failed")}`);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
