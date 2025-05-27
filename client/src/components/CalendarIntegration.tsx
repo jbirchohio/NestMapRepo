@@ -17,16 +17,27 @@ export default function CalendarIntegration({ trip, activities }: CalendarIntegr
 
   const generateICalContent = () => {
     const events = activities.map(activity => {
-      const startDate = new Date(activity.date);
-      const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000)); // Default 2 hour duration
+      // Parse the activity date and time properly
+      const activityDate = new Date(activity.date);
+      const [hours, minutes] = activity.time.split(':').map(Number);
+      
+      const startDate = new Date(activityDate);
+      startDate.setHours(hours, minutes, 0, 0);
+      
+      // Default 2 hour duration for each activity
+      const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
+      
+      const formatDateForICal = (date: Date) => {
+        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      };
       
       return `BEGIN:VEVENT
 UID:nestmap-${activity.id}-${Date.now()}@nestmap.com
-DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
-DTSTART:${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
-DTEND:${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTSTAMP:${formatDateForICal(new Date())}
+DTSTART:${formatDateForICal(startDate)}
+DTEND:${formatDateForICal(endDate)}
 SUMMARY:${activity.title}
-DESCRIPTION:${activity.notes || ''}
+DESCRIPTION:${activity.notes || 'Activity from NestMap trip: ' + trip.title}
 LOCATION:${activity.locationName || ''}
 END:VEVENT`;
     }).join('\n');
@@ -76,28 +87,56 @@ END:VCALENDAR`;
   };
 
   const openGoogleCalendar = () => {
-    const startDate = new Date(trip.startDate).toISOString().replace(/[-:]/g, '').split('.')[0];
-    const endDate = new Date(trip.endDate).toISOString().replace(/[-:]/g, '').split('.')[0];
+    // Create individual events for each activity
+    activities.forEach((activity, index) => {
+      const activityDate = new Date(activity.date);
+      const [hours, minutes] = activity.time.split(':').map(Number);
+      
+      const startDate = new Date(activityDate);
+      startDate.setHours(hours, minutes, 0, 0);
+      
+      const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
+      
+      const formatDateForGoogle = (date: Date) => {
+        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      };
+      
+      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(activity.title)}&dates=${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}&details=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.locationName || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`)}&location=${encodeURIComponent(activity.locationName || '')}`;
+      
+      // Small delay between opening tabs to prevent browser blocking
+      setTimeout(() => {
+        window.open(googleUrl, '_blank');
+      }, index * 500);
+    });
     
-    const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(trip.title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(`Trip planned with NestMap\n\nActivities:\n${activities.map(a => `• ${a.title}`).join('\n')}`)}`;
-    
-    window.open(googleUrl, '_blank');
     toast({
       title: "Opening Google Calendar",
-      description: "A new tab will open with your trip details.",
+      description: `${activities.length} tabs will open, one for each activity.`,
     });
   };
 
   const openOutlookCalendar = () => {
-    const startDate = new Date(trip.startDate).toISOString();
-    const endDate = new Date(trip.endDate).toISOString();
+    // Create individual events for each activity
+    activities.forEach((activity, index) => {
+      const activityDate = new Date(activity.date);
+      const [hours, minutes] = activity.time.split(':').map(Number);
+      
+      const startDate = new Date(activityDate);
+      startDate.setHours(hours, minutes, 0, 0);
+      
+      const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
+      
+      const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(activity.title)}&startdt=${startDate.toISOString()}&enddt=${endDate.toISOString()}&body=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.locationName || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`)}&location=${encodeURIComponent(activity.locationName || '')}`;
+      
+      // Small delay between opening tabs to prevent browser blocking
+      setTimeout(() => {
+        window.open(outlookUrl, '_blank');
+      }, index * 500);
+    });
     
-    const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(trip.title)}&startdt=${startDate}&enddt=${endDate}&body=${encodeURIComponent(`Trip planned with NestMap\n\nActivities:\n${activities.map(a => `• ${a.title}`).join('\n')}`)}`;
-    
-    window.open(outlookUrl, '_blank');
     toast({
       title: "Opening Outlook Calendar",
-      description: "A new tab will open with your trip details.",
+      description: `${activities.length} tabs will open, one for each activity.`,
     });
   };
 
