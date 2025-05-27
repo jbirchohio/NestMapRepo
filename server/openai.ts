@@ -182,7 +182,7 @@ export async function optimizeItinerary(activities: any[], tripContext: any): Pr
 
 CRITICAL TASK: Look at these activities and find any that have THE EXACT SAME TIME - this is a scheduling conflict that MUST be fixed!
 
-Current Activities:
+Current Activities (USE THESE EXACT IDs):
 ${JSON.stringify(activities.map(a => ({
   id: a.id,
   title: a.title,
@@ -193,6 +193,8 @@ ${JSON.stringify(activities.map(a => ({
   tag: a.tag,
   notes: a.notes
 })), null, 2)}
+
+IMPORTANT: You MUST use the exact numeric "id" values shown above (like ${activities.map(a => a.id).join(', ')}) in your response, NOT the titles!
 
 STEP 1: SCAN FOR IDENTICAL TIMES
 - Look through the "time" field for each activity
@@ -213,27 +215,15 @@ Trip Context: ${tripContext.location || 'Unknown'}, ${tripContext.duration || 'U
 
 You MUST provide an optimization for EVERY activity. If no change needed, suggest the same time with reason "Time confirmed as optimal".
 
-Respond with JSON using the EXACT activity IDs from above:
+Respond with JSON using the EXACT numeric IDs from the activities above:
 {
   "optimizedActivities": [
-    {
-      "id": "32",
+${activities.map(a => `    {
+      "id": "${a.id}",
       "suggestedTime": "HH:MM",
       "suggestedDay": 1,
       "reason": "Specific reason - especially mention if this fixes a time conflict"
-    },
-    {
-      "id": "34", 
-      "suggestedTime": "HH:MM",
-      "suggestedDay": 1,
-      "reason": "Specific reason - especially mention if this fixes a time conflict"
-    },
-    {
-      "id": "38",
-      "suggestedTime": "HH:MM", 
-      "suggestedDay": 1,
-      "reason": "Specific reason - especially mention if this fixes a time conflict"
-    }
+    }`).join(',\n')}
   ],
   "recommendations": [
     "State exactly which time conflicts were found and resolved",
