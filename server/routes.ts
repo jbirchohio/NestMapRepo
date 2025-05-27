@@ -653,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Error in assistant endpoint:", error);
-      res.status(500).json({ message: "Could not get assistant response" });
+      res.status(500).json({ message: "Could not get assistant response", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
   
@@ -694,7 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       console.error("Error in weather activities endpoint:", error);
-      res.status(500).json({ message: "Could not get weather-based activity suggestions" });
+      res.status(500).json({ message: "Could not get weather-based activity suggestions", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
   
@@ -726,7 +726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       console.error("Error in budget options endpoint:", error);
-      res.status(500).json({ message: "Could not get budget suggestions" });
+      res.status(500).json({ message: "Could not get budget suggestions", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -748,7 +748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Weather API error:", error);
-      res.status(500).json({ message: "Could not fetch weather data" });
+      res.status(500).json({ message: "Could not fetch weather data", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -786,7 +786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(sharedTripData);
     } catch (error) {
       console.error("Error fetching shared trip:", error);
-      res.status(500).json({ message: "Failed to fetch shared trip" });
+      res.status(500).json({ message: "Failed to fetch shared trip", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
