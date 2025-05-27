@@ -46,14 +46,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const dbUser = await response.json();
               console.log('Database user found:', dbUser);
               setUserId(dbUser.id);
+            } else if (response.status === 404) {
+              // User not found in database - this is expected for new users
+              console.log('Database user not found for auth user:', user.id, '- this is normal for new users');
+              setUserId(null);
             } else {
-              console.warn('Database user not found for auth user:', user.id);
-              console.log('Missing database user for auth ID:', user.id, 'Email:', user.email);
+              console.warn('Unexpected response when fetching database user:', response.status);
               setUserId(null);
             }
           } catch (dbError) {
-            console.error('Error fetching database user:', dbError);
-            console.log('Auth user details:', { id: user.id, email: user.email });
+            console.warn('Network error fetching database user (non-critical):', dbError);
+            // Don't treat this as a fatal error - user can still use the app
             setUserId(null);
           }
         } else {
