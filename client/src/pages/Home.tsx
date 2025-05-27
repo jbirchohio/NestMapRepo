@@ -389,39 +389,7 @@ export default function Home() {
                   <Button onClick={handleCreateNewTrip}>Create New Trip</Button>
                 </CardContent>
               </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {trips.map((trip) => (
-                  <SwipeableTrip
-                    key={trip.id}
-                    trip={trip}
-                    onNavigate={handleNavigateToTrip}
-                    onRename={handleOpenRenameDialog}
-                  />
-                ))}
-                
-                {/* Rename Trip Dialog */}
-                <RenameTripDialog
-                  isOpen={isRenameModalOpen}
-                  onClose={handleCloseRenameDialog}
-                  trip={tripToRename}
-                />
-                
-                <Card 
-                  className="border-dashed cursor-pointer hover:bg-[hsl(var(--muted))] transition-colors"
-                  onClick={handleCreateNewTrip}
-                >
-                  <CardContent className="p-4 flex items-center justify-center h-full">
-                    <div className="text-center py-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mx-auto mb-2 text-[hsl(var(--primary))]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      <span className="text-[hsl(var(--primary))]">New Trip</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            ) : null}
           </section>
         </div>
       </main>
