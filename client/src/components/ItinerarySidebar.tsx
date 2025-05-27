@@ -14,6 +14,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+import { CheckCircle, Circle } from "lucide-react";
 
 interface ItinerarySidebarProps {
   trip: ClientTrip;

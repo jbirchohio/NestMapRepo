@@ -45,6 +45,9 @@ export const trips = pgTable("trips", {
   hotel: text("hotel"),
   hotelLatitude: text("hotel_latitude"),
   hotelLongitude: text("hotel_longitude"),
+  // Trip status
+  completed: boolean("completed").default(false),
+  completedAt: timestamp("completed_at"),
   // Metadata
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

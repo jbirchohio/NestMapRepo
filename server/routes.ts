@@ -214,6 +214,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/trips/:id/toggle-complete", async (req: Request, res: Response) => {
+    try {
+      const tripId = Number(req.params.id);
+      if (isNaN(tripId)) {
+        return res.status(400).json({ message: "Invalid trip ID" });
+      }
+
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+
+      const updatedTrip = await storage.updateTrip(tripId, {
+        completed: !trip.completed,
+        completedAt: !trip.completed ? new Date() : null
+      });
+
+      if (!updatedTrip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+
+      res.json(updatedTrip);
+    } catch (error) {
+      console.error("Error toggling trip completion:", error);
+      res.status(500).json({ message: "Could not update trip" });
+    }
+  });
+
   // Activities routes
   app.get("/api/trips/:id/activities", async (req: Request, res: Response) => {
     try {
