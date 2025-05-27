@@ -53,11 +53,15 @@ ${events}
 END:VCALENDAR`;
   };
 
-  const downloadICalFile = () => {
+  const downloadICalFile = async () => {
     setIsExporting(true);
     try {
-      const icalContent = generateICalContent();
-      const blob = new Blob([icalContent], { type: 'text/calendar;charset=utf-8' });
+      const response = await fetch(`/api/trips/${trip.id}/calendar/ical`);
+      if (!response.ok) {
+        throw new Error('Failed to generate calendar file');
+      }
+      
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       
       const link = document.createElement('a');
@@ -86,58 +90,64 @@ END:VCALENDAR`;
     }
   };
 
-  const openGoogleCalendar = () => {
-    // Create individual events for each activity
-    activities.forEach((activity, index) => {
-      const activityDate = new Date(activity.date);
-      const [hours, minutes] = activity.time.split(':').map(Number);
+  const openGoogleCalendar = async () => {
+    try {
+      const response = await fetch(`/api/trips/${trip.id}/calendar/google`);
+      if (!response.ok) {
+        throw new Error('Failed to generate calendar URLs');
+      }
       
-      const startDate = new Date(activityDate);
-      startDate.setHours(hours, minutes, 0, 0);
+      const { urls } = await response.json();
       
-      const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
+      // Open each URL with a small delay to prevent browser blocking
+      urls.forEach((url: string, index: number) => {
+        setTimeout(() => {
+          window.open(url, '_blank');
+        }, index * 500);
+      });
       
-      const formatDateForGoogle = (date: Date) => {
-        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-      };
-      
-      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(activity.title)}&dates=${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}&details=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.locationName || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`)}&location=${encodeURIComponent(activity.locationName || '')}`;
-      
-      // Small delay between opening tabs to prevent browser blocking
-      setTimeout(() => {
-        window.open(googleUrl, '_blank');
-      }, index * 500);
-    });
-    
-    toast({
-      title: "Opening Google Calendar",
-      description: `${activities.length} tabs will open, one for each activity.`,
-    });
+      toast({
+        title: "Opening Google Calendar",
+        description: `${urls.length} tabs will open, one for each activity.`,
+      });
+    } catch (error) {
+      console.error("Error opening Google Calendar:", error);
+      toast({
+        title: "Error",
+        description: "Could not open Google Calendar. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const openOutlookCalendar = () => {
-    // Create individual events for each activity
-    activities.forEach((activity, index) => {
-      const activityDate = new Date(activity.date);
-      const [hours, minutes] = activity.time.split(':').map(Number);
+  const openOutlookCalendar = async () => {
+    try {
+      const response = await fetch(`/api/trips/${trip.id}/calendar/outlook`);
+      if (!response.ok) {
+        throw new Error('Failed to generate calendar URLs');
+      }
       
-      const startDate = new Date(activityDate);
-      startDate.setHours(hours, minutes, 0, 0);
+      const { urls } = await response.json();
       
-      const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
+      // Open each URL with a small delay to prevent browser blocking
+      urls.forEach((url: string, index: number) => {
+        setTimeout(() => {
+          window.open(url, '_blank');
+        }, index * 500);
+      });
       
-      const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(activity.title)}&startdt=${startDate.toISOString()}&enddt=${endDate.toISOString()}&body=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.locationName || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`)}&location=${encodeURIComponent(activity.locationName || '')}`;
-      
-      // Small delay between opening tabs to prevent browser blocking
-      setTimeout(() => {
-        window.open(outlookUrl, '_blank');
-      }, index * 500);
-    });
-    
-    toast({
-      title: "Opening Outlook Calendar",
-      description: `${activities.length} tabs will open, one for each activity.`,
-    });
+      toast({
+        title: "Opening Outlook Calendar",
+        description: `${urls.length} tabs will open, one for each activity.`,
+      });
+    } catch (error) {
+      console.error("Error opening Outlook Calendar:", error);
+      toast({
+        title: "Error",
+        description: "Could not open Outlook Calendar. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

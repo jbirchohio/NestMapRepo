@@ -15,6 +15,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import * as openai from "./openai";
 import * as aiLocations from "./aiLocations";
+import { generateICalContent, generateGoogleCalendarUrls, generateOutlookCalendarUrls } from "./calendar";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for Supabase integration
@@ -787,6 +788,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching shared trip:", error);
       res.status(500).json({ message: "Failed to fetch shared trip", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Calendar export endpoints
+  app.get("/api/trips/:id/calendar/ical", async (req: Request, res: Response) => {
+    try {
+      const tripId = parseInt(req.params.id);
+      
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      const activities = await storage.getActivitiesByTripId(tripId);
+      const icalContent = generateICalContent(trip, activities);
+      
+      res.setHeader('Content-Type', 'text/calendar');
+      res.setHeader('Content-Disposition', `attachment; filename="${trip.title.replace(/[^a-z0-9]/gi, '_')}_trip.ics"`);
+      res.send(icalContent);
+    } catch (error) {
+      console.error("Error generating iCal:", error);
+      res.status(500).json({ message: "Could not generate calendar file" });
+    }
+  });
+
+  app.get("/api/trips/:id/calendar/google", async (req: Request, res: Response) => {
+    try {
+      const tripId = parseInt(req.params.id);
+      
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      const activities = await storage.getActivitiesByTripId(tripId);
+      const googleUrls = generateGoogleCalendarUrls(trip, activities);
+      
+      res.json({ urls: googleUrls });
+    } catch (error) {
+      console.error("Error generating Google Calendar URLs:", error);
+      res.status(500).json({ message: "Could not generate calendar URLs" });
+    }
+  });
+
+  app.get("/api/trips/:id/calendar/outlook", async (req: Request, res: Response) => {
+    try {
+      const tripId = parseInt(req.params.id);
+      
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      const activities = await storage.getActivitiesByTripId(tripId);
+      const outlookUrls = generateOutlookCalendarUrls(trip, activities);
+      
+      res.json({ urls: outlookUrls });
+    } catch (error) {
+      console.error("Error generating Outlook Calendar URLs:", error);
+      res.status(500).json({ message: "Could not generate calendar URLs" });
     }
   });
 
