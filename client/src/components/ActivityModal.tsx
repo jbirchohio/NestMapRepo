@@ -430,7 +430,7 @@ export default function ActivityModal({
                         
                         // Process the multiple locations returned by the API
                         if (aiData.locations && Array.isArray(aiData.locations)) {
-                          const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN || import.meta.env.MAPBOX_TOKEN;
+                          const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
                           
                           // Process each location to get coordinates
                           const processedLocations = await Promise.all(
