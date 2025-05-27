@@ -519,7 +519,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).end();
     } catch (error) {
-      res.status(500).json({ message: "Could not delete note" });
+      console.error("Error deleting note:", error);
+      res.status(500).json({ message: "Could not delete note", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -534,7 +535,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const summary = await openai.summarizeDay(activities);
       res.json({ summary });
     } catch (error) {
-      res.status(500).json({ message: "Could not generate summary" });
+      console.error("Error generating summary:", error);
+      res.status(500).json({ message: "Could not generate summary", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -548,7 +550,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const suggestions = await openai.suggestNearbyFood(location, foodType);
       res.json(suggestions);
     } catch (error) {
-      res.status(500).json({ message: "Could not generate food suggestions" });
+      console.error("Error generating food suggestions:", error);
+      res.status(500).json({ message: "Could not generate food suggestions", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -562,7 +565,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const conflicts = await openai.detectTimeConflicts(activities);
       res.json(conflicts);
     } catch (error) {
-      res.status(500).json({ message: "Could not detect conflicts" });
+      console.error("Error detecting conflicts:", error);
+      res.status(500).json({ message: "Could not detect conflicts", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -576,7 +580,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const itinerary = await openai.generateThemedItinerary(location, theme, duration);
       res.json(itinerary);
     } catch (error) {
-      res.status(500).json({ message: "Could not generate themed itinerary" });
+      console.error("Error generating themed itinerary:", error);
+      res.status(500).json({ message: "Could not generate themed itinerary", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
