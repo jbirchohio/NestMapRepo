@@ -16,6 +16,14 @@ import { z } from "zod";
 import * as openai from "./openai";
 import * as aiLocations from "./aiLocations";
 import { generateICalContent, generateGoogleCalendarUrls, generateOutlookCalendarUrls } from "./calendar";
+import { 
+  syncToGoogleCalendar, 
+  syncToOutlookCalendar, 
+  getGoogleAuthUrl, 
+  getMicrosoftAuthUrl,
+  exchangeGoogleCodeForToken,
+  exchangeMicrosoftCodeForToken
+} from "./calendarSync";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for Supabase integration
