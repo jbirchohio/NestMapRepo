@@ -333,6 +333,19 @@ export default function ItinerarySidebar({
           queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id, "activities"] });
         }}
       />
+
+      {/* AI Itinerary Optimization Modal */}
+      <ItineraryOptimizationModal
+        open={isOptimizationModalOpen}
+        onOpenChange={setIsOptimizationModalOpen}
+        trip={trip}
+        activities={activities}
+        onApplyOptimization={(optimizedActivities) => {
+          // Here we would typically update the activities with the new times/days
+          // For now, we'll just refresh the activities to show the user feedback
+          onActivitiesUpdated();
+        }}
+      />
     </>
   );
 }
