@@ -619,6 +619,436 @@ export const tripTemplates: TripTemplate[] = [
       medium: 180,
       high: 350
     }
+  },
+  {
+    id: "rome-history",
+    title: "Rome Historical Journey",
+    description: "Explore 2,500 years of history through Rome's iconic landmarks and hidden gems",
+    duration: 4,
+    city: "Rome",
+    country: "Italy",
+    tags: ["History", "Culture", "Food", "Architecture"],
+    activities: [
+      {
+        title: "Colosseum & Roman Forum",
+        time: "09:00",
+        locationName: "Colosseum",
+        notes: "Book skip-the-line tickets. Start early to avoid crowds",
+        tag: "History",
+        day: 1,
+        latitude: "41.8902",
+        longitude: "12.4922"
+      },
+      {
+        title: "Palatine Hill",
+        time: "11:30",
+        locationName: "Palatine Hill",
+        notes: "Birthplace of Rome with stunning views",
+        tag: "History",
+        day: 1,
+        latitude: "41.8893",
+        longitude: "12.4875"
+      },
+      {
+        title: "Lunch at Armando al Pantheon",
+        time: "13:30",
+        locationName: "Armando al Pantheon",
+        notes: "Family-run restaurant since 1961, near the Pantheon",
+        tag: "Food",
+        day: 1,
+        latitude: "41.8986",
+        longitude: "12.4769"
+      },
+      {
+        title: "Pantheon",
+        time: "15:00",
+        locationName: "Pantheon",
+        notes: "Free entry, marvel at the engineering masterpiece",
+        tag: "Architecture",
+        day: 1,
+        latitude: "41.8986",
+        longitude: "12.4769"
+      },
+      {
+        title: "Vatican Museums & Sistine Chapel",
+        time: "09:00",
+        locationName: "Vatican Museums",
+        notes: "Pre-book tickets. Allow 3-4 hours minimum",
+        tag: "Culture",
+        day: 2,
+        latitude: "41.9065",
+        longitude: "12.4536"
+      },
+      {
+        title: "St. Peter's Basilica",
+        time: "14:00",
+        locationName: "St. Peter's Basilica",
+        notes: "Climb the dome for panoramic views (extra fee)",
+        tag: "Architecture",
+        day: 2,
+        latitude: "41.9022",
+        longitude: "12.4539"
+      },
+      {
+        title: "Trastevere Evening",
+        time: "18:00",
+        locationName: "Trastevere",
+        notes: "Charming neighborhood for dinner and evening stroll",
+        tag: "Food",
+        day: 2,
+        latitude: "41.8890",
+        longitude: "12.4695"
+      }
+    ],
+    suggestedTodos: [
+      "Download Roma Pass app for discounts",
+      "Book Colosseum skip-the-line tickets",
+      "Reserve Vatican Museums entry",
+      "Comfortable walking shoes",
+      "Portable phone charger",
+      "Learn basic Italian phrases"
+    ],
+    notes: "Rome requires lots of walking on ancient cobblestones. Many sites are free on first Sunday of each month but expect crowds. Dress modestly for religious sites.",
+    bestTimeToVisit: "April-May, September-October (mild weather, fewer crowds)",
+    budget: {
+      low: 80,
+      medium: 120,
+      high: 200
+    }
+  },
+  {
+    id: "bali-adventure",
+    title: "Bali Adventure & Culture",
+    description: "Perfect blend of temples, rice terraces, beaches, and Balinese culture",
+    duration: 6,
+    city: "Ubud",
+    country: "Indonesia",
+    tags: ["Adventure", "Culture", "Nature", "Relaxation"],
+    activities: [
+      {
+        title: "Arrive & Ubud Monkey Forest",
+        time: "15:00",
+        locationName: "Sacred Monkey Forest Sanctuary",
+        notes: "Keep bags closed, monkeys can grab items. Beautiful temple ruins",
+        tag: "Nature",
+        day: 1,
+        latitude: "-8.5185",
+        longitude: "115.2582"
+      },
+      {
+        title: "Ubud Market & Palace",
+        time: "09:00",
+        locationName: "Ubud Traditional Market",
+        notes: "Best time for fresh produce and local crafts",
+        tag: "Culture",
+        day: 2,
+        latitude: "-8.5069",
+        longitude: "115.2625"
+      },
+      {
+        title: "Tegallalang Rice Terraces",
+        time: "11:00",
+        locationName: "Tegallalang Rice Terrace",
+        notes: "Famous Instagram spot. Early morning has best light",
+        tag: "Nature",
+        day: 2,
+        latitude: "-8.4341",
+        longitude: "115.2737"
+      },
+      {
+        title: "Coffee Plantation Tour",
+        time: "14:00",
+        locationName: "Bali Coffee Plantation",
+        notes: "Try the famous Luwak coffee and various spices",
+        tag: "Culture",
+        day: 2,
+        latitude: "-8.4168",
+        longitude: "115.2871"
+      },
+      {
+        title: "Mount Batur Sunrise Hike",
+        time: "03:00",
+        locationName: "Mount Batur",
+        notes: "2-hour hike to summit. Bring warm clothes and flashlight",
+        tag: "Adventure",
+        day: 3,
+        latitude: "-8.2425",
+        longitude: "115.3751"
+      },
+      {
+        title: "Natural Hot Springs",
+        time: "08:30",
+        locationName: "Toya Devasya Hot Springs",
+        notes: "Relax after the hike with lake views",
+        tag: "Relaxation",
+        day: 3,
+        latitude: "-8.2389",
+        longitude: "115.3903"
+      }
+    ],
+    suggestedTodos: [
+      "Get travel insurance",
+      "Download offline maps",
+      "Rent scooter (international license needed)",
+      "Pack mosquito repellent",
+      "Comfortable hiking shoes",
+      "Respectful temple clothing"
+    ],
+    notes: "Bali is perfect for digital nomads with good WiFi in Ubud. Rent a scooter for easy transport. Always negotiate prices at markets. Respect local customs at temples.",
+    bestTimeToVisit: "April-October (dry season)",
+    budget: {
+      low: 30,
+      medium: 60,
+      high: 120
+    }
+  },
+  {
+    id: "barcelona-tapas",
+    title: "Barcelona Food & Architecture",
+    description: "Gaudi's masterpieces, incredible tapas, and vibrant Catalan culture",
+    duration: 4,
+    city: "Barcelona",
+    country: "Spain",
+    tags: ["Food", "Architecture", "Culture", "Art"],
+    activities: [
+      {
+        title: "Sagrada Familia",
+        time: "09:00",
+        locationName: "Sagrada Familia",
+        notes: "Pre-book timed entry. Audio guide highly recommended",
+        tag: "Architecture",
+        day: 1,
+        latitude: "41.4036",
+        longitude: "2.1744"
+      },
+      {
+        title: "Park Güell",
+        time: "11:30",
+        locationName: "Park Güell",
+        notes: "Gaudi's colorful mosaic park. Timed entry required",
+        tag: "Architecture",
+        day: 1,
+        latitude: "41.4145",
+        longitude: "2.1527"
+      },
+      {
+        title: "Tapas in Gracia",
+        time: "14:00",
+        locationName: "Gracia Neighborhood",
+        notes: "Local neighborhood with authentic tapas bars",
+        tag: "Food",
+        day: 1,
+        latitude: "41.4037",
+        longitude: "2.1560"
+      },
+      {
+        title: "Gothic Quarter Walk",
+        time: "10:00",
+        locationName: "Gothic Quarter",
+        notes: "Medieval streets, cathedral, and hidden plazas",
+        tag: "Culture",
+        day: 2,
+        latitude: "41.3838",
+        longitude: "2.1762"
+      },
+      {
+        title: "La Boqueria Market",
+        time: "12:00",
+        locationName: "Mercat de la Boqueria",
+        notes: "Famous food market on Las Ramblas",
+        tag: "Food",
+        day: 2,
+        latitude: "41.3818",
+        longitude: "2.1721"
+      },
+      {
+        title: "Beach Time at Barceloneta",
+        time: "15:00",
+        locationName: "Barceloneta Beach",
+        notes: "City beach with chiringuitos (beach bars)",
+        tag: "Relaxation",
+        day: 2,
+        latitude: "41.3755",
+        longitude: "2.1909"
+      }
+    ],
+    suggestedTodos: [
+      "Download Barcelona metro app",
+      "Book Sagrada Familia tickets",
+      "Reserve Park Güell entry",
+      "Learn Spanish tapas vocabulary",
+      "Comfortable walking shoes",
+      "Sunscreen for beach day"
+    ],
+    notes: "Lunch is typically 2-4pm, dinner after 9pm. Many museums are free on Sunday afternoons. Pickpockets are common in tourist areas - stay alert.",
+    bestTimeToVisit: "May-June, September-October (pleasant weather, fewer crowds)",
+    budget: {
+      low: 70,
+      medium: 110,
+      high: 180
+    }
+  },
+  {
+    id: "dubai-luxury",
+    title: "Dubai Modern Marvels",
+    description: "Futuristic architecture, luxury shopping, and desert adventures",
+    duration: 5,
+    city: "Dubai",
+    country: "UAE",
+    tags: ["Luxury", "Architecture", "Adventure", "Shopping"],
+    activities: [
+      {
+        title: "Burj Khalifa Observation Deck",
+        time: "16:00",
+        locationName: "Burj Khalifa",
+        notes: "Book sunset time for best views. Levels 124 & 125",
+        tag: "Architecture",
+        day: 1,
+        latitude: "25.1972",
+        longitude: "55.2744"
+      },
+      {
+        title: "Dubai Mall & Aquarium",
+        time: "18:30",
+        locationName: "Dubai Mall",
+        notes: "World's largest shopping mall with incredible aquarium",
+        tag: "Shopping",
+        day: 1,
+        latitude: "25.1975",
+        longitude: "55.2796"
+      },
+      {
+        title: "Desert Safari",
+        time: "15:00",
+        locationName: "Dubai Desert",
+        notes: "Dune bashing, camel riding, BBQ dinner under stars",
+        tag: "Adventure",
+        day: 2,
+        latitude: "24.8607",
+        longitude: "55.6095"
+      },
+      {
+        title: "Dubai Marina Walk",
+        time: "10:00",
+        locationName: "Dubai Marina",
+        notes: "Stunning waterfront with skyscrapers and yachts",
+        tag: "Architecture",
+        day: 3,
+        latitude: "25.0777",
+        longitude: "55.1340"
+      },
+      {
+        title: "Jumeirah Beach",
+        time: "14:00",
+        locationName: "Jumeirah Beach",
+        notes: "Perfect beach with Burj Al Arab views",
+        tag: "Relaxation",
+        day: 3,
+        latitude: "25.2048",
+        longitude: "55.2708"
+      }
+    ],
+    suggestedTodos: [
+      "Check visa requirements",
+      "Download Dubai Metro app",
+      "Book Burj Khalifa tickets",
+      "Reserve desert safari",
+      "Pack modest clothing for malls",
+      "Sunscreen and hat"
+    ],
+    notes: "Dubai is very modern and tourist-friendly. Metro is efficient and air-conditioned. Tipping 10-15% is standard. Alcohol is available in licensed venues.",
+    bestTimeToVisit: "November-March (cooler weather)",
+    budget: {
+      low: 100,
+      medium: 200,
+      high: 400
+    }
+  },
+  {
+    id: "amsterdam-canals",
+    title: "Amsterdam Canals & Culture",
+    description: "Bike through canal districts, world-class museums, and vibrant neighborhoods",
+    duration: 3,
+    city: "Amsterdam",
+    country: "Netherlands",
+    tags: ["Culture", "History", "Art", "Cycling"],
+    activities: [
+      {
+        title: "Canal Ring Bike Tour",
+        time: "10:00",
+        locationName: "Amsterdam Canal Ring",
+        notes: "Rent bikes early. Follow cycling rules and watch for trams",
+        tag: "Cycling",
+        day: 1,
+        latitude: "52.3676",
+        longitude: "4.9041"
+      },
+      {
+        title: "Anne Frank House",
+        time: "13:00",
+        locationName: "Anne Frank House",
+        notes: "Pre-book online only. No photos inside. Very moving experience",
+        tag: "History",
+        day: 1,
+        latitude: "52.3752",
+        longitude: "4.8840"
+      },
+      {
+        title: "Jordaan District",
+        time: "15:30",
+        locationName: "Jordaan",
+        notes: "Charming neighborhood with cafes, galleries, and markets",
+        tag: "Culture",
+        day: 1,
+        latitude: "52.3744",
+        longitude: "4.8826"
+      },
+      {
+        title: "Van Gogh Museum",
+        time: "09:00",
+        locationName: "Van Gogh Museum",
+        notes: "Book timed entry. World's largest Van Gogh collection",
+        tag: "Art",
+        day: 2,
+        latitude: "52.3584",
+        longitude: "4.8811"
+      },
+      {
+        title: "Vondelpark",
+        time: "12:00",
+        locationName: "Vondelpark",
+        notes: "Perfect for picnic and people watching",
+        tag: "Relaxation",
+        day: 2,
+        latitude: "52.3579",
+        longitude: "4.8686"
+      },
+      {
+        title: "Red Light District Evening",
+        time: "19:00",
+        locationName: "Red Light District",
+        notes: "Historic area with unique atmosphere. Respect photography rules",
+        tag: "Culture",
+        day: 2,
+        latitude: "52.3731",
+        longitude: "4.8956"
+      }
+    ],
+    suggestedTodos: [
+      "Book Anne Frank House online",
+      "Reserve Van Gogh Museum tickets",
+      "Download cycling route apps",
+      "Pack rain jacket",
+      "Comfortable shoes for walking",
+      "Learn basic Dutch phrases"
+    ],
+    notes: "Cycling is the best way to see Amsterdam. Be very careful of trams and follow bike lane rules. Many museums accept credit cards. Coffee shops sell cannabis legally.",
+    bestTimeToVisit: "April-September (warmer weather, longer days)",
+    budget: {
+      low: 80,
+      medium: 120,
+      high: 200
+    }
   }
 ];
 
