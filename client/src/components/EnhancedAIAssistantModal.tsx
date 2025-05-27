@@ -281,7 +281,7 @@ export default function EnhancedAIAssistantModal({
                             const suggestions: any[] = [];
                             
                             // Pattern 1: • Name - Description format
-                            const pattern1 = message.content.match(/• (.+?) - (.+?)(?=\n|$)/g);
+                            const pattern1 = message.content.match(/• (.+?) - (.+)/g);
                             if (pattern1) {
                               pattern1.forEach((suggestion, index) => {
                                 const match = suggestion.match(/• (.+?) - (.+)/);
@@ -298,7 +298,7 @@ export default function EnhancedAIAssistantModal({
                             }
                             
                             // Pattern 2: **Name** - Description format
-                            const pattern2 = message.content.match(/\*\*(.+?)\*\* - (.+?)(?=\n|$)/g);
+                            const pattern2 = message.content.match(/\*\*(.+?)\*\* - (.+)/g);
                             if (pattern2) {
                               pattern2.forEach((suggestion, index) => {
                                 const match = suggestion.match(/\*\*(.+?)\*\* - (.+)/);
@@ -315,7 +315,7 @@ export default function EnhancedAIAssistantModal({
                             }
                             
                             // Pattern 4: Numbered list with **Name** format (like your screenshot)
-                            const pattern4 = message.content.match(/\d+\.\s+\*\*(.+?)\*\*(.+?)(?=\n\d+\.|$)/g);
+                            const pattern4 = message.content.match(/\d+\.\s+\*\*(.+?)\*\*(.+)/g);
                             if (pattern4) {
                               pattern4.forEach((suggestion, index) => {
                                 const match = suggestion.match(/\d+\.\s+\*\*(.+?)\*\*(.+)/);
@@ -332,7 +332,7 @@ export default function EnhancedAIAssistantModal({
                             }
                             
                             // Pattern 3: 1. Name - Description format
-                            const pattern3 = message.content.match(/\d+\.\s+(.+?) - (.+?)(?=\n|$)/g);
+                            const pattern3 = message.content.match(/\d+\.\s+(.+?) - (.+)/g);
                             if (pattern3) {
                               pattern3.forEach((suggestion, index) => {
                                 const match = suggestion.match(/\d+\.\s+(.+?) - (.+)/);
