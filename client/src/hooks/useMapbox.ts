@@ -52,15 +52,21 @@ export default function useMapbox() {
     }
   }, []);
 
-  // Add markers to the map
+  // Add markers to the map with performance optimization
   const addMarkers = useCallback((
     markers: MapMarker[],
     onMarkerClick?: (marker: MapMarker) => void
   ): void => {
     if (!mapInstance.current || !isInitialized) return;
     
-    // Clear previous markers
-    Object.values(markersRef.current).forEach(marker => marker.remove());
+    // Clear previous markers efficiently
+    Object.values(markersRef.current).forEach(marker => {
+      const element = marker.getElement();
+      if (element && (element as any)._clickHandler) {
+        element.removeEventListener('click', (element as any)._clickHandler);
+      }
+      marker.remove();
+    });
     markersRef.current = {};
     
     // Create a function to generate custom marker element
@@ -95,11 +101,13 @@ export default function useMapbox() {
         .setLngLat([longitude, latitude])
         .addTo(mapInstance.current!);
       
-      // Add click handler if provided
+      // Add click handler if provided with proper cleanup tracking
       if (onMarkerClick) {
-        mapboxMarker.getElement().addEventListener('click', () => {
-          onMarkerClick(marker);
-        });
+        const element = mapboxMarker.getElement();
+        const clickHandler = () => onMarkerClick(marker);
+        element.addEventListener('click', clickHandler);
+        // Store click handler for cleanup
+        (element as any)._clickHandler = clickHandler;
       }
       
       // Store reference to the marker

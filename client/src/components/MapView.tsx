@@ -46,25 +46,33 @@ export default function MapView({
     }
   }, [isMapReady, routes, addRoutes]);
 
-  // Add resize observer to handle container size changes
+  // Add optimized resize observer with debouncing
   useEffect(() => {
     if (!mapContainer.current || !isMapReady) return;
 
+    let resizeTimeout: NodeJS.Timeout;
+    
     const resizeObserver = new ResizeObserver(() => {
-      // Small delay to ensure the DOM has updated
-      setTimeout(() => {
-        if (resizeMap) {
-          resizeMap();
-        }
-      }, 100);
+      // Clear previous timeout to debounce rapid resize events
+      clearTimeout(resizeTimeout);
+      
+      // Use requestAnimationFrame for better performance
+      resizeTimeout = setTimeout(() => {
+        requestAnimationFrame(() => {
+          if (resizeMap) {
+            resizeMap();
+          }
+        });
+      }, 150); // Slightly longer debounce for better performance
     });
 
     resizeObserver.observe(mapContainer.current);
 
     return () => {
+      clearTimeout(resizeTimeout);
       resizeObserver.disconnect();
     };
-  }, [isMapReady]); // Remove resizeMap from dependencies to avoid hook ordering issues
+  }, [isMapReady, resizeMap]);
 
   const handleZoomIn = () => {
     if (isMapReady) {
