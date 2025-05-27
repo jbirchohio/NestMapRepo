@@ -245,8 +245,8 @@ export default function TripPlanner() {
       </div>
 
       {/* Desktop view: side-by-side layout */}
-      <div className="hidden md:flex h-[calc(100vh-110px)]">
-        <div className="w-[400px] h-full overflow-y-auto flex-shrink-0">
+      <div className="hidden md:grid h-[calc(100vh-110px)]" style={{ gridTemplateColumns: '400px calc(100vw - 400px)' }}>
+        <div className="h-full overflow-y-auto">
           <ItinerarySidebar
             trip={trip}
             activities={activities}
@@ -258,7 +258,7 @@ export default function TripPlanner() {
           />
         </div>
         
-        <div className="flex-1 h-full">
+        <div className="h-full">
           <MapView
             markers={mapMarkers}
             routes={mapRoutes}
