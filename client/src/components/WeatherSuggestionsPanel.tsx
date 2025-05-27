@@ -223,7 +223,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
     return <CloudSun className="h-5 w-5 text-gray-500" />;
   };
 
-  const handleAddActivity = async (activitySuggestion: WeatherActivitySuggestion) => {
+  const handleAddActivity = async (activitySuggestion: WeatherActivitySuggestion): Promise<void> => {
     try {
       // Format the activity for saving
       const activityDate = new Date(selectedDate);
