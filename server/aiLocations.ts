@@ -138,7 +138,7 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
       locations: result.locations.map((loc: any) => ({
         name: loc.name,
         address: loc.address,
-        city: loc.city || (cityContext || "New York City"),
+        city: loc.city || cityContext || "",
         region: loc.region,
         country: loc.country,
         description: loc.description

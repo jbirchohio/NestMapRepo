@@ -426,24 +426,11 @@ export default function ActivityModal({
                         const aiData = await aiResponse.json();
                         console.log("OpenAI location result:", aiData);
                         
-                        // Special case for Leo House which is hardcoded
-                        if (locationName.toLowerCase().includes("leo house")) {
-                          setLocationResults([{
-                            name: "Leo House",
-                            address: "332 W 23rd St",
-                            city: "New York City",
-                            region: "NY",
-                            country: "USA",
-                            description: "Catholic guesthouse located in Chelsea, Manhattan",
-                            latitude: "40.7453",
-                            longitude: "-73.9977"
-                          }]);
-                          return;
-                        }
+                        // Remove hardcoded location - let AI handle all location searches
                         
                         // Process the multiple locations returned by the API
                         if (aiData.locations && Array.isArray(aiData.locations)) {
-                          const mapboxToken = "pk.eyJ1IjoicmV0bW91c2VyIiwiYSI6ImNtOXJtOHZ0MjA0dTgycG9ocDA3dXNpMGIifQ.WHYwcRzR3g8djNiBsVw1vg";
+                          const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN || import.meta.env.MAPBOX_TOKEN;
                           
                           // Process each location to get coordinates
                           const processedLocations = await Promise.all(
@@ -502,8 +489,8 @@ export default function ActivityModal({
                               address: "",
                               city: cityContext,
                               description: "Approximate location",
-                              latitude: "40.7580",  // Midtown Manhattan default
-                              longitude: "-73.9855"
+                              latitude: "",  // No default coordinates
+                              longitude: ""
                             }]);
                             
                             toast({

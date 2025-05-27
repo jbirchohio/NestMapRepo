@@ -3,8 +3,8 @@ import mapboxgl from "mapbox-gl";
 import { MapMarker, MapRoute } from "@/lib/types";
 import { MAPBOX_STYLE_URL } from "@/lib/constants";
 
-// Hard-coded Mapbox token for development
-const MAPBOX_TOKEN = "pk.eyJ1IjoicmV0bW91c2VyIiwiYSI6ImNtOXJtOHZ0MjA0dTgycG9ocDA3dXNpMGIifQ.WHYwcRzR3g8djNiBsVw1vg";
+// Use environment variable for Mapbox token
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || import.meta.env.MAPBOX_TOKEN;
 
 export default function useMapbox() {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
