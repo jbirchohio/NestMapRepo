@@ -983,7 +983,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trip templates endpoints
   app.get("/api/templates", async (req: Request, res: Response) => {
     try {
+      console.log("Templates route hit, fetching templates...");
       const templates = getAllTemplates();
+      console.log("Templates found:", templates.length);
       res.json(templates);
     } catch (error) {
       console.error("Error fetching templates:", error);
