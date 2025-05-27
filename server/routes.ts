@@ -26,6 +26,7 @@ import {
 } from "./calendarSync";
 import { generateTripPdf } from "./pdfExport";
 import { getAllTemplates, getTemplateById } from "./tripTemplates";
+import { getAnalytics, exportAnalyticsCSV } from "./analytics";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for Supabase integration
