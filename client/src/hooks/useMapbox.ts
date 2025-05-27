@@ -114,33 +114,52 @@ export default function useMapbox() {
       markersRef.current[id] = mapboxMarker;
     });
     
-    // If there are markers, fit the map to show all of them
+    // If there are markers, fit the map to show all of them with performance optimization
     if (markers.length > 0) {
       const bounds = new mapboxgl.LngLatBounds();
       markers.forEach(marker => {
         bounds.extend([marker.longitude, marker.latitude]);
       });
       
-      mapInstance.current.fitBounds(bounds, {
-        padding: 60,
-        maxZoom: 15,
+      // Use requestAnimationFrame for smoother animation
+      requestAnimationFrame(() => {
+        mapInstance.current?.fitBounds(bounds, {
+          padding: 60,
+          maxZoom: 15,
+          duration: 1000, // Smooth animation
+        });
       });
     }
   }, [isInitialized]);
 
-  // Add routes to the map
+  // Add routes to the map with optimized cleanup
   const addRoutes = useCallback((routes: MapRoute[]): void => {
     if (!mapInstance.current || !isInitialized) return;
     
-    // Remove existing routes
-    routes.forEach((_, index) => {
-      if (mapInstance.current!.getLayer(`route-${index}`)) {
-        mapInstance.current!.removeLayer(`route-${index}`);
-      }
-      if (mapInstance.current!.getSource(`route-${index}`)) {
-        mapInstance.current!.removeSource(`route-${index}`);
-      }
-    });
+    // Efficiently remove all existing route layers and sources
+    const map = mapInstance.current;
+    const style = map.getStyle();
+    
+    // Remove route layers and sources in batch for better performance
+    if (style && style.layers) {
+      style.layers.forEach(layer => {
+        if (layer.id.startsWith('route-')) {
+          if (map.getLayer(layer.id)) {
+            map.removeLayer(layer.id);
+          }
+        }
+      });
+    }
+    
+    if (style && style.sources) {
+      Object.keys(style.sources).forEach(sourceId => {
+        if (sourceId.startsWith('route-')) {
+          if (map.getSource(sourceId)) {
+            map.removeSource(sourceId);
+          }
+        }
+      });
+    }
     
     // Add new routes
     routes.forEach((route, index) => {
@@ -434,6 +453,27 @@ export default function useMapbox() {
     };
   }, []);
 
+  // Cleanup function for better memory management
+  const cleanup = useCallback(() => {
+    // Clean up all markers and event listeners
+    Object.values(markersRef.current).forEach(marker => {
+      const element = marker.getElement();
+      if (element && (element as any)._clickHandler) {
+        element.removeEventListener('click', (element as any)._clickHandler);
+      }
+      marker.remove();
+    });
+    markersRef.current = {};
+    
+    // Clean up map instance
+    if (mapInstance.current) {
+      mapInstance.current.remove();
+      mapInstance.current = null;
+    }
+    
+    setIsInitialized(false);
+  }, []);
+
   return {
     initializeMap,
     addMarkers,
@@ -441,6 +481,7 @@ export default function useMapbox() {
     geocodeLocation,
     flyToLocation,
     resizeMap,
+    cleanup,
     isInitialized,
   };
 }
