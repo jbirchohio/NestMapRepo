@@ -78,11 +78,30 @@ export default function useAIAssistant() {
     },
   });
 
+  // Optimize itinerary order
+  const optimizeItinerary = useMutation({
+    mutationFn: async (tripId: number): Promise<{
+      optimizedActivities: Array<{
+        id: string;
+        suggestedTime: string;
+        suggestedDay: number;
+        reason: string;
+      }>;
+      recommendations: string[];
+    }> => {
+      const res = await apiRequest("POST", "/api/ai/optimize-itinerary", {
+        tripId,
+      });
+      return res.json();
+    },
+  });
+
   return {
     summarizeDay,
     suggestFood,
     detectConflicts,
     generateThemedItinerary,
     askTripAssistant,
+    optimizeItinerary,
   };
 }

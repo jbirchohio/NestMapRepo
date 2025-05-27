@@ -770,6 +770,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Itinerary optimization endpoint
+  app.post("/api/ai/optimize-itinerary", async (req: Request, res: Response) => {
+    try {
+      const { tripId } = req.body;
+      
+      if (!tripId) {
+        return res.status(400).json({ message: "Trip ID is required" });
+      }
+      
+      // Get trip details and activities
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      const activities = await storage.getActivitiesByTripId(tripId);
+      
+      const tripContext = {
+        location: trip.city || trip.location,
+        duration: Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24)),
+        hotel: trip.hotel
+      };
+      
+      const optimization = await openai.optimizeItinerary(activities, tripContext);
+      res.json(optimization);
+    } catch (error) {
+      console.error("Error optimizing itinerary:", error);
+      res.status(500).json({ message: "Could not optimize itinerary", error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
   app.post("/api/weather/forecast", async (req: Request, res: Response) => {
     try {
       const { location, dates } = req.body;

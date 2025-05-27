@@ -162,6 +162,76 @@ export async function generateThemedItinerary(
  * Handles general trip planning questions
  */
 /**
+ * Optimizes itinerary order to minimize travel time and avoid conflicts
+ */
+export async function optimizeItinerary(activities: any[], tripContext: any): Promise<{ optimizedActivities: any[], recommendations: string[] }> {
+  try {
+    if (!activities || activities.length === 0) {
+      return { optimizedActivities: [], recommendations: ["No activities to optimize."] };
+    }
+
+    const prompt = `You are an expert travel planner. Analyze this itinerary and optimize the order of activities to:
+1. Minimize travel time and backtracking
+2. Avoid time conflicts
+3. Consider logical flow (meals at appropriate times, indoor/outdoor balance, etc.)
+4. Group activities by location when possible
+
+Trip Context:
+- Location: ${tripContext.location || 'Unknown'}
+- Duration: ${tripContext.duration || 'Unknown'} days
+- Hotel: ${tripContext.hotel || 'Not specified'}
+
+Current Activities:
+${JSON.stringify(activities.map(a => ({
+  title: a.title,
+  time: a.time,
+  day: a.day,
+  locationName: a.locationName,
+  latitude: a.latitude,
+  longitude: a.longitude,
+  tag: a.tag,
+  notes: a.notes
+})), null, 2)}
+
+Please respond with JSON in this exact format:
+{
+  "optimizedActivities": [
+    {
+      "id": "original_activity_id",
+      "suggestedTime": "HH:MM",
+      "suggestedDay": 1,
+      "reason": "Why this time/day is better"
+    }
+  ],
+  "recommendations": [
+    "Brief explanation of major changes made",
+    "Travel time savings achieved",
+    "Any conflicts resolved"
+  ]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" }
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || '{}');
+    
+    return {
+      optimizedActivities: result.optimizedActivities || [],
+      recommendations: result.recommendations || ["Unable to generate optimization recommendations."]
+    };
+  } catch (error) {
+    console.error("Error optimizing itinerary:", error);
+    return {
+      optimizedActivities: [],
+      recommendations: ["Unable to optimize itinerary at this time. Please try again later."]
+    };
+  }
+}
+
+/**
  * Provides weather-based trip suggestions
  */
 export async function suggestWeatherBasedActivities(
