@@ -20,7 +20,7 @@ export default function MapView({
   onMarkerClick,
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const { initializeMap, addMarkers, addRoutes, flyToLocation } = useMapbox();
+  const { initializeMap, addMarkers, addRoutes, flyToLocation, resizeMap } = useMapbox();
   const [isMapReady, setIsMapReady] = useState(false);
 
   // Initialize map
@@ -45,6 +45,24 @@ export default function MapView({
       addRoutes(routes);
     }
   }, [isMapReady, routes, addRoutes]);
+
+  // Add resize observer to handle container size changes
+  useEffect(() => {
+    if (!mapContainer.current || !isMapReady) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Small delay to ensure the DOM has updated
+      setTimeout(() => {
+        resizeMap();
+      }, 100);
+    });
+
+    resizeObserver.observe(mapContainer.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isMapReady, resizeMap]);
 
   const handleZoomIn = () => {
     if (isMapReady) {
