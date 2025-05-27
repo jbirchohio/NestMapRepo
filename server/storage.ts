@@ -72,8 +72,8 @@ export class MemStorage implements IStorage {
     
     // Add sample user for testing
     this.createUser({
+      auth_id: "test-auth-id",
       username: "testuser",
-      password: "password",
       email: "test@example.com"
     });
   }
@@ -91,7 +91,13 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      created_at: new Date(),
+      display_name: insertUser.display_name || null,
+      avatar_url: insertUser.avatar_url || null
+    };
     this.users.set(id, user);
     return user;
   }
@@ -107,9 +113,33 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getTripByShareCode(shareCode: string): Promise<Trip | undefined> {
+    return Array.from(this.trips.values()).find(
+      (trip) => trip.shareCode === shareCode
+    );
+  }
+
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
     const id = this.tripIdCounter++;
-    const trip: Trip = { ...insertTrip, id };
+    const trip: Trip = { 
+      ...insertTrip, 
+      id,
+      sharePermission: "read-only",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      collaborators: insertTrip.collaborators || [],
+      isPublic: insertTrip.isPublic || false,
+      sharingEnabled: insertTrip.sharingEnabled || false,
+      shareCode: insertTrip.shareCode || null,
+      city: insertTrip.city || null,
+      country: insertTrip.country || null,
+      location: insertTrip.location || null,
+      cityLatitude: insertTrip.cityLatitude || null,
+      cityLongitude: insertTrip.cityLongitude || null,
+      hotel: insertTrip.hotel || null,
+      hotelLatitude: insertTrip.hotelLatitude || null,
+      hotelLongitude: insertTrip.hotelLongitude || null
+    };
     this.trips.set(id, trip);
     return trip;
   }
@@ -140,7 +170,17 @@ export class MemStorage implements IStorage {
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     const id = this.activityIdCounter++;
-    const activity: Activity = { ...insertActivity, id };
+    const activity: Activity = { 
+      ...insertActivity, 
+      id,
+      latitude: insertActivity.latitude || null,
+      longitude: insertActivity.longitude || null,
+      notes: insertActivity.notes || null,
+      tag: insertActivity.tag || null,
+      assignedTo: insertActivity.assignedTo || null,
+      travelMode: insertActivity.travelMode || null,
+      completed: insertActivity.completed || null
+    };
     this.activities.set(id, activity);
     return activity;
   }
