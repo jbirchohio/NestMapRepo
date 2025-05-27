@@ -57,9 +57,19 @@ export default function ItinerarySidebar({
       
       // Apply each optimization by updating the activity times
       for (const optimization of result.optimizedActivities) {
-        const activity = activities.find(a => a.id.toString() === optimization.id);
+        // Try to find activity by ID first, then by title as fallback
+        let activity = activities.find(a => a.id.toString() === optimization.id);
+        
+        // Fallback: If ID matching fails, try matching by title
+        if (!activity) {
+          activity = activities.find(a => a.title.toLowerCase() === optimization.id.toLowerCase());
+          console.log(`Fallback: Matching by title "${optimization.id}" found:`, !!activity);
+        }
+        
         console.log(`Processing optimization for activity ${optimization.id}:`, {
           foundActivity: !!activity,
+          matchedById: activities.some(a => a.id.toString() === optimization.id),
+          matchedByTitle: activities.some(a => a.title.toLowerCase() === optimization.id.toLowerCase()),
           currentTime: activity?.time,
           suggestedTime: optimization.suggestedTime,
           willUpdate: activity && activity.time !== optimization.suggestedTime
@@ -67,7 +77,7 @@ export default function ItinerarySidebar({
         
         if (activity && activity.time !== optimization.suggestedTime) {
           try {
-            console.log(`Updating activity ${activity.id} from ${activity.time} to ${optimization.suggestedTime}`);
+            console.log(`Updating activity ${activity.id} (${activity.title}) from ${activity.time} to ${optimization.suggestedTime}`);
             await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
               ...activity,
               time: optimization.suggestedTime,

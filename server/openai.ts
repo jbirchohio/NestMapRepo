@@ -194,7 +194,9 @@ ${JSON.stringify(activities.map(a => ({
   notes: a.notes
 })), null, 2)}
 
-IMPORTANT: You MUST use the exact numeric "id" values shown above (like ${activities.map(a => a.id).join(', ')}) in your response, NOT the titles!
+CRITICAL REQUIREMENT: You MUST use ONLY the numeric "id" values (${activities.map(a => a.id).join(', ')}) in your response. 
+DO NOT use titles like "Checkin", "Museum", "food" - ONLY use the numbers!
+EXAMPLE: Use "32" NOT "Checkin", use "34" NOT "Museum", use "38" NOT "food"!
 
 STEP 1: SCAN FOR IDENTICAL TIMES
 - Look through the "time" field for each activity
