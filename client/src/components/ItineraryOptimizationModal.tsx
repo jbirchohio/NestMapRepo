@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, Clock, MapPin, CheckCircle, AlertTriangle, Sparkles } from "lucide-react";
-import { useAIAssistant } from "@/hooks/useAIAssistant";
+import useAIAssistant from "@/hooks/useAIAssistant";
 import { ClientTrip, ClientActivity } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -155,7 +155,7 @@ export function ItineraryOptimizationModal({
                         if (!activity) return null;
 
                         const currentTime = activity.time || "Not set";
-                        const currentDay = activity.day || 1;
+                        const currentDay = 1; // Default to day 1 for now
                         const hasTimeChange = currentTime !== optimization.suggestedTime;
                         const hasDayChange = currentDay !== optimization.suggestedDay;
 

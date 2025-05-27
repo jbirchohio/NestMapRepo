@@ -9,6 +9,7 @@ import ActivityTimeline from "./ActivityTimeline";
 import EnhancedAIAssistantModal from "./EnhancedAIAssistantModal";
 import CalendarIntegration from "./CalendarIntegration";
 import PdfExport from "./PdfExport";
+import { ItineraryOptimizationModal } from "./ItineraryOptimizationModal";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -37,6 +38,7 @@ export default function ItinerarySidebar({
 }: ItinerarySidebarProps) {
   const { toast } = useToast();
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [isOptimizationModalOpen, setIsOptimizationModalOpen] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [newNote, setNewNote] = useState("");
   
@@ -226,6 +228,25 @@ export default function ItinerarySidebar({
                   <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                 </svg>
                 AI Assistant
+              </button>
+
+              {/* AI Itinerary Optimization Button */}
+              <button 
+                className="w-full py-3 px-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 text-purple-700 dark:text-purple-300 rounded-md border border-purple-200 dark:border-purple-800/50 flex items-center justify-center hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all"
+                onClick={() => setIsOptimizationModalOpen(true)}
+                disabled={activities.length === 0}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 3h5v5"/>
+                  <path d="m21 3-5 5"/>
+                  <path d="M8 3H3v5"/>
+                  <path d="m3 3 5 5"/>
+                  <path d="M16 21h5v-5"/>
+                  <path d="m21 21-5-5"/>
+                  <path d="M8 21H3v-5"/>
+                  <path d="m3 21 5-5"/>
+                </svg>
+                AI Optimize Itinerary
               </button>
               
               {/* Calendar Export Button */}
