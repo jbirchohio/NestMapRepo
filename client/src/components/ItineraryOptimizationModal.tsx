@@ -16,6 +16,7 @@ interface ItineraryOptimizationModalProps {
   trip: ClientTrip;
   activities: ClientActivity[];
   onApplyOptimization?: (optimizedActivities: any[]) => void;
+  autoApply?: boolean;
 }
 
 export function ItineraryOptimizationModal({
@@ -24,6 +25,7 @@ export function ItineraryOptimizationModal({
   trip,
   activities,
   onApplyOptimization,
+  autoApply = false,
 }: ItineraryOptimizationModalProps) {
   const [optimizationResult, setOptimizationResult] = useState<{
     optimizedActivities: Array<{
@@ -42,6 +44,16 @@ export function ItineraryOptimizationModal({
     try {
       const result = await optimizeItinerary.mutateAsync(trip.id);
       setOptimizationResult(result);
+      
+      // Auto-apply if enabled
+      if (autoApply && onApplyOptimization) {
+        onApplyOptimization(result.optimizedActivities);
+        toast({
+          title: "Itinerary Auto-Optimized!",
+          description: "Your activities have been automatically reordered for better efficiency.",
+        });
+        onOpenChange(false);
+      }
     } catch (error) {
       toast({
         title: "Optimization Failed",

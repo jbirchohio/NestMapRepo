@@ -15,7 +15,8 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Circle } from "lucide-react";
+import { CheckCircle, Circle, Loader2 } from "lucide-react";
+import useAIAssistant from "@/hooks/useAIAssistant";
 
 interface ItinerarySidebarProps {
   trip: ClientTrip;
@@ -39,8 +40,35 @@ export default function ItinerarySidebar({
   const { toast } = useToast();
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isOptimizationModalOpen, setIsOptimizationModalOpen] = useState(false);
+  const [isAutoOptimizing, setIsAutoOptimizing] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
   const [newNote, setNewNote] = useState("");
+  
+  const { optimizeItinerary } = useAIAssistant();
+
+  // One-click auto-optimization function
+  const handleAutoOptimize = async () => {
+    setIsAutoOptimizing(true);
+    try {
+      const result = await optimizeItinerary.mutateAsync(trip.id);
+      
+      // Automatically apply optimizations without showing modal
+      onActivitiesUpdated();
+      
+      toast({
+        title: "🚀 Itinerary Auto-Optimized!",
+        description: `Applied ${result.optimizedActivities.length} optimizations to minimize travel time and avoid conflicts.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Optimization Failed",
+        description: "Unable to auto-optimize your itinerary. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAutoOptimizing(false);
+    }
+  };
   
   const toggleTodo = useMutation({
     mutationFn: async (todo: Todo) => {
@@ -230,24 +258,48 @@ export default function ItinerarySidebar({
                 AI Assistant
               </button>
 
-              {/* AI Itinerary Optimization Button */}
-              <button 
-                className="w-full py-3 px-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 text-purple-700 dark:text-purple-300 rounded-md border border-purple-200 dark:border-purple-800/50 flex items-center justify-center hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all"
-                onClick={() => setIsOptimizationModalOpen(true)}
-                disabled={activities.length === 0}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 3h5v5"/>
-                  <path d="m21 3-5 5"/>
-                  <path d="M8 3H3v5"/>
-                  <path d="m3 3 5 5"/>
-                  <path d="M16 21h5v-5"/>
-                  <path d="m21 21-5-5"/>
-                  <path d="M8 21H3v-5"/>
-                  <path d="m3 21 5-5"/>
-                </svg>
-                AI Optimize Itinerary
-              </button>
+              {/* AI Itinerary Optimization Buttons */}
+              <div className="flex gap-2">
+                {/* One-Click Auto Optimize Button */}
+                <button 
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 rounded-md border border-green-200 dark:border-green-800/50 flex items-center justify-center hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleAutoOptimize}
+                  disabled={activities.length === 0 || isAutoOptimizing}
+                >
+                  {isAutoOptimizing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      Optimizing...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                      </svg>
+                      Auto-Optimize
+                    </>
+                  )}
+                </button>
+                
+                {/* Review & Optimize Button */}
+                <button 
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 text-purple-700 dark:text-purple-300 rounded-md border border-purple-200 dark:border-purple-800/50 flex items-center justify-center hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all text-sm"
+                  onClick={() => setIsOptimizationModalOpen(true)}
+                  disabled={activities.length === 0}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 3h5v5"/>
+                    <path d="m21 3-5 5"/>
+                    <path d="M8 3H3v5"/>
+                    <path d="m3 3 5 5"/>
+                    <path d="M16 21h5v-5"/>
+                    <path d="m21 21-5-5"/>
+                    <path d="M8 21H3v-5"/>
+                    <path d="m3 21 5-5"/>
+                  </svg>
+                  Review & Optimize
+                </button>
+              </div>
               
               {/* Calendar Export Button */}
               <CalendarIntegration trip={trip} activities={activities} />
