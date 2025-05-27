@@ -1086,6 +1086,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Analytics endpoints
+  app.get("/api/analytics", async (req: Request, res: Response) => {
+    try {
+      console.log("Fetching analytics data...");
+      const analyticsData = await getAnalytics();
+      console.log("Analytics data generated successfully");
+      res.json(analyticsData);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Could not fetch analytics data" });
+    }
+  });
+
+  app.get("/api/analytics/export", async (req: Request, res: Response) => {
+    try {
+      const analyticsData = await getAnalytics();
+      const csvData = await exportAnalyticsCSV(analyticsData);
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="nestmap-analytics.csv"');
+      res.send(csvData);
+    } catch (error) {
+      console.error("Error exporting analytics:", error);
+      res.status(500).json({ message: "Could not export analytics data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

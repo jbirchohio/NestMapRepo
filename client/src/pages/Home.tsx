@@ -12,7 +12,7 @@ import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
-import { UserRound, LogOut } from "lucide-react";
+import { UserRound, LogOut, BarChart3 } from "lucide-react";
 
 export default function Home() {
   const [, setLocation] = useLocation();

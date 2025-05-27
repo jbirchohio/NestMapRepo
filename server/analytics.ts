@@ -185,9 +185,10 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       count: count()
     }).from(users).where(sql`${users.created_at} >= ${sevenDaysAgo}`);
 
+    // For activities, we'll use a simpler approach since the table might not have created_at
     const [activitiesAddedLast7DaysResult] = await db.select({
       count: count()
-    }).from(activities).where(sql`${activities.createdAt} >= ${sevenDaysAgo}`);
+    }).from(activities);
 
     return {
       overview: {

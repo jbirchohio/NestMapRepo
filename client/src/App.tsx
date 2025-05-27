@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Home from "@/pages/Home";
 import TripPlanner from "@/pages/TripPlanner";
 import SimpleShare from "@/pages/SimpleShare";
+import Analytics from "@/pages/Analytics";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/trip/:id" component={TripPlanner} />
       <Route path="/share/:shareCode" component={SimpleShare} />
+      <Route path="/analytics" component={Analytics} />
       <Route component={NotFound} />
     </Switch>
   );
