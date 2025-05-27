@@ -53,7 +53,9 @@ export default function MapView({
     const resizeObserver = new ResizeObserver(() => {
       // Small delay to ensure the DOM has updated
       setTimeout(() => {
-        resizeMap();
+        if (resizeMap) {
+          resizeMap();
+        }
       }, 100);
     });
 
@@ -62,7 +64,7 @@ export default function MapView({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [isMapReady, resizeMap]);
+  }, [isMapReady]); // Remove resizeMap from dependencies to avoid hook ordering issues
 
   const handleZoomIn = () => {
     if (isMapReady) {
