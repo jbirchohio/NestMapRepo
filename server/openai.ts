@@ -178,25 +178,22 @@ export async function optimizeItinerary(activities: any[], tripContext: any): Pr
       locationName: a.locationName
     })), null, 2));
 
-    const prompt = `You are an expert travel planner. I need you to IMMEDIATELY IDENTIFY TIME CONFLICTS and fix them.
+    const prompt = `CRITICAL SCHEDULING CONFLICT RESOLVER
 
-CRITICAL TASK: Look at these activities and find any that have THE EXACT SAME TIME - this is a scheduling conflict that MUST be fixed!
+TASK: Fix time conflicts in this itinerary. Multiple activities are scheduled at THE SAME TIME.
 
-Current Activities (USE THESE EXACT IDs):
-${JSON.stringify(activities.map(a => ({
-  id: a.id,
-  title: a.title,
-  time: a.time,
-  locationName: a.locationName,
-  latitude: a.latitude,
-  longitude: a.longitude,
-  tag: a.tag,
-  notes: a.notes
-})), null, 2)}
+ACTIVITIES TO OPTIMIZE:
+${activities.map((a, index) => `
+ACTIVITY ${index + 1}:
+- DATABASE_ID: ${a.id} (THIS IS THE ID YOU MUST USE!)
+- TITLE: ${a.title}
+- CURRENT_TIME: ${a.time}
+- LOCATION: ${a.locationName}
+`).join('')}
 
-CRITICAL REQUIREMENT: You MUST use ONLY the numeric "id" values (${activities.map(a => a.id).join(', ')}) in your response. 
-DO NOT use titles like "Checkin", "Museum", "food" - ONLY use the numbers!
-EXAMPLE: Use "32" NOT "Checkin", use "34" NOT "Museum", use "38" NOT "food"!
+CONFLICT DETECTED: Look for activities with identical times and fix them!
+
+MANDATORY RESPONSE FORMAT - USE EXACT DATABASE_ID NUMBERS:
 
 STEP 1: SCAN FOR IDENTICAL TIMES
 - Look through the "time" field for each activity
@@ -217,14 +214,13 @@ Trip Context: ${tripContext.location || 'Unknown'}, ${tripContext.duration || 'U
 
 You MUST provide an optimization for EVERY activity. If no change needed, suggest the same time with reason "Time confirmed as optimal".
 
-Respond with JSON using the EXACT numeric IDs from the activities above:
 {
   "optimizedActivities": [
 ${activities.map(a => `    {
       "id": "${a.id}",
-      "suggestedTime": "HH:MM",
+      "suggestedTime": "HH:MM", 
       "suggestedDay": 1,
-      "reason": "Specific reason - especially mention if this fixes a time conflict"
+      "reason": "Explanation for ${a.title} (ID: ${a.id})"
     }`).join(',\n')}
   ],
   "recommendations": [
