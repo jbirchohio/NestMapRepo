@@ -52,11 +52,22 @@ export default function ItinerarySidebar({
     try {
       const result = await optimizeItinerary.mutateAsync(trip.id);
       
+      // Debug: Log what optimizations we received
+      console.log("Optimization result:", result);
+      
       // Apply each optimization by updating the activity times
       for (const optimization of result.optimizedActivities) {
         const activity = activities.find(a => a.id.toString() === optimization.id);
+        console.log(`Processing optimization for activity ${optimization.id}:`, {
+          foundActivity: !!activity,
+          currentTime: activity?.time,
+          suggestedTime: optimization.suggestedTime,
+          willUpdate: activity && activity.time !== optimization.suggestedTime
+        });
+        
         if (activity && activity.time !== optimization.suggestedTime) {
           try {
+            console.log(`Updating activity ${activity.id} from ${activity.time} to ${optimization.suggestedTime}`);
             await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
               ...activity,
               time: optimization.suggestedTime,

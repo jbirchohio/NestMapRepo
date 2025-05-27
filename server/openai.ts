@@ -238,6 +238,9 @@ Respond with JSON:
 
     const result = JSON.parse(response.choices[0].message.content || '{}');
     
+    // Debug: Log the AI's optimization response
+    console.log("AI optimization response:", JSON.stringify(result, null, 2));
+    
     return {
       optimizedActivities: result.optimizedActivities || [],
       recommendations: result.recommendations || ["Unable to generate optimization recommendations."]
