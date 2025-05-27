@@ -10,7 +10,31 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   display_name: text("display_name"),
   avatar_url: text("avatar_url"),
+  role: text("role").default("user"), // System-wide role: admin, manager, user, guest
+  organization_id: integer("organization_id"), // For B2B multi-tenant support
   created_at: timestamp("created_at").defaultNow(),
+});
+
+// Organizations for B2B/Enterprise customers
+export const organizations = pgTable("organizations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  domain: text("domain"), // Company domain for auto-assignment
+  plan: text("plan").default("free"), // free, team, enterprise
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Trip collaborators with roles
+export const tripCollaborators = pgTable("trip_collaborators", {
+  id: serial("id").primaryKey(),
+  trip_id: integer("trip_id").notNull(),
+  user_id: integer("user_id").notNull(),
+  role: text("role").notNull(), // admin, editor, viewer, commenter
+  invited_by: integer("invited_by"), // User ID who sent invitation
+  invited_at: timestamp("invited_at").defaultNow(),
+  accepted_at: timestamp("accepted_at"),
+  status: text("status").default("pending"), // pending, accepted, declined
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
