@@ -30,7 +30,8 @@ export interface AnalyticsData {
     usersWithTrips: number;
     usersWithMultipleTrips: number;
     averageTripsPerUser: number;
-    completionRate: number;
+    tripCompletionRate: number;
+    activityCompletionRate: number;
   };
   recentActivity: {
     newTripsLast7Days: number;
