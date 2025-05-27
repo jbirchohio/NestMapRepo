@@ -245,7 +245,7 @@ export default function TripPlanner() {
       </div>
 
       {/* Desktop view: side-by-side layout */}
-      <div className="hidden md:grid md:grid-cols-2 h-[calc(100vh-110px)]">
+      <div className="hidden md:grid md:grid-cols-[400px_1fr] h-[calc(100vh-110px)]">
         <div className="h-full overflow-y-auto">
           <ItinerarySidebar
             trip={trip}
