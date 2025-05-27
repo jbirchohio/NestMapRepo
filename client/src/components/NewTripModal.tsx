@@ -94,7 +94,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
     if (city && city.length > 3) {
       const timer = setTimeout(async () => {
         try {
-          const result = await geocodeLocation(city);
+          const result = await geocodeLocation(city, true);
           if (result) {
             setValue("cityLatitude", result.latitude.toString());
             setValue("cityLongitude", result.longitude.toString());

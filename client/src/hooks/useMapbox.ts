@@ -216,7 +216,7 @@ export default function useMapbox() {
   }, []);
   
   // Geocode a location name to coordinates with improved accuracy for POIs and landmarks
-  const geocodeLocation = useCallback(async (locationName: string): Promise<{ longitude: number, latitude: number, fullAddress?: string } | null> => {
+  const geocodeLocation = useCallback(async (locationName: string, isCity: boolean = false): Promise<{ longitude: number, latitude: number, fullAddress?: string } | null> => {
     try {
       // Get trip context for better geocoding
       const tripContext = getTripDestinationCoordinates();
@@ -252,10 +252,11 @@ export default function useMapbox() {
         ].join(',');
       }
       
-      // Use a more comprehensive query for places 
+      // Use different search types based on whether we're searching for cities or specific locations
+      const searchTypes = isCity ? 'place,locality,region' : 'poi,address';
       const queryParams = new URLSearchParams({
         access_token: MAPBOX_TOKEN,
-        types: 'poi,address', // Include both POIs and addresses in first query
+        types: searchTypes,
         limit: '10',
         language: 'en'
       });
