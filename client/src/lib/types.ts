@@ -1,6 +1,9 @@
 // Type definitions for the application
 import { Trip, Activity, Todo, Note } from "@shared/schema";
 
+// Re-export shared types for easier imports
+export { Todo, Note };
+
 // Extended types with additional client-side properties
 export interface ClientTrip extends Trip {
   days?: Date[];
