@@ -25,6 +25,7 @@ import {
   exchangeMicrosoftCodeForToken
 } from "./calendarSync";
 import { generateTripPdf } from "./pdfExport";
+import { getAllTemplates, getTemplateById } from "./tripTemplates";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for Supabase integration
@@ -976,6 +977,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating PDF:", error);
       res.status(500).json({ message: "Could not generate PDF export" });
+    }
+  });
+
+  // Trip templates endpoints
+  app.get("/api/templates", async (req: Request, res: Response) => {
+    try {
+      const templates = getAllTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      res.status(500).json({ message: "Could not fetch templates" });
+    }
+  });
+
+  app.get("/api/templates/:id", async (req: Request, res: Response) => {
+    try {
+      const template = getTemplateById(req.params.id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ message: "Could not fetch template" });
+    }
+  });
+
+  app.post("/api/templates/:id/create-trip", async (req: Request, res: Response) => {
+    try {
+      const template = getTemplateById(req.params.id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      const { userId, startDate, customTitle } = req.body;
+      if (!userId || !startDate) {
+        return res.status(400).json({ message: "User ID and start date are required" });
+      }
+
+      const tripStartDate = new Date(startDate);
+      const tripEndDate = new Date(tripStartDate);
+      tripEndDate.setDate(tripStartDate.getDate() + template.duration - 1);
+
+      // Create trip from template
+      const newTrip = await storage.createTrip({
+        title: customTitle || template.title,
+        startDate: tripStartDate,
+        endDate: tripEndDate,
+        userId: parseInt(userId),
+        city: template.city,
+        country: template.country,
+        isPublic: false,
+        sharingEnabled: false,
+        sharePermission: "read-only"
+      });
+
+      // Create activities from template
+      const createdActivities = [];
+      for (const templateActivity of template.activities) {
+        const activityDate = new Date(tripStartDate);
+        activityDate.setDate(tripStartDate.getDate() + templateActivity.day - 1);
+        
+        const activity = await storage.createActivity({
+          tripId: newTrip.id,
+          title: templateActivity.title,
+          date: activityDate,
+          time: templateActivity.time,
+          locationName: templateActivity.locationName,
+          latitude: templateActivity.latitude || null,
+          longitude: templateActivity.longitude || null,
+          notes: templateActivity.notes || null,
+          tag: templateActivity.tag || null,
+          order: createdActivities.length + 1,
+          completed: false
+        });
+        createdActivities.push(activity);
+      }
+
+      // Create todos from template
+      for (const todoText of template.suggestedTodos) {
+        await storage.createTodo({
+          tripId: newTrip.id,
+          task: todoText,
+          completed: false
+        });
+      }
+
+      // Create notes from template
+      if (template.notes) {
+        await storage.createNote({
+          tripId: newTrip.id,
+          content: template.notes
+        });
+      }
+
+      res.json({ 
+        trip: newTrip, 
+        activities: createdActivities,
+        message: "Trip created successfully from template"
+      });
+    } catch (error) {
+      console.error("Error creating trip from template:", error);
+      res.status(500).json({ message: "Could not create trip from template" });
     }
   });
 

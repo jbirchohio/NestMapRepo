@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import NewTripModal from "@/components/NewTripModal";
 import SwipeableTrip from "@/components/SwipeableTrip";
 import RenameTripDialog from "@/components/RenameTripDialog";
+import TripTemplates from "@/components/TripTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import { UserRound, LogOut } from "lucide-react";
@@ -210,12 +211,18 @@ export default function Home() {
                   </p>
                 )}
               </div>
-              <Button 
-                onClick={handleCreateNewTrip} 
-                className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]"
-              >
-                {isGuestMode && trips.length >= 1 ? "Try One More" : "New Trip"}
-              </Button>
+              <div className="flex gap-2">
+                <TripTemplates 
+                  userId={effectiveUserId} 
+                  onTripCreated={(tripId) => setLocation(`/trip/${tripId}`)}
+                />
+                <Button 
+                  onClick={handleCreateNewTrip} 
+                  className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]"
+                >
+                  {isGuestMode && trips.length >= 1 ? "Try One More" : "New Trip"}
+                </Button>
+              </div>
             </div>
             
             <Card>
