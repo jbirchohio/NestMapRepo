@@ -10,7 +10,7 @@ import {
   activities,
   users
 } from "@shared/schema";
-import { db } from "./db";
+import { db } from "./db-connection";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import * as openai from "./openai";
