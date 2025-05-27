@@ -220,7 +220,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activities = await storage.getActivitiesByTripId(tripId);
       res.json(activities);
     } catch (error) {
-      res.status(500).json({ message: "Could not fetch activities" });
+      console.error("Error fetching activities:", error);
+      res.status(500).json({ message: "Could not fetch activities", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -253,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Zod validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
       }
-      res.status(500).json({ message: "Could not create activity" });
+      res.status(500).json({ message: "Could not create activity", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -288,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(updatedActivity);
     } catch (error) {
       console.error("Error toggling activity completion:", error);
-      return res.status(500).json({ message: "Failed to toggle completion status" });
+      return res.status(500).json({ message: "Failed to toggle completion status", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
   
@@ -354,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
       }
       console.error("Error updating activity:", error);
-      res.status(500).json({ message: "Could not update activity" });
+      res.status(500).json({ message: "Could not update activity", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -372,7 +373,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).end();
     } catch (error) {
-      res.status(500).json({ message: "Could not delete activity" });
+      console.error("Error deleting activity:", error);
+      res.status(500).json({ message: "Could not delete activity", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -387,7 +389,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const todos = await storage.getTodosByTripId(tripId);
       res.json(todos);
     } catch (error) {
-      res.status(500).json({ message: "Could not fetch todos" });
+      console.error("Error fetching todos:", error);
+      res.status(500).json({ message: "Could not fetch todos", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
