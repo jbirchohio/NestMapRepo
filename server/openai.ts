@@ -213,12 +213,24 @@ Trip Context: ${tripContext.location || 'Unknown'}, ${tripContext.duration || 'U
 
 You MUST provide an optimization for EVERY activity. If no change needed, suggest the same time with reason "Time confirmed as optimal".
 
-Respond with JSON:
+Respond with JSON using the EXACT activity IDs from above:
 {
   "optimizedActivities": [
     {
-      "id": "activity_id",
+      "id": "32",
       "suggestedTime": "HH:MM",
+      "suggestedDay": 1,
+      "reason": "Specific reason - especially mention if this fixes a time conflict"
+    },
+    {
+      "id": "34", 
+      "suggestedTime": "HH:MM",
+      "suggestedDay": 1,
+      "reason": "Specific reason - especially mention if this fixes a time conflict"
+    },
+    {
+      "id": "38",
+      "suggestedTime": "HH:MM", 
       "suggestedDay": 1,
       "reason": "Specific reason - especially mention if this fixes a time conflict"
     }
