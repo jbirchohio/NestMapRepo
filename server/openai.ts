@@ -170,18 +170,19 @@ export async function optimizeItinerary(activities: any[], tripContext: any): Pr
       return { optimizedActivities: [], recommendations: ["No activities to optimize."] };
     }
 
-    const prompt = `You are an expert travel planner. Analyze this itinerary and optimize the order of activities to:
-1. **DETECT AND FIX TIME CONFLICTS** - Look for overlapping times
-2. **MINIMIZE TRAVEL TIME** - Order activities by proximity to reduce backtracking
-3. **LOGICAL FLOW** - Meals at appropriate times (breakfast 7-10am, lunch 11am-2pm, dinner 6-9pm)
-4. **GROUP BY LOCATION** - Cluster nearby activities together
+    // Debug: Log what we're actually sending to AI
+    console.log("DEBUG: Activities being sent to AI for optimization:", JSON.stringify(activities.map(a => ({
+      id: a.id,
+      title: a.title,
+      time: a.time,
+      locationName: a.locationName
+    })), null, 2));
 
-Trip Context:
-- Location: ${tripContext.location || 'Unknown'}
-- Duration: ${tripContext.duration || 'Unknown'} days
-- Hotel: ${tripContext.hotel || 'Not specified'}
+    const prompt = `You are an expert travel planner. I need you to IMMEDIATELY IDENTIFY TIME CONFLICTS and fix them.
 
-Current Activities (ANALYZE CAREFULLY FOR CONFLICTS):
+CRITICAL TASK: Look at these activities and find any that have THE EXACT SAME TIME - this is a scheduling conflict that MUST be fixed!
+
+Current Activities:
 ${JSON.stringify(activities.map(a => ({
   id: a.id,
   title: a.title,
@@ -193,27 +194,39 @@ ${JSON.stringify(activities.map(a => ({
   notes: a.notes
 })), null, 2)}
 
-IMPORTANT: 
-- Check if multiple activities have the same or overlapping times
-- If activities are scheduled too close together without travel time, adjust them
-- Suggest realistic time gaps between distant locations (15+ minutes for nearby, 30+ for across city)
-- For food activities, suggest appropriate meal times
-- Always provide an optimization for EVERY activity, even if just confirming the current time
+STEP 1: SCAN FOR IDENTICAL TIMES
+- Look through the "time" field for each activity
+- If ANY two activities have the same time (like "13:00" and "13:00"), that's a CONFLICT
+- Example: If Museum is at "13:00" and Food is at "13:00", you MUST change one of them
 
-Please respond with JSON in this exact format:
+STEP 2: FIX CONFLICTS
+- Move conflicting activities to different times
+- Consider logical flow: meals at appropriate times, travel time between locations
+- Space activities at least 30 minutes apart if they're at different locations
+
+STEP 3: OPTIMIZE REMAINING SCHEDULE
+- Group nearby activities together
+- Ensure realistic travel time between distant locations
+- Suggest appropriate meal times (breakfast 7-10am, lunch 11am-2pm, dinner 6-9pm)
+
+Trip Context: ${tripContext.location || 'Unknown'}, ${tripContext.duration || 'Unknown'} days, Hotel: ${tripContext.hotel || 'Not specified'}
+
+You MUST provide an optimization for EVERY activity. If no change needed, suggest the same time with reason "Time confirmed as optimal".
+
+Respond with JSON:
 {
   "optimizedActivities": [
     {
-      "id": "${activities[0]?.id || 'activity_id'}",
+      "id": "activity_id",
       "suggestedTime": "HH:MM",
       "suggestedDay": 1,
-      "reason": "Specific reason for this timing change or confirmation"
+      "reason": "Specific reason - especially mention if this fixes a time conflict"
     }
   ],
   "recommendations": [
-    "Specific conflicts detected and resolved",
-    "Travel time improvements made",
-    "Meal timing optimizations applied"
+    "State exactly which time conflicts were found and resolved",
+    "List travel time improvements made",
+    "Note any meal timing optimizations"
   ]
 }`;
 
