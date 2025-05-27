@@ -8,6 +8,7 @@ import { ClientTrip, ClientActivity, Todo } from "@/lib/types";
 import ActivityTimeline from "./ActivityTimeline";
 import EnhancedAIAssistantModal from "./EnhancedAIAssistantModal";
 import CalendarIntegration from "./CalendarIntegration";
+import PdfExport from "./PdfExport";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -190,6 +191,9 @@ export default function ItinerarySidebar({
               
               {/* Calendar Export Button */}
               <CalendarIntegration trip={trip} activities={activities} />
+              
+              {/* PDF Export Button */}
+              <PdfExport trip={trip} />
             </div>
 
             {/* Itinerary Timeline */}

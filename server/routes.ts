@@ -24,6 +24,7 @@ import {
   exchangeGoogleCodeForToken,
   exchangeMicrosoftCodeForToken
 } from "./calendarSync";
+import { generateTripPdf } from "./pdfExport";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for Supabase integration
@@ -943,6 +944,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error syncing to Outlook Calendar:", error);
       res.redirect(`/sync-error?provider=outlook&error=${encodeURIComponent("Sync failed")}`);
+    }
+  });
+
+  // PDF export endpoint
+  app.get("/api/trips/:id/export/pdf", async (req: Request, res: Response) => {
+    try {
+      const tripId = parseInt(req.params.id);
+      
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      const [activities, todos, notes] = await Promise.all([
+        storage.getActivitiesByTripId(tripId),
+        storage.getTodosByTripId(tripId),
+        storage.getNotesByTripId(tripId)
+      ]);
+      
+      const pdfBuffer = await generateTripPdf({
+        trip,
+        activities,
+        todos,
+        notes
+      });
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${trip.title.replace(/[^a-z0-9]/gi, '_')}_itinerary.pdf"`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      res.status(500).json({ message: "Could not generate PDF export" });
     }
   });
 
