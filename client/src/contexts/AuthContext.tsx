@@ -63,8 +63,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserId(null);
         }
       } catch (err: any) {
-        console.error('Error loading user:', err);
-        setError(err.message);
+        // Only log actual errors, not empty objects
+        if (err && (err.message || err.error || Object.keys(err).length > 0)) {
+          console.error('Error loading user:', err);
+          setError(err.message || 'Authentication error occurred');
+        } else {
+          // Clear any previous error state
+          setError(null);
+        }
       } finally {
         setLoading(false);
         setAuthReady(true); // Mark authentication as complete
