@@ -179,7 +179,7 @@ export class MemStorage implements IStorage {
       tag: insertActivity.tag || null,
       assignedTo: insertActivity.assignedTo || null,
       travelMode: insertActivity.travelMode || null,
-      completed: insertActivity.completed || null
+      completed: insertActivity.completed ?? false
     };
     this.activities.set(id, activity);
     return activity;
@@ -215,7 +215,7 @@ export class MemStorage implements IStorage {
       ...insertTodo, 
       id,
       assignedTo: insertTodo.assignedTo || null,
-      completed: insertTodo.completed || null
+      completed: insertTodo.completed ?? false
     };
     this.todos.set(id, todo);
     return todo;

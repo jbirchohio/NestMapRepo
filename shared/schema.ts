@@ -111,7 +111,7 @@ export const insertActivitySchema = z.object({
   tag: z.string().nullable().optional(),
   assignedTo: z.string().nullable().optional(),
   order: z.number(),
-  travelMode: z.string().nullable().optional().transform(val => val === null ? undefined : val),
+  travelMode: z.string().nullable().optional(),
   completed: z.boolean().optional().default(false),
 });
 
