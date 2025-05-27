@@ -71,6 +71,21 @@ export default function ItinerarySidebar({
       });
     }
   });
+
+  const toggleTripCompletion = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PUT", `/api/trips/${trip.id}/toggle-complete`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id] });
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS] });
+      toast({
+        title: trip.completed ? "Trip marked as ongoing" : "Trip completed!",
+        description: trip.completed ? "Trip has been marked as ongoing" : "Congratulations on completing your trip!",
+      });
+    }
+  });
   
   const updateNotes = useMutation({
     mutationFn: async () => {
@@ -125,10 +140,33 @@ export default function ItinerarySidebar({
       <aside id="sidebar" className="w-full h-full bg-white dark:bg-[hsl(var(--card))] border-r dark:border-[hsl(var(--border))] overflow-y-auto p-4">
         {/* Trip Title */}
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold">{trip.title}</h2>
-          <p className="text-[hsl(var(--muted-foreground))]">
-            {formatDateRange(new Date(trip.startDate), new Date(trip.endDate))}
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold">{trip.title}</h2>
+              <p className="text-[hsl(var(--muted-foreground))]">
+                {formatDateRange(new Date(trip.startDate), new Date(trip.endDate))}
+              </p>
+            </div>
+            <Button
+              variant={trip.completed ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleTripCompletion.mutate()}
+              disabled={toggleTripCompletion.isPending}
+              className="flex items-center gap-2"
+            >
+              {trip.completed ? (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  Completed
+                </>
+              ) : (
+                <>
+                  <Circle className="h-4 w-4" />
+                  Mark Complete
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
