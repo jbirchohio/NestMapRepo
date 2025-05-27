@@ -52,16 +52,31 @@ export default function ItinerarySidebar({
     try {
       const result = await optimizeItinerary.mutateAsync(trip.id);
       
-      // Automatically apply optimizations without showing modal
+      // Apply each optimization by updating the activity times
+      for (const optimization of result.optimizedActivities) {
+        const activity = activities.find(a => a.id.toString() === optimization.id);
+        if (activity && activity.time !== optimization.suggestedTime) {
+          try {
+            await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, {
+              ...activity,
+              time: optimization.suggestedTime,
+            });
+          } catch (updateError) {
+            console.error("Failed to update activity:", updateError);
+          }
+        }
+      }
+      
+      // Refresh activities to show changes
       onActivitiesUpdated();
       
       toast({
         title: "🚀 Itinerary Auto-Optimized!",
-        description: `Applied ${result.optimizedActivities.length} optimizations to minimize travel time and avoid conflicts.`,
+        description: `Applied ${result.optimizedActivities.length} time optimizations. ${result.recommendations.join(". ")}`,
       });
     } catch (error) {
       toast({
-        title: "Optimization Failed",
+        title: "Optimization Failed", 
         description: "Unable to auto-optimize your itinerary. Please try again.",
         variant: "destructive",
       });

@@ -171,21 +171,21 @@ export async function optimizeItinerary(activities: any[], tripContext: any): Pr
     }
 
     const prompt = `You are an expert travel planner. Analyze this itinerary and optimize the order of activities to:
-1. Minimize travel time and backtracking
-2. Avoid time conflicts
-3. Consider logical flow (meals at appropriate times, indoor/outdoor balance, etc.)
-4. Group activities by location when possible
+1. **DETECT AND FIX TIME CONFLICTS** - Look for overlapping times
+2. **MINIMIZE TRAVEL TIME** - Order activities by proximity to reduce backtracking
+3. **LOGICAL FLOW** - Meals at appropriate times (breakfast 7-10am, lunch 11am-2pm, dinner 6-9pm)
+4. **GROUP BY LOCATION** - Cluster nearby activities together
 
 Trip Context:
 - Location: ${tripContext.location || 'Unknown'}
 - Duration: ${tripContext.duration || 'Unknown'} days
 - Hotel: ${tripContext.hotel || 'Not specified'}
 
-Current Activities:
+Current Activities (ANALYZE CAREFULLY FOR CONFLICTS):
 ${JSON.stringify(activities.map(a => ({
+  id: a.id,
   title: a.title,
   time: a.time,
-  day: a.day,
   locationName: a.locationName,
   latitude: a.latitude,
   longitude: a.longitude,
@@ -193,20 +193,27 @@ ${JSON.stringify(activities.map(a => ({
   notes: a.notes
 })), null, 2)}
 
+IMPORTANT: 
+- Check if multiple activities have the same or overlapping times
+- If activities are scheduled too close together without travel time, adjust them
+- Suggest realistic time gaps between distant locations (15+ minutes for nearby, 30+ for across city)
+- For food activities, suggest appropriate meal times
+- Always provide an optimization for EVERY activity, even if just confirming the current time
+
 Please respond with JSON in this exact format:
 {
   "optimizedActivities": [
     {
-      "id": "original_activity_id",
+      "id": "${activities[0]?.id || 'activity_id'}",
       "suggestedTime": "HH:MM",
       "suggestedDay": 1,
-      "reason": "Why this time/day is better"
+      "reason": "Specific reason for this timing change or confirmation"
     }
   ],
   "recommendations": [
-    "Brief explanation of major changes made",
-    "Travel time savings achieved",
-    "Any conflicts resolved"
+    "Specific conflicts detected and resolved",
+    "Travel time improvements made",
+    "Meal timing optimizations applied"
   ]
 }`;
 
