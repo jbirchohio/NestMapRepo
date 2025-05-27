@@ -863,10 +863,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/calendar/google/auth", async (req: Request, res: Response) => {
     try {
       const { tripId } = req.query;
-      const authUrl = getGoogleAuthUrl();
       
-      // Store tripId in session for callback
-      req.session.tripId = tripId;
+      if (!tripId) {
+        return res.status(400).json({ message: "Trip ID is required" });
+      }
+      
+      // Include tripId in the state parameter for OAuth callback
+      const baseUrl = getGoogleAuthUrl();
+      const authUrl = `${baseUrl}&state=${tripId}`;
       
       res.json({ authUrl });
     } catch (error) {
@@ -878,10 +882,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/calendar/microsoft/auth", async (req: Request, res: Response) => {
     try {
       const { tripId } = req.query;
-      const authUrl = getMicrosoftAuthUrl();
       
-      // Store tripId in session for callback
-      req.session.tripId = tripId;
+      if (!tripId) {
+        return res.status(400).json({ message: "Trip ID is required" });
+      }
+      
+      // Include tripId in the state parameter for OAuth callback
+      const baseUrl = getMicrosoftAuthUrl();
+      const authUrl = `${baseUrl}&state=${tripId}`;
       
       res.json({ authUrl });
     } catch (error) {
@@ -892,8 +900,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/google/callback", async (req: Request, res: Response) => {
     try {
-      const { code } = req.query;
-      const tripId = req.session.tripId;
+      const { code, state } = req.query;
+      const tripId = state; // Get tripId from state parameter
       
       if (!code || !tripId) {
         return res.status(400).send("Missing authorization code or trip ID");
@@ -906,9 +914,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const results = await syncToGoogleCalendar(trip!, activities, accessToken);
       
-      // Clear session
-      delete req.session.tripId;
-      
       // Redirect to success page with results
       res.redirect(`/sync-success?provider=google&events=${results.filter(r => r.success).length}&total=${results.length}`);
     } catch (error) {
@@ -919,8 +924,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/microsoft/callback", async (req: Request, res: Response) => {
     try {
-      const { code } = req.query;
-      const tripId = req.session.tripId;
+      const { code, state } = req.query;
+      const tripId = state; // Get tripId from state parameter
       
       if (!code || !tripId) {
         return res.status(400).send("Missing authorization code or trip ID");
@@ -932,9 +937,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activities = await storage.getActivitiesByTripId(parseInt(tripId as string));
       
       const results = await syncToOutlookCalendar(trip!, activities, accessToken);
-      
-      // Clear session
-      delete req.session.tripId;
       
       // Redirect to success page with results
       res.redirect(`/sync-success?provider=outlook&events=${results.filter(r => r.success).length}&total=${results.length}`);
