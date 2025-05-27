@@ -340,8 +340,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // No need for special handling since our schema transform will handle null to undefined conversion
       
-      // Update the activity with all fields
-      const updatedActivity = await storage.updateActivity(activityId, activityData);
+      // Convert null values to undefined for storage compatibility
+      const cleanedActivityData = Object.fromEntries(
+        Object.entries(activityData).map(([key, value]) => [key, value === null ? undefined : value])
+      );
+      const updatedActivity = await storage.updateActivity(activityId, cleanedActivityData);
       res.json(updatedActivity);
       
     } catch (error) {

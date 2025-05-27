@@ -15,7 +15,7 @@ interface MapViewProps {
 export default function MapView({
   markers = [],
   routes = [],
-  center = DEFAULT_MAP_SETTINGS.center,
+  center = DEFAULT_MAP_SETTINGS.center as [number, number],
   zoom = DEFAULT_MAP_SETTINGS.zoom,
   onMarkerClick,
 }: MapViewProps) {

@@ -105,9 +105,8 @@ export default function EnhancedAIAssistantModal({
     },
   });
 
-  const handleAddActivity = async (activity: any) => {
+  const handleAddActivity = async (activity: any): Promise<void> => {
     await createActivityMutation.mutateAsync(activity);
-    return true;
   };
 
   const handleSendQuestion = async () => {
@@ -279,7 +278,7 @@ export default function EnhancedAIAssistantModal({
                         <div className="mt-3 space-y-2">
                           {/* Parse food suggestions and add buttons - multiple patterns */}
                           {(() => {
-                            const suggestions = [];
+                            const suggestions: any[] = [];
                             
                             // Pattern 1: • Name - Description format
                             const pattern1 = message.content.match(/• (.+?) - (.+?)(?=\n|$)/g);
@@ -316,10 +315,10 @@ export default function EnhancedAIAssistantModal({
                             }
                             
                             // Pattern 4: Numbered list with **Name** format (like your screenshot)
-                            const pattern4 = message.content.match(/\d+\.\s+\*\*(.+?)\*\*(.+?)(?=\n\d+\.|$)/gs);
+                            const pattern4 = message.content.match(/\d+\.\s+\*\*(.+?)\*\*(.+?)(?=\n\d+\.|$)/g);
                             if (pattern4) {
                               pattern4.forEach((suggestion, index) => {
-                                const match = suggestion.match(/\d+\.\s+\*\*(.+?)\*\*(.+)/s);
+                                const match = suggestion.match(/\d+\.\s+\*\*(.+?)\*\*(.+)/);
                                 if (match) {
                                   const [, name, description] = match;
                                   suggestions.push({

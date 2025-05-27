@@ -140,9 +140,9 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
 
     const weatherData: WeatherData[] = [];
     
-    for (const [date, forecasts] of dailyForecasts) {
+    for (const [date, forecasts] of Array.from(dailyForecasts.entries())) {
       // Take the forecast closest to midday for daily summary
-      const middayForecast = forecasts.reduce((closest, current) => {
+      const middayForecast = forecasts.reduce((closest: any, current: any) => {
         const currentHour = new Date(current.dt * 1000).getHours();
         const closestHour = new Date(closest.dt * 1000).getHours();
         return Math.abs(currentHour - 12) < Math.abs(closestHour - 12) ? current : closest;
