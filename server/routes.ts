@@ -101,7 +101,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(trip);
     } catch (error) {
-      res.status(500).json({ message: "Could not fetch trip" });
+      console.error("Error fetching trip:", error);
+      res.status(500).json({ message: "Could not fetch trip", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -125,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
       }
       console.error("Error creating trip:", error);
-      res.status(500).json({ message: "Could not create trip" });
+      res.status(500).json({ message: "Could not create trip", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -178,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
       }
-      res.status(500).json({ message: "Could not update trip" });
+      res.status(500).json({ message: "Could not update trip", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -196,7 +197,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).end();
     } catch (error) {
-      res.status(500).json({ message: "Could not delete trip" });
+      console.error("Error deleting trip:", error);
+      res.status(500).json({ message: "Could not delete trip", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
