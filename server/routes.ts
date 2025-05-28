@@ -1438,9 +1438,15 @@ If you have all required info, return JSON with:
             questions.push("How many travelers?");
           }
           
+          // If no specific questions, ask the essential ones
+          if (questions.length === 0) {
+            questions.push("Where will you be traveling from?");
+            questions.push("What are your specific travel dates?");
+          }
+          
           return {
             needsMoreInfo: true,
-            message: analysis.message || "I need a few more details to plan your trip.",
+            message: analysis.message || "I need a few more details to find the best flights and hotels:",
             questions
           };
         }

@@ -113,10 +113,20 @@ export default function AITripGenerator() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-white rounded-lg p-4 border">
-              <p className="text-gray-800">{assistantMessage}</p>
+              <p className="text-gray-800 mb-3">{assistantMessage}</p>
+              {conversation.length > 0 && conversation[conversation.length - 1].content && (
+                <div className="space-y-2">
+                  {conversation[conversation.length - 1].content.split('\n').filter(line => line.includes('?')).map((question, index) => (
+                    <div key={index} className="flex items-start space-x-2">
+                      <span className="text-blue-600 font-medium">{index + 1}.</span>
+                      <span className="text-gray-700">{question.trim()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="text-sm text-blue-600 font-medium">
-              Please provide the missing details below to continue:
+              Please provide these details below to continue:
             </div>
           </CardContent>
         </Card>
