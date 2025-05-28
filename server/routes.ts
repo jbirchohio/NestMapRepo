@@ -1616,7 +1616,7 @@ If you have all required info, return JSON with:
       }
 
       // Search for real flights with authentic pricing using exact Amadeus API spec
-      const flightUrl = `https://test.api.amadeus.com/v2/shopping/flight-offers`;
+      const flightUrl = `https://api.amadeus.com/v2/shopping/flight-offers`;
       
       const origin = tripInfo.originCode || 'SFO';
       const destination = tripInfo.destinationCode || 'NRT';
@@ -1670,7 +1670,7 @@ If you have all required info, return JSON with:
       }
 
       // Search for real hotels with authentic pricing using correct Amadeus API
-      const hotelSearchUrl = `https://test.api.amadeus.com/v2/shopping/hotel-offers`;
+      const hotelSearchUrl = `https://api.amadeus.com/v2/shopping/hotel-offers`;
       const cityCode = getHotelCityCode(tripInfo.destination); // Use city code instead of airport code
       const checkIn = tripInfo.startDate || '2025-06-01';
       const checkOut = tripInfo.endDate || '2025-06-04';
@@ -1711,7 +1711,7 @@ If you have all required info, return JSON with:
   // Amadeus OAuth token function
   async function getAmadeusToken() {
     try {
-      const authUrl = 'https://test.api.amadeus.com/v1/security/oauth2/token';
+      const authUrl = 'https://api.amadeus.com/v1/security/oauth2/token';
       
       const response = await fetch(authUrl, {
         method: 'POST',
