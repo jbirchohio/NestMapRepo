@@ -1407,30 +1407,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper functions for AI Trip Generator
   async function analyzePromptWithAI(prompt: string) {
-    // Use the OpenAI assistant functionality to analyze trip requirements
+    // Use OpenAI to properly analyze the prompt and extract trip requirements
     try {
-      const response = await aiLocations.findLocation(prompt);
-      return {
-        destination: "New York City", // Extract from response
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        budget: 2500,
-        preferences: {
-          food: ["Business Dining"],
-          accommodation: "business",
-          activities: ["Business", "Cultural"]
-        }
-      };
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{
+            role: 'system',
+            content: 'Extract trip information from the user prompt. Return JSON with: destination (city name), startDate (YYYY-MM-DD), endDate (YYYY-MM-DD), budget (number), duration (days). If not specified, use reasonable defaults for business travel.'
+          }, {
+            role: 'user',
+            content: prompt
+          }],
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const analysis = JSON.parse(data.choices[0].message.content);
+        
+        return {
+          destination: analysis.destination || "San Francisco",
+          startDate: analysis.startDate || new Date().toISOString().split('T')[0],
+          endDate: analysis.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          budget: analysis.budget || 3000,
+          preferences: {
+            food: ["Business Dining"],
+            accommodation: "business",
+            activities: ["Business", "Cultural"]
+          }
+        };
+      }
     } catch (error) {
-      console.log("AI analysis failed, using defaults");
-      return {
-        destination: "New York City",
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        budget: 2500,
-        preferences: { food: ["Business"], accommodation: "business", activities: ["Business"] }
-      };
+      console.log("AI analysis failed, extracting destination manually");
     }
+
+    // Fallback: extract destination from prompt manually
+    const promptLower = prompt.toLowerCase();
+    let destination = "San Francisco"; // Default
+    
+    if (promptLower.includes('san francisco') || promptLower.includes('sf')) destination = "San Francisco";
+    else if (promptLower.includes('new york') || promptLower.includes('nyc')) destination = "New York City";
+    else if (promptLower.includes('chicago')) destination = "Chicago";
+    else if (promptLower.includes('seattle')) destination = "Seattle";
+    else if (promptLower.includes('austin')) destination = "Austin";
+    else if (promptLower.includes('miami')) destination = "Miami";
+    else if (promptLower.includes('denver')) destination = "Denver";
+    
+    return {
+      destination,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      budget: 3000,
+      preferences: { food: ["Business"], accommodation: "business", activities: ["Business"] }
+    };
   }
 
   async function searchRealFlights(tripInfo: any) {
