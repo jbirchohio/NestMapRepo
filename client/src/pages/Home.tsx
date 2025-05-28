@@ -151,8 +151,8 @@ export default function Home() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h1 className="text-2xl font-bold">NestMap</h1>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">Plan. Pin. Wander.</p>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200">NestMap</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Professional Travel Management</p>
               </div>
             </div>
             
@@ -219,47 +219,46 @@ export default function Home() {
                 />
                 <Button 
                   onClick={handleCreateNewTrip} 
-                  className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {isGuestMode && trips.length >= 1 ? "Try One More" : "New Trip"}
+                  {isGuestMode && trips.length >= 1 ? "Try One More" : "New Team Project"}
                 </Button>
               </div>
             </div>
             
-            <Card>
+            <Card className="border-slate-200 dark:border-slate-700">
               <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-2">Your Trip Planner</h3>
-                <p className="text-[hsl(var(--muted-foreground))] mb-4">
-                  Create collaborative trip itineraries with time-blocked activities, map visualizations, 
-                  and AI-powered suggestions.
+                <h3 className="text-lg font-semibold mb-2 text-slate-800 dark:text-slate-200">🗂️ Professional Travel Management</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  Streamline corporate travel, client itineraries, and team events with enterprise-grade planning tools.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-start">
-                    <div className="h-8 w-8 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center mr-3 mt-0.5">1</div>
+                    <div className="h-8 w-8 bg-blue-600 text-white rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📍</div>
                     <div>
-                      <h4 className="font-medium">Plan Your Itinerary</h4>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))]">Create a daily schedule with locations automatically pinned on the map.</p>
+                      <h4 className="font-semibold text-slate-800 dark:text-slate-200">Plan for Teams or Clients</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Schedule events, meetings, and logistics for corporate or group travel</p>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="h-8 w-8 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center mr-3 mt-0.5">2</div>
+                    <div className="h-8 w-8 bg-blue-600 text-white rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📊</div>
                     <div>
-                      <h4 className="font-medium">See Travel Times</h4>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))]">Automatically calculate distances and travel times between stops.</p>
+                      <h4 className="font-semibold text-slate-800 dark:text-slate-200">Smart Route & Time Optimization</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Let AI minimize travel time and automate transitions between events</p>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="h-8 w-8 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center mr-3 mt-0.5">3</div>
+                    <div className="h-8 w-8 bg-blue-600 text-white rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📈</div>
                     <div>
-                      <h4 className="font-medium">Get AI Suggestions</h4>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))]">Find nearby restaurants, detect schedule conflicts, and get themed itinerary ideas.</p>
+                      <h4 className="font-semibold text-slate-800 dark:text-slate-200">Share & Track Engagement</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Send branded itineraries and track completion status and updates</p>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="h-8 w-8 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center mr-3 mt-0.5">4</div>
+                    <div className="h-8 w-8 bg-blue-600 text-white rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">🤝</div>
                     <div>
-                      <h4 className="font-medium">Collaborate</h4>
-                      <p className="text-sm text-[hsl(var(--muted-foreground))]">Share and edit trips with friends and family.</p>
+                      <h4 className="font-semibold text-slate-800 dark:text-slate-200">Collaborate Across Departments</h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Allow internal and external stakeholders to access or edit trips</p>
                     </div>
                   </div>
                 </div>
