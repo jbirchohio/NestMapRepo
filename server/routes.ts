@@ -1434,32 +1434,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   async function searchRealFlights(tripInfo: any) {
-    // Use Amadeus Test API (free tier) for authentic flight data
+    // Use Amadeus API for authentic flight data
     try {
-      // Amadeus Test API provides real flight data for free
-      const amadeuUrl = `https://test.api.amadeus.com/v2/shopping/flight-offers`;
-      
-      // For authentic data, we need the Amadeus API key
-      if (!process.env.AMADEUS_API_KEY) {
-        console.log("Amadeus API key needed for real flight data");
+      if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
+        console.log("Amadeus credentials needed for authentic flight data");
         return [];
       }
 
-      const response = await fetch(`${amadeuUrl}?originLocationCode=${tripInfo.origin || 'ORD'}&destinationLocationCode=${tripInfo.destination || 'JFK'}&departureDate=${tripInfo.startDate}&adults=1`, {
+      // First, get OAuth token from Amadeus
+      const token = await getAmadeusToken();
+      if (!token) {
+        console.log("Failed to get Amadeus auth token");
+        return [];
+      }
+
+      // Search for real flights with authentic pricing
+      const flightUrl = `https://test.api.amadeus.com/v2/shopping/flight-offers`;
+      const origin = tripInfo.origin || 'ORD';
+      const destination = tripInfo.destination || 'NYC';
+      
+      const response = await fetch(`${flightUrl}?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${tripInfo.startDate}&adults=1&max=5`, {
         headers: {
-          'Authorization': `Bearer ${process.env.AMADEUS_API_KEY}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Retrieved authentic flight data from Amadeus");
         return data.data || [];
+      } else {
+        console.log("Amadeus flight search response:", response.status);
       }
       
       return [];
     } catch (error) {
-      console.log("Flight search failed - need Amadeus API key for authentic data");
+      console.log("Flight search failed:", error.message);
       return [];
     }
   }
@@ -1467,30 +1478,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function searchRealHotels(tripInfo: any) {
     // Use Amadeus Hotel Search API for authentic hotel data
     try {
-      if (!process.env.AMADEUS_API_KEY) {
-        console.log("Amadeus API key needed for authentic hotel data");
+      if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
+        console.log("Amadeus credentials needed for authentic hotel data");
         return [];
       }
 
-      // Amadeus Hotel Search provides real hotel prices and availability
+      // Get OAuth token for Amadeus
+      const token = await getAmadeusToken();
+      if (!token) {
+        console.log("Failed to get Amadeus auth token for hotels");
+        return [];
+      }
+
+      // Search for real hotels with authentic pricing
       const hotelSearchUrl = `https://test.api.amadeus.com/v3/shopping/hotel-offers`;
+      const cityCode = tripInfo.destinationCode || 'NYC';
       
-      const response = await fetch(`${hotelSearchUrl}?cityCode=${tripInfo.destinationCode || 'NYC'}&checkInDate=${tripInfo.startDate}&checkOutDate=${tripInfo.endDate}&adults=1&roomQuantity=1`, {
+      const response = await fetch(`${hotelSearchUrl}?cityCode=${cityCode}&checkInDate=${tripInfo.startDate}&checkOutDate=${tripInfo.endDate}&adults=1&roomQuantity=1`, {
         headers: {
-          'Authorization': `Bearer ${process.env.AMADEUS_API_KEY}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Retrieved authentic hotel data from Amadeus");
         return data.data || [];
+      } else {
+        console.log("Amadeus hotel search response:", response.status);
       }
       
       return [];
     } catch (error) {
-      console.log("Hotel search failed - need Amadeus API key for authentic data");
+      console.log("Hotel search failed:", error.message);
       return [];
+    }
+  }
+
+  // Amadeus OAuth token function
+  async function getAmadeusToken() {
+    try {
+      const authUrl = 'https://test.api.amadeus.com/v1/security/oauth2/token';
+      
+      const response = await fetch(authUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `grant_type=client_credentials&client_id=${process.env.AMADEUS_API_KEY}&client_secret=${process.env.AMADEUS_API_SECRET}`
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.access_token;
+      } else {
+        console.log("Failed to get Amadeus token:", response.status);
+        return null;
+      }
+    } catch (error) {
+      console.log("Amadeus authentication error:", error.message);
+      return null;
     }
   }
 
