@@ -31,6 +31,7 @@ function Router() {
         <Route path="/settings" component={Settings} />
         <Route path="/team" component={TeamManagement} />
         <Route path="/billing" component={BillingDashboard} />
+        <Route path="/proposals" component={ProposalCenter} />
         <Route component={NotFound} />
       </Switch>
     </>
