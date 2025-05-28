@@ -31,18 +31,34 @@ export default function AITripGenerator() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedTrip, setGeneratedTrip] = useState<any>(null);
+  const [conversation, setConversation] = useState<any[]>([]);
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [assistantMessage, setAssistantMessage] = useState('');
 
   const generateTripMutation = useMutation({
     mutationFn: async (userPrompt: string) => {
-      const response = await apiRequest('POST', '/api/generate-ai-trip', { prompt: userPrompt });
+      const response = await apiRequest('POST', '/api/generate-ai-trip', { 
+        prompt: userPrompt,
+        conversation 
+      });
       if (!response.ok) {
         throw new Error('Failed to generate trip');
       }
       return response.json();
     },
     onSuccess: (data) => {
-      setGeneratedTrip(data);
-      setIsGenerating(false);
+      if (data.type === 'questions') {
+        // Assistant needs more information
+        setShowQuestions(true);
+        setAssistantMessage(data.message);
+        setConversation(data.conversation);
+        setIsGenerating(false);
+      } else {
+        // Complete trip generated
+        setGeneratedTrip(data);
+        setShowQuestions(false);
+        setIsGenerating(false);
+      }
     },
     onError: () => {
       setIsGenerating(false);
@@ -63,7 +79,12 @@ export default function AITripGenerator() {
   };
 
   if (generatedTrip) {
-    return <TripResultsView trip={generatedTrip} onBack={() => setGeneratedTrip(null)} />;
+    return <TripResultsView trip={generatedTrip} onBack={() => {
+      setGeneratedTrip(null);
+      setShowQuestions(false);
+      setConversation([]);
+      setPrompt('');
+    }} />;
   }
 
   return (
@@ -71,12 +92,35 @@ export default function AITripGenerator() {
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center space-x-2">
           <Sparkles className="w-8 h-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">AI Trip Generator</h1>
+          <h1 className="text-3xl font-bold text-gray-900">AI Trip Assistant</h1>
         </div>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Describe your ideal business trip and let our AI create a comprehensive itinerary with flights, hotels, activities, and budget planning.
+          {showQuestions ? 
+            "Let me gather a few more details to find the best flights and hotels for your trip!" :
+            "Describe your business trip and I'll help plan everything with real pricing and availability."
+          }
         </p>
       </div>
+
+      {/* Show conversation when assistant asks questions */}
+      {showQuestions && conversation.length > 0 && (
+        <Card className="w-full border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Sparkles className="w-5 h-5 text-blue-600" />
+              <span>Travel Assistant</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-white rounded-lg p-4 border">
+              <p className="text-gray-800">{assistantMessage}</p>
+            </div>
+            <div className="text-sm text-blue-600 font-medium">
+              Please provide the missing details below to continue:
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="w-full">
         <CardHeader>
