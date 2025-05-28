@@ -60,6 +60,29 @@ export const insertTripCollaboratorSchema = createInsertSchema(tripCollaborators
   invited_by: true,
 });
 
+// Team invitations table
+export const invitations = pgTable("invitations", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  invitedBy: integer("invited_by").references(() => users.id).notNull(),
+  role: text("role").notNull(), // user role in organization
+  token: text("token").notNull().unique(), // unique invitation token
+  status: text("status").default("pending"), // pending, accepted, expired
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  acceptedAt: timestamp("accepted_at"),
+});
+
+export const insertInvitationSchema = createInsertSchema(invitations).pick({
+  email: true,
+  organizationId: true,
+  invitedBy: true,
+  role: true,
+  token: true,
+  expiresAt: true,
+});
+
 // Trip schema with enhanced sharing/collaboration features
 export const trips = pgTable("trips", {
   id: serial("id").primaryKey(),
@@ -247,3 +270,6 @@ export type InsertNote = z.infer<typeof insertNoteSchema>;
 export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 export type TripRole = typeof TRIP_ROLES[keyof typeof TRIP_ROLES];
 export type OrganizationPlan = typeof ORGANIZATION_PLANS[keyof typeof ORGANIZATION_PLANS];
+
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
