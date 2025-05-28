@@ -29,6 +29,13 @@ import { getAllTemplates, getTemplateById } from "./tripTemplates";
 import { getAnalytics, exportAnalyticsCSV } from "./analytics";
 import { sendTeamInvitationEmail, sendWelcomeEmail } from "./emailService";
 import { getUserWithRole, ROLE_PERMISSIONS } from "./rbac";
+import { 
+  createOrganizationSubscription, 
+  getOrganizationBilling, 
+  cancelOrganizationSubscription,
+  updateOrganizationSubscription,
+  createBillingPortalSession 
+} from "./billing";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for Supabase integration
@@ -1284,10 +1291,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Invitation not found or expired" });
       }
 
+      // Send welcome email to new team member
+      const user = await storage.getUser(userId);
+      if (user) {
+        await sendWelcomeEmail({
+          to: user.email,
+          name: user.display_name || user.username,
+          organizationName: `Organization ${invitation.organizationId}`
+        });
+      }
+
       res.json(invitation);
     } catch (error) {
       console.error("Error accepting invitation:", error);
       res.status(500).json({ error: "Failed to accept invitation" });
+    }
+  });
+
+  // Billing routes for organization subscriptions
+  app.post("/api/billing/subscription", async (req: Request, res: Response) => {
+    try {
+      const { organizationId, plan, customerEmail, customerName } = req.body;
+      
+      const result = await createOrganizationSubscription({
+        organizationId,
+        plan,
+        customerEmail,
+        customerName
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      res.status(500).json({ error: "Failed to create subscription" });
+    }
+  });
+
+  app.get("/api/billing/:customerId", async (req: Request, res: Response) => {
+    try {
+      const { customerId } = req.params;
+      const billing = await getOrganizationBilling(customerId);
+      res.json(billing);
+    } catch (error) {
+      console.error("Error fetching billing info:", error);
+      res.status(500).json({ error: "Failed to fetch billing info" });
+    }
+  });
+
+  app.post("/api/billing/portal", async (req: Request, res: Response) => {
+    try {
+      const { customerId, returnUrl } = req.body;
+      const url = await createBillingPortalSession(customerId, returnUrl);
+      res.json({ url });
+    } catch (error) {
+      console.error("Error creating billing portal:", error);
+      res.status(500).json({ error: "Failed to create billing portal" });
+    }
+  });
+
+  app.post("/api/billing/cancel/:subscriptionId", async (req: Request, res: Response) => {
+    try {
+      const { subscriptionId } = req.params;
+      const success = await cancelOrganizationSubscription(subscriptionId);
+      res.json({ success });
+    } catch (error) {
+      console.error("Error canceling subscription:", error);
+      res.status(500).json({ error: "Failed to cancel subscription" });
     }
   });
 

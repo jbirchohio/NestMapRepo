@@ -186,6 +186,15 @@ export default function Home() {
                     </Button>
                     <Button 
                       variant="ghost" 
+                      size="sm" 
+                      onClick={() => setLocation('/billing')}
+                      title="Billing & Subscription"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Billing
+                    </Button>
+                    <Button 
+                      variant="ghost" 
                       size="icon" 
                       className="rounded-full"
                       onClick={handleSignOut}

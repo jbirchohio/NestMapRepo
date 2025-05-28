@@ -9,6 +9,7 @@ import TripPlanner from "@/pages/TripPlanner";
 import SimpleShare from "@/pages/SimpleShare";
 import Analytics from "@/pages/Analytics";
 import TeamManagement from "@/components/TeamManagement";
+import BillingDashboard from "@/components/BillingDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/share/:shareCode" component={SimpleShare} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/team" component={TeamManagement} />
+      <Route path="/billing" component={BillingDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
