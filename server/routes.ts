@@ -1391,13 +1391,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           model: 'gpt-4o',
           messages: [{
             role: 'system',
-            content: `You are a travel assistant. Analyze the conversation and determine if you have enough information to book flights and hotels.
+            content: `You are a travel assistant. Analyze the conversation and extract travel information intelligently.
 
-Required information:
-- Departure city/airport (where traveling FROM)
-- Destination city (where traveling TO) 
-- Travel dates (start and end)
-- Number of travelers
+EXTRACT EVERYTHING POSSIBLE from the user's message. Look for:
+- Departure city (phrases like "from San Francisco", "coming from NYC", "he is coming from san francisco")
+- Destination (phrases like "to Japan", "trip to Paris", "need a trip for my client to Japan") 
+- Travel dates (phrases like "May 30th through June 4th", "from May 30-June 4", specific dates)
+- Number of travelers (if not specified, assume 1 traveler)
+
+Be SMART about extraction. The user provided: "trip for my client to Japan from May 30th through June 4th... He is coming from san francisco"
+This clearly contains: departure=San Francisco, destination=Japan, dates=May 30-June 4, travelers=1
+
+Only ask for missing CRITICAL information if you truly cannot extract it.
 
 If any required information is missing, return JSON with:
 {
