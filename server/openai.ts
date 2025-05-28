@@ -255,6 +255,210 @@ ${activities.map(a => `    {
 }
 
 /**
+ * Corporate trip optimization with budget simulation and conflict detection
+ */
+export async function optimizeCorporateTrips(trips: any[]): Promise<{
+  optimizedTrips: any[];
+  savings: {
+    totalMoneySaved: number;
+    totalTimeSaved: number;
+    conflictsResolved: number;
+  };
+  recommendations: string[];
+}> {
+  try {
+    // Pricing constants (mock logic for now)
+    const PRICING = {
+      flight: 300,
+      hotel: 150,
+      weekendSurcharge: 0.1,
+      groupDiscount: 0.15,
+      lastMinuteUpcharge: 0.25,
+      advanceBookingDiscount: 0.1
+    };
+
+    // Budget simulation function
+    const calculateTripCost = (trip: any, adjustments: any = {}) => {
+      const baseFlight = PRICING.flight;
+      const startDate = new Date(trip.startDate);
+      const endDate = new Date(trip.endDate);
+      const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const baseHotel = PRICING.hotel * nights;
+      
+      let cost = baseFlight + baseHotel;
+      
+      // Weekend surcharge
+      const startDay = startDate.getDay();
+      if (startDay === 5 || startDay === 6) cost *= (1 + PRICING.weekendSurcharge);
+      
+      // Group discount for overlapping trips
+      if (adjustments.hasGroupBooking) cost *= (1 - PRICING.groupDiscount);
+      
+      // Advance booking discount
+      const now = new Date();
+      const daysFromNow = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (daysFromNow > 30) cost *= (1 - PRICING.advanceBookingDiscount);
+      
+      return Math.round(cost);
+    };
+
+    // Detect conflicts and opportunities
+    const detectConflicts = (trips: any[]) => {
+      const conflicts = [];
+      const opportunities = [];
+      
+      for (let i = 0; i < trips.length; i++) {
+        for (let j = i + 1; j < trips.length; j++) {
+          const trip1 = trips[i];
+          const trip2 = trips[j];
+          
+          // Date overlap check
+          const start1 = new Date(trip1.startDate);
+          const end1 = new Date(trip1.endDate);
+          const start2 = new Date(trip2.startDate);
+          const end2 = new Date(trip2.endDate);
+          
+          if (start1 <= end2 && start2 <= end1) {
+            conflicts.push({
+              trips: [trip1.id, trip2.id],
+              type: 'date_overlap',
+              users: [trip1.userId, trip2.userId],
+              departments: [trip1.department, trip2.department]
+            });
+          }
+          
+          // Geo-clustering opportunity
+          if (trip1.city === trip2.city && Math.abs(start1.getTime() - start2.getTime()) <= 7 * 24 * 60 * 60 * 1000) {
+            opportunities.push({
+              trips: [trip1.id, trip2.id],
+              type: 'geo_clustering',
+              city: trip1.city,
+              potentialSavings: calculateTripCost(trip1) * PRICING.groupDiscount
+            });
+          }
+        }
+      }
+      
+      return { conflicts, opportunities };
+    };
+
+    // AI analysis prompt
+    const prompt = `
+    Analyze these corporate trips for optimization opportunities:
+    
+    ${JSON.stringify(trips.map(t => ({
+      id: t.id,
+      destination: t.city,
+      dates: `${t.startDate} to ${t.endDate}`,
+      department: t.department,
+      budget: t.budget,
+      travelMode: t.travelMode || 'flight'
+    })), null, 2)}
+    
+    Provide optimization recommendations focusing on:
+    1. Date adjustments to avoid conflicts and reduce costs
+    2. Travel mode optimization (flight vs train vs drive)
+    3. Group booking opportunities
+    4. Resource allocation improvements
+    
+    Respond with JSON:
+    {
+      "optimizations": [
+        {
+          "tripId": "trip_id",
+          "currentDates": "current range",
+          "suggestedDates": "optimized range", 
+          "reasoning": "why this change helps",
+          "estimatedSavings": 0,
+          "conflictResolution": "what conflict this resolves"
+        }
+      ],
+      "summary": {
+        "totalPotentialSavings": 0,
+        "conflictsFound": 0,
+        "recommendationCount": 0
+      },
+      "recommendations": ["list of general recommendations"]
+    }
+    `;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    });
+
+    const aiResult = JSON.parse(response.choices[0].message.content || "{}");
+    const { conflicts, opportunities } = detectConflicts(trips);
+
+    // Apply optimizations to trips
+    const optimizedTrips = trips.map(trip => {
+      const originalCost = calculateTripCost(trip);
+      const optimization = aiResult.optimizations?.find((opt: any) => opt.tripId === trip.id);
+      
+      if (optimization) {
+        const hasGroupBooking = opportunities.some(opp => opp.trips.includes(trip.id));
+        const optimizedCost = calculateTripCost({
+          ...trip,
+          startDate: optimization.suggestedDates.split(' to ')[0],
+          endDate: optimization.suggestedDates.split(' to ')[1]
+        }, { hasGroupBooking });
+
+        return {
+          ...trip,
+          originalStartDate: trip.startDate,
+          originalEndDate: trip.endDate,
+          suggestedStartDate: optimization.suggestedDates.split(' to ')[0],
+          suggestedEndDate: optimization.suggestedDates.split(' to ')[1],
+          originalCost,
+          optimizedCost,
+          savings: originalCost - optimizedCost,
+          reasoning: optimization.reasoning,
+          conflictFlags: conflicts.filter(c => c.trips.includes(trip.id)),
+          hasOptimization: true
+        };
+      }
+
+      return {
+        ...trip,
+        originalCost: calculateTripCost(trip),
+        optimizedCost: calculateTripCost(trip),
+        savings: 0,
+        hasOptimization: false,
+        conflictFlags: conflicts.filter(c => c.trips.includes(trip.id))
+      };
+    });
+
+    // Calculate total savings
+    const totalMoneySaved = optimizedTrips.reduce((sum, trip) => sum + (trip.savings || 0), 0);
+    const conflictsResolved = conflicts.length;
+    const totalTimeSaved = Math.round(conflictsResolved * 2.5); // Assume 2.5 hours saved per conflict resolved
+
+    return {
+      optimizedTrips,
+      savings: {
+        totalMoneySaved,
+        totalTimeSaved,
+        conflictsResolved
+      },
+      recommendations: aiResult.recommendations || [
+        "Consider consolidating trips to the same city within a 2-week window",
+        "Book business travel at least 30 days in advance for 10% savings",
+        "Avoid weekend departures when possible to reduce surcharges"
+      ]
+    };
+
+  } catch (error) {
+    console.error("Error in optimizeCorporateTrips:", error);
+    return {
+      optimizedTrips: trips,
+      savings: { totalMoneySaved: 0, totalTimeSaved: 0, conflictsResolved: 0 },
+      recommendations: ["Unable to generate optimization recommendations at this time."]
+    };
+  }
+}
+
+/**
  * Provides weather-based trip suggestions
  */
 export async function suggestWeatherBasedActivities(

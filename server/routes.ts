@@ -821,6 +821,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Corporate trip optimization endpoint
+  app.post("/api/optimize-corporate-trips", async (req: Request, res: Response) => {
+    try {
+      const { trips } = req.body;
+      
+      if (!Array.isArray(trips) || trips.length === 0) {
+        return res.status(400).json({ message: "Invalid trips data. Expected non-empty array." });
+      }
+
+      const result = await openai.optimizeCorporateTrips(trips);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error optimizing corporate trips:", error);
+      res.status(500).json({ message: "Error optimizing corporate trips: " + error.message });
+    }
+  });
+
   app.post("/api/weather/forecast", async (req: Request, res: Response) => {
     try {
       const { location, dates } = req.body;
