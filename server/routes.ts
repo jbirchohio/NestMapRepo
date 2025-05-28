@@ -39,6 +39,31 @@ import {
 import { generateBusinessTrip } from "./businessTripGenerator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // User permissions endpoint
+  app.get("/api/user/permissions", async (req: Request, res: Response) => {
+    try {
+      const userId = Number(req.query.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+        
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      const permissions = ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || [];
+      res.json({ permissions, role: user.role });
+    } catch (error) {
+      console.error("Error fetching user permissions:", error);
+      res.status(500).json({ error: "Failed to fetch permissions" });
+    }
+  });
+
   // Users routes for Supabase integration
   app.post("/api/users", async (req: Request, res: Response) => {
     try {

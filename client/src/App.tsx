@@ -16,6 +16,7 @@ import TeamManagement from "@/components/TeamManagement";
 import BillingDashboard from "@/components/BillingDashboard";
 import ProposalCenter from "@/pages/ProposalCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
+import EnterpriseDashboard from "@/pages/EnterpriseDashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -34,6 +35,7 @@ function Router() {
         <Route path="/team" component={TeamManagement} />
         <Route path="/billing" component={BillingDashboard} />
         <Route path="/proposals" component={ProposalCenter} />
+        <Route path="/enterprise" component={EnterpriseDashboard} />
         <Route component={NotFound} />
       </Switch>
     </>
