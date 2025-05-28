@@ -17,11 +17,13 @@ import BillingDashboard from "@/components/BillingDashboard";
 import ProposalCenter from "@/pages/ProposalCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
 import EnterpriseDashboard from "@/pages/EnterpriseDashboard";
+import EmergencyLogout from "@/components/EmergencyLogout";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <>
+      <EmergencyLogout />
       <MainNavigation />
       <Switch>
         <Route path="/" component={Home} />
