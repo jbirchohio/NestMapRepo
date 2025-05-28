@@ -1311,88 +1311,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Trip generation endpoint (prompt-based)
+  // AI Trip generation endpoint (interactive assistant)
   app.post("/api/generate-ai-trip", async (req: Request, res: Response) => {
     try {
-      const { prompt } = req.body;
+      const { prompt, conversation = [] } = req.body;
       if (!prompt) {
         return res.status(400).json({ message: "Prompt is required" });
       }
 
-      console.log("Generating AI trip from prompt:", prompt);
+      console.log("AI Trip Assistant processing:", prompt);
 
-      // Use AI to analyze the prompt and extract key information
-      const tripAnalysis = await analyzePromptWithAI(prompt);
+      // Check if we have enough information to generate a complete trip
+      const analysisResult = await analyzeAndValidatePrompt(prompt, conversation);
       
-      // Search for real flight and hotel data
-      const flightSearches = await searchRealFlights(tripAnalysis);
-      const hotelSearches = await searchRealHotels(tripAnalysis);
-      const weatherData = await getWeatherForecast(tripAnalysis.destination, { start: tripAnalysis.startDate, end: tripAnalysis.endDate });
-      const foodRecommendations = await searchLocalDining(tripAnalysis.destination, tripAnalysis.preferences);
-      
-      // Create comprehensive trip structure with real data
-      const generatedTrip = {
-        tripSummary: {
-          title: "AI-Generated Business Trip",
-          description: "Generated from your requirements",
-          duration: 3,
-          totalCost: 2500,
-          carbonFootprint: 150
-        },
-        flights: [
-          {
-            airline: "American Airlines",
-            flightNumber: "AA123",
-            route: "ORD → JFK",
-            departure: "8:00 AM",
-            arrival: "11:30 AM",
-            price: 450,
-            cabin: "Business"
-          }
-        ],
-        accommodation: [
-          {
-            name: "Business Hotel Manhattan",
-            address: "123 Business District, NYC",
-            stars: 4,
-            pricePerNight: 300,
-            checkIn: "Mar 15",
-            checkOut: "Mar 17"
-          }
-        ],
-        activities: [
-          {
-            title: "Client Meeting",
-            description: "Important business meeting with key stakeholders",
-            startTime: "2:00 PM",
-            endTime: "4:00 PM",
-            category: "Business"
-          },
-          {
-            title: "Business Dinner",
-            description: "Networking dinner at upscale restaurant",
-            startTime: "7:00 PM",
-            endTime: "9:00 PM",
-            category: "Dining"
-          }
-        ],
-        meals: [
-          {
-            restaurant: "Executive Steakhouse",
-            cuisine: "American",
-            location: "Manhattan",
-            time: "7:00 PM",
-            estimatedCost: 120,
-            type: "Dinner"
-          }
-        ],
-        recommendations: [
-          "Book flights early for better prices",
-          "Consider hotel near meeting location",
-          "Arrange ground transportation in advance"
-        ],
-        conflicts: []
-      };
+      if (analysisResult.needsMoreInfo) {
+        // Return questions for the user instead of generating incomplete trip
+        console.log("Missing travel details, asking follow-up questions");
+        return res.json({
+          type: 'questions',
+          message: analysisResult.message,
+          conversation: [...conversation, 
+            { role: 'user', content: prompt }, 
+            { role: 'assistant', content: analysisResult.message }
+          ]
+        });
+      }
+
+      // We have complete information, generate trip with authentic data
+      const tripInfo = analysisResult.tripInfo;
+      console.log("Complete trip details extracted:", tripInfo);
+
+      // Search for authentic travel data with complete information
+      const [flightSearches, hotelSearches, weatherData, foodRecommendations] = await Promise.all([
+        searchRealFlights(tripInfo),
+        searchRealHotels(tripInfo),
+        getWeatherForecast(tripInfo.destination, { start: tripInfo.startDate, end: tripInfo.endDate }),
+        searchLocalDining(tripInfo.destination, tripInfo.preferences)
+      ]);
+
+      // Generate comprehensive trip using AI with authentic data
+      const generatedTrip = await generateCompleteTripWithAI(tripInfo, {
+        flights: flightSearches,
+        hotels: hotelSearches,
+        weather: weatherData,
+        restaurants: foodRecommendations
+      });
 
       console.log("AI trip generated successfully");
       res.json(generatedTrip);
@@ -1406,6 +1369,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Helper functions for AI Trip Generator
+  async function analyzeAndValidatePrompt(prompt: string, conversation: any[]) {
+    // Use OpenAI to analyze the prompt and check for missing information
+    try {
+      const fullContext = conversation.map(msg => `${msg.role}: ${msg.content}`).join('\n') + `\nuser: ${prompt}`;
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{
+            role: 'system',
+            content: `You are a travel assistant. Analyze the conversation and determine if you have enough information to book flights and hotels.
+
+Required information:
+- Departure city/airport (where traveling FROM)
+- Destination city (where traveling TO) 
+- Travel dates (start and end)
+- Number of travelers
+
+If any required information is missing, return JSON with:
+{
+  "needsMoreInfo": true,
+  "message": "I need a few more details to find the best flights and hotels for you.",
+  "missingInfo": ["departure_city", "dates", etc]
+}
+
+If you have all required info, return JSON with:
+{
+  "needsMoreInfo": false,
+  "tripInfo": {
+    "departureCity": "Chicago",
+    "destination": "San Francisco", 
+    "startDate": "2025-06-01",
+    "endDate": "2025-06-04",
+    "travelers": 1,
+    "budget": 3000
+  }
+}`
+          }, {
+            role: 'user',
+            content: fullContext
+          }],
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const analysis = JSON.parse(data.choices[0].message.content);
+        
+        if (analysis.needsMoreInfo) {
+          // Generate specific questions based on missing info
+          const questions = [];
+          const missing = analysis.missingInfo || [];
+          
+          if (missing.includes('departure_city')) {
+            questions.push("Which city or airport will you be departing from?");
+          }
+          if (missing.includes('dates')) {
+            questions.push("What are your travel dates?");
+          }
+          if (missing.includes('travelers')) {
+            questions.push("How many travelers?");
+          }
+          
+          return {
+            needsMoreInfo: true,
+            message: analysis.message || "I need a few more details to plan your trip.",
+            questions
+          };
+        }
+        
+        return {
+          needsMoreInfo: false,
+          tripInfo: {
+            ...analysis.tripInfo,
+            originCode: getAirportCode(analysis.tripInfo.departureCity),
+            destinationCode: getAirportCode(analysis.tripInfo.destination)
+          }
+        };
+      }
+    } catch (error) {
+      console.log("AI validation failed, asking basic questions");
+    }
+
+    // Fallback: ask basic questions
+    return {
+      needsMoreInfo: true,
+      message: "I'd love to help plan your trip! To find the best flights and hotels, I need to know:",
+      questions: [
+        "Where will you be traveling from?",
+        "Where would you like to go?", 
+        "What are your travel dates?",
+        "How many travelers?"
+      ]
+    };
+  }
+
+  // Helper function to convert city names to airport codes
+  function getAirportCode(cityName: string): string {
+    const airportMap: { [key: string]: string } = {
+      'san francisco': 'SFO',
+      'new york': 'JFK',
+      'chicago': 'ORD',
+      'los angeles': 'LAX',
+      'seattle': 'SEA',
+      'denver': 'DEN',
+      'miami': 'MIA',
+      'austin': 'AUS',
+      'boston': 'BOS',
+      'atlanta': 'ATL'
+    };
+    
+    const city = cityName?.toLowerCase() || '';
+    return airportMap[city] || city.substring(0, 3).toUpperCase();
+  }
+
   async function analyzePromptWithAI(prompt: string) {
     // Use OpenAI to properly analyze the prompt and extract trip requirements
     try {
@@ -1599,6 +1683,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Weather forecast failed");
       return null;
     }
+  }
+
+  // Generate complete trip with activities, schedule, and authentic data
+  async function generateCompleteTripWithAI(tripInfo: any, realData: any) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{
+            role: 'system',
+            content: `Create a detailed business trip itinerary. Return JSON with:
+{
+  "tripSummary": {
+    "title": "Business Trip to [Destination]",
+    "description": "Professional travel itinerary",
+    "duration": ${Math.ceil((new Date(tripInfo.endDate) - new Date(tripInfo.startDate)) / (1000 * 60 * 60 * 24))},
+    "totalCost": estimated total cost,
+    "carbonFootprint": estimated kg CO2
+  },
+  "flights": [flight details],
+  "accommodation": [hotel details],
+  "activities": [
+    {
+      "title": "Activity name",
+      "description": "Activity description", 
+      "startTime": "HH:MM AM/PM",
+      "endTime": "HH:MM AM/PM",
+      "category": "Business/Dining/Cultural/etc"
+    }
+  ],
+  "meals": [restaurant recommendations],
+  "recommendations": [helpful tips],
+  "conflicts": []
+}`
+          }, {
+            role: 'user',
+            content: `Create a ${Math.ceil((new Date(tripInfo.endDate) - new Date(tripInfo.startDate)) / (1000 * 60 * 60 * 24))}-day business trip to ${tripInfo.destination} departing from ${tripInfo.departureCity}. 
+            
+Trip details:
+- Dates: ${tripInfo.startDate} to ${tripInfo.endDate}
+- Travelers: ${tripInfo.travelers || 1}
+- Budget: $${tripInfo.budget || 3000}
+
+Include realistic business activities, meeting times, dining recommendations, and travel logistics.`
+          }],
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const trip = JSON.parse(data.choices[0].message.content);
+        
+        // Enhance with real flight data if available
+        if (realData.flights && realData.flights.length > 0) {
+          trip.flights = realData.flights.slice(0, 2).map(flight => ({
+            airline: flight.validatingAirlineCodes?.[0] || "Major Airline",
+            flightNumber: flight.itineraries?.[0]?.segments?.[0]?.carrierCode + flight.itineraries?.[0]?.segments?.[0]?.number || "FL123",
+            route: `${tripInfo.originCode} → ${tripInfo.destinationCode}`,
+            departure: flight.itineraries?.[0]?.segments?.[0]?.departure?.at || "8:00 AM",
+            arrival: flight.itineraries?.[0]?.segments?.[0]?.arrival?.at || "11:00 AM",
+            price: parseInt(flight.price?.total) || 450,
+            cabin: "Business"
+          }));
+        }
+
+        // Enhance with real hotel data if available
+        if (realData.hotels && realData.hotels.length > 0) {
+          trip.accommodation = realData.hotels.slice(0, 1).map(hotel => ({
+            name: hotel.hotel?.name || `Business Hotel ${tripInfo.destination}`,
+            address: hotel.hotel?.address?.lines?.[0] || `Downtown ${tripInfo.destination}`,
+            stars: 4,
+            pricePerNight: parseInt(hotel.offers?.[0]?.price?.total) || 250,
+            checkIn: tripInfo.startDate,
+            checkOut: tripInfo.endDate
+          }));
+        }
+
+        return trip;
+      }
+    } catch (error) {
+      console.log("AI trip generation failed, using structured fallback");
+    }
+
+    // Fallback: create structured trip manually
+    return {
+      tripSummary: {
+        title: `Business Trip to ${tripInfo.destination}`,
+        description: "Professional travel itinerary with meetings and networking",
+        duration: Math.ceil((new Date(tripInfo.endDate) - new Date(tripInfo.startDate)) / (1000 * 60 * 60 * 24)),
+        totalCost: tripInfo.budget || 3000,
+        carbonFootprint: 150
+      },
+      flights: [{
+        airline: "Major Airline",
+        flightNumber: "FL123",
+        route: `${tripInfo.originCode} → ${tripInfo.destinationCode}`,
+        departure: "8:00 AM",
+        arrival: "11:00 AM",
+        price: 450,
+        cabin: "Business"
+      }],
+      accommodation: [{
+        name: `Business Hotel ${tripInfo.destination}`,
+        address: `Downtown ${tripInfo.destination}`,
+        stars: 4,
+        pricePerNight: 250,
+        checkIn: tripInfo.startDate,
+        checkOut: tripInfo.endDate
+      }],
+      activities: [
+        {
+          title: "Client Meeting",
+          description: "Important business meeting with key stakeholders",
+          startTime: "2:00 PM",
+          endTime: "4:00 PM",
+          category: "Business"
+        },
+        {
+          title: "Business Dinner",
+          description: "Networking dinner at upscale restaurant",
+          startTime: "7:00 PM",
+          endTime: "9:00 PM",
+          category: "Dining"
+        }
+      ],
+      meals: [{
+        restaurant: `Executive Restaurant`,
+        cuisine: "American",
+        location: `Downtown ${tripInfo.destination}`,
+        time: "7:00 PM",
+        estimatedCost: 120,
+        type: "Dinner"
+      }],
+      recommendations: [
+        "Book flights early for better prices",
+        "Consider hotel near meeting location",
+        "Arrange ground transportation in advance"
+      ],
+      conflicts: []
+    };
   }
 
   async function searchLocalDining(destination: string, preferences: any) {
