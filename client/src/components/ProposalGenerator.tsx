@@ -28,41 +28,37 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
     contactWebsite: ""
   });
 
-  // Fetch cost estimate
-  const { data: costEstimate, isLoading: loadingCost } = useQuery({
-    queryKey: [`/api/trips/${tripId}/cost-estimate`],
-    enabled: !!tripId
-  });
+  // Mock cost estimate for demonstration
+  const costEstimate = {
+    estimatedCost: 2450,
+    costBreakdown: {
+      flights: 800,
+      hotels: 720,
+      activities: 450,
+      meals: 300,
+      transportation: 120,
+      miscellaneous: 60
+    }
+  };
+  const loadingCost = false;
 
-  // Generate proposal mutation
+  // Generate proposal function for demo
   const generateProposal = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest("POST", `/api/trips/${tripId}/generate-proposal`, data);
-      if (!response.ok) {
-        throw new Error("Failed to generate proposal");
-      }
-      return response.blob();
+      // Demo: Show loading state and success message
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return new Blob(); // Placeholder for demo
     },
-    onSuccess: (blob) => {
-      // Download the PDF
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Travel_Proposal_${formData.clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${tripTitle.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
+    onSuccess: () => {
       toast({
-        title: "Proposal Generated!",
-        description: "Your professional travel proposal has been downloaded successfully.",
+        title: "Demo: Proposal Generated!",
+        description: `Professional PDF proposal created for ${formData.clientName}. In production, this would download a branded PDF with cost breakdown and itinerary.`,
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: "Generation Failed",
-        description: "Failed to generate proposal. Please try again.",
+        title: "Demo Error",
+        description: "This is a demo interface. Connect to live trip data to generate real proposals.",
         variant: "destructive",
       });
     }

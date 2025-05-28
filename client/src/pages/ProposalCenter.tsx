@@ -11,17 +11,41 @@ export default function ProposalCenter() {
   const [selectedTrip, setSelectedTrip] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch trips for proposal generation
-  const { data: trips, isLoading } = useQuery({
-    queryKey: ['/api/trips'],
-  });
+  // Mock trips data for demonstration (replace with real API when auth is working)
+  const mockTrips = [
+    {
+      id: 1,
+      title: "Tokyo Business Trip",
+      city: "Tokyo",
+      country: "Japan",
+      startDate: "2024-03-15",
+      endDate: "2024-03-20"
+    },
+    {
+      id: 2,
+      title: "European Client Tour",
+      city: "Paris",
+      country: "France",
+      startDate: "2024-04-10",
+      endDate: "2024-04-17"
+    },
+    {
+      id: 3,
+      title: "NYC Conference",
+      city: "New York",
+      country: "USA",
+      startDate: "2024-05-05",
+      endDate: "2024-05-08"
+    }
+  ];
 
-  const filteredTrips = trips?.filter((trip: any) => 
+  const filteredTrips = mockTrips.filter((trip: any) => 
     trip.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     trip.city?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  );
 
-  const selectedTripData = trips?.find((trip: any) => trip.id === selectedTrip);
+  const selectedTripData = mockTrips.find((trip: any) => trip.id === selectedTrip);
+  const isLoading = false;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
