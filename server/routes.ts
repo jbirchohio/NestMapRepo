@@ -1327,7 +1327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Search for real flight and hotel data
       const flightSearches = await searchRealFlights(tripAnalysis);
       const hotelSearches = await searchRealHotels(tripAnalysis);
-      const weatherData = await getWeatherForecast(tripAnalysis.destination, tripAnalysis.dates);
+      const weatherData = await getWeatherForecast(tripAnalysis.destination, { start: tripAnalysis.startDate, end: tripAnalysis.endDate });
       const foodRecommendations = await searchLocalDining(tripAnalysis.destination, tripAnalysis.preferences);
       
       // Create comprehensive trip structure with real data
