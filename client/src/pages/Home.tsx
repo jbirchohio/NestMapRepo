@@ -14,6 +14,7 @@ import TripTemplates from "@/components/TripTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import { UserRound, LogOut, BarChart3, CheckCircle, Clock, Plus, Users } from "lucide-react";
+import { useEffect } from "react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -25,6 +26,13 @@ export default function Home() {
   
   const { user, userId, signOut } = useAuth();
   const queryClient = useQueryClient();
+  
+  // Redirect admin users to enterprise dashboard
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      setLocation('/enterprise');
+    }
+  }, [user, setLocation]);
   
   // Get user ID from authentication or use guest mode
   const effectiveUserId = userId ?? -1; // Use database userId or -1 for guest mode
