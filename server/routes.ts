@@ -1456,6 +1456,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Proposal Generator endpoint - enterprise game-changer!
+  app.post("/api/trips/:id/generate-proposal", async (req: Request, res: Response) => {
+    try {
+      const tripId = parseInt(req.params.id);
+      const trip = storage.getTrip(tripId);
+      const activities = storage.getActivities(tripId);
+      
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      const {
+        clientName,
+        agentName = "Travel Professional",
+        companyName = "NestMap Travel Services",
+        companyLogo,
+        proposalNotes,
+        contactEmail,
+        contactPhone,
+        contactWebsite
+      } = req.body;
+      
+      if (!clientName || !contactEmail) {
+        return res.status(400).json({ message: "Client name and contact email are required" });
+      }
+      
+      // Generate AI-powered cost estimate
+      const { generateCostEstimate, generateAIProposal } = await import('./proposalGenerator');
+      const { estimatedCost, costBreakdown } = generateCostEstimate(trip, activities);
+      
+      // Create proposal data
+      const proposalData = {
+        trip,
+        activities,
+        clientName,
+        agentName,
+        companyName,
+        companyLogo,
+        estimatedCost,
+        costBreakdown,
+        proposalNotes: proposalNotes || "This customized travel proposal has been carefully crafted to provide you with an exceptional travel experience. All costs are estimates and subject to change based on availability.",
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        contactInfo: {
+          email: contactEmail,
+          phone: contactPhone,
+          website: contactWebsite
+        }
+      };
+      
+      // Generate the branded PDF proposal
+      const pdfBuffer = await generateAIProposal(proposalData);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Travel_Proposal_${clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`);
+      res.send(pdfBuffer);
+    } catch (error: any) {
+      console.error("Error generating proposal:", error);
+      res.status(500).json({ message: "Error generating proposal: " + error.message });
+    }
+  });
+
+  // Cost estimate endpoint for quick estimates
+  app.get("/api/trips/:id/cost-estimate", async (req: Request, res: Response) => {
+    try {
+      const tripId = parseInt(req.params.id);
+      const trip = storage.getTrip(tripId);
+      const activities = storage.getActivities(tripId);
+      
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      const { generateCostEstimate } = await import('./proposalGenerator');
+      const costData = generateCostEstimate(trip, activities);
+      
+      res.json(costData);
+    } catch (error: any) {
+      console.error("Error generating cost estimate:", error);
+      res.status(500).json({ message: "Error generating cost estimate: " + error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
