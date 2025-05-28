@@ -3,7 +3,8 @@ import {
   trips, type Trip, type InsertTrip,
   activities, type Activity, type InsertActivity,
   todos, type Todo, type InsertTodo,
-  notes, type Note, type InsertNote
+  notes, type Note, type InsertNote,
+  invitations, type Invitation, type InsertInvitation
 } from "@shared/schema";
 
 // Interface for storage operations
@@ -41,6 +42,11 @@ export interface IStorage {
   createNote(note: InsertNote): Promise<Note>;
   updateNote(id: number, note: Partial<InsertNote>): Promise<Note | undefined>;
   deleteNote(id: number): Promise<boolean>;
+  
+  // Team invitation operations
+  createInvitation(invitation: InsertInvitation): Promise<Invitation>;
+  getInvitationByToken(token: string): Promise<Invitation | undefined>;
+  acceptInvitation(token: string, userId: number): Promise<Invitation | undefined>;
 }
 
 // In-memory implementation
@@ -538,6 +544,52 @@ export class DatabaseStorage implements IStorage {
       .where(eq(notes.id, id))
       .returning({ id: notes.id });
     return result.length > 0;
+  }
+
+  // Team invitation operations
+  async createInvitation(invitation: InsertInvitation): Promise<Invitation> {
+    const [newInvitation] = await db
+      .insert(invitations)
+      .values(invitation)
+      .returning();
+    return newInvitation;
+  }
+
+  async getInvitationByToken(token: string): Promise<Invitation | undefined> {
+    const [invitation] = await db
+      .select()
+      .from(invitations)
+      .where(eq(invitations.token, token));
+    return invitation || undefined;
+  }
+
+  async acceptInvitation(token: string, userId: number): Promise<Invitation | undefined> {
+    // First verify the invitation exists and is valid
+    const invitation = await this.getInvitationByToken(token);
+    if (!invitation || invitation.status !== 'pending' || new Date() > invitation.expiresAt) {
+      return undefined;
+    }
+
+    // Update user's organization and role based on invitation
+    await db
+      .update(users)
+      .set({
+        organizationId: invitation.organizationId,
+        role: invitation.role
+      })
+      .where(eq(users.id, userId));
+
+    // Mark invitation as accepted
+    const [acceptedInvitation] = await db
+      .update(invitations)
+      .set({
+        status: 'accepted',
+        acceptedAt: new Date()
+      })
+      .where(eq(invitations.token, token))
+      .returning();
+
+    return acceptedInvitation || undefined;
   }
 }
 
