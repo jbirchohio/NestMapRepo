@@ -1502,7 +1502,16 @@ If you have all required info, return JSON with:
       'miami': 'MIA',
       'austin': 'AUS',
       'boston': 'BOS',
-      'atlanta': 'ATL'
+      'atlanta': 'ATL',
+      'japan': 'NRT',
+      'tokyo': 'NRT',
+      'osaka': 'KIX',
+      'paris': 'CDG',
+      'london': 'LHR',
+      'rome': 'FCO',
+      'amsterdam': 'AMS',
+      'madrid': 'MAD',
+      'barcelona': 'BCN'
     };
     
     const city = cityName?.toLowerCase() || '';
@@ -1852,31 +1861,18 @@ Include realistic business activities, meeting times, dining recommendations, an
   }
 
   async function searchLocalDining(destination: string, preferences: any) {
-    // Use the existing AI food suggestion functionality from your app
+    // Use the existing working AI food suggestion system
     try {
-      const foodResponse = await openai.suggestFood(destination, {
-        occasion: "business dining",
-        preferences: preferences.food || [],
-        budget: "mid-to-high",
-        time: "evening"
-      });
+      const dietaryInfo = preferences.dietaryRestrictions?.join(', ') || '';
+      const suggestions = await openai.suggestNearbyFood(destination, dietaryInfo);
       
       return {
-        restaurants: foodResponse.suggestions || []
+        restaurants: suggestions.suggestions || []
       };
     } catch (error) {
       console.log("Restaurant search failed, using authentic local search");
       return { 
-        restaurants: [
-          {
-            name: "The Capital Grille",
-            cuisine: "American Steakhouse", 
-            location: destination,
-            priceRange: "$$$",
-            businessSuitable: true,
-            description: "Upscale steakhouse perfect for business dinners"
-          }
-        ]
+        restaurants: []
       };
     }
   }
