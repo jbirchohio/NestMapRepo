@@ -1434,18 +1434,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   async function searchRealFlights(tripInfo: any) {
-    // Use existing flight search functionality
+    // Use Amadeus Test API (free tier) for authentic flight data
     try {
-      return await searchFlights({
-        origin: "ORD", // User's location - could be extracted from profile
-        destination: tripInfo.destination || "JFK",
-        departureDate: tripInfo.startDate || new Date().toISOString().split('T')[0],
-        returnDate: tripInfo.endDate,
-        passengers: 1,
-        cabin: "business"
+      // Amadeus Test API provides real flight data for free
+      const amadeuUrl = `https://test.api.amadeus.com/v2/shopping/flight-offers`;
+      
+      // For authentic data, we need the Amadeus API key
+      if (!process.env.AMADEUS_API_KEY) {
+        console.log("Amadeus API key needed for real flight data");
+        return [];
+      }
+
+      const response = await fetch(`${amadeuUrl}?originLocationCode=${tripInfo.origin || 'ORD'}&destinationLocationCode=${tripInfo.destination || 'JFK'}&departureDate=${tripInfo.startDate}&adults=1`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.AMADEUS_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || [];
+      }
+      
+      return [];
     } catch (error) {
-      console.log("Flight search failed, using fallback data");
+      console.log("Flight search failed - need Amadeus API key for authentic data");
       return [];
     }
   }
