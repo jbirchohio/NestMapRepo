@@ -30,359 +30,139 @@ import {
 export default function AITripGenerator() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-
   const [generatedTrip, setGeneratedTrip] = useState<any>(null);
-  const [showResults, setShowResults] = useState(false);
 
-  // Generate trip mutation
   const generateTripMutation = useMutation({
-    mutationFn: (request: any) => apiRequest('POST', '/api/generate-business-trip', request),
+    mutationFn: async (userPrompt: string) => {
+      const response = await apiRequest('POST', '/api/generate-ai-trip', { prompt: userPrompt });
+      if (!response.ok) {
+        throw new Error('Failed to generate trip');
+      }
+      return response.json();
+    },
     onSuccess: (data) => {
       setGeneratedTrip(data);
-      setShowResults(true);
+      setIsGenerating(false);
+    },
+    onError: () => {
+      setIsGenerating(false);
     }
   });
 
-  const handleInputChange = (field: string, value: any) => {
-    setTripRequest(prev => ({ ...prev, [field]: value }));
+  const handleGenerateTrip = () => {
+    if (!prompt.trim()) return;
+    setIsGenerating(true);
+    generateTripMutation.mutate(prompt);
   };
 
-  const handleArrayToggle = (field: string, value: string) => {
-    setTripRequest(prev => ({
-      ...prev,
-      [field]: (prev[field as keyof typeof prev] as string[]).includes(value)
-        ? (prev[field as keyof typeof prev] as string[]).filter(item => item !== value)
-        : [...(prev[field as keyof typeof prev] as string[]), value]
-    }));
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleGenerateTrip();
+    }
   };
 
-  const handleGenerate = () => {
-    const formattedRequest = {
-      clientName: tripRequest.clientName,
-      destination: tripRequest.destination,
-      startDate: tripRequest.startDate,
-      endDate: tripRequest.endDate,
-      budget: parseFloat(tripRequest.budget),
-      currency: 'USD',
-      workSchedule: {
-        workDays: tripRequest.workDays,
-        workHours: tripRequest.workHours,
-        meetingBlocks: tripRequest.meetingBlocks ? [tripRequest.meetingBlocks] : []
-      },
-      preferences: {
-        foodTypes: tripRequest.foodTypes,
-        accommodationType: tripRequest.accommodationType,
-        activityTypes: tripRequest.activityTypes,
-        dietaryRestrictions: tripRequest.dietaryRestrictions ? [tripRequest.dietaryRestrictions] : []
-      },
-      companyInfo: {
-        name: tripRequest.companyName,
-        industry: tripRequest.industry
-      },
-      tripPurpose: tripRequest.tripPurpose,
-      groupSize: tripRequest.groupSize
-    };
-
-    generateTripMutation.mutate(formattedRequest);
-  };
-
-  const isFormValid = tripRequest.clientName && tripRequest.destination && 
-                     tripRequest.startDate && tripRequest.endDate && 
-                     tripRequest.budget && tripRequest.tripPurpose;
-
-  if (showResults && generatedTrip) {
-    return <TripResultsView trip={generatedTrip} onBack={() => setShowResults(false)} />;
+  if (generatedTrip) {
+    return <TripResultsView trip={generatedTrip} onBack={() => setGeneratedTrip(null)} />;
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <Card>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center space-x-2">
+          <Sparkles className="w-8 h-8 text-blue-600" />
+          <h1 className="text-3xl font-bold text-gray-900">AI Trip Generator</h1>
+        </div>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Describe your ideal business trip and let our AI create a comprehensive itinerary with flights, hotels, activities, and budget planning.
+        </p>
+      </div>
+
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <Sparkles className="w-6 h-6 text-yellow-600" />
-            AI Business Trip Generator
+          <CardTitle className="flex items-center space-x-2">
+            <Briefcase className="w-5 h-5 text-blue-600" />
+            <span>Describe Your Business Trip</span>
           </CardTitle>
           <CardDescription>
-            Simply describe your business trip needs and let our AI create a complete itinerary with flights, hotels, activities, and schedules
+            Tell us about your destination, dates, budget, business requirements, and preferences. Be as detailed as you'd like!
           </CardDescription>
         </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Example: I need a 3-day business trip to New York City from March 15-17, 2024. Budget around $2500. I have client meetings on March 16th from 2-4pm. I prefer business hotels near Manhattan, enjoy fine dining, and would like some cultural activities in the evenings. I have dietary restrictions for vegetarian food..."
+              className="min-h-[120px] resize-none"
+              disabled={isGenerating}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              Press Shift + Enter for new line, Enter to generate
+            </div>
+            <Button
+              onClick={handleGenerateTrip}
+              disabled={!prompt.trim() || isGenerating}
+              className="flex items-center space-x-2"
+            >
+              {isGenerating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Generating...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>Generate Trip</span>
+                </>
+              )}
+            </Button>
+          </div>
+
+          {generateTripMutation.error && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to generate trip. Please try again or refine your request.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
       </Card>
 
-      {/* Quick Example */}
-      <Alert>
-        <Sparkles className="w-4 h-4" />
-        <AlertDescription>
-          <strong>Example:</strong> "I need a 3-day trip to London for client meetings with Acme Corp. Budget is $3,500. 
-          Client likes fine dining and cultural activities. I need to work Monday-Wednesday 9-5 with a key presentation Tuesday at 2 PM."
-        </AlertDescription>
-      </Alert>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Trip Basics */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Trip Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center space-x-3">
+            <MapPin className="w-5 h-5 text-blue-600" />
             <div>
-              <Label htmlFor="clientName">Client/Traveler Name</Label>
-              <Input
-                id="clientName"
-                placeholder="John Smith"
-                value={tripRequest.clientName}
-                onChange={(e) => handleInputChange('clientName', e.target.value)}
-              />
+              <h3 className="font-medium">Smart Destinations</h3>
+              <p className="text-sm text-gray-600">AI finds the best locations and venues</p>
             </div>
-
-            <div>
-              <Label htmlFor="destination">Destination</Label>
-              <Input
-                id="destination"
-                placeholder="London, UK"
-                value={tripRequest.destination}
-                onChange={(e) => handleInputChange('destination', e.target.value)}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={tripRequest.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={tripRequest.endDate}
-                  onChange={(e) => handleInputChange('endDate', e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="budget">Budget (USD)</Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  placeholder="3500"
-                  value={tripRequest.budget}
-                  onChange={(e) => handleInputChange('budget', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="groupSize">Group Size</Label>
-                <Input
-                  id="groupSize"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={tripRequest.groupSize}
-                  onChange={(e) => handleInputChange('groupSize', parseInt(e.target.value))}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="tripPurpose">Trip Purpose</Label>
-              <Textarea
-                id="tripPurpose"
-                placeholder="Client meetings, product demo, contract negotiation..."
-                value={tripRequest.tripPurpose}
-                onChange={(e) => handleInputChange('tripPurpose', e.target.value)}
-              />
-            </div>
-          </CardContent>
+          </div>
         </Card>
-
-        {/* Work Schedule */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Briefcase className="w-5 h-5" />
-              Work Requirements
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        
+        <Card className="p-4">
+          <div className="flex items-center space-x-3">
+            <Calendar className="w-5 h-5 text-green-600" />
             <div>
-              <Label>Work Days</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
-                  <Badge
-                    key={day}
-                    variant={tripRequest.workDays.includes(day) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => handleArrayToggle('workDays', day)}
-                  >
-                    {day}
-                  </Badge>
-                ))}
-              </div>
+              <h3 className="font-medium">Schedule Optimization</h3>
+              <p className="text-sm text-gray-600">Conflicts avoided, time maximized</p>
             </div>
-
-            <div>
-              <Label htmlFor="workHours">Work Hours</Label>
-              <Input
-                id="workHours"
-                placeholder="9:00-17:00"
-                value={tripRequest.workHours}
-                onChange={(e) => handleInputChange('workHours', e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="meetingBlocks">Specific Meeting Times</Label>
-              <Input
-                id="meetingBlocks"
-                placeholder="Tuesday 14:00-16:00 - Key Presentation"
-                value={tripRequest.meetingBlocks}
-                onChange={(e) => handleInputChange('meetingBlocks', e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input
-                id="companyName"
-                placeholder="Acme Corporation"
-                value={tripRequest.companyName}
-                onChange={(e) => handleInputChange('companyName', e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="industry">Industry</Label>
-              <Input
-                id="industry"
-                placeholder="Technology, Finance, Healthcare..."
-                value={tripRequest.industry}
-                onChange={(e) => handleInputChange('industry', e.target.value)}
-              />
-            </div>
-          </CardContent>
+          </div>
         </Card>
-
-        {/* Preferences */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Utensils className="w-5 h-5" />
-              Client Preferences
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        
+        <Card className="p-4">
+          <div className="flex items-center space-x-3">
+            <DollarSign className="w-5 h-5 text-purple-600" />
             <div>
-              <Label>Food Preferences</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {['Fine Dining', 'Local Cuisine', 'Business Lunch', 'Casual Dining', 'Vegetarian', 'Asian', 'European'].map(food => (
-                  <Badge
-                    key={food}
-                    variant={tripRequest.foodTypes.includes(food) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => handleArrayToggle('foodTypes', food)}
-                  >
-                    {food}
-                  </Badge>
-                ))}
-              </div>
+              <h3 className="font-medium">Budget Planning</h3>
+              <p className="text-sm text-gray-600">Detailed cost breakdown and optimization</p>
             </div>
-
-            <div>
-              <Label>Activity Types</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {['Networking', 'Cultural Sites', 'Museums', 'Entertainment', 'Shopping', 'Outdoor Activities', 'Nightlife'].map(activity => (
-                  <Badge
-                    key={activity}
-                    variant={tripRequest.activityTypes.includes(activity) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => handleArrayToggle('activityTypes', activity)}
-                  >
-                    {activity}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label>Accommodation Level</Label>
-              <div className="flex gap-2 mt-2">
-                {[
-                  { value: 'luxury', label: 'Luxury (5★)' },
-                  { value: 'business', label: 'Business (4★)' },
-                  { value: 'budget', label: 'Budget (3★)' }
-                ].map(option => (
-                  <Badge
-                    key={option.value}
-                    variant={tripRequest.accommodationType === option.value ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => handleInputChange('accommodationType', option.value)}
-                  >
-                    {option.label}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="dietaryRestrictions">Dietary Restrictions</Label>
-              <Input
-                id="dietaryRestrictions"
-                placeholder="Vegetarian, No shellfish, Kosher..."
-                value={tripRequest.dietaryRestrictions}
-                onChange={(e) => handleInputChange('dietaryRestrictions', e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Generate Button */}
-        <Card>
-          <CardContent className="pt-6">
-            <Button
-              onClick={handleGenerate}
-              disabled={!isFormValid || generateTripMutation.isPending}
-              className="w-full h-16 text-lg"
-              size="lg"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              {generateTripMutation.isPending ? 'Generating Your Perfect Trip...' : 'Generate AI Business Trip'}
-            </Button>
-
-            {generateTripMutation.isPending && (
-              <div className="mt-4 space-y-2">
-                <div className="text-sm text-gray-600 dark:text-gray-300">
-                  🧠 Analyzing your requirements...
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
-                  ✈️ Finding optimal flights and hotels...
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
-                  🎯 Creating schedule with conflict detection...
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
-                  🌍 Adding weather and crowd intelligence...
-                </div>
-              </div>
-            )}
-
-            {generateTripMutation.error && (
-              <Alert className="mt-4 border-red-200 bg-red-50">
-                <AlertTriangle className="w-4 h-4" />
-                <AlertDescription>
-                  Failed to generate trip. Please check your requirements and try again.
-                </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
+          </div>
         </Card>
       </div>
     </div>
@@ -390,298 +170,168 @@ export default function AITripGenerator() {
 }
 
 function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
-  const [selectedTab, setSelectedTab] = useState('overview');
-
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-2xl">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-                {trip.tripSummary?.title || 'Business Trip Generated'}
-              </CardTitle>
-              <CardDescription className="mt-2">
-                {trip.tripSummary?.description || 'Your AI-generated business trip is ready for review'}
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={onBack}>
-                ← Back to Generator
-              </Button>
-              <Button>
-                <Download className="w-4 h-4 mr-2" />
-                Export Trip
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Cost</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  ${trip.budgetBreakdown?.total || trip.tripSummary?.totalCost || 0}
-                </p>
-              </div>
-              <DollarSign className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Duration</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {trip.tripSummary?.duration || 3} days
-                </p>
-              </div>
-              <Calendar className="w-8 h-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Carbon Impact</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {trip.tripSummary?.carbonFootprint || 0} kg
-                </p>
-                <p className="text-xs text-gray-500">CO₂</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Conflicts</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {trip.conflicts?.length || 0}
-                </p>
-                <p className="text-xs text-gray-500">Issues detected</p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-red-600" />
-            </div>
-          </CardContent>
-        </Card>
+    <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <Button variant="outline" onClick={onBack} className="flex items-center space-x-2">
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Generator</span>
+        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" className="flex items-center space-x-2">
+            <Download className="w-4 h-4" />
+            <span>Export PDF</span>
+          </Button>
+          <Button variant="outline" className="flex items-center space-x-2">
+            <Share className="w-4 h-4" />
+            <span>Share Trip</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Conflicts Alert */}
-      {trip.conflicts && trip.conflicts.length > 0 && (
-        <Alert className="border-yellow-200 bg-yellow-50">
-          <AlertTriangle className="w-4 h-4" />
-          <AlertDescription>
-            <strong>{trip.conflicts.length} scheduling conflicts detected.</strong> Review the schedule tab to resolve timing issues.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Detailed Results */}
       <Card>
-        <CardContent className="pt-6">
-          <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="flights">Flights</TabsTrigger>
-              <TabsTrigger value="hotels">Hotels</TabsTrigger>
-              <TabsTrigger value="schedule">Schedule</TabsTrigger>
-              <TabsTrigger value="budget">Budget</TabsTrigger>
-              <TabsTrigger value="insights">AI Insights</TabsTrigger>
-            </TabsList>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <CheckCircle className="w-6 h-6 text-green-600" />
+            <span>{trip.tripSummary?.title || "Generated Business Trip"}</span>
+          </CardTitle>
+          <CardDescription>
+            {trip.tripSummary?.description || "Your AI-generated business trip itinerary"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-4 gap-4 mb-6">
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+              <div className="text-sm font-medium">Duration</div>
+              <div className="text-lg font-bold">{trip.tripSummary?.duration || 0} days</div>
+            </div>
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <DollarSign className="w-6 h-6 text-green-600 mx-auto mb-1" />
+              <div className="text-sm font-medium">Total Cost</div>
+              <div className="text-lg font-bold">${trip.tripSummary?.totalCost || 0}</div>
+            </div>
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+              <div className="text-sm font-medium">Activities</div>
+              <div className="text-lg font-bold">{trip.activities?.length || 0}</div>
+            </div>
+            <div className="text-center p-3 bg-orange-50 rounded-lg">
+              <Plane className="w-6 h-6 text-orange-600 mx-auto mb-1" />
+              <div className="text-sm font-medium">Carbon</div>
+              <div className="text-lg font-bold">{trip.tripSummary?.carbonFootprint || 0} kg</div>
+            </div>
+          </div>
 
-            <TabsContent value="overview" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Trip Highlights</h3>
-                  <div className="space-y-2">
-                    {trip.recommendations?.slice(0, 5).map((rec: string, index: number) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{rec}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Compliance Notes</h3>
-                  <div className="space-y-2">
-                    {trip.complianceNotes?.slice(0, 5).map((note: string, index: number) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{note}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="flights" className="space-y-4">
-              <h3 className="text-lg font-semibold">Flight Options</h3>
-              <div className="space-y-3">
-                {trip.flights?.slice(0, 3).map((flight: any, index: number) => (
-                  <Card key={index}>
-                    <CardContent className="pt-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="font-medium">{flight.airline} {flight.flightNumber}</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-300">
-                            {flight.origin} → {flight.destination}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            Depart: {flight.departureTime} | Arrive: {flight.arrivalTime}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xl font-bold">${flight.price?.amount || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">{flight.cabin}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="hotels" className="space-y-4">
-              <h3 className="text-lg font-semibold">Accommodation Options</h3>
-              <div className="space-y-3">
-                {trip.accommodation?.slice(0, 3).map((hotel: any, index: number) => (
-                  <Card key={index}>
-                    <CardContent className="pt-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="font-medium">{hotel.name}</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-300">
-                            {hotel.address}
-                          </div>
-                          <div className="flex items-center gap-2 mt-2">
-                            <div className="flex">
-                              {Array.from({ length: hotel.starRating || 4 }).map((_, i) => (
-                                <span key={i} className="text-yellow-400">★</span>
-                              ))}
-                            </div>
-                            {hotel.rating && (
-                              <span className="text-sm text-gray-500">
-                                {hotel.rating.score}/10 ({hotel.rating.reviews} reviews)
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xl font-bold">${hotel.price?.amount || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">per {hotel.price?.per || 'night'}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="schedule" className="space-y-4">
-              <h3 className="text-lg font-semibold">Daily Schedule</h3>
-              <div className="space-y-4">
-                {trip.activities?.slice(0, 10).map((activity: any, index: number) => (
-                  <Card key={index}>
-                    <CardContent className="pt-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="font-medium">{activity.title}</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-300">
-                            {activity.locationName || activity.location}
-                          </div>
-                          {activity.notes && (
-                            <div className="text-sm text-gray-500 mt-1">{activity.notes}</div>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">{activity.time}</div>
-                          <Badge variant="outline" className="text-xs">
-                            Day {activity.day}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="budget" className="space-y-4">
-              <h3 className="text-lg font-semibold">Budget Breakdown</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {trip.budgetBreakdown && Object.entries(trip.budgetBreakdown).map(([category, amount]) => (
-                  <Card key={category}>
-                    <CardContent className="pt-4">
-                      <div className="text-center">
-                        <div className="text-lg font-bold">${amount as number}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300 capitalize">
-                          {category.replace(/([A-Z])/g, ' $1').trim()}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="insights" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">AI Recommendations</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {trip.recommendations?.map((rec: string, index: number) => (
-                        <div key={index} className="flex items-start gap-2">
-                          <Sparkles className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{rec}</span>
-                        </div>
-                      ))}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center space-x-2">
+                <Plane className="w-5 h-5 text-blue-600" />
+                <span>Flights</span>
+              </h3>
+              {trip.flights?.map((flight: any, index: number) => (
+                <Card key={index} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">{flight.airline} {flight.flightNumber}</div>
+                      <div className="text-sm text-gray-600">{flight.route}</div>
+                      <div className="text-sm text-gray-500">{flight.departure} - {flight.arrival}</div>
                     </div>
-                  </CardContent>
+                    <div className="text-right">
+                      <div className="font-bold text-green-600">${flight.price}</div>
+                      <Badge variant="secondary">{flight.cabin}</Badge>
+                    </div>
+                  </div>
                 </Card>
+              ))}
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Weather Considerations</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {trip.weatherConsiderations ? (
-                      <div className="space-y-2">
-                        <p className="text-sm">Weather-optimized scheduling applied to your itinerary.</p>
-                        {trip.weatherConsiderations.indoorAlternatives?.length > 0 && (
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {trip.weatherConsiderations.indoorAlternatives.length} backup indoor activities included.
-                          </p>
-                        )}
+              <h3 className="text-lg font-semibold flex items-center space-x-2">
+                <Bed className="w-5 h-5 text-purple-600" />
+                <span>Accommodation</span>
+              </h3>
+              {trip.accommodation?.map((hotel: any, index: number) => (
+                <Card key={index} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">{hotel.name}</div>
+                      <div className="text-sm text-gray-600">{hotel.address}</div>
+                      <div className="flex items-center space-x-2 mt-1">
+                        {[...Array(hotel.stars)].map((_, i) => (
+                          <span key={i} className="text-yellow-400">★</span>
+                        ))}
                       </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">Weather data will be updated closer to your travel date.</p>
-                    )}
-                  </CardContent>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-green-600">${hotel.pricePerNight}/night</div>
+                      <div className="text-sm text-gray-500">{hotel.checkIn} - {hotel.checkOut}</div>
+                    </div>
+                  </div>
                 </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center space-x-2">
+                <MapPin className="w-5 h-5 text-red-600" />
+                <span>Activities & Schedule</span>
+              </h3>
+              {trip.activities?.map((activity: any, index: number) => (
+                <Card key={index} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-medium">{activity.title}</div>
+                      <div className="text-sm text-gray-600">{activity.description}</div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        <Clock className="w-3 h-3 inline mr-1" />
+                        {activity.startTime} - {activity.endTime}
+                      </div>
+                    </div>
+                    <Badge variant="outline">{activity.category}</Badge>
+                  </div>
+                </Card>
+              ))}
+
+              <h3 className="text-lg font-semibold flex items-center space-x-2">
+                <Utensils className="w-5 h-5 text-orange-600" />
+                <span>Dining</span>
+              </h3>
+              {trip.meals?.map((meal: any, index: number) => (
+                <Card key={index} className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium">{meal.restaurant}</div>
+                      <div className="text-sm text-gray-600">{meal.cuisine} • {meal.location}</div>
+                      <div className="text-sm text-gray-500">{meal.time}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-green-600">${meal.estimatedCost}</div>
+                      <Badge variant="secondary">{meal.type}</Badge>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {trip.recommendations && trip.recommendations.length > 0 && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-2">AI Recommendations</h3>
+              <ul className="space-y-1">
+                {trip.recommendations.map((rec: string, index: number) => (
+                  <li key={index} className="text-sm text-blue-800">• {rec}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {trip.conflicts && trip.conflicts.length > 0 && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Potential Conflicts:</strong> {trip.conflicts.join(', ')}
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
     </div>
