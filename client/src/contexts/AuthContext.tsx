@@ -225,18 +225,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message);
       }
       
-      // Clear all state
+      // Clear all state immediately
       setUser(null);
       setUserId(null);
       setAuthReady(false);
+      setLoading(false);
       
-      // Force reload to clear any cached state
-      window.location.href = '/';
+      // Force reload to clear any cached state - do this without showing toast
+      window.location.reload();
       
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
     } catch (err: any) {
       console.error('Error signing out:', err);
       setError(err.message);
@@ -245,7 +242,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: err.message,
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
