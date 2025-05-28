@@ -60,6 +60,10 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
       
       await signUp(values.email, values.password, {
         display_name: values.name,
+        company: values.company,
+        job_title: values.jobTitle,
+        team_size: values.teamSize,
+        use_case: values.useCase,
       });
       
       if (onSuccess) {
@@ -75,9 +79,12 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl">Create Account</CardTitle>
+        <CardTitle className="text-2xl flex items-center gap-2">
+          <Building2 className="h-6 w-6 text-primary" />
+          Create Business Account
+        </CardTitle>
         <CardDescription>
-          Sign up to start planning your trips
+          Join thousands of professionals using NestMap for business travel planning
         </CardDescription>
       </CardHeader>
       <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -138,6 +145,78 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
               <p className="text-sm text-destructive">{form.formState.errors.passwordConfirm.message}</p>
             )}
           </div>
+
+          {/* Business Information Section */}
+          <div className="pt-2 border-t">
+            <h4 className="text-sm font-medium text-muted-foreground mb-3">Business Information</h4>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="company">Company Name</Label>
+                <Input
+                  id="company"
+                  type="text"
+                  placeholder="Your Company"
+                  {...form.register("company")}
+                />
+                {form.formState.errors.company && (
+                  <p className="text-sm text-destructive">{form.formState.errors.company.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="jobTitle">Job Title</Label>
+                <Input
+                  id="jobTitle"
+                  type="text"
+                  placeholder="e.g., Travel Manager, Operations Director"
+                  {...form.register("jobTitle")}
+                />
+                {form.formState.errors.jobTitle && (
+                  <p className="text-sm text-destructive">{form.formState.errors.jobTitle.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="teamSize">Team Size</Label>
+                <Select onValueChange={(value) => form.setValue("teamSize", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select team size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1-10">1-10 employees</SelectItem>
+                    <SelectItem value="11-50">11-50 employees</SelectItem>
+                    <SelectItem value="51-200">51-200 employees</SelectItem>
+                    <SelectItem value="201-1000">201-1000 employees</SelectItem>
+                    <SelectItem value="1000+">1000+ employees</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.teamSize && (
+                  <p className="text-sm text-destructive">{form.formState.errors.teamSize.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="useCase">Primary Use Case</Label>
+                <Select onValueChange={(value) => form.setValue("useCase", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="How will you use NestMap?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="business-travel">Business Travel Management</SelectItem>
+                    <SelectItem value="client-meetings">Client Meetings & Events</SelectItem>
+                    <SelectItem value="team-retreats">Team Retreats & Offsites</SelectItem>
+                    <SelectItem value="conferences">Conference & Trade Show Planning</SelectItem>
+                    <SelectItem value="sales-trips">Sales Team Travel</SelectItem>
+                    <SelectItem value="other">Other Business Use</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.useCase && (
+                  <p className="text-sm text-destructive">{form.formState.errors.useCase.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
         </CardContent>
         
         <CardFooter className="flex flex-col space-y-4">
@@ -146,7 +225,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? "Creating Account..." : "Create Account"}
+            {isLoading ? "Creating Business Account..." : "Start Your Business Account"}
           </Button>
           
           <div className="text-center text-sm">
