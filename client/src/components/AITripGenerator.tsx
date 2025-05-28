@@ -3,12 +3,9 @@ import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Sparkles, 
   MapPin, 
@@ -25,28 +22,14 @@ import {
   CheckCircle,
   TrendingUp,
   Download,
-  Share
+  Share,
+  Send,
+  ArrowLeft
 } from 'lucide-react';
 
 export default function AITripGenerator() {
-  const [tripRequest, setTripRequest] = useState({
-    clientName: '',
-    destination: '',
-    startDate: '',
-    endDate: '',
-    budget: '',
-    workDays: [] as string[],
-    workHours: '9:00-17:00',
-    meetingBlocks: '',
-    foodTypes: [] as string[],
-    accommodationType: 'business' as 'luxury' | 'business' | 'budget',
-    activityTypes: [] as string[],
-    dietaryRestrictions: '',
-    companyName: '',
-    industry: '',
-    tripPurpose: '',
-    groupSize: 1
-  });
+  const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const [generatedTrip, setGeneratedTrip] = useState<any>(null);
   const [showResults, setShowResults] = useState(false);
