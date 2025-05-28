@@ -39,8 +39,10 @@ export default function BillingDashboard() {
     enabled: !!user,
   });
 
-  const hasBillingAccess = userPermissions?.includes?.('BILLING_ACCESS') || 
-                          userPermissions?.includes?.('MANAGE_ORGANIZATION');
+  const hasBillingAccess = Array.isArray(userPermissions) && (
+    userPermissions.includes('BILLING_ACCESS') || 
+    userPermissions.includes('MANAGE_ORGANIZATION')
+  );
 
   // Get billing information
   const { data: billingInfo, isLoading: billingLoading } = useQuery<BillingInfo>({

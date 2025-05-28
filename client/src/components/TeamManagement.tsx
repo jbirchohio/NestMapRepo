@@ -399,13 +399,45 @@ export default function TeamManagement() {
                     {member.status}
                   </Badge>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        toast({
+                          title: "Member Details",
+                          description: `Viewing details for ${member.name} (${member.role})`,
+                        });
+                      }}
+                      title="View member details"
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        toast({
+                          title: "Edit Permissions",
+                          description: `Editing permissions for ${member.name}`,
+                        });
+                      }}
+                      title="Edit member permissions"
+                    >
                       <Edit3 className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive"
+                      onClick={() => {
+                        toast({
+                          title: "Remove Member",
+                          description: `This would remove ${member.name} from the organization`,
+                          variant: "destructive",
+                        });
+                      }}
+                      title="Remove member"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

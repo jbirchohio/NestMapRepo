@@ -13,8 +13,10 @@ export default function Analytics() {
     enabled: !!user,
   });
 
-  const hasAnalyticsAccess = userPermissions?.includes('ACCESS_ANALYTICS') || 
-                           userPermissions?.includes('MANAGE_ORGANIZATION');
+  const hasAnalyticsAccess = Array.isArray(userPermissions) && (
+    userPermissions.includes('ACCESS_ANALYTICS') || 
+    userPermissions.includes('MANAGE_ORGANIZATION')
+  );
 
   if (!user) {
     return (
