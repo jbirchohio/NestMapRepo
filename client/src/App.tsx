@@ -18,6 +18,7 @@ function Router() {
       <Route path="/trip/:id" component={TripPlanner} />
       <Route path="/share/:shareCode" component={SimpleShare} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/team" component={TeamManagement} />
       <Route component={NotFound} />
     </Switch>
   );
