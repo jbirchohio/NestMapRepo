@@ -124,6 +124,12 @@ export const insertTripSchema = z.object({
   hotel: z.string().optional(),
   hotelLatitude: z.string().optional(),
   hotelLongitude: z.string().optional(),
+  // B2B fields
+  tripType: z.string().optional().default("personal"),
+  clientName: z.string().optional(),
+  projectType: z.string().optional(),
+  organization: z.string().optional(),
+  budget: z.string().optional(),
 });
 
 // Activity schema

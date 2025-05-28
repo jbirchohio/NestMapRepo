@@ -130,6 +130,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.country) tripData.country = req.body.country;
       if (req.body.location) tripData.location = req.body.location;
       
+      // Include B2B fields - now handled by schema parsing
+      // B2B fields are automatically included through insertTripSchema
+      
       console.log("Processed trip data:", tripData);
       const trip = await storage.createTrip(tripData);
       res.status(201).json(trip);
@@ -170,6 +173,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hotel: z.string().optional(),
         hotelLatitude: z.string().optional(),
         hotelLongitude: z.string().optional(),
+        // B2B fields
+        tripType: z.string().optional(),
+        clientName: z.string().optional(),
+        projectType: z.string().optional(),
+        organization: z.string().optional(),
+        budget: z.string().optional(),
+        completed: z.boolean().optional(),
+        completedAt: z.date().optional(),
       });
       
       console.log("Raw request body:", req.body);
