@@ -13,7 +13,7 @@ import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
-import { UserRound, LogOut, BarChart3, CheckCircle, Clock, Plus } from "lucide-react";
+import { UserRound, LogOut, BarChart3, CheckCircle, Clock, Plus, Users } from "lucide-react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -166,6 +166,24 @@ export default function Home() {
                     <p className="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
                   </div>
                   <div className="flex space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setLocation('/analytics')}
+                      title="Analytics Dashboard"
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Analytics
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setLocation('/team')}
+                      title="Team Management"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Team
+                    </Button>
                     <Button 
                       variant="ghost" 
                       size="icon" 
