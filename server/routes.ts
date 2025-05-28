@@ -1465,18 +1465,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   async function searchRealHotels(tripInfo: any) {
-    // Use existing hotel search functionality
+    // Use Amadeus Hotel Search API for authentic hotel data
     try {
-      return await searchHotels({
-        destination: tripInfo.destination || "New York",
-        checkIn: tripInfo.startDate || new Date().toISOString().split('T')[0],
-        checkOut: tripInfo.endDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        guests: 1,
-        rooms: 1,
-        starRating: 4
+      if (!process.env.AMADEUS_API_KEY) {
+        console.log("Amadeus API key needed for authentic hotel data");
+        return [];
+      }
+
+      // Amadeus Hotel Search provides real hotel prices and availability
+      const hotelSearchUrl = `https://test.api.amadeus.com/v3/shopping/hotel-offers`;
+      
+      const response = await fetch(`${hotelSearchUrl}?cityCode=${tripInfo.destinationCode || 'NYC'}&checkInDate=${tripInfo.startDate}&checkOutDate=${tripInfo.endDate}&adults=1&roomQuantity=1`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.AMADEUS_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || [];
+      }
+      
+      return [];
     } catch (error) {
-      console.log("Hotel search failed, using fallback data");
+      console.log("Hotel search failed - need Amadeus API key for authentic data");
       return [];
     }
   }
