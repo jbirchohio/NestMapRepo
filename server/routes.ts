@@ -1327,12 +1327,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (analysisResult.needsMoreInfo) {
         // Return questions for the user instead of generating incomplete trip
         console.log("Missing travel details, asking follow-up questions");
+        
+        // Format the message with numbered questions
+        const questionsList = (analysisResult.questions || []).map((q: string, i: number) => `${i + 1}. ${q}`).join('\n');
+        const fullMessage = analysisResult.questions && analysisResult.questions.length > 0 
+          ? `${analysisResult.message}\n\n${questionsList}`
+          : analysisResult.message;
+        
         return res.json({
           type: 'questions',
-          message: analysisResult.message,
+          message: fullMessage,
           conversation: [...conversation, 
             { role: 'user', content: prompt }, 
-            { role: 'assistant', content: analysisResult.message }
+            { role: 'assistant', content: fullMessage }
           ]
         });
       }
@@ -1465,15 +1472,16 @@ If you have all required info, return JSON with:
     }
 
     // Fallback: ask basic questions
+    const essentialQuestions = [
+      "Where will you be traveling from?",
+      "What are your specific travel dates?",
+      "How many travelers?"
+    ];
+    
     return {
       needsMoreInfo: true,
-      message: "I'd love to help plan your trip! To find the best flights and hotels, I need to know:",
-      questions: [
-        "Where will you be traveling from?",
-        "Where would you like to go?", 
-        "What are your travel dates?",
-        "How many travelers?"
-      ]
+      message: "I need a few more details to find the best flights and hotels:\n\n" + essentialQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n'),
+      questions: essentialQuestions
     };
   }
 
