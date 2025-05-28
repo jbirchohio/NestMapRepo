@@ -239,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedTrip = await storage.updateTrip(tripId, {
         completed: !trip.completed,
-        completedAt: !trip.completed ? new Date() : undefined
+        ...((!trip.completed) && { completedAt: new Date() })
       });
 
       if (!updatedTrip) {
@@ -1102,8 +1102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         city: template.city,
         country: template.country,
         isPublic: false,
-        sharingEnabled: false,
-        sharePermission: "read-only"
+        sharingEnabled: false
       });
 
       // Create activities from template
