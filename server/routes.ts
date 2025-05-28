@@ -36,6 +36,7 @@ import {
   updateOrganizationSubscription,
   createBillingPortalSession 
 } from "./billing";
+import { generateBusinessTrip } from "./businessTripGenerator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for Supabase integration
@@ -1257,6 +1258,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating trip from template:", error);
       res.status(500).json({ message: "Could not create trip from template" });
+    }
+  });
+
+  // AI Business Trip Generator endpoint
+  app.post("/api/generate-business-trip", async (req: Request, res: Response) => {
+    try {
+      console.log("Generating business trip with AI...");
+      const tripRequest = req.body;
+      
+      // Validate required fields
+      if (!tripRequest.clientName || !tripRequest.destination || !tripRequest.startDate || !tripRequest.endDate) {
+        return res.status(400).json({ message: "Missing required trip details" });
+      }
+
+      const generatedTrip = await generateBusinessTrip(tripRequest);
+      console.log("Business trip generated successfully");
+      
+      res.json(generatedTrip);
+    } catch (error) {
+      console.error("Error generating business trip:", error);
+      res.status(500).json({ 
+        message: "Could not generate business trip", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
