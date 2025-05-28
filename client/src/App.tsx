@@ -15,6 +15,7 @@ import Settings from "@/pages/Settings";
 import TeamManagement from "@/components/TeamManagement";
 import BillingDashboard from "@/components/BillingDashboard";
 import ProposalCenter from "@/pages/ProposalCenter";
+import AITripGeneratorPage from "@/pages/AITripGenerator";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
         <Route path="/share/:shareCode" component={SimpleShare} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/bookings" component={Bookings} />
+        <Route path="/ai-generator" component={AITripGeneratorPage} />
         <Route path="/optimizer" component={TripOptimizer} />
         <Route path="/settings" component={Settings} />
         <Route path="/team" component={TeamManagement} />

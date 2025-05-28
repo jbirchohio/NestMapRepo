@@ -15,7 +15,8 @@ import {
   Shield,
   Bell,
   User,
-  LogOut
+  LogOut,
+  Sparkles
 } from 'lucide-react';
 
 export default function MainNavigation() {
@@ -42,6 +43,12 @@ export default function MainNavigation() {
   const hasOptimizerAccess = Array.isArray(userPermissions) && (
     userPermissions.includes('ACCESS_ANALYTICS') || 
     userPermissions.includes('MANAGE_ORGANIZATION')
+  );
+
+  const hasAIGeneratorAccess = Array.isArray(userPermissions) && (
+    userPermissions.includes('CREATE_TRIPS') || 
+    userPermissions.includes('MANAGE_ORGANIZATION') ||
+    userPermissions.includes('ACCESS_ANALYTICS')
   );
 
   const hasSettingsAccess = Array.isArray(userPermissions) && (
@@ -88,12 +95,20 @@ export default function MainNavigation() {
       badge: 'New'
     },
     {
+      path: '/ai-generator',
+      label: 'AI Trip Generator',
+      icon: Sparkles,
+      active: location === '/ai-generator',
+      show: hasAIGeneratorAccess,
+      badge: 'AI'
+    },
+    {
       path: '/optimizer',
       label: 'Trip Optimizer',
       icon: Brain,
       active: location === '/optimizer',
       show: hasOptimizerAccess,
-      badge: 'AI'
+      badge: 'Pro'
     },
     {
       path: '/team',
