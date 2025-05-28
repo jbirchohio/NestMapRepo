@@ -130,6 +130,9 @@ export const insertTripSchema = z.object({
   projectType: z.string().optional(),
   organization: z.string().optional(),
   budget: z.string().optional(),
+  // Trip completion tracking
+  completed: z.boolean().optional().default(false),
+  completedAt: z.date().optional(),
 });
 
 // Activity schema

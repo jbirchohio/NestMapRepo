@@ -239,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedTrip = await storage.updateTrip(tripId, {
         completed: !trip.completed,
-        completedAt: !trip.completed ? new Date() : null
+        completedAt: !trip.completed ? new Date() : undefined
       });
 
       if (!updatedTrip) {
