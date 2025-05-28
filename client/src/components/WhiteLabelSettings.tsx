@@ -1,0 +1,556 @@
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Palette, 
+  Globe, 
+  Image, 
+  Settings, 
+  Eye, 
+  Save,
+  Upload,
+  Paintbrush,
+  Type,
+  Link,
+  Smartphone
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+const whiteLabelSchema = z.object({
+  // Branding
+  companyName: z.string().min(1, "Company name is required"),
+  companyLogo: z.string().url().optional().or(z.literal("")),
+  favicon: z.string().url().optional().or(z.literal("")),
+  tagline: z.string().optional(),
+  
+  // Colors
+  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex color"),
+  secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex color"),
+  accentColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Must be a valid hex color"),
+  
+  // Domain & URLs
+  customDomain: z.string().optional(),
+  supportEmail: z.string().email().optional().or(z.literal("")),
+  helpUrl: z.string().url().optional().or(z.literal("")),
+  
+  // Features
+  enableGuestMode: z.boolean(),
+  enablePublicSignup: z.boolean(),
+  enableSocialLogin: z.boolean(),
+  enableMobileApp: z.boolean(),
+  
+  // Footer & Legal
+  companyWebsite: z.string().url().optional().or(z.literal("")),
+  privacyPolicyUrl: z.string().url().optional().or(z.literal("")),
+  termsOfServiceUrl: z.string().url().optional().or(z.literal("")),
+  footerText: z.string().optional(),
+});
+
+type WhiteLabelFormValues = z.infer<typeof whiteLabelSchema>;
+
+export default function WhiteLabelSettings() {
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+
+  const form = useForm<WhiteLabelFormValues>({
+    resolver: zodResolver(whiteLabelSchema),
+    defaultValues: {
+      companyName: "NestMap",
+      primaryColor: "#2563eb",
+      secondaryColor: "#64748b",
+      accentColor: "#10b981",
+      enableGuestMode: true,
+      enablePublicSignup: true,
+      enableSocialLogin: true,
+      enableMobileApp: true,
+      tagline: "AI-Powered Corporate Travel Management",
+      footerText: "© 2025 NestMap. All rights reserved."
+    }
+  });
+
+  const onSubmit = async (values: WhiteLabelFormValues) => {
+    setIsSaving(true);
+    try {
+      // Here you would save to your backend API
+      console.log('White label settings:', values);
+      
+      // Apply CSS variables for live preview
+      document.documentElement.style.setProperty('--primary', values.primaryColor);
+      document.documentElement.style.setProperty('--secondary', values.secondaryColor);
+      document.documentElement.style.setProperty('--accent', values.accentColor);
+      
+      toast({
+        title: "Settings Saved",
+        description: "White label configuration has been updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Save Failed",
+        description: "Unable to save white label settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // In a real implementation, you'd upload to a file storage service
+      const fakeUrl = `https://example.com/logos/${file.name}`;
+      form.setValue('companyLogo', fakeUrl);
+      toast({
+        title: "Logo Uploaded",
+        description: "Company logo has been uploaded successfully.",
+      });
+    }
+  };
+
+  const currentValues = form.watch();
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            White Label Settings
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400">
+            Customize the platform branding and appearance for your organization
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setPreviewMode(!previewMode)}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            {previewMode ? 'Exit Preview' : 'Preview Changes'}
+          </Button>
+          <Button
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={isSaving}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </div>
+
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Tabs defaultValue="branding" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="branding" className="flex items-center gap-2">
+              <Paintbrush className="h-4 w-4" />
+              Branding
+            </TabsTrigger>
+            <TabsTrigger value="colors" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Colors
+            </TabsTrigger>
+            <TabsTrigger value="domain" className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              Domain
+            </TabsTrigger>
+            <TabsTrigger value="features" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Features
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Branding Tab */}
+          <TabsContent value="branding" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Type className="h-5 w-5" />
+                  Company Information
+                </CardTitle>
+                <CardDescription>
+                  Basic company details and branding elements
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input
+                      id="companyName"
+                      {...form.register("companyName")}
+                      placeholder="Your Company Name"
+                    />
+                    {form.formState.errors.companyName && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.companyName.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tagline">Tagline</Label>
+                    <Input
+                      id="tagline"
+                      {...form.register("tagline")}
+                      placeholder="Your company tagline"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="logo">Company Logo</Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('logo-upload')?.click()}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Upload Logo
+                    </Button>
+                    {currentValues.companyLogo && (
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 bg-slate-200 dark:bg-slate-700 rounded flex items-center justify-center">
+                          <Image className="h-4 w-4" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">Logo uploaded</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="footerText">Footer Text</Label>
+                  <Textarea
+                    id="footerText"
+                    {...form.register("footerText")}
+                    placeholder="Copyright and footer information"
+                    rows={2}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Colors Tab */}
+          <TabsContent value="colors" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Color Scheme
+                </CardTitle>
+                <CardDescription>
+                  Customize the platform's color palette to match your brand
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="primaryColor">Primary Color</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="color"
+                        id="primaryColor"
+                        {...form.register("primaryColor")}
+                        className="w-12 h-10 p-1"
+                      />
+                      <Input
+                        {...form.register("primaryColor")}
+                        placeholder="#2563eb"
+                        className="flex-1"
+                      />
+                    </div>
+                    {form.formState.errors.primaryColor && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.primaryColor.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="secondaryColor">Secondary Color</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="color"
+                        id="secondaryColor"
+                        {...form.register("secondaryColor")}
+                        className="w-12 h-10 p-1"
+                      />
+                      <Input
+                        {...form.register("secondaryColor")}
+                        placeholder="#64748b"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="accentColor">Accent Color</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="color"
+                        id="accentColor"
+                        {...form.register("accentColor")}
+                        className="w-12 h-10 p-1"
+                      />
+                      <Input
+                        {...form.register("accentColor")}
+                        placeholder="#10b981"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Color Preview */}
+                <div className="p-4 border rounded-lg">
+                  <h4 className="text-sm font-medium mb-3">Color Preview</h4>
+                  <div className="flex gap-3">
+                    <div 
+                      className="h-16 w-24 rounded flex items-center justify-center text-white text-xs font-medium"
+                      style={{ backgroundColor: currentValues.primaryColor }}
+                    >
+                      Primary
+                    </div>
+                    <div 
+                      className="h-16 w-24 rounded flex items-center justify-center text-white text-xs font-medium"
+                      style={{ backgroundColor: currentValues.secondaryColor }}
+                    >
+                      Secondary
+                    </div>
+                    <div 
+                      className="h-16 w-24 rounded flex items-center justify-center text-white text-xs font-medium"
+                      style={{ backgroundColor: currentValues.accentColor }}
+                    >
+                      Accent
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Domain Tab */}
+          <TabsContent value="domain" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Link className="h-5 w-5" />
+                  Domain & URLs
+                </CardTitle>
+                <CardDescription>
+                  Configure custom domain and support links
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="customDomain">Custom Domain</Label>
+                    <Input
+                      id="customDomain"
+                      {...form.register("customDomain")}
+                      placeholder="travel.yourcompany.com"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Configure DNS to point to our servers
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="supportEmail">Support Email</Label>
+                    <Input
+                      id="supportEmail"
+                      type="email"
+                      {...form.register("supportEmail")}
+                      placeholder="support@yourcompany.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="helpUrl">Help/Documentation URL</Label>
+                    <Input
+                      id="helpUrl"
+                      {...form.register("helpUrl")}
+                      placeholder="https://help.yourcompany.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="companyWebsite">Company Website</Label>
+                    <Input
+                      id="companyWebsite"
+                      {...form.register("companyWebsite")}
+                      placeholder="https://yourcompany.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="privacyPolicyUrl">Privacy Policy URL</Label>
+                    <Input
+                      id="privacyPolicyUrl"
+                      {...form.register("privacyPolicyUrl")}
+                      placeholder="https://yourcompany.com/privacy"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="termsOfServiceUrl">Terms of Service URL</Label>
+                    <Input
+                      id="termsOfServiceUrl"
+                      {...form.register("termsOfServiceUrl")}
+                      placeholder="https://yourcompany.com/terms"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Features Tab */}
+          <TabsContent value="features" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Platform Features
+                </CardTitle>
+                <CardDescription>
+                  Control which features are available to your users
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="enableGuestMode">Guest Mode</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Allow anonymous users to try the platform with limited features
+                      </p>
+                    </div>
+                    <Switch
+                      id="enableGuestMode"
+                      checked={form.watch("enableGuestMode")}
+                      onCheckedChange={(checked) => form.setValue("enableGuestMode", checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="enablePublicSignup">Public Signup</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Allow users to create accounts without invitations
+                      </p>
+                    </div>
+                    <Switch
+                      id="enablePublicSignup"
+                      checked={form.watch("enablePublicSignup")}
+                      onCheckedChange={(checked) => form.setValue("enablePublicSignup", checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="enableSocialLogin">Social Login</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Enable Google and Microsoft OAuth authentication
+                      </p>
+                    </div>
+                    <Switch
+                      id="enableSocialLogin"
+                      checked={form.watch("enableSocialLogin")}
+                      onCheckedChange={(checked) => form.setValue("enableSocialLogin", checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label htmlFor="enableMobileApp">Mobile App</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Provide mobile app download links and features
+                      </p>
+                    </div>
+                    <Switch
+                      id="enableMobileApp"
+                      checked={form.watch("enableMobileApp")}
+                      onCheckedChange={(checked) => form.setValue("enableMobileApp", checked)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Platform Preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Platform Preview</CardTitle>
+                <CardDescription>
+                  See how your white label configuration will appear to users
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg p-6 space-y-4">
+                  {/* Mock Header */}
+                  <div className="flex items-center justify-between pb-4 border-b">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="h-8 w-8 rounded flex items-center justify-center text-white text-sm font-bold"
+                        style={{ backgroundColor: currentValues.primaryColor }}
+                      >
+                        {currentValues.companyName.charAt(0)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{currentValues.companyName}</h3>
+                        {currentValues.tagline && (
+                          <p className="text-xs text-muted-foreground">{currentValues.tagline}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Badge style={{ backgroundColor: currentValues.accentColor, color: 'white' }}>
+                      Enterprise
+                    </Badge>
+                  </div>
+
+                  {/* Mock Content */}
+                  <div className="space-y-3">
+                    <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
+                  </div>
+
+                  {/* Mock Footer */}
+                  <div className="pt-4 border-t text-center">
+                    <p className="text-xs text-muted-foreground">
+                      {currentValues.footerText}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </form>
+    </div>
+  );
+}

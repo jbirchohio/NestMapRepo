@@ -1,5 +1,6 @@
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import CorporateTripOptimizer from "@/components/CorporateTripOptimizer";
+import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -59,7 +60,7 @@ export default function Analytics() {
         </div>
         
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Analytics Dashboard
@@ -67,6 +68,10 @@ export default function Analytics() {
             <TabsTrigger value="optimizer" className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
               Trip Optimizer
+            </TabsTrigger>
+            <TabsTrigger value="whitelabel" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              White Label
             </TabsTrigger>
           </TabsList>
           
@@ -76,6 +81,10 @@ export default function Analytics() {
           
           <TabsContent value="optimizer">
             <CorporateTripOptimizer />
+          </TabsContent>
+          
+          <TabsContent value="whitelabel">
+            <WhiteLabelSettings />
           </TabsContent>
         </Tabs>
       </div>
