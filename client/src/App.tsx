@@ -8,6 +8,9 @@ import Home from "@/pages/Home";
 import TripPlanner from "@/pages/TripPlanner";
 import SimpleShare from "@/pages/SimpleShare";
 import Analytics from "@/pages/Analytics";
+import Bookings from "@/pages/Bookings";
+import TripOptimizer from "@/pages/TripOptimizer";
+import Settings from "@/pages/Settings";
 import TeamManagement from "@/components/TeamManagement";
 import BillingDashboard from "@/components/BillingDashboard";
 import NotFound from "@/pages/not-found";
@@ -19,6 +22,9 @@ function Router() {
       <Route path="/trip/:id" component={TripPlanner} />
       <Route path="/share/:shareCode" component={SimpleShare} />
       <Route path="/analytics" component={Analytics} />
+      <Route path="/bookings" component={Bookings} />
+      <Route path="/optimizer" component={TripOptimizer} />
+      <Route path="/settings" component={Settings} />
       <Route path="/team" component={TeamManagement} />
       <Route path="/billing" component={BillingDashboard} />
       <Route component={NotFound} />
