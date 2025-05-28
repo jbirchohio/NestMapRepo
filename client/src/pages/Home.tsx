@@ -13,7 +13,7 @@ import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
-import { UserRound, LogOut, BarChart3, CheckCircle, Clock } from "lucide-react";
+import { UserRound, LogOut, BarChart3, CheckCircle, Clock, Plus } from "lucide-react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -152,7 +152,8 @@ export default function Home() {
               </div>
               <div className="ml-3">
                 <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200">NestMap</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Professional Travel Management</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">[ Professional Travel Management ]</p>
+                <p className="text-xs text-slate-500 dark:text-slate-500">The all-in-one platform for planning, collaborating, and delivering itineraries at scale.</p>
               </div>
             </div>
             
@@ -219,8 +220,9 @@ export default function Home() {
                 />
                 <Button 
                   onClick={handleCreateNewTrip} 
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-slate-700 hover:bg-slate-800 text-white font-semibold"
                 >
+                  <Plus className="h-4 w-4 mr-2" />
                   {isGuestMode && trips.length >= 1 ? "Try One More" : "New Team Project"}
                 </Button>
               </div>

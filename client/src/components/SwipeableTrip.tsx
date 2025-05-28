@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSwipeable } from "react-swipeable";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Building2, Users } from "lucide-react";
 import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClientTrip } from "@/lib/types";
@@ -175,14 +175,41 @@ export default function SwipeableTrip({ trip, onNavigate, onRename }: SwipeableT
         >
           <CardContent className="p-4">
             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-medium text-lg">{trip.title}</h3>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                  {format(new Date(trip.startDate), 'MMM d')} - {format(new Date(trip.endDate), 'MMM d, yyyy')}
+              <div className="flex-1">
+                {/* Client/Organization info */}
+                <div className="flex items-center gap-2 mb-1">
+                  <Building2 className="h-3 w-3 text-slate-500" />
+                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                    Client: {trip.city || "Internal Project"}
+                  </span>
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                    Shared
+                  </span>
+                </div>
+                
+                {/* Trip title with travel icon */}
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-lg text-slate-800 dark:text-slate-200">
+                    ✈️ {trip.title}
+                  </h3>
+                </div>
+                
+                {/* Dates */}
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                  {format(new Date(trip.startDate), 'MMM d')} – {format(new Date(trip.endDate), 'MMM d, yyyy')}
                 </p>
+                
+                {/* Collaboration indicator */}
+                {trip.sharingEnabled && (
+                  <div className="flex items-center gap-1 mt-2">
+                    <Users className="h-3 w-3 text-blue-500" />
+                    <span className="text-xs text-blue-600 dark:text-blue-400">Team Collaboration</span>
+                  </div>
+                )}
               </div>
+              
               {/* Visual indicator that trip can be renamed with long press */}
-              <div className="text-[hsl(var(--muted-foreground))] opacity-50">
+              <div className="text-slate-400 opacity-50">
                 <Edit size={16} />
               </div>
             </div>
