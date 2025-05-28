@@ -20,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const tripSchema = z.object({
   title: z.string().min(1, "Trip name is required"),
@@ -35,6 +37,12 @@ const tripSchema = z.object({
   hotel: z.string().optional(),
   hotelLatitude: z.string().optional(),
   hotelLongitude: z.string().optional(),
+  // B2B specific fields
+  tripType: z.enum(["personal", "business"]).default("personal"),
+  clientName: z.string().optional(),
+  projectType: z.string().optional(),
+  organization: z.string().optional(),
+  budget: z.string().optional(),
 });
 
 type TripFormValues = z.infer<typeof tripSchema>;
@@ -66,6 +74,11 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
     hotel: "",
     hotelLatitude: "",
     hotelLongitude: "",
+    tripType: "personal",
+    clientName: "",
+    projectType: "",
+    organization: "",
+    budget: "",
   };
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<TripFormValues>({
@@ -75,6 +88,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
   
   const city = watch("city");
   const hotel = watch("hotel");
+  const tripType = watch("tripType");
   
   // Hotel search state
   const [hotelSearchTerm, setHotelSearchTerm] = useState("");
@@ -239,6 +253,80 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                 <p className="text-xs text-[hsl(var(--destructive))]">{errors.title.message}</p>
               )}
             </div>
+
+            {/* B2B Trip Type Toggle */}
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tripType" className="text-sm font-medium">Trip Type</Label>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-slate-600">Personal</span>
+                  <Switch
+                    id="tripType"
+                    checked={tripType === "business"}
+                    onCheckedChange={(checked) => setValue("tripType", checked ? "business" : "personal")}
+                  />
+                  <span className="text-sm text-slate-600">Business</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Business-specific fields */}
+            {tripType === "business" && (
+              <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                  🏢 Business Trip Details
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="clientName">Client Name</Label>
+                    <Input
+                      id="clientName"
+                      {...register("clientName")}
+                      placeholder="e.g., Acme Corp, Johnson & Associates"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="projectType">Project Type</Label>
+                    <Select onValueChange={(value) => setValue("projectType", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select project type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="conference">Conference/Event</SelectItem>
+                        <SelectItem value="client_meeting">Client Meeting</SelectItem>
+                        <SelectItem value="sales_trip">Sales Trip</SelectItem>
+                        <SelectItem value="team_building">Team Building</SelectItem>
+                        <SelectItem value="training">Training/Workshop</SelectItem>
+                        <SelectItem value="site_visit">Site Visit</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="organization">Organization/Department</Label>
+                    <Input
+                      id="organization"
+                      {...register("organization")}
+                      placeholder="e.g., Sales Team, Marketing Dept"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="budget">Budget (Optional)</Label>
+                    <Input
+                      id="budget"
+                      {...register("budget")}
+                      placeholder="e.g., $5,000, €3,000"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
             
             <div className="grid gap-2">
               <Label htmlFor="city">Destination City</Label>
