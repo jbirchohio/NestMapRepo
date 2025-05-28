@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import TripPlanner from "@/pages/TripPlanner";
 import SimpleShare from "@/pages/SimpleShare";
 import Analytics from "@/pages/Analytics";
+import TeamManagement from "@/components/TeamManagement";
 import NotFound from "@/pages/not-found";
 
 function Router() {

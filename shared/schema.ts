@@ -244,6 +244,29 @@ export const ORGANIZATION_PLANS = {
   ENTERPRISE: 'enterprise'
 } as const;
 
+// Enhanced permission system for organizations
+export const ORGANIZATION_PERMISSIONS = {
+  // Trip permissions
+  VIEW_ALL_TRIPS: "view_all_trips",
+  EDIT_ALL_TRIPS: "edit_all_trips", 
+  CREATE_TRIPS: "create_trips",
+  DELETE_TRIPS: "delete_trips",
+  
+  // Team permissions
+  INVITE_MEMBERS: "invite_members",
+  MANAGE_MEMBERS: "manage_members",
+  VIEW_MEMBERS: "view_members",
+  
+  // Business permissions
+  MANAGE_BUDGETS: "manage_budgets",
+  EXPORT_DATA: "export_data",
+  ACCESS_ANALYTICS: "access_analytics",
+  
+  // Admin permissions
+  MANAGE_ORGANIZATION: "manage_organization",
+  BILLING_ACCESS: "billing_access"
+} as const;
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
