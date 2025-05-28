@@ -1627,13 +1627,14 @@ If you have all required info, return JSON with:
         return [];
       }
 
-      // Search for real hotels with authentic pricing
-      const hotelSearchUrl = `https://test.api.amadeus.com/v3/shopping/hotel-offers`;
-      const cityCode = tripInfo.destinationCode || 'SFO'; // San Francisco
+      // Search for real hotels with authentic pricing using correct v2 API
+      const hotelSearchUrl = `https://test.api.amadeus.com/v2/shopping/hotel-offers`;
+      const cityCode = tripInfo.destinationCode || 'SFO';
       const checkIn = tripInfo.startDate || '2025-06-01';
       const checkOut = tripInfo.endDate || '2025-06-04';
+      const adults = tripInfo.travelers || 1;
       
-      const response = await fetch(`${hotelSearchUrl}?cityCode=${cityCode}&checkInDate=${checkIn}&checkOutDate=${checkOut}&adults=1&roomQuantity=1`, {
+      const response = await fetch(`${hotelSearchUrl}?cityCode=${cityCode}&checkInDate=${checkIn}&checkOutDate=${checkOut}&adults=${adults}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
