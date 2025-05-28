@@ -225,7 +225,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.message);
       }
       
+      // Clear all state
       setUser(null);
+      setUserId(null);
+      setAuthReady(false);
+      
+      // Force reload to clear any cached state
+      window.location.href = '/';
+      
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
