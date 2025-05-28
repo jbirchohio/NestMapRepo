@@ -87,6 +87,12 @@ export const trips = pgTable("trips", {
   // Trip status
   completed: boolean("completed").default(false),
   completedAt: timestamp("completed_at"),
+  // B2B/Client mode fields
+  tripType: text("trip_type").default("personal"), // "personal" or "business"
+  clientName: text("client_name"),
+  projectType: text("project_type"),
+  organization: text("organization"),
+  budget: text("budget"),
   // Metadata
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

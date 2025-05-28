@@ -180,7 +180,7 @@ export default function SwipeableTrip({ trip, onNavigate, onRename }: SwipeableT
                 <div className="flex items-center gap-2 mb-1">
                   <Building2 className="h-3 w-3 text-slate-500" />
                   <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                    Client: {trip.city || "Internal Project"}
+                    Client: {(trip as any).clientName || trip.city || "Internal Project"}
                   </span>
                   <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
                     Shared
