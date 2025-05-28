@@ -27,6 +27,8 @@ import {
 import { generateTripPdf } from "./pdfExport";
 import { getAllTemplates, getTemplateById } from "./tripTemplates";
 import { getAnalytics, exportAnalyticsCSV } from "./analytics";
+import { sendTeamInvitationEmail, sendWelcomeEmail } from "./emailService";
+import { getUserWithRole, ROLE_PERMISSIONS } from "./rbac";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for Supabase integration
@@ -1212,10 +1214,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt
       });
 
-      console.log(`Team invitation created for ${email} to join organization ${inviter.organization_id}`);
+      // Send invitation email
+      const emailSent = await sendTeamInvitationEmail({
+        to: email,
+        inviterName: inviter.display_name || inviter.username,
+        organizationName: `Organization ${inviter.organization_id}`, // You can enhance this with actual org names
+        invitationToken: token,
+        role
+      });
+
+      console.log(`Team invitation created for ${email} to join organization ${inviter.organization_id}${emailSent ? ' (email sent)' : ' (email failed)'}`);
       res.status(201).json({
         ...invitation,
-        organizationName: inviter.organization_id // Include org context in response
+        organizationName: inviter.organization_id, // Include org context in response
+        emailSent
       });
     } catch (error) {
       console.error("Error creating invitation:", error);
@@ -1236,6 +1248,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching invitation:", error);
       res.status(500).json({ error: "Failed to fetch invitation" });
+    }
+  });
+
+  // User permissions API endpoint
+  app.get("/api/user/permissions", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const user = await getUserWithRole(req.user.auth_id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Get role-based permissions
+      const permissions = ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || [];
+      
+      res.json(permissions);
+    } catch (error) {
+      console.error("Error fetching user permissions:", error);
+      res.status(500).json({ error: "Failed to fetch permissions" });
     }
   });
 

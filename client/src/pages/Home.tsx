@@ -181,7 +181,7 @@ export default function Home() {
                       onClick={() => setLocation('/team')}
                       title="Team Management"
                     >
-                      <Users className="h-4 w-4 mr-2" />
+                      <UserRound className="h-4 w-4 mr-2" />
                       Team
                     </Button>
                     <Button 
