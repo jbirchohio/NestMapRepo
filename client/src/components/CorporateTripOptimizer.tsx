@@ -146,7 +146,7 @@ export default function CorporateTripOptimizer() {
   };
 
   const handleApplyChanges = (tripId: number) => {
-    setAppliedChanges(prev => new Set([...prev, tripId]));
+    setAppliedChanges(prev => new Set([...Array.from(prev), tripId]));
     toast({
       title: "Changes Applied",
       description: "Trip optimization has been applied successfully.",
