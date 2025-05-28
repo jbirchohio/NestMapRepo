@@ -1450,10 +1450,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Search for real flights with authentic pricing
       const flightUrl = `https://test.api.amadeus.com/v2/shopping/flight-offers`;
-      const origin = tripInfo.origin || 'ORD';
-      const destination = tripInfo.destination || 'NYC';
       
-      const response = await fetch(`${flightUrl}?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${tripInfo.startDate}&adults=1&max=5`, {
+      // Amadeus needs IATA airport codes, let's use common ones
+      const origin = tripInfo.originCode || 'CHI'; // Chicago
+      const destination = tripInfo.destinationCode || 'SFO'; // San Francisco
+      const departureDate = tripInfo.startDate || '2025-06-01';
+      
+      const response = await fetch(`${flightUrl}?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=1&max=5`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -1492,9 +1495,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Search for real hotels with authentic pricing
       const hotelSearchUrl = `https://test.api.amadeus.com/v3/shopping/hotel-offers`;
-      const cityCode = tripInfo.destinationCode || 'NYC';
+      const cityCode = tripInfo.destinationCode || 'SFO'; // San Francisco
+      const checkIn = tripInfo.startDate || '2025-06-01';
+      const checkOut = tripInfo.endDate || '2025-06-04';
       
-      const response = await fetch(`${hotelSearchUrl}?cityCode=${cityCode}&checkInDate=${tripInfo.startDate}&checkOutDate=${tripInfo.endDate}&adults=1&roomQuantity=1`, {
+      const response = await fetch(`${hotelSearchUrl}?cityCode=${cityCode}&checkInDate=${checkIn}&checkOutDate=${checkOut}&adults=1&roomQuantity=1`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
