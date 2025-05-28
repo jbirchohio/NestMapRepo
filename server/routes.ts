@@ -1310,6 +1310,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Trip generation endpoint (prompt-based)
+  app.post("/api/generate-ai-trip", async (req: Request, res: Response) => {
+    try {
+      const { prompt } = req.body;
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+
+      console.log("Generating AI trip from prompt:", prompt);
+
+      // Create a simple mock trip structure for now
+      const generatedTrip = {
+        tripSummary: {
+          title: "AI-Generated Business Trip",
+          description: "Generated from your requirements",
+          duration: 3,
+          totalCost: 2500,
+          carbonFootprint: 150
+        },
+        flights: [
+          {
+            airline: "American Airlines",
+            flightNumber: "AA123",
+            route: "ORD → JFK",
+            departure: "8:00 AM",
+            arrival: "11:30 AM",
+            price: 450,
+            cabin: "Business"
+          }
+        ],
+        accommodation: [
+          {
+            name: "Business Hotel Manhattan",
+            address: "123 Business District, NYC",
+            stars: 4,
+            pricePerNight: 300,
+            checkIn: "Mar 15",
+            checkOut: "Mar 17"
+          }
+        ],
+        activities: [
+          {
+            title: "Client Meeting",
+            description: "Important business meeting with key stakeholders",
+            startTime: "2:00 PM",
+            endTime: "4:00 PM",
+            category: "Business"
+          },
+          {
+            title: "Business Dinner",
+            description: "Networking dinner at upscale restaurant",
+            startTime: "7:00 PM",
+            endTime: "9:00 PM",
+            category: "Dining"
+          }
+        ],
+        meals: [
+          {
+            restaurant: "Executive Steakhouse",
+            cuisine: "American",
+            location: "Manhattan",
+            time: "7:00 PM",
+            estimatedCost: 120,
+            type: "Dinner"
+          }
+        ],
+        recommendations: [
+          "Book flights early for better prices",
+          "Consider hotel near meeting location",
+          "Arrange ground transportation in advance"
+        ],
+        conflicts: []
+      };
+
+      console.log("AI trip generated successfully");
+      res.json(generatedTrip);
+    } catch (error) {
+      console.error("Error generating AI trip:", error);
+      res.status(500).json({ 
+        message: "Could not generate AI trip", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Analytics endpoints
   app.get("/api/analytics", async (req: Request, res: Response) => {
     try {
