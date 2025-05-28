@@ -1518,6 +1518,25 @@ If you have all required info, return JSON with:
     return airportMap[city] || city.substring(0, 3).toUpperCase();
   }
 
+  // Helper function to convert destination to hotel city code
+  function getHotelCityCode(destination: string): string {
+    const cityCodeMap: { [key: string]: string } = {
+      'japan': 'TYO',
+      'tokyo': 'TYO',
+      'osaka': 'OSA',
+      'paris': 'PAR',
+      'london': 'LON',
+      'new york': 'NYC',
+      'san francisco': 'SFO',
+      'los angeles': 'LAX',
+      'chicago': 'CHI',
+      'miami': 'MIA'
+    };
+    
+    const city = destination?.toLowerCase() || '';
+    return cityCodeMap[city] || 'TYO'; // Default to Tokyo
+  }
+
   async function analyzePromptWithAI(prompt: string) {
     // Use OpenAI to properly analyze the prompt and extract trip requirements
     try {
@@ -1596,18 +1615,27 @@ If you have all required info, return JSON with:
         return [];
       }
 
-      // Search for real flights with authentic pricing
+      // Search for real flights with authentic pricing using exact Amadeus API spec
       const flightUrl = `https://test.api.amadeus.com/v2/shopping/flight-offers`;
       
-      // Amadeus needs IATA airport codes, let's use common ones
-      const origin = tripInfo.originCode || 'CHI'; // Chicago
-      const destination = tripInfo.destinationCode || 'SFO'; // San Francisco
+      const origin = tripInfo.originCode || 'SFO';
+      const destination = tripInfo.destinationCode || 'NRT';
       const departureDate = tripInfo.startDate || '2025-06-01';
+      const adults = tripInfo.travelers || 1;
       
-      const response = await fetch(`${flightUrl}?originLocationCode=${origin}&destinationLocationCode=${destination}&departureDate=${departureDate}&adults=1&max=5`, {
+      // Build query string exactly as per Amadeus documentation
+      const queryParams = new URLSearchParams({
+        originLocationCode: origin,
+        destinationLocationCode: destination,
+        departureDate: departureDate,
+        adults: adults.toString(),
+        max: '5',
+        currencyCode: 'USD'
+      });
+      
+      const response = await fetch(`${flightUrl}?${queryParams}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -1641,17 +1669,27 @@ If you have all required info, return JSON with:
         return [];
       }
 
-      // Search for real hotels with authentic pricing using correct v2 API
+      // Search for real hotels with authentic pricing using correct Amadeus API
       const hotelSearchUrl = `https://test.api.amadeus.com/v2/shopping/hotel-offers`;
-      const cityCode = tripInfo.destinationCode || 'SFO';
+      const cityCode = getHotelCityCode(tripInfo.destination); // Use city code instead of airport code
       const checkIn = tripInfo.startDate || '2025-06-01';
       const checkOut = tripInfo.endDate || '2025-06-04';
       const adults = tripInfo.travelers || 1;
       
-      const response = await fetch(`${hotelSearchUrl}?cityCode=${cityCode}&checkInDate=${checkIn}&checkOutDate=${checkOut}&adults=${adults}`, {
+      // Build query string exactly as per Amadeus hotel API spec
+      const hotelParams = new URLSearchParams({
+        cityCode: cityCode,
+        checkInDate: checkIn,
+        checkOutDate: checkOut,
+        adults: adults.toString(),
+        radius: '5',
+        radiusUnit: 'KM',
+        ratings: '3,4,5'
+      });
+      
+      const response = await fetch(`${hotelSearchUrl}?${hotelParams}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
