@@ -42,23 +42,35 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
   };
   const loadingCost = false;
 
-  // Generate proposal function for demo
+  // Generate actual PDF proposal
   const generateProposal = useMutation({
     mutationFn: async (data: typeof formData) => {
-      // Demo: Show loading state and success message
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return new Blob(); // Placeholder for demo
+      const response = await apiRequest("POST", `/api/trips/${tripId}/generate-proposal`, data);
+      if (!response.ok) {
+        throw new Error("Failed to generate proposal");
+      }
+      return response.blob();
     },
-    onSuccess: () => {
+    onSuccess: (blob) => {
+      // Download the PDF
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Travel_Proposal_${formData.clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${tripTitle.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
       toast({
-        title: "Demo: Proposal Generated!",
-        description: `Professional PDF proposal created for ${formData.clientName}. In production, this would download a branded PDF with cost breakdown and itinerary.`,
+        title: "Proposal Generated!",
+        description: "Your professional travel proposal has been downloaded successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
-        title: "Demo Error",
-        description: "This is a demo interface. Connect to live trip data to generate real proposals.",
+        title: "Generation Failed",
+        description: "Failed to generate proposal. Please try again.",
         variant: "destructive",
       });
     }
