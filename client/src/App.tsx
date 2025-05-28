@@ -14,6 +14,7 @@ import TripOptimizer from "@/pages/TripOptimizer";
 import Settings from "@/pages/Settings";
 import TeamManagement from "@/components/TeamManagement";
 import BillingDashboard from "@/components/BillingDashboard";
+import ProposalCenter from "@/pages/ProposalCenter";
 import NotFound from "@/pages/not-found";
 
 function Router() {
