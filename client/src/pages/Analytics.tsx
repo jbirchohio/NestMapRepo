@@ -1,11 +1,12 @@
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
 import CorporateTripOptimizer from "@/components/CorporateTripOptimizer";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
+import BookingSystem from "@/components/BookingSystem";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Brain, BarChart3 } from "lucide-react";
+import { Shield, Brain, BarChart3, Plane } from "lucide-react";
 
 export default function Analytics() {
   const { user } = useAuth();
@@ -60,14 +61,18 @@ export default function Analytics() {
         </div>
         
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              Analytics Dashboard
+              Analytics
             </TabsTrigger>
             <TabsTrigger value="optimizer" className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
               Trip Optimizer
+            </TabsTrigger>
+            <TabsTrigger value="bookings" className="flex items-center gap-2">
+              <Plane className="h-4 w-4" />
+              Bookings
             </TabsTrigger>
             <TabsTrigger value="whitelabel" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
@@ -81,6 +86,10 @@ export default function Analytics() {
           
           <TabsContent value="optimizer">
             <CorporateTripOptimizer />
+          </TabsContent>
+          
+          <TabsContent value="bookings">
+            <BookingSystem />
           </TabsContent>
           
           <TabsContent value="whitelabel">

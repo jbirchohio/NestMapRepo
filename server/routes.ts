@@ -838,6 +838,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Flight search endpoint
+  app.post("/api/bookings/flights/search", async (req: Request, res: Response) => {
+    try {
+      const { origin, destination, departureDate, returnDate, passengers, cabin, directFlights } = req.body;
+      
+      if (!origin || !destination || !departureDate || !passengers) {
+        return res.status(400).json({ message: "Missing required search parameters" });
+      }
+
+      const { searchFlights } = await import('./bookingProviders');
+      const flights = await searchFlights({
+        origin,
+        destination,
+        departureDate,
+        returnDate,
+        passengers,
+        cabin: cabin || 'economy',
+        directFlights
+      });
+      
+      res.json({ flights });
+    } catch (error: any) {
+      console.error("Flight search error:", error);
+      res.status(500).json({ message: "Unable to search flights: " + error.message });
+    }
+  });
+
+  // Hotel search endpoint
+  app.post("/api/bookings/hotels/search", async (req: Request, res: Response) => {
+    try {
+      const { destination, checkIn, checkOut, guests, rooms, starRating, amenities } = req.body;
+      
+      if (!destination || !checkIn || !checkOut || !guests) {
+        return res.status(400).json({ message: "Missing required search parameters" });
+      }
+
+      const { searchHotels } = await import('./bookingProviders');
+      const hotels = await searchHotels({
+        destination,
+        checkIn,
+        checkOut,
+        guests,
+        rooms: rooms || 1,
+        starRating,
+        amenities
+      });
+      
+      res.json({ hotels });
+    } catch (error: any) {
+      console.error("Hotel search error:", error);
+      res.status(500).json({ message: "Unable to search hotels: " + error.message });
+    }
+  });
+
+  // Create booking endpoint
+  app.post("/api/bookings/create", async (req: Request, res: Response) => {
+    try {
+      const { type, bookingData, tripId } = req.body;
+      
+      if (!type || !bookingData) {
+        return res.status(400).json({ message: "Missing booking type or data" });
+      }
+
+      const { createBooking } = await import('./bookingProviders');
+      const booking = await createBooking(type, bookingData);
+      
+      // Save booking to trip if tripId provided
+      if (tripId) {
+        // Here you would save the booking details to the trip
+        console.log(`Booking ${booking.bookingId} created for trip ${tripId}`);
+      }
+      
+      res.json(booking);
+    } catch (error: any) {
+      console.error("Booking creation error:", error);
+      res.status(500).json({ message: "Unable to create booking: " + error.message });
+    }
+  });
+
   app.post("/api/weather/forecast", async (req: Request, res: Response) => {
     try {
       const { location, dates } = req.body;
