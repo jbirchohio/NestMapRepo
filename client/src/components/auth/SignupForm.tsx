@@ -6,16 +6,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Building2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Signup form validation schema
+// Enhanced B2B signup form validation schema
 const signupSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
+  email: z.string().email({ message: "Please enter a valid business email address" }),
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  passwordConfirm: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  passwordConfirm: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  // Business information
+  company: z.string().min(2, { message: "Company name is required" }),
+  jobTitle: z.string().min(2, { message: "Job title is required" }),
+  teamSize: z.string().min(1, { message: "Please select team size" }),
+  useCase: z.string().min(1, { message: "Please select primary use case" }),
 }).refine((data) => data.password === data.passwordConfirm, {
   message: "Passwords do not match",
   path: ["passwordConfirm"],
@@ -40,6 +46,10 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
       name: "",
       password: "",
       passwordConfirm: "",
+      company: "",
+      jobTitle: "",
+      teamSize: "",
+      useCase: "",
     },
   });
 
