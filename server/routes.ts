@@ -1194,7 +1194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get the inviter's organization context
       const inviter = await storage.getUser(inviterUserId);
-      if (!inviter || !inviter.organizationId) {
+      if (!inviter || !inviter.organization_id) {
         return res.status(403).json({ error: "Must be part of an organization to invite team members" });
       }
 
@@ -1205,17 +1205,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const invitation = await storage.createInvitation({
         email,
-        organizationId: inviter.organizationId, // Inherit organization from inviter
+        organizationId: inviter.organization_id, // Inherit organization from inviter
         invitedBy: inviterUserId,
         role,
         token,
         expiresAt
       });
 
-      console.log(`Team invitation created for ${email} to join organization ${inviter.organizationId}`);
+      console.log(`Team invitation created for ${email} to join organization ${inviter.organization_id}`);
       res.status(201).json({
         ...invitation,
-        organizationName: inviter.organizationId // Include org context in response
+        organizationName: inviter.organization_id // Include org context in response
       });
     } catch (error) {
       console.error("Error creating invitation:", error);

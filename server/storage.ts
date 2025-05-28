@@ -574,7 +574,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(users)
       .set({
-        organizationId: invitation.organizationId,
+        organization_id: invitation.organizationId,
         role: invitation.role
       })
       .where(eq(users.id, userId));
