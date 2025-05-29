@@ -1962,6 +1962,43 @@ Include realistic business activities, meeting times, dining recommendations, an
           }));
         }
 
+        // Enhance activities with weather-based suggestions and time constraints
+        try {
+          const activityResponse = await fetch(`http://localhost:5000/api/ai/weather-activities`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              location: tripInfo.destination,
+              date: tripInfo.startDate,
+              weatherCondition: realData.weather?.list?.[0]?.weather?.[0]?.main || 'Clear'
+            })
+          });
+
+          if (activityResponse.ok) {
+            const activityData = await activityResponse.json();
+            if (activityData.activities) {
+              // Add time-specific activities based on user constraints
+              const timeConstraints = tripInfo.preferences || '';
+              const isEveningRequest = timeConstraints.includes('after 5pm') || timeConstraints.includes('evening');
+              
+              const enhancedActivities = activityData.activities.map((activity: any) => ({
+                ...activity,
+                startTime: isEveningRequest ? '17:30' : activity.startTime || '10:00',
+                endTime: isEveningRequest ? '21:00' : activity.endTime || '12:00',
+                timeNote: isEveningRequest ? 'Evening activity after 5pm' : null,
+                weatherAppropriate: true
+              }));
+              
+              // Add weather-appropriate activities to the trip
+              trip.activities = [...(trip.activities || []), ...enhancedActivities.slice(0, 3)];
+            }
+          }
+        } catch (error: any) {
+          console.log("Activity enhancement failed:", error.message);
+        }
+
         return trip;
       }
     } catch (error) {
