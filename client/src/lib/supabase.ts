@@ -4,19 +4,26 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Only create client if valid credentials exist
-let supabase: any = null;
-
-try {
-  if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
-  }
-} catch (error) {
-  console.warn('Supabase client initialization failed - using fallback mode');
+// Validate environment variables
+if (!supabaseUrl) {
+  console.error('VITE_SUPABASE_URL is required but not set');
 }
 
-// Export supabase client or mock object
-export { supabase };
+if (!supabaseAnonKey) {
+  console.error('VITE_SUPABASE_ANON_KEY is required but not set');
+}
+
+// Validate URL format
+let validUrl = supabaseUrl;
+if (supabaseUrl && !supabaseUrl.startsWith('http')) {
+  validUrl = `https://${supabaseUrl}`;
+}
+
+// Create the Supabase client with error handling
+export const supabase = createClient(
+  validUrl || 'https://placeholder.supabase.co', 
+  supabaseAnonKey || 'placeholder-key'
+);
 
 // Auth helper functions
 export const auth = {
