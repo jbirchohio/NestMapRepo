@@ -171,7 +171,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await auth.signUp(email, password, metadata);
       
       if (error) {
-        throw new Error(error.message);
+        console.error('Supabase signup error:', error);
+        throw new Error(error.message || 'Failed to create account with authentication service');
       }
       
       if (data.user) {
@@ -213,10 +214,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (err: any) {
       console.error('Error signing up:', err);
-      setError(err.message);
+      const errorMessage = err.message || 'Authentication service unavailable. Please check your credentials.';
+      setError(errorMessage);
       toast({
         title: "Sign-up failed",
-        description: err.message,
+        description: errorMessage,
         variant: "destructive",
       });
       throw err;
