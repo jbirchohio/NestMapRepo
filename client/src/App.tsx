@@ -17,6 +17,8 @@ import BillingDashboard from "@/components/BillingDashboard";
 import ProposalCenter from "@/pages/ProposalCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
 import EnterpriseDashboard from "@/pages/EnterpriseDashboard";
+import CorporateDashboard from "@/pages/CorporateDashboard";
+import AgencyDashboard from "@/pages/AgencyDashboard";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import CalendarSettings from "@/pages/CalendarSettings";
@@ -39,6 +41,8 @@ function Router() {
         <Route path="/billing" component={BillingDashboard} />
         <Route path="/proposals" component={ProposalCenter} />
         <Route path="/enterprise" component={EnterpriseDashboard} />
+        <Route path="/dashboard/corporate" component={CorporateDashboard} />
+        <Route path="/dashboard/agency" component={AgencyDashboard} />
         <Route path="/profile" component={ProfileSettings} />
         <Route path="/help" component={HelpCenter} />
         <Route path="/calendar" component={CalendarSettings} />

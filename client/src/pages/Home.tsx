@@ -13,6 +13,7 @@ import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
+import RoleBasedRedirect from "@/components/RoleBasedRedirect";
 import { UserRound, LogOut, BarChart3, CheckCircle, Clock, Plus, Users } from "lucide-react";
 import { useEffect } from "react";
 
