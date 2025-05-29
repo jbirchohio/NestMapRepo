@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
@@ -17,6 +17,11 @@ export default function AuthModal({
   onSuccess
 }: AuthModalProps) {
   const [view, setView] = useState<"login" | "signup">(defaultView);
+
+  // Update view when defaultView changes
+  useEffect(() => {
+    setView(defaultView);
+  }, [defaultView]);
 
   const handleSuccess = () => {
     if (onSuccess) {

@@ -20,13 +20,11 @@ import EnterpriseDashboard from "@/pages/EnterpriseDashboard";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import CalendarSettings from "@/pages/CalendarSettings";
-import EmergencyLogout from "@/components/EmergencyLogout";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <>
-      <EmergencyLogout />
       <MainNavigation />
       <Switch>
         <Route path="/" component={Home} />
