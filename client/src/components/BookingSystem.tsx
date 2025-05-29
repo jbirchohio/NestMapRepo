@@ -209,6 +209,44 @@ export default function BookingSystem() {
     }
   };
 
+  const formatFlightTime = (isoString: string) => {
+    if (!isoString) return '--:--';
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } catch {
+      return '--:--';
+    }
+  };
+
+  const formatFlightDate = (isoString: string) => {
+    if (!isoString) return '';
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const formatDuration = (duration: string) => {
+    if (!duration) return '';
+    // Convert PT8H30M format to "8h 30m"
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+    if (!match) return duration;
+    
+    const hours = match[1] ? `${match[1]}h` : '';
+    const minutes = match[2] ? ` ${match[2]}m` : '';
+    return `${hours}${minutes}`.trim();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -378,7 +416,7 @@ export default function BookingSystem() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        <span>{flight.duration}</span>
+                        <span>{formatDuration(flight.duration)}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
@@ -386,7 +424,10 @@ export default function BookingSystem() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
-                        <span>{flight.departureTime}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{formatFlightTime(flight.departureTime)} - {formatFlightTime(flight.arrivalTime)}</span>
+                          <span className="text-xs text-muted-foreground">{formatFlightDate(flight.departureTime)}</span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
