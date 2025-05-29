@@ -189,11 +189,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: email,
               display_name: metadata?.display_name || username,
               avatar_url: metadata?.avatar_url || null,
-              roleType: metadata?.role_type || 'corporate',
+              role_type: metadata?.role_type || 'corporate',
               company: metadata?.company || null,
-              jobTitle: metadata?.job_title || null,
-              teamSize: metadata?.team_size || null,
-              useCase: metadata?.use_case || null,
+              job_title: metadata?.job_title || null,
+              team_size: metadata?.team_size || null,
+              use_case: metadata?.use_case || null,
             }),
           });
           

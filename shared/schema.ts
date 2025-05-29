@@ -13,6 +13,10 @@ export const users = pgTable("users", {
   role: text("role").default("user"), // System-wide role: admin, manager, user, guest
   role_type: text("role_type").default("corporate"), // Business mode: corporate, agency
   organization_id: integer("organization_id"), // For B2B multi-tenant support
+  company: text("company"), // Company name
+  job_title: text("job_title"), // Job title
+  team_size: text("team_size"), // Team size range
+  use_case: text("use_case"), // Primary use case
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -47,6 +51,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
   role_type: true,
   organization_id: true,
+  company: true,
+  job_title: true,
+  team_size: true,
+  use_case: true,
 });
 
 export const insertOrganizationSchema = createInsertSchema(organizations).pick({
