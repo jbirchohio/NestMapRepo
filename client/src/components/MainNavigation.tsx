@@ -2,6 +2,14 @@ import React from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +25,11 @@ import {
   Bell,
   User,
   LogOut,
-  Sparkles
+  Sparkles,
+  UserCircle,
+  Edit3,
+  Key,
+  HelpCircle
 } from 'lucide-react';
 
 export default function MainNavigation() {
@@ -199,35 +211,92 @@ export default function MainNavigation() {
                 {user.role || 'User'}
               </Badge>
               
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => {
-                  toast({
-                    title: "Account Information",
-                    description: `Role: ${user.role || 'User'} | ID: ${user.id} | Email: ${user.email}`,
-                  });
-                }}
-              >
-                <User className="h-4 w-4" />
-                <span className="ml-1 hidden sm:inline">
-                  {user.email}
-                </span>
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => {
-                  signOut();
-                  toast({
-                    title: "Logged out",
-                    description: "You have been successfully logged out",
-                  });
-                }}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <UserCircle className="h-4 w-4" />
+                    <span className="ml-1 hidden sm:inline">
+                      {user.email}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.email}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.role || 'User'} • ID: {user.id}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem
+                    onClick={() => {
+                      toast({
+                        title: "Profile Settings",
+                        description: "Profile management coming soon",
+                      });
+                    }}
+                  >
+                    <Edit3 className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem
+                    onClick={() => {
+                      toast({
+                        title: "Account Settings",
+                        description: "Account management coming soon",
+                      });
+                    }}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Account Settings
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem
+                    onClick={() => {
+                      toast({
+                        title: "Change Password",
+                        description: "Password management coming soon",
+                      });
+                    }}
+                  >
+                    <Key className="mr-2 h-4 w-4" />
+                    Change Password
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem
+                    onClick={() => {
+                      toast({
+                        title: "Help & Support",
+                        description: "Support documentation coming soon",
+                      });
+                    }}
+                  >
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    Help & Support
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem
+                    onClick={() => {
+                      signOut();
+                      toast({
+                        title: "Logged out",
+                        description: "You have been successfully logged out",
+                      });
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
