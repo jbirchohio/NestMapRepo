@@ -238,16 +238,11 @@ export default function MainNavigation() {
                     </Link>
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem
-                    onClick={() => {
-                      toast({
-                        title: "Account Settings",
-                        description: "Account management coming soon",
-                      });
-                    }}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Account Settings
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Account Settings
+                    </Link>
                   </DropdownMenuItem>
                   
                   <DropdownMenuItem
