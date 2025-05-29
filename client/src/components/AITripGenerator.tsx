@@ -65,26 +65,19 @@ export default function AITripGenerator() {
     }
   });
 
-  const generateProposalMutation = useMutation({
-    mutationFn: async (data: { tripData: any; clientInfo: any }) => {
-      const response = await apiRequest('POST', '/api/generate-proposal', data);
+  const shareItineraryMutation = useMutation({
+    mutationFn: async (trackingCode: string) => {
+      const response = await apiRequest('GET', `/api/track/${trackingCode}`);
       if (!response.ok) {
-        throw new Error('Failed to generate proposal');
+        throw new Error('Failed to get sharing info');
       }
-      return response.blob();
+      return response.json();
     },
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = 'travel-proposal.pdf';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
+    onSuccess: (data) => {
+      navigator.clipboard.writeText(data.shareUrl);
       toast({
-        title: "Proposal Generated",
-        description: "Professional PDF proposal downloaded",
+        title: "Share Link Copied",
+        description: "Mobile tracking link copied to clipboard",
       });
     }
   });
@@ -109,15 +102,8 @@ export default function AITripGenerator() {
     });
   };
 
-  const handleGenerateProposal = () => {
-    generateProposalMutation.mutate({
-      tripData: generatedTrip,
-      clientInfo: {
-        email: clientEmail,
-        name: "Client",
-        company: "Company Name"
-      }
-    });
+  const handleShareItinerary = (trackingCode: string) => {
+    shareItineraryMutation.mutate(trackingCode);
   };
 
   const generateTripMutation = useMutation({
@@ -472,9 +458,9 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
             </Alert>
           )}
 
-          {/* B2B Action Buttons */}
+          {/* Mobile Client Tracking */}
           <div className="mt-6 space-y-4 border-t pt-4">
-            <h3 className="font-semibold text-gray-900">Client Actions</h3>
+            <h3 className="font-semibold text-gray-900">Client Tracking</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Button 
                 onClick={handleCreateItinerary}
@@ -482,17 +468,19 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 disabled={createItineraryMutation.isPending}
               >
                 <Send className="w-4 h-4 mr-2" />
-                {createItineraryMutation.isPending ? "Creating..." : "Create Client Itinerary"}
+                {createItineraryMutation.isPending ? "Creating..." : "Send Mobile Tracking Link"}
               </Button>
               
-              <Button 
-                onClick={handleGenerateProposal}
-                variant="outline"
-                disabled={generateProposalMutation.isPending}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {generateProposalMutation.isPending ? "Generating..." : "Generate Proposal PDF"}
-              </Button>
+              {generatedTrip?.clientAccess?.trackingCode && (
+                <Button 
+                  onClick={() => handleShareItinerary(generatedTrip.clientAccess.trackingCode)}
+                  variant="outline"
+                  disabled={shareItineraryMutation.isPending}
+                >
+                  <Share className="w-4 h-4 mr-2" />
+                  {shareItineraryMutation.isPending ? "Copying..." : "Copy Tracking Link"}
+                </Button>
+              )}
             </div>
           </div>
 

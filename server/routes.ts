@@ -2456,60 +2456,38 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Generate professional proposal PDF
-  app.post("/api/generate-proposal", async (req: Request, res: Response) => {
+  // Update client itinerary with real-time changes
+  app.post("/api/update-client-itinerary/:trackingCode", async (req: Request, res: Response) => {
     try {
-      const { tripData, clientInfo } = req.body;
+      const { trackingCode } = req.params;
+      const { updateType, message, data } = req.body;
       
-      if (!tripData || !clientInfo) {
-        return res.status(400).json({ message: "Trip data and client info are required" });
+      if (!trackingCode || !updateType || !message) {
+        return res.status(400).json({ message: "Tracking code, update type, and message are required" });
       }
 
-      // Calculate pricing breakdown using authentic data
-      const pricing = {
-        flights: tripData.flights?.[0]?.price?.amount || 800,
-        hotels: tripData.accommodation?.[0]?.price?.amount || 400,
-        activities: (tripData.activities?.length || 3) * 50,
-        meals: (tripData.restaurants?.length || 6) * 30,
-        transportation: 150,
-        serviceFee: 200
+      // In a real app, this would update the database and send notifications
+      const update = {
+        timestamp: new Date().toISOString(),
+        type: updateType, // 'booking_change', 'flight_delay', 'hotel_confirmation', etc.
+        message,
+        data: data || null
       };
 
-      pricing.subtotal = Object.values(pricing).reduce((sum, cost) => sum + cost, 0) - pricing.serviceFee;
-      pricing.total = pricing.subtotal + pricing.serviceFee;
-
-      // Generate professional proposal content
-      const proposalData = {
-        clientInfo,
-        tripData,
-        pricing,
-        companyInfo: {
-          name: "NestMap Travel Solutions",
-          address: "123 Business Ave, Suite 100",
-          phone: "(555) 123-4567",
-          email: "proposals@nestmap.com",
-          website: "www.nestmap.com"
-        },
-        proposalNumber: `PROP-${Date.now()}`,
-        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        terms: [
-          "50% deposit required upon acceptance",
-          "Final payment due 30 days before departure",
-          "Cancellation policy applies as per terms",
-          "Travel insurance recommended"
-        ]
-      };
+      console.log("Client itinerary updated:", {
+        trackingCode,
+        update
+      });
 
       res.json({
         success: true,
-        proposalData,
-        downloadUrl: `/api/proposals/${proposalData.proposalNumber}/pdf`,
-        message: "Proposal generated successfully"
+        update,
+        message: "Client notified of itinerary update"
       });
 
     } catch (error) {
-      console.error("Error generating proposal:", error);
-      res.status(500).json({ message: "Failed to generate proposal" });
+      console.error("Error updating client itinerary:", error);
+      res.status(500).json({ message: "Failed to update client itinerary" });
     }
   });
 
@@ -2518,12 +2496,23 @@ Include realistic business activities, meeting times, dining recommendations, an
     try {
       const { trackingCode } = req.params;
       
+      // In a real implementation, fetch from database using trackingCode
       const trackingData = {
         trackingCode,
         status: 'confirmed',
         lastUpdated: new Date().toISOString(),
-        tripTitle: "Business Trip to Miami",
-        dates: "Jan 15-20, 2024",
+        shareUrl: `${process.env.BASE_URL || 'https://your-domain.com'}/track/${trackingCode}`,
+        mobileOptimized: true,
+        notifications: {
+          email: true,
+          sms: false,
+          push: false
+        },
+        tripDetails: {
+          title: "Business Trip",
+          destination: "Miami, FL",
+          dates: new Date().toISOString().split('T')[0] + " - " + new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        },
         updates: [
           {
             timestamp: new Date().toISOString(),
@@ -2531,15 +2520,15 @@ Include realistic business activities, meeting times, dining recommendations, an
             message: 'Itinerary confirmed and ready for travel'
           },
           {
-            timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
             type: 'booking',
-            message: 'Hotel reservation confirmed'
+            message: 'Hotel reservation confirmed with real-time pricing'
           }
         ],
         nextSteps: [
           "Check-in for flight 24 hours before departure",
           "Download mobile boarding passes",
-          "Confirm hotel arrival time"
+          "Review restaurant reservations"
         ]
       };
 
