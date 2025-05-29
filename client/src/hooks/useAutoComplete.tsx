@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { API_ENDPOINTS } from '@/lib/constants';
@@ -10,16 +10,25 @@ interface UseAutoCompleteProps {
 }
 
 export function useAutoComplete({ activities, tripId }: UseAutoCompleteProps) {
+  const [processedActivityIds, setProcessedActivityIds] = useState<Set<number>>(new Set());
+  const processingRef = useRef<Set<number>>(new Set());
+
   const autoCompleteMutation = useMutation({
     mutationFn: async (activityId: number) => {
       return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activityId}/toggle-complete`, {
         completed: true
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, activityId) => {
+      // Mark this activity as processed to prevent re-processing
+      setProcessedActivityIds(prev => new Set(prev).add(activityId));
+      processingRef.current.delete(activityId);
       // Invalidate activities query to refresh the list
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
     },
+    onError: (_, activityId) => {
+      processingRef.current.delete(activityId);
+    }
   });
 
   useEffect(() => {
@@ -62,8 +71,12 @@ export function useAutoComplete({ activities, tripId }: UseAutoCompleteProps) {
           const activity = dayActivities[i];
           const nextActivity = dayActivities[i + 1]; // Next activity same day
           
-          // Skip if already completed or no time set
-          if (activity.completed || !activity.time) continue;
+          // Skip if already completed, no time set, or already processed/processing
+          if (activity.completed || !activity.time || 
+              processedActivityIds.has(activity.id) || 
+              processingRef.current.has(activity.id)) {
+            continue;
+          }
           
           // Get the dates for comparison
           const activityDateStr = new Date(activity.date).toDateString();
