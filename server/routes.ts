@@ -1655,52 +1655,104 @@ If you have all required info, return JSON with:
   }
 
   async function searchRealHotels(tripInfo: any) {
-    // Use Amadeus Hotel Search API for authentic hotel data
+    // Use Amadeus Hotel Search API for authentic hotel data (test environment)
     try {
-      if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
-        console.log("Amadeus credentials needed for authentic hotel data");
+      if (!process.env.AMADEUS_TEST_API_KEY || !process.env.AMADEUS_TEST_API_SECRET) {
+        console.log("Amadeus test credentials needed for authentic hotel data");
         return [];
       }
 
-      // Get OAuth token for Amadeus
-      const token = await getAmadeusToken();
+      // Get OAuth token for Amadeus test environment
+      const token = await getAmadeusTestToken();
       if (!token) {
-        console.log("Failed to get Amadeus auth token for hotels");
+        console.log("Failed to get Amadeus test auth token for hotels");
         return [];
       }
 
-      // Search for hotels directly by city code (simpler approach)
-      const hotelSearchUrl = `https://api.amadeus.com/v2/shopping/hotel-offers`;
+      // First get hotel IDs by location
+      const hotelLocationUrl = `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city`;
       const cityCode = getHotelCityCode(tripInfo.destination);
-      const checkIn = tripInfo.startDate || '2025-06-01';
-      const checkOut = tripInfo.endDate || '2025-06-04';
-      const adults = tripInfo.travelers || 1;
       
-      const hotelParams = new URLSearchParams({
+      const locationParams = new URLSearchParams({
         cityCode: cityCode,
-        checkInDate: checkIn,
-        checkOutDate: checkOut,
-        adults: adults.toString(),
-        currency: 'USD',
-        includeClosed: 'false'
+        radius: '5',
+        radiusUnit: 'KM',
+        hotelSource: 'ALL'
       });
       
-      const response = await fetch(`${hotelSearchUrl}?${hotelParams}`, {
+      const locationResponse = await fetch(`${hotelLocationUrl}?${locationParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      if (!locationResponse.ok) {
+        console.log("Hotel location search failed:", locationResponse.status);
+        return [];
+      }
+
+      const locationData = await locationResponse.json();
+      const hotelIds = locationData.data?.slice(0, 5).map((hotel: any) => hotel.hotelId) || [];
+      
+      if (hotelIds.length === 0) {
+        console.log("No hotels found in location");
+        return [];
+      }
+
+      // Now search for hotel offers using the hotel IDs with v3 endpoint
+      const hotelSearchUrl = `https://test.api.amadeus.com/v3/shopping/hotel-offers`;
+      const checkIn = tripInfo.startDate || '2025-06-01';
+      const checkOut = tripInfo.endDate || '2025-06-04';
+      const adults = tripInfo.travelers || 1;
+      
+      const hotelParams = new URLSearchParams({
+        hotelIds: hotelIds.join(','),
+        checkInDate: checkIn,
+        checkOutDate: checkOut,
+        adults: adults.toString(),
+        currency: 'USD'
+      });
+      
+      const fullUrl = `${hotelSearchUrl}?${hotelParams}`;
+      console.log("Amadeus hotel search URL:", fullUrl);
+      
+      const response = await fetch(fullUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log("Hotel search response status:", response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        console.log("Retrieved authentic hotel data from Amadeus");
-        return data.data || [];
+        console.log("Retrieved authentic hotel data from Amadeus test API");
+        console.log("Number of hotels found:", data.data?.length || 0);
+        
+        // Extract all hotel details directly from the response to avoid offer ID expiration
+        const hotels = data.data?.map((hotel: any) => {
+          const offer = hotel.offers?.[0]; // Get first offer
+          return {
+            name: hotel.hotel?.name || 'Unknown Hotel',
+            address: `${hotel.hotel?.address?.cityName || ''}, ${hotel.hotel?.address?.countryCode || ''}`,
+            price: offer?.price?.total || '200',
+            currency: offer?.price?.currency || 'USD',
+            rating: hotel.hotel?.rating || 4,
+            amenities: hotel.hotel?.amenities || [],
+            checkIn: offer?.checkInDate || checkIn,
+            checkOut: offer?.checkOutDate || checkOut,
+            offerId: offer?.id || null // Store offer ID for potential future use
+          };
+        }) || [];
+        
+        return hotels;
       } else {
-        console.log("Amadeus hotel search response:", response.status);
+        const errorText = await response.text();
+        console.log("Amadeus hotel search error:", response.status, errorText);
       }
       
       return [];
-    } catch (error) {
+    } catch (error: any) {
       console.log("Hotel search failed:", error.message);
       return [];
     }
