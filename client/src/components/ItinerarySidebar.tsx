@@ -26,6 +26,9 @@ interface ItinerarySidebarProps {
   activeDay: Date;
   onChangeDayClick: (day: Date) => void;
   onActivitiesUpdated: () => void;
+  onAddActivity?: (activity: ClientActivity | null, day: Date | null) => void;
+  mobileView?: 'itinerary' | 'map';
+  setMobileView?: (view: 'itinerary' | 'map') => void;
 }
 
 export default function ItinerarySidebar({
@@ -36,6 +39,9 @@ export default function ItinerarySidebar({
   activeDay,
   onChangeDayClick,
   onActivitiesUpdated,
+  onAddActivity,
+  mobileView,
+  setMobileView,
 }: ItinerarySidebarProps) {
   const { toast } = useToast();
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
@@ -269,11 +275,15 @@ export default function ItinerarySidebar({
               <button 
                 className="w-full py-3 px-4 bg-[hsl(var(--primary))] text-white rounded-md flex items-center justify-center"
                 onClick={() => {
-                  // Call the function from ActivityTimeline component
-                  const timeline = document.querySelector(".timeline-container");
-                  if (timeline) {
-                    const addButton = timeline.querySelector("button");
-                    if (addButton) addButton.click();
+                  if (onAddActivity) {
+                    onAddActivity(null, activeDay);
+                  } else {
+                    // Fallback to clicking timeline button if centralized handler not available
+                    const timeline = document.querySelector(".timeline-container");
+                    if (timeline) {
+                      const addButton = timeline.querySelector("button");
+                      if (addButton) addButton.click();
+                    }
                   }
                 }}
               >

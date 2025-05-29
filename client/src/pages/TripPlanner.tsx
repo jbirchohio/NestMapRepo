@@ -5,6 +5,7 @@ import AppShell from "@/components/AppShell";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import MapView from "@/components/MapView";
 import ShareTripModal from "@/components/ShareTripModal";
+import ActivityModal from "@/components/ActivityModal";
 import useTrip from "@/hooks/useTrip";
 import useActivities from "@/hooks/useActivities";
 import { useAutoComplete } from "@/hooks/useAutoComplete";
@@ -339,6 +340,17 @@ export default function TripPlanner() {
         trip={trip}
         onSave={handleSaveShareSettings}
       />
+      
+      {/* Centralized Activity Modal */}
+      {isActivityModalOpen && activeDay && (
+        <ActivityModal
+          onClose={handleCloseActivityModal}
+          tripId={tripId}
+          date={activeDay}
+          activity={selectedActivity}
+          onSave={handleActivitySaved}
+        />
+      )}
     </AppShell>
   );
 }
