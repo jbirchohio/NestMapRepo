@@ -92,6 +92,8 @@ export default function BookingSystem() {
   const [isBooking, setIsBooking] = useState(false);
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('round-trip');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [selectedDepartureFlight, setSelectedDepartureFlight] = useState<FlightResult | null>(null);
+  const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightResult | null>(null);
 
   const flightForm = useForm<FlightSearchValues>({
     resolver: zodResolver(flightSearchSchema),
@@ -587,10 +589,10 @@ export default function BookingSystem() {
                               {flight.cabin}
                             </Badge>
                             <Button 
-                              onClick={() => handleBooking('flight', flight)}
-                              disabled={isBooking}
+                              onClick={() => setSelectedDepartureFlight(flight)}
+                              variant={selectedDepartureFlight?.id === flight.id ? 'default' : 'outline'}
                             >
-                              {isBooking ? 'Booking...' : 'Book Flight'}
+                              {selectedDepartureFlight?.id === flight.id ? 'Selected' : 'Select Flight'}
                             </Button>
                           </div>
                         </div>
