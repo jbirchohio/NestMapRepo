@@ -1620,7 +1620,14 @@ If you have all required info, return JSON with:
       
       const origin = tripInfo.originCode || 'SFO';
       const destination = tripInfo.destinationCode || 'NRT';
-      const departureDate = tripInfo.startDate || '2025-06-01';
+      
+      // Fix date formatting - ensure future dates
+      const startDate = new Date(tripInfo.startDate || '2025-06-01');
+      const today = new Date();
+      if (startDate < today) {
+        startDate.setFullYear(2025);
+      }
+      const departureDate = startDate.toISOString().split('T')[0];
       const adults = tripInfo.travelers || 1;
       
       // Build query string exactly as per Amadeus documentation
@@ -1644,7 +1651,8 @@ If you have all required info, return JSON with:
         console.log("Retrieved authentic flight data from Amadeus");
         return data.data || [];
       } else {
-        console.log("Amadeus flight search response:", response.status);
+        const errorText = await response.text();
+        console.log("Amadeus flight search error:", response.status, errorText);
       }
       
       return [];
@@ -1703,12 +1711,26 @@ If you have all required info, return JSON with:
       const hotelSearchUrl = `https://test.api.amadeus.com/v3/shopping/hotel-offers`;
       const checkIn = tripInfo.startDate || '2025-06-01';
       const checkOut = tripInfo.endDate || '2025-06-04';
+      
+      // Ensure dates are in correct format and in the future
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+      const today = new Date();
+      
+      // If dates are in the past, adjust to future dates
+      if (checkInDate < today) {
+        checkInDate.setFullYear(2025);
+        checkOutDate.setFullYear(2025);
+      }
+      
+      const formattedCheckIn = checkInDate.toISOString().split('T')[0];
+      const formattedCheckOut = checkOutDate.toISOString().split('T')[0];
       const adults = tripInfo.travelers || 1;
       
       const hotelParams = new URLSearchParams({
         hotelIds: hotelIds.join(','),
-        checkInDate: checkIn,
-        checkOutDate: checkOut,
+        checkInDate: formattedCheckIn,
+        checkOutDate: formattedCheckOut,
         adults: adults.toString(),
         currency: 'USD'
       });
