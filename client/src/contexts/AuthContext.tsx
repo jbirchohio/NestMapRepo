@@ -21,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
+  const [roleType, setRoleType] = useState<'corporate' | 'agency' | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,21 +48,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const dbUser = await response.json();
               console.log('Database user found:', dbUser);
               setUserId(dbUser.id);
+              setRoleType(dbUser.roleType || null);
             } else if (response.status === 404) {
               // User not found in database - this is expected for new users
               console.log('Database user not found for auth user:', user.id, '- this is normal for new users');
               setUserId(null);
+              setRoleType(null);
             } else {
               console.warn('Unexpected response when fetching database user:', response.status);
               setUserId(null);
+              setRoleType(null);
             }
           } catch (dbError) {
             console.warn('Network error fetching database user (non-critical):', dbError);
             // Don't treat this as a fatal error - user can still use the app
             setUserId(null);
+            setRoleType(null);
           }
         } else {
           setUserId(null);
+          setRoleType(null);
         }
       } catch (err: any) {
         // Only log actual errors, not empty objects
@@ -183,6 +189,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: email,
               display_name: metadata?.display_name || username,
               avatar_url: metadata?.avatar_url || null,
+              roleType: metadata?.role_type || 'corporate',
+              company: metadata?.company || null,
+              jobTitle: metadata?.job_title || null,
+              teamSize: metadata?.team_size || null,
+              useCase: metadata?.use_case || null,
             }),
           });
           
@@ -229,6 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear all state immediately
       setUser(null);
       setUserId(null);
+      setRoleType(null);
       setAuthReady(false);
       setLoading(false);
       
@@ -283,6 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     user,
     userId,
+    roleType,
     loading,
     authReady,
     error,
