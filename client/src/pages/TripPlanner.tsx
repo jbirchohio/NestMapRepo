@@ -93,11 +93,13 @@ export default function TripPlanner() {
     }
   }, [tripError, activitiesError, toast]);
   
-  // Filter activities for current day
+  // Filter activities for current day AND exclude completed activities from map
   const filteredActivities = activities.filter((activity) => {
     if (!activeDay) return false;
     const activityDate = new Date(activity.date);
-    return activityDate.toDateString() === activeDay.toDateString();
+    const isCorrectDay = activityDate.toDateString() === activeDay.toDateString();
+    const isNotCompleted = !activity.completed; // Only show pending activities on map
+    return isCorrectDay && isNotCompleted;
   });
   
   // Sort activities by time

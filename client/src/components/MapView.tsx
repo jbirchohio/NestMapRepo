@@ -32,9 +32,9 @@ export default function MapView({
     }
   }, [mapContainer, center, zoom, initializeMap, isMapReady]);
 
-  // Update markers when they change
+  // Update markers when they change (including clearing when empty)
   useEffect(() => {
-    if (isMapReady && markers.length > 0) {
+    if (isMapReady) {
       addMarkers(markers, onMarkerClick);
     }
   }, [isMapReady, markers, addMarkers, onMarkerClick]);
