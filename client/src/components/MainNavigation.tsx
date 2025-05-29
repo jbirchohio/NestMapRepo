@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Home, 
   BarChart3, 
@@ -20,8 +21,9 @@ import {
 } from 'lucide-react';
 
 export default function MainNavigation() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [location] = useLocation();
+  const { toast } = useToast();
 
   // Get user permissions
   const { data: userPermissions } = useQuery({
@@ -176,7 +178,16 @@ export default function MainNavigation() {
 
           {/* User Section */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                toast({
+                  title: "Notifications",
+                  description: "No new notifications",
+                });
+              }}
+            >
               <Bell className="h-4 w-4" />
             </Button>
 
@@ -188,14 +199,33 @@ export default function MainNavigation() {
                 {user.role || 'User'}
               </Badge>
               
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  toast({
+                    title: "Profile",
+                    description: `Logged in as ${user.email}`,
+                  });
+                }}
+              >
                 <User className="h-4 w-4" />
                 <span className="ml-1 hidden sm:inline">
                   {user.email}
                 </span>
               </Button>
               
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  logout();
+                  toast({
+                    title: "Logged out",
+                    description: "You have been successfully logged out",
+                  });
+                }}
+              >
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
