@@ -166,9 +166,24 @@ export default function BookingSystem() {
   };
 
   const searchHotels = async (values: HotelSearchValues) => {
+    if (!dateRange?.from) {
+      toast({
+        title: "Missing Travel Dates",
+        description: "Please select your travel dates before searching.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSearching(true);
     try {
-      const response = await apiRequest('POST', '/api/bookings/hotels/search', values);
+      const searchData = {
+        ...values,
+        checkIn: format(dateRange.from, 'yyyy-MM-dd'),
+        checkOut: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : format(new Date(dateRange.from.getTime() + 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+      };
+
+      const response = await apiRequest('POST', '/api/bookings/hotels/search', searchData);
       
       if (!response.ok) {
         throw new Error('Hotel search failed');
