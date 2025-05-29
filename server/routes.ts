@@ -2028,15 +2028,32 @@ Include realistic business activities, meeting times, dining recommendations, an
   }
 
   async function searchLocalDining(destination: string, preferences: any) {
-    // Use the existing working AI food suggestion system
+    // Use the same working API endpoint that the assistant tabs use
     try {
-      const { suggestNearbyFood } = await import('./openai');
       const dietaryInfo = preferences?.dietaryRestrictions?.join(', ') || preferences?.dietary || '';
-      const suggestions = await suggestNearbyFood(destination, dietaryInfo || 'local food');
+      const foodType = dietaryInfo || 'food';
       
-      return {
-        restaurants: suggestions.suggestions || []
-      };
+      // Call the working /api/ai/suggest-food endpoint internally
+      const response = await fetch(`http://localhost:5000/api/ai/suggest-food`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          location: destination,
+          foodType: foodType
+        })
+      });
+
+      if (response.ok) {
+        const suggestions = await response.json();
+        return {
+          restaurants: suggestions.suggestions || []
+        };
+      } else {
+        console.log("Restaurant API response not ok:", response.status);
+        return { restaurants: [] };
+      }
     } catch (error: any) {
       console.log("Restaurant search failed:", error.message);
       return { 
