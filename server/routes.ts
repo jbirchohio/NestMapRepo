@@ -2980,12 +2980,56 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // In-memory storage for demo (replace with database in production)
+  let demoNotifications = [
+    {
+      id: "1",
+      type: "trip_shared",
+      title: "Trip shared with you",
+      message: "John shared 'Paris Adventure' with you",
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      read: false,
+      actionUrl: "/trips/1"
+    },
+    {
+      id: "2", 
+      type: "activity_reminder",
+      title: "Activity starting soon",
+      message: "Your museum visit starts in 30 minutes",
+      timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      read: false,
+      actionUrl: "/trips/2"
+    },
+    {
+      id: "3",
+      type: "booking_confirmed", 
+      title: "Hotel booking confirmed",
+      message: "Your reservation at Grand Hotel Paris has been confirmed",
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      actionUrl: "/bookings"
+    }
+  ];
+
+  app.get("/api/notifications", (req: Request, res: Response) => {
+    try {
+      res.json(demoNotifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
   app.put("/api/notifications/:id/read", (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       
-      // In a real implementation, you would update the notification in the database
-      console.log(`Marking notification ${id} as read`);
+      // Update notification as read
+      const notification = demoNotifications.find(n => n.id === id);
+      if (notification) {
+        notification.read = true;
+        console.log(`Marking notification ${id} as read`);
+      }
       
       res.json({ success: true });
     } catch (error) {
@@ -2996,7 +3040,10 @@ Include realistic business activities, meeting times, dining recommendations, an
 
   app.put("/api/notifications/mark-all-read", (req: Request, res: Response) => {
     try {
-      // In a real implementation, you would update all notifications for the user
+      // Mark all notifications as read
+      demoNotifications.forEach(notification => {
+        notification.read = true;
+      });
       console.log(`Marking all notifications as read`);
       
       res.json({ success: true });
@@ -3010,10 +3057,16 @@ Include realistic business activities, meeting times, dining recommendations, an
     try {
       const { id } = req.params;
       
-      // In a real implementation, you would delete the notification from the database
-      console.log(`Deleting notification ${id}`);
+      // Remove notification from array
+      const initialLength = demoNotifications.length;
+      demoNotifications = demoNotifications.filter(n => n.id !== id);
       
-      res.json({ success: true });
+      if (demoNotifications.length < initialLength) {
+        console.log(`Deleting notification ${id}`);
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Notification not found" });
+      }
     } catch (error) {
       console.error("Error deleting notification:", error);
       res.status(500).json({ error: "Failed to delete notification" });
