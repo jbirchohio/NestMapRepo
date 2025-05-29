@@ -1908,15 +1908,43 @@ Include realistic business activities, meeting times, dining recommendations, an
         
         // Enhance with real flight data if available
         if (realData.flights && realData.flights.length > 0) {
-          trip.flights = realData.flights.slice(0, 2).map(flight => ({
-            airline: flight.validatingAirlineCodes?.[0] || "Major Airline",
-            flightNumber: flight.itineraries?.[0]?.segments?.[0]?.carrierCode + flight.itineraries?.[0]?.segments?.[0]?.number || "FL123",
-            route: `${tripInfo.originCode} → ${tripInfo.destinationCode}`,
-            departure: flight.itineraries?.[0]?.segments?.[0]?.departure?.at || "8:00 AM",
-            arrival: flight.itineraries?.[0]?.segments?.[0]?.arrival?.at || "11:00 AM",
-            price: parseInt(flight.price?.total) || 450,
-            cabin: "Business"
-          }));
+          trip.flights = realData.flights.slice(0, 2).map(flight => {
+            const segment = flight.itineraries?.[0]?.segments?.[0];
+            const carrierCode = segment?.carrierCode || 'UA';
+            const flightNum = segment?.number || '1234';
+            
+            // Format times more clearly
+            const formatFlightTime = (isoString) => {
+              if (!isoString) return '';
+              const date = new Date(isoString);
+              return date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+              });
+            };
+
+            const formatDate = (isoString) => {
+              if (!isoString) return '';
+              const date = new Date(isoString);
+              return date.toISOString().split('T')[0];
+            };
+
+            return {
+              airline: carrierCode,
+              flightNumber: `${carrierCode} ${carrierCode}${flightNum}`,
+              route: `${segment?.departure?.iataCode || tripInfo.originCode} → ${segment?.arrival?.iataCode || tripInfo.destinationCode}`,
+              departure: segment?.departure?.at || "2025-06-01T08:00:00",
+              arrival: segment?.arrival?.at || "2025-06-01T20:00:00", 
+              departureTime: formatFlightTime(segment?.departure?.at),
+              arrivalTime: formatFlightTime(segment?.arrival?.at),
+              departureDate: formatDate(segment?.departure?.at),
+              price: Math.round(parseFloat(flight.price?.total)) || 450,
+              currency: flight.price?.currency || 'USD',
+              cabin: flight.travelerPricings?.[0]?.fareDetailsBySegment?.[0]?.cabin || 'ECONOMY',
+              duration: flight.itineraries?.[0]?.duration || 'PT8H30M'
+            };
+          });
         }
 
         // Enhance with real hotel data if available
