@@ -474,12 +474,39 @@ async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightR
     }
     
     // Try different airport combinations until we find flights
+    let allFlights: FlightResult[] = [];
+    
     for (const originCode of originAirports.slice(0, 3)) { // Try up to 3 origin airports
       for (const destCode of destinationAirports.slice(0, 3)) { // Try up to 3 destination airports
-        const flights = await searchSingleRoute(originCode, destCode, params, token);
-        if (flights.length > 0) {
-          console.log(`Found ${flights.length} flights from ${originCode} to ${destCode}`);
-          return flights;
+        // Search outbound flights
+        const outboundFlights = await searchSingleRoute(originCode, destCode, params, token);
+        if (outboundFlights.length > 0) {
+          console.log(`Found ${outboundFlights.length} outbound flights from ${originCode} to ${destCode}`);
+          allFlights = [...allFlights, ...outboundFlights];
+          
+          // For round-trip, also search return flights
+          if (params.returnDate) {
+            const returnParams = {
+              ...params,
+              departureDate: params.returnDate,
+              returnDate: undefined // Make it one-way for the return leg
+            };
+            const returnFlights = await searchSingleRoute(destCode, originCode, returnParams, token);
+            if (returnFlights.length > 0) {
+              console.log(`Found ${returnFlights.length} return flights from ${destCode} to ${originCode}`);
+              // Mark return flights with a prefix to distinguish them
+              const markedReturnFlights = returnFlights.map(flight => ({
+                ...flight,
+                id: `return_${flight.id}`,
+                flightNumber: `${flight.flightNumber} (Return)`
+              }));
+              allFlights = [...allFlights, ...markedReturnFlights];
+            }
+          }
+          
+          if (allFlights.length > 0) {
+            return allFlights;
+          }
         }
       }
     }
