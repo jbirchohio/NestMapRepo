@@ -2755,6 +2755,109 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // Notification routes
+  app.get("/api/notifications", (req: Request, res: Response) => {
+    try {
+      // Get user ID from session (you'll need to implement this based on your auth)
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // Generate sample notifications for demonstration
+      const notifications = [
+        {
+          id: '1',
+          type: 'trip_shared',
+          title: 'Trip shared with you',
+          message: 'John Doe shared "European Adventure" trip with you',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+          read: false,
+          actionUrl: '/trip/1'
+        },
+        {
+          id: '2',
+          type: 'booking_confirmed',
+          title: 'Flight booking confirmed',
+          message: 'Your flight to Paris has been confirmed for March 15th',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+          read: false,
+          actionUrl: '/bookings'
+        },
+        {
+          id: '3',
+          type: 'reminder',
+          title: 'Trip starts tomorrow',
+          message: 'Don\'t forget to check in for your flight to Tokyo',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+          read: true,
+          actionUrl: '/trip/2'
+        }
+      ];
+
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  app.put("/api/notifications/:id/read", (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // In a real implementation, you would update the notification in the database
+      console.log(`Marking notification ${id} as read for user ${userId}`);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  app.put("/api/notifications/mark-all-read", (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // In a real implementation, you would update all notifications for the user
+      console.log(`Marking all notifications as read for user ${userId}`);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ error: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // In a real implementation, you would delete the notification from the database
+      console.log(`Deleting notification ${id} for user ${userId}`);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      res.status(500).json({ error: "Failed to delete notification" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

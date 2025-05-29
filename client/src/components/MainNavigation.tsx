@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import NotificationCenter from '@/components/NotificationCenter';
 import { 
   Home, 
   BarChart3, 
@@ -190,18 +191,7 @@ export default function MainNavigation() {
 
           {/* User Section */}
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => {
-                toast({
-                  title: "Notifications",
-                  description: "No new notifications",
-                });
-              }}
-            >
-              <Bell className="h-4 w-4" />
-            </Button>
+            <NotificationCenter />
 
             <div className="flex items-center gap-2">
               <Badge 
