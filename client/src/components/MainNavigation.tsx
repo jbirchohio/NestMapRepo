@@ -40,8 +40,15 @@ export default function MainNavigation() {
 
   // Get user permissions
   const { data: userPermissions } = useQuery({
-    queryKey: ['/api/user/permissions'],
-    enabled: !!user,
+    queryKey: ['/api/user/permissions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const response = await fetch(`/api/user/permissions?userId=${user.id}`);
+      if (!response.ok) throw new Error('Failed to fetch permissions');
+      const data = await response.json();
+      return data.permissions || [];
+    },
+    enabled: !!user?.id,
   });
 
   // Check permissions for different sections
