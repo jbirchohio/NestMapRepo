@@ -5,16 +5,24 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, userId } = useAuth();
   
   // Check user permissions for settings access
   const { data: userPermissions } = useQuery({
-    queryKey: ['/api/user/permissions'],
-    enabled: !!user,
+    queryKey: ['/api/user/permissions', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const response = await fetch(`/api/user/permissions?userId=${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch permissions');
+      const data = await response.json();
+      return data.permissions || [];
+    },
+    enabled: !!userId,
   });
 
   const hasSettingsAccess = Array.isArray(userPermissions) && (
     userPermissions.includes('MANAGE_ORGANIZATION') || 
+    userPermissions.includes('manage_organizations') ||
     userPermissions.includes('ADMIN_ACCESS')
   );
 

@@ -5,17 +5,26 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
 
 export default function TripOptimizer() {
-  const { user } = useAuth();
+  const { user, userId } = useAuth();
   
   // Check user permissions for optimization access
   const { data: userPermissions } = useQuery({
-    queryKey: ['/api/user/permissions'],
-    enabled: !!user,
+    queryKey: ['/api/user/permissions', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const response = await fetch(`/api/user/permissions?userId=${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch permissions');
+      const data = await response.json();
+      return data.permissions || [];
+    },
+    enabled: !!userId,
   });
 
   const hasOptimizerAccess = Array.isArray(userPermissions) && (
     userPermissions.includes('ACCESS_ANALYTICS') || 
-    userPermissions.includes('MANAGE_ORGANIZATION')
+    userPermissions.includes('view_analytics') ||
+    userPermissions.includes('MANAGE_ORGANIZATION') ||
+    userPermissions.includes('manage_organizations')
   );
 
   if (!user) {
