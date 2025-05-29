@@ -225,7 +225,7 @@ export default function BookingSystem() {
 
       const tripResponse = await apiRequest('POST', '/api/trips', {
         title: `Trip to ${destination}`,
-        destination,
+        city: destination,
         startDate,
         endDate,
         description: `Trip created with flight bookings to ${destination}`,
