@@ -1353,7 +1353,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         searchRealFlights(tripInfo),
         searchRealHotels(tripInfo),
         getWeatherForecast(tripInfo.destination, { start: tripInfo.startDate, end: tripInfo.endDate }),
-        searchLocalDining(tripInfo.destination, tripInfo.preferences)
+        searchLocalDining(tripInfo.destination, { 
+          dietary: tripInfo.dietary || 'vegetarian',
+          dietaryRestrictions: tripInfo.dietaryRestrictions || ['vegetarian']
+        })
       ]);
 
       // Generate comprehensive trip using AI with authentic data
@@ -2028,8 +2031,8 @@ Include realistic business activities, meeting times, dining recommendations, an
     // Use the existing working AI food suggestion system
     try {
       const { suggestNearbyFood } = await import('./openai');
-      const dietaryInfo = preferences.dietaryRestrictions?.join(', ') || '';
-      const suggestions = await suggestNearbyFood(destination, dietaryInfo);
+      const dietaryInfo = preferences?.dietaryRestrictions?.join(', ') || preferences?.dietary || '';
+      const suggestions = await suggestNearbyFood(destination, dietaryInfo || 'local food');
       
       return {
         restaurants: suggestions.suggestions || []
