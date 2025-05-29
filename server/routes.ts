@@ -3042,6 +3042,66 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // Test endpoint to create new notifications
+  app.post("/api/notifications/test", (req: Request, res: Response) => {
+    try {
+      const notificationTypes = [
+        {
+          type: "trip_shared",
+          title: "New Trip Shared",
+          message: "Sarah shared 'Tokyo Adventure 2025' with you",
+          actionUrl: "/trips/12"
+        },
+        {
+          type: "activity_reminder",
+          title: "Activity Starting Soon",
+          message: "Your dinner reservation at Sukiyabashi Jiro starts in 1 hour",
+          actionUrl: "/trips/12"
+        },
+        {
+          type: "booking_confirmed",
+          title: "Booking Confirmed",
+          message: "Your hotel reservation at Park Hyatt Tokyo has been confirmed",
+          actionUrl: "/bookings"
+        },
+        {
+          type: "team_invite",
+          title: "Team Invitation",
+          message: "You've been invited to join 'Marketing Team' organization",
+          actionUrl: "/teams"
+        },
+        {
+          type: "payment_due",
+          title: "Payment Required",
+          message: "Your subscription payment of $29/month is due tomorrow",
+          actionUrl: "/billing"
+        }
+      ];
+
+      // Generate a random notification
+      const randomNotif = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+      const newId = (Math.max(...demoNotifications.map(n => parseInt(n.id)), 0) + 1).toString();
+      
+      const newNotification = {
+        id: newId,
+        type: randomNotif.type,
+        title: randomNotif.title,
+        message: randomNotif.message,
+        timestamp: new Date().toISOString(),
+        read: false,
+        actionUrl: randomNotif.actionUrl
+      };
+
+      demoNotifications.unshift(newNotification); // Add to beginning
+      console.log(`Created test notification: ${newNotification.title}`);
+      
+      res.json({ success: true, notification: newNotification });
+    } catch (error) {
+      console.error("Error creating test notification:", error);
+      res.status(500).json({ error: "Failed to create test notification" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
