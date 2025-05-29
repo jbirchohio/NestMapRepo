@@ -280,7 +280,8 @@ async function findAirportCode(cityOrCode: string): Promise<string | null> {
       return null;
     }
 
-    const response = await fetch(`https://api.amadeus.com/v1/reference-data/locations?subType=AIRPORT&keyword=${encodeURIComponent(cityOrCode)}&page%5Blimit%5D=10`, {
+    // Search for airports using city name
+    const response = await fetch(`https://api.amadeus.com/v1/reference-data/locations?subType=AIRPORT&keyword=${encodeURIComponent(cityOrCode)}&page%5Blimit%5D=20`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -293,25 +294,133 @@ async function findAirportCode(cityOrCode: string): Promise<string | null> {
 
     const data = await response.json();
     
-    // Find the best match (prefer major airports)
     if (data.data && data.data.length > 0) {
-      // Sort by relevance and airport size
+      // Sort airports by preference
       const sortedAirports = data.data.sort((a: any, b: any) => {
-        // Prefer airports with higher relevance
+        // Prefer major international airports (usually have "International" in name)
+        const aIsInternational = a.name?.toLowerCase().includes('international') ? 1 : 0;
+        const bIsInternational = b.name?.toLowerCase().includes('international') ? 1 : 0;
+        if (aIsInternational !== bIsInternational) {
+          return bIsInternational - aIsInternational;
+        }
+        
+        // Prefer higher relevance
         if (a.relevance !== b.relevance) {
           return b.relevance - a.relevance;
         }
-        // Prefer larger airports (those with more detailed names usually)
-        return (b.name?.length || 0) - (a.name?.length || 0);
+        
+        // Prefer airports that match city name more closely
+        const cityLower = cityOrCode.toLowerCase();
+        const aMatchesCity = a.address?.cityName?.toLowerCase().includes(cityLower) ? 1 : 0;
+        const bMatchesCity = b.address?.cityName?.toLowerCase().includes(cityLower) ? 1 : 0;
+        if (aMatchesCity !== bMatchesCity) {
+          return bMatchesCity - aMatchesCity;
+        }
+        
+        return 0;
       });
 
-      return sortedAirports[0].iataCode;
+      // Try the top airport first
+      const primaryAirport = sortedAirports[0];
+      console.log(`Found airport ${primaryAirport.iataCode} (${primaryAirport.name}) for "${cityOrCode}"`);
+      
+      return primaryAirport.iataCode;
     }
 
     return null;
   } catch (error) {
     console.error('Airport lookup error:', error);
     return null;
+  }
+}
+
+async function findNearbyAirports(cityOrCode: string): Promise<string[]> {
+  try {
+    const token = await getAmadeusToken();
+    if (!token) {
+      return [];
+    }
+
+    // Search for airports and cities near the location
+    const response = await fetch(`https://api.amadeus.com/v1/reference-data/locations?subType=AIRPORT,CITY&keyword=${encodeURIComponent(cityOrCode)}&page%5Blimit%5D=30`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    
+    if (data.data && data.data.length > 0) {
+      // Filter for airports only and sort by relevance
+      const airports = data.data
+        .filter((location: any) => location.subType === 'AIRPORT' && location.iataCode)
+        .sort((a: any, b: any) => {
+          // Prefer international airports
+          const aIsInternational = a.name?.toLowerCase().includes('international') ? 1 : 0;
+          const bIsInternational = b.name?.toLowerCase().includes('international') ? 1 : 0;
+          if (aIsInternational !== bIsInternational) {
+            return bIsInternational - aIsInternational;
+          }
+          return b.relevance - a.relevance;
+        })
+        .slice(0, 5) // Take top 5 airports
+        .map((airport: any) => airport.iataCode);
+
+      // Remove duplicates manually
+      const uniqueAirports: string[] = [];
+      for (const airport of airports) {
+        if (!uniqueAirports.includes(airport)) {
+          uniqueAirports.push(airport);
+        }
+      }
+      return uniqueAirports;
+    }
+
+    return [];
+  } catch (error) {
+    console.error('Nearby airports lookup error:', error);
+    return [];
+  }
+}
+
+async function searchSingleRoute(originCode: string, destCode: string, params: FlightSearchParams, token: string): Promise<FlightResult[]> {
+  try {
+    const queryParams = new URLSearchParams({
+      originLocationCode: originCode,
+      destinationLocationCode: destCode,
+      departureDate: params.departureDate,
+      adults: params.passengers.toString(),
+      max: '10',
+      currencyCode: 'USD'
+    });
+
+    if (params.returnDate) {
+      queryParams.append('returnDate', params.returnDate);
+    }
+
+    const response = await fetch(`https://api.amadeus.com/v2/shopping/flight-offers?${queryParams}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      return [];
+    }
+    
+    const data = await response.json();
+    
+    if (!data.data || data.data.length === 0) {
+      return [];
+    }
+    
+    return transformAmadeusResponse(data);
+  } catch (error) {
+    return [];
   }
 }
 
@@ -332,60 +441,51 @@ async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightR
     let origin = params.origin?.toUpperCase().trim() || '';
     let destination = params.destination?.toUpperCase().trim() || '';
     
-    // If not already 3-letter IATA codes, try to find airports
+    // Get primary and nearby airports for origin
+    let originAirports: string[] = [];
     if (!/^[A-Z]{3}$/.test(origin)) {
-      const originAirport = await findAirportCode(origin);
-      if (!originAirport) {
+      const primaryOrigin = await findAirportCode(origin);
+      if (!primaryOrigin) {
         throw new Error(`Could not find airport for origin: ${params.origin}`);
       }
-      origin = originAirport;
+      originAirports = [primaryOrigin];
+      
+      // Add nearby airports as alternatives
+      const nearbyOrigins = await findNearbyAirports(origin);
+      originAirports = [...originAirports, ...nearbyOrigins.filter(code => code !== primaryOrigin)];
+    } else {
+      originAirports = [origin];
     }
     
+    // Get primary and nearby airports for destination
+    let destinationAirports: string[] = [];
     if (!/^[A-Z]{3}$/.test(destination)) {
-      const destinationAirport = await findAirportCode(destination);
-      if (!destinationAirport) {
+      const primaryDestination = await findAirportCode(destination);
+      if (!primaryDestination) {
         throw new Error(`Could not find airport for destination: ${params.destination}`);
       }
-      destination = destinationAirport;
+      destinationAirports = [primaryDestination];
+      
+      // Add nearby airports as alternatives
+      const nearbyDestinations = await findNearbyAirports(destination);
+      destinationAirports = [...destinationAirports, ...nearbyDestinations.filter(code => code !== primaryDestination)];
+    } else {
+      destinationAirports = [destination];
     }
-
-    // Build query parameters
-    const queryParams = new URLSearchParams({
-      originLocationCode: origin,
-      destinationLocationCode: destination,
-      departureDate: params.departureDate,
-      adults: params.passengers.toString(),
-      max: '10',
-      currencyCode: 'USD'
-    });
-
-    if (params.returnDate) {
-      queryParams.append('returnDate', params.returnDate);
-    }
-
-    console.log(`Searching flights: ${origin} → ${destination} on ${params.departureDate}`);
     
-    const response = await fetch(`https://api.amadeus.com/v2/shopping/flight-offers?${queryParams}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    // Try different airport combinations until we find flights
+    for (const originCode of originAirports.slice(0, 3)) { // Try up to 3 origin airports
+      for (const destCode of destinationAirports.slice(0, 3)) { // Try up to 3 destination airports
+        const flights = await searchSingleRoute(originCode, destCode, params, token);
+        if (flights.length > 0) {
+          console.log(`Found ${flights.length} flights from ${originCode} to ${destCode}`);
+          return flights;
+        }
       }
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log("Amadeus flight search error:", response.status, errorText);
-      throw new Error('Amadeus API request failed');
     }
     
-    const data = await response.json();
-    console.log(`Amadeus API returned ${data.data?.length || 0} flight offers`);
-    
-    if (!data.data || data.data.length === 0) {
-      console.log("No flights found for the given criteria");
-      return [];
-    }
-    
-    return transformAmadeusResponse(data);
+    console.log("No flights found for any airport combination");
+    return [];
   } catch (error) {
     console.log("Flight search error:", error instanceof Error ? error.message : 'Unknown error');
     throw error;
@@ -398,7 +498,7 @@ async function searchBookingComHotels(params: HotelSearchParams): Promise<HotelR
   const response = await fetch(`${HOTEL_PROVIDERS.BOOKING_COM.baseUrl}/json/bookings.searchHotels`, {
     method: 'POST',
     headers: {
-      'Authorization': `Basic ${process.env.BOOKING_API_KEY}`,
+      'Authorization': `Basic ${process.env.BOOKING_API_KEY || ''}`,
       'Content-Type': 'application/json'
     },
     // Add actual Booking.com API parameters
