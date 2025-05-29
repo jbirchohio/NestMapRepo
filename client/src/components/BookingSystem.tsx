@@ -770,7 +770,6 @@ export default function BookingSystem() {
                       )}
                     </div>
                   )}
-                </div>
               </CardContent>
             </Card>
           )}
