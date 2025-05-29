@@ -115,6 +115,8 @@ export function useAutoComplete({ activities, tripId }: UseAutoCompleteProps) {
           }
           
           if (shouldComplete) {
+            // Mark as processing to prevent duplicate calls
+            processingRef.current.add(activity.id);
             console.log(`Auto-completing activity "${activity.title}" on ${activityDateStr} - ${reason}`);
             autoCompleteMutation.mutate(activity.id);
           }

@@ -97,7 +97,9 @@ export default function TripPlanner() {
   const filteredActivities = activities.filter((activity) => {
     if (!activeDay) return false;
     const activityDate = new Date(activity.date);
-    return activityDate.toDateString() === activeDay.toDateString();
+    const matches = activityDate.toDateString() === activeDay.toDateString();
+    console.log(`Activity "${activity.title}" on ${activityDate.toDateString()} vs selected ${activeDay.toDateString()}: ${matches}`);
+    return matches;
   });
   
   // Sort activities by time
