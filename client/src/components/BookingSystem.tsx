@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as ReactCalendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/contexts/AuthContext';
 
 type DateRange = {
   from: Date | undefined;
@@ -68,6 +69,7 @@ interface HotelResult {
 
 export default function BookingSystem() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('flights');
   const [isSearching, setIsSearching] = useState(false);
   const [flightResults, setFlightResults] = useState<FlightResult[]>([]);
@@ -211,6 +213,15 @@ export default function BookingSystem() {
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Authentication Error",
+        description: "Please sign in to create a trip.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsBooking(true);
     try {
       const startDate = selectedDepartureFlight?.departureTime ? 
@@ -228,6 +239,7 @@ export default function BookingSystem() {
         city: destination,
         startDate,
         endDate,
+        userId: user.id,
         description: `Trip created with flight bookings to ${destination}`,
         notes: ''
       });
