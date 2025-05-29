@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DayPicker, DateRange } from 'react-day-picker';
+import { format } from 'date-fns';
 import { 
   Plane, 
   Hotel, 
@@ -100,6 +103,7 @@ export default function BookingSystem() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('round-trip');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const flightForm = useForm<FlightSearchValues>({
     resolver: zodResolver(flightSearchSchema),
@@ -119,9 +123,24 @@ export default function BookingSystem() {
   });
 
   const searchFlights = async (values: FlightSearchValues) => {
+    if (!dateRange?.from) {
+      toast({
+        title: "Missing Travel Dates",
+        description: "Please select your travel dates before searching.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSearching(true);
     try {
-      const response = await apiRequest('POST', '/api/bookings/flights/search', values);
+      const searchData = {
+        ...values,
+        departureDate: format(dateRange.from, 'yyyy-MM-dd'),
+        returnDate: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
+      };
+
+      const response = await apiRequest('POST', '/api/bookings/flights/search', searchData);
       
       if (!response.ok) {
         throw new Error('Flight search failed');
@@ -352,34 +371,57 @@ export default function BookingSystem() {
                   </div>
                 </div>
 
-                {/* Date Selection - Unified Interface */}
+                {/* Date Range Picker - Unified Interface */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Travel Dates</Label>
-                  <div className={`grid gap-4 ${tripType === 'round-trip' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-1 max-w-md'}`}>
-                    <div className="space-y-2">
-                      <Label htmlFor="departureDate" className="text-sm text-muted-foreground">
-                        {tripType === 'round-trip' ? 'Departure Date' : 'Travel Date'}
-                      </Label>
-                      <Input
-                        id="departureDate"
-                        type="date"
-                        {...flightForm.register("departureDate")}
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-
-                    {tripType === 'round-trip' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="returnDate" className="text-sm text-muted-foreground">Return Date</Label>
-                        <Input
-                          id="returnDate"
-                          type="date"
-                          {...flightForm.register("returnDate")}
-                          min={flightForm.watch("departureDate") || new Date().toISOString().split('T')[0]}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                          dateRange.to ? (
+                            <>
+                              {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                            </>
+                          ) : (
+                            format(dateRange.from, "LLL dd, y")
+                          )
+                        ) : (
+                          <span>Pick your travel dates</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      {tripType === 'round-trip' ? (
+                        <DayPicker
+                          mode="range"
+                          selected={dateRange}
+                          onSelect={setDateRange}
+                          disabled={(date) => date < new Date()}
+                          numberOfMonths={2}
+                          className="p-3"
                         />
-                      </div>
-                    )}
-                  </div>
+                      ) : (
+                        <DayPicker
+                          mode="single"
+                          selected={dateRange?.from}
+                          onSelect={(date) => setDateRange(date ? { from: date, to: undefined } : undefined)}
+                          disabled={(date) => date < new Date()}
+                          numberOfMonths={1}
+                          className="p-3"
+                        />
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">
+                    {tripType === 'round-trip' 
+                      ? 'Select your departure and return dates' 
+                      : 'Select your travel date'
+                    }
+                  </p>
                 </div>
 
                 {/* Passengers and Options */}
