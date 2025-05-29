@@ -2027,14 +2027,15 @@ Include realistic business activities, meeting times, dining recommendations, an
   async function searchLocalDining(destination: string, preferences: any) {
     // Use the existing working AI food suggestion system
     try {
+      const { suggestNearbyFood } = await import('./openai');
       const dietaryInfo = preferences.dietaryRestrictions?.join(', ') || '';
-      const suggestions = await openai.suggestNearbyFood(destination, dietaryInfo);
+      const suggestions = await suggestNearbyFood(destination, dietaryInfo);
       
       return {
         restaurants: suggestions.suggestions || []
       };
-    } catch (error) {
-      console.log("Restaurant search failed, using authentic local search");
+    } catch (error: any) {
+      console.log("Restaurant search failed:", error.message);
       return { 
         restaurants: []
       };
