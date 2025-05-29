@@ -69,7 +69,7 @@ interface HotelResult {
 
 export default function BookingSystem() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, userId } = useAuth();
   const [activeTab, setActiveTab] = useState('flights');
   const [isSearching, setIsSearching] = useState(false);
   const [flightResults, setFlightResults] = useState<FlightResult[]>([]);
@@ -213,7 +213,7 @@ export default function BookingSystem() {
       return;
     }
 
-    if (!user?.id) {
+    if (!userId) {
       toast({
         title: "Authentication Error",
         description: "Please sign in to create a trip.",
@@ -239,7 +239,7 @@ export default function BookingSystem() {
         city: destination,
         startDate,
         endDate,
-        userId: user.dbUser?.id || user.id,
+        userId: userId,
         description: `Trip created with flight bookings to ${destination}`,
         notes: ''
       });
