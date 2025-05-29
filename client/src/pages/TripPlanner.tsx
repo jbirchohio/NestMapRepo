@@ -123,6 +123,8 @@ export default function TripPlanner() {
       activity,
     }));
   
+  console.log(`Map markers for ${activeDay?.toDateString()}: ${mapMarkers.length} markers`, mapMarkers.map(m => m.activity.title));
+  
   // Prepare map routes (simplified for now)
   const mapRoutes: MapRoute[] = mapMarkers.length > 1 
     ? [{
