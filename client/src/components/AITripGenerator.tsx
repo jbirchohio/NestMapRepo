@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Sparkles, 
   MapPin, 
@@ -34,6 +37,88 @@ export default function AITripGenerator() {
   const [conversation, setConversation] = useState<any[]>([]);
   const [showQuestions, setShowQuestions] = useState(false);
   const [assistantMessage, setAssistantMessage] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [showClientForm, setShowClientForm] = useState(false);
+  const { toast } = useToast();
+
+  const createItineraryMutation = useMutation({
+    mutationFn: async (data: { tripData: any; clientEmail: string }) => {
+      const response = await apiRequest('POST', '/api/create-client-itinerary', data);
+      if (!response.ok) {
+        throw new Error('Failed to create itinerary');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Itinerary Created",
+        description: `Client tracking link sent to ${clientEmail}`,
+      });
+      setShowClientForm(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create client itinerary",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const generateProposalMutation = useMutation({
+    mutationFn: async (data: { tripData: any; clientInfo: any }) => {
+      const response = await apiRequest('POST', '/api/generate-proposal', data);
+      if (!response.ok) {
+        throw new Error('Failed to generate proposal');
+      }
+      return response.blob();
+    },
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = 'travel-proposal.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast({
+        title: "Proposal Generated",
+        description: "Professional PDF proposal downloaded",
+      });
+    }
+  });
+
+  const handleCreateItinerary = () => {
+    setShowClientForm(true);
+  };
+
+  const handleSubmitClientForm = () => {
+    if (!clientEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter client email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createItineraryMutation.mutate({
+      tripData: generatedTrip,
+      clientEmail
+    });
+  };
+
+  const handleGenerateProposal = () => {
+    generateProposalMutation.mutate({
+      tripData: generatedTrip,
+      clientInfo: {
+        email: clientEmail,
+        name: "Client",
+        company: "Company Name"
+      }
+    });
+  };
 
   const generateTripMutation = useMutation({
     mutationFn: async (userPrompt: string) => {
@@ -385,6 +470,67 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <strong>Potential Conflicts:</strong> {trip.conflicts.join(', ')}
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* B2B Action Buttons */}
+          <div className="mt-6 space-y-4 border-t pt-4">
+            <h3 className="font-semibold text-gray-900">Client Actions</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Button 
+                onClick={handleCreateItinerary}
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={createItineraryMutation.isPending}
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {createItineraryMutation.isPending ? "Creating..." : "Create Client Itinerary"}
+              </Button>
+              
+              <Button 
+                onClick={handleGenerateProposal}
+                variant="outline"
+                disabled={generateProposalMutation.isPending}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {generateProposalMutation.isPending ? "Generating..." : "Generate Proposal PDF"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Client Form Modal */}
+          {showClientForm && (
+            <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+              <h4 className="font-medium mb-3">Send Itinerary to Client</h4>
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="clientEmail">Client Email Address</Label>
+                  <Input
+                    id="clientEmail"
+                    type="email"
+                    placeholder="client@company.com"
+                    value={clientEmail}
+                    onChange={(e) => setClientEmail(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSubmitClientForm}
+                    disabled={createItineraryMutation.isPending}
+                    className="flex-1"
+                  >
+                    Send Tracking Link
+                  </Button>
+                  <Button 
+                    onClick={() => setShowClientForm(false)}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Client will receive a mobile-friendly tracking link and email notifications for any updates.
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>

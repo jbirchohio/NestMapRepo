@@ -1367,8 +1367,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         restaurants: foodRecommendations
       });
 
-      console.log("AI trip generated successfully");
-      res.json(generatedTrip);
+      // Add client-specific features for B2B workflow
+      const enhancedTrip = {
+        ...generatedTrip,
+        clientAccess: {
+          shareCode: Math.random().toString(36).substring(2, 15),
+          mobileTrackingUrl: `${process.env.BASE_URL || 'https://your-domain.com'}/track/${Math.random().toString(36).substring(2, 15)}`,
+          lastUpdated: new Date().toISOString(),
+          notificationPreferences: {
+            sms: false,
+            email: true,
+            push: false
+          }
+        },
+        businessInfo: {
+          canGenerateProposal: true,
+          billingReady: true,
+          proposalTemplate: 'professional'
+        }
+      };
+
+      console.log("AI trip generated successfully with client features");
+      res.json(enhancedTrip);
     } catch (error) {
       console.error("Error generating AI trip:", error);
       res.status(500).json({ 
