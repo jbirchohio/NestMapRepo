@@ -70,31 +70,41 @@ export default function useMapbox() {
     markersRef.current = {};
     
     // Create a function to generate custom marker element
-    const createMarkerElement = (label: string) => {
+    const createMarkerElement = (label: string, completed: boolean = false) => {
       const el = document.createElement('div');
       el.className = 'flex items-center justify-center';
       el.style.width = '32px';
       el.style.height = '32px';
       el.style.borderRadius = '50%';
-      el.style.backgroundColor = 'hsl(16, 100%, 50%)'; // accent color
+      el.style.backgroundColor = completed ? 'hsl(142, 70%, 45%)' : 'hsl(16, 100%, 50%)'; // green for completed, orange for pending
       el.style.color = 'white';
       el.style.fontWeight = 'bold';
       el.style.display = 'flex';
       el.style.alignItems = 'center';
       el.style.justifyContent = 'center';
       el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-      el.innerHTML = label;
+      el.style.position = 'relative';
+      
+      if (completed) {
+        // Show checkmark for completed activities
+        el.innerHTML = '✓';
+        el.style.fontSize = '14px';
+      } else {
+        // Show number for pending activities
+        el.innerHTML = label;
+      }
+      
       return el;
     };
     
     // Add markers for each location
     markers.forEach((marker, index) => {
-      const { id, latitude, longitude, label } = marker;
+      const { id, latitude, longitude, label, completed } = marker;
       
       // Use number (index + 1) instead of letter label
       const markerNumber = (index + 1).toString();
-      // Create custom marker element with numeric index
-      const el = createMarkerElement(markerNumber);
+      // Create custom marker element with numeric index and completion status
+      const el = createMarkerElement(markerNumber, completed);
       
       // Create the marker
       const mapboxMarker = new mapboxgl.Marker({ element: el })

@@ -40,6 +40,7 @@ export interface MapMarker {
   latitude: number;
   label?: string;
   activity?: ClientActivity;
+  completed?: boolean;
 }
 
 export interface MapRoute {

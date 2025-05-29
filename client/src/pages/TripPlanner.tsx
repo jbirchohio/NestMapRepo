@@ -97,9 +97,7 @@ export default function TripPlanner() {
   const filteredActivities = activities.filter((activity) => {
     if (!activeDay) return false;
     const activityDate = new Date(activity.date);
-    const matches = activityDate.toDateString() === activeDay.toDateString();
-    console.log(`Activity "${activity.title}" on ${activityDate.toDateString()} vs selected ${activeDay.toDateString()}: ${matches}`);
-    return matches;
+    return activityDate.toDateString() === activeDay.toDateString();
   });
   
   // Sort activities by time
@@ -107,13 +105,12 @@ export default function TripPlanner() {
     return a.time.localeCompare(b.time);
   });
   
-  // Prepare map markers - filter out completed activities so they don't show on the map
+  // Prepare map markers - include all activities with coordinates (both completed and pending)
   const mapMarkers: MapMarker[] = sortedActivities
     .filter(activity => 
-      // Only include activities with coordinates and that aren't marked as completed
+      // Only include activities with coordinates
       activity.latitude && 
-      activity.longitude && 
-      !activity.completed
+      activity.longitude
     )
     .map((activity, index) => ({
       id: activity.id,
@@ -121,9 +118,8 @@ export default function TripPlanner() {
       longitude: parseFloat(activity.longitude || "0"),
       label: String.fromCharCode(65 + index), // A, B, C, etc.
       activity,
+      completed: activity.completed || false, // Pass completion status to map component
     }));
-  
-  console.log(`Map markers for ${activeDay?.toDateString()}: ${mapMarkers.length} markers`, mapMarkers.map(m => m.activity.title));
   
   // Prepare map routes (simplified for now)
   const mapRoutes: MapRoute[] = mapMarkers.length > 1 
