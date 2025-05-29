@@ -91,6 +91,7 @@ export default function BookingSystem() {
   const [hotelResults, setHotelResults] = useState<HotelResult[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
+  const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('round-trip');
 
   const flightForm = useForm<FlightSearchValues>({
     resolver: zodResolver(flightSearchSchema),
@@ -284,7 +285,35 @@ export default function BookingSystem() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={flightForm.handleSubmit(searchFlights)} className="space-y-4">
+              <form onSubmit={flightForm.handleSubmit(searchFlights)} className="space-y-6">
+                {/* Trip Type Selector */}
+                <div className="flex items-center gap-4">
+                  <Label className="text-sm font-medium">Trip Type:</Label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        value="round-trip"
+                        checked={tripType === 'round-trip'}
+                        onChange={(e) => setTripType(e.target.value as 'round-trip')}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">Round Trip</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        value="one-way"
+                        checked={tripType === 'one-way'}
+                        onChange={(e) => setTripType(e.target.value as 'one-way')}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">One Way</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Destination Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="origin">From</Label>
@@ -313,25 +342,40 @@ export default function BookingSystem() {
                       </p>
                     )}
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="departureDate">Departure Date</Label>
-                    <Input
-                      id="departureDate"
-                      type="date"
-                      {...flightForm.register("departureDate")}
-                    />
+                {/* Date Selection - Unified Interface */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Travel Dates</Label>
+                  <div className={`grid gap-4 ${tripType === 'round-trip' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-1 max-w-md'}`}>
+                    <div className="space-y-2">
+                      <Label htmlFor="departureDate" className="text-sm text-muted-foreground">
+                        {tripType === 'round-trip' ? 'Departure Date' : 'Travel Date'}
+                      </Label>
+                      <Input
+                        id="departureDate"
+                        type="date"
+                        {...flightForm.register("departureDate")}
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+
+                    {tripType === 'round-trip' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="returnDate" className="text-sm text-muted-foreground">Return Date</Label>
+                        <Input
+                          id="returnDate"
+                          type="date"
+                          {...flightForm.register("returnDate")}
+                          min={flightForm.watch("departureDate") || new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="returnDate">Return Date (Optional)</Label>
-                    <Input
-                      id="returnDate"
-                      type="date"
-                      {...flightForm.register("returnDate")}
-                    />
-                  </div>
-
+                {/* Passengers and Options */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="passengers">Passengers</Label>
                     <Select onValueChange={(value) => flightForm.setValue("passengers", parseInt(value))}>
