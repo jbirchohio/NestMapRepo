@@ -523,61 +523,391 @@ export default function BookingSystem() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {flightResults.map((flight) => (
-                  <div key={flight.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                          <Plane className="h-5 w-5 text-blue-600" />
+                {/* Flight Type Tabs for Round Trip */}
+                {tripType === 'round-trip' && flightResults.some(f => f.id.startsWith('return_')) ? (
+                  <Tabs defaultValue="departure" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="departure" className="flex items-center gap-2">
+                        <Plane className="h-4 w-4" />
+                        Departure Flights ({flightResults.filter(f => !f.id.startsWith('return_')).length})
+                      </TabsTrigger>
+                      <TabsTrigger value="return" className="flex items-center gap-2">
+                        <Plane className="h-4 w-4 rotate-180" />
+                        Return Flights ({flightResults.filter(f => f.id.startsWith('return_')).length})
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="departure" className="space-y-4 mt-4">
+                      {flightResults.filter(flight => !flight.id.startsWith('return_')).map((flight) => (
+                        <div key={flight.id} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                                <Plane className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold">{flight.airline} {flight.flightNumber}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {flight.origin} → {flight.destination}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-green-600">
+                                ${flight.price.amount}
+                              </p>
+                              <p className="text-sm text-muted-foreground">per person</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              <span>{formatDuration(flight.duration)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              <span>{flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              <div className="flex flex-col">
+                                <span className="font-medium">{formatFlightTime(flight.departureTime)} - {formatFlightTime(flight.arrivalTime)}</span>
+                                <span className="text-xs text-muted-foreground">{formatFlightDate(flight.departureTime)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              <span>{flight.availability} seats left</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="capitalize">
+                              {flight.cabin}
+                            </Badge>
+                            <Button 
+                              onClick={() => handleBooking('flight', flight)}
+                              disabled={isBooking}
+                            >
+                              {isBooking ? 'Booking...' : 'Book Flight'}
+                            </Button>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold">{flight.airline} {flight.flightNumber}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {flight.origin} → {flight.destination}
-                          </p>
+                      ))}
+                    </TabsContent>
+                    
+                    <TabsContent value="return" className="space-y-4 mt-4">
+                      {flightResults.filter(flight => flight.id.startsWith('return_')).map((flight) => (
+                        <div key={flight.id} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
+                                <Plane className="h-5 w-5 text-orange-600 rotate-180" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold">{flight.airline} {flight.flightNumber}</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {flight.origin} → {flight.destination}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-green-600">
+                                ${flight.price.amount}
+                              </p>
+                              <p className="text-sm text-muted-foreground">per person</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              <span>{formatDuration(flight.duration)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              <span>{flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              <div className="flex flex-col">
+                                <span className="font-medium">{formatFlightTime(flight.departureTime)} - {formatFlightTime(flight.arrivalTime)}</span>
+                                <span className="text-xs text-muted-foreground">{formatFlightDate(flight.departureTime)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              <span>{flight.availability} seats left</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="capitalize">
+                              {flight.cabin}
+                            </Badge>
+                            <Button 
+                              onClick={() => handleBooking('flight', flight)}
+                              disabled={isBooking}
+                            >
+                              {isBooking ? 'Booking...' : 'Book Flight'}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </TabsContent>
+                  </Tabs>
+                ) : (
+                  /* Single list for one-way flights */
+                  <div className="space-y-4">
+                    {flightResults.map((flight) => (
+                      <div key={flight.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                              <Plane className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">{flight.airline} {flight.flightNumber}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {flight.origin} → {flight.destination}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-green-600">
+                              ${flight.price.amount}
+                            </p>
+                            <p className="text-sm text-muted-foreground">per person</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            <span>{formatDuration(flight.duration)}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            <span>{flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{formatFlightTime(flight.departureTime)} - {formatFlightTime(flight.arrivalTime)}</span>
+                              <span className="text-xs text-muted-foreground">{formatFlightDate(flight.departureTime)}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            <span>{flight.availability} seats left</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="capitalize">
+                            {flight.cabin}
+                          </Badge>
+                          <Button 
+                            onClick={() => handleBooking('flight', flight)}
+                            disabled={isBooking}
+                          >
+                            {isBooking ? 'Booking...' : 'Book Flight'}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Hotel Search Tab */}
+        <TabsContent value="hotels" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Hotel className="h-5 w-5" />
+                Hotel Search
+              </CardTitle>
+              <CardDescription>
+                Find and book hotels with the best rates and amenities
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={hotelForm.handleSubmit(searchHotels)} className="space-y-6">
+                {/* Hotel search form fields... */}
+                <div className="space-y-2">
+                  <Label htmlFor="hotelDestination">Destination</Label>
+                  <Input
+                    id="hotelDestination"
+                    {...hotelForm.register("destination")}
+                    placeholder="City or hotel name"
+                  />
+                </div>
+
+                {/* Use the same date range picker for hotels */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Stay Dates</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                          dateRange.to ? (
+                            <>
+                              <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">Check-in</span>
+                                <span>{format(dateRange.from, "LLL dd, y")}</span>
+                              </div>
+                              <span className="mx-2">→</span>
+                              <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">Check-out</span>
+                                <span>{format(dateRange.to, "LLL dd, y")}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">Check-in</span>
+                                <span>{format(dateRange.from, "LLL dd, y")}</span>
+                              </div>
+                              <span className="mx-2 text-muted-foreground">→ Select check-out</span>
+                            </>
+                          )
+                        ) : (
+                          <span>Select check-in and check-out dates</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <DayPicker
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={setDateRange}
+                        disabled={(date) => date < new Date()}
+                        numberOfMonths={2}
+                        className="p-3"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="guests">Guests</Label>
+                    <Select onValueChange={(value) => hotelForm.setValue("guests", parseInt(value))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="1 Guest" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1,2,3,4,5,6,7,8,9,10].map(num => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} Guest{num > 1 ? 's' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="rooms">Rooms</Label>
+                    <Select onValueChange={(value) => hotelForm.setValue("rooms", parseInt(value))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="1 Room" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1,2,3,4,5].map(num => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} Room{num > 1 ? 's' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Button type="submit" disabled={isSearching} className="w-full">
+                  {isSearching ? (
+                    <>
+                      <Search className="h-4 w-4 mr-2 animate-spin" />
+                      Searching Hotels...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Search Hotels
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Hotel Results remain the same... */}
+          {hotelResults.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Hotel Results</CardTitle>
+                <CardDescription>
+                  {hotelResults.length} hotels found
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {hotelResults.map((hotel) => (
+                  <div key={hotel.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold">{hotel.name}</h4>
+                          <div className="flex items-center">
+                            {[...Array(hotel.starRating)].map((_, i) => (
+                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{hotel.address}</p>
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4" />
+                            <span>{hotel.rating.score}/5 ({hotel.rating.reviews} reviews)</span>
+                          </div>
+                          <Badge variant="outline">{hotel.cancellation}</Badge>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-green-600">
-                          ${flight.price.amount}
+                          ${hotel.price.amount}
                         </p>
-                        <p className="text-sm text-muted-foreground">per person</p>
+                        <p className="text-sm text-muted-foreground">per {hotel.price.per}</p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{formatDuration(flight.duration)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <div className="flex flex-col">
-                          <span className="font-medium">{formatFlightTime(flight.departureTime)} - {formatFlightTime(flight.arrivalTime)}</span>
-                          <span className="text-xs text-muted-foreground">{formatFlightDate(flight.departureTime)}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>{flight.availability} seats left</span>
-                      </div>
+                    <div className="flex flex-wrap gap-1">
+                      {hotel.amenities.slice(0, 4).map((amenity, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {amenity}
+                        </Badge>
+                      ))}
+                      {hotel.amenities.length > 4 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{hotel.amenities.length - 4} more
+                        </Badge>
+                      )}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="capitalize">
-                        {flight.cabin}
-                      </Badge>
-                      <Button 
-                        onClick={() => handleBooking('flight', flight)}
-                        disabled={isBooking}
-                      >
-                        {isBooking ? 'Booking...' : 'Book Flight'}
-                      </Button>
-                    </div>
+                    <Button 
+                      onClick={() => handleBooking('hotel', hotel)}
+                      disabled={isBooking}
+                      className="w-full"
+                    >
+                      {isBooking ? 'Booking...' : 'Book Hotel'}
+                    </Button>
                   </div>
                 ))}
               </CardContent>
