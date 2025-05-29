@@ -58,12 +58,17 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
       setIsLoading(true);
       setErrorMessage("");
       
+      // Determine role type based on use case
+      const agencyUseCases = ['client-services', 'client-planning'];
+      const roleType = agencyUseCases.includes(values.useCase) ? 'agency' : 'corporate';
+      
       await signUp(values.email, values.password, {
         display_name: values.name,
         company: values.company,
         job_title: values.jobTitle,
         team_size: values.teamSize,
         use_case: values.useCase,
+        role_type: roleType,
       });
       
       if (onSuccess) {
@@ -203,11 +208,12 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
                     <SelectValue placeholder="How will you use NestMap?" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="business-travel">Business Travel Management</SelectItem>
-                    <SelectItem value="client-meetings">Client Meetings & Events</SelectItem>
+                    <SelectItem value="corporate-travel">Corporate Travel Management</SelectItem>
                     <SelectItem value="team-retreats">Team Retreats & Offsites</SelectItem>
                     <SelectItem value="conferences">Conference & Trade Show Planning</SelectItem>
                     <SelectItem value="sales-trips">Sales Team Travel</SelectItem>
+                    <SelectItem value="client-services">Travel Agency & Client Services</SelectItem>
+                    <SelectItem value="client-planning">Client Trip Planning & Proposals</SelectItem>
                     <SelectItem value="other">Other Business Use</SelectItem>
                   </SelectContent>
                 </Select>

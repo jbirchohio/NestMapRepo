@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   userId: number | null; // Database user ID
+  roleType: 'corporate' | 'agency' | null; // Business mode
   loading: boolean;
   authReady: boolean; // Authentication and database user lookup complete
   error: string | null;

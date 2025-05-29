@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   display_name: text("display_name"),
   avatar_url: text("avatar_url"),
   role: text("role").default("user"), // System-wide role: admin, manager, user, guest
+  role_type: text("role_type").default("corporate"), // Business mode: corporate, agency
   organization_id: integer("organization_id"), // For B2B multi-tenant support
   created_at: timestamp("created_at").defaultNow(),
 });
@@ -44,6 +45,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   display_name: true,
   avatar_url: true,
   role: true,
+  role_type: true,
   organization_id: true,
 });
 
