@@ -2942,38 +2942,7 @@ Include realistic business activities, meeting times, dining recommendations, an
       // For now, return sample notifications for all users
       // In production, you would check authentication and return user-specific notifications
 
-      // Generate sample notifications for demonstration
-      const notifications = [
-        {
-          id: '1',
-          type: 'trip_shared',
-          title: 'Trip shared with you',
-          message: 'John Doe shared "European Adventure" trip with you',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-          read: false,
-          actionUrl: '/trip/1'
-        },
-        {
-          id: '2',
-          type: 'booking_confirmed',
-          title: 'Flight booking confirmed',
-          message: 'Your flight to Paris has been confirmed for March 15th',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-          read: false,
-          actionUrl: '/bookings'
-        },
-        {
-          id: '3',
-          type: 'reminder',
-          title: 'Trip starts tomorrow',
-          message: 'Don\'t forget to check in for your flight to Tokyo',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-          read: true,
-          actionUrl: '/trip/2'
-        }
-      ];
-
-      res.json(notifications);
+      res.json(demoNotifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);
       res.status(500).json({ error: "Failed to fetch notifications" });
