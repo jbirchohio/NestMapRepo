@@ -2647,6 +2647,84 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  app.put("/api/user/privacy", async (req: Request, res: Response) => {
+    try {
+      const { 
+        userId,
+        profileVisibility,
+        showEmail,
+        showLocation,
+        allowSearchEngineIndexing,
+        shareDataWithPartners,
+        allowAnalytics 
+      } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      // In a real app, you would save these settings to the database
+      // For now, we'll log the privacy settings update
+      console.log('Privacy settings updated for user:', userId, {
+        profileVisibility,
+        showEmail,
+        showLocation,
+        allowSearchEngineIndexing,
+        shareDataWithPartners,
+        allowAnalytics
+      });
+      
+      res.json({ 
+        success: true,
+        message: "Privacy settings updated successfully" 
+      });
+    } catch (error) {
+      console.error('Privacy settings update error:', error);
+      res.status(500).json({ message: "Failed to update privacy settings" });
+    }
+  });
+
+  app.put("/api/user/notifications", async (req: Request, res: Response) => {
+    try {
+      const { 
+        userId,
+        emailNotifications,
+        pushNotifications,
+        smsNotifications,
+        tripReminders,
+        bookingUpdates,
+        promotionalEmails,
+        weeklyDigest,
+        instantUpdates 
+      } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      // In a real app, you would save these settings to the database
+      // For now, we'll log the notification settings update
+      console.log('Notification settings updated for user:', userId, {
+        emailNotifications,
+        pushNotifications,
+        smsNotifications,
+        tripReminders,
+        bookingUpdates,
+        promotionalEmails,
+        weeklyDigest,
+        instantUpdates
+      });
+      
+      res.json({ 
+        success: true,
+        message: "Notification settings updated successfully" 
+      });
+    } catch (error) {
+      console.error('Notification settings update error:', error);
+      res.status(500).json({ message: "Failed to update notification settings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

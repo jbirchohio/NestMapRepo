@@ -472,10 +472,125 @@ export default function ProfileSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Notification settings will be available in a future update.
-                </p>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Delivery Methods</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Email Notifications</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Receive notifications via email
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.emailNotifications}
+                        onCheckedChange={(checked) => updateNotificationSettings('emailNotifications', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Push Notifications</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Receive browser push notifications
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.pushNotifications}
+                        onCheckedChange={(checked) => updateNotificationSettings('pushNotifications', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">SMS Notifications</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Receive notifications via text message
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.smsNotifications}
+                        onCheckedChange={(checked) => updateNotificationSettings('smsNotifications', checked)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Trip & Travel</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Trip Reminders</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Get reminders about upcoming trips and activities
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.tripReminders}
+                        onCheckedChange={(checked) => updateNotificationSettings('tripReminders', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Booking Updates</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Notifications about flight, hotel, and booking changes
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.bookingUpdates}
+                        onCheckedChange={(checked) => updateNotificationSettings('bookingUpdates', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Instant Updates</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Real-time notifications for urgent travel updates
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.instantUpdates}
+                        onCheckedChange={(checked) => updateNotificationSettings('instantUpdates', checked)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Marketing & Updates</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Promotional Emails</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Receive promotional offers and travel deals
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.promotionalEmails}
+                        onCheckedChange={(checked) => updateNotificationSettings('promotionalEmails', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Weekly Digest</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Weekly summary of your trips and platform updates
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.weeklyDigest}
+                        onCheckedChange={(checked) => updateNotificationSettings('weeklyDigest', checked)}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
