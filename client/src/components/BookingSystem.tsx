@@ -239,7 +239,7 @@ export default function BookingSystem() {
         city: destination,
         startDate,
         endDate,
-        userId: user.id,
+        userId: user.dbUser?.id || user.id,
         description: `Trip created with flight bookings to ${destination}`,
         notes: ''
       });
