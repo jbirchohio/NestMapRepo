@@ -2638,8 +2638,8 @@ Include realistic business activities, meeting times, dining recommendations, an
       });
 
       res.json({
-        success: true,
-        message: "Password change request received - implement Supabase Auth integration"
+        success: false,
+        message: "Password change is not yet implemented. This requires Supabase Auth integration."
       });
     } catch (error) {
       console.error("Error changing password:", error);

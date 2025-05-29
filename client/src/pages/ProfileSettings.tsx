@@ -100,11 +100,17 @@ export default function ProfileSettings() {
 
   const changePasswordMutation = useMutation({
     mutationFn: async (data: PasswordFormData) => {
-      return apiRequest('PUT', '/api/user/password', {
+      const response = await apiRequest('PUT', '/api/user/password', {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
         userId,
       });
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      return result;
     },
     onSuccess: () => {
       toast({
@@ -115,8 +121,8 @@ export default function ProfileSettings() {
     },
     onError: (error: any) => {
       toast({
-        title: "Password Change Failed",
-        description: error.message || "Failed to change password",
+        title: "Password Change Not Available",
+        description: error.message || "Password change functionality requires authentication setup",
         variant: "destructive",
       });
     },
