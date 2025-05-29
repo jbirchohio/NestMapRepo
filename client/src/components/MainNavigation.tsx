@@ -204,8 +204,8 @@ export default function MainNavigation() {
                 size="sm"
                 onClick={() => {
                   toast({
-                    title: "Profile",
-                    description: `Logged in as ${user.email}`,
+                    title: "Account Information",
+                    description: `Role: ${user.role || 'User'} | ID: ${user.id} | Email: ${user.email}`,
                   });
                 }}
               >

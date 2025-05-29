@@ -94,18 +94,24 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
     e.stopPropagation(); // Prevent triggering the activity click
     
     // Show a confirmation toast
-    toast({
+    const { dismiss } = toast({
       title: "Delete Activity?",
       description: "Are you sure you want to delete this activity?",
       action: (
         <div className="flex gap-2">
           <button 
-            onClick={() => deleteActivity.mutate()}
+            onClick={() => {
+              deleteActivity.mutate();
+              dismiss();
+            }}
             className="bg-[hsl(var(--destructive))] text-white px-3 py-1 rounded text-xs"
           >
             Delete
           </button>
-          <button className="bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] px-3 py-1 rounded text-xs">
+          <button 
+            onClick={() => dismiss()}
+            className="bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] px-3 py-1 rounded text-xs"
+          >
             Cancel
           </button>
         </div>
