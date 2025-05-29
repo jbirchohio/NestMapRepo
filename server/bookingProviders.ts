@@ -521,26 +521,30 @@ function transformAmadeusResponse(data: any): FlightResult[] {
 
   return data.data.map((offer: any) => {
     const itinerary = offer.itineraries?.[0];
-    const segment = itinerary?.segments?.[0];
+    const segments = itinerary?.segments || [];
     const price = offer.price;
     
-    if (!segment || !price) return null;
+    if (!segments.length || !price) return null;
+
+    // Get first and last segments for complete route
+    const firstSegment = segments[0];
+    const lastSegment = segments[segments.length - 1];
 
     return {
       id: offer.id,
-      airline: segment.carrierCode || 'Unknown',
-      flightNumber: `${segment.carrierCode}${segment.number}` || 'N/A',
-      origin: segment.departure?.iataCode || '',
-      destination: segment.arrival?.iataCode || '',
-      departureTime: segment.departure?.at || '',
-      arrivalTime: segment.arrival?.at || '',
+      airline: firstSegment.carrierCode || 'Unknown',
+      flightNumber: `${firstSegment.carrierCode}${firstSegment.number}` || 'N/A',
+      origin: firstSegment.departure?.iataCode || '',
+      destination: lastSegment.arrival?.iataCode || '',
+      departureTime: firstSegment.departure?.at || '',
+      arrivalTime: lastSegment.arrival?.at || '',
       duration: itinerary.duration || '',
-      stops: (itinerary.segments?.length || 1) - 1,
+      stops: segments.length - 1,
       price: {
         amount: parseFloat(price.total) || 0,
         currency: price.currency || 'USD'
       },
-      cabin: segment.cabin || 'ECONOMY',
+      cabin: firstSegment.cabin || 'ECONOMY',
       availability: offer.numberOfBookableSeats || 0,
       bookingUrl: `https://amadeus.com/booking/${offer.id}`
     };
