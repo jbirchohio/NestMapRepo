@@ -1667,12 +1667,18 @@ If you have all required info, return JSON with:
           };
         }
         
+        // Ensure we have valid airport codes
+        const originCode = getAirportCode(analysis.tripInfo.departureCity);
+        const destinationCode = getAirportCode(analysis.tripInfo.destination);
+        
+        console.log(`Airport codes: ${analysis.tripInfo.departureCity} -> ${originCode}, ${analysis.tripInfo.destination} -> ${destinationCode}`);
+        
         return {
           needsMoreInfo: false,
           tripInfo: {
             ...analysis.tripInfo,
-            originCode: getAirportCode(analysis.tripInfo.departureCity),
-            destinationCode: getAirportCode(analysis.tripInfo.destination)
+            originCode,
+            destinationCode
           }
         };
       }
@@ -1698,28 +1704,135 @@ If you have all required info, return JSON with:
   function getAirportCode(cityName: string): string {
     const airportMap: { [key: string]: string } = {
       'san francisco': 'SFO',
+      'san francisco, ca': 'SFO',
+      'sf': 'SFO',
       'new york': 'JFK',
+      'new york city': 'JFK',
+      'nyc': 'JFK',
+      'ny': 'JFK',
       'chicago': 'ORD',
+      'chicago, il': 'ORD',
       'los angeles': 'LAX',
+      'la': 'LAX',
       'seattle': 'SEA',
+      'seattle, wa': 'SEA',
       'denver': 'DEN',
+      'denver, co': 'DEN',
       'miami': 'MIA',
+      'miami, fl': 'MIA',
       'austin': 'AUS',
+      'austin, tx': 'AUS',
       'boston': 'BOS',
+      'boston, ma': 'BOS',
       'atlanta': 'ATL',
+      'atlanta, ga': 'ATL',
+      'washington': 'DCA',
+      'washington dc': 'DCA',
+      'dc': 'DCA',
+      'philadelphia': 'PHL',
+      'phoenix': 'PHX',
+      'las vegas': 'LAS',
+      'vegas': 'LAS',
+      'orlando': 'MCO',
+      'dallas': 'DFW',
+      'houston': 'IAH',
+      'detroit': 'DTW',
+      'minneapolis': 'MSP',
+      'charlotte': 'CLT',
+      'portland': 'PDX',
+      'salt lake city': 'SLC',
+      'nashville': 'BNA',
       'japan': 'NRT',
       'tokyo': 'NRT',
       'osaka': 'KIX',
+      'kyoto': 'KIX',
       'paris': 'CDG',
+      'france': 'CDG',
       'london': 'LHR',
+      'uk': 'LHR',
+      'england': 'LHR',
       'rome': 'FCO',
+      'italy': 'FCO',
       'amsterdam': 'AMS',
+      'netherlands': 'AMS',
       'madrid': 'MAD',
-      'barcelona': 'BCN'
+      'spain': 'MAD',
+      'barcelona': 'BCN',
+      'berlin': 'BER',
+      'germany': 'FRA',
+      'frankfurt': 'FRA',
+      'munich': 'MUC',
+      'zurich': 'ZUR',
+      'switzerland': 'ZUR',
+      'vienna': 'VIE',
+      'austria': 'VIE',
+      'stockholm': 'ARN',
+      'sweden': 'ARN',
+      'copenhagen': 'CPH',
+      'denmark': 'CPH',
+      'oslo': 'OSL',
+      'norway': 'OSL',
+      'helsinki': 'HEL',
+      'finland': 'HEL',
+      'dublin': 'DUB',
+      'ireland': 'DUB',
+      'lisbon': 'LIS',
+      'portugal': 'LIS',
+      'toronto': 'YYZ',
+      'vancouver': 'YVR',
+      'montreal': 'YUL',
+      'canada': 'YYZ',
+      'mexico city': 'MEX',
+      'mexico': 'CUN',
+      'cancun': 'CUN',
+      'sydney': 'SYD',
+      'melbourne': 'MEL',
+      'australia': 'SYD',
+      'singapore': 'SIN',
+      'hong kong': 'HKG',
+      'seoul': 'ICN',
+      'south korea': 'ICN',
+      'beijing': 'PEK',
+      'shanghai': 'PVG',
+      'china': 'PEK',
+      'mumbai': 'BOM',
+      'delhi': 'DEL',
+      'india': 'DEL',
+      'dubai': 'DXB',
+      'uae': 'DXB',
+      'tel aviv': 'TLV',
+      'israel': 'TLV',
+      'cairo': 'CAI',
+      'egypt': 'CAI',
+      'johannesburg': 'JNB',
+      'south africa': 'JNB',
+      'sao paulo': 'GRU',
+      'brazil': 'GRU',
+      'buenos aires': 'EZE',
+      'argentina': 'EZE'
     };
     
-    const city = cityName?.toLowerCase() || '';
-    return airportMap[city] || city.substring(0, 3).toUpperCase();
+    const city = cityName?.toLowerCase().trim() || '';
+    
+    // Direct match
+    if (airportMap[city]) {
+      return airportMap[city];
+    }
+    
+    // Check if it's already a 3-letter code
+    if (city.length === 3 && /^[A-Za-z]{3}$/.test(city)) {
+      return city.toUpperCase();
+    }
+    
+    // Try partial matches for compound city names
+    for (const [key, code] of Object.entries(airportMap)) {
+      if (city.includes(key) || key.includes(city)) {
+        return code;
+      }
+    }
+    
+    // Default fallback to major airports
+    return 'JFK'; // Default to JFK if no match found
   }
 
   // Helper function to convert destination to hotel city code
@@ -1822,8 +1935,23 @@ If you have all required info, return JSON with:
       // Search for real flights with authentic pricing using exact Amadeus API spec
       const flightUrl = `https://api.amadeus.com/v2/shopping/flight-offers`;
       
-      const origin = tripInfo.originCode || 'SFO';
-      const destination = tripInfo.destinationCode || 'NRT';
+      // Ensure we have valid 3-letter airport codes
+      let origin = tripInfo.originCode || getAirportCode(tripInfo.departureCity) || 'JFK';
+      let destination = tripInfo.destinationCode || getAirportCode(tripInfo.destination) || 'LAX';
+      
+      // Validate airport codes are exactly 3 letters
+      if (!/^[A-Za-z]{3}$/.test(origin)) {
+        origin = getAirportCode(origin);
+      }
+      if (!/^[A-Za-z]{3}$/.test(destination)) {
+        destination = getAirportCode(destination);
+      }
+      
+      // Final validation - use defaults if still invalid
+      if (!/^[A-Za-z]{3}$/.test(origin)) origin = 'JFK';
+      if (!/^[A-Za-z]{3}$/.test(destination)) destination = 'LAX';
+      
+      console.log(`Using airport codes for flight search: ${origin} -> ${destination}`);
       
       // Fix date formatting - ensure future dates
       const startDate = new Date(tripInfo.startDate || '2025-06-01');
@@ -1836,13 +1964,15 @@ If you have all required info, return JSON with:
       
       // Build query string exactly as per Amadeus documentation
       const queryParams = new URLSearchParams({
-        originLocationCode: origin,
-        destinationLocationCode: destination,
+        originLocationCode: origin.toUpperCase(),
+        destinationLocationCode: destination.toUpperCase(),
         departureDate: departureDate,
         adults: adults.toString(),
         max: '5',
         currencyCode: 'USD'
       });
+      
+      console.log(`Amadeus flight search params:`, queryParams.toString());
       
       const response = await fetch(`${flightUrl}?${queryParams}`, {
         headers: {

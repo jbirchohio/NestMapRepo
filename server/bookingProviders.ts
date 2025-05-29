@@ -281,10 +281,22 @@ async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightR
       throw new Error("Failed to authenticate with Amadeus");
     }
 
+    // Validate and ensure proper airport codes
+    let origin = params.origin?.toUpperCase().trim() || '';
+    let destination = params.destination?.toUpperCase().trim() || '';
+    
+    // Ensure exactly 3 letters
+    if (!/^[A-Z]{3}$/.test(origin)) {
+      throw new Error(`Invalid origin airport code: ${params.origin}. Must be 3-letter IATA code.`);
+    }
+    if (!/^[A-Z]{3}$/.test(destination)) {
+      throw new Error(`Invalid destination airport code: ${params.destination}. Must be 3-letter IATA code.`);
+    }
+
     // Build query parameters
     const queryParams = new URLSearchParams({
-      originLocationCode: params.origin,
-      destinationLocationCode: params.destination,
+      originLocationCode: origin,
+      destinationLocationCode: destination,
       departureDate: params.departureDate,
       adults: params.passengers.toString(),
       max: '10',
