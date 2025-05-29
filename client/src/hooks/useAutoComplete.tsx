@@ -7,9 +7,10 @@ import { ClientActivity } from '@/lib/types';
 interface UseAutoCompleteProps {
   activities: ClientActivity[];
   tripId: number;
+  onActivityCompleted?: () => void;
 }
 
-export function useAutoComplete({ activities, tripId }: UseAutoCompleteProps) {
+export function useAutoComplete({ activities, tripId, onActivityCompleted }: UseAutoCompleteProps) {
   const [processedActivityIds, setProcessedActivityIds] = useState<Set<number>>(new Set());
   const processingRef = useRef<Set<number>>(new Set());
 
@@ -25,6 +26,10 @@ export function useAutoComplete({ activities, tripId }: UseAutoCompleteProps) {
       processingRef.current.delete(activityId);
       // Invalidate activities query to refresh the list
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"] });
+      // Trigger immediate callback for real-time updates
+      if (onActivityCompleted) {
+        onActivityCompleted();
+      }
     },
     onError: (_, activityId) => {
       processingRef.current.delete(activityId);

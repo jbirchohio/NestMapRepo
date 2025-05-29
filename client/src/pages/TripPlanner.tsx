@@ -34,8 +34,8 @@ export default function TripPlanner() {
     refetchActivities 
   } = useActivities(tripId);
   
-  // Auto-complete activities based on time
-  useAutoComplete({ activities, tripId });
+  // Auto-complete activities based on time with immediate updates
+  useAutoComplete({ activities, tripId, onActivityCompleted: refetchActivities });
   
   // State for currently active day
   const [activeDay, setActiveDay] = useState<Date | null>(null);
@@ -45,6 +45,26 @@ export default function TripPlanner() {
   
   // State for share modal
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  
+  // State for activity modal management
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<ClientActivity | null>(null);
+  
+  // Centralized activity modal handlers
+  const handleOpenActivityModal = (activity: ClientActivity | null = null, day: Date | null = null) => {
+    setSelectedActivity(activity);
+    setIsActivityModalOpen(true);
+  };
+  
+  const handleCloseActivityModal = () => {
+    setSelectedActivity(null);
+    setIsActivityModalOpen(false);
+  };
+  
+  const handleActivitySaved = () => {
+    refetchActivities();
+    handleCloseActivityModal();
+  };
   
   // Set active day when trip data loads and store trip destination info for geocoding
   useEffect(() => {
@@ -261,6 +281,9 @@ export default function TripPlanner() {
             activeDay={activeDay}
             onChangeDayClick={setActiveDay}
             onActivitiesUpdated={refetchActivities}
+            onAddActivity={handleOpenActivityModal}
+            mobileView={mobileView}
+            setMobileView={setMobileView}
           />
         </div>
         
@@ -288,6 +311,9 @@ export default function TripPlanner() {
               activeDay={activeDay}
               onChangeDayClick={setActiveDay}
               onActivitiesUpdated={refetchActivities}
+              onAddActivity={handleOpenActivityModal}
+              mobileView={mobileView}
+              setMobileView={setMobileView}
             />
           </div>
         )}
