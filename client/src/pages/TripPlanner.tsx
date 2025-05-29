@@ -34,8 +34,8 @@ export default function TripPlanner() {
     refetchActivities 
   } = useActivities(tripId);
   
-  // Auto-complete activities based on time (temporarily disabled to fix infinite loop)
-  // useAutoComplete({ activities, tripId });
+  // Auto-complete activities based on time
+  useAutoComplete({ activities, tripId });
   
   // State for currently active day
   const [activeDay, setActiveDay] = useState<Date | null>(null);

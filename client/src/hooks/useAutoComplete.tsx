@@ -36,6 +36,7 @@ export function useAutoComplete({ activities, tripId }: UseAutoCompleteProps) {
 
     const checkAutoComplete = () => {
       const now = new Date();
+      console.log('🕐 Auto-completion check running at:', now.toLocaleString());
       
       // Sort activities by date first, then by time
       const sortedActivities = [...activities].sort((a, b) => {
