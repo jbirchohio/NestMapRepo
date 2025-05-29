@@ -3102,6 +3102,51 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // Push notification subscription endpoints
+  app.post("/api/push/subscribe", (req: Request, res: Response) => {
+    try {
+      const { subscription, userId } = req.body;
+      
+      if (!subscription || !userId) {
+        return res.status(400).json({ error: "Missing subscription or userId" });
+      }
+
+      // In production, save to database
+      console.log(`Push subscription registered for user ${userId}`);
+      
+      res.json({ success: true, message: "Push subscription registered" });
+    } catch (error) {
+      console.error("Error registering push subscription:", error);
+      res.status(500).json({ error: "Failed to register push subscription" });
+    }
+  });
+
+  app.post("/api/push/unsubscribe", (req: Request, res: Response) => {
+    try {
+      const { endpoint, userId } = req.body;
+      
+      if (!endpoint || !userId) {
+        return res.status(400).json({ error: "Missing endpoint or userId" });
+      }
+
+      // In production, remove from database
+      console.log(`Push subscription removed for user ${userId}`);
+      
+      res.json({ success: true, message: "Push subscription removed" });
+    } catch (error) {
+      console.error("Error removing push subscription:", error);
+      res.status(500).json({ error: "Failed to remove push subscription" });
+    }
+  });
+
+  app.get("/api/push/vapid-public-key", (req: Request, res: Response) => {
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    if (!publicKey) {
+      return res.status(500).json({ error: "VAPID public key not configured" });
+    }
+    res.json({ publicKey });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

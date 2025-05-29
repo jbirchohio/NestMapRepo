@@ -19,6 +19,42 @@ interface TeamInvitationEmailParams {
   role: string;
 }
 
+interface NotificationEmailParams {
+  to: string;
+  subject: string;
+  title: string;
+  message: string;
+  actionUrl?: string;
+  actionText?: string;
+  type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system';
+}
+
+export async function sendNotificationEmail(params: NotificationEmailParams): Promise<boolean> {
+  if (!process.env.SENDGRID_API_KEY) {
+    console.log('⚠ SendGrid not configured - email sending disabled');
+    return false;
+  }
+
+  try {
+    const sgMail = require('@sendgrid/mail');
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+    const msg = {
+      to: params.to,
+      from: process.env.FROM_EMAIL || 'noreply@nestmap.com',
+      subject: params.subject,
+      html: generateNotificationHTML(params),
+    };
+
+    await sgMail.send(msg);
+    console.log(`Notification email sent to ${params.to}: ${params.subject}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending notification email:', error);
+    return false;
+  }
+}
+
 export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams): Promise<boolean> {
   if (!mailService) {
     console.log(`[EMAIL DISABLED] Would send invitation to ${params.to} for ${params.organizationName}`);
