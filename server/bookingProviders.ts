@@ -268,6 +268,53 @@ async function getAmadeusToken() {
   }
 }
 
+async function findAirportCode(cityOrCode: string): Promise<string | null> {
+  try {
+    // If already a 3-letter code, return as-is
+    if (/^[A-Z]{3}$/.test(cityOrCode.toUpperCase())) {
+      return cityOrCode.toUpperCase();
+    }
+
+    const token = await getAmadeusToken();
+    if (!token) {
+      return null;
+    }
+
+    const response = await fetch(`https://api.amadeus.com/v1/reference-data/locations?subType=AIRPORT&keyword=${encodeURIComponent(cityOrCode)}&page%5Blimit%5D=10`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      console.error('Airport search failed:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    // Find the best match (prefer major airports)
+    if (data.data && data.data.length > 0) {
+      // Sort by relevance and airport size
+      const sortedAirports = data.data.sort((a: any, b: any) => {
+        // Prefer airports with higher relevance
+        if (a.relevance !== b.relevance) {
+          return b.relevance - a.relevance;
+        }
+        // Prefer larger airports (those with more detailed names usually)
+        return (b.name?.length || 0) - (a.name?.length || 0);
+      });
+
+      return sortedAirports[0].iataCode;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Airport lookup error:', error);
+    return null;
+  }
+}
+
 // Amadeus API integration with proper authentication
 async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightResult[]> {
   try {
@@ -281,16 +328,25 @@ async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightR
       throw new Error("Failed to authenticate with Amadeus");
     }
 
-    // Validate and ensure proper airport codes
+    // Convert city names to airport codes if needed
     let origin = params.origin?.toUpperCase().trim() || '';
     let destination = params.destination?.toUpperCase().trim() || '';
     
-    // Ensure exactly 3 letters
+    // If not already 3-letter IATA codes, try to find airports
     if (!/^[A-Z]{3}$/.test(origin)) {
-      throw new Error(`Invalid origin airport code: ${params.origin}. Must be 3-letter IATA code.`);
+      const originAirport = await findAirportCode(origin);
+      if (!originAirport) {
+        throw new Error(`Could not find airport for origin: ${params.origin}`);
+      }
+      origin = originAirport;
     }
+    
     if (!/^[A-Z]{3}$/.test(destination)) {
-      throw new Error(`Invalid destination airport code: ${params.destination}. Must be 3-letter IATA code.`);
+      const destinationAirport = await findAirportCode(destination);
+      if (!destinationAirport) {
+        throw new Error(`Could not find airport for destination: ${params.destination}`);
+      }
+      destination = destinationAirport;
     }
 
     // Build query parameters
