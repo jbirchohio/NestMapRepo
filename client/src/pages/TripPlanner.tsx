@@ -225,7 +225,7 @@ export default function TripPlanner() {
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
       {/* Mobile view toggle buttons */}
-      <div className="md:hidden flex border rounded-md overflow-hidden shadow-sm m-2">
+      <div className="md:hidden flex border rounded-md overflow-hidden shadow-sm m-2 relative z-50 bg-white dark:bg-[hsl(var(--card))]">
         <button
           onClick={() => setMobileView('itinerary')}
           className={`flex-1 py-3 px-4 font-medium ${
