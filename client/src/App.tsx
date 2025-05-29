@@ -19,6 +19,7 @@ import AITripGeneratorPage from "@/pages/AITripGenerator";
 import EnterpriseDashboard from "@/pages/EnterpriseDashboard";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
+import CalendarSettings from "@/pages/CalendarSettings";
 import EmergencyLogout from "@/components/EmergencyLogout";
 import NotFound from "@/pages/not-found";
 
@@ -42,6 +43,7 @@ function Router() {
         <Route path="/enterprise" component={EnterpriseDashboard} />
         <Route path="/profile" component={ProfileSettings} />
         <Route path="/help" component={HelpCenter} />
+        <Route path="/calendar" component={CalendarSettings} />
         <Route component={NotFound} />
       </Switch>
     </>
