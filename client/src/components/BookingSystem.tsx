@@ -319,30 +319,34 @@ export default function BookingSystem() {
             </CardHeader>
             <CardContent>
               <form onSubmit={flightForm.handleSubmit(searchFlights)} className="space-y-6">
-                {/* Trip Type Selector */}
-                <div className="flex items-center gap-4">
-                  <Label className="text-sm font-medium">Trip Type:</Label>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        value="round-trip"
-                        checked={tripType === 'round-trip'}
-                        onChange={(e) => setTripType(e.target.value as 'round-trip')}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">Round Trip</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        value="one-way"
-                        checked={tripType === 'one-way'}
-                        onChange={(e) => setTripType(e.target.value as 'one-way')}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">One Way</span>
-                    </label>
+                {/* Trip Type Selector - More Prominent */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Trip Type</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={tripType === 'round-trip' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setTripType('round-trip');
+                        setDateRange(undefined);
+                      }}
+                      className="flex-1"
+                    >
+                      Round Trip
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={tripType === 'one-way' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setTripType('one-way');
+                        setDateRange(undefined);
+                      }}
+                      className="flex-1"
+                    >
+                      One Way
+                    </Button>
                   </div>
                 </div>
 
@@ -387,16 +391,44 @@ export default function BookingSystem() {
                         className="w-full justify-start text-left font-normal"
                       >
                         <Calendar className="mr-2 h-4 w-4" />
-                        {dateRange?.from ? (
-                          dateRange.to ? (
-                            <>
-                              {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                            </>
+{dateRange?.from ? (
+                          tripType === 'round-trip' ? (
+                            dateRange.to ? (
+                              <>
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-muted-foreground">Departure</span>
+                                  <span>{format(dateRange.from, "LLL dd, y")}</span>
+                                </div>
+                                <span className="mx-2">→</span>
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-muted-foreground">Return</span>
+                                  <span>{format(dateRange.to, "LLL dd, y")}</span>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-muted-foreground">Departure</span>
+                                  <span>{format(dateRange.from, "LLL dd, y")}</span>
+                                </div>
+                                <span className="mx-2 text-muted-foreground">→ Select return date</span>
+                              </>
+                            )
                           ) : (
-                            format(dateRange.from, "LLL dd, y")
+                            <>
+                              <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground">Travel Date</span>
+                                <span>{format(dateRange.from, "LLL dd, y")}</span>
+                              </div>
+                            </>
                           )
                         ) : (
-                          <span>Pick your travel dates</span>
+                          <span>
+                            {tripType === 'round-trip' 
+                              ? 'Select departure and return dates' 
+                              : 'Select travel date'
+                            }
+                          </span>
                         )}
                       </Button>
                     </PopoverTrigger>
