@@ -1669,22 +1669,48 @@ If you have all required info, return JSON with:
         return [];
       }
 
-      // Search for real hotels with authentic pricing using correct Amadeus API
+      // First search for hotels by location to get hotel IDs
+      const hotelListUrl = `https://api.amadeus.com/v1/reference-data/locations/hotels/by-city`;
+      const cityCode = getHotelCityCode(tripInfo.destination);
+      
+      const locationParams = new URLSearchParams({
+        cityCode: cityCode,
+        radius: '5',
+        radiusUnit: 'KM',
+        hotelSource: 'ALL'
+      });
+      
+      const locationResponse = await fetch(`${hotelListUrl}?${locationParams}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!locationResponse.ok) {
+        console.log("Hotel location search failed:", locationResponse.status);
+        return [];
+      }
+
+      const locationData = await locationResponse.json();
+      const hotelIds = locationData.data?.slice(0, 5).map((hotel: any) => hotel.hotelId) || [];
+      
+      if (hotelIds.length === 0) {
+        console.log("No hotels found in location");
+        return [];
+      }
+
+      // Now search for hotel offers using the hotel IDs
       const hotelSearchUrl = `https://api.amadeus.com/v2/shopping/hotel-offers`;
-      const cityCode = getHotelCityCode(tripInfo.destination); // Use city code instead of airport code
       const checkIn = tripInfo.startDate || '2025-06-01';
       const checkOut = tripInfo.endDate || '2025-06-04';
       const adults = tripInfo.travelers || 1;
       
-      // Build query string exactly as per Amadeus hotel API spec
       const hotelParams = new URLSearchParams({
-        cityCode: cityCode,
+        hotelIds: hotelIds.join(','),
         checkInDate: checkIn,
         checkOutDate: checkOut,
         adults: adults.toString(),
-        radius: '5',
-        radiusUnit: 'KM',
-        ratings: '3,4,5'
+        currency: 'USD'
       });
       
       const response = await fetch(`${hotelSearchUrl}?${hotelParams}`, {
