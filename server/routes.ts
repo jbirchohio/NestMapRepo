@@ -1706,7 +1706,7 @@ If you have all required info, return JSON with:
     }
   }
 
-  // Amadeus OAuth token function
+  // Amadeus OAuth token function for flights (production)
   async function getAmadeusToken() {
     try {
       const authUrl = 'https://api.amadeus.com/v1/security/oauth2/token';
@@ -1728,6 +1728,32 @@ If you have all required info, return JSON with:
       }
     } catch (error) {
       console.log("Amadeus authentication error:", error.message);
+      return null;
+    }
+  }
+
+  // Amadeus OAuth token function for hotels (test environment)
+  async function getAmadeusTestToken() {
+    try {
+      const authUrl = 'https://test.api.amadeus.com/v1/security/oauth2/token';
+      
+      const response = await fetch(authUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `grant_type=client_credentials&client_id=${process.env.AMADEUS_TEST_API_KEY}&client_secret=${process.env.AMADEUS_TEST_API_SECRET}`
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.access_token;
+      } else {
+        console.log("Failed to get Amadeus test token:", response.status);
+        return null;
+      }
+    } catch (error) {
+      console.log("Amadeus test authentication error:", error.message);
       return null;
     }
   }
