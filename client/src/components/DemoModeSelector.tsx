@@ -9,10 +9,36 @@ export default function DemoModeSelector() {
   const [, setLocation] = useLocation();
 
   const handleCorporateDemo = () => {
+    // Store demo mode in localStorage for persistence
+    localStorage.setItem('demo-mode', 'corporate');
+    localStorage.setItem('demo-user', JSON.stringify({
+      id: 'demo-corp-1',
+      username: 'demo-corporate',
+      email: 'demo@corporate.com',
+      display_name: 'Corporate Demo User',
+      roleType: 'corporate',
+      company: 'Demo Corporation',
+      jobTitle: 'Travel Manager',
+      teamSize: '50-200',
+      primaryUseCase: 'Corporate Travel Management'
+    }));
     setLocation('/dashboard/corporate');
   };
 
   const handleAgencyDemo = () => {
+    // Store demo mode in localStorage for persistence
+    localStorage.setItem('demo-mode', 'agency');
+    localStorage.setItem('demo-user', JSON.stringify({
+      id: 'demo-agency-1',
+      username: 'demo-agency',
+      email: 'demo@travelagency.com',
+      display_name: 'Agency Demo User',
+      roleType: 'agency',
+      company: 'Demo Travel Agency',
+      jobTitle: 'Travel Consultant',
+      teamSize: '10-50',
+      primaryUseCase: 'Travel Agency & Client Services'
+    }));
     setLocation('/dashboard/agency');
   };
 
