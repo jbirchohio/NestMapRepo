@@ -245,30 +245,20 @@ export default function MainNavigation() {
                     </Link>
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem
-                    onClick={() => {
-                      toast({
-                        title: "Change Password",
-                        description: "Password management coming soon",
-                      });
-                    }}
-                  >
-                    <Key className="mr-2 h-4 w-4" />
-                    Change Password
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile?tab=security" className="flex items-center">
+                      <Key className="mr-2 h-4 w-4" />
+                      Change Password
+                    </Link>
                   </DropdownMenuItem>
                   
                   <DropdownMenuSeparator />
                   
-                  <DropdownMenuItem
-                    onClick={() => {
-                      toast({
-                        title: "Help & Support",
-                        description: "Support documentation coming soon",
-                      });
-                    }}
-                  >
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    Help & Support
+                  <DropdownMenuItem asChild>
+                    <Link href="/help" className="flex items-center">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Help & Support
+                    </Link>
                   </DropdownMenuItem>
                   
                   <DropdownMenuSeparator />

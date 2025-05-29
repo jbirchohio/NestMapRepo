@@ -18,6 +18,7 @@ import ProposalCenter from "@/pages/ProposalCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
 import EnterpriseDashboard from "@/pages/EnterpriseDashboard";
 import ProfileSettings from "@/pages/ProfileSettings";
+import HelpCenter from "@/pages/HelpCenter";
 import EmergencyLogout from "@/components/EmergencyLogout";
 import NotFound from "@/pages/not-found";
 
@@ -40,6 +41,7 @@ function Router() {
         <Route path="/proposals" component={ProposalCenter} />
         <Route path="/enterprise" component={EnterpriseDashboard} />
         <Route path="/profile" component={ProfileSettings} />
+        <Route path="/help" component={HelpCenter} />
         <Route component={NotFound} />
       </Switch>
     </>
