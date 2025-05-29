@@ -38,25 +38,13 @@ import { apiRequest } from '@/lib/queryClient';
 const flightSearchSchema = z.object({
   origin: z.string().min(3, "Origin city is required"),
   destination: z.string().min(3, "Destination city is required"),
-  departureDate: z.string().min(1, "Departure date is required"),
-  returnDate: z.string().optional(),
   passengers: z.number().min(1).max(9),
   cabin: z.enum(['economy', 'premium', 'business', 'first']),
   directFlights: z.boolean().optional()
-}).refine((data) => {
-  if (data.returnDate && data.departureDate) {
-    return new Date(data.returnDate) >= new Date(data.departureDate);
-  }
-  return true;
-}, {
-  message: "Return date must be after departure date",
-  path: ["returnDate"]
 });
 
 const hotelSearchSchema = z.object({
   destination: z.string().min(3, "Destination is required"),
-  checkIn: z.string().min(1, "Check-in date is required"),
-  checkOut: z.string().min(1, "Check-out date is required"),
   guests: z.number().min(1).max(10),
   rooms: z.number().min(1).max(5),
   starRating: z.number().min(1).max(5).optional(),
@@ -108,6 +96,8 @@ export default function BookingSystem() {
   const flightForm = useForm<FlightSearchValues>({
     resolver: zodResolver(flightSearchSchema),
     defaultValues: {
+      origin: '',
+      destination: '',
       passengers: 1,
       cabin: 'economy',
       directFlights: false
@@ -117,6 +107,7 @@ export default function BookingSystem() {
   const hotelForm = useForm<HotelSearchValues>({
     resolver: zodResolver(hotelSearchSchema),
     defaultValues: {
+      destination: '',
       guests: 1,
       rooms: 1
     }
@@ -607,23 +598,7 @@ export default function BookingSystem() {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="checkIn">Check-in Date</Label>
-                    <Input
-                      id="checkIn"
-                      type="date"
-                      {...hotelForm.register("checkIn")}
-                    />
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="checkOut">Check-out Date</Label>
-                    <Input
-                      id="checkOut"
-                      type="date"
-                      {...hotelForm.register("checkOut")}
-                    />
-                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="guests">Guests</Label>
