@@ -2628,18 +2628,48 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(400).json({ message: "New password must be at least 8 characters long" });
       }
 
-      // In a real implementation with Supabase, you would:
-      // 1. Verify the current password using Supabase Auth API
-      // 2. Update the password using Supabase Auth API
-      // For now, we'll simulate a successful password change
-      console.log("Password change request:", {
-        userId,
-        message: "Password change would be handled by Supabase Auth"
+      // Get the user's auth_id from our database
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Initialize Supabase Admin client for server-side operations
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.VITE_SUPABASE_URL;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (!supabaseUrl || !supabaseServiceKey) {
+        return res.status(500).json({ 
+          message: "Server configuration error. Supabase credentials not properly configured." 
+        });
+      }
+
+      const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
       });
 
+      // Update the user's password using Supabase Auth Admin API
+      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
+        user.auth_id,
+        { password: newPassword }
+      );
+
+      if (error) {
+        console.error("Supabase password update error:", error);
+        return res.status(400).json({ 
+          message: error.message || "Failed to update password" 
+        });
+      }
+
+      console.log("Password updated successfully for user:", userId);
+
       res.json({
-        success: false,
-        message: "Password change is not yet implemented. This requires Supabase Auth integration."
+        success: true,
+        message: "Password updated successfully"
       });
     } catch (error) {
       console.error("Error changing password:", error);
