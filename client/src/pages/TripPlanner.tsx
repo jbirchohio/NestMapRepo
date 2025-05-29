@@ -7,6 +7,7 @@ import MapView from "@/components/MapView";
 import ShareTripModal from "@/components/ShareTripModal";
 import useTrip from "@/hooks/useTrip";
 import useActivities from "@/hooks/useActivities";
+import { useAutoComplete } from "@/hooks/useAutoComplete";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
@@ -32,6 +33,9 @@ export default function TripPlanner() {
     error: activitiesError,
     refetchActivities 
   } = useActivities(tripId);
+  
+  // Auto-complete activities based on time
+  useAutoComplete({ activities, tripId });
   
   // State for currently active day
   const [activeDay, setActiveDay] = useState<Date | null>(null);

@@ -137,22 +137,17 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
         </div>
         
         <div className="p-3 pt-6 relative">
-          {/* Completion toggle button - always visible */}
-          <div 
-            className="absolute right-2 top-2 z-10 w-5 h-5 flex items-center justify-center bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/90] text-white rounded-full cursor-pointer"
-            onClick={handleToggleComplete}
-            title={activity.completed ? "Mark as incomplete" : "Mark as completed"}
-          >
-            {activity.completed ? (
+          {/* Auto-completion status indicator - read-only */}
+          {activity.completed && (
+            <div 
+              className="absolute right-2 top-2 z-10 w-5 h-5 flex items-center justify-center bg-green-500 text-white rounded-full"
+              title="Auto-completed based on next activity time"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            )}
-          </div>
+            </div>
+          )}
         
           {/* Delete button - only visible on hover */}
           <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
