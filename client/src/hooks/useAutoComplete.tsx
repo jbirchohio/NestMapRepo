@@ -31,6 +31,8 @@ export function useAutoComplete({ activities, tripId }: UseAutoCompleteProps) {
       const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
       const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
       
+      console.log(`Checking auto-completion at ${currentTime} on ${currentDate}`);
+      
       // Sort activities by date first, then by time
       const sortedActivities = [...activities].sort((a, b) => {
         // Sort by date first
@@ -67,32 +69,35 @@ export function useAutoComplete({ activities, tripId }: UseAutoCompleteProps) {
           const activityDateStr = new Date(activity.date).toDateString();
           const currentDateStr = now.toDateString();
           
-          // Only auto-complete activities that are today or in the past
-          if (new Date(activity.date) > now) continue;
+          // Get activity date for comparison
+          const activityDate = new Date(activity.date);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Reset time to start of day
+          activityDate.setHours(0, 0, 0, 0); // Reset time to start of day
           
           // Determine if we should auto-complete this activity
           let shouldComplete = false;
           let reason = '';
           
-          if (nextActivity && nextActivity.time) {
-            // Same day: next activity time reached
-            if (activityDateStr === currentDateStr && currentTime >= nextActivity.time) {
-              shouldComplete = true;
-              reason = 'next activity time reached (same day)';
-            }
-          } else {
-            // Last activity of the day or trip
-            if (activityDateStr === currentDateStr) {
-              // Today: auto-complete 2 hours after start time
+          if (activityDate < today) {
+            // Past day: auto-complete all activities
+            shouldComplete = true;
+            reason = 'activity was on a previous day';
+          } else if (activityDate.getTime() === today.getTime()) {
+            // Today: check time-based logic
+            if (nextActivity && nextActivity.time) {
+              // Same day: next activity time reached
+              if (currentTime >= nextActivity.time) {
+                shouldComplete = true;
+                reason = 'next activity time reached (same day)';
+              }
+            } else {
+              // Last activity of the day: auto-complete 2 hours after start time
               const activityEndTime = addHoursToTime(activity.time, 2);
               if (currentTime >= activityEndTime) {
                 shouldComplete = true;
                 reason = 'activity duration elapsed (2 hours)';
               }
-            } else if (new Date(activity.date) < new Date(currentDateStr)) {
-              // Past day: auto-complete all activities
-              shouldComplete = true;
-              reason = 'activity was on a previous day';
             }
           }
           
