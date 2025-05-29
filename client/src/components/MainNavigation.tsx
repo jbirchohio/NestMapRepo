@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export default function MainNavigation() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [location] = useLocation();
   const { toast } = useToast();
 
@@ -219,7 +219,7 @@ export default function MainNavigation() {
                 variant="ghost" 
                 size="sm"
                 onClick={() => {
-                  logout();
+                  signOut();
                   toast({
                     title: "Logged out",
                     description: "You have been successfully logged out",
