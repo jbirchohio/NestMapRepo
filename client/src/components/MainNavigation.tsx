@@ -34,21 +34,21 @@ import {
 } from 'lucide-react';
 
 export default function MainNavigation() {
-  const { user, signOut } = useAuth();
+  const { user, userId, signOut } = useAuth();
   const [location] = useLocation();
   const { toast } = useToast();
 
   // Get user permissions
   const { data: userPermissions } = useQuery({
-    queryKey: ['/api/user/permissions', user?.id],
+    queryKey: ['/api/user/permissions', userId],
     queryFn: async () => {
-      if (!user?.id) return [];
-      const response = await fetch(`/api/user/permissions?userId=${user.id}`);
+      if (!userId) return [];
+      const response = await fetch(`/api/user/permissions?userId=${userId}`);
       if (!response.ok) throw new Error('Failed to fetch permissions');
       const data = await response.json();
       return data.permissions || [];
     },
-    enabled: !!user?.id,
+    enabled: !!userId,
   });
 
   // Check permissions for different sections
