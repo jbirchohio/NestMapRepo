@@ -40,6 +40,14 @@ const flightSearchSchema = z.object({
   passengers: z.number().min(1).max(9),
   cabin: z.enum(['economy', 'premium', 'business', 'first']),
   directFlights: z.boolean().optional()
+}).refine((data) => {
+  if (data.returnDate && data.departureDate) {
+    return new Date(data.returnDate) >= new Date(data.departureDate);
+  }
+  return true;
+}, {
+  message: "Return date must be after departure date",
+  path: ["returnDate"]
 });
 
 const hotelSearchSchema = z.object({
