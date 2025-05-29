@@ -4,8 +4,26 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Create the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validate environment variables
+if (!supabaseUrl) {
+  console.error('VITE_SUPABASE_URL is required but not set');
+}
+
+if (!supabaseAnonKey) {
+  console.error('VITE_SUPABASE_ANON_KEY is required but not set');
+}
+
+// Validate URL format
+let validUrl = supabaseUrl;
+if (supabaseUrl && !supabaseUrl.startsWith('http')) {
+  validUrl = `https://${supabaseUrl}`;
+}
+
+// Create the Supabase client with error handling
+export const supabase = createClient(
+  validUrl || 'https://placeholder.supabase.co', 
+  supabaseAnonKey || 'placeholder-key'
+);
 
 // Auth helper functions
 export const auth = {

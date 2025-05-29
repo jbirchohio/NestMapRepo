@@ -242,25 +242,77 @@ async function generateAIHotelSuggestions(params: HotelSearchParams): Promise<Ho
   return result.hotels || [];
 }
 
-// Amadeus API integration (example implementation)
-async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightResult[]> {
-  // This would be a real Amadeus API call
-  const response = await fetch(`${FLIGHT_PROVIDERS.AMADEUS.baseUrl}/v2/shopping/flight-offers`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${process.env.AMADEUS_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    // Add actual Amadeus API parameters
-  });
-  
-  if (!response.ok) {
-    throw new Error('Amadeus API request failed');
+// Amadeus OAuth token function for flights
+async function getAmadeusToken() {
+  try {
+    const authUrl = 'https://api.amadeus.com/v1/security/oauth2/token';
+    
+    const response = await fetch(authUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `grant_type=client_credentials&client_id=${process.env.AMADEUS_API_KEY}&client_secret=${process.env.AMADEUS_API_SECRET}`
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.access_token;
+    } else {
+      console.log("Failed to get Amadeus token:", response.status);
+      return null;
+    }
+  } catch (error) {
+    console.log("Amadeus authentication error:", error instanceof Error ? error.message : 'Unknown error');
+    return null;
   }
-  
-  const data = await response.json();
-  // Transform Amadeus response to our FlightResult format
-  return transformAmadeusResponse(data);
+}
+
+// Amadeus API integration with proper authentication
+async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightResult[]> {
+  try {
+    if (!process.env.AMADEUS_API_KEY || !process.env.AMADEUS_API_SECRET) {
+      throw new Error("Amadeus credentials not configured");
+    }
+
+    // Get OAuth token
+    const token = await getAmadeusToken();
+    if (!token) {
+      throw new Error("Failed to authenticate with Amadeus");
+    }
+
+    // Build query parameters
+    const queryParams = new URLSearchParams({
+      originLocationCode: params.origin,
+      destinationLocationCode: params.destination,
+      departureDate: params.departureDate,
+      adults: params.passengers.toString(),
+      max: '10',
+      currencyCode: 'USD'
+    });
+
+    if (params.returnDate) {
+      queryParams.append('returnDate', params.returnDate);
+    }
+
+    const response = await fetch(`https://api.amadeus.com/v2/shopping/flight-offers?${queryParams}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log("Amadeus flight search error:", response.status, errorText);
+      throw new Error('Amadeus API request failed');
+    }
+    
+    const data = await response.json();
+    return transformAmadeusResponse(data);
+  } catch (error) {
+    console.log("Flight search error:", error instanceof Error ? error.message : 'Unknown error');
+    throw error;
+  }
 }
 
 // Booking.com API integration (example implementation)
@@ -286,8 +338,36 @@ async function searchBookingComHotels(params: HotelSearchParams): Promise<HotelR
 
 // Helper functions to transform API responses
 function transformAmadeusResponse(data: any): FlightResult[] {
-  // Transform Amadeus API response format to our FlightResult interface
-  return [];
+  if (!data.data || !Array.isArray(data.data)) {
+    return [];
+  }
+
+  return data.data.map((offer: any) => {
+    const itinerary = offer.itineraries?.[0];
+    const segment = itinerary?.segments?.[0];
+    const price = offer.price;
+    
+    if (!segment || !price) return null;
+
+    return {
+      id: offer.id,
+      airline: segment.carrierCode || 'Unknown',
+      flightNumber: `${segment.carrierCode}${segment.number}` || 'N/A',
+      origin: segment.departure?.iataCode || '',
+      destination: segment.arrival?.iataCode || '',
+      departureTime: segment.departure?.at || '',
+      arrivalTime: segment.arrival?.at || '',
+      duration: itinerary.duration || '',
+      stops: (itinerary.segments?.length || 1) - 1,
+      price: {
+        amount: parseFloat(price.total) || 0,
+        currency: price.currency || 'USD'
+      },
+      cabin: segment.cabin || 'ECONOMY',
+      availability: offer.numberOfBookableSeats || 0,
+      bookingUrl: `https://amadeus.com/booking/${offer.id}`
+    };
+  }).filter(Boolean);
 }
 
 function transformBookingComResponse(data: any): HotelResult[] {
