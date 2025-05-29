@@ -234,6 +234,69 @@ export default function BookingSystem() {
     }
   };
 
+  const handleCreateTripWithFlights = async () => {
+    if (!selectedDepartureFlight && !selectedReturnFlight) {
+      toast({
+        title: "No Flights Selected",
+        description: "Please select at least one flight to create a trip.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsBooking(true);
+    try {
+      // Determine trip dates from flight selection
+      const startDate = selectedDepartureFlight?.departureTime ? 
+        new Date(selectedDepartureFlight.departureTime).toISOString().split('T')[0] : 
+        new Date().toISOString().split('T')[0];
+      
+      const endDate = selectedReturnFlight?.departureTime ? 
+        new Date(selectedReturnFlight.departureTime).toISOString().split('T')[0] : 
+        startDate;
+
+      // Get destination from flight info
+      const destination = selectedDepartureFlight?.destination || selectedReturnFlight?.origin || 'Unknown';
+
+      // Create the trip
+      const tripResponse = await apiRequest('POST', '/api/trips', {
+        title: `Trip to ${destination}`,
+        destination,
+        startDate,
+        endDate,
+        description: `Trip created with flight bookings to ${destination}`,
+        notes: ''
+      });
+
+      if (tripResponse.ok) {
+        const trip = await tripResponse.json();
+        
+        toast({
+          title: "Trip Created",
+          description: `Your trip to ${destination} has been created successfully with your selected flights.`,
+        });
+
+        // Clear selections
+        setSelectedDepartureFlight(null);
+        setSelectedReturnFlight(null);
+        setFlightResults([]);
+        
+        // Redirect to trip planner
+        window.location.href = `/trip/${trip.id}`;
+      } else {
+        throw new Error('Failed to create trip');
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to Create Trip",
+        description: "There was an error creating your trip. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
   const getAmenityIcon = (amenity: string) => {
     switch (amenity.toLowerCase()) {
       case 'wifi': return <Wifi className="h-3 w-3" />;
@@ -649,16 +712,93 @@ export default function BookingSystem() {
                               {flight.cabin}
                             </Badge>
                             <Button 
-                              onClick={() => handleBooking('flight', flight)}
-                              disabled={isBooking}
+                              onClick={() => setSelectedReturnFlight(flight)}
+                              variant={selectedReturnFlight?.id === flight.id ? 'default' : 'outline'}
                             >
-                              {isBooking ? 'Booking...' : 'Book Flight'}
+                              {selectedReturnFlight?.id === flight.id ? 'Selected' : 'Select Flight'}
                             </Button>
                           </div>
                         </div>
                       ))}
                     </TabsContent>
                   </Tabs>
+
+                  {/* Flight Selection Summary */}
+                  {(selectedDepartureFlight || selectedReturnFlight) && (
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                      <h3 className="font-semibold mb-4">Selected Flights</h3>
+                      
+                      {selectedDepartureFlight && (
+                        <div className="mb-3 p-3 bg-background rounded border">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-1 bg-blue-100 dark:bg-blue-900 rounded">
+                                <Plane className="h-4 w-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {selectedDepartureFlight.origin} → {selectedDepartureFlight.destination}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatFlightDate(selectedDepartureFlight.departureTime)} at {formatFlightTime(selectedDepartureFlight.departureTime)}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="font-semibold text-green-600">${selectedDepartureFlight.price.amount}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedReturnFlight && (
+                        <div className="mb-3 p-3 bg-background rounded border">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-1 bg-orange-100 dark:bg-orange-900 rounded">
+                                <Plane className="h-4 w-4 text-orange-600 rotate-180" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{selectedReturnFlight.airline} {selectedReturnFlight.flightNumber}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {selectedReturnFlight.origin} → {selectedReturnFlight.destination}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatFlightDate(selectedReturnFlight.departureTime)} at {formatFlightTime(selectedReturnFlight.departureTime)}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="font-semibold text-green-600">${selectedReturnFlight.price.amount}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-3 border-t">
+                        <div>
+                          <p className="font-semibold">
+                            Total: ${(selectedDepartureFlight?.price.amount || 0) + (selectedReturnFlight?.price.amount || 0)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">per person</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedDepartureFlight(null);
+                              setSelectedReturnFlight(null);
+                            }}
+                          >
+                            Clear Selection
+                          </Button>
+                          <Button
+                            onClick={handleCreateTripWithFlights}
+                            disabled={isBooking}
+                          >
+                            {isBooking ? 'Creating Trip...' : 'Create Trip with Flights'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 ) : (
                   /* Single list for one-way flights */
                   <div className="space-y-4">
@@ -711,15 +851,63 @@ export default function BookingSystem() {
                             {flight.cabin}
                           </Badge>
                           <Button 
-                            onClick={() => handleBooking('flight', flight)}
-                            disabled={isBooking}
+                            onClick={() => setSelectedDepartureFlight(flight)}
+                            variant={selectedDepartureFlight?.id === flight.id ? 'default' : 'outline'}
                           >
-                            {isBooking ? 'Booking...' : 'Book Flight'}
+                            {selectedDepartureFlight?.id === flight.id ? 'Selected' : 'Select Flight'}
                           </Button>
                         </div>
                       </div>
                     ))}
                   </div>
+                  
+                  {/* Flight Selection Summary for one-way flights */}
+                  {selectedDepartureFlight && (
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                      <h3 className="font-semibold mb-4">Selected Flight</h3>
+                      
+                      <div className="mb-3 p-3 bg-background rounded border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-1 bg-blue-100 dark:bg-blue-900 rounded">
+                              <Plane className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {selectedDepartureFlight.origin} → {selectedDepartureFlight.destination}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatFlightDate(selectedDepartureFlight.departureTime)} at {formatFlightTime(selectedDepartureFlight.departureTime)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="font-semibold text-green-600">${selectedDepartureFlight.price.amount}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-3 border-t">
+                        <div>
+                          <p className="font-semibold">Total: ${selectedDepartureFlight.price.amount}</p>
+                          <p className="text-sm text-muted-foreground">per person</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setSelectedDepartureFlight(null)}
+                          >
+                            Clear Selection
+                          </Button>
+                          <Button
+                            onClick={handleCreateTripWithFlights}
+                            disabled={isBooking}
+                          >
+                            {isBooking ? 'Creating Trip...' : 'Create Trip with Flight'}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 )}
               </CardContent>
             </Card>
