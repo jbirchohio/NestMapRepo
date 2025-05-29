@@ -231,16 +231,11 @@ export default function MainNavigation() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   
-                  <DropdownMenuItem
-                    onClick={() => {
-                      toast({
-                        title: "Profile Settings",
-                        description: "Profile management coming soon",
-                      });
-                    }}
-                  >
-                    <Edit3 className="mr-2 h-4 w-4" />
-                    Edit Profile
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center">
+                      <Edit3 className="mr-2 h-4 w-4" />
+                      Edit Profile
+                    </Link>
                   </DropdownMenuItem>
                   
                   <DropdownMenuItem

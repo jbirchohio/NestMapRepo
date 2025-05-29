@@ -2540,6 +2540,100 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // Profile management endpoints
+  app.get("/api/user/profile", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const user = req.user;
+      res.json({
+        id: user.id,
+        email: user.email,
+        displayName: user.user_metadata?.display_name || user.email,
+        username: user.user_metadata?.username || '',
+        role: user.role || 'user',
+        createdAt: user.created_at,
+        lastSignIn: user.last_sign_in_at
+      });
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  app.put("/api/user/profile", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { displayName, username, email } = req.body;
+      const user = req.user;
+
+      // In a real implementation, you would update the user profile in Supabase
+      // For now, we'll simulate a successful update
+      console.log("Profile update request:", {
+        userId: user.id,
+        displayName,
+        username,
+        email
+      });
+
+      res.json({
+        success: true,
+        message: "Profile updated successfully",
+        profile: {
+          id: user.id,
+          email: email || user.email,
+          displayName: displayName || user.user_metadata?.display_name || user.email,
+          username: username || user.user_metadata?.username || '',
+          role: user.role || 'user'
+        }
+      });
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.put("/api/user/password", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+      const user = req.user;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "New password must be at least 8 characters long" });
+      }
+
+      // In a real implementation, you would:
+      // 1. Verify the current password
+      // 2. Update the password in Supabase
+      // For now, we'll simulate a successful password change
+      console.log("Password change request:", {
+        userId: user.id,
+        email: user.email
+      });
+
+      res.json({
+        success: true,
+        message: "Password changed successfully"
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

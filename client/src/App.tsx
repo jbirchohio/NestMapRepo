@@ -17,6 +17,7 @@ import BillingDashboard from "@/components/BillingDashboard";
 import ProposalCenter from "@/pages/ProposalCenter";
 import AITripGeneratorPage from "@/pages/AITripGenerator";
 import EnterpriseDashboard from "@/pages/EnterpriseDashboard";
+import ProfileSettings from "@/pages/ProfileSettings";
 import EmergencyLogout from "@/components/EmergencyLogout";
 import NotFound from "@/pages/not-found";
 
@@ -38,6 +39,7 @@ function Router() {
         <Route path="/billing" component={BillingDashboard} />
         <Route path="/proposals" component={ProposalCenter} />
         <Route path="/enterprise" component={EnterpriseDashboard} />
+        <Route path="/profile" component={ProfileSettings} />
         <Route component={NotFound} />
       </Switch>
     </>
