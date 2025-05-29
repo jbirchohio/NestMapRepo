@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Search, Plane, Building, Clock, MapPin, Users, Star, Wifi, Car, Utensils, Dumbbell, Calendar } from 'lucide-react';
+import { Calendar as CalendarIcon, Plane, Building, Clock, MapPin, Users, Star, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -72,7 +72,6 @@ export default function BookingSystem() {
   const [isSearching, setIsSearching] = useState(false);
   const [flightResults, setFlightResults] = useState<FlightResult[]>([]);
   const [hotelResults, setHotelResults] = useState<HotelResult[]>([]);
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('round-trip');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -199,39 +198,6 @@ export default function BookingSystem() {
       setHotelResults([]);
     } finally {
       setIsSearching(false);
-    }
-  };
-
-  const handleBooking = async (type: 'flight' | 'hotel', bookingData: any) => {
-    setIsBooking(true);
-    try {
-      const response = await apiRequest('POST', '/api/bookings/create', {
-        type,
-        bookingData,
-        tripId: null
-      });
-      
-      if (!response.ok) {
-        throw new Error('Booking failed');
-      }
-      
-      const booking = await response.json();
-      
-      toast({
-        title: "Booking Confirmed!",
-        description: `Your ${type} booking has been confirmed. Confirmation: ${booking.confirmationNumber}`,
-      });
-
-      setSelectedBooking(null);
-    } catch (error) {
-      console.error('Booking error:', error);
-      toast({
-        title: "Booking Failed",
-        description: "Unable to complete your booking. Please try again or contact support.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsBooking(false);
     }
   };
 
@@ -401,8 +367,8 @@ export default function BookingSystem() {
                         initialFocus
                         mode={tripType === 'round-trip' ? "range" : "single"}
                         defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={setDateRange}
+                        selected={dateRange as any}
+                        onSelect={setDateRange as any}
                         numberOfMonths={2}
                       />
                     </PopoverContent>
@@ -584,7 +550,7 @@ export default function BookingSystem() {
                       </TabsContent>
                     </Tabs>
                   ) : (
-                    /* Single list for one-way flights */
+                    /* One-way flights */
                     <div className="space-y-4">
                       {flightResults.map((flight) => (
                         <div key={flight.id} className="border rounded-lg p-4 space-y-3">
@@ -643,241 +609,83 @@ export default function BookingSystem() {
                           </div>
                         </div>
                       ))}
-                      
-                      {/* Flight Selection Summary for one-way flights */}
-                      {selectedDepartureFlight && (
-                        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                          <h3 className="font-semibold mb-4">Selected Flight</h3>
-                          
-                          <div className="mb-3 p-3 bg-background rounded border">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-1 bg-blue-100 dark:bg-blue-900 rounded">
-                                  <Plane className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {selectedDepartureFlight.origin} → {selectedDepartureFlight.destination}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatFlightDate(selectedDepartureFlight.departureTime)} at {formatFlightTime(selectedDepartureFlight.departureTime)}
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="font-semibold text-green-600">${selectedDepartureFlight.price.amount}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-3 border-t">
-                            <div>
-                              <p className="font-semibold">Total: ${selectedDepartureFlight.price.amount}</p>
-                              <p className="text-sm text-muted-foreground">per person</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                onClick={() => setSelectedDepartureFlight(null)}
-                              >
-                                Clear Selection
-                              </Button>
-                              <Button
-                                onClick={handleCreateTripWithFlights}
-                                disabled={isBooking}
-                              >
-                                {isBooking ? 'Creating Trip...' : 'Create Trip with Flight'}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
 
-                  {/* Flight Selection Summary for round-trip */}
-                  {tripType === 'round-trip' && (selectedDepartureFlight || selectedReturnFlight) && (
+                  {/* Flight Selection Summary */}
+                  {(selectedDepartureFlight || selectedReturnFlight) && (
                     <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                        <h3 className="font-semibold mb-4">Selected Flights</h3>
-                        
-                        {selectedDepartureFlight && (
-                          <div className="mb-3 p-3 bg-background rounded border">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-1 bg-blue-100 dark:bg-blue-900 rounded">
-                                  <Plane className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {selectedDepartureFlight.origin} → {selectedDepartureFlight.destination}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatFlightDate(selectedDepartureFlight.departureTime)} at {formatFlightTime(selectedDepartureFlight.departureTime)}
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="font-semibold text-green-600">${selectedDepartureFlight.price.amount}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {selectedReturnFlight && (
-                          <div className="mb-3 p-3 bg-background rounded border">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-1 bg-orange-100 dark:bg-orange-900 rounded">
-                                  <Plane className="h-4 w-4 text-orange-600 rotate-180" />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{selectedReturnFlight.airline} {selectedReturnFlight.flightNumber}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {selectedReturnFlight.origin} → {selectedReturnFlight.destination}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatFlightDate(selectedReturnFlight.departureTime)} at {formatFlightTime(selectedReturnFlight.departureTime)}
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="font-semibold text-green-600">${selectedReturnFlight.price.amount}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between pt-3 border-t">
-                          <div>
-                            <p className="font-semibold">
-                              Total: ${(selectedDepartureFlight?.price.amount || 0) + (selectedReturnFlight?.price.amount || 0)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">per person</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedDepartureFlight(null);
-                                setSelectedReturnFlight(null);
-                              }}
-                            >
-                              Clear Selection
-                            </Button>
-                            <Button
-                              onClick={handleCreateTripWithFlights}
-                              disabled={isBooking}
-                            >
-                              {isBooking ? 'Creating Trip...' : 'Create Trip with Flights'}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  ) : (
-                    /* Single list for one-way flights */
-                    <div className="space-y-4">
-                      {flightResults.map((flight) => (
-                        <div key={flight.id} className="border rounded-lg p-4 space-y-3">
+                      <h3 className="font-semibold mb-4">Selected Flights</h3>
+                      
+                      {selectedDepartureFlight && (
+                        <div className="mb-3 p-3 bg-background rounded border">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                                <Plane className="h-5 w-5 text-blue-600" />
+                              <div className="p-1 bg-blue-100 dark:bg-blue-900 rounded">
+                                <Plane className="h-4 w-4 text-blue-600" />
                               </div>
                               <div>
-                                <h4 className="font-semibold">{flight.airline} {flight.flightNumber}</h4>
+                                <p className="font-medium">{selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {flight.origin} → {flight.destination}
+                                  {selectedDepartureFlight.origin} → {selectedDepartureFlight.destination}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatFlightDate(selectedDepartureFlight.departureTime)} at {formatFlightTime(selectedDepartureFlight.departureTime)}
                                 </p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-2xl font-bold text-green-600">
-                                ${flight.price.amount}
-                              </p>
-                              <p className="text-sm text-muted-foreground">per person</p>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              <span>{formatDuration(flight.duration)}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              <span>{flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              <div className="flex flex-col">
-                                <span className="font-medium">{formatFlightTime(flight.departureTime)} - {formatFlightTime(flight.arrivalTime)}</span>
-                                <span className="text-xs text-muted-foreground">{formatFlightDate(flight.departureTime)}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span>{flight.availability} seats left</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <Badge variant="outline" className="capitalize">
-                              {flight.cabin}
-                            </Badge>
-                            <Button 
-                              onClick={() => setSelectedDepartureFlight(flight)}
-                              variant={selectedDepartureFlight?.id === flight.id ? 'default' : 'outline'}
-                            >
-                              {selectedDepartureFlight?.id === flight.id ? 'Selected' : 'Select Flight'}
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      {/* Flight Selection Summary for one-way flights */}
-                      {selectedDepartureFlight && (
-                        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                          <h3 className="font-semibold mb-4">Selected Flight</h3>
-                          
-                          <div className="mb-3 p-3 bg-background rounded border">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-1 bg-blue-100 dark:bg-blue-900 rounded">
-                                  <Plane className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {selectedDepartureFlight.origin} → {selectedDepartureFlight.destination}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatFlightDate(selectedDepartureFlight.departureTime)} at {formatFlightTime(selectedDepartureFlight.departureTime)}
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="font-semibold text-green-600">${selectedDepartureFlight.price.amount}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-3 border-t">
-                            <div>
-                              <p className="font-semibold">Total: ${selectedDepartureFlight.price.amount}</p>
-                              <p className="text-sm text-muted-foreground">per person</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                onClick={() => setSelectedDepartureFlight(null)}
-                              >
-                                Clear Selection
-                              </Button>
-                              <Button
-                                onClick={handleCreateTripWithFlights}
-                                disabled={isBooking}
-                              >
-                                {isBooking ? 'Creating Trip...' : 'Create Trip with Flight'}
-                              </Button>
-                            </div>
+                            <p className="font-semibold text-green-600">${selectedDepartureFlight.price.amount}</p>
                           </div>
                         </div>
                       )}
+
+                      {selectedReturnFlight && (
+                        <div className="mb-3 p-3 bg-background rounded border">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-1 bg-orange-100 dark:bg-orange-900 rounded">
+                                <Plane className="h-4 w-4 text-orange-600 rotate-180" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{selectedReturnFlight.airline} {selectedReturnFlight.flightNumber}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {selectedReturnFlight.origin} → {selectedReturnFlight.destination}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatFlightDate(selectedReturnFlight.departureTime)} at {formatFlightTime(selectedReturnFlight.departureTime)}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="font-semibold text-green-600">${selectedReturnFlight.price.amount}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-3 border-t">
+                        <div>
+                          <p className="font-semibold">
+                            Total: ${(selectedDepartureFlight?.price.amount || 0) + (selectedReturnFlight?.price.amount || 0)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">per person</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedDepartureFlight(null);
+                              setSelectedReturnFlight(null);
+                            }}
+                          >
+                            Clear Selection
+                          </Button>
+                          <Button
+                            onClick={handleCreateTripWithFlights}
+                            disabled={isBooking}
+                          >
+                            {isBooking ? 'Creating Trip...' : 'Create Trip with Flights'}
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -903,7 +711,6 @@ export default function BookingSystem() {
                   />
                 </div>
 
-                {/* Date Range Picker for Hotels */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Stay Dates</Label>
                   <Popover>
@@ -933,8 +740,8 @@ export default function BookingSystem() {
                         initialFocus
                         mode="range"
                         defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={setDateRange}
+                        selected={dateRange as any}
+                        onSelect={setDateRange as any}
                         numberOfMonths={2}
                       />
                     </PopoverContent>
@@ -1026,11 +833,8 @@ export default function BookingSystem() {
                         <div className="text-sm">
                           <span className="font-medium text-green-600">{hotel.cancellation}</span> cancellation
                         </div>
-                        <Button 
-                          onClick={() => handleBooking('hotel', hotel)}
-                          disabled={isBooking}
-                        >
-                          {isBooking ? 'Booking...' : 'Book Hotel'}
+                        <Button>
+                          Book Hotel
                         </Button>
                       </div>
                     </div>
