@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -32,9 +34,31 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export default function ProfileSettings() {
-  const { user } = useAuth();
+  const { user, userId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Privacy settings state
+  const [privacySettings, setPrivacySettings] = useState({
+    profileVisibility: 'public',
+    showEmail: false,
+    showLocation: true,
+    allowSearchEngineIndexing: true,
+    shareDataWithPartners: false,
+    allowAnalytics: true,
+  });
+
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    pushNotifications: true,
+    smsNotifications: false,
+    tripReminders: true,
+    bookingUpdates: true,
+    promotionalEmails: false,
+    weeklyDigest: true,
+    instantUpdates: true,
+  });
   
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -56,7 +80,7 @@ export default function ProfileSettings() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
-      return apiRequest('PUT', '/api/user/profile', data);
+      return apiRequest('PUT', '/api/user/profile', { ...data, userId });
     },
     onSuccess: () => {
       toast({
@@ -79,6 +103,7 @@ export default function ProfileSettings() {
       return apiRequest('PUT', '/api/user/password', {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
+        userId,
       });
     },
     onSuccess: () => {
@@ -101,8 +126,58 @@ export default function ProfileSettings() {
     updateProfileMutation.mutate(data);
   };
 
+  const updatePrivacyMutation = useMutation({
+    mutationFn: async (settings: typeof privacySettings) => {
+      return apiRequest('PUT', '/api/user/privacy', { ...settings, userId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Privacy Settings Updated",
+        description: "Your privacy preferences have been saved.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update privacy settings",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateNotificationsMutation = useMutation({
+    mutationFn: async (settings: typeof notificationSettings) => {
+      return apiRequest('PUT', '/api/user/notifications', { ...settings, userId });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Notification Settings Updated",
+        description: "Your notification preferences have been saved.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update notification settings",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmitPassword = (data: PasswordFormData) => {
     changePasswordMutation.mutate(data);
+  };
+
+  const updatePrivacySettings = (key: string, value: any) => {
+    const newSettings = { ...privacySettings, [key]: value };
+    setPrivacySettings(newSettings);
+    updatePrivacyMutation.mutate(newSettings);
+  };
+
+  const updateNotificationSettings = (key: string, value: any) => {
+    const newSettings = { ...notificationSettings, [key]: value };
+    setNotificationSettings(newSettings);
+    updateNotificationsMutation.mutate(newSettings);
   };
 
   if (!user) {
@@ -286,10 +361,103 @@ export default function ProfileSettings() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Privacy settings will be available in a future update.
-                </p>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Profile Visibility</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Profile Visibility</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Choose who can see your profile information
+                        </p>
+                      </div>
+                      <Select
+                        value={privacySettings.profileVisibility}
+                        onValueChange={(value) => updatePrivacySettings('profileVisibility', value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="public">Public</SelectItem>
+                          <SelectItem value="friends">Friends Only</SelectItem>
+                          <SelectItem value="private">Private</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Show Email Address</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Allow others to see your email address
+                        </p>
+                      </div>
+                      <Switch
+                        checked={privacySettings.showEmail}
+                        onCheckedChange={(checked) => updatePrivacySettings('showEmail', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Show Location</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Display your location in trip activities
+                        </p>
+                      </div>
+                      <Switch
+                        checked={privacySettings.showLocation}
+                        onCheckedChange={(checked) => updatePrivacySettings('showLocation', checked)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Data & Analytics</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Search Engine Indexing</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Allow search engines to index your public content
+                        </p>
+                      </div>
+                      <Switch
+                        checked={privacySettings.allowSearchEngineIndexing}
+                        onCheckedChange={(checked) => updatePrivacySettings('allowSearchEngineIndexing', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Share Data with Partners</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Allow sharing anonymized data with travel partners
+                        </p>
+                      </div>
+                      <Switch
+                        checked={privacySettings.shareDataWithPartners}
+                        onCheckedChange={(checked) => updatePrivacySettings('shareDataWithPartners', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-normal">Analytics & Improvement</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Help us improve the service with usage analytics
+                        </p>
+                      </div>
+                      <Switch
+                        checked={privacySettings.allowAnalytics}
+                        onCheckedChange={(checked) => updatePrivacySettings('allowAnalytics', checked)}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
