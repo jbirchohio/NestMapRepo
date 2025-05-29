@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 
 export default function MainNavigation() {
-  const { user, userId, signOut } = useAuth();
+  const { user, userId, roleType, signOut } = useAuth();
   const [location] = useLocation();
   const { toast } = useToast();
 
@@ -107,17 +107,23 @@ export default function MainNavigation() {
     return null; // Don't show navigation for unauthenticated users
   }
 
+  // Role-based navigation items
+  const getRoleBasedDashboardPath = () => {
+    if (roleType === 'agency') return '/dashboard/agency';
+    return '/dashboard/corporate';
+  };
+
   const navigationItems = [
     {
-      path: '/',
-      label: 'Dashboard',
+      path: getRoleBasedDashboardPath(),
+      label: roleType === 'agency' ? 'Client Hub' : 'Travel Console',
       icon: Home,
-      active: location === '/',
+      active: location === getRoleBasedDashboardPath() || location === '/',
       show: true
     },
     {
       path: '/analytics',
-      label: 'Analytics',
+      label: roleType === 'agency' ? 'Client Analytics' : 'Travel Analytics',
       icon: BarChart3,
       active: location === '/analytics',
       show: hasAnalyticsAccess,
@@ -125,7 +131,7 @@ export default function MainNavigation() {
     },
     {
       path: '/bookings',
-      label: 'Bookings',
+      label: roleType === 'agency' ? 'Client Bookings' : 'Team Bookings',
       icon: Plane,
       active: location === '/bookings',
       show: hasBookingAccess,
@@ -133,7 +139,7 @@ export default function MainNavigation() {
     },
     {
       path: '/ai-generator',
-      label: 'AI Trip Generator',
+      label: roleType === 'agency' ? 'AI Proposal Generator' : 'AI Trip Generator',
       icon: Sparkles,
       active: location === '/ai-generator',
       show: hasAIGeneratorAccess,
@@ -149,21 +155,21 @@ export default function MainNavigation() {
     },
     {
       path: '/team',
-      label: 'Team',
+      label: roleType === 'agency' ? 'Team & Clients' : 'Team Management',
       icon: Users,
       active: location === '/team',
       show: hasTeamAccess
     },
     {
       path: '/billing',
-      label: 'Billing',
+      label: roleType === 'agency' ? 'Commission & Billing' : 'Company Billing',
       icon: CreditCard,
       active: location === '/billing',
       show: hasBillingAccess
     },
     {
       path: '/settings',
-      label: 'Settings',
+      label: roleType === 'agency' ? 'Agency Settings' : 'Company Settings',
       icon: Settings,
       active: location === '/settings',
       show: hasSettingsAccess,
@@ -177,13 +183,18 @@ export default function MainNavigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand Section */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={getRoleBasedDashboardPath()} className="flex items-center gap-2">
               <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">N</span>
               </div>
-              <span className="font-bold text-xl text-slate-900 dark:text-slate-100">
-                NestMap
-              </span>
+              <div className="flex flex-col">
+                <span className="font-bold text-xl text-slate-900 dark:text-slate-100">
+                  NestMap
+                </span>
+                <span className="text-xs text-muted-foreground -mt-1">
+                  {roleType === 'agency' ? 'Client Travel Proposals' : 'Company Travel Management'}
+                </span>
+              </div>
             </Link>
 
             {/* Main Navigation */}

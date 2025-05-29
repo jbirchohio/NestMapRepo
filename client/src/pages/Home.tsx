@@ -25,15 +25,26 @@ export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("login");
   
-  const { user, userId, signOut } = useAuth();
+  const { user, userId, roleType, authReady, signOut } = useAuth();
   const queryClient = useQueryClient();
   
-  // Redirect admin users to enterprise dashboard
+  // Redirect authenticated users based on their role
   useEffect(() => {
-    if (user && user.role === 'admin') {
+    if (!authReady || !user) return;
+    
+    // Admin users go to enterprise dashboard
+    if (user.role === 'admin') {
       setLocation('/enterprise');
+      return;
     }
-  }, [user, setLocation]);
+    
+    // Regular users go to role-based dashboard
+    if (roleType === 'agency') {
+      setLocation('/dashboard/agency');
+    } else {
+      setLocation('/dashboard/corporate');
+    }
+  }, [authReady, user, roleType, setLocation]);
   
   // Get user ID from authentication or use guest mode
   const effectiveUserId = userId ?? -1; // Use database userId or -1 for guest mode

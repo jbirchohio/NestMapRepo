@@ -58,9 +58,8 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
       setIsLoading(true);
       setErrorMessage("");
       
-      // Determine role type based on use case
-      const agencyUseCases = ['client-services', 'client-planning'];
-      const roleType = agencyUseCases.includes(values.useCase) ? 'agency' : 'corporate';
+      // Determine role type based on use case using utility function
+      const roleType = mapUseCaseToRoleType(values.useCase);
       
       await signUp(values.email, values.password, {
         display_name: values.name,
