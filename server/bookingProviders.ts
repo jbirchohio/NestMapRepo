@@ -363,6 +363,8 @@ async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightR
       queryParams.append('returnDate', params.returnDate);
     }
 
+    console.log(`Searching flights: ${origin} → ${destination} on ${params.departureDate}`);
+    
     const response = await fetch(`https://api.amadeus.com/v2/shopping/flight-offers?${queryParams}`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -376,6 +378,13 @@ async function searchAmadeusFlights(params: FlightSearchParams): Promise<FlightR
     }
     
     const data = await response.json();
+    console.log(`Amadeus API returned ${data.data?.length || 0} flight offers`);
+    
+    if (!data.data || data.data.length === 0) {
+      console.log("No flights found for the given criteria");
+      return [];
+    }
+    
     return transformAmadeusResponse(data);
   } catch (error) {
     console.log("Flight search error:", error instanceof Error ? error.message : 'Unknown error');
