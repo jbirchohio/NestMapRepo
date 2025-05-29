@@ -39,9 +39,9 @@ export default function MapView({
     }
   }, [isMapReady, markers, addMarkers, onMarkerClick]);
 
-  // Update routes when they change
+  // Update routes when they change (including clearing when empty)
   useEffect(() => {
-    if (isMapReady && routes.length > 0) {
+    if (isMapReady) {
       addRoutes(routes);
     }
   }, [isMapReady, routes, addRoutes]);
