@@ -7,7 +7,7 @@ import { formatDateRange, formatDate } from "@/lib/constants";
 import { ClientTrip, ClientActivity, Todo } from "@/lib/types";
 import ActivityTimeline from "./ActivityTimeline";
 import EnhancedAIAssistantModal from "./EnhancedAIAssistantModal";
-import CalendarIntegration from "./CalendarIntegration";
+
 import PdfExport from "./PdfExport";
 import { ItineraryOptimizationModal } from "./ItineraryOptimizationModal";
 import { useMutation } from "@tanstack/react-query";
@@ -347,8 +347,7 @@ export default function ItinerarySidebar({
                 </button>
               </div>
               
-              {/* Calendar Export Button */}
-              <CalendarIntegration trip={trip} activities={activities} />
+
               
               {/* PDF Export Button */}
               <PdfExport trip={trip} />
