@@ -469,7 +469,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle demo trips
       if (tripIdParam.startsWith('demo-trip-')) {
-        // Return empty array for demo trips
+        // Check if we have stored demo trip data with hotel information
+        const demoTripData = global.demoTrips?.[tripIdParam];
+        if (demoTripData?.selectedHotel) {
+          const hotel = demoTripData.selectedHotel;
+          const startDate = new Date(demoTripData.startDate);
+          const endDate = new Date(demoTripData.endDate);
+          
+          const activities = [
+            {
+              id: `demo-activity-checkin-${tripIdParam}`,
+              tripId: tripIdParam,
+              title: `Stay at ${hotel.name}`,
+              date: startDate.toISOString(),
+              time: '15:00',
+              locationName: hotel.name,
+              latitude: null,
+              longitude: null,
+              notes: `${hotel.starRating}-star hotel • ${hotel.amenities?.slice(0, 3).join(', ') || 'Amenities available'} • ${hotel.cancellation} cancellation`,
+              tag: 'Accommodation',
+              completed: false,
+              order: 1
+            }
+          ];
+          
+          // Add checkout activity for multi-day trips
+          if (endDate > startDate) {
+            activities.push({
+              id: `demo-activity-checkout-${tripIdParam}`,
+              tripId: tripIdParam,
+              title: `Check out from ${hotel.name}`,
+              date: endDate.toISOString(),
+              time: '11:00',
+              locationName: hotel.name,
+              latitude: null,
+              longitude: null,
+              notes: 'Hotel check-out',
+              tag: 'Accommodation',
+              completed: false,
+              order: 2
+            });
+          }
+          
+          return res.json(activities);
+        }
+        
+        // Return empty array for demo trips without hotel data
         return res.json([]);
       }
       
