@@ -231,6 +231,7 @@ export default function BookingWorkflow() {
       const tripResponse = await apiRequest('POST', '/api/trips', {
         title: `Trip to ${clientInfo.destination}`,
         city: clientInfo.destination,
+        country: 'United States', // You could enhance this to detect country from destination
         startDate: clientInfo.departureDate,
         endDate: clientInfo.returnDate || clientInfo.departureDate,
         userId: userId,
@@ -242,6 +243,12 @@ export default function BookingWorkflow() {
         tripPurpose: clientInfo.tripPurpose,
         companyName: clientInfo.companyName,
         costCenter: clientInfo.costCenter,
+        // Include booking information
+        selectedFlights: {
+          departure: selectedDepartureFlight,
+          return: selectedReturnFlight
+        },
+        selectedHotel: selectedHotel,
       });
 
       if (tripResponse.ok) {

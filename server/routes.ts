@@ -273,7 +273,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           country: req.body.country,
           userId: req.body.userId,
           status: 'confirmed',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          hasHotelButton: !!req.body.selectedHotel // Track if hotel was selected
+        };
+        
+        // Store the trip data in demo storage for later retrieval
+        if (!global.demoTrips) {
+          global.demoTrips = {};
+        }
+        global.demoTrips[mockTrip.id] = {
+          ...mockTrip,
+          selectedHotel: req.body.selectedHotel,
+          selectedFlights: req.body.selectedFlights
         };
         
         return res.status(201).json(mockTrip);
@@ -291,6 +302,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Processed trip data:", tripData);
       const trip = await storage.createTrip(tripData);
+      
+      // If this trip was created through the booking workflow with hotel information,
+      // automatically create a hotel activity
+      if (req.body.selectedHotel) {
+        const hotel = req.body.selectedHotel;
+        try {
+          await storage.createActivity({
+            tripId: trip.id,
+            title: `Stay at ${hotel.name}`,
+            date: new Date(trip.startDate),
+            time: '15:00', // Standard check-in time
+            locationName: hotel.name,
+            latitude: null, // Hotel coordinates would need to be included in hotel data
+            longitude: null,
+            notes: `${hotel.starRating}-star hotel • ${hotel.amenities?.slice(0, 3).join(', ') || 'Amenities available'} • ${hotel.cancellation} cancellation`,
+            tag: 'Accommodation',
+            completed: false,
+            order: 1
+          });
+          
+          // Create check-out activity for multi-day trips
+          if (trip.endDate > trip.startDate) {
+            await storage.createActivity({
+              tripId: trip.id,
+              title: `Check out from ${hotel.name}`,
+              date: new Date(trip.endDate),
+              time: '11:00', // Standard check-out time
+              locationName: hotel.name,
+              latitude: null,
+              longitude: null,
+              notes: 'Hotel check-out',
+              tag: 'Accommodation',
+              completed: false,
+              order: 2
+            });
+          }
+        } catch (activityError) {
+          console.error("Error creating hotel activities:", activityError);
+          // Don't fail the trip creation if activity creation fails
+        }
+      }
+      
       res.status(201).json(trip);
     } catch (error) {
       if (error instanceof z.ZodError) {
