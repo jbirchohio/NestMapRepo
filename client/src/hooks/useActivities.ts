@@ -3,7 +3,7 @@ import { queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientActivity } from "@/lib/types";
 
-export default function useActivities(tripId: number) {
+export default function useActivities(tripId: string | number) {
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): any => {
     if (typeof window === "undefined") return null;

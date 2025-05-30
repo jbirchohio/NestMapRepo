@@ -15,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 export default function TripPlanner() {
   const [, params] = useRoute("/trip/:id");
-  const tripId = params ? parseInt(params.id) : 0;
+  const tripId = params?.id || "";
   const { toast } = useToast();
   
   // Fetch trip data

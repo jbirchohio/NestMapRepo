@@ -6,7 +6,7 @@ import { ClientActivity } from '@/lib/types';
 
 interface UseAutoCompleteProps {
   activities: ClientActivity[];
-  tripId: number;
+  tripId: string | number;
   onActivityCompleted?: () => void;
 }
 

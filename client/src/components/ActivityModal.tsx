@@ -19,7 +19,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import TripDatePicker from "@/components/TripDatePicker";
 
 interface ActivityModalProps {
-  tripId: number;
+  tripId: string | number;
   date: Date;
   activity: ClientActivity | null;
   onClose: () => void;

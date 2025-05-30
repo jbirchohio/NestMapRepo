@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
 import { Todo, Note } from "@shared/schema";
 
-export default function useTrip(tripId: number) {
+export default function useTrip(tripId: string | number) {
   // Helper function to check if trip exists in localStorage (guest mode)
   const getGuestTrip = (): ClientTrip | null => {
     if (typeof window === "undefined") return null;
