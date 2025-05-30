@@ -239,6 +239,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the incoming data to help with debugging
       console.log("Creating trip with data:", req.body);
       
+      // Handle demo users - return mock success response
+      if (req.body.userId && typeof req.body.userId === 'string' && 
+          (req.body.userId.startsWith('demo-corp-') || req.body.userId.startsWith('demo-agency-'))) {
+        
+        const mockTrip = {
+          id: `demo-trip-${Date.now()}`,
+          title: req.body.title || 'Demo Trip',
+          description: req.body.description || 'Demo trip created successfully',
+          startDate: req.body.startDate,
+          endDate: req.body.endDate,
+          city: req.body.city,
+          country: req.body.country,
+          userId: req.body.userId,
+          status: 'confirmed',
+          created_at: new Date().toISOString()
+        };
+        
+        return res.status(201).json(mockTrip);
+      }
+      
       const tripData = insertTripSchema.parse(req.body);
       
       // Ensure the location fields are properly included
