@@ -39,19 +39,90 @@ import {
 import { generateBusinessTrip } from "./businessTripGenerator";
 import { searchFlights, searchHotels } from "./bookingProviders";
 
+// Demo data for testing role-based features
+const getDemoTrips = (roleType: string) => {
+  const baseTrips = [
+    {
+      id: 'demo-1',
+      title: roleType === 'corporate' ? 'Q2 Team Offsite - Austin' : 'Johnson Family Vacation',
+      description: roleType === 'corporate' ? 'Quarterly team meeting and strategy session' : 'Custom family vacation package',
+      startDate: '2025-06-15',
+      endDate: '2025-06-18',
+      destination: 'Austin, TX',
+      status: 'planning',
+      created_at: new Date().toISOString(),
+      user_id: roleType === 'corporate' ? 'demo-corp-1' : 'demo-agency-1'
+    },
+    {
+      id: 'demo-2', 
+      title: roleType === 'corporate' ? 'Client Meeting - San Francisco' : 'Miller Wedding Proposal',
+      description: roleType === 'corporate' ? 'Important client presentation meeting' : 'Romantic honeymoon package proposal',
+      startDate: '2025-07-01',
+      endDate: '2025-07-03',
+      destination: 'San Francisco, CA',
+      status: 'approved',
+      created_at: new Date().toISOString(),
+      user_id: roleType === 'corporate' ? 'demo-corp-1' : 'demo-agency-1'
+    }
+  ];
+  return baseTrips;
+};
+
+const getDemoAnalytics = (roleType: string) => {
+  if (roleType === 'corporate') {
+    return {
+      totalTrips: 24,
+      totalEmployees: 156,
+      averageTripCost: 2850,
+      totalBudget: 68400,
+      pendingApprovals: 3,
+      completedTrips: 21,
+      monthlySpend: [
+        { month: 'Jan', amount: 12500 },
+        { month: 'Feb', amount: 15800 },
+        { month: 'Mar', amount: 18200 },
+        { month: 'Apr', amount: 22100 }
+      ]
+    };
+  } else {
+    return {
+      totalProposals: 48,
+      totalClients: 32,
+      winRate: 68,
+      totalRevenue: 145600,
+      pendingProposals: 7,
+      averageDealSize: 3900,
+      monthlyRevenue: [
+        { month: 'Jan', amount: 28500 },
+        { month: 'Feb', amount: 35800 },
+        { month: 'Mar', amount: 42200 },
+        { month: 'Apr', amount: 39100 }
+      ]
+    };
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // User permissions endpoint
   app.get("/api/user/permissions", async (req: Request, res: Response) => {
     try {
-      const userId = Number(req.query.userId);
-      if (isNaN(userId)) {
+      const userId = req.query.userId as string;
+      
+      // Handle demo users
+      if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
+        const permissions = ["manage_users", "manage_organizations", "view_analytics", "export_data"];
+        return res.json({ permissions, role: "admin" });
+      }
+      
+      const numericUserId = Number(userId);
+      if (isNaN(numericUserId)) {
         return res.status(400).json({ error: "Invalid user ID" });
       }
       
       const [user] = await db
         .select()
         .from(users)
-        .where(eq(users.id, userId));
+        .where(eq(users.id, numericUserId));
         
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -120,13 +191,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trips routes
   app.get("/api/trips", async (req: Request, res: Response) => {
     try {
-      const userId = Number(req.query.userId);
-      if (isNaN(userId)) {
+      const userId = req.query.userId as string;
+      
+      // Handle demo users
+      if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
+        const roleType = userId.startsWith('demo-corp-') ? 'corporate' : 'agency';
+        const demoTrips = getDemoTrips(roleType);
+        return res.json(demoTrips);
+      }
+      
+      const numericUserId = Number(userId);
+      if (isNaN(numericUserId)) {
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
-      console.log("Attempting to fetch trips for user ID:", userId);
-      const trips = await storage.getTripsByUserId(userId);
+      console.log("Attempting to fetch trips for user ID:", numericUserId);
+      const trips = await storage.getTripsByUserId(numericUserId);
       console.log("Trips fetched successfully:", trips.length);
       res.json(trips);
     } catch (error) {
@@ -2440,6 +2520,56 @@ Include realistic business activities, meeting times, dining recommendations, an
     } catch (error) {
       console.error("Error fetching analytics:", error);
       res.status(500).json({ message: "Could not fetch analytics data" });
+    }
+  });
+
+  // Corporate analytics endpoint
+  app.get("/api/analytics/corporate", async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string;
+      
+      // Handle demo users
+      if (userId && userId.startsWith('demo-corp-')) {
+        const demoAnalytics = getDemoAnalytics('corporate');
+        return res.json(demoAnalytics);
+      }
+      
+      // For real users, return basic analytics
+      const basicAnalytics = {
+        totalTrips: 0,
+        totalBudget: 0,
+        avgDuration: 0,
+        teamSize: 0
+      };
+      res.json(basicAnalytics);
+    } catch (error) {
+      console.error("Error fetching corporate analytics:", error);
+      res.status(500).json({ message: "Could not fetch corporate analytics" });
+    }
+  });
+
+  // Agency analytics endpoint
+  app.get("/api/analytics/agency", async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string;
+      
+      // Handle demo users
+      if (userId && userId.startsWith('demo-agency-')) {
+        const demoAnalytics = getDemoAnalytics('agency');
+        return res.json(demoAnalytics);
+      }
+      
+      // For real users, return basic analytics
+      const basicAnalytics = {
+        totalProposals: 0,
+        totalRevenue: 0,
+        winRate: 0,
+        activeClients: 0
+      };
+      res.json(basicAnalytics);
+    } catch (error) {
+      console.error("Error fetching agency analytics:", error);
+      res.status(500).json({ message: "Could not fetch agency analytics" });
     }
   });
 
