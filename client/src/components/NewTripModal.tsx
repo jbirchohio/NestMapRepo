@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import useMapbox from "@/hooks/useMapbox";
 
 import {
@@ -57,6 +58,7 @@ interface NewTripModalProps {
 
 export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGuestMode = false }: NewTripModalProps) {
   const { toast } = useToast();
+  const { roleType } = useAuth();
   const { geocodeLocation } = useMapbox();
   
   // Set default dates (today to 3 days from now)
@@ -278,14 +280,25 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                 </h4>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="clientName">Client Name</Label>
-                    <Input
-                      id="clientName"
-                      {...register("clientName")}
-                      placeholder="e.g., Acme Corp, Johnson & Associates"
-                    />
-                  </div>
+                  {roleType === 'agency' ? (
+                    <div className="grid gap-2">
+                      <Label htmlFor="clientName">Client Name</Label>
+                      <Input
+                        id="clientName"
+                        {...register("clientName")}
+                        placeholder="e.g., Acme Corp, Johnson & Associates"
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid gap-2">
+                      <Label htmlFor="clientName">Department/Team</Label>
+                      <Input
+                        id="clientName"
+                        {...register("clientName")}
+                        placeholder="e.g., Sales Team, Engineering Dept"
+                      />
+                    </div>
+                  )}
                   
                   <div className="grid gap-2">
                     <Label htmlFor="projectType">Project Type</Label>
@@ -294,13 +307,27 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                         <SelectValue placeholder="Select project type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="conference">Conference/Event</SelectItem>
-                        <SelectItem value="client_meeting">Client Meeting</SelectItem>
-                        <SelectItem value="sales_trip">Sales Trip</SelectItem>
-                        <SelectItem value="team_building">Team Building</SelectItem>
-                        <SelectItem value="training">Training/Workshop</SelectItem>
-                        <SelectItem value="site_visit">Site Visit</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        {roleType === 'agency' ? (
+                          <>
+                            <SelectItem value="client_meeting">Client Meeting</SelectItem>
+                            <SelectItem value="leisure_travel">Leisure Travel</SelectItem>
+                            <SelectItem value="corporate_travel">Corporate Travel</SelectItem>
+                            <SelectItem value="destination_wedding">Destination Wedding</SelectItem>
+                            <SelectItem value="group_travel">Group Travel</SelectItem>
+                            <SelectItem value="luxury_travel">Luxury Travel</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </>
+                        ) : (
+                          <>
+                            <SelectItem value="conference">Conference/Event</SelectItem>
+                            <SelectItem value="team_meeting">Team Meeting</SelectItem>
+                            <SelectItem value="sales_trip">Sales Trip</SelectItem>
+                            <SelectItem value="team_building">Team Building</SelectItem>
+                            <SelectItem value="training">Training/Workshop</SelectItem>
+                            <SelectItem value="site_visit">Site Visit</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
