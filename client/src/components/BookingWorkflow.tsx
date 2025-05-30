@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Plane, Building, Clock, MapPin, Users, Star, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, Plane, Building, Clock, MapPin, Users, Star, Calendar, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as ReactCalendar } from '@/components/ui/calendar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -91,6 +92,7 @@ export default function BookingWorkflow() {
   const [selectedDepartureFlight, setSelectedDepartureFlight] = useState<FlightResult | null>(null);
   const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightResult | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<HotelResult | null>(null);
+  const [additionalTravelers, setAdditionalTravelers] = useState<Array<{firstName: string; lastName: string; dateOfBirth: string}>>([]);
   
   const clientForm = useForm<ClientInfoValues>({
     resolver: zodResolver(clientInfoSchema),
@@ -465,6 +467,74 @@ export default function BookingWorkflow() {
                 </div>
               </div>
 
+              {/* Additional Travelers Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h3 className="text-lg font-medium">Additional Travelers</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAdditionalTravelers([...additionalTravelers, { firstName: '', lastName: '', dateOfBirth: '' }])}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Traveler
+                  </Button>
+                </div>
+                
+                {additionalTravelers.map((traveler, index) => (
+                  <div key={index} className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Traveler {index + 2}</h4>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAdditionalTravelers(additionalTravelers.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>First Name *</Label>
+                        <Input
+                          value={traveler.firstName}
+                          onChange={(e) => {
+                            const updated = [...additionalTravelers];
+                            updated[index].firstName = e.target.value;
+                            setAdditionalTravelers(updated);
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <Label>Last Name *</Label>
+                        <Input
+                          value={traveler.lastName}
+                          onChange={(e) => {
+                            const updated = [...additionalTravelers];
+                            updated[index].lastName = e.target.value;
+                            setAdditionalTravelers(updated);
+                          }}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label>Date of Birth *</Label>
+                        <Input
+                          type="date"
+                          value={traveler.dateOfBirth}
+                          onChange={(e) => {
+                            const updated = [...additionalTravelers];
+                            updated[index].dateOfBirth = e.target.value;
+                            setAdditionalTravelers(updated);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* Trip Details Section */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium border-b pb-2">Trip Purpose & Details</h3>
@@ -541,9 +611,27 @@ export default function BookingWorkflow() {
 
             {flightResults.length > 0 ? (
               <div className="space-y-4">
-                {/* Outbound Flights */}
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Departure Flights</h3>
+                <Tabs defaultValue="departure" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="departure">
+                      <Plane className="h-4 w-4 mr-2" />
+                      Departure Flights
+                    </TabsTrigger>
+                    {clientInfo.tripType === 'round-trip' && (
+                      <TabsTrigger value="return">
+                        <Plane className="h-4 w-4 mr-2 transform rotate-180" />
+                        Return Flights
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+
+                <TabsContent value="departure" className="space-y-4 mt-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Select Departure Flight</h3>
+                    <div className="text-sm text-gray-500">
+                      {clientInfo.origin} → {clientInfo.destination}
+                    </div>
+                  </div>
                   <div className="space-y-3">
                     {flightResults.filter(f => !f.id.startsWith('return_')).map((flight) => (
                       <div 
@@ -571,12 +659,16 @@ export default function BookingWorkflow() {
                       </div>
                     ))}
                   </div>
-                </div>
+                </TabsContent>
 
-                {/* Return Flights */}
                 {clientInfo.tripType === 'round-trip' && (
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Return Flights</h3>
+                  <TabsContent value="return" className="space-y-4 mt-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Select Return Flight</h3>
+                      <div className="text-sm text-gray-500">
+                        {clientInfo.destination} → {clientInfo.origin}
+                      </div>
+                    </div>
                     <div className="space-y-3">
                       {flightResults.filter(f => f.id.startsWith('return_')).map((flight) => (
                         <div 
@@ -604,8 +696,9 @@ export default function BookingWorkflow() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </TabsContent>
                 )}
+                </Tabs>
 
                 {/* Flight Selection Summary */}
                 {(selectedDepartureFlight || selectedReturnFlight) && (
