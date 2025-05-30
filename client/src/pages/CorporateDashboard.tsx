@@ -87,7 +87,7 @@ export default function CorporateDashboard() {
           </Button>
           
           <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
-            <Link href="/ai-assistant">
+            <Link href="/ai-generator">
               <Sparkles className="h-5 w-5" />
               AI Trip Generator
             </Link>
