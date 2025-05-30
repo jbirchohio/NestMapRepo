@@ -32,6 +32,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/trip/:id" component={TripPlanner} />
+        <Route path="/trip-planner/:id" component={TripPlanner} />
         <Route path="/share/:shareCode" component={SimpleShare} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/bookings" component={Bookings} />

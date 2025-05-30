@@ -217,7 +217,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/trips/:id", async (req: Request, res: Response) => {
     try {
-      const tripId = Number(req.params.id);
+      const tripIdParam = req.params.id;
+      
+      // Handle demo trips
+      if (tripIdParam.startsWith('demo-trip-')) {
+        // Return a mock trip response for demo trips
+        const mockTrip = {
+          id: tripIdParam,
+          title: 'Demo Trip',
+          description: 'Demo trip for testing',
+          startDate: new Date().toISOString().split('T')[0],
+          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          city: 'Demo City',
+          country: 'Demo Country',
+          userId: 'demo-user',
+          status: 'confirmed',
+          created_at: new Date().toISOString()
+        };
+        return res.json(mockTrip);
+      }
+      
+      const tripId = Number(tripIdParam);
       if (isNaN(tripId)) {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
@@ -392,7 +412,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Activities routes
   app.get("/api/trips/:id/activities", async (req: Request, res: Response) => {
     try {
-      const tripId = Number(req.params.id);
+      const tripIdParam = req.params.id;
+      
+      // Handle demo trips
+      if (tripIdParam.startsWith('demo-trip-')) {
+        // Return empty array for demo trips
+        return res.json([]);
+      }
+      
+      const tripId = Number(tripIdParam);
       if (isNaN(tripId)) {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
@@ -568,7 +596,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Todos routes
   app.get("/api/trips/:id/todos", async (req: Request, res: Response) => {
     try {
-      const tripId = Number(req.params.id);
+      const tripIdParam = req.params.id;
+      
+      // Handle demo trips
+      if (tripIdParam.startsWith('demo-trip-')) {
+        // Return empty array for demo trips
+        return res.json([]);
+      }
+      
+      const tripId = Number(tripIdParam);
       if (isNaN(tripId)) {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
@@ -641,7 +677,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notes routes
   app.get("/api/trips/:id/notes", async (req: Request, res: Response) => {
     try {
-      const tripId = Number(req.params.id);
+      const tripIdParam = req.params.id;
+      
+      // Handle demo trips
+      if (tripIdParam.startsWith('demo-trip-')) {
+        // Return empty array for demo trips
+        return res.json([]);
+      }
+      
+      const tripId = Number(tripIdParam);
       if (isNaN(tripId)) {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
