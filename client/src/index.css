@@ -2,50 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Warm Earth & Citrus Theme */
+/* Professional Blue & Enterprise Theme */
 :root {
   /* Base colors */
-  --primary: 25 91% 53%; /* Tangerine Orange: #F97316 */
+  --primary: 217 91% 60%; /* Cerulean Blue: #3B82F6 */
   --primary-foreground: 0 0% 98%; /* White text on primary */
   
-  --background: 37 100% 98%; /* Light Sand: #FFFBF7 */
-  --foreground: 0 0% 12%; /* Charcoal: #1F1F1F */
+  --background: 0 0% 100%; /* Pure White */
+  --foreground: 222 84% 5%; /* Deep Slate: #0F172A */
   
-  --muted: 22 20% 90%; /* Lighter muted background */
-  --muted-foreground: 22 42% 30%; /* Darker text for better contrast */
+  --muted: 210 40% 98%; /* Light Blue-Gray */
+  --muted-foreground: 215 16% 47%; /* Slate Gray */
   
-  --card: 37 100% 99%; /* Very Light Sand for cards */
-  --card-foreground: 0 0% 12%; /* Charcoal: #1F1F1F */
+  --card: 0 0% 100%; /* White cards */
+  --card-foreground: 222 84% 5%; /* Deep Slate */
   
-  --accent: 22 30% 92%; /* Light Clay accent, slightly darker for contrast */
-  --accent-foreground: 22 42% 25%; /* Darker Clay Gray for better readability */
+  --accent: 210 40% 96%; /* Very Light Blue-Gray accent */
+  --accent-foreground: 222 47% 11%; /* Dark Slate for readability */
   
-  --border: 22 10% 90%; /* Light border color */
+  --border: 214 32% 91%; /* Light Blue-Gray border */
   
-  --popover: 37 100% 99%;
-  --popover-foreground: 0 0% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 84% 5%;
   
   /* Status colors */
-  --success: 82 85% 35%; /* Olive Green: #65A30D */
-  --warning: 49 95% 53%; /* Amber: #FACC15 */
-  --destructive: 0 74% 51%; /* Brick Red: #DC2626 */
-  --destructive-foreground: 0 0% 98%; /* White text on destructive */
+  --success: 142 76% 36%; /* Professional Green */
+  --warning: 38 92% 50%; /* Keep amber for warnings */
+  --destructive: 0 84% 60%; /* Professional Red */
+  --destructive-foreground: 0 0% 98%;
   
-  /* Secondary color */
-  --secondary: 82 85% 35%; /* Olive Green as secondary color */
-  --secondary-foreground: 0 0% 98%; /* White text on secondary */
+  /* Secondary color - Steel Blue */
+  --secondary: 207 44% 49%; /* Steel Blue: #4682B4 */
+  --secondary-foreground: 0 0% 98%;
   
   /* Input and focus states */
-  --input: 22 10% 90%;
-  --ring: 25 91% 53%;
+  --input: 214 32% 91%;
+  --ring: 217 91% 60%; /* Cerulean Blue focus ring */
   --radius: 0.5rem;
   
-  /* Tag colors - updated to match our new warm earth theme */
-  --tag-coral: 14 100% 65%;
-  --tag-olive: 82 40% 45%;
-  --tag-terracotta: 14 58% 45%;
-  --tag-marigold: 38 95% 50%;
-  --tag-fern: 142 60% 45%;
+  /* Tag colors - updated to match professional blue theme */
+  --tag-cerulean: 217 91% 60%; /* Cerulean Blue */
+  --tag-steel: 207 44% 49%; /* Steel Blue */
+  --tag-sky: 199 89% 48%; /* Sky Blue */
+  --tag-slate: 215 16% 47%; /* Slate Blue-Gray */
+  --tag-azure: 214 100% 50%; /* Azure Blue */
   
   /* Maintain backwards compatibility with old tag names */
   --tag-culture: 14 58% 45%; /* Terracotta */
@@ -55,25 +55,25 @@
 }
 
 .dark {
-  /* Dark mode adjustments */
-  --background: 20 20% 12%; /* Dark earthy background */
-  --foreground: 37 30% 96%; /* Light sand text */
+  /* Dark mode adjustments - Professional Blue Theme */
+  --background: 222 84% 5%; /* Deep Slate background */
+  --foreground: 210 40% 98%; /* Light Blue-Gray text */
   
-  --muted: 22 25% 25%; /* Darker Clay Gray */
-  --muted-foreground: 22 25% 70%; /* Light Clay Gray for dark mode */
+  --muted: 215 16% 16%; /* Dark Slate Gray */
+  --muted-foreground: 215 16% 65%; /* Light Slate Gray for dark mode */
   
-  --card: 20 20% 15%; /* Dark earthy card background */
-  --card-foreground: 37 30% 96%; /* Light sand text on cards */
+  --card: 222 47% 11%; /* Dark Slate card background */
+  --card-foreground: 210 40% 98%; /* Light Blue-Gray text on cards */
   
-  --accent: 22 20% 20%; /* Dark accent */
-  --accent-foreground: 22 20% 85%; /* Light text on accent */
+  --accent: 215 16% 20%; /* Dark accent */
+  --accent-foreground: 210 40% 90%; /* Light text on accent */
   
-  --border: 22 15% 25%; /* Dark border */
+  --border: 215 16% 25%; /* Dark border */
   
-  --popover: 20 20% 15%;
-  --popover-foreground: 37 30% 96%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
   
-  --input: 22 15% 25%;
+  --input: 215 16% 25%;
 }
 
 @layer base {
