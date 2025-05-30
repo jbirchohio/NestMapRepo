@@ -35,7 +35,16 @@ const hotelSearchSchema = z.object({
   rooms: z.number().min(1).max(5),
 });
 
-const travelerInfoSchema = z.object({
+const clientInfoSchema = z.object({
+  // Travel Details
+  origin: z.string().min(1, 'Origin city is required'),
+  destination: z.string().min(1, 'Destination city is required'),
+  departureDate: z.string().min(1, 'Departure date is required'),
+  returnDate: z.string().optional(),
+  tripType: z.enum(['one-way', 'round-trip']),
+  passengers: z.number().min(1).max(10),
+  
+  // Primary Traveler
   primaryTraveler: z.object({
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().min(1, 'Last name is required'),
@@ -56,7 +65,7 @@ const travelerInfoSchema = z.object({
 
 type FlightSearchValues = z.infer<typeof flightSearchSchema>;
 type HotelSearchValues = z.infer<typeof hotelSearchSchema>;
-type TravelerInfoValues = z.infer<typeof travelerInfoSchema>;
+type ClientInfoValues = z.infer<typeof clientInfoSchema>;
 
 interface FlightResult {
   id: string;
@@ -90,16 +99,23 @@ interface HotelResult {
 export default function BookingSystem() {
   const { toast } = useToast();
   const { user, userId } = useAuth();
-  const [activeTab, setActiveTab] = useState('flights');
+  
+  // Workflow steps: client-info -> flights -> hotels -> confirmation
+  const [currentStep, setCurrentStep] = useState<'client-info' | 'flights' | 'hotels' | 'confirmation'>('client-info');
   const [isSearching, setIsSearching] = useState(false);
   const [flightResults, setFlightResults] = useState<FlightResult[]>([]);
   const [hotelResults, setHotelResults] = useState<HotelResult[]>([]);
   const [isBooking, setIsBooking] = useState(false);
+  
+  // Client and trip information
+  const [clientInfo, setClientInfo] = useState<ClientInfoValues | null>(null);
   const [tripType, setTripType] = useState<'one-way' | 'round-trip'>('round-trip');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  
+  // Selected bookings
   const [selectedDepartureFlight, setSelectedDepartureFlight] = useState<FlightResult | null>(null);
   const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightResult | null>(null);
-  const [showTravelerForm, setShowTravelerForm] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState<HotelResult | null>(null);
 
   const flightForm = useForm<FlightSearchValues>({
     resolver: zodResolver(flightSearchSchema),
@@ -121,9 +137,15 @@ export default function BookingSystem() {
     },
   });
 
-  const travelerForm = useForm<TravelerInfoValues>({
-    resolver: zodResolver(travelerInfoSchema),
+  const clientForm = useForm<ClientInfoValues>({
+    resolver: zodResolver(clientInfoSchema),
     defaultValues: {
+      origin: '',
+      destination: '',
+      departureDate: '',
+      returnDate: '',
+      tripType: 'round-trip',
+      passengers: 1,
       primaryTraveler: {
         firstName: '',
         lastName: '',

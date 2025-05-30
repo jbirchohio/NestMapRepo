@@ -1,4 +1,4 @@
-import BookingSystem from "@/components/BookingSystem";
+import BookingWorkflow from "@/components/BookingWorkflow";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -55,7 +55,7 @@ export default function Bookings() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
       <div className="max-w-7xl mx-auto">
-        <BookingSystem />
+        <BookingWorkflow />
       </div>
     </div>
   );
