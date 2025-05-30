@@ -35,8 +35,28 @@ const hotelSearchSchema = z.object({
   rooms: z.number().min(1).max(5),
 });
 
+const travelerInfoSchema = z.object({
+  primaryTraveler: z.object({
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    email: z.string().email('Valid email is required'),
+    phone: z.string().min(10, 'Phone number is required'),
+    dateOfBirth: z.string().min(1, 'Date of birth is required'),
+  }),
+  emergencyContact: z.object({
+    name: z.string().min(1, 'Emergency contact name is required'),
+    phone: z.string().min(10, 'Emergency contact phone is required'),
+    relationship: z.string().min(1, 'Relationship is required'),
+  }),
+  specialRequests: z.string().optional(),
+  tripPurpose: z.enum(['business', 'leisure', 'family', 'medical', 'other']),
+  companyName: z.string().optional(),
+  costCenter: z.string().optional(),
+});
+
 type FlightSearchValues = z.infer<typeof flightSearchSchema>;
 type HotelSearchValues = z.infer<typeof hotelSearchSchema>;
+type TravelerInfoValues = z.infer<typeof travelerInfoSchema>;
 
 interface FlightResult {
   id: string;
@@ -79,6 +99,7 @@ export default function BookingSystem() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [selectedDepartureFlight, setSelectedDepartureFlight] = useState<FlightResult | null>(null);
   const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightResult | null>(null);
+  const [showTravelerForm, setShowTravelerForm] = useState(false);
 
   const flightForm = useForm<FlightSearchValues>({
     resolver: zodResolver(flightSearchSchema),
@@ -97,6 +118,28 @@ export default function BookingSystem() {
       destination: '',
       guests: 1,
       rooms: 1,
+    },
+  });
+
+  const travelerForm = useForm<TravelerInfoValues>({
+    resolver: zodResolver(travelerInfoSchema),
+    defaultValues: {
+      primaryTraveler: {
+        firstName: '',
+        lastName: '',
+        email: user?.email || '',
+        phone: '',
+        dateOfBirth: '',
+      },
+      emergencyContact: {
+        name: '',
+        phone: '',
+        relationship: '',
+      },
+      specialRequests: '',
+      tripPurpose: 'business',
+      companyName: '',
+      costCenter: '',
     },
   });
 
@@ -222,6 +265,11 @@ export default function BookingSystem() {
       return;
     }
 
+    // Show traveler information form instead of creating trip immediately
+    setShowTravelerForm(true);
+  };
+
+  const handleCreateTripWithTravelerInfo = async (travelerData: TravelerInfoValues) => {
     setIsBooking(true);
     try {
       const startDate = selectedDepartureFlight?.departureTime ? 
@@ -240,8 +288,14 @@ export default function BookingSystem() {
         startDate,
         endDate,
         userId: userId,
-        description: `Trip created with flight bookings to ${destination}`,
-        notes: ''
+        description: `${travelerData.tripPurpose} trip for ${travelerData.primaryTraveler.firstName} ${travelerData.primaryTraveler.lastName}`,
+        notes: travelerData.specialRequests || '',
+        // Add traveler information to trip data
+        primaryTraveler: travelerData.primaryTraveler,
+        emergencyContact: travelerData.emergencyContact,
+        tripPurpose: travelerData.tripPurpose,
+        companyName: travelerData.companyName,
+        costCenter: travelerData.costCenter,
       });
 
       if (tripResponse.ok) {
@@ -249,12 +303,13 @@ export default function BookingSystem() {
         
         toast({
           title: "Trip Created",
-          description: `Your trip to ${destination} has been created successfully with your selected flights.`,
+          description: `Trip for ${travelerData.primaryTraveler.firstName} ${travelerData.primaryTraveler.lastName} has been created successfully.`,
         });
 
         setSelectedDepartureFlight(null);
         setSelectedReturnFlight(null);
         setFlightResults([]);
+        setShowTravelerForm(false);
         
         window.location.href = `/trip/${trip.id}`;
       } else {
