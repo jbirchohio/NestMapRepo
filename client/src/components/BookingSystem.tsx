@@ -912,6 +912,235 @@ export default function BookingSystem() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Traveler Information Modal */}
+      {showTravelerForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold">Traveler Information</h2>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setShowTravelerForm(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+
+              <form onSubmit={travelerForm.handleSubmit(handleCreateTripWithTravelerInfo)} className="space-y-6">
+                {/* Primary Traveler Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Primary Traveler</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input
+                        id="firstName"
+                        {...travelerForm.register("primaryTraveler.firstName")}
+                        className={travelerForm.formState.errors.primaryTraveler?.firstName ? "border-red-500" : ""}
+                      />
+                      {travelerForm.formState.errors.primaryTraveler?.firstName && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {travelerForm.formState.errors.primaryTraveler.firstName.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input
+                        id="lastName"
+                        {...travelerForm.register("primaryTraveler.lastName")}
+                        className={travelerForm.formState.errors.primaryTraveler?.lastName ? "border-red-500" : ""}
+                      />
+                      {travelerForm.formState.errors.primaryTraveler?.lastName && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {travelerForm.formState.errors.primaryTraveler.lastName.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        {...travelerForm.register("primaryTraveler.email")}
+                        className={travelerForm.formState.errors.primaryTraveler?.email ? "border-red-500" : ""}
+                      />
+                      {travelerForm.formState.errors.primaryTraveler?.email && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {travelerForm.formState.errors.primaryTraveler.email.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone *</Label>
+                      <Input
+                        id="phone"
+                        {...travelerForm.register("primaryTraveler.phone")}
+                        className={travelerForm.formState.errors.primaryTraveler?.phone ? "border-red-500" : ""}
+                      />
+                      {travelerForm.formState.errors.primaryTraveler?.phone && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {travelerForm.formState.errors.primaryTraveler.phone.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                      <Input
+                        id="dateOfBirth"
+                        type="date"
+                        {...travelerForm.register("primaryTraveler.dateOfBirth")}
+                        className={travelerForm.formState.errors.primaryTraveler?.dateOfBirth ? "border-red-500" : ""}
+                      />
+                      {travelerForm.formState.errors.primaryTraveler?.dateOfBirth && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {travelerForm.formState.errors.primaryTraveler.dateOfBirth.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Emergency Contact Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Emergency Contact</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="emergencyName">Contact Name *</Label>
+                      <Input
+                        id="emergencyName"
+                        {...travelerForm.register("emergencyContact.name")}
+                        className={travelerForm.formState.errors.emergencyContact?.name ? "border-red-500" : ""}
+                      />
+                      {travelerForm.formState.errors.emergencyContact?.name && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {travelerForm.formState.errors.emergencyContact.name.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="emergencyPhone">Contact Phone *</Label>
+                      <Input
+                        id="emergencyPhone"
+                        {...travelerForm.register("emergencyContact.phone")}
+                        className={travelerForm.formState.errors.emergencyContact?.phone ? "border-red-500" : ""}
+                      />
+                      {travelerForm.formState.errors.emergencyContact?.phone && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {travelerForm.formState.errors.emergencyContact.phone.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="relationship">Relationship *</Label>
+                      <Input
+                        id="relationship"
+                        placeholder="e.g., Spouse, Parent, Friend"
+                        {...travelerForm.register("emergencyContact.relationship")}
+                        className={travelerForm.formState.errors.emergencyContact?.relationship ? "border-red-500" : ""}
+                      />
+                      {travelerForm.formState.errors.emergencyContact?.relationship && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {travelerForm.formState.errors.emergencyContact.relationship.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trip Details Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Trip Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="tripPurpose">Trip Purpose *</Label>
+                      <select
+                        id="tripPurpose"
+                        {...travelerForm.register("tripPurpose")}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="business">Business</option>
+                        <option value="leisure">Leisure</option>
+                        <option value="family">Family</option>
+                        <option value="medical">Medical</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="companyName">Company Name</Label>
+                      <Input
+                        id="companyName"
+                        {...travelerForm.register("companyName")}
+                        placeholder="Optional"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="costCenter">Cost Center</Label>
+                      <Input
+                        id="costCenter"
+                        {...travelerForm.register("costCenter")}
+                        placeholder="For business trips (optional)"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="specialRequests">Special Requests</Label>
+                      <textarea
+                        id="specialRequests"
+                        {...travelerForm.register("specialRequests")}
+                        placeholder="Any special dietary requirements, accessibility needs, etc."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Flight Summary */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium border-b pb-2">Flight Summary</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    {selectedDepartureFlight && (
+                      <div className="flex justify-between items-center">
+                        <span>Departure: {selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</span>
+                        <span className="font-medium">${selectedDepartureFlight.price.amount}</span>
+                      </div>
+                    )}
+                    {selectedReturnFlight && (
+                      <div className="flex justify-between items-center">
+                        <span>Return: {selectedReturnFlight.airline} {selectedReturnFlight.flightNumber}</span>
+                        <span className="font-medium">${selectedReturnFlight.price.amount}</span>
+                      </div>
+                    )}
+                    <div className="border-t pt-2 flex justify-between items-center font-bold">
+                      <span>Total:</span>
+                      <span>${(selectedDepartureFlight?.price.amount || 0) + (selectedReturnFlight?.price.amount || 0)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => setShowTravelerForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={isBooking}
+                  >
+                    {isBooking ? 'Creating Trip...' : 'Create Trip'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
