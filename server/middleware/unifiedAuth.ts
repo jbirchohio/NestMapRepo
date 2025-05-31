@@ -8,7 +8,7 @@ declare global {
       user?: {
         id: number;
         email: string;
-        organizationId?: number | null;
+        organization_id?: number | null;
         role?: string;
         displayName?: string;
         [key: string]: any;
@@ -66,7 +66,7 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
       req.user = {
         id: user.id,
         email: user.email,
-        organizationId: user.organizationId,
+        organization_id: user.organizationId,
         role: user.role,
         displayName: user.displayName
       };
@@ -110,7 +110,7 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
 export function withOrganizationScope<T extends Record<string, any>>(
   req: Request,
   baseWhere: T = {} as T
-): T & { organizationId?: number | null } {
+): T & { organization_id?: number | null } {
   // Super admins bypass organization filtering unless explicitly requested
   if (req.user?.role === 'super_admin' && !req.query.organizationId) {
     return baseWhere;
@@ -119,7 +119,7 @@ export function withOrganizationScope<T extends Record<string, any>>(
   // Add organization filter for all other users
   return {
     ...baseWhere,
-    organizationId: req.organizationId
+    organization_id: req.organizationId
   };
 }
 
