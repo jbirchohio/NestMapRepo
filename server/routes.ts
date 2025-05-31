@@ -2811,7 +2811,7 @@ Include realistic business activities, meeting times, dining recommendations, an
   });
 
   // Corporate analytics endpoint - CRITICAL SECURITY: Organization-aware analytics isolation
-  app.get("/api/analytics/corporate", async (req: Request, res: Response) => {
+  app.get("/api/analytics/corporate", endpointRateLimit('analytics'), async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication first
       if (!req.user) {
@@ -2885,7 +2885,7 @@ Include realistic business activities, meeting times, dining recommendations, an
   });
 
   // Agency analytics endpoint - CRITICAL SECURITY: Organization-aware analytics isolation
-  app.get("/api/analytics/agency", async (req: Request, res: Response) => {
+  app.get("/api/analytics/agency", endpointRateLimit('analytics'), async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication first
       if (!req.user) {
@@ -2929,7 +2929,7 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  app.get("/api/analytics/export", async (req: Request, res: Response) => {
+  app.get("/api/analytics/export", endpointRateLimit('export'), async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication first
       if (!req.user) {
