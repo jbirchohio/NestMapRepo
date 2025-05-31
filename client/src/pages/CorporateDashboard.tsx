@@ -60,6 +60,22 @@ export default function CorporateDashboard() {
   const recentTrips = trips.slice(0, 3);
   const upcomingTrips = trips.filter(trip => new Date(trip.start_date) > new Date()).slice(0, 3);
 
+  // Calculate actual average trip duration from real data
+  const avgTripDuration = trips.length > 0 ? Math.round(
+    trips.reduce((sum, trip) => {
+      const startDate = trip.start_date || trip.startDate;
+      const endDate = trip.end_date || trip.endDate;
+      if (!startDate || !endDate) return sum;
+      
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return sum;
+      
+      const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      return sum + duration;
+    }, 0) / trips.length
+  ) : 0;
+
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
       <div className="container mx-auto px-4 py-8">
@@ -132,7 +148,7 @@ export default function CorporateDashboard() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics?.avgDuration || 0} days</div>
+              <div className="text-2xl font-bold">{avgTripDuration} days</div>
               <p className="text-xs text-muted-foreground">
                 Optimal for business travel
               </p>
