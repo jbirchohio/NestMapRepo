@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,7 @@ interface Trip {
 export default function CorporateDashboard() {
   const { userId, user } = useAuth();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
     queryKey: ['/api/trips', { userId }],
@@ -187,7 +188,11 @@ export default function CorporateDashboard() {
               ) : recentTrips.length > 0 ? (
                 <div className="space-y-4">
                   {recentTrips.map((trip) => (
-                    <div key={trip.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div 
+                      key={trip.id} 
+                      className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:shadow-md hover:bg-muted/50 transition-all"
+                      onClick={() => setLocation(`/trip/${trip.id}`)}
+                    >
                       <div className="flex items-center gap-3">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <div>
@@ -253,7 +258,11 @@ export default function CorporateDashboard() {
               {upcomingTrips.length > 0 ? (
                 <div className="space-y-4">
                   {upcomingTrips.map((trip) => (
-                    <div key={trip.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div 
+                      key={trip.id} 
+                      className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:shadow-md hover:bg-muted/50 transition-all"
+                      onClick={() => setLocation(`/trip/${trip.id}`)}
+                    >
                       <div className="flex items-center gap-3">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <div>
