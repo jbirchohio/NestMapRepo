@@ -192,6 +192,8 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
           // Include city coordinates for map centering
           latitude: data.cityLatitude,
           longitude: data.cityLongitude,
+          cityLatitude: data.cityLatitude,
+          cityLongitude: data.cityLongitude,
         };
         
         // Store in localStorage
