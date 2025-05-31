@@ -132,6 +132,14 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
           organizationId: user.organization_id,
           role: user.role || 'user'
         };
+        console.log('Session auth - populated req.user:', {
+          id: req.user.id,
+          organizationId: req.user.organizationId,
+          role: req.user.role,
+          path: req.path
+        });
+      } else {
+        console.log('Session auth - no user found for session userId:', userId);
       }
     }
   } catch (error) {
