@@ -47,7 +47,7 @@ import {
   setOrganizationId,
   logOrganizationAccess
 } from "./organizationContext";
-import { generateTripPdf } from "./pdfExport";
+import { generatePdfBuffer } from "./utils/pdfHelper";
 import { BRANDING_CONFIG } from "./config";
 import { getAllTemplates, getTemplateById } from "./tripTemplates";
 import { getAnalytics, getUserPersonalAnalytics, exportAnalyticsCSV } from "./analytics";
@@ -1704,7 +1704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getNotesByTripId(tripId)
       ]);
       
-      const pdfBuffer = await generateTripPdf({
+      const pdfBuffer = await generatePdfBuffer({
         trip,
         activities,
         todos,
