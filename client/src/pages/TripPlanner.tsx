@@ -131,11 +131,12 @@ export default function TripPlanner() {
   
   // Prepare map markers - include all activities with coordinates (both completed and pending)
   const mapMarkers: MapMarker[] = sortedActivities
-    .filter(activity => 
-      // Only include activities with coordinates
-      activity.latitude && 
-      activity.longitude
-    )
+    .filter(activity => {
+      // Only include activities with valid coordinates
+      const hasLat = activity.latitude && activity.latitude !== "0" && !isNaN(parseFloat(activity.latitude));
+      const hasLng = activity.longitude && activity.longitude !== "0" && !isNaN(parseFloat(activity.longitude));
+      return hasLat && hasLng;
+    })
     .map((activity, index) => ({
       id: activity.id,
       latitude: parseFloat(activity.latitude || "0"),
@@ -161,9 +162,10 @@ export default function TripPlanner() {
         mapMarkers.reduce((sum, marker) => sum + marker.longitude, 0) / mapMarkers.length,
         mapMarkers.reduce((sum, marker) => sum + marker.latitude, 0) / mapMarkers.length,
       ] as [number, number]
-    : (trip?.cityLatitude && trip?.cityLongitude)
+    : (trip?.cityLatitude && trip?.cityLongitude && 
+       !isNaN(parseFloat(trip.cityLatitude)) && !isNaN(parseFloat(trip.cityLongitude)))
     ? [parseFloat(trip.cityLongitude), parseFloat(trip.cityLatitude)] as [number, number]
-    : undefined;
+    : [-74.006, 40.7128] as [number, number]; // Default to NYC coordinates instead of undefined
   
   // Handle activity marker click
   const handleMarkerClick = (marker: MapMarker) => {
