@@ -71,10 +71,7 @@ export default function Home() {
     }
   };
 
-  // Auto-clear localStorage on page load for testing (temporary)
-  React.useEffect(() => {
-    clearGuestData();
-  }, []);
+
 
   const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
     queryKey: [API_ENDPOINTS.TRIPS, { userId }],
