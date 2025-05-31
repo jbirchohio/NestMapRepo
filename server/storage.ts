@@ -304,6 +304,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserByAuthId(authId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.auth_id, authId));
+    return user || undefined;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -419,6 +424,10 @@ export class DatabaseStorage implements IStorage {
     console.log("Activities with travel modes:", activityList.map(a => ({id: a.id, title: a.title, travelMode: a.travelMode})));
     
     return activityList;
+  }
+
+  async getActivities(tripId: number): Promise<Activity[]> {
+    return this.getActivitiesByTripId(tripId);
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {

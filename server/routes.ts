@@ -1818,7 +1818,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         city: template.city,
         country: template.country,
         isPublic: false,
-        sharingEnabled: false
+        sharingEnabled: false,
+        collaborators: [],
+        completed: false,
+        tripType: 'leisure'
       });
 
       // Create activities from template
@@ -3204,8 +3207,8 @@ Include realistic business activities, meeting times, dining recommendations, an
   app.post("/api/trips/:id/generate-proposal", async (req: Request, res: Response) => {
     try {
       const tripId = parseInt(req.params.id);
-      const trip = storage.getTrip(tripId);
-      const activities = storage.getActivities(tripId);
+      const trip = await storage.getTrip(tripId);
+      const activities = await storage.getActivities(tripId);
       
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
@@ -3265,8 +3268,8 @@ Include realistic business activities, meeting times, dining recommendations, an
   app.get("/api/trips/:id/cost-estimate", async (req: Request, res: Response) => {
     try {
       const tripId = parseInt(req.params.id);
-      const trip = storage.getTrip(tripId);
-      const activities = storage.getActivities(tripId);
+      const trip = await storage.getTrip(tripId);
+      const activities = await storage.getActivities(tripId);
       
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
@@ -4314,7 +4317,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(404).json({ error: "Trip not found" });
       }
 
-      const tripActivities = await db.select().from(activities).where(eq(activities.trip_id, parseInt(tripId)));
+      const tripActivities = await db.select().from(activities).where(eq(activities.tripId, parseInt(tripId)));
       
       // Calculate estimated costs based on activities and destination
       let flightCost = 0;
