@@ -39,20 +39,22 @@ export default function useTrip(tripId: string | number) {
     queryFn: async () => {
       if (!tripId) return null;
       
-      // For guest trips (negative IDs), always use localStorage
-      if (typeof tripId === 'number' && tripId < 0) {
-        const guestTrip = getGuestTrip();
-        if (guestTrip) {
-          console.log('Returning guest trip from localStorage:', guestTrip);
-          return guestTrip;
-        }
-      }
-      
       // For regular trips, fetch from server with authentication
       const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}`, undefined);
       return res.json();
     },
-    enabled: !!tripId,
+    enabled: !!tripId && (typeof tripId !== 'number' || tripId > 0), // Don't fetch for guest trips
+    initialData: () => {
+      // For guest trips, return localStorage data immediately
+      if (tripId && typeof tripId === 'number' && tripId < 0) {
+        const guestTrip = getGuestTrip();
+        if (guestTrip) {
+          console.log('Using guest trip from localStorage as initialData:', guestTrip);
+          return guestTrip;
+        }
+      }
+      return undefined;
+    },
   });
 
   // Fetch trip todos
