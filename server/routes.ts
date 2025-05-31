@@ -4482,7 +4482,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         openai: !!process.env.OPENAI_API_KEY,
         mapbox: !!process.env.MAPBOX_TOKEN,
         session: !!process.env.SESSION_SECRET,
-        baseUrl: !!process.env.BASE_URL || !!process.env.PORT
+        baseUrl: !!process.env.BASE_URL
       };
 
       const configScore = Object.values(envChecks).filter(Boolean).length / Object.keys(envChecks).length;
