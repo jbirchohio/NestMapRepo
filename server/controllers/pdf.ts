@@ -34,7 +34,13 @@ export async function generateTripProposal(req: Request, res: Response) {
     const activities = await storage.getActivitiesByTripId(tripId);
 
     // Generate PDF buffer - FIXED: Now returns actual PDF instead of HTML
-    const pdfBuffer = await generateTripPdf(trip, activities);
+    const pdfData: any = {
+      trip,
+      activities,
+      todos: [],
+      notes: []
+    };
+    const pdfBuffer = await generateTripPdf(pdfData);
 
     // Set proper headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
