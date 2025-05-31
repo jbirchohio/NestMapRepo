@@ -60,7 +60,7 @@ export default function ActivityTimeline({
           <p className="text-[hsl(var(--muted-foreground))] mb-4">No activities planned for this day.</p>
           <Button 
             onClick={handleAddActivity}
-            className="btn-primary"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary hover:bg-primary/90 h-10 px-4 py-2 btn-primary text-[#0f172a]"
           >
             Add Your First Activity
           </Button>
