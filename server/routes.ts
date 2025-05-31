@@ -1924,10 +1924,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing required trip details" });
       }
 
-      const generatedTrip = await generateBusinessTrip(tripRequest);
+      // Require authentication for trip creation
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Authentication required to save trip" });
+      }
+
+      // Enhance the request with required business trip fields
+      const enhancedRequest = {
+        ...tripRequest,
+        currency: tripRequest.currency || 'USD',
+        workSchedule: tripRequest.workSchedule || {
+          workDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          workHours: '9:00-17:00'
+        },
+        preferences: {
+          foodTypes: ['Business Dining', 'Local Cuisine'],
+          accommodationType: 'business',
+          activityTypes: ['Networking', 'Cultural Sites'],
+          ...tripRequest.preferences
+        },
+        companyInfo: tripRequest.companyInfo || {
+          name: tripRequest.clientName,
+          industry: 'Business Services'
+        },
+        tripPurpose: tripRequest.tripPurpose || 'Business Meeting',
+        groupSize: tripRequest.groupSize || 1
+      };
+
+      const generatedTrip = await generateBusinessTrip(enhancedRequest);
       console.log("Business trip generated successfully");
+
+      // Save the generated business trip to the database
+      const newTrip = await storage.createTrip({
+        userId: req.user.id,
+        organizationId: req.user.organizationId,
+        title: `Business Trip to ${tripRequest.destination} for ${tripRequest.clientName}`,
+        description: `Professional business trip generated for ${tripRequest.clientName}`,
+        destination: tripRequest.destination,
+        startDate: tripRequest.startDate,
+        endDate: tripRequest.endDate,
+        budget: tripRequest.budget || generatedTrip.tripSummary?.totalCost || 0,
+        notes: `Business trip for client: ${tripRequest.clientName}. ${generatedTrip.tripSummary?.carbonFootprint ? `Carbon footprint: ${generatedTrip.tripSummary.carbonFootprint} kg CO2` : ''}`
+      });
+
+      console.log("Business trip saved to database with ID:", newTrip.id);
+
+      // Save activities from the generated business trip
+      const savedActivities = [];
+      if (generatedTrip.schedule && Array.isArray(generatedTrip.schedule)) {
+        for (let i = 0; i < generatedTrip.schedule.length; i++) {
+          const activity = generatedTrip.schedule[i];
+          
+          const savedActivity = await storage.createActivity({
+            tripId: newTrip.id,
+            title: activity.title || activity.activity || 'Business Activity',
+            date: activity.date || tripRequest.startDate,
+            time: activity.time || activity.startTime || `${9 + i}:00`,
+            locationName: activity.location || activity.venue || tripRequest.destination,
+            notes: activity.description || activity.notes || '',
+            tag: activity.category || activity.type || 'Business',
+            order: i + 1,
+            completed: false
+          });
+          
+          savedActivities.push(savedActivity);
+        }
+      }
+
+      console.log(`Saved ${savedActivities.length} business activities for trip ${newTrip.id}`);
+
+      // Create business trip response with saved data
+      const enhancedTrip = {
+        success: true,
+        tripId: newTrip.id,
+        trip: newTrip,
+        activities: savedActivities,
+        generatedData: generatedTrip,
+        message: "Business trip successfully generated and saved to your account"
+      };
       
-      res.json(generatedTrip);
+      res.json(enhancedTrip);
     } catch (error) {
       console.error("Error generating business trip:", error);
       res.status(500).json({ 
@@ -1975,45 +2051,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Complete trip details extracted:", tripInfo);
 
       // Search for authentic travel data with complete information
-      const [flightSearches, hotelSearches, weatherData, foodRecommendations] = await Promise.all([
-        searchRealFlights(tripInfo),
-        searchRealHotels(tripInfo),
-        getWeatherForecast(tripInfo.destination, { start: tripInfo.startDate, end: tripInfo.endDate }),
-        searchLocalDining(tripInfo.destination, { 
-          dietary: tripInfo.dietary || 'vegetarian',
-          dietaryRestrictions: tripInfo.dietaryRestrictions || ['vegetarian']
+      const { searchFlights, searchHotels } = await import('./bookingProviders');
+      
+      const [flightSearches, hotelSearches] = await Promise.all([
+        searchFlights({
+          origin: tripInfo.origin || 'JFK',
+          destination: tripInfo.destination,
+          departureDate: tripInfo.startDate,
+          returnDate: tripInfo.endDate,
+          passengers: tripInfo.groupSize || 1
+        }),
+        searchHotels({
+          destination: tripInfo.destination,
+          checkIn: tripInfo.startDate,
+          checkOut: tripInfo.endDate,
+          guests: tripInfo.groupSize || 1,
+          rooms: Math.ceil((tripInfo.groupSize || 1) / 2)
         })
       ]);
 
       // Generate comprehensive trip using AI with authentic data
       const generatedTrip = await generateCompleteTripWithAI(tripInfo, {
         flights: flightSearches,
-        hotels: hotelSearches,
-        weather: weatherData,
-        restaurants: foodRecommendations
+        hotels: hotelSearches
       });
 
-      // Add client-specific features for B2B workflow
-      const enhancedTrip = {
-        ...generatedTrip,
-        clientAccess: {
-          shareCode: Math.random().toString(36).substring(2, 15),
-          mobileTrackingUrl: `${process.env.BASE_URL || 'https://your-domain.com'}/track/${Math.random().toString(36).substring(2, 15)}`,
-          lastUpdated: new Date().toISOString(),
-          notificationPreferences: {
-            sms: false,
-            email: true,
-            push: false
-          }
-        },
-        businessInfo: {
-          canGenerateProposal: true,
-          billingReady: true,
-          proposalTemplate: 'professional'
+      // Require authentication for trip creation
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Authentication required to save trip" });
+      }
+
+      // Save the generated trip to the database
+      const tripDuration = Math.ceil((new Date(tripInfo.endDate) - new Date(tripInfo.startDate)) / (1000 * 60 * 60 * 24));
+      
+      const newTrip = await storage.createTrip({
+        userId: req.user.id,
+        organizationId: req.user.organizationId,
+        title: generatedTrip.tripSummary?.title || `AI Trip to ${tripInfo.destination}`,
+        description: generatedTrip.tripSummary?.description || `AI-generated itinerary for ${tripInfo.destination}`,
+        destination: tripInfo.destination,
+        startDate: tripInfo.startDate,
+        endDate: tripInfo.endDate,
+        budget: tripInfo.budget || generatedTrip.tripSummary?.totalCost || 0,
+        notes: `Generated by AI Assistant. ${generatedTrip.tripSummary?.carbonFootprint ? `Carbon footprint: ${generatedTrip.tripSummary.carbonFootprint} kg CO2` : ''}`
+      });
+
+      console.log("Trip saved to database with ID:", newTrip.id);
+
+      // Save activities from the generated trip
+      const savedActivities = [];
+      if (generatedTrip.activities && Array.isArray(generatedTrip.activities)) {
+        for (let i = 0; i < generatedTrip.activities.length; i++) {
+          const activity = generatedTrip.activities[i];
+          
+          // Calculate which day this activity belongs to
+          const activityDay = Math.floor(i / 3) + 1; // Roughly 3 activities per day
+          const activityDate = new Date(tripInfo.startDate);
+          activityDate.setDate(activityDate.getDate() + activityDay - 1);
+          
+          const savedActivity = await storage.createActivity({
+            tripId: newTrip.id,
+            title: activity.title || 'AI Generated Activity',
+            date: activityDate.toISOString().split('T')[0],
+            time: activity.startTime || `${9 + i}:00`,
+            locationName: activity.location || tripInfo.destination,
+            notes: activity.description || '',
+            tag: activity.category || 'AI Generated',
+            order: i + 1,
+            completed: false
+          });
+          
+          savedActivities.push(savedActivity);
         }
+      }
+
+      console.log(`Saved ${savedActivities.length} activities for trip ${newTrip.id}`);
+
+      // Add budget breakdown if available
+      if (generatedTrip.tripSummary?.totalCost) {
+        await storage.createNote({
+          tripId: newTrip.id,
+          content: `Budget Breakdown:\nTotal: $${generatedTrip.tripSummary.totalCost}\n${generatedTrip.flights ? `Flights: Estimated from search results\n` : ''}${generatedTrip.accommodation ? `Hotels: Estimated from search results\n` : ''}Generated by AI Assistant`
+        });
+      }
+
+      // Create response with saved trip data
+      const enhancedTrip = {
+        success: true,
+        tripId: newTrip.id,
+        trip: newTrip,
+        activities: savedActivities,
+        generatedData: {
+          flights: flightSearches || [],
+          hotels: hotelSearches || [],
+          totalCost: generatedTrip.tripSummary?.totalCost,
+          carbonFootprint: generatedTrip.tripSummary?.carbonFootprint
+        },
+        message: "Trip successfully generated and saved to your account"
       };
 
-      console.log("AI trip generated successfully with client features");
+      console.log("AI trip generated and saved successfully");
       res.json(enhancedTrip);
     } catch (error) {
       console.error("Error generating AI trip:", error);
