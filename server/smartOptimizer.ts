@@ -138,7 +138,6 @@ function checkActivityConflict(activity1: Activity, activity2: Activity): Confli
       activities: [activity1, activity2],
       description: `${activity1.title} and ${activity2.title} have overlapping time slots`,
       suggestion: `Reschedule ${activity2.title} to ${formatTime(new Date(end1.getTime() + 30 * 60000))}`,
-      suggestedFix: `Reschedule ${activity2.title} to ${formatTime(new Date(end1.getTime() + 30 * 60000))}`,
       autoFixAvailable: true
     };
   }
@@ -159,7 +158,6 @@ function checkActivityConflict(activity1: Activity, activity2: Activity): Confli
         activities: [activity1, activity2],
         description: `Insufficient travel time between ${activity1.locationName} and ${activity2.locationName} (need ${travelTime} minutes, have ${timeBetween})`,
         suggestion: `Add ${Math.ceil(travelTime + 15 - timeBetween)} minutes buffer or reorder activities`,
-        suggestedFix: `Add ${Math.ceil(travelTime + 15 - timeBetween)} minutes buffer or reorder activities`,
         autoFixAvailable: true
       };
     }
@@ -190,27 +188,25 @@ async function checkVenueHours(activities: Activity[]): Promise<ConflictDetectio
     
     // Guess venue type from activity title/location
     const venueType = guessVenueType(activity.title, activity.locationName);
-    const hours = venueHours[venueType as keyof typeof venueHours];
+    const hours = venueType in venueHours ? venueHours[venueType as keyof typeof venueHours] : null;
     
     if (hours) {
-      if (hours.closedDays.includes(dayName)) {
+      if (hours.closedDays.includes(dayName as any)) {
         conflicts.push({
-          type: 'venue_hours',
+          type: 'schedule_gap',
           severity: 'high',
           activities: [activity],
           description: `${activity.locationName} is typically closed on ${dayName}`,
           suggestion: `Move to a different day or verify operating hours`,
-          suggestedFix: `Move to a different day or verify operating hours`,
           autoFixAvailable: false
         });
       } else if (hour < hours.open || hour > hours.close) {
         conflicts.push({
-          type: 'venue_hours',
+          type: 'schedule_gap',
           severity: 'medium',
           activities: [activity],
           description: `${activity.locationName} may be closed at ${formatTime(activityTime)} (typical hours: ${hours.open}:00-${hours.close}:00)`,
           suggestion: `Reschedule between ${hours.open}:00-${hours.close}:00`,
-          suggestedFix: `Reschedule between ${hours.open}:00-${hours.close}:00`,
           autoFixAvailable: true
         });
       }
