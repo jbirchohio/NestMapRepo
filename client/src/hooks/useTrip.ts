@@ -43,10 +43,10 @@ export default function useTrip(tripId: string | number) {
       const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}`, undefined);
       return res.json();
     },
-    enabled: !!tripId && (typeof tripId !== 'number' || tripId > 0), // Don't fetch for guest trips
+    enabled: !!tripId && Number(tripId) > 0, // Don't fetch for guest trips (negative IDs)
     initialData: () => {
       // For guest trips, return localStorage data immediately
-      if (tripId && typeof tripId === 'number' && tripId < 0) {
+      if (tripId && Number(tripId) < 0) {
         const guestTrip = getGuestTrip();
         if (guestTrip) {
           console.log('Using guest trip from localStorage as initialData:', guestTrip);
