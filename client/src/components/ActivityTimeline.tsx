@@ -60,7 +60,7 @@ export default function ActivityTimeline({
           <p className="text-[hsl(var(--muted-foreground))] mb-4">No activities planned for this day.</p>
           <Button 
             onClick={handleAddActivity}
-            className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]"
+            className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
           >
             Add Your First Activity
           </Button>
@@ -78,7 +78,7 @@ export default function ActivityTimeline({
       
             {/* Always show the Add Activity button - but make it bigger when no activities */}
       <Button 
-        className={`w-full ${sortedActivities.length === 0 ? 'text-base py-5 mt-4' : 'text-sm'} bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90`}
+        className={`w-full ${sortedActivities.length === 0 ? 'text-base py-5 mt-4' : 'text-sm'} bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-[hsl(var(--primary-foreground))]`}
         onClick={handleAddActivity}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
