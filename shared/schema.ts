@@ -113,6 +113,7 @@ export const trips = pgTable("trips", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   userId: integer("user_id").notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   collaborators: jsonb("collaborators").default([]),
   // Sharing and collaboration settings
   isPublic: boolean("is_public").default(false),
@@ -154,6 +155,7 @@ export const insertTripSchema = z.object({
     val instanceof Date ? val : new Date(val)
   ),
   userId: z.number(),
+  organizationId: z.number().optional(), // Multi-tenant isolation
   collaborators: z.array(z.any()).default([]),
   // Sharing and collaboration settings
   isPublic: z.boolean().optional().default(false),
@@ -185,6 +187,7 @@ export const insertTripSchema = z.object({
 export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
   tripId: integer("trip_id").notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   title: text("title").notNull(),
   date: timestamp("date").notNull(),
   time: text("time").notNull(),
@@ -202,6 +205,7 @@ export const activities = pgTable("activities", {
 // Create a custom schema that properly handles dates as strings from JSON
 export const insertActivitySchema = z.object({
   tripId: z.number(),
+  organizationId: z.number().optional(), // Multi-tenant isolation
   title: z.string(),
   date: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
@@ -222,6 +226,7 @@ export const insertActivitySchema = z.object({
 export const todos = pgTable("todos", {
   id: serial("id").primaryKey(),
   tripId: integer("trip_id").notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   task: text("task").notNull(),
   completed: boolean("completed").default(false),
   assignedTo: text("assigned_to"),
@@ -229,6 +234,7 @@ export const todos = pgTable("todos", {
 
 export const insertTodoSchema = createInsertSchema(todos).pick({
   tripId: true,
+  organizationId: true,
   task: true,
   completed: true,
   assignedTo: true,
@@ -238,11 +244,13 @@ export const insertTodoSchema = createInsertSchema(todos).pick({
 export const notes = pgTable("notes", {
   id: serial("id").primaryKey(),
   tripId: integer("trip_id").notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   content: text("content").notNull(),
 });
 
 export const insertNoteSchema = createInsertSchema(notes).pick({
   tripId: true,
+  organizationId: true,
   content: true,
 });
 
