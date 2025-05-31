@@ -172,14 +172,30 @@ export default function CorporateDashboard() {
                         <Badge variant={trip.status === 'completed' ? 'default' : 'secondary'}>
                           {trip.status}
                         </Badge>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <div className="text-xs text-muted-foreground mt-1">
                           {(() => {
-                            const date = trip.start_date || trip.startDate;
-                            if (!date) return 'No date set';
-                            const parsed = new Date(date);
-                            return isNaN(parsed.getTime()) ? 'Invalid date' : parsed.toLocaleDateString();
+                            const startDate = trip.start_date || trip.startDate;
+                            const endDate = trip.end_date || trip.endDate;
+                            
+                            if (!startDate || !endDate) return <p>Dates not set</p>;
+                            
+                            const start = new Date(startDate);
+                            const end = new Date(endDate);
+                            
+                            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                              return <p>Invalid dates</p>;
+                            }
+                            
+                            const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                            
+                            return (
+                              <div>
+                                <p>{start.toLocaleDateString()} - {end.toLocaleDateString()}</p>
+                                <p className="text-xs opacity-75">{duration} day{duration !== 1 ? 's' : ''}</p>
+                              </div>
+                            );
                           })()}
-                        </p>
+                        </div>
                       </div>
                     </div>
                   ))}
