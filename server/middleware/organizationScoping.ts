@@ -6,13 +6,21 @@ import { Request, Response, NextFunction } from 'express';
  * Prevents cross-organization data access
  */
 export function injectOrganizationContext(req: Request, res: Response, next: NextFunction) {
-  // Skip for public endpoints and auth routes
+  // Skip for public endpoints, frontend routes, and auth routes
   const publicPaths = ['/api/auth/', '/api/public/', '/api/health', '/api/share/', '/.well-known/'];
+  const frontendPaths = ['/', '/trip/', '/share/', '/login', '/signup', '/demo'];
+  
+  // Skip authentication for public API endpoints
   if (publicPaths.some(path => req.path.includes(path))) {
     return next();
   }
+  
+  // Skip authentication for frontend routes (non-API)
+  if (!req.path.startsWith('/api') || frontendPaths.some(path => req.path.startsWith(path))) {
+    return next();
+  }
 
-  // Ensure user is authenticated for organization-scoped endpoints
+  // Ensure user is authenticated for organization-scoped API endpoints
   if (!req.isAuthenticated || !req.isAuthenticated()) {
     return res.status(401).json({ message: 'Authentication required' });
   }

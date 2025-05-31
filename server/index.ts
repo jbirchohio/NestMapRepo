@@ -69,10 +69,10 @@ app.use(memoryMonitor);
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
 
-// Apply API security middleware
-app.use(apiVersioning);
-app.use(authenticateApiKey);
-app.use(tieredRateLimit);
+// Apply API security middleware only to API routes
+app.use('/api', apiVersioning);
+app.use('/api', authenticateApiKey);
+app.use('/api', tieredRateLimit);
 app.use(monitorEndpoints);
 
 // Apply database security middleware
