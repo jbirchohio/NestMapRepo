@@ -153,13 +153,18 @@ export const insertTripSchema = z.object({
   endDate: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
   ),
-  userId: z.number(),
-  organizationId: z.number().optional(), // Multi-tenant isolation
+  userId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ),
+  organizationId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ).optional(), // Multi-tenant isolation
   collaborators: z.array(z.any()).default([]),
   // Sharing and collaboration settings
   isPublic: z.boolean().optional().default(false),
   shareCode: z.string().optional(),
   sharingEnabled: z.boolean().optional().default(false),
+  sharePermission: z.string().optional().default("read-only"),
   // Location fields are optional
   city: z.string().optional(),
   country: z.string().optional(),
@@ -203,8 +208,12 @@ export const activities = pgTable("activities", {
 
 // Create a custom schema that properly handles dates as strings from JSON
 export const insertActivitySchema = z.object({
-  tripId: z.number(),
-  organizationId: z.number().optional(), // Multi-tenant isolation
+  tripId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ),
+  organizationId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ).optional(), // Multi-tenant isolation
   title: z.string(),
   date: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
@@ -231,12 +240,16 @@ export const todos = pgTable("todos", {
   assignedTo: text("assigned_to"),
 });
 
-export const insertTodoSchema = createInsertSchema(todos).pick({
-  tripId: true,
-  organizationId: true,
-  task: true,
-  completed: true,
-  assignedTo: true,
+export const insertTodoSchema = z.object({
+  tripId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ),
+  organizationId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ).optional(),
+  task: z.string(),
+  completed: z.boolean().optional().default(false),
+  assignedTo: z.string().optional(),
 });
 
 // Notes schema
@@ -247,10 +260,14 @@ export const notes = pgTable("notes", {
   content: text("content").notNull(),
 });
 
-export const insertNoteSchema = createInsertSchema(notes).pick({
-  tripId: true,
-  organizationId: true,
-  content: true,
+export const insertNoteSchema = z.object({
+  tripId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ),
+  organizationId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ).optional(),
+  content: z.string(),
 });
 
 // RBAC constants
