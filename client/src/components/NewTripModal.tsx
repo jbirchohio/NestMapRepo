@@ -185,7 +185,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
       // Handle guest mode with localStorage
       if (isGuestMode) {
         const guestTrip = {
-          id: Date.now(), // Use timestamp as ID for guest trips
+          id: -(Math.floor(Date.now() / 1000) % 100000), // Smaller negative ID for guest trips
           ...tripData,
           userId: -1,
           createdAt: new Date().toISOString(),
