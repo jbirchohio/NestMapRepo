@@ -75,7 +75,7 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
             <Input
               id="email"
               type="email"
-              placeholder="your.email@example.com"
+              placeholder="Enter your email address"
               {...form.register("email")}
             />
             {form.formState.errors.email && (

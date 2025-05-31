@@ -266,7 +266,7 @@ export default function ProfileSettings() {
                     id="email"
                     type="email"
                     {...profileForm.register('email')}
-                    placeholder="your.email@example.com"
+                    placeholder="Enter your email address"
                   />
                   {profileForm.formState.errors.email && (
                     <p className="text-sm text-destructive">

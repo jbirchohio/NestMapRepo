@@ -12,6 +12,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByAuthId(authId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
   // Trip operations
@@ -26,6 +27,7 @@ export interface IStorage {
   // Activity operations
   getActivity(id: number): Promise<Activity | undefined>;
   getActivitiesByTripId(tripId: number): Promise<Activity[]>;
+  getActivities(tripId: number): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
   updateActivity(id: number, activity: Partial<InsertActivity>): Promise<Activity | undefined>;
   deleteActivity(id: number): Promise<boolean>;
@@ -81,7 +83,7 @@ export class MemStorage implements IStorage {
     this.createUser({
       auth_id: "test-auth-id",
       username: "testuser",
-      email: "test@example.com"
+      email: "demo@nestmap.com"
     });
   }
 

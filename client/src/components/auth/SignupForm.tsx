@@ -106,7 +106,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
             <Input
               id="email"
               type="email"
-              placeholder="your.email@example.com"
+              placeholder="Enter your email address"
               {...form.register("email")}
             />
             {form.formState.errors.email && (
