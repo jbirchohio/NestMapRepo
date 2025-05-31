@@ -16,6 +16,7 @@ import { runMigrations } from "../scripts/migrate";
 import { db } from "./db-connection";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
+import { authenticateUser, getUserById } from "./auth";
 
 const app = express();
 
@@ -104,10 +105,82 @@ app.use(session({
   proxy: process.env.NODE_ENV === 'production' // Trust proxy in production
 }));
 
+// Authentication routes
+app.post('/api/auth/login', async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const user = await authenticateUser(email, password);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Store user ID in session
+    (req.session as any).userId = user.id;
+    
+    console.log('Login successful for user:', {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      organizationId: user.organizationId
+    });
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        organizationId: user.organizationId,
+        displayName: user.displayName
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/auth/logout', (req: Request, res: Response) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ error: 'Could not log out' });
+    }
+    res.clearCookie('nestmap.sid');
+    res.json({ success: true, message: 'Logged out successfully' });
+  });
+});
+
+app.get('/api/auth/me', async (req: Request, res: Response) => {
+  if (req.user) {
+    res.json({
+      user: {
+        id: req.user.id,
+        email: req.user.email || 'Unknown',
+        role: req.user.role,
+        organizationId: req.user.organizationId,
+        displayName: req.user.displayName || 'Unknown'
+      }
+    });
+  } else {
+    res.status(401).json({ error: 'Not authenticated' });
+  }
+});
+
 // Session-based authentication middleware to populate req.user
 app.use(async (req: Request, res: Response, next: NextFunction) => {
-  // Skip for non-API routes and specific auth endpoints only
-  if (!req.path.startsWith('/api') || req.path === '/api/auth/login' || req.path === '/api/auth/register') {
+  // Skip for non-API routes and specific auth endpoints
+  if (!req.path.startsWith('/api') || 
+      req.path === '/api/auth/login' || 
+      req.path === '/api/auth/register' ||
+      req.path === '/api/auth/logout' ||
+      req.path === '/api/templates') {
     return next();
   }
 
@@ -123,26 +196,28 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
     if (req.session && (req.session as any).userId) {
       const userId = (req.session as any).userId;
       
-      // Get user from database to populate req.user
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId));
+      // Use the auth service to get user data
+      const user = await getUserById(userId);
 
       if (user) {
         req.user = {
           id: user.id,
-          organizationId: user.organization_id,
-          role: user.role || 'user'
+          email: user.email,
+          organizationId: user.organizationId,
+          role: user.role,
+          displayName: user.displayName
         };
-        console.log('Session auth - populated req.user:', {
+        console.log('Auth middleware - populated req.user:', {
           id: req.user.id,
+          email: req.user.email,
           organizationId: req.user.organizationId,
           role: req.user.role,
           path: req.path
         });
       } else {
-        console.log('Session auth - no user found for session userId:', userId);
+        console.log('Auth middleware - no user found for session userId:', userId);
+        // Clear invalid session
+        delete (req.session as any).userId;
       }
     }
   } catch (error) {
