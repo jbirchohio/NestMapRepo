@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,6 +24,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 
 const whiteLabelSchema = z.object({
   // Branding
@@ -59,34 +60,28 @@ type WhiteLabelFormValues = z.infer<typeof whiteLabelSchema>;
 
 export default function WhiteLabelSettings() {
   const { toast } = useToast();
+  const { config, updateConfig } = useWhiteLabel();
   const [isSaving, setIsSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
 
   const form = useForm<WhiteLabelFormValues>({
     resolver: zodResolver(whiteLabelSchema),
-    defaultValues: {
-      companyName: "NestMap",
-      primaryColor: "#2563eb",
-      secondaryColor: "#64748b",
-      accentColor: "#10b981",
-      enableGuestMode: true,
-      enablePublicSignup: true,
-      enableSocialLogin: true,
-      enableMobileApp: true,
-      tagline: "AI-Powered Corporate Travel Management",
-      footerText: "© 2025 NestMap. All rights reserved."
-    }
+    defaultValues: config
   });
+
+  // Watch form values for live preview
+  const watchedValues = form.watch();
 
   const onSubmit = async (values: WhiteLabelFormValues) => {
     setIsSaving(true);
     try {
-      // Here you would save to your backend API
-      console.log('White label settings:', values);
+      // Update the white label configuration
+      updateConfig(values);
       
-      // Apply CSS variables for live preview
-      document.documentElement.style.setProperty('--primary', values.primaryColor);
-      document.documentElement.style.setProperty('--secondary', values.secondaryColor);
+      toast({
+        title: "Settings saved",
+        description: "White label configuration has been updated successfully.",
+      });
       document.documentElement.style.setProperty('--accent', values.accentColor);
       
       toast({
@@ -510,38 +505,109 @@ export default function WhiteLabelSettings() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg p-6 space-y-4">
-                  {/* Mock Header */}
-                  <div className="flex items-center justify-between pb-4 border-b">
-                    <div className="flex items-center gap-3">
+                <div className="border rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+                  {/* Live Preview Header */}
+                  <div className="border-b bg-white dark:bg-slate-900 px-4 py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="h-8 w-8 rounded flex items-center justify-center text-white text-sm font-bold"
+                          style={{ backgroundColor: currentValues.primaryColor }}
+                        >
+                          {currentValues.companyName.charAt(0)}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-lg text-slate-900 dark:text-slate-100">
+                            {currentValues.companyName}
+                          </span>
+                          {currentValues.tagline && (
+                            <span className="text-xs text-muted-foreground -mt-1">
+                              {currentValues.tagline}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Badge style={{ backgroundColor: currentValues.accentColor, color: 'white' }}>
+                        Enterprise
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Live Preview Navigation */}
+                  <div className="border-b bg-slate-50 dark:bg-slate-800 px-4 py-2">
+                    <div className="flex items-center gap-6 text-sm">
                       <div 
-                        className="h-8 w-8 rounded flex items-center justify-center text-white text-sm font-bold"
+                        className="px-3 py-1 rounded text-white font-medium"
                         style={{ backgroundColor: currentValues.primaryColor }}
                       >
-                        {currentValues.companyName.charAt(0)}
+                        Travel Console
                       </div>
-                      <div>
-                        <h3 className="font-semibold">{currentValues.companyName}</h3>
-                        {currentValues.tagline && (
-                          <p className="text-xs text-muted-foreground">{currentValues.tagline}</p>
-                        )}
+                      <span className="text-slate-600 dark:text-slate-400">Travel Analytics</span>
+                      <span className="text-slate-600 dark:text-slate-400">Team Bookings</span>
+                      <span className="text-slate-600 dark:text-slate-400">AI Trip Generator</span>
+                      <span className="text-slate-600 dark:text-slate-400">Team Management</span>
+                    </div>
+                  </div>
+
+                  {/* Live Preview Content */}
+                  <div className="p-4 space-y-4">
+                    {/* Dashboard Cards */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="border rounded-lg p-3 bg-white dark:bg-slate-800">
+                        <div className="text-sm text-slate-600 dark:text-slate-400">Active Trips</div>
+                        <div className="text-xl font-bold" style={{ color: currentValues.primaryColor }}>24</div>
+                      </div>
+                      <div className="border rounded-lg p-3 bg-white dark:bg-slate-800">
+                        <div className="text-sm text-slate-600 dark:text-slate-400">Team Members</div>
+                        <div className="text-xl font-bold" style={{ color: currentValues.secondaryColor }}>156</div>
+                      </div>
+                      <div className="border rounded-lg p-3 bg-white dark:bg-slate-800">
+                        <div className="text-sm text-slate-600 dark:text-slate-400">Total Budget</div>
+                        <div className="text-xl font-bold" style={{ color: currentValues.accentColor }}>$245K</div>
                       </div>
                     </div>
-                    <Badge style={{ backgroundColor: currentValues.accentColor, color: 'white' }}>
-                      Enterprise
-                    </Badge>
+
+                    {/* Recent Trips List */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-slate-900 dark:text-slate-100">Recent Team Trips</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: currentValues.accentColor }}
+                            />
+                            <span className="text-sm font-medium">Q2 Sales Conference - Austin</span>
+                          </div>
+                          <span className="text-xs text-slate-500">Active</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: currentValues.primaryColor }}
+                            />
+                            <span className="text-sm font-medium">Engineering Retreat - Denver</span>
+                          </div>
+                          <span className="text-xs text-slate-500">Planning</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CTA Button */}
+                    <div className="flex justify-center pt-2">
+                      <button 
+                        className="px-4 py-2 rounded text-white text-sm font-medium"
+                        style={{ backgroundColor: currentValues.primaryColor }}
+                      >
+                        Create New Team Trip
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Mock Content */}
-                  <div className="space-y-3">
-                    <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
-                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
-                  </div>
-
-                  {/* Mock Footer */}
-                  <div className="pt-4 border-t text-center">
-                    <p className="text-xs text-muted-foreground">
+                  {/* Live Preview Footer */}
+                  <div className="border-t bg-slate-50 dark:bg-slate-800 px-4 py-3 text-center">
+                    <p className="text-xs text-slate-500">
                       {currentValues.footerText}
                     </p>
                   </div>
