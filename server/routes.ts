@@ -43,6 +43,13 @@ import {
 } from "./billing";
 import { generateBusinessTrip } from "./businessTripGenerator";
 import { searchFlights, searchHotels } from "./bookingProviders";
+import { 
+  organizationContextMiddleware, 
+  withOrganizationFilter, 
+  setOrganizationId, 
+  validateTripAccess, 
+  logOrganizationAccess 
+} from "./organizationContext";
 
 // Demo data for testing role-based features
 const getDemoTrips = (roleType: string) => {
@@ -159,6 +166,9 @@ const getDemoAnalytics = async (orgId: number | null, roleType: string) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Apply organization context middleware to all API routes for multi-tenant security
+  app.use('/api', organizationContextMiddleware);
+  
   // User permissions endpoint
   app.get("/api/user/permissions", async (req: Request, res: Response) => {
     try {
@@ -261,17 +271,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
+      // Log organization access for audit
+      logOrganizationAccess(req, 'fetch', 'trips');
+      
       console.log("Attempting to fetch trips for user ID:", numericUserId);
       const trips = await storage.getTripsByUserId(numericUserId);
-      console.log("Trips fetched successfully:", trips.length);
-      res.json(trips);
+      
+      // Filter trips by organization context for multi-tenant security
+      const filteredTrips = trips.filter(trip => {
+        if (!req.organizationContext) return true; // Skip filtering for non-authenticated requests
+        return req.organizationContext.canAccessOrganization(trip.organizationId);
+      });
+      
+      console.log("Trips fetched successfully:", filteredTrips.length);
+      res.json(filteredTrips);
     } catch (error) {
       console.error("Error fetching trips:", error);
       res.status(500).json({ message: "Could not fetch trips", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
-  app.get("/api/trips/:id", async (req: Request, res: Response) => {
+  app.get("/api/trips/:id", validateTripAccess, async (req: Request, res: Response) => {
     try {
       const tripIdParam = req.params.id;
       
@@ -302,6 +322,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
       }
+      
+      // Additional organization access check (middleware already validates this)
+      if (req.organizationContext) {
+        req.organizationContext.enforceOrganizationAccess(trip.organizationId);
+      }
+      
+      // Log organization access for audit
+      logOrganizationAccess(req, 'view', 'trip', tripId);
       
       res.json(trip);
     } catch (error) {
@@ -353,11 +381,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.country) tripData.country = req.body.country;
       if (req.body.location) tripData.location = req.body.location;
       
+      // Enforce organization context for multi-tenant security
+      const tripDataWithOrg = setOrganizationId(req, tripData);
+      
       // Include B2B fields - now handled by schema parsing
       // B2B fields are automatically included through insertTripSchema
       
-      console.log("Processed trip data:", tripData);
-      const trip = await storage.createTrip(tripData);
+      console.log("Processed trip data:", tripDataWithOrg);
+      
+      // Log organization access for audit
+      logOrganizationAccess(req, 'create', 'trip');
+      
+      const trip = await storage.createTrip(tripDataWithOrg);
       
       // If this trip was created through the booking workflow with hotel information,
       // automatically create a hotel activity
@@ -585,6 +620,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For guest mode, return empty array since activities are stored in localStorage
         return res.json([]);
       }
+      
+      // Verify trip access first for organizational security
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // Check organization access
+      if (req.organizationContext) {
+        req.organizationContext.enforceOrganizationAccess(trip.organizationId);
+      }
+      
+      // Log organization access for audit
+      logOrganizationAccess(req, 'fetch', 'activities', tripId);
       
       const activities = await storage.getActivitiesByTripId(tripId);
       res.json(activities);
