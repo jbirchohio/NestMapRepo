@@ -299,13 +299,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/trips/:id", validateTripAccess, async (req: Request, res: Response) => {
+  app.get("/api/trips/:id", async (req: Request, res: Response) => {
     try {
       const tripIdParam = req.params.id;
       
       // Handle demo trips
       if (tripIdParam.startsWith('demo-trip-')) {
-        // Return a mock trip response for demo trips
         const mockTrip = {
           id: tripIdParam,
           title: 'Demo Trip',
@@ -326,18 +325,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
       
+      // CRITICAL SECURITY FIX: Add organization filtering to prevent cross-tenant data access
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const trip = await storage.getTrip(tripId);
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
       }
       
-      // Additional organization access check (middleware already validates this)
-      if (req.organizationContext) {
-        req.organizationContext.enforceOrganizationAccess(trip.organizationId);
+      // CRITICAL: Verify user can access this trip's organization
+      const userOrgId = req.user.organizationId || null;
+      if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
+        return res.status(403).json({ message: "Access denied: Cannot access this trip" });
       }
-      
-      // Log organization access for audit
-      logOrganizationAccess(req, 'view', 'trip', tripId);
       
       res.json(trip);
     } catch (error) {
@@ -4076,9 +4078,19 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Organization Members API
+  // Organization Members API - CRITICAL SECURITY: Add role-based access control
   app.get("/api/organizations/members", async (req: Request, res: Response) => {
     try {
+      // CRITICAL: Verify authentication and role authorization
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // CRITICAL: Only admins and super_admins can view organization members
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Admin role required" });
+      }
+      
       // Get organization members from database
       const members = await db.select().from(users).where(eq(users.role_type, 'corporate'));
       
