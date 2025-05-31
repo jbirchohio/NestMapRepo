@@ -39,16 +39,26 @@
   --tag-azure: 214 100% 50%; /* Azure Blue */
 }
 
-/* Force button visibility fix */
-.btn-primary, 
-button.bg-primary, 
-.bg-primary button,
-button[class*="bg-primary"] {
+/* Force button visibility fix - comprehensive approach */
+button[class*="bg-primary"],
+.bg-primary,
+button.bg-primary,
+[data-variant="default"],
+button[data-variant="default"] {
+  background-color: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
 }
 
-button.text-primary-foreground,
-.text-primary-foreground {
+/* Ensure text is visible on primary buttons */
+button[class*="text-primary-foreground"],
+.text-primary-foreground,
+button.text-primary-foreground {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Additional button visibility rules */
+button[class*="bg-primary"]:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
   color: hsl(var(--primary-foreground)) !important;
 }
 
