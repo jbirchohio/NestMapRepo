@@ -28,6 +28,7 @@ import {
   exchangeMicrosoftCodeForToken
 } from "./calendarSync";
 import { generateTripPdf } from "./pdfExport";
+import { BRANDING_CONFIG } from "./config";
 import { getAllTemplates, getTemplateById } from "./tripTemplates";
 import { getAnalytics, getUserPersonalAnalytics, exportAnalyticsCSV } from "./analytics";
 import { sendTeamInvitationEmail, sendWelcomeEmail } from "./emailService";
@@ -3950,6 +3951,53 @@ Include realistic business activities, meeting times, dining recommendations, an
     } catch (error) {
       console.error("Error getting ACME stats:", error);
       res.status(500).json({ error: "Failed to get ACME statistics" });
+    }
+  });
+
+  // Dynamic branding configuration endpoint
+  app.get("/api/branding", async (req: Request, res: Response) => {
+    try {
+      const domain = req.headers.host || req.query.domain as string;
+      
+      // Try to find organization by domain for white-label branding
+      if (domain && domain !== 'localhost' && !domain.includes('replit')) {
+        try {
+          const [orgByDomain] = await db.select()
+            .from(organizations)
+            .where(eq(organizations.domain, domain.split(':')[0]))
+            .limit(1);
+          
+          if (orgByDomain && orgByDomain.white_label_enabled) {
+            return res.json({
+              appName: orgByDomain.name || BRANDING_CONFIG.defaultAppName,
+              primaryColor: orgByDomain.primary_color || BRANDING_CONFIG.defaultPrimaryColor,
+              secondaryColor: orgByDomain.secondary_color || BRANDING_CONFIG.defaultSecondaryColor,
+              accentColor: orgByDomain.accent_color || BRANDING_CONFIG.defaultAccentColor,
+              logoUrl: orgByDomain.logo_url || BRANDING_CONFIG.logoUrl,
+              companyUrl: orgByDomain.domain || BRANDING_CONFIG.companyUrl,
+              supportEmail: orgByDomain.support_email || BRANDING_CONFIG.supportEmail,
+              isWhiteLabel: true
+            });
+          }
+        } catch (error) {
+          console.warn('Could not fetch org by domain:', error);
+        }
+      }
+      
+      // Return default branding configuration
+      res.json({
+        appName: BRANDING_CONFIG.defaultAppName,
+        primaryColor: BRANDING_CONFIG.defaultPrimaryColor,
+        secondaryColor: BRANDING_CONFIG.defaultSecondaryColor,
+        accentColor: BRANDING_CONFIG.defaultAccentColor,
+        logoUrl: BRANDING_CONFIG.logoUrl,
+        companyUrl: BRANDING_CONFIG.companyUrl,
+        supportEmail: BRANDING_CONFIG.supportEmail,
+        isWhiteLabel: false
+      });
+    } catch (error) {
+      console.error("Error fetching branding config:", error);
+      res.status(500).json({ error: "Failed to fetch branding configuration" });
     }
   });
 
