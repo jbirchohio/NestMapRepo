@@ -3,13 +3,12 @@ import { detectTripConflicts } from "./services/conflictDetector";
 import { Activity, OptimizedSchedule } from "../shared/interfaces";
 
 interface ConflictDetection {
-  type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict';
-  severity: 'high' | 'medium' | 'low';
+  type: 'time_overlap' | 'location_conflict' | 'capacity_issue' | 'schedule_gap';
+  severity: 'low' | 'medium' | 'high';
   activities: Activity[];
   description: string;
   suggestion: string;
-  suggestedFix: string;
-  autoFixAvailable: boolean;
+  autoFixAvailable?: boolean;
 }
 
 interface SmartReminder {
@@ -138,6 +137,7 @@ function checkActivityConflict(activity1: Activity, activity2: Activity): Confli
       severity: 'high',
       activities: [activity1, activity2],
       description: `${activity1.title} and ${activity2.title} have overlapping time slots`,
+      suggestion: `Reschedule ${activity2.title} to ${formatTime(new Date(end1.getTime() + 30 * 60000))}`,
       suggestedFix: `Reschedule ${activity2.title} to ${formatTime(new Date(end1.getTime() + 30 * 60000))}`,
       autoFixAvailable: true
     };
@@ -154,10 +154,11 @@ function checkActivityConflict(activity1: Activity, activity2: Activity): Confli
     
     if (timeBetween < travelTime + 15) { // 15 min buffer
       return {
-        type: 'travel_time',
+        type: 'location_conflict',
         severity: travelTime > timeBetween + 30 ? 'high' : 'medium',
         activities: [activity1, activity2],
         description: `Insufficient travel time between ${activity1.locationName} and ${activity2.locationName} (need ${travelTime} minutes, have ${timeBetween})`,
+        suggestion: `Add ${Math.ceil(travelTime + 15 - timeBetween)} minutes buffer or reorder activities`,
         suggestedFix: `Add ${Math.ceil(travelTime + 15 - timeBetween)} minutes buffer or reorder activities`,
         autoFixAvailable: true
       };
@@ -198,6 +199,7 @@ async function checkVenueHours(activities: Activity[]): Promise<ConflictDetectio
           severity: 'high',
           activities: [activity],
           description: `${activity.locationName} is typically closed on ${dayName}`,
+          suggestion: `Move to a different day or verify operating hours`,
           suggestedFix: `Move to a different day or verify operating hours`,
           autoFixAvailable: false
         });
@@ -207,6 +209,7 @@ async function checkVenueHours(activities: Activity[]): Promise<ConflictDetectio
           severity: 'medium',
           activities: [activity],
           description: `${activity.locationName} may be closed at ${formatTime(activityTime)} (typical hours: ${hours.open}:00-${hours.close}:00)`,
+          suggestion: `Reschedule between ${hours.open}:00-${hours.close}:00`,
           suggestedFix: `Reschedule between ${hours.open}:00-${hours.close}:00`,
           autoFixAvailable: true
         });
