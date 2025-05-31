@@ -41,6 +41,43 @@
 
 /* Remove custom button overrides - use shadcn/ui Button component instead */
 
+/* Ensure button text visibility across all themes */
+button {
+  @apply transition-all duration-200;
+}
+
+/* Force button text visibility in all variants */
+button[class*="bg-primary"] {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+button[class*="bg-destructive"] {
+  color: hsl(var(--destructive-foreground)) !important;
+}
+
+button[class*="bg-secondary"] {
+  color: hsl(var(--secondary-foreground)) !important;
+}
+
+/* Ensure outline buttons have proper contrast */
+button[class*="border-primary"] {
+  color: hsl(var(--primary)) !important;
+}
+
+button[class*="border-primary"]:hover {
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Fix ghost button text visibility */
+button[class*="text-foreground"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Link button visibility */
+button[class*="text-primary"] {
+  color: hsl(var(--primary)) !important;
+}
+
 /* Tag colors continued */
 :root {
   /* Maintain backwards compatibility with old tag names */
