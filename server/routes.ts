@@ -28,6 +28,7 @@ import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import * as openai from "./openai";
 import * as aiLocations from "./aiLocations";
+import { searchFlights, searchHotels } from "./bookingProviders";
 import { generateICalContent, generateGoogleCalendarUrls, generateOutlookCalendarUrls } from "./calendar";
 import { 
   syncToGoogleCalendar, 
@@ -4077,13 +4078,39 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(403).json({ error: "Access denied: Cannot modify other organizations" });
       }
       
-      const updates = req.body;
+      // Import validation schema
+      const { validateWhiteLabelSettings } = await import('./whiteLabelValidation');
+      
+      // Validate request body
+      const validation = validateWhiteLabelSettings(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Validation failed", 
+          details: validation.errors 
+        });
+      }
 
+      const updates = validation.data;
+
+      // Update organization with validated data
       await db.update(organizations)
         .set({ ...updates, updated_at: new Date() })
         .where(eq(organizations.id, orgId));
 
-      res.json({ success: true });
+      // Fetch and return updated organization data
+      const updatedOrg = await db.select()
+        .from(organizations)
+        .where(eq(organizations.id, orgId))
+        .limit(1);
+
+      if (updatedOrg.length === 0) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+
+      res.json({
+        success: true,
+        organization: updatedOrg[0]
+      });
     } catch (error) {
       console.error("Error updating organization:", error);
       res.status(500).json({ error: "Failed to update organization" });
