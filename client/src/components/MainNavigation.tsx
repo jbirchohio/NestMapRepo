@@ -180,10 +180,10 @@ export default function MainNavigation() {
   return (
     <nav className="border-b bg-white dark:bg-slate-900 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between min-h-[4rem] py-2">
           {/* Logo/Brand Section */}
-          <div className="flex items-center gap-8">
-            <Link href={getRoleBasedDashboardPath()} className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <Link href={getRoleBasedDashboardPath()} className="flex items-center gap-2 flex-shrink-0">
               <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">N</span>
               </div>
@@ -196,40 +196,10 @@ export default function MainNavigation() {
                 </span>
               </div>
             </Link>
-
-            {/* Main Navigation */}
-            <div className="hidden md:flex items-center gap-1 flex-wrap">
-              {navigationItems.filter(item => item.show).map((item) => (
-                <Link key={item.path} href={item.path}>
-                  <Button
-                    variant={item.active ? 'default' : 'ghost'}
-                    size="sm"
-                    className={`flex items-center gap-2 transition-colors border ${
-                      item.active 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' 
-                        : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 border-slate-200 dark:border-slate-700 hover:border-blue-300'
-                    }`}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="font-medium">{item.label}</span>
-                    {item.badge && (
-                      <Badge 
-                        variant={item.badge === 'Admin' ? 'destructive' : item.active ? 'outline' : 'secondary'} 
-                        className={`ml-1 text-xs ${
-                          item.active ? 'border-white/20 text-white' : ''
-                        }`}
-                      >
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </Button>
-                </Link>
-              ))}
-            </div>
           </div>
 
           {/* User Section */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             <NotificationCenter />
 
             <div className="flex items-center gap-2">
@@ -310,8 +280,8 @@ export default function MainNavigation() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        <div className="md:hidden py-3">
+        {/* Main Navigation - Full Width Row */}
+        <div className="border-t border-slate-200 dark:border-slate-700 py-3">
           <div className="flex flex-wrap gap-2">
             {navigationItems.filter(item => item.show).map((item) => (
               <Link key={item.path} href={item.path}>
@@ -325,7 +295,7 @@ export default function MainNavigation() {
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
-                  <span className="text-xs font-medium">{item.label}</span>
+                  <span className="text-sm font-medium">{item.label}</span>
                   {item.badge && (
                     <Badge 
                       variant={item.badge === 'Admin' ? 'destructive' : item.active ? 'outline' : 'secondary'} 
