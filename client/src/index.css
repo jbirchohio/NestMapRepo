@@ -46,34 +46,7 @@ button {
   @apply transition-all duration-200;
 }
 
-/* Force consistent navigation-style button colors */
-button[class*="bg-blue-600"] {
-  background-color: rgb(37 99 235) !important;
-  color: white !important;
-  border-color: rgb(37 99 235) !important;
-}
 
-button[class*="bg-blue-600"]:hover {
-  background-color: rgb(29 78 216) !important;
-}
-
-button[class*="bg-red-600"] {
-  background-color: rgb(220 38 38) !important;
-  color: white !important;
-  border-color: rgb(220 38 38) !important;
-}
-
-button[class*="bg-red-600"]:hover {
-  background-color: rgb(185 28 28) !important;
-}
-
-button[class*="text-slate-600"] {
-  color: rgb(71 85 105) !important;
-}
-
-.dark button[class*="text-slate-300"] {
-  color: rgb(203 213 225) !important;
-}
 
 /* Mobile-specific button fixes - prevent white buttons on touch devices */
 @media (hover: none) and (pointer: coarse) {
