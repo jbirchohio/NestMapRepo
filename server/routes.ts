@@ -193,8 +193,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const userId = req.query.userId as string;
       
+      // If no userId provided, use the authenticated user's ID
+      const targetUserId = userId || req.user.id.toString();
+      
       // Handle demo users - but first check if they have real trips in database
-      if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
+      if (targetUserId && (targetUserId.startsWith('demo-corp-') || targetUserId.startsWith('demo-agency-'))) {
         // Demo users can only access their own data through authenticated session
         if (req.user.id) {
           try {
@@ -215,12 +218,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Fallback to demo trips only
-        const roleType = userId.startsWith('demo-corp-') ? 'corporate' : 'agency';
+        const roleType = targetUserId.startsWith('demo-corp-') ? 'corporate' : 'agency';
         const demoTrips = getDemoTrips(roleType);
         return res.json(demoTrips);
       }
       
-      const numericUserId = Number(userId);
+      const numericUserId = Number(targetUserId);
       if (isNaN(numericUserId)) {
         return res.status(400).json({ message: "Invalid user ID" });
       }
