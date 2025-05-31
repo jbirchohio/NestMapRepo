@@ -1,19 +1,18 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import { MapMarker, MapRoute } from "@/lib/types";
-import { MAPBOX_STYLE_URL } from "@/lib/constants";
 
-// Use environment variable for Mapbox token
+// Import the Mapbox CSS
+import "mapbox-gl/dist/mapbox-gl.css";
+
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 export default function useMapbox() {
   const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<{ [id: string | number]: mapboxgl.Marker }>({});
-  const [isInitialized, setIsInitialized] = useState(false);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
 
-  // Initialize the Mapbox instance
   const initializeMap = useCallback(async (
-    container: HTMLElement,
+    container: HTMLDivElement,
     center: [number, number],
     zoom: number
   ): Promise<void> => {
@@ -25,549 +24,145 @@ export default function useMapbox() {
         throw new Error('Mapbox token is not configured. Please set VITE_MAPBOX_TOKEN in your environment variables.');
       }
       
-      // Validate coordinates - this is likely the source of the array access error
-      const validCenter: [number, number] = [
-        (center && typeof center[0] === 'number' && !isNaN(center[0])) ? center[0] : -74.006,
-        (center && typeof center[1] === 'number' && !isNaN(center[1])) ? center[1] : 40.7128
-      ];
+      // Validate coordinates with strict checking
+      if (!Array.isArray(center) || center.length !== 2 || 
+          typeof center[0] !== 'number' || typeof center[1] !== 'number' ||
+          isNaN(center[0]) || isNaN(center[1])) {
+        center = [-74.006, 40.7128]; // Default to NYC
+      }
       
       // Set the access token
       mapboxgl.accessToken = MAPBOX_TOKEN;
       console.log('Mapbox token configured:', MAPBOX_TOKEN ? 'Yes' : 'No');
-      console.log('Map center coordinates:', validCenter);
+      console.log('Map center coordinates:', center);
       
-      // Wrap entire map creation in defensive error handling
-      let map: mapboxgl.Map;
-      try {
-        // Create a new map instance with minimal configuration to avoid library errors
-        map = new mapboxgl.Map({
-          container,
-          style: {
-            version: 8,
-            sources: {
-              'mapbox-streets': {
-                type: 'raster',
-                tiles: ['https://api.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.png?access_token=' + MAPBOX_TOKEN],
-                tileSize: 256
-              }
-            },
-            layers: [{
-              id: 'background',
-              type: 'raster',
-              source: 'mapbox-streets'
-            }]
-          },
-          center: validCenter,
-          zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
-          attributionControl: false
-        });
-      } catch (mapError) {
-        console.warn('Failed to create Mapbox map with custom style, trying basic fallback:', mapError);
-        // Fallback to absolute minimal map
-        map = new mapboxgl.Map({
-          container,
-          style: 'mapbox://styles/mapbox/streets-v11', // Try older stable style
-          center: validCenter,
-          zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
-          attributionControl: false
-        });
-      }
+      // Create a new map instance with basic configuration
+      const map = new mapboxgl.Map({
+        container,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: center as [number, number],
+        zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
+        attributionControl: false
+      });
       
       // Add zoom and rotation controls
       map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       
-      // Wait for map to load with simplified promise
-      await new Promise<void>((resolve, reject) => {
-        let resolved = false;
-        
-        map.on('load', () => {
-          if (!resolved) {
-            resolved = true;
-            console.log('Mapbox map loaded successfully');
-            resolve();
-          }
-        });
-        
-        map.on('error', (e) => {
-          if (!resolved) {
-            resolved = true;
-            console.error('Mapbox GL error:', e.error);
-            reject(new Error(`Mapbox error: ${e.error?.message || 'Map failed to load'}`));
-          }
-        });
-        
-        // Shorter timeout and fallback
-        setTimeout(() => {
-          if (!resolved) {
-            resolved = true;
-            console.log('Map loading timeout, but continuing...');
-            resolve(); // Resolve anyway to prevent hanging
-          }
-        }, 5000);
-      });
-      
+      // Store the map instance
       mapInstance.current = map;
-      setIsInitialized(true);
       
-      return;
     } catch (error) {
-      console.error("Error initializing Mapbox:", error);
+      console.error('Error initializing Mapbox:', error);
+      console.error('Failed to initialize map:', error);
       throw error;
     }
   }, []);
 
-  // Add markers to the map with performance optimization
-  const addMarkers = useCallback((
-    markers: MapMarker[],
-    onMarkerClick?: (marker: MapMarker) => void
-  ): void => {
-    if (!mapInstance.current || !isInitialized) return;
-    
-    // Clear previous markers efficiently
-    Object.values(markersRef.current).forEach(marker => {
-      const element = marker.getElement();
-      if (element && (element as any)._clickHandler) {
-        element.removeEventListener('click', (element as any)._clickHandler);
-      }
-      marker.remove();
-    });
-    markersRef.current = {};
-    
-    // Create a function to generate custom marker element
-    const createMarkerElement = (label: string, completed: boolean = false) => {
-      const el = document.createElement('div');
-      el.className = 'flex items-center justify-center';
-      el.style.width = '32px';
-      el.style.height = '32px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = completed ? 'hsl(142, 70%, 45%)' : 'hsl(16, 100%, 50%)'; // green for completed, orange for pending
-      el.style.color = 'white';
-      el.style.fontWeight = 'bold';
-      el.style.display = 'flex';
-      el.style.alignItems = 'center';
-      el.style.justifyContent = 'center';
-      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-      el.style.position = 'relative';
-      
-      if (completed) {
-        // Show checkmark for completed activities
-        el.innerHTML = '✓';
-        el.style.fontSize = '14px';
-      } else {
-        // Show number for pending activities
-        el.innerHTML = label;
-      }
-      
-      return el;
-    };
-    
-    // Add markers for each location
-    markers.forEach((marker, index) => {
-      const { id, latitude, longitude, label, completed } = marker;
-      
-      // Use number (index + 1) instead of letter label
-      const markerNumber = (index + 1).toString();
-      // Create custom marker element with numeric index and completion status
-      const el = createMarkerElement(markerNumber, completed);
-      
-      // Create the marker
-      const mapboxMarker = new mapboxgl.Marker({ element: el })
-        .setLngLat([longitude, latitude])
-        .addTo(mapInstance.current!);
-      
-      // Add click handler if provided with proper cleanup tracking
-      if (onMarkerClick) {
-        const element = mapboxMarker.getElement();
-        const clickHandler = () => onMarkerClick(marker);
-        element.addEventListener('click', clickHandler);
-        // Store click handler for cleanup
-        (element as any)._clickHandler = clickHandler;
-      }
-      
-      // Store reference to the marker
-      markersRef.current[id] = mapboxMarker;
-    });
-    
-    // If there are markers, fit the map to show all of them with performance optimization
-    if (markers.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      markers.forEach(marker => {
-        bounds.extend([marker.longitude, marker.latitude]);
-      });
-      
-      // Use requestAnimationFrame for smoother animation
-      requestAnimationFrame(() => {
-        mapInstance.current?.fitBounds(bounds, {
-          padding: 60,
-          maxZoom: 15,
-          duration: 1000, // Smooth animation
-        });
-      });
-    }
-  }, [isInitialized]);
+  const addMarkers = useCallback((markers: MapMarker[], onMarkerClick?: (marker: MapMarker) => void) => {
+    if (!mapInstance.current) return;
 
-  // Add routes to the map with optimized cleanup
-  const addRoutes = useCallback((routes: MapRoute[]): void => {
-    if (!mapInstance.current || !isInitialized) return;
-    
-    // Efficiently remove all existing route layers and sources
-    const map = mapInstance.current;
-    const style = map.getStyle();
-    
-    // Remove route layers and sources in batch for better performance
-    if (style && style.layers) {
-      style.layers.forEach(layer => {
-        if (layer.id.startsWith('route-')) {
-          if (map.getLayer(layer.id)) {
-            map.removeLayer(layer.id);
-          }
-        }
-      });
-    }
-    
-    if (style && style.sources) {
-      Object.keys(style.sources).forEach(sourceId => {
-        if (sourceId.startsWith('route-')) {
-          if (map.getSource(sourceId)) {
-            map.removeSource(sourceId);
-          }
-        }
-      });
-    }
-    
-    // Add new routes
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // Add new markers only if they have valid coordinates
+    markers.forEach((markerData) => {
+      if (typeof markerData.longitude !== 'number' || typeof markerData.latitude !== 'number' ||
+          isNaN(markerData.longitude) || isNaN(markerData.latitude)) {
+        console.warn('Invalid marker coordinates, skipping:', markerData);
+        return;
+      }
+
+      // Create marker element
+      const el = document.createElement('div');
+      el.className = 'custom-marker';
+      el.style.backgroundImage = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23${markerData.color || 'ff0000'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>')`;
+      el.style.width = '24px';
+      el.style.height = '24px';
+      el.style.backgroundSize = 'contain';
+      el.style.backgroundRepeat = 'no-repeat';
+      el.style.cursor = 'pointer';
+
+      // Create and add marker
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([markerData.longitude, markerData.latitude])
+        .addTo(mapInstance.current!);
+
+      // Add click handler
+      if (onMarkerClick) {
+        el.addEventListener('click', () => onMarkerClick(markerData));
+      }
+
+      markersRef.current.push(marker);
+    });
+  }, []);
+
+  const addRoutes = useCallback((routes: MapRoute[]) => {
+    if (!mapInstance.current || !routes.length) return;
+
     routes.forEach((route, index) => {
-      // Skip if no coordinates or only one point
-      if (!route.coordinates || route.coordinates.length < 2) return;
-      
-      // Create GeoJSON source for the route
-      if (!mapInstance.current!.getSource(`route-${index}`)) {
-        mapInstance.current!.addSource(`route-${index}`, {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: route.coordinates,
-            },
-          },
-        });
-      } else {
-        // Update existing source if it exists
-        const source = mapInstance.current!.getSource(`route-${index}`) as mapboxgl.GeoJSONSource;
-        source.setData({
+      const sourceId = `route-${index}`;
+      const layerId = `route-layer-${index}`;
+
+      // Remove existing route if it exists
+      if (mapInstance.current!.getLayer(layerId)) {
+        mapInstance.current!.removeLayer(layerId);
+      }
+      if (mapInstance.current!.getSource(sourceId)) {
+        mapInstance.current!.removeSource(sourceId);
+      }
+
+      // Add route source
+      mapInstance.current!.addSource(sourceId, {
+        type: 'geojson',
+        data: {
           type: 'Feature',
           properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: route.coordinates,
-          },
-        });
-      }
-      
-      // Create a line layer for the route
-      if (!mapInstance.current!.getLayer(`route-${index}`)) {
-        mapInstance.current!.addLayer({
-          id: `route-${index}`,
-          type: 'line',
-          source: `route-${index}`,
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round',
-          },
-          paint: {
-            'line-color': '#4571E6', // primary color
-            'line-width': 4,
-            'line-opacity': 0.8,
-          },
-        });
-      }
+          geometry: route.geometry
+        }
+      });
+
+      // Add route layer
+      mapInstance.current!.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': route.color || '#3b82f6',
+          'line-width': 3
+        }
+      });
     });
-  }, [isInitialized]);
-
-  // Get trip destination coordinates for better geocoding context
-  const getTripDestinationCoordinates = useCallback((): { longitude?: number, latitude?: number, city?: string } => {
-    // Try to get coordinates from URL if we're in a trip view
-    const path = window.location.pathname;
-    const tripMatch = path.match(/\/trip\/(\d+)/);
-    
-    // If we're in a trip view with a trip ID
-    if (tripMatch && tripMatch[1]) {
-      // Check if the trip data is in localStorage (we'll store it there in the TripPlanner component)
-      const tripData = localStorage.getItem(`trip_${tripMatch[1]}`);
-      if (tripData) {
-        try {
-          const trip = JSON.parse(tripData);
-          if (trip.longitude && trip.latitude) {
-            return {
-              longitude: parseFloat(trip.longitude), 
-              latitude: parseFloat(trip.latitude),
-              city: trip.city
-            };
-          }
-        } catch (e) {
-          console.error("Error parsing trip data from localStorage:", e);
-        }
-      }
-    }
-    
-    // No default location - let Mapbox search globally
-    return {};
   }, []);
-  
-  // Geocode a location name to coordinates with improved accuracy for POIs and landmarks
-  const geocodeLocation = useCallback(async (locationName: string, isCity: boolean = false): Promise<{ longitude: number, latitude: number, fullAddress?: string } | null> => {
-    try {
-      // Get trip context for better geocoding
-      const tripContext = getTripDestinationCoordinates();
-      
-      // Augment the search term if it doesn't already include the city
-      let searchTerm = locationName;
-      if (tripContext.city) {
-        const cityTerms = tripContext.city.toLowerCase().split(/[ ,]+/);
-        const searchLower = searchTerm.toLowerCase();
-        
-        // Check if search already includes city name
-        const hasCityReference = cityTerms.some(term => 
-          term.length > 2 && searchLower.includes(term)
-        );
-        
-        // If search doesn't have city reference, append city
-        if (!hasCityReference && searchTerm.split(",").length === 1) {
-          searchTerm = `${searchTerm}, ${tripContext.city}`;
-        }
-      }
-      
-      // Define bounding box (bbox) around trip destination for more relevant results
-      // Format: [min_longitude, min_latitude, max_longitude, max_latitude]
-      let bbox = undefined;
-      if (tripContext.longitude && tripContext.latitude) {
-        // Create a bbox that's roughly 20km on each side of the destination
-        const offset = 0.18; // ~20km at most latitudes
-        bbox = [
-          tripContext.longitude - offset,
-          tripContext.latitude - offset,
-          tripContext.longitude + offset,
-          tripContext.latitude + offset
-        ].join(',');
-      }
-      
-      // Use different search types based on whether we're searching for cities or specific locations
-      const searchTypes = isCity ? 'place,locality,region' : 'poi,address';
-      const queryParams = new URLSearchParams({
-        access_token: MAPBOX_TOKEN,
-        types: searchTypes,
-        limit: '10',
-        language: 'en'
-      });
-      
-      // Add bbox if available for more precise contextual results
-      if (bbox) {
-        queryParams.append('bbox', bbox);
-      } 
-      // Otherwise use proximity if we have coordinates
-      else if (tripContext.longitude && tripContext.latitude) {
-        queryParams.append('proximity', `${tripContext.longitude},${tripContext.latitude}`);
-      }
-      
-      // First query - focused on POIs near the trip destination
-      const poiQuery = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?${queryParams.toString()}`;
-      
-      // Second query - include more specific searches for places like Leo House that might not register as POIs
-      const fallbackParams = new URLSearchParams({
-        access_token: MAPBOX_TOKEN,
-        types: 'poi,place,address',
-        limit: '8',
-        language: 'en',
-        // Ensure the geocoder knows we want exact matches
-        fuzzyMatch: 'false',
-        // Set a higher autocomplete value for better prediction
-        autocomplete: 'true'
-      });
-      
-      if (tripContext.longitude && tripContext.latitude) {
-        fallbackParams.append('proximity', `${tripContext.longitude},${tripContext.latitude}`);
-      }
-      
-      const fallbackQuery = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json?${fallbackParams.toString()}`;
-      
-      // Debug the queries being sent
-      console.log("GEOCODE DEBUG - POI Query:", {
-        searchTerm,
-        url: poiQuery,
-        params: Object.fromEntries(queryParams.entries()),
-        tripContext
-      });
-      
-      // Try POI search first
-      let response = await fetch(poiQuery);
-      let data = await response.json();
-      
-      console.log("GEOCODE RESPONSE - POI Result:", {
-        features: data.features?.length || 0,
-        firstResult: data.features?.length > 0 ? data.features[0].place_name : 'none',
-        allTypes: data.features?.map((f: any) => f.place_type).flat().filter((v: any, i: number, a: any) => a.indexOf(v) === i) || []
-      });
-      
-      // If no POIs found, try broader search
-      if (!data.features || data.features.length === 0) {
-        console.log("GEOCODE DEBUG - Fallback Query:", {
-          searchTerm, 
-          url: fallbackQuery,
-          params: Object.fromEntries(fallbackParams.entries()),
-        });
-        
-        response = await fetch(fallbackQuery);
-        data = await response.json();
-        
-        console.log("GEOCODE RESPONSE - Fallback Result:", {
-          features: data.features?.length || 0,
-          firstResult: data.features?.length > 0 ? data.features[0].place_name : 'none',
-          allTypes: data.features?.map((f: any) => f.place_type).flat().filter((v: any, i: number, a: any) => a.indexOf(v) === i) || []
-        });
-      }
-      
-      if (data.features && data.features.length > 0) {
-        // Score and rank the features based on relevance
-        const scoredFeatures = data.features.map((feature: any) => {
-          let score = 0;
-          
-          // Parse search words, ignoring common terms
-          const searchWords = searchTerm.toLowerCase()
-            .replace(/\b(the|a|an|in|of|at|by|for|with|hotel|inn|motel)\b/g, '')
-            .split(/[ ,]+/)
-            .filter((w: string) => w.length > 2);
-          
-          // Get feature name and type
-          const featureName = feature.text.toLowerCase();
-          const featureType = feature.place_type?.[0] || '';
-          
-          // Strongly prefer POIs
-          if (featureType === 'poi') score += 25;
-          if (featureType === 'place') score += 15;
-          
-          // Prefer items with relevance higher than 0.8 (Mapbox score)
-          if (feature.relevance > 0.8) score += feature.relevance * 20;
-          
-          // Prefer landmarks or known places
-          if (feature.properties?.category?.includes('landmark')) score += 20;
-          
-          // Prefer exact name matches (e.g., "Empire State Building")
-          searchWords.forEach((word: string) => {
-            if (featureName.includes(word)) {
-              score += 5;
-              
-              // Extra points for words at the beginning
-              if (featureName.startsWith(word)) score += 10;
-            }
-          });
-          
-          // Slightly prefer results in the same city as trip context
-          if (tripContext.city && 
-              feature.place_name.toLowerCase().includes(tripContext.city.toLowerCase())) {
-            score += 10;
-          }
-          
-          return { feature, score };
-        });
-        
-        // Sort by score descending
-        scoredFeatures.sort((a: any, b: any) => b.score - a.score);
-        
-        // Check if we have any scored features
-        if (scoredFeatures.length === 0) {
-          console.warn("No valid features found in geocoding response");
-          return null;
-        }
-        
-        // Use the highest scoring feature
-        const bestMatch = scoredFeatures[0].feature;
-        
-        // Safely extract coordinates with validation
-        if (!bestMatch.center || !Array.isArray(bestMatch.center) || bestMatch.center.length < 2) {
-          console.warn("Invalid coordinates in geocoding response:", bestMatch);
-          return null;
-        }
-        
-        const [longitude, latitude] = bestMatch.center;
-        const fullAddress = bestMatch.place_name;
-        
-        console.log("Location found:", { 
-          input: searchTerm,
-          matched: fullAddress,
-          coordinates: [longitude, latitude],
-          allResults: data.features.slice(0, 5).map((f: any) => f.place_name),
-          score: scoredFeatures[0]?.score || 0
-        });
-        
-        return { longitude, latitude, fullAddress };
-      }
-      
-      return null;
-    } catch (error) {
-      console.error("Error geocoding location:", error);
-      return null;
-    }
-  }, [getTripDestinationCoordinates]);
 
-  // Fly to a location
-  const flyToLocation = useCallback((center: [number, number], zoom: number): void => {
-    if (!mapInstance.current || !isInitialized) return;
+  const flyToLocation = useCallback((center: [number, number], zoom?: number) => {
+    if (!mapInstance.current) return;
     
     mapInstance.current.flyTo({
       center,
-      zoom,
-      essential: true,
+      zoom: zoom || mapInstance.current.getZoom(),
+      essential: true
     });
-  }, [isInitialized]);
-
-  // Resize map when container dimensions change
-  const resizeMap = useCallback((): void => {
-    if (!mapInstance.current || !isInitialized) return;
-    
-    mapInstance.current.resize();
-  }, [isInitialized]);
-
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
   }, []);
 
-  // Cleanup function for better memory management
-  const cleanup = useCallback(() => {
-    // Clean up all markers and event listeners
-    Object.values(markersRef.current).forEach(marker => {
-      const element = marker.getElement();
-      if (element && (element as any)._clickHandler) {
-        element.removeEventListener('click', (element as any)._clickHandler);
-      }
-      marker.remove();
-    });
-    markersRef.current = {};
-    
-    // Clean up map instance
+  const resizeMap = useCallback(() => {
     if (mapInstance.current) {
-      mapInstance.current.remove();
-      mapInstance.current = null;
+      // Small delay to ensure container has been resized
+      setTimeout(() => {
+        mapInstance.current?.resize();
+      }, 100);
     }
-    
-    setIsInitialized(false);
   }, []);
 
   return {
     initializeMap,
     addMarkers,
     addRoutes,
-    geocodeLocation,
     flyToLocation,
-    resizeMap,
-    cleanup,
-    isInitialized,
+    resizeMap
   };
 }
