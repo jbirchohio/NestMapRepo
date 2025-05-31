@@ -8,7 +8,10 @@ import {
   insertNoteSchema,
   insertUserSchema,
   activities,
-  users
+  users,
+  organizations,
+  whiteLabelRequests,
+  customDomains
 } from "@shared/schema";
 import { db } from "./db-connection";
 import { eq } from "drizzle-orm";
@@ -3567,6 +3570,153 @@ Include realistic business activities, meeting times, dining recommendations, an
       return res.status(500).json({ error: "VAPID public key not configured" });
     }
     res.json({ publicKey });
+  });
+
+  // Admin API endpoints for white label management
+  // Get all organizations with white label status
+  app.get("/api/admin/organizations", async (req: Request, res: Response) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const orgs = await db.select().from(organizations);
+      res.json(orgs);
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+      res.status(500).json({ error: "Failed to fetch organizations" });
+    }
+  });
+
+  // Update organization white label settings
+  app.patch("/api/admin/organizations/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const orgId = parseInt(req.params.id);
+      const updates = req.body;
+
+      await db.update(organizations)
+        .set({ ...updates, updated_at: new Date() })
+        .where(eq(organizations.id, orgId));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating organization:", error);
+      res.status(500).json({ error: "Failed to update organization" });
+    }
+  });
+
+  // Get white label requests pending approval
+  app.get("/api/admin/white-label-requests", async (req: Request, res: Response) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const requests = await db.select({
+        id: whiteLabelRequests.id,
+        organization_id: whiteLabelRequests.organization_id,
+        organization_name: organizations.name,
+        requested_by: whiteLabelRequests.requested_by,
+        requester_name: users.display_name,
+        request_type: whiteLabelRequests.request_type,
+        request_data: whiteLabelRequests.request_data,
+        status: whiteLabelRequests.status,
+        created_at: whiteLabelRequests.created_at,
+      })
+      .from(whiteLabelRequests)
+      .leftJoin(organizations, eq(whiteLabelRequests.organization_id, organizations.id))
+      .leftJoin(users, eq(whiteLabelRequests.requested_by, users.id))
+      .where(eq(whiteLabelRequests.status, 'pending'));
+
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+      res.status(500).json({ error: "Failed to fetch requests" });
+    }
+  });
+
+  // Review white label request
+  app.patch("/api/admin/white-label-requests/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const requestId = parseInt(req.params.id);
+      const { status, notes } = req.body;
+
+      await db.update(whiteLabelRequests)
+        .set({
+          status,
+          reviewed_by: req.user.id,
+          reviewed_at: new Date(),
+          review_notes: notes,
+        })
+        .where(eq(whiteLabelRequests.id, requestId));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reviewing request:", error);
+      res.status(500).json({ error: "Failed to review request" });
+    }
+  });
+
+  // Get custom domains
+  app.get("/api/admin/custom-domains", async (req: Request, res: Response) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const domains = await db.select({
+        id: customDomains.id,
+        organization_id: customDomains.organization_id,
+        organization_name: organizations.name,
+        domain: customDomains.domain,
+        subdomain: customDomains.subdomain,
+        dns_verified: customDomains.dns_verified,
+        ssl_verified: customDomains.ssl_verified,
+        status: customDomains.status,
+        created_at: customDomains.created_at,
+      })
+      .from(customDomains)
+      .leftJoin(organizations, eq(customDomains.organization_id, organizations.id));
+
+      res.json(domains);
+    } catch (error) {
+      console.error("Error fetching domains:", error);
+      res.status(500).json({ error: "Failed to fetch domains" });
+    }
+  });
+
+  // Verify domain
+  app.post("/api/admin/domains/:id/verify", async (req: Request, res: Response) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const domainId = parseInt(req.params.id);
+
+      // In production, implement actual DNS verification
+      await db.update(customDomains)
+        .set({
+          dns_verified: true,
+          ssl_verified: true,
+          status: 'active',
+          verified_at: new Date(),
+        })
+        .where(eq(customDomains.id, domainId));
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error verifying domain:", error);
+      res.status(500).json({ error: "Failed to verify domain" });
+    }
   });
 
   const httpServer = createServer(app);

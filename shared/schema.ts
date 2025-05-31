@@ -26,6 +26,12 @@ export const organizations = pgTable("organizations", {
   name: text("name").notNull(),
   domain: text("domain"), // Company domain for auto-assignment
   plan: text("plan").default("free"), // free, team, enterprise
+  white_label_enabled: boolean("white_label_enabled").default(false),
+  white_label_plan: text("white_label_plan").default("none"), // none, basic, premium, enterprise
+  stripe_customer_id: text("stripe_customer_id"),
+  stripe_subscription_id: text("stripe_subscription_id"),
+  subscription_status: text("subscription_status").default("inactive"), // active, inactive, past_due, canceled
+  current_period_end: timestamp("current_period_end"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
@@ -306,3 +312,132 @@ export type OrganizationPlan = typeof ORGANIZATION_PLANS[keyof typeof ORGANIZATI
 
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
+
+// White Label Branding Settings
+export const whiteLabelSettings = pgTable("white_label_settings", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  company_name: text("company_name").notNull(),
+  company_logo: text("company_logo"),
+  tagline: text("tagline"),
+  primary_color: text("primary_color").default("#3B82F6"),
+  secondary_color: text("secondary_color").default("#64748B"),
+  accent_color: text("accent_color").default("#10B981"),
+  custom_domain: text("custom_domain"),
+  support_email: text("support_email"),
+  help_url: text("help_url"),
+  footer_text: text("footer_text"),
+  status: text("status").default("draft"), // draft, pending_approval, approved, rejected
+  approved_by: integer("approved_by").references(() => users.id),
+  approved_at: timestamp("approved_at"),
+  rejection_reason: text("rejection_reason"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Custom Domain Management
+export const customDomains = pgTable("custom_domains", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  domain: text("domain").notNull().unique(),
+  subdomain: text("subdomain"), // For subdomain.nestmap.com
+  ssl_certificate: text("ssl_certificate"),
+  dns_verified: boolean("dns_verified").default(false),
+  ssl_verified: boolean("ssl_verified").default(false),
+  status: text("status").default("pending"), // pending, active, failed, disabled
+  verification_token: text("verification_token"),
+  created_at: timestamp("created_at").defaultNow(),
+  verified_at: timestamp("verified_at"),
+});
+
+// White Label Approval Requests
+export const whiteLabelRequests = pgTable("white_label_requests", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  requested_by: integer("requested_by").references(() => users.id).notNull(),
+  request_type: text("request_type").notNull(), // branding_update, domain_setup, plan_upgrade
+  request_data: jsonb("request_data"), // JSON data for the request
+  status: text("status").default("pending"), // pending, approved, rejected
+  reviewed_by: integer("reviewed_by").references(() => users.id),
+  reviewed_at: timestamp("reviewed_at"),
+  review_notes: text("review_notes"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// White Label Feature Limits
+export const whiteLabelFeatures = pgTable("white_label_features", {
+  id: serial("id").primaryKey(),
+  plan: text("plan").notNull(), // basic, premium, enterprise
+  custom_logo: boolean("custom_logo").default(false),
+  custom_colors: boolean("custom_colors").default(false),
+  custom_domain: boolean("custom_domain").default(false),
+  remove_branding: boolean("remove_branding").default(false),
+  custom_email_templates: boolean("custom_email_templates").default(false),
+  api_access: boolean("api_access").default(false),
+  max_users: integer("max_users").default(5),
+  monthly_price: integer("monthly_price").default(0), // in cents
+});
+
+// Insert schemas for new tables
+export const insertWhiteLabelSettingsSchema = createInsertSchema(whiteLabelSettings).pick({
+  organization_id: true,
+  company_name: true,
+  company_logo: true,
+  tagline: true,
+  primary_color: true,
+  secondary_color: true,
+  accent_color: true,
+  custom_domain: true,
+  support_email: true,
+  help_url: true,
+  footer_text: true,
+});
+
+export const insertCustomDomainSchema = createInsertSchema(customDomains).pick({
+  organization_id: true,
+  domain: true,
+  subdomain: true,
+});
+
+export const insertWhiteLabelRequestSchema = createInsertSchema(whiteLabelRequests).pick({
+  organization_id: true,
+  requested_by: true,
+  request_type: true,
+  request_data: true,
+});
+
+// White Label constants
+export const WHITE_LABEL_PLANS = {
+  NONE: 'none',
+  BASIC: 'basic',
+  PREMIUM: 'premium',
+  ENTERPRISE: 'enterprise'
+} as const;
+
+export const WHITE_LABEL_STATUS = {
+  DRAFT: 'draft',
+  PENDING_APPROVAL: 'pending_approval',
+  APPROVED: 'approved',
+  REJECTED: 'rejected'
+} as const;
+
+export const DOMAIN_STATUS = {
+  PENDING: 'pending',
+  ACTIVE: 'active',
+  FAILED: 'failed',
+  DISABLED: 'disabled'
+} as const;
+
+// Types for new tables
+export type WhiteLabelSettings = typeof whiteLabelSettings.$inferSelect;
+export type InsertWhiteLabelSettings = z.infer<typeof insertWhiteLabelSettingsSchema>;
+
+export type CustomDomain = typeof customDomains.$inferSelect;
+export type InsertCustomDomain = z.infer<typeof insertCustomDomainSchema>;
+
+export type WhiteLabelRequest = typeof whiteLabelRequests.$inferSelect;
+export type InsertWhiteLabelRequest = z.infer<typeof insertWhiteLabelRequestSchema>;
+
+export type WhiteLabelFeature = typeof whiteLabelFeatures.$inferSelect;
+
+export type WhiteLabelPlan = typeof WHITE_LABEL_PLANS[keyof typeof WHITE_LABEL_PLANS];
