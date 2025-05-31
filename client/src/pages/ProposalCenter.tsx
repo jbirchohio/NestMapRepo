@@ -11,41 +11,24 @@ export default function ProposalCenter() {
   const [selectedTrip, setSelectedTrip] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Mock trips data for demonstration (replace with real API when auth is working)
-  const mockTrips = [
-    {
-      id: 1,
-      title: "Tokyo Business Trip",
-      city: "Tokyo",
-      country: "Japan",
-      startDate: "2024-03-15",
-      endDate: "2024-03-20"
-    },
-    {
-      id: 2,
-      title: "European Client Tour",
-      city: "Paris",
-      country: "France",
-      startDate: "2024-04-10",
-      endDate: "2024-04-17"
-    },
-    {
-      id: 3,
-      title: "NYC Conference",
-      city: "New York",
-      country: "USA",
-      startDate: "2024-05-05",
-      endDate: "2024-05-08"
+  // Fetch real trips data from API
+  const { data: trips, isLoading } = useQuery({
+    queryKey: ['/api/trips'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/trips");
+      if (!response.ok) {
+        throw new Error("Failed to fetch trips");
+      }
+      return response.json();
     }
-  ];
+  });
 
-  const filteredTrips = mockTrips.filter((trip: any) => 
+  const filteredTrips = trips?.filter((trip: any) => 
     trip.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     trip.city?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
 
-  const selectedTripData = mockTrips.find((trip: any) => trip.id === selectedTrip);
-  const isLoading = false;
+  const selectedTripData = trips?.find((trip: any) => trip.id === selectedTrip);
 
   return (
     <div className="container mx-auto p-6 space-y-6">

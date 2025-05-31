@@ -28,19 +28,17 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
     contactWebsite: ""
   });
 
-  // Mock cost estimate for demonstration
-  const costEstimate = {
-    estimatedCost: 2450,
-    costBreakdown: {
-      flights: 800,
-      hotels: 720,
-      activities: 450,
-      meals: 300,
-      transportation: 120,
-      miscellaneous: 60
+  // Fetch real cost estimate from API
+  const { data: costEstimate, isLoading: loadingCost } = useQuery({
+    queryKey: ['/api/trips', tripId, 'cost-estimate'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/trips/${tripId}/cost-estimate`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch cost estimate");
+      }
+      return response.json();
     }
-  };
-  const loadingCost = false;
+  });
 
   // Generate actual PDF proposal
   const generateProposal = useMutation({

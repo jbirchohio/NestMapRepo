@@ -78,37 +78,6 @@ const getDefaultPermissions = (role: string) => {
   }
 };
 
-// Mock team members data (replace with real API call)
-const mockTeamMembers = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    email: "sarah@company.com",
-    role: "admin",
-    status: "active",
-    joinedAt: "2024-01-15",
-    lastActive: "2 hours ago"
-  },
-  {
-    id: 2,
-    name: "Mike Chen",
-    email: "mike@company.com", 
-    role: "manager",
-    status: "active",
-    joinedAt: "2024-02-03",
-    lastActive: "1 day ago"
-  },
-  {
-    id: 3,
-    name: "Emily Davis",
-    email: "emily@company.com",
-    role: "user",
-    status: "pending",
-    joinedAt: "2024-03-10",
-    lastActive: "Never"
-  }
-];
-
 export default function TeamManagement() {
   const [isInviting, setIsInviting] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -116,6 +85,18 @@ export default function TeamManagement() {
   const [showMemberDetails, setShowMemberDetails] = useState(false);
   const [showEditPermissions, setShowEditPermissions] = useState(false);
   const { toast } = useToast();
+
+  // Fetch real team members from API
+  const { data: teamMembers, isLoading: isLoadingMembers } = useQuery({
+    queryKey: ['/api/organizations/members'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/organizations/members");
+      if (!response.ok) {
+        throw new Error("Failed to fetch team members");
+      }
+      return response.json();
+    }
+  });
 
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
@@ -175,14 +156,35 @@ export default function TeamManagement() {
     setShowEditPermissions(true);
   };
 
-  const handleRemoveMember = (member: any) => {
-    if (confirm(`Are you sure you want to remove ${member.name} from the organization? This action cannot be undone.`)) {
-      // TODO: Implement actual API call to remove member
+  const removeMemberMutation = useMutation({
+    mutationFn: async (memberId: number) => {
+      const response = await apiRequest("DELETE", `/api/organizations/members/${memberId}`);
+      if (!response.ok) {
+        throw new Error("Failed to remove member");
+      }
+      return response.json();
+    },
+    onSuccess: (data, memberId) => {
+      const member = teamMembers?.find((m: any) => m.id === memberId);
+      queryClient.invalidateQueries({ queryKey: ['/api/organizations/members'] });
       toast({
         title: "Member Removed",
-        description: `${member.name} has been removed from the organization`,
+        description: `${member?.name || 'Member'} has been removed from the organization`,
         variant: "destructive",
       });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to remove member. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleRemoveMember = (member: any) => {
+    if (confirm(`Are you sure you want to remove ${member.name} from the organization? This action cannot be undone.`)) {
+      removeMemberMutation.mutate(member.id);
     }
   };
 
