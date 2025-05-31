@@ -39,50 +39,7 @@
   --tag-azure: 214 100% 50%; /* Azure Blue */
 }
 
-/* Unified Button System - Clean, Consistent Architecture */
-button, .btn {
-  @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors;
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-  @apply disabled:pointer-events-none disabled:opacity-50;
-  @apply px-4 py-2 h-10; /* Default size */
-}
-
-/* Primary Button Style - Professional blue theme */
-button.btn-primary, 
-.btn-primary {
-  @apply bg-primary text-primary-foreground shadow hover:bg-primary/90;
-  background-color: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
-}
-
-/* Secondary Button Style */
-button.btn-secondary,
-.btn-secondary {
-  @apply bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80;
-}
-
-/* Outline Button Style */
-button.btn-outline,
-.btn-outline {
-  @apply border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground;
-}
-
-/* Ghost Button Style */
-button.btn-ghost,
-.btn-ghost {
-  @apply hover:bg-accent hover:text-accent-foreground;
-}
-
-/* Destructive Button Style */
-button.btn-destructive,
-.btn-destructive {
-  @apply bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90;
-}
-
-/* Size Variants */
-.btn-sm { @apply h-8 rounded-md px-3 text-xs; }
-.btn-lg { @apply h-12 rounded-md px-8; }
-.btn-icon { @apply h-10 w-10; }
+/* Remove custom button overrides - use shadcn/ui Button component instead */
 
 /* Tag colors continued */
 :root {

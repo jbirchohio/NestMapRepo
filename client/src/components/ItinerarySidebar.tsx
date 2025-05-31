@@ -272,8 +272,8 @@ export default function ItinerarySidebar({
             {/* Split buttons into separate containers */}
             <div className="space-y-2 mb-4">
               {/* Add Activity Button */}
-              <button 
-                className="btn-primary w-full"
+              <Button 
+                className="w-full"
                 onClick={() => {
                   if (onAddActivity) {
                     onAddActivity(null, activeDay);
@@ -291,18 +291,19 @@ export default function ItinerarySidebar({
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
                 Add Activity
-              </button>
+              </Button>
               
               {/* AI Assistant Button */}
-              <button 
-                className="btn-outline w-full"
+              <Button 
+                variant="outline"
+                className="w-full"
                 onClick={() => setIsAIModalOpen(true)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
                 </svg>
                 AI Assistant
-              </button>
+              </Button>
 
               {/* AI Itinerary Optimization Buttons */}
               <div className="flex gap-2">
