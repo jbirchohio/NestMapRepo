@@ -283,14 +283,14 @@ export default function Home() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-start">
-                    <div className="h-8 w-8 bg-blue-600 text-white rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📍</div>
+                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📍</div>
                     <div>
                       <h4 className="font-semibold text-slate-800 dark:text-slate-200">Plan for Teams or Clients</h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400">Schedule events, meetings, and logistics for corporate or group travel</p>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="h-8 w-8 bg-blue-600 text-white rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📊</div>
+                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📊</div>
                     <div>
                       <h4 className="font-semibold text-slate-800 dark:text-slate-200">Smart Route & Time Optimization</h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400">Let AI minimize travel time and automate transitions between events</p>

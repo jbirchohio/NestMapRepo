@@ -308,8 +308,10 @@ export default function ItinerarySidebar({
               {/* AI Itinerary Optimization Buttons */}
               <div className="flex gap-2">
                 {/* One-Click Auto Optimize Button */}
-                <button 
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 rounded-md border border-green-200 dark:border-green-800/50 flex items-center justify-center hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                <Button 
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
                   onClick={handleAutoOptimize}
                   disabled={activities.length === 0 || isAutoOptimizing}
                 >
@@ -326,11 +328,13 @@ export default function ItinerarySidebar({
                       Auto-Optimize
                     </>
                   )}
-                </button>
+                </Button>
                 
                 {/* Review & Optimize Button */}
-                <button 
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 text-purple-700 dark:text-purple-300 rounded-md border border-purple-200 dark:border-purple-800/50 flex items-center justify-center hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all text-sm"
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
                   onClick={() => setIsOptimizationModalOpen(true)}
                   disabled={activities.length === 0}
                 >
@@ -345,7 +349,7 @@ export default function ItinerarySidebar({
                     <path d="m3 21 5-5"/>
                   </svg>
                   Review & Optimize
-                </button>
+                </Button>
               </div>
               
 

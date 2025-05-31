@@ -78,7 +78,9 @@ export default function ActivityTimeline({
       
             {/* Always show the Add Activity button - but make it bigger when no activities */}
       <Button 
-        className={`btn-primary w-full ${sortedActivities.length === 0 ? 'text-base py-5 mt-4' : 'text-sm'}`}
+        variant="default"
+        size={sortedActivities.length === 0 ? "lg" : "sm"}
+        className={`w-full ${sortedActivities.length === 0 ? 'mt-4' : ''}`}
         onClick={handleAddActivity}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
