@@ -256,7 +256,7 @@ export default function EnterpriseDashboard() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="space-y-3">
-              {displayStats.upcomingDeadlines.map((deadline, index) => (
+              {(displayStats?.upcomingDeadlines || []).map((deadline: any, index: number) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
