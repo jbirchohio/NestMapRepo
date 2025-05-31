@@ -61,17 +61,17 @@ interface AnalyticsData {
 const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 
 export default function AnalyticsDashboard() {
-  const { user } = useAuth();
+  const { userId } = useAuth();
   
   const { data: analytics, isLoading, error } = useQuery({
-    queryKey: ["/api/analytics", user?.id],
+    queryKey: ["/api/analytics", userId],
     queryFn: async () => {
-      const url = user?.id ? `/api/analytics?userId=${user.id}` : "/api/analytics";
+      const url = userId ? `/api/analytics?userId=${userId}` : "/api/analytics";
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch analytics");
       return response.json() as Promise<AnalyticsData>;
     },
-    enabled: !!user
+    enabled: !!userId
   });
 
   const handleExportCSV = () => {
