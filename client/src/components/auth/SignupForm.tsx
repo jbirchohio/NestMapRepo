@@ -236,13 +236,14 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
           
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
-            <button
+            <Button
               type="button"
-              className="font-medium text-primary hover:underline"
+              variant="link"
+              className="p-0 h-auto font-medium"
               onClick={onToggleForm}
             >
               Sign In
-            </button>
+            </Button>
           </div>
         </CardFooter>
       </form>

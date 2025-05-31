@@ -95,12 +95,13 @@ export default function AuthPrompt({
           </Button>
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
-            <button
-              className="text-primary hover:underline font-medium"
+            <Button
+              variant="link"
+              className="p-0 h-auto font-medium"
               onClick={handleSignIn}
             >
               Sign in
-            </button>
+            </Button>
           </div>
         </CardFooter>
       </Card>

@@ -86,13 +86,14 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <button
+              <Button
                 type="button"
-                className="text-sm font-medium text-primary hover:underline"
+                variant="link"
+                className="p-0 h-auto text-sm font-medium"
                 onClick={() => {/* Implement forgot password later */}}
               >
                 Forgot password?
-              </button>
+              </Button>
             </div>
             <Input
               id="password"
@@ -116,13 +117,14 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
           
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>
-            <button
+            <Button
               type="button"
-              className="font-medium text-primary hover:underline"
+              variant="link"
+              className="p-0 h-auto font-medium"
               onClick={onToggleForm}
             >
               Sign Up
-            </button>
+            </Button>
           </div>
         </CardFooter>
       </form>
