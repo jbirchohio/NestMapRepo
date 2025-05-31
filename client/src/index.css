@@ -20,7 +20,7 @@
   --accent: 210 40% 96%; /* Very Light Blue-Gray accent */
   --accent-foreground: 222 47% 11%; /* Dark Slate for readability */
   
-  --border: 214 32% 91%; /* Light Blue-Gray border */
+  --border: 214 32% 80%; /* More visible border */
   
   --popover: 0 0% 100%;
   --popover-foreground: 222 84% 5%;
@@ -32,8 +32,8 @@
   --destructive-foreground: 0 0% 98%;
   
   /* Secondary color - Steel Blue */
-  --secondary: 207 44% 49%; /* Steel Blue: #4682B4 */
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 214 32% 91%; /* Light secondary for better visibility */
+  --secondary-foreground: 222 84% 5%; /* Dark text for contrast */
   
   /* Input and focus states */
   --input: 214 32% 91%;
@@ -116,6 +116,83 @@
     height: calc(100vh - 64px);
     width: 100%;
   }
+}
+
+/* Enhanced visibility for interactive elements */
+button {
+  @apply shadow-sm border border-gray-200;
+}
+
+button:not(.ghost):not(.link) {
+  @apply bg-white border-gray-300;
+}
+
+button[data-variant="default"], button[data-variant="primary"] {
+  @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700;
+}
+
+button[data-variant="secondary"] {
+  @apply bg-gray-100 text-gray-900 border-gray-300 hover:bg-gray-200;
+}
+
+button[data-variant="outline"] {
+  @apply bg-white text-gray-900 border-gray-300 hover:bg-gray-50;
+}
+
+button[data-variant="ghost"] {
+  @apply border-transparent hover:bg-gray-100;
+}
+
+/* Switch/Toggle visibility improvements */
+button[role="switch"] {
+  @apply border-2 transition-all duration-200;
+}
+
+button[role="switch"][data-state="checked"] {
+  @apply bg-blue-600 border-blue-600;
+}
+
+button[role="switch"][data-state="unchecked"] {
+  @apply bg-gray-200 border-gray-300;
+}
+
+button[role="switch"] span {
+  @apply shadow-sm;
+}
+
+/* Select dropdown improvements */
+.select-trigger, [data-radix-select-trigger] {
+  @apply border-2 border-gray-300 shadow-sm bg-white;
+}
+
+/* Badge visibility improvements */
+.badge, [data-badge] {
+  @apply border shadow-sm;
+}
+
+/* Input field improvements */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="search"],
+textarea,
+select {
+  @apply border-2 border-gray-300 shadow-sm bg-white;
+}
+
+input:focus, 
+textarea:focus, 
+select:focus {
+  @apply border-blue-500 ring-2 ring-blue-200 ring-opacity-50;
+}
+
+/* Action button improvements specifically for TeamManagement */
+.team-action-btn {
+  @apply border border-gray-300 bg-white hover:bg-gray-50 text-gray-700;
+}
+
+.team-action-btn:hover {
+  @apply border-gray-400;
 }
 
 /* Mobile responsive adjustments */
