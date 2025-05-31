@@ -173,7 +173,7 @@ export default function MainNavigation() {
       icon: Settings,
       active: location === '/settings',
       show: hasSettingsAccess,
-      badge: 'Admin'
+      badge: (user.role === 'admin' || user.role === 'owner') ? 'Admin' : undefined
     }
   ];
 
