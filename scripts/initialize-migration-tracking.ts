@@ -54,7 +54,7 @@ async function initializeMigrationTracking(): Promise<void> {
     console.log('📊 Migration tracking status:');
     console.log(`   - Total migrations recorded: ${allMigrations.rows.length}`);
     allMigrations.rows.forEach((row, index) => {
-      const date = new Date(row.created_at).toISOString();
+      const date = new Date(Number(row.created_at)).toISOString();
       console.log(`   ${index + 1}. ${row.hash} (applied: ${date})`);
     });
 
