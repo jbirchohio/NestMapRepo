@@ -73,36 +73,15 @@ export default function CorporateDashboard() {
           </p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Primary Action */}
+        <div className="mb-8">
           <Button 
             onClick={() => setIsNewTripModalOpen(true)}
-            className="h-16 flex items-center justify-center gap-3 bg-blue-600 text-white hover:bg-blue-700 border-0"
+            className="h-16 px-8 flex items-center justify-center gap-3 bg-blue-600 text-white hover:bg-blue-700 border-0"
             size="lg"
           >
             <Plus className="h-5 w-5" />
             Plan Team Trip
-          </Button>
-          
-          <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
-            <Link href="/ai-generator">
-              <Sparkles className="h-5 w-5" />
-              AI Trip Generator
-            </Link>
-          </Button>
-          
-          <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
-            <Link href="/analytics">
-              <BarChart3 className="h-5 w-5" />
-              Travel Analytics
-            </Link>
-          </Button>
-          
-          <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
-            <Link href="/settings">
-              <Settings className="h-5 w-5" />
-              Company Settings
-            </Link>
           </Button>
         </div>
 
