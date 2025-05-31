@@ -204,14 +204,20 @@ export default function MainNavigation() {
                   <Button
                     variant={item.active ? 'default' : 'ghost'}
                     size="sm"
-                    className="flex items-center gap-2"
+                    className={`flex items-center gap-2 transition-colors ${
+                      item.active 
+                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                        : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950'
+                    }`}
                   >
                     <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
+                    <span className="font-medium">{item.label}</span>
                     {item.badge && (
                       <Badge 
-                        variant={item.badge === 'Admin' ? 'destructive' : 'secondary'} 
-                        className="ml-1 text-xs"
+                        variant={item.badge === 'Admin' ? 'destructive' : item.active ? 'outline' : 'secondary'} 
+                        className={`ml-1 text-xs ${
+                          item.active ? 'border-white/20 text-white' : ''
+                        }`}
                       >
                         {item.badge}
                       </Badge>
@@ -312,14 +318,20 @@ export default function MainNavigation() {
                 <Button
                   variant={item.active ? 'default' : 'ghost'}
                   size="sm"
-                  className="flex items-center gap-2 whitespace-nowrap"
+                  className={`flex items-center gap-2 whitespace-nowrap transition-colors ${
+                    item.active 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950'
+                  }`}
                 >
                   <item.icon className="h-4 w-4" />
-                  <span className="text-xs">{item.label}</span>
+                  <span className="text-xs font-medium">{item.label}</span>
                   {item.badge && (
                     <Badge 
-                      variant={item.badge === 'Admin' ? 'destructive' : 'secondary'} 
-                      className="ml-1 text-xs"
+                      variant={item.badge === 'Admin' ? 'destructive' : item.active ? 'outline' : 'secondary'} 
+                      className={`ml-1 text-xs ${
+                        item.active ? 'border-white/20 text-white' : ''
+                      }`}
                     >
                       {item.badge}
                     </Badge>
