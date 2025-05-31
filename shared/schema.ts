@@ -28,6 +28,13 @@ export const organizations = pgTable("organizations", {
   plan: text("plan").default("free"), // free, team, enterprise
   white_label_enabled: boolean("white_label_enabled").default(false),
   white_label_plan: text("white_label_plan").default("none"), // none, basic, premium, enterprise
+  // White-label branding configuration
+  primary_color: text("primary_color"), // Custom primary color
+  secondary_color: text("secondary_color"), // Custom secondary color
+  accent_color: text("accent_color"), // Custom accent color
+  logo_url: text("logo_url"), // Custom logo URL
+  support_email: text("support_email"), // Custom support email
+  employee_count: integer("employee_count"), // Organization size for demo analytics
   stripe_customer_id: text("stripe_customer_id"),
   stripe_subscription_id: text("stripe_subscription_id"),
   subscription_status: text("subscription_status").default("inactive"), // active, inactive, past_due, canceled
