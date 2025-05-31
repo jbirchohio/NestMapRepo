@@ -145,7 +145,7 @@ window.__vite_plugin_react_preamble_installed__ = true
       // Make the Mapbox token available globally
       window.MAPBOX_TOKEN = "%MAPBOX_TOKEN%";
     </script>
-    <script type="module" src="/src/main.tsx?v=wX_qtvsX9cWbYCxCjRL5Y"></script>
+    <script type="module" src="/src/main.tsx?v=s-iNhTANN75FpbDliLUC5"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
