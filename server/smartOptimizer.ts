@@ -1,12 +1,13 @@
 import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
 import { detectTripConflicts } from "./services/conflictDetector";
-import { Activity, OptimizedSchedule, ConflictDetection } from "../shared/interfaces";
+import { Activity, OptimizedSchedule } from "../shared/interfaces";
 
 interface ConflictDetection {
   type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict';
   severity: 'high' | 'medium' | 'low';
   activities: Activity[];
   description: string;
+  suggestion: string;
   suggestedFix: string;
   autoFixAvailable: boolean;
 }
