@@ -20,13 +20,11 @@ export function initializeMonitoring() {
       ],
       // Performance monitoring
       tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-      // Profiling
-      profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
       // Additional configuration
       beforeSend: (event) => {
         // Filter out sensitive information
         if (event.request?.data) {
-          const data = event.request.data;
+          const data = event.request.data as Record<string, any>;
           if (typeof data === 'object' && data !== null) {
             // Remove sensitive fields
             delete data.password;
