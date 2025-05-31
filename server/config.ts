@@ -21,6 +21,17 @@ export const DB_CONFIG = {
   connectionPoolSize: parseInt(process.env.DB_POOL_SIZE || '10', 10)
 };
 
+// Branding and white-label configuration
+export const BRANDING_CONFIG = {
+  defaultAppName: process.env.APP_NAME || 'NestMap',
+  defaultPrimaryColor: process.env.PRIMARY_COLOR || '#3B82F6',
+  defaultSecondaryColor: process.env.SECONDARY_COLOR || '#64748B',
+  defaultAccentColor: process.env.ACCENT_COLOR || '#10B981',
+  companyUrl: process.env.COMPANY_URL || 'yourcompany.com',
+  supportEmail: process.env.SUPPORT_EMAIL || 'support@example.com',
+  logoUrl: process.env.LOGO_URL || null
+};
+
 // External services configuration
 export const SERVICES_CONFIG = {
   openai: {
@@ -62,6 +73,7 @@ export function validateConfig() {
 export default {
   server: SERVER_CONFIG,
   db: DB_CONFIG,
+  branding: BRANDING_CONFIG,
   services: SERVICES_CONFIG,
   validate: validateConfig
 };

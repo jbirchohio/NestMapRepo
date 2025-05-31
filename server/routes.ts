@@ -71,7 +71,58 @@ const getDemoTrips = (roleType: string) => {
   return baseTrips;
 };
 
-const getDemoAnalytics = (roleType: string) => {
+const getDemoAnalytics = async (orgId: number | null, roleType: string) => {
+  // Try to fetch organization-specific demo data
+  if (orgId) {
+    try {
+      const orgDemoData = await db.select()
+        .from(organizations)
+        .where(eq(organizations.id, orgId))
+        .limit(1);
+      
+      if (orgDemoData.length > 0) {
+        const org = orgDemoData[0];
+        // Generate realistic demo data based on organization size and type
+        const baseMultiplier = Math.max(1, Math.floor((org.employee_count || 50) / 50));
+        
+        if (roleType === 'corporate') {
+          return {
+            totalTrips: 15 * baseMultiplier,
+            totalEmployees: org.employee_count || 156,
+            averageTripCost: 2500 + (baseMultiplier * 350),
+            totalBudget: (15 * baseMultiplier * (2500 + baseMultiplier * 350)),
+            pendingApprovals: Math.min(8, baseMultiplier + 1),
+            completedTrips: Math.floor((15 * baseMultiplier) * 0.8),
+            monthlySpend: [
+              { month: 'Jan', amount: 8000 * baseMultiplier },
+              { month: 'Feb', amount: 12000 * baseMultiplier },
+              { month: 'Mar', amount: 15000 * baseMultiplier },
+              { month: 'Apr', amount: 18000 * baseMultiplier }
+            ]
+          };
+        } else {
+          return {
+            totalProposals: 25 * baseMultiplier,
+            totalClients: 20 * baseMultiplier,
+            winRate: Math.min(85, 60 + (baseMultiplier * 5)),
+            totalRevenue: 120000 * baseMultiplier,
+            pendingProposals: Math.min(10, baseMultiplier + 3),
+            averageDealSize: 3500 + (baseMultiplier * 400),
+            monthlyRevenue: [
+              { month: 'Jan', amount: 22000 * baseMultiplier },
+              { month: 'Feb', amount: 28000 * baseMultiplier },
+              { month: 'Mar', amount: 35000 * baseMultiplier },
+              { month: 'Apr', amount: 32000 * baseMultiplier }
+            ]
+          };
+        }
+      }
+    } catch (error) {
+      console.warn('Could not fetch org demo data, using defaults');
+    }
+  }
+
+  // Fallback to default demo data
   if (roleType === 'corporate') {
     return {
       totalTrips: 24,
@@ -2712,7 +2763,8 @@ Include realistic business activities, meeting times, dining recommendations, an
       
       // Handle demo users
       if (userId && userId.startsWith('demo-corp-')) {
-        const demoAnalytics = getDemoAnalytics('corporate');
+        const user = await storage.getUserByAuthId(userId);
+        const demoAnalytics = await getDemoAnalytics(user?.organization_id || null, 'corporate');
         return res.json(demoAnalytics);
       }
       
@@ -2769,7 +2821,8 @@ Include realistic business activities, meeting times, dining recommendations, an
       
       // Handle demo users
       if (userId && userId.startsWith('demo-agency-')) {
-        const demoAnalytics = getDemoAnalytics('agency');
+        const user = await storage.getUserByAuthId(userId);
+        const demoAnalytics = await getDemoAnalytics(user?.organization_id || null, 'agency');
         return res.json(demoAnalytics);
       }
       
