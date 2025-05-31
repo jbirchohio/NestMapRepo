@@ -14,7 +14,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'nestmap-calendar-sync-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // Set to true in production with HTTPS
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', // Automatically secure in production
+    httpOnly: true, // Prevent XSS attacks
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+  }
 }));
 
 app.use((req, res, next) => {
@@ -73,7 +78,7 @@ app.use((req, res, next) => {
     }
   }
 
-  const port = 5000;
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
   server.listen(
     {
       port,

@@ -301,3 +301,92 @@ export function getAvailableProviders(
   const config = getBookingProviderConfig(orgId);
   return config[type].filter(provider => provider.enabled);
 }
+
+/**
+ * Search flights using integrated booking providers
+ * @param params Flight search parameters
+ * @returns Flight search results
+ */
+export async function searchFlights(params: {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  passengers?: number;
+}): Promise<any[]> {
+  // This would integrate with actual flight APIs like Amadeus
+  // For now, return structured mock data that matches real API responses
+  return [
+    {
+      id: "flight-1",
+      airline: "American Airlines",
+      flightNumber: "AA123",
+      price: 450,
+      currency: "USD",
+      departure: {
+        airport: params.origin,
+        time: "08:00",
+        date: params.departureDate
+      },
+      arrival: {
+        airport: params.destination,
+        time: "11:30",
+        date: params.departureDate
+      },
+      duration: "3h 30m",
+      stops: 0
+    }
+  ];
+}
+
+/**
+ * Search hotels using integrated booking providers
+ * @param params Hotel search parameters
+ * @returns Hotel search results
+ */
+export async function searchHotels(params: {
+  destination: string;
+  checkIn: string;
+  checkOut: string;
+  guests?: number;
+  rooms?: number;
+}): Promise<any[]> {
+  // This would integrate with actual hotel APIs
+  // For now, return structured mock data that matches real API responses
+  return [
+    {
+      id: "hotel-1",
+      name: "Grand Plaza Hotel",
+      rating: 4.5,
+      price: 180,
+      currency: "USD",
+      location: params.destination,
+      amenities: ["WiFi", "Pool", "Gym", "Restaurant"],
+      checkIn: params.checkIn,
+      checkOut: params.checkOut,
+      availability: "Available"
+    }
+  ];
+}
+
+/**
+ * Create booking through integrated providers
+ * @param params Booking parameters
+ * @returns Booking confirmation
+ */
+export async function createBooking(params: {
+  type: 'flight' | 'hotel' | 'activity';
+  itemId: string;
+  userDetails: any;
+}): Promise<any> {
+  // This would handle actual booking creation through provider APIs
+  // For now, return a structured confirmation response
+  return {
+    bookingId: `booking-${Date.now()}`,
+    status: "confirmed",
+    type: params.type,
+    itemId: params.itemId,
+    confirmationCode: `CONF${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
+    createdAt: new Date().toISOString()
+  };
+}

@@ -4463,6 +4463,71 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // Health check endpoint for deployment monitoring
+  app.get("/api/health", async (req: Request, res: Response) => {
+    try {
+      const startTime = Date.now();
+      
+      // Check database connectivity
+      let dbStatus = "healthy";
+      let dbLatency = 0;
+      try {
+        const dbStart = Date.now();
+        await db.select().from(users).limit(1);
+        dbLatency = Date.now() - dbStart;
+      } catch (error) {
+        dbStatus = "unhealthy";
+        dbLatency = -1;
+      }
+
+      // Check environment configuration
+      const envChecks = {
+        database: !!process.env.DATABASE_URL,
+        openai: !!process.env.OPENAI_API_KEY,
+        mapbox: !!process.env.MAPBOX_TOKEN,
+        session: !!process.env.SESSION_SECRET,
+        baseUrl: !!process.env.BASE_URL || !!process.env.PORT
+      };
+
+      const configScore = Object.values(envChecks).filter(Boolean).length / Object.keys(envChecks).length;
+      
+      const responseTime = Date.now() - startTime;
+      const isHealthy = dbStatus === "healthy" && configScore >= 0.8;
+
+      const healthData = {
+        status: isHealthy ? "healthy" : "degraded",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        database: {
+          status: dbStatus,
+          latency: dbLatency
+        },
+        configuration: {
+          score: Math.round(configScore * 100),
+          checks: envChecks
+        },
+        performance: {
+          responseTime,
+          memory: {
+            used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+            total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
+          }
+        },
+        version: "1.0.0",
+        environment: process.env.NODE_ENV || "development"
+      };
+
+      const statusCode = isHealthy ? 200 : 503;
+      res.status(statusCode).json(healthData);
+    } catch (error) {
+      res.status(503).json({
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        error: process.env.NODE_ENV === 'production' ? 'Service unavailable' : error.message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

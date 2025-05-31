@@ -117,7 +117,8 @@ export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], 
 // OAuth flow helpers
 export function getGoogleAuthUrl(): string {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5000/api/auth/google/callback';
+  const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${baseUrl}/api/auth/google/callback`;
   const scope = 'https://www.googleapis.com/auth/calendar';
   
   return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline`;
@@ -125,7 +126,8 @@ export function getGoogleAuthUrl(): string {
 
 export function getMicrosoftAuthUrl(): string {
   const clientId = process.env.MICROSOFT_CLIENT_ID;
-  const redirectUri = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:5000/api/auth/microsoft/callback';
+  const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+  const redirectUri = process.env.MICROSOFT_REDIRECT_URI || `${baseUrl}/api/auth/microsoft/callback`;
   const scope = 'https://graph.microsoft.com/calendars.readwrite';
   
   return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
