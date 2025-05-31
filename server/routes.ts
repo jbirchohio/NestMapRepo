@@ -2838,9 +2838,14 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   }
 
-  // Analytics endpoints
+  // Analytics endpoints - CRITICAL SECURITY: Organization-aware analytics isolation
   app.get("/api/analytics", async (req: Request, res: Response) => {
     try {
+      // CRITICAL: Verify authentication first
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       console.log("Fetching analytics data...");
       const userId = req.query.userId as string;
       console.log("Raw userId from query:", userId);
@@ -2853,10 +2858,27 @@ Include realistic business activities, meeting times, dining recommendations, an
         if (isNaN(userIdNum)) {
           return res.status(400).json({ message: "Invalid user ID" });
         }
+        
+        // CRITICAL: Verify user can access this data - organization boundary check
+        const targetUser = await storage.getUser(userIdNum);
+        if (!targetUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        const userOrgId = req.user.organization_id || null;
+        if (req.user.role !== 'super_admin' && targetUser.organization_id !== userOrgId) {
+          return res.status(403).json({ message: "Access denied: Cannot view this user's analytics" });
+        }
+        
         const analyticsData = await getUserPersonalAnalytics(userIdNum);
         console.log("Personal analytics data generated successfully");
         res.json(analyticsData);
       } else {
+        // CRITICAL: Only admins and super_admins can access system-wide analytics
+        if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+          return res.status(403).json({ message: "Admin access required for system analytics" });
+        }
+        
         // For system-wide analytics (admin view)
         const analyticsData = await getAnalytics();
         console.log("System analytics data generated successfully");
@@ -2868,9 +2890,14 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Corporate analytics endpoint
+  // Corporate analytics endpoint - CRITICAL SECURITY: Organization-aware analytics isolation
   app.get("/api/analytics/corporate", async (req: Request, res: Response) => {
     try {
+      // CRITICAL: Verify authentication first
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const userId = req.query.userId as string;
       
       // Handle demo users
@@ -2888,6 +2915,17 @@ Include realistic business activities, meeting times, dining recommendations, an
       const userIdNum = parseInt(userId);
       if (isNaN(userIdNum)) {
         return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // CRITICAL: Verify user can access this data - organization boundary check
+      const targetUser = await storage.getUser(userIdNum);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const userOrgId = req.user.organizationId || null;
+      if (req.user.role !== 'super_admin' && targetUser.organizationId !== userOrgId) {
+        return res.status(403).json({ message: "Access denied: Cannot view this user's corporate analytics" });
       }
 
       const trips = await storage.getUserTrips(userIdNum);
@@ -3787,10 +3825,16 @@ Include realistic business activities, meeting times, dining recommendations, an
   });
 
   // Admin API endpoints for white label management
-  // Get all organizations with white label status
+  // Get all organizations with white label status - CRITICAL SECURITY: Enhanced role checks
   app.get("/api/admin/organizations", async (req: Request, res: Response) => {
     try {
-      if (!req.user || req.user.role !== 'admin') {
+      // CRITICAL: Verify authentication first
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // CRITICAL: Only admins and super_admins can access organization data
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -3802,14 +3846,24 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Update organization white label settings
+  // Update organization white label settings - CRITICAL SECURITY: Enhanced role checks
   app.patch("/api/admin/organizations/:id", async (req: Request, res: Response) => {
     try {
-      if (!req.user || req.user.role !== 'admin') {
+      // CRITICAL: Verify authentication first
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // CRITICAL: Only admins and super_admins can modify organization data
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
       const orgId = parseInt(req.params.id);
+      if (isNaN(orgId)) {
+        return res.status(400).json({ error: "Invalid organization ID" });
+      }
+      
       const updates = req.body;
 
       await db.update(organizations)
@@ -3823,10 +3877,16 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Get white label requests pending approval
+  // Get white label requests pending approval - CRITICAL SECURITY: Enhanced role checks
   app.get("/api/admin/white-label-requests", async (req: Request, res: Response) => {
     try {
-      if (!req.user || req.user.role !== 'admin') {
+      // CRITICAL: Verify authentication first
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      // CRITICAL: Only admins and super_admins can access white label requests
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
