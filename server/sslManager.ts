@@ -76,7 +76,7 @@ export class SSLManager {
       return {
         privateKey: keyPair.privateKey,
         publicKey: keyPair.publicKey,
-        accountUrl,
+        accountUrl: accountUrl as string,
       };
     } catch (error) {
       throw new Error(`Failed to create ACME account: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -110,7 +110,7 @@ export class SSLManager {
       );
 
       // Get order details
-      const orderResponse = await this.sendACMERequest(orderUrl, '', account.privateKey);
+      const orderResponse = await this.sendACMERequest(orderUrl as string, '', account.privateKey);
       const order = await orderResponse.json();
 
       // Process authorizations

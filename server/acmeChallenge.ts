@@ -135,7 +135,7 @@ export function cleanupExpiredChallenges(): void {
   const now = new Date();
   let cleanedCount = 0;
 
-  for (const [token, challenge] of challengeStore.entries()) {
+  for (const [token, challenge] of Array.from(challengeStore.entries())) {
     if (now > challenge.expiresAt) {
       challengeStore.delete(token);
       cleanedCount++;

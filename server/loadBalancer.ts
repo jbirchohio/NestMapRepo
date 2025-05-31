@@ -111,8 +111,8 @@ async function getDomainConfig(domain: string): Promise<DomainConfig | null> {
     return {
       domain: row.domain,
       organizationId: row.organizationId,
-      ssl_verified: row.ssl_verified,
-      status: row.status,
+      ssl_verified: row.ssl_verified || false,
+      status: row.status || 'pending',
       branding: row.companyName ? {
         companyName: row.companyName,
         companyLogo: row.companyLogo || undefined,

@@ -1,4 +1,4 @@
-import { dns } from 'dns';
+import * as dns from 'dns';
 import { promisify } from 'util';
 import crypto from 'crypto';
 import https from 'https';
@@ -38,7 +38,7 @@ export async function verifyDomainOwnership(
     const txtRecords = await resolveTxt(`_nestmap-verification.${domain}`);
     
     const flatRecords = txtRecords.flat();
-    const verificationRecord = flatRecords.find(record => 
+    const verificationRecord = flatRecords.find((record: string) => 
       record.includes(`nestmap-verification=${expectedToken}`)
     );
     
