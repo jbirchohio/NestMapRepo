@@ -39,7 +39,7 @@
   --tag-azure: 214 100% 50%; /* Azure Blue */
 }
 
-/* Unified Button System - Consistent Across All Components */
+/* Unified Button System - Clean, Consistent Architecture */
 button, .btn {
   @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors;
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
@@ -47,11 +47,12 @@ button, .btn {
   @apply px-4 py-2 h-10; /* Default size */
 }
 
-/* Primary Button Style - Blue theme */
+/* Primary Button Style - Professional blue theme */
 button.btn-primary, 
-button[class*="bg-primary"],
 .btn-primary {
   @apply bg-primary text-primary-foreground shadow hover:bg-primary/90;
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }
 
 /* Secondary Button Style */
