@@ -53,6 +53,7 @@ function Router() {
         <Route path="/help" component={HelpCenter} />
         <Route path="/calendar" component={CalendarSettings} />
         <Route path="/white-label" component={WhiteLabelSettings} />
+        <Route path="/admin" component={AdminDashboard} />
         <Route component={NotFound} />
       </Switch>
     </>
