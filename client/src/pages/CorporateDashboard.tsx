@@ -173,7 +173,12 @@ export default function CorporateDashboard() {
                           {trip.status}
                         </Badge>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(trip.start_date).toLocaleDateString()}
+                          {(() => {
+                            const date = trip.start_date || trip.startDate;
+                            if (!date) return 'No date set';
+                            const parsed = new Date(date);
+                            return isNaN(parsed.getTime()) ? 'Invalid date' : parsed.toLocaleDateString();
+                          })()}
                         </p>
                       </div>
                     </div>
