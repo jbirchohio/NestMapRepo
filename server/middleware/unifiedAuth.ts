@@ -11,6 +11,7 @@ declare global {
         organizationId?: number | null;
         role?: string;
         displayName?: string;
+        [key: string]: any;
       };
       organizationId?: number | null;
       organizationContext?: {

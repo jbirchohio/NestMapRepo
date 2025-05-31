@@ -173,59 +173,11 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
   }
 });
 
-// Session-based authentication middleware to populate req.user
-app.use(async (req: Request, res: Response, next: NextFunction) => {
-  // Skip for non-API routes and specific auth endpoints (but not /api/auth/me)
-  if (!req.path.startsWith('/api') || 
-      req.path === '/api/auth/login' || 
-      req.path === '/api/auth/register' ||
-      req.path === '/api/auth/logout' ||
-      req.path === '/api/templates') {
-    return next();
-  }
+// Import unified authentication middleware
+import { unifiedAuthMiddleware } from './middleware/unifiedAuth';
 
-  try {
-    console.log('Auth middleware check:', {
-      path: req.path,
-      hasSession: !!req.session,
-      sessionUserId: req.session ? (req.session as any).userId : 'no session',
-      sessionKeys: req.session ? Object.keys(req.session) : []
-    });
-    
-    // Check for session-based authentication
-    if (req.session && (req.session as any).userId) {
-      const userId = (req.session as any).userId;
-      
-      // Use the auth service to get user data
-      const user = await getUserById(userId);
-
-      if (user) {
-        req.user = {
-          id: user.id,
-          email: user.email,
-          organizationId: user.organizationId,
-          role: user.role,
-          displayName: user.displayName
-        };
-        console.log('Auth middleware - populated req.user:', {
-          id: req.user.id,
-          email: req.user.email,
-          organizationId: req.user.organizationId,
-          role: req.user.role,
-          path: req.path
-        });
-      } else {
-        console.log('Auth middleware - no user found for session userId:', userId);
-        // Clear invalid session
-        delete (req.session as any).userId;
-      }
-    }
-  } catch (error) {
-    console.error('Session authentication error:', error);
-  }
-  
-  next();
-});
+// Apply unified authentication and organization context
+app.use(unifiedAuthMiddleware);
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

@@ -183,41 +183,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Trips routes
+  // Trips routes - using unified authorization middleware
   app.get("/api/trips", async (req: Request, res: Response) => {
     try {
-      // CRITICAL SECURITY FIX: Enforce authentication
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
       const userId = req.query.userId as string;
+      const targetUserId = userId || req.user!.id.toString();
       
-      // If no userId provided, use the authenticated user's ID
-      const targetUserId = userId || req.user.id.toString();
-      
-      // Handle demo users - but first check if they have real trips in database
+      // Handle demo users with real trip fallback
       if (targetUserId && (targetUserId.startsWith('demo-corp-') || targetUserId.startsWith('demo-agency-'))) {
-        // Demo users can only access their own data through authenticated session
-        if (req.user.id) {
-          try {
-            console.log("Demo user detected, checking for real trips for user ID:", req.user.id);
-            const realTrips = await storage.getTripsByUserId(req.user.id, req.user.organizationId);
-            
-            // If they have real trips, return those combined with demo trips
-            if (realTrips.length > 0) {
-              const roleType = userId.startsWith('demo-corp-') ? 'corporate' : 'agency';
-              const demoTrips = getDemoTrips(roleType);
-              
-              console.log("Found real trips for demo user:", realTrips.length);
-              return res.json([...realTrips, ...demoTrips]);
-            }
-          } catch (error) {
-            console.log("Error fetching real trips for demo user, falling back to demo trips:", error);
+        try {
+          console.log("Demo user detected, checking for real trips for user ID:", req.user!.id);
+          const realTrips = await storage.getTripsByUserId(req.user!.id, req.organizationId);
+          
+          if (realTrips.length > 0) {
+            const roleType = userId.startsWith('demo-corp-') ? 'corporate' : 'agency';
+            const demoTrips = getDemoTrips(roleType);
+            console.log("Found real trips for demo user:", realTrips.length);
+            return res.json([...realTrips, ...demoTrips]);
           }
+        } catch (error) {
+          console.log("Error fetching real trips for demo user, falling back to demo trips:", error);
         }
         
-        // Fallback to demo trips only
         const roleType = targetUserId.startsWith('demo-corp-') ? 'corporate' : 'agency';
         const demoTrips = getDemoTrips(roleType);
         return res.json(demoTrips);
@@ -228,19 +215,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID" });
       }
 
-      // CRITICAL SECURITY FIX: Prevent cross-tenant access
-      // Users can only access trips from their own organization unless they're super admin
-      if (req.user.role !== 'super_admin' && numericUserId !== req.user.id) {
+      // Unified organization access check
+      if (req.user!.role !== 'super_admin' && numericUserId !== req.user!.id) {
         return res.status(403).json({ message: "Access denied: Cannot access other users' trips" });
       }
       
-      // Log organization access for audit
       logOrganizationAccess(req, 'fetch', 'trips');
+      console.log("Fetching trips for user ID:", numericUserId, "from organization:", req.organizationId);
       
-      console.log("Attempting to fetch trips for user ID:", numericUserId, "from organization:", req.user.organizationId);
-      
-      // CRITICAL SECURITY FIX: Always filter by organization
-      const trips = await storage.getTripsByUserId(numericUserId, req.user.organizationId);
+      // Organization-scoped query (automatically filtered by unified middleware)
+      const trips = await storage.getTripsByUserId(numericUserId, req.organizationId);
       
       console.log("Trips fetched successfully:", trips.length);
       res.json(trips);
