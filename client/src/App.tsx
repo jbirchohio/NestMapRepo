@@ -24,6 +24,7 @@ import DemoModeSelector from "@/components/DemoModeSelector";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import CalendarSettings from "@/pages/CalendarSettings";
+import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -50,6 +51,7 @@ function Router() {
         <Route path="/profile" component={ProfileSettings} />
         <Route path="/help" component={HelpCenter} />
         <Route path="/calendar" component={CalendarSettings} />
+        <Route path="/white-label" component={WhiteLabelSettings} />
         <Route component={NotFound} />
       </Switch>
     </>
