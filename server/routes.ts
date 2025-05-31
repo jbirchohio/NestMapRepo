@@ -1,5 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
+import { 
+  validateAndSanitizeBody, 
+  validateQueryParams, 
+  contentCreationRateLimit,
+  validateContentLength,
+  validationSchemas
+} from "./middleware/inputValidation";
 
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -262,10 +269,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/trips", async (req: Request, res: Response) => {
+  app.post("/api/trips", 
+    validateContentLength(10 * 1024), // 10KB max
+    contentCreationRateLimit(),
+    validateAndSanitizeBody(validationSchemas.trip),
+    async (req: Request, res: Response) => {
     try {
       // Log the incoming data to help with debugging
-      console.log("Creating trip with data:", req.body);
+      console.log("Creating trip with validated data:", req.body);
       
       // Handle demo users - return mock success response
       if (req.body.userId && typeof req.body.userId === 'string' && 
@@ -601,9 +612,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/activities", async (req: Request, res: Response) => {
+  app.post("/api/activities", 
+    validateContentLength(5 * 1024), // 5KB max
+    contentCreationRateLimit(),
+    validateAndSanitizeBody(validationSchemas.activity),
+    async (req: Request, res: Response) => {
     try {
-      console.log("Creating activity with request body:", req.body);
+      console.log("Creating activity with validated data:", req.body);
       const activityData = insertActivitySchema.parse(req.body);
       console.log("Parsed activity data:", activityData);
       
@@ -795,7 +810,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/todos", async (req: Request, res: Response) => {
+  app.post("/api/todos", 
+    validateContentLength(2 * 1024), // 2KB max
+    contentCreationRateLimit(),
+    validateAndSanitizeBody(z.object({
+      tripId: z.number(),
+      text: z.string().min(1).max(500).refine(val => !/(<script|javascript:|on\w+\s*=)/gi.test(val), 'Invalid characters'),
+      completed: z.boolean().optional()
+    })),
+    async (req: Request, res: Response) => {
     try {
       const todoData = insertTodoSchema.parse(req.body);
       const todo = await storage.createTodo(todoData);
