@@ -83,7 +83,7 @@ export default function CorporateDashboard() {
   ) : 0;
 
   // Count unique travelers by user ID (since trips are per user)
-  const uniqueTravelers = new Set(trips.map(trip => trip.userId)).size;
+  const uniqueTravelers = new Set(trips.map(trip => trip.user_id)).size;
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">

@@ -102,7 +102,7 @@ export default function EnterpriseDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Trips</p>
-                  <p className="text-2xl font-bold text-foreground">{displayStats.activeTrips}</p>
+                  <p className="text-2xl font-bold text-foreground">{displayStats?.activeTrips || 0}</p>
                 </div>
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <MapPin className="w-5 h-5 text-primary" />
@@ -120,7 +120,7 @@ export default function EnterpriseDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Clients</p>
-                  <p className="text-2xl font-bold text-foreground">{displayStats.totalClients}</p>
+                  <p className="text-2xl font-bold text-foreground">{displayStats?.totalClients || 0}</p>
                 </div>
                 <div className="p-2 bg-emerald-500/10 rounded-lg">
                   <Users className="w-5 h-5 text-emerald-600" />
@@ -138,7 +138,7 @@ export default function EnterpriseDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Revenue</p>
-                  <p className="text-2xl font-bold text-foreground">${displayStats.monthlyRevenue.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-foreground">${(displayStats?.monthlyRevenue || 0).toLocaleString()}</p>
                 </div>
                 <div className="p-2 bg-purple-500/10 rounded-lg">
                   <DollarSign className="w-5 h-5 text-purple-600" />
@@ -156,7 +156,7 @@ export default function EnterpriseDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
-                  <p className="text-2xl font-bold text-foreground">{displayStats.completionRate}%</p>
+                  <p className="text-2xl font-bold text-foreground">{displayStats?.completionRate || 0}%</p>
                 </div>
                 <div className="p-2 bg-orange-500/10 rounded-lg">
                   <Target className="w-5 h-5 text-orange-600" />
@@ -228,7 +228,7 @@ export default function EnterpriseDashboard() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="space-y-3">
-              {displayStats.recentActivity.map((activity, index) => (
+              {(displayStats?.recentActivity || []).map((activity: any, index: number) => (
                 <div key={index} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <div className={`w-2 h-2 rounded-full ${
                     activity.status === 'success' ? 'bg-green-500' :
