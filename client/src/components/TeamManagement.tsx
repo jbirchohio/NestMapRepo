@@ -522,7 +522,10 @@ export default function TeamManagement() {
                         <Label className="text-sm">{permission.label}</Label>
                         <p className="text-xs text-muted-foreground">{permission.desc}</p>
                       </div>
-                      <Switch defaultChecked={selectedMember.role === 'admin'} />
+                      <Switch 
+                        defaultChecked={selectedMember.role === 'admin'} 
+                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+                      />
                     </div>
                   ))}
                 </div>
