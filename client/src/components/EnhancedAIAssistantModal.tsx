@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
+import { parseAISuggestions } from "@/utils/patternParser";
 import {
   Dialog,
   DialogContent,
@@ -278,77 +279,9 @@ export default function EnhancedAIAssistantModal({
                         <div className="mt-3 space-y-2">
                           {/* Parse food suggestions and add buttons - multiple patterns */}
                           {(() => {
-                            const suggestions: any[] = [];
+                            const suggestions = parseAISuggestions(message.content);
                             
-                            // Pattern 1: • Name - Description format
-                            const pattern1 = message.content.match(/• (.+?) - (.+)/g);
-                            if (pattern1) {
-                              pattern1.forEach((suggestion, index) => {
-                                const match = suggestion.match(/• (.+?) - (.+)/);
-                                if (match) {
-                                  const [, name, description] = match;
-                                  suggestions.push({
-                                    key: `pattern1-${index}`,
-                                    name: name.trim(),
-                                    description: description.trim(),
-                                    notes: description.trim()
-                                  });
-                                }
-                              });
-                            }
-                            
-                            // Pattern 2: **Name** - Description format
-                            const pattern2 = message.content.match(/\*\*(.+?)\*\* - (.+)/g);
-                            if (pattern2) {
-                              pattern2.forEach((suggestion, index) => {
-                                const match = suggestion.match(/\*\*(.+?)\*\* - (.+)/);
-                                if (match) {
-                                  const [, name, description] = match;
-                                  suggestions.push({
-                                    key: `pattern2-${index}`,
-                                    name: name.trim(),
-                                    description: description.trim(),
-                                    notes: description.trim()
-                                  });
-                                }
-                              });
-                            }
-                            
-                            // Pattern 4: Numbered list with **Name** format (like your screenshot)
-                            const pattern4 = message.content.match(/\d+\.\s+\*\*(.+?)\*\*(.+)/g);
-                            if (pattern4) {
-                              pattern4.forEach((suggestion, index) => {
-                                const match = suggestion.match(/\d+\.\s+\*\*(.+?)\*\*(.+)/);
-                                if (match) {
-                                  const [, name, description] = match;
-                                  suggestions.push({
-                                    key: `pattern4-${index}`,
-                                    name: name.trim(),
-                                    description: description.replace(/\s*-\s*/, '').trim(),
-                                    notes: description.replace(/\s*-\s*/, '').trim()
-                                  });
-                                }
-                              });
-                            }
-                            
-                            // Pattern 3: 1. Name - Description format
-                            const pattern3 = message.content.match(/\d+\.\s+(.+?) - (.+)/g);
-                            if (pattern3) {
-                              pattern3.forEach((suggestion, index) => {
-                                const match = suggestion.match(/\d+\.\s+(.+?) - (.+)/);
-                                if (match) {
-                                  const [, name, description] = match;
-                                  suggestions.push({
-                                    key: `pattern3-${index}`,
-                                    name: name.trim(),
-                                    description: description.trim(),
-                                    notes: description.trim()
-                                  });
-                                }
-                              });
-                            }
-                            
-                            return (suggestions as any[]).map((suggestion) => (
+                            return suggestions.map((suggestion) => (
                               <Button
                                 key={suggestion.key}
                                 variant="outline"

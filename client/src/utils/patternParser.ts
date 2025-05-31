@@ -49,10 +49,9 @@ export function parseAISuggestions(content: string): ParsedSuggestion[] {
   ];
   
   patterns.forEach((pattern, patternIndex) => {
-    const matches = content.matchAll(pattern.regex);
-    let matchIndex = 0;
+    const matches = Array.from(content.matchAll(pattern.regex));
     
-    for (const match of matches) {
+    matches.forEach((match, matchIndex) => {
       if (match[pattern.nameGroup] && match[pattern.descriptionGroup]) {
         const name = match[pattern.nameGroup].trim();
         const description = match[pattern.descriptionGroup].replace(/\s*-\s*/, '').trim();
@@ -63,10 +62,8 @@ export function parseAISuggestions(content: string): ParsedSuggestion[] {
           description,
           notes: description
         });
-        
-        matchIndex++;
       }
-    }
+    });
   });
   
   return suggestions;
