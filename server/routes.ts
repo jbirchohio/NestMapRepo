@@ -188,8 +188,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.query.userId as string;
       
-      // Handle demo users
+      // Handle demo users - but first check if they have real trips in database
       if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
+        // Try to get real database trips first using the numeric user ID from auth context
+        if (req.user?.id) {
+          try {
+            console.log("Demo user detected, checking for real trips for user ID:", req.user.id);
+            const realTrips = await storage.getTripsByUserId(req.user.id);
+            
+            // If they have real trips, return those combined with demo trips
+            if (realTrips.length > 0) {
+              const roleType = userId.startsWith('demo-corp-') ? 'corporate' : 'agency';
+              const demoTrips = getDemoTrips(roleType);
+              
+              console.log("Found real trips for demo user:", realTrips.length);
+              return res.json([...realTrips, ...demoTrips]);
+            }
+          } catch (error) {
+            console.log("Error fetching real trips for demo user, falling back to demo trips:", error);
+          }
+        }
+        
+        // Fallback to demo trips only
         const roleType = userId.startsWith('demo-corp-') ? 'corporate' : 'agency';
         const demoTrips = getDemoTrips(roleType);
         return res.json(demoTrips);
