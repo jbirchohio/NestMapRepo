@@ -1,10 +1,10 @@
-import OpenAI from "openai";
+import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
+import { calculateTripCost } from "./utils/tripCost";
+import { detectConflicts } from "./services/conflictDetector";
 import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "./predictiveAI";
 import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer";
 import { calculateCarbonFootprint } from "./carbonTracker";
 import { searchFlights, searchHotels } from "./bookingProviders";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 interface BusinessTripRequest {
   clientName: string;
@@ -67,8 +67,9 @@ export async function generateBusinessTrip(request: BusinessTripRequest): Promis
     console.log('Starting business trip generation for:', request.clientName, 'to', request.destination);
     
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: OPENAI_MODEL,
       messages: [
         {
           role: "system",

@@ -1,33 +1,6 @@
-import OpenAI from "openai";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-interface Activity {
-  id: number;
-  title: string;
-  time: string;
-  duration?: number;
-  locationName: string;
-  latitude?: string;
-  longitude?: string;
-  day: number;
-  priority?: 'high' | 'medium' | 'low';
-  category?: string;
-  notes?: string;
-}
-
-interface OptimizedSchedule {
-  originalActivities: Activity[];
-  optimizedActivities: Activity[];
-  improvements: {
-    timeSaved: number;
-    conflictsResolved: number;
-    efficiencyGain: number;
-    travelTimeReduced: number;
-  };
-  recommendations: string[];
-  conflicts: ConflictDetection[];
-}
+import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
+import { detectConflicts } from "./services/conflictDetector";
+import { Activity, OptimizedSchedule, ConflictDetection } from "../shared/interfaces";
 
 interface ConflictDetection {
   type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict';
@@ -55,9 +28,9 @@ export async function optimizeScheduleIntelligently(
   constraints: any = {}
 ): Promise<OptimizedSchedule> {
   try {
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: OPENAI_MODEL,
       messages: [
         {
           role: "system",
