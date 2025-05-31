@@ -99,14 +99,14 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     const avgActivitiesPerTrip = userTripActivities.length > 0 ? 
       Math.round(userTripActivities.reduce((sum, trip) => sum + trip.activityCount, 0) / userTripActivities.length) : 0;
 
-    // User's destinations only
+    // User's destinations only - check for city OR location data
     const destinationsResult = await db.select({
       city: trips.city,
       country: trips.country,
       tripCount: count()
     })
     .from(trips)
-    .where(and(userTripsFilter, sql`${trips.city} IS NOT NULL AND ${trips.country} IS NOT NULL`))
+    .where(and(userTripsFilter, sql`(${trips.city} IS NOT NULL OR ${trips.location} IS NOT NULL)`))
     .groupBy(trips.city, trips.country)
     .orderBy(desc(count()))
     .limit(10);
@@ -114,7 +114,7 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     const totalTripsWithDestination = destinationsResult.reduce((sum, dest) => sum + dest.tripCount, 0);
     const destinations = destinationsResult.map(dest => ({
       city: dest.city || 'Unknown',
-      country: dest.country || 'Unknown',
+      country: dest.country || 'USA', // Default to USA when country is null
       tripCount: dest.tripCount,
       percentage: totalTripsWithDestination > 0 ? Math.round((dest.tripCount / totalTripsWithDestination) * 100) : 0
     }));
@@ -146,21 +146,21 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       percentage: totalTripsForDuration > 0 ? Math.round((dur.count / totalTripsForDuration) * 100) : 0
     }));
 
-    // User's activity tags distribution
+    // User's activity types distribution (using activity titles as categories)
     const activityTagsResult = await db.select({
-      tag: activities.tag,
+      tag: sql`LOWER(${activities.title})`.as('tag'),
       count: count()
     })
     .from(activities)
     .innerJoin(trips, eq(activities.tripId, trips.id))
-    .where(and(userTripsFilter, sql`${activities.tag} IS NOT NULL`))
-    .groupBy(activities.tag)
+    .where(and(userTripsFilter, sql`${activities.title} IS NOT NULL`))
+    .groupBy(sql`LOWER(${activities.title})`)
     .orderBy(desc(count()))
     .limit(10);
 
     const totalActivitiesWithTags = activityTagsResult.reduce((sum, tag) => sum + tag.count, 0);
     const activityTags = activityTagsResult.map(tag => ({
-      tag: tag.tag || 'Untagged',
+      tag: (tag.tag || 'Untagged').toString(),
       count: tag.count,
       percentage: totalActivitiesWithTags > 0 ? Math.round((tag.count / totalActivitiesWithTags) * 100) : 0
     }));
