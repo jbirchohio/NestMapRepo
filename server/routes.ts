@@ -2923,8 +2923,8 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(404).json({ message: "User not found" });
       }
       
-      const userOrgId = req.user.organizationId || null;
-      if (req.user.role !== 'super_admin' && targetUser.organizationId !== userOrgId) {
+      const userOrgId = req.user.organization_id || null;
+      if (req.user.role !== 'super_admin' && targetUser.organization_id !== userOrgId) {
         return res.status(403).json({ message: "Access denied: Cannot view this user's corporate analytics" });
       }
 
@@ -2964,9 +2964,14 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Agency analytics endpoint
+  // Agency analytics endpoint - CRITICAL SECURITY: Organization-aware analytics isolation
   app.get("/api/analytics/agency", async (req: Request, res: Response) => {
     try {
+      // CRITICAL: Verify authentication first
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const userId = req.query.userId as string;
       
       // Handle demo users
@@ -2974,6 +2979,20 @@ Include realistic business activities, meeting times, dining recommendations, an
         const user = await storage.getUserByAuthId(userId);
         const demoAnalytics = await getDemoAnalytics(user?.organization_id || null, 'agency');
         return res.json(demoAnalytics);
+      }
+      
+      // CRITICAL: Only allow access to user's own organization data
+      if (userId) {
+        const userIdNum = parseInt(userId);
+        if (!isNaN(userIdNum)) {
+          const targetUser = await storage.getUser(userIdNum);
+          if (targetUser) {
+            const userOrgId = req.user.organization_id || null;
+            if (req.user.role !== 'super_admin' && targetUser.organization_id !== userOrgId) {
+              return res.status(403).json({ message: "Access denied: Cannot view this user's agency analytics" });
+            }
+          }
+        }
       }
       
       // For real users, return basic analytics
@@ -2992,6 +3011,16 @@ Include realistic business activities, meeting times, dining recommendations, an
 
   app.get("/api/analytics/export", async (req: Request, res: Response) => {
     try {
+      // CRITICAL: Verify authentication first
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // CRITICAL: Only admins and super_admins can export system-wide analytics
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Admin access required for analytics export" });
+      }
+      
       const analyticsData = await getAnalytics();
       const csvData = await exportAnalyticsCSV(analyticsData);
       
