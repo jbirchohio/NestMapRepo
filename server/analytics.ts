@@ -97,7 +97,6 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     .orderBy(desc(count()))
     .limit(10);
 
-    console.log('Destinations query result:', destinationsResult);
     const totalTripsWithDestination = destinationsResult.reduce((sum, dest) => sum + dest.tripCount, 0);
     const destinations = destinationsResult.map(dest => ({
       city: dest.city || 'Unknown',
@@ -105,16 +104,6 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       tripCount: dest.tripCount,
       percentage: totalTripsWithDestination > 0 ? Math.round((dest.tripCount / totalTripsWithDestination) * 100) : 0
     }));
-    console.log('Processed destinations:', destinations);
-
-    // Debug: Check trip dates
-    const tripDatesDebug = await db.select({
-      id: trips.id,
-      title: trips.title,
-      startDate: trips.startDate,
-      endDate: trips.endDate
-    }).from(trips).where(userTripsFilter).limit(5);
-    console.log('Trip dates debug:', tripDatesDebug);
 
     // User's trip duration distribution
     const tripDurationsResult = await db.select({
@@ -135,7 +124,6 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       ELSE 'Extended Trip (10+ days)'
     END`)
     .orderBy(desc(count()));
-    console.log('Trip durations result:', tripDurationsResult);
 
     const totalTripsForDuration = tripDurationsResult.reduce((sum, dur) => sum + dur.count, 0);
     const tripDurations = tripDurationsResult.map(dur => ({
