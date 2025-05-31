@@ -12,6 +12,7 @@ import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } 
 import { apiRateLimit, authRateLimit, organizationRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
 import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
+import { runMigrations } from "../scripts/migrate";
 
 const app = express();
 
