@@ -329,6 +329,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(201).json(mockTrip);
       }
       
+      // Handle guest mode trip creation (when userId is null)
+      if (!req.body.userId && req.body.userId !== 0) {
+        console.log("Guest mode trip creation detected");
+        // For guest mode, create a temporary trip with negative ID
+        const guestTrip = {
+          id: -Date.now(), // Negative timestamp as unique ID for guest trips
+          title: req.body.title,
+          startDate: req.body.startDate,
+          endDate: req.body.endDate,
+          city: req.body.city,
+          location: req.body.location,
+          hotel: req.body.hotel,
+          hotelLatitude: req.body.hotelLatitude,
+          hotelLongitude: req.body.hotelLongitude,
+          cityLatitude: req.body.cityLatitude,
+          cityLongitude: req.body.cityLongitude,
+          collaborators: req.body.collaborators || [],
+          isGuest: true,
+          created_at: new Date().toISOString()
+        };
+        console.log("Created guest trip:", guestTrip);
+        return res.status(201).json(guestTrip);
+      }
+      
       const tripData = insertTripSchema.parse(req.body);
       
       // Ensure the location fields are properly included
