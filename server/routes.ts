@@ -899,7 +899,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/notes", async (req: Request, res: Response) => {
+  app.post("/api/notes", 
+    validateContentLength(5 * 1024), // 5KB max
+    contentCreationRateLimit(),
+    validateAndSanitizeBody(z.object({
+      tripId: z.number(),
+      content: z.string().min(1).max(2000).refine(val => !/(<script|javascript:|on\w+\s*=)/gi.test(val), 'Invalid characters'),
+      title: z.string().max(200).optional()
+    })),
+    async (req: Request, res: Response) => {
     try {
       const noteData = insertNoteSchema.parse(req.body);
       const note = await storage.createNote(noteData);
@@ -972,12 +980,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ai/suggest-food", async (req: Request, res: Response) => {
+  app.post("/api/ai/suggest-food", 
+    validateContentLength(2 * 1024), // 2KB max
+    validateAndSanitizeBody(z.object({
+      location: z.string().min(1).max(200).refine(val => !/(<script|javascript:|on\w+\s*=)/gi.test(val), 'Invalid characters'),
+      foodType: z.string().max(100).optional()
+    })),
+    async (req: Request, res: Response) => {
     try {
       const { location, foodType } = req.body;
-      if (!location) {
-        return res.status(400).json({ message: "Location is required" });
-      }
       
       const suggestions = await openai.suggestNearbyFood(location, foodType);
       res.json(suggestions);
