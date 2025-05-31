@@ -7,6 +7,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
+import { injectOrganizationContext, enforceOrganizationQueries, auditDatabaseOperations, monitorDatabasePerformance } from "./middleware/database";
+import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
 
 const app = express();
 
@@ -64,6 +66,18 @@ app.use(memoryMonitor);
 
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
+
+// Apply API security middleware
+app.use(apiVersioning);
+app.use(authenticateApiKey);
+app.use(tieredRateLimit);
+app.use(monitorEndpoints);
+
+// Apply database security middleware
+app.use(monitorDatabasePerformance);
+app.use(injectOrganizationContext);
+app.use(enforceOrganizationQueries);
+app.use(auditDatabaseOperations);
 
 // Enhanced session security middleware for OAuth flow
 app.use(session({
