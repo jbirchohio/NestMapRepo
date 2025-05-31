@@ -29,9 +29,12 @@ export const BRANDING_CONFIG = {
   defaultPrimaryColor: process.env.PRIMARY_COLOR || '#3B82F6',
   defaultSecondaryColor: process.env.SECONDARY_COLOR || '#64748B',
   defaultAccentColor: process.env.ACCENT_COLOR || '#10B981',
-  companyUrl: process.env.COMPANY_URL || 'yourcompany.com',
-  supportEmail: process.env.SUPPORT_EMAIL || 'support@example.com',
-  logoUrl: process.env.LOGO_URL || null
+  companyUrl: process.env.COMPANY_URL || (process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : 'nestmap.app'),
+  supportEmail: process.env.SUPPORT_EMAIL || `support@${process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : 'nestmap.app'}`,
+  logoUrl: process.env.LOGO_URL || null,
+  privacyUrl: process.env.PRIVACY_URL,
+  termsUrl: process.env.TERMS_URL,
+  helpUrl: process.env.HELP_URL
 };
 
 // External services configuration

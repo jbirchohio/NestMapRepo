@@ -53,13 +53,6 @@ import {
 } from "./billing";
 import { generateBusinessTrip } from "./businessTripGenerator";
 import { searchFlights, searchHotels } from "./bookingProviders";
-import { 
-  organizationContextMiddleware, 
-  withOrganizationFilter, 
-  setOrganizationId, 
-  validateTripAccess, 
-  logOrganizationAccess 
-} from "./organizationContext";
 
 // Demo data for testing role-based features
 const getDemoTrips = (roleType: string) => {
@@ -2545,7 +2538,8 @@ If you have all required info, return JSON with:
         return null;
       }
     } catch (error) {
-      console.log("Amadeus authentication error:", error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      console.log("Amadeus authentication error:", errorMessage);
       return null;
     }
   }
