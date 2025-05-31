@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -216,6 +216,8 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
         title: "Trip created",
         description: "Your new trip has been created successfully.",
       });
+      // Invalidate trips cache to refresh the list
+      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS] });
       onSuccess(data.id);
     },
     onError: (error) => {
