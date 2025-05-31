@@ -67,9 +67,9 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Apply CORS configuration
 app.use(configureCORS);
 
-// Apply performance monitoring
-app.use(performanceMonitor);
-app.use(memoryMonitor);
+// Apply unified monitoring (replaces performance, memory, database, and endpoint monitoring)
+import { unifiedMonitoringMiddleware } from "./middleware/unified-monitoring";
+app.use(unifiedMonitoringMiddleware);
 
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
@@ -82,10 +82,6 @@ app.use('/api', organizationRateLimit); // Organization-tier based limiting
 // Apply API security middleware only to API routes
 app.use('/api', apiVersioning);
 app.use('/api', authenticateApiKey);
-app.use(monitorEndpoints);
-
-// Apply database security middleware
-app.use(monitorDatabasePerformance);
 
 // Apply organization scoping middleware for multi-tenant security
 app.use(resolveDomainOrganization);
