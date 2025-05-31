@@ -4502,6 +4502,41 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // Authentication session endpoint to populate session with user ID
+  app.post("/api/auth/session", async (req: Request, res: Response) => {
+    try {
+      const { authId } = req.body;
+      
+      if (!authId) {
+        return res.status(400).json({ message: "Auth ID is required" });
+      }
+      
+      // Get user from database by auth ID
+      const user = await storage.getUserByAuthId(authId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Set session data
+      (req.session as any).userId = user.id;
+      
+      console.log('Session created for user:', {
+        userId: user.id,
+        authId: authId,
+        username: user.username
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Session established",
+        userId: user.id 
+      });
+    } catch (error) {
+      console.error("Error establishing session:", error);
+      res.status(500).json({ message: "Failed to establish session" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

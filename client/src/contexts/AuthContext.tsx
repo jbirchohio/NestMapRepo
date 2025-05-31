@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('ACTUAL SIGN-IN USER:', { id: data.user?.id, email: data.user?.email });
       setUser(data.user);
       
-      // Get database user ID for the authenticated user
+      // Get database user ID and establish session for the authenticated user
       if (data.user) {
         try {
           const response = await fetch(`/api/users/auth/${data.user.id}`);
@@ -132,6 +132,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const dbUser = await response.json();
             console.log('Sign-in: Database user found:', dbUser);
             setUserId(dbUser.id);
+            
+            // Establish backend session
+            try {
+              const sessionResponse = await fetch('/api/auth/session', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ authId: data.user.id })
+              });
+              
+              if (sessionResponse.ok) {
+                const sessionData = await sessionResponse.json();
+                console.log('Backend session established:', sessionData);
+              } else {
+                console.warn('Failed to establish backend session');
+              }
+            } catch (sessionError) {
+              console.error('Error establishing backend session:', sessionError);
+            }
+            
             setAuthReady(true);
           } else {
             console.warn('Database user not found for auth user:', data.user.id);
