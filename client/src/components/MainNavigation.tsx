@@ -198,16 +198,16 @@ export default function MainNavigation() {
             </Link>
 
             {/* Main Navigation */}
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-1 flex-wrap">
               {navigationItems.filter(item => item.show).map((item) => (
                 <Link key={item.path} href={item.path}>
                   <Button
                     variant={item.active ? 'default' : 'ghost'}
                     size="sm"
-                    className={`flex items-center gap-2 transition-colors ${
+                    className={`flex items-center gap-2 transition-colors border ${
                       item.active 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                        : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' 
+                        : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 border-slate-200 dark:border-slate-700 hover:border-blue-300'
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
@@ -312,16 +312,16 @@ export default function MainNavigation() {
 
         {/* Mobile Navigation */}
         <div className="md:hidden pb-3">
-          <div className="flex gap-1 overflow-x-auto">
+          <div className="flex flex-wrap gap-1">
             {navigationItems.filter(item => item.show).map((item) => (
               <Link key={item.path} href={item.path}>
                 <Button
                   variant={item.active ? 'default' : 'ghost'}
                   size="sm"
-                  className={`flex items-center gap-2 whitespace-nowrap transition-colors ${
+                  className={`flex items-center gap-2 whitespace-nowrap transition-colors border ${
                     item.active 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                      : 'text-slate-700 dark:text-slate-200 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' 
+                      : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 border-slate-200 dark:border-slate-700 hover:border-blue-300'
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
