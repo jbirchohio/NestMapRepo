@@ -464,7 +464,7 @@ export default function useMapbox() {
           matched: fullAddress,
           coordinates: [longitude, latitude],
           allResults: data.features.slice(0, 5).map((f: any) => f.place_name),
-          score: scoredFeatures[0].score
+          score: scoredFeatures[0]?.score || 0
         });
         
         return { longitude, latitude, fullAddress };
