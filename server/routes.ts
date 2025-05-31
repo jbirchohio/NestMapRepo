@@ -2680,10 +2680,13 @@ Include realistic business activities, meeting times, dining recommendations, an
     try {
       console.log("Fetching analytics data...");
       const userId = req.query.userId as string;
+      console.log("Raw userId from query:", userId);
+      console.log("All query params:", req.query);
       
       if (userId) {
         // For specific user, get their personal analytics
         const userIdNum = parseInt(userId);
+        console.log("Parsed userIdNum:", userIdNum);
         if (isNaN(userIdNum)) {
           return res.status(400).json({ message: "Invalid user ID" });
         }
