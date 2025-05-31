@@ -93,13 +93,25 @@ export const tripValidationSchema = z.object({
     .max(2000, 'Description too long')
     .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in description')
     .optional(),
-  destination: z.string()
-    .min(1, 'Destination is required')
-    .max(100, 'Destination too long')
-    .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in destination'),
+  city: z.string()
+    .min(1, 'City is required')
+    .max(100, 'City name too long')
+    .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in city'),
   startDate: z.string().datetime('Invalid start date'),
   endDate: z.string().datetime('Invalid end date'),
-  budget: z.number().min(0, 'Budget must be positive').max(1000000, 'Budget too high').optional(),
+  userId: z.union([z.number(), z.string()]).optional(),
+  location: z.string().optional(),
+  collaborators: z.array(z.any()).optional(),
+  cityLatitude: z.string().optional(),
+  cityLongitude: z.string().optional(),
+  hotel: z.string().optional(),
+  hotelLatitude: z.string().optional(),
+  hotelLongitude: z.string().optional(),
+  tripType: z.string().optional(),
+  clientName: z.string().optional(),
+  projectType: z.string().optional(),
+  organization: z.string().optional(),
+  budget: z.union([z.number(), z.string()]).optional(),
   tags: z.array(z.string().max(50, 'Tag too long')).max(20, 'Too many tags').optional(),
   notes: z.string().max(5000, 'Notes too long').optional()
 });
