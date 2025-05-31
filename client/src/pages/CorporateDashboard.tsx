@@ -83,7 +83,7 @@ export default function CorporateDashboard() {
   ) : 0;
 
   // Count unique travelers by user ID (since trips are per user)
-  const uniqueTravelers = new Set(trips.map(trip => trip.user_id)).size;
+  const uniqueTravelers = new Set(trips.map(trip => trip.userId)).size;
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
@@ -199,8 +199,8 @@ export default function CorporateDashboard() {
                         </Badge>
                         <div className="text-xs text-muted-foreground mt-1">
                           {(() => {
-                            const startDate = trip.startDate || trip.start_date;
-                            const endDate = trip.endDate || trip.end_date;
+                            const startDate = trip.start_date;
+                            const endDate = trip.end_date;
                             
                             if (!startDate || !endDate) return <p>Dates not set</p>;
                             
