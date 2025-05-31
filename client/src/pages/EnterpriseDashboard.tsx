@@ -178,37 +178,37 @@ export default function EnterpriseDashboard() {
           <CardContent className="p-4 pt-0">
             <div className="grid grid-cols-2 gap-3">
               <Link href="/ai-generator">
-                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50 dark:border-blue-600 dark:hover:border-blue-400 dark:hover:bg-blue-900/20">
+                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground">
                   <div className="text-center">
-                    <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">AI Trip Generator</span>
+                    <Sparkles className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <span className="text-sm font-medium text-primary">AI Trip Generator</span>
                   </div>
                 </Button>
               </Link>
               
               <Link href="/proposal-center">
-                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-green-300 hover:border-green-500 hover:bg-green-50 dark:border-green-600 dark:hover:border-green-400 dark:hover:bg-green-900/20">
+                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground">
                   <div className="text-center">
-                    <FileText className="w-6 h-6 text-green-600 dark:text-green-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-green-600 dark:text-green-400">New Proposal</span>
+                    <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <span className="text-sm font-medium text-primary">New Proposal</span>
                   </div>
                 </Button>
               </Link>
               
               <Link href="/analytics">
-                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-purple-300 hover:border-purple-500 hover:bg-purple-50 dark:border-purple-600 dark:hover:border-purple-400 dark:hover:bg-purple-900/20">
+                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground">
                   <div className="text-center">
-                    <BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-purple-600 dark:text-purple-400">Analytics</span>
+                    <BarChart3 className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <span className="text-sm font-medium text-primary">Analytics</span>
                   </div>
                 </Button>
               </Link>
               
               <Link href="/team">
-                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-orange-300 hover:border-orange-500 hover:bg-orange-50 dark:border-orange-600 dark:hover:border-orange-400 dark:hover:bg-orange-900/20">
+                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground">
                   <div className="text-center">
-                    <Building2 className="w-6 h-6 text-orange-600 dark:text-orange-400 mx-auto mb-2" />
-                    <span className="text-sm font-medium text-orange-600 dark:text-orange-400">Team Management</span>
+                    <Building2 className="w-6 h-6 text-primary mx-auto mb-2" />
+                    <span className="text-sm font-medium text-primary">Team Management</span>
                   </div>
                 </Button>
               </Link>
