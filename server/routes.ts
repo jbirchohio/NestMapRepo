@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from "express";
-
+import { endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
 
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -2759,7 +2759,7 @@ Include realistic business activities, meeting times, dining recommendations, an
   }
 
   // Analytics endpoints - CRITICAL SECURITY: Organization-aware analytics isolation
-  app.get("/api/analytics", async (req: Request, res: Response) => {
+  app.get("/api/analytics", endpointRateLimit('analytics'), async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication first
       if (!req.user) {
