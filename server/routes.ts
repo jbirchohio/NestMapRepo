@@ -3769,7 +3769,13 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Request SSL certificate for domain
+  // ACME challenge endpoint for SSL certificate validation
+  app.get("/.well-known/acme-challenge/:token", async (req: Request, res: Response) => {
+    const { serveACMEChallenge } = await import('./acmeChallenge');
+    await serveACMEChallenge(req, res);
+  });
+
+  // Request SSL certificate for domain with real ACME validation
   app.post("/api/admin/domains/:id/ssl-certificate", async (req: Request, res: Response) => {
     try {
       if (!req.user || req.user.role !== 'admin') {
@@ -3791,26 +3797,18 @@ Include realistic business activities, meeting times, dining recommendations, an
       }
 
       const { SSLManager } = await import('./sslManager');
+      const { createACMEValidationCallback } = await import('./acmeChallenge');
+      
       const sslManager = new SSLManager(false); // Use staging for development
 
       // Create ACME account if needed
-      const account = await sslManager.createAccount('admin@nestmap.com'); // Use your admin email
+      const account = await sslManager.createAccount('admin@nestmap.com');
 
-      // Request certificate with HTTP-01 challenge validation
+      // Request certificate with real ACME challenge validation
       const certificate = await sslManager.requestCertificate(
         domain.domain,
         account,
-        async (token: string, keyAuthorization: string) => {
-          // Store challenge response for domain validation
-          // In production, you'd serve this at /.well-known/acme-challenge/${token}
-          console.log(`ACME Challenge for ${domain.domain}:`);
-          console.log(`Token: ${token}`);
-          console.log(`Key Authorization: ${keyAuthorization}`);
-          console.log(`Serve at: http://${domain.domain}/.well-known/acme-challenge/${token}`);
-          
-          // For now, return true - in production implement proper challenge serving
-          return true;
-        }
+        createACMEValidationCallback(domain.domain)
       );
 
       // Store certificate
@@ -3833,6 +3831,23 @@ Include realistic business activities, meeting times, dining recommendations, an
     } catch (error) {
       console.error("Error requesting SSL certificate:", error);
       res.status(500).json({ error: `Failed to request SSL certificate: ${error instanceof Error ? error.message : 'Unknown error'}` });
+    }
+  });
+
+  // Get ACME challenge statistics (for monitoring)
+  app.get("/api/admin/acme-stats", async (req: Request, res: Response) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const { getChallengeStats } = await import('./acmeChallenge');
+      const stats = getChallengeStats();
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting ACME stats:", error);
+      res.status(500).json({ error: "Failed to get ACME statistics" });
     }
   });
 
