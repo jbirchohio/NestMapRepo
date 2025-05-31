@@ -46,36 +46,33 @@ button {
   @apply transition-all duration-200;
 }
 
-/* Force button text visibility in all variants */
-button[class*="bg-primary"] {
-  color: hsl(var(--primary-foreground)) !important;
+/* Force consistent navigation-style button colors */
+button[class*="bg-blue-600"] {
+  background-color: rgb(37 99 235) !important;
+  color: white !important;
+  border-color: rgb(37 99 235) !important;
 }
 
-button[class*="bg-destructive"] {
-  color: hsl(var(--destructive-foreground)) !important;
+button[class*="bg-blue-600"]:hover {
+  background-color: rgb(29 78 216) !important;
 }
 
-button[class*="bg-secondary"] {
-  color: hsl(var(--secondary-foreground)) !important;
+button[class*="bg-red-600"] {
+  background-color: rgb(220 38 38) !important;
+  color: white !important;
+  border-color: rgb(220 38 38) !important;
 }
 
-/* Ensure outline buttons have proper contrast */
-button[class*="border-primary"] {
-  color: hsl(var(--primary)) !important;
+button[class*="bg-red-600"]:hover {
+  background-color: rgb(185 28 28) !important;
 }
 
-button[class*="border-primary"]:hover {
-  color: hsl(var(--primary-foreground)) !important;
+button[class*="text-slate-600"] {
+  color: rgb(71 85 105) !important;
 }
 
-/* Fix ghost button text visibility */
-button[class*="text-foreground"] {
-  color: hsl(var(--foreground)) !important;
-}
-
-/* Link button visibility */
-button[class*="text-primary"] {
-  color: hsl(var(--primary)) !important;
+.dark button[class*="text-slate-300"] {
+  color: rgb(203 213 225) !important;
 }
 
 /* Mobile-specific button fixes - prevent white buttons on touch devices */

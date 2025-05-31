@@ -9,15 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md border border-primary/20 shadow-sm",
+        default: "bg-blue-600 text-white hover:bg-blue-700 border border-blue-600 shadow-sm transition-colors min-h-[2.5rem]",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-md border border-destructive/20 shadow-sm",
+          "bg-red-600 text-white hover:bg-red-700 border border-red-600 shadow-sm transition-colors",
         outline:
-          "border-2 border-primary bg-background text-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md transition-all",
+          "border-2 border-slate-200 dark:border-slate-700 bg-background text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 hover:border-blue-300 transition-colors",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:shadow-sm border border-secondary/50 shadow-sm",
-        ghost: "text-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm border border-transparent hover:border-border/50",
-        link: "text-primary underline-offset-4 hover:underline hover:text-primary/80 bg-transparent",
+          "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-sm transition-colors",
+        ghost: "text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-colors",
+        link: "text-blue-600 underline-offset-4 hover:underline hover:text-blue-700 bg-transparent",
       },
       size: {
         default: "h-10 px-4 py-2",
