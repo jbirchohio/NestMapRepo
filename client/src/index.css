@@ -4,40 +4,25 @@
 
 /* Professional Blue & Enterprise Theme */
 :root {
-  /* Base colors */
-  --primary: 217 91% 60%; /* Cerulean Blue: #3B82F6 */
-  --primary-foreground: 0 0% 98%; /* White text on primary */
-  
-  --background: 0 0% 100%; /* Pure White */
-  --foreground: 222 84% 5%; /* Deep Slate: #0F172A */
-  
-  --muted: 210 40% 98%; /* Light Blue-Gray */
-  --muted-foreground: 215 16% 47%; /* Slate Gray */
-  
-  --card: 0 0% 100%; /* White cards */
-  --card-foreground: 222 84% 5%; /* Deep Slate */
-  
-  --accent: 210 40% 96%; /* Very Light Blue-Gray accent */
-  --accent-foreground: 222 47% 11%; /* Dark Slate for readability */
-  
-  --border: 214 32% 80%; /* More visible border */
-  
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 84% 5%;
-  
-  /* Status colors */
-  --success: 142 76% 36%; /* Professional Green */
-  --warning: 38 92% 50%; /* Keep amber for warnings */
-  --destructive: 0 84% 60%; /* Professional Red */
-  --destructive-foreground: 0 0% 98%;
-  
-  /* Secondary color - Steel Blue */
-  --secondary: 214 32% 91%; /* Light secondary for better visibility */
-  --secondary-foreground: 222 84% 5%; /* Dark text for contrast */
-  
-  /* Input and focus states */
-  --input: 214 32% 91%;
-  --ring: 217 91% 60%; /* Cerulean Blue focus ring */
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%; /* Blue primary */
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%; /* Blue ring */
   --radius: 0.5rem;
   
   /* Tag colors - updated to match professional blue theme */
@@ -118,82 +103,7 @@
   }
 }
 
-/* Enhanced visibility for interactive elements */
-button {
-  @apply shadow-sm border border-gray-200;
-}
-
-button:not(.ghost):not(.link) {
-  @apply bg-white border-gray-300;
-}
-
-button[data-variant="default"], button[data-variant="primary"] {
-  @apply bg-blue-600 text-white border-blue-600 hover:bg-blue-700;
-}
-
-button[data-variant="secondary"] {
-  @apply bg-gray-100 text-gray-900 border-gray-300 hover:bg-gray-200;
-}
-
-button[data-variant="outline"] {
-  @apply bg-white text-gray-900 border-gray-300 hover:bg-gray-50;
-}
-
-button[data-variant="ghost"] {
-  @apply border-transparent hover:bg-gray-100;
-}
-
-/* Switch/Toggle visibility improvements */
-button[role="switch"] {
-  @apply border-2 transition-all duration-200;
-}
-
-button[role="switch"][data-state="checked"] {
-  @apply bg-blue-600 border-blue-600;
-}
-
-button[role="switch"][data-state="unchecked"] {
-  @apply bg-gray-200 border-gray-300;
-}
-
-button[role="switch"] span {
-  @apply shadow-sm;
-}
-
-/* Select dropdown improvements */
-.select-trigger, [data-radix-select-trigger] {
-  @apply border-2 border-gray-300 shadow-sm bg-white;
-}
-
-/* Badge visibility improvements */
-.badge, [data-badge] {
-  @apply border shadow-sm;
-}
-
-/* Input field improvements */
-input[type="text"], 
-input[type="email"], 
-input[type="password"], 
-input[type="search"],
-textarea,
-select {
-  @apply border-2 border-gray-300 shadow-sm bg-white;
-}
-
-input:focus, 
-textarea:focus, 
-select:focus {
-  @apply border-blue-500 ring-2 ring-blue-200 ring-opacity-50;
-}
-
-/* Action button improvements specifically for TeamManagement */
-.team-action-btn {
-  @apply border border-gray-300 bg-white hover:bg-gray-50 text-gray-700;
-}
-
-.team-action-btn:hover {
-  @apply border-gray-400;
-}
+/* Professional blue theme with proper visibility */
 
 /* Mobile responsive adjustments */
 @media (max-width: 767px) {
