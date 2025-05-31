@@ -4526,10 +4526,18 @@ Include realistic business activities, meeting times, dining recommendations, an
         username: user.username
       });
       
-      res.json({ 
-        success: true, 
-        message: "Session established",
-        userId: user.id 
+      // Save session and send response
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: "Failed to save session" });
+        }
+        
+        res.json({ 
+          success: true, 
+          message: "Session established",
+          userId: user.id 
+        });
       });
     } catch (error) {
       console.error("Error establishing session:", error);
