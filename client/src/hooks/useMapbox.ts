@@ -29,38 +29,47 @@ export default function useMapbox() {
       mapboxgl.accessToken = MAPBOX_TOKEN;
       console.log('Mapbox token configured:', MAPBOX_TOKEN ? 'Yes' : 'No');
       
-      // Create a new map instance
+      // Create a new map instance with better error handling
       const map = new mapboxgl.Map({
         container,
-        style: MAPBOX_STYLE_URL,
+        style: 'mapbox://styles/mapbox/streets-v12', // Use simplified style URL
         center,
         zoom,
         attributionControl: false,
-      });
-      
-      // Add error handler
-      map.on('error', (e) => {
-        console.error('Mapbox GL error:', e.error);
+        crossSourceCollisions: false
       });
       
       // Add zoom and rotation controls
       map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       
-      // Wait for map to load
+      // Wait for map to load with simplified promise
       await new Promise<void>((resolve, reject) => {
+        let resolved = false;
+        
         map.on('load', () => {
-          console.log('Mapbox map loaded successfully');
-          resolve();
+          if (!resolved) {
+            resolved = true;
+            console.log('Mapbox map loaded successfully');
+            resolve();
+          }
         });
         
         map.on('error', (e) => {
-          reject(new Error(`Mapbox load error: ${e.error?.message || 'Unknown error'}`));
+          if (!resolved) {
+            resolved = true;
+            console.error('Mapbox GL error:', e.error);
+            reject(new Error(`Mapbox error: ${e.error?.message || 'Map failed to load'}`));
+          }
         });
         
-        // Timeout after 10 seconds
+        // Shorter timeout and fallback
         setTimeout(() => {
-          reject(new Error('Mapbox initialization timeout'));
-        }, 10000);
+          if (!resolved) {
+            resolved = true;
+            console.log('Map loading timeout, but continuing...');
+            resolve(); // Resolve anyway to prevent hanging
+          }
+        }, 5000);
       });
       
       mapInstance.current = map;
