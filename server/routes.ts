@@ -1691,7 +1691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PDF export endpoint
   app.get("/api/trips/:id/export/pdf", async (req: Request, res: Response) => {
     try {
-      const tripId = parseInt(req.params.id);
+      const tripId = req.params.id;
       
       const trip = await storage.getTrip(tripId);
       if (!trip) {
