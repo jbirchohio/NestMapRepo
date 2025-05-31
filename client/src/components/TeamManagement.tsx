@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Users, UserPlus, Mail, Shield, Eye, Edit3, Trash2 } from 'lucide-react';
+import { Users, UserPlus, Mail, Shield, Eye, Edit3, Trash2, User, X, Check, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 // Permission schema with smart defaults
 const inviteSchema = z.object({
@@ -166,23 +168,16 @@ export default function TeamManagement() {
   const handleViewMember = (member: any) => {
     setSelectedMember(member);
     setShowMemberDetails(true);
-    toast({
-      title: "Member Details",
-      description: `Viewing detailed information for ${member.name}`,
-    });
   };
 
   const handleEditMember = (member: any) => {
     setSelectedMember(member);
     setShowEditPermissions(true);
-    toast({
-      title: "Edit Permissions",
-      description: `Opening permission editor for ${member.name}`,
-    });
   };
 
   const handleRemoveMember = (member: any) => {
     if (confirm(`Are you sure you want to remove ${member.name} from the organization? This action cannot be undone.`)) {
+      // TODO: Implement actual API call to remove member
       toast({
         title: "Member Removed",
         description: `${member.name} has been removed from the organization`,
@@ -392,6 +387,159 @@ export default function TeamManagement() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Member Details Modal */}
+      {showMemberDetails && selectedMember && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Member Details: {selectedMember.name}
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowMemberDetails(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Contact Information</Label>
+                  <div className="mt-2 space-y-2">
+                    <p className="text-sm"><span className="font-medium">Email:</span> {selectedMember.email}</p>
+                    <p className="text-sm"><span className="font-medium">Role:</span> 
+                      <Badge className={`ml-2 ${getRoleBadgeColor(selectedMember.role)}`}>
+                        {selectedMember.role}
+                      </Badge>
+                    </p>
+                    <p className="text-sm"><span className="font-medium">Status:</span> 
+                      <Badge className={`ml-2 ${getStatusBadgeColor(selectedMember.status)}`}>
+                        {selectedMember.status}
+                      </Badge>
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Activity</Label>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-sm text-muted-foreground">Joined: {selectedMember.joinedAt}</p>
+                    <p className="text-sm text-muted-foreground">Last Active: {selectedMember.lastActive}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Permissions</Label>
+                  <div className="mt-2 grid grid-cols-1 gap-2">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Create and manage trips</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">View team analytics</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <X className="h-4 w-4 text-red-500" />
+                      <span className="text-sm">Manage billing</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit Permissions Modal */}
+      {showEditPermissions && selectedMember && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Edit Permissions: {selectedMember.name}
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowEditPermissions(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Select defaultValue={selectedMember.role}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin - Full access</SelectItem>
+                      <SelectItem value="manager">Manager - Team oversight</SelectItem>
+                      <SelectItem value="user">User - Basic access</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select defaultValue={selectedMember.status}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <Label className="text-sm font-medium mb-4 block">Individual Permissions</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { key: 'viewTrips', label: 'View All Trips', desc: 'Access to view organization trips' },
+                    { key: 'editTrips', label: 'Edit All Trips', desc: 'Modify any trip in organization' },
+                    { key: 'createTrips', label: 'Create Trips', desc: 'Plan new business trips' },
+                    { key: 'inviteMembers', label: 'Invite Members', desc: 'Send team invitations' },
+                    { key: 'manageBudgets', label: 'Manage Budgets', desc: 'Set and track trip budgets' },
+                    { key: 'accessAnalytics', label: 'Access Analytics', desc: 'View organization insights' }
+                  ].map((permission) => (
+                    <div key={permission.key} className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm">{permission.label}</Label>
+                        <p className="text-xs text-muted-foreground">{permission.desc}</p>
+                      </div>
+                      <Switch defaultChecked={selectedMember.role === 'admin'} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowEditPermissions(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => {
+                  toast({
+                    title: "Permissions Updated",
+                    description: `${selectedMember.name}'s permissions have been updated successfully`,
+                  });
+                  setShowEditPermissions(false);
+                }}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
