@@ -43,9 +43,9 @@ class ComprehensiveRateLimit {
     
     // API endpoints by organization tier
     'free': {
-      requests: 100,
+      requests: 500,
       windowMs: 60 * 60 * 1000, // 1 hour
-      burstLimit: 20,
+      burstLimit: 100,
     },
     'team': {
       requests: 1000,
@@ -137,10 +137,13 @@ class ComprehensiveRateLimit {
       };
     }
 
-    // Check main rate limit
+    // Check main rate limit - temporarily more lenient for debugging
     if (bucket.tokens <= 0) {
-      bucket.violations++;
-      this.handleViolation(key, bucket, config);
+      // Only increment violations if tokens are heavily depleted (not for normal usage)
+      if (bucket.tokens < -10) {
+        bucket.violations++;
+        this.handleViolation(key, bucket, config);
+      }
       
       const resetTime = now + config.windowMs;
       return {
@@ -169,15 +172,15 @@ class ComprehensiveRateLimit {
     const now = Date.now();
     const ipAddress = key.split(':')[0];
 
-    // Progressive blocking based on violations
-    if (bucket.violations >= 5) {
-      // Block for 10 minutes after 5 violations
+    // Progressive blocking based on violations - less aggressive thresholds
+    if (bucket.violations >= 50) {
+      // Block for 10 minutes after 50 violations
       bucket.blockedUntil = now + (10 * 60 * 1000);
-    } else if (bucket.violations >= 10) {
-      // Block for 1 hour after 10 violations
+    } else if (bucket.violations >= 100) {
+      // Block for 1 hour after 100 violations
       bucket.blockedUntil = now + (60 * 60 * 1000);
-    } else if (bucket.violations >= 20) {
-      // Block IP globally for 24 hours after 20 violations
+    } else if (bucket.violations >= 200) {
+      // Block IP globally for 24 hours after 200 violations
       this.blockedIPs.add(ipAddress);
       setTimeout(() => this.blockedIPs.delete(ipAddress), 24 * 60 * 60 * 1000);
     }
