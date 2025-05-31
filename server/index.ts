@@ -68,9 +68,8 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(configureCORS);
 
 // Apply performance monitoring
-// Temporarily disabled to prevent header conflicts causing server crashes
-// app.use(performanceMonitor);
-// app.use(memoryMonitor);
+app.use(performanceMonitor);
+app.use(memoryMonitor);
 
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
@@ -86,8 +85,7 @@ app.use('/api', authenticateApiKey);
 app.use(monitorEndpoints);
 
 // Apply database security middleware
-// Temporarily disabled to prevent header conflicts causing server crashes
-// app.use(monitorDatabasePerformance);
+app.use(monitorDatabasePerformance);
 
 // Apply organization scoping middleware for multi-tenant security
 app.use(resolveDomainOrganization);
