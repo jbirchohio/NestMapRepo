@@ -167,10 +167,10 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     );
 
     const tripCompletionRate = totalTripsResult[0]?.count > 0 ? 
-      Math.round((completedTripsResult[0]?.count / totalTripsResult[0]?.count) * 100) : 0;
+      Math.round(((completedTripsResult[0]?.count || 0) / totalTripsResult[0]?.count) * 100) : 0;
 
     const activityCompletionRate = totalTripsResult[0]?.count > 0 ? 
-      Math.round((tripsWithCompletedActivitiesResult[0]?.count / totalTripsResult[0]?.count) * 100) : 0;
+      Math.round(((tripsWithCompletedActivitiesResult[0]?.count || 0) / totalTripsResult[0]?.count) * 100) : 0;
 
     // Recent activity for user only
     const sevenDaysAgo = new Date();

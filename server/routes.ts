@@ -1216,9 +1216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         destination,
         departureDate,
         returnDate,
-        passengers,
-        cabin: cabin || 'economy',
-        directFlights
+        passengers
       });
       
       res.json({ flights });
@@ -1243,9 +1241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         checkIn,
         checkOut,
         guests,
-        rooms: rooms || 1,
-        starRating,
-        amenities
+        rooms: rooms || 1
       });
       
       res.json({ hotels });
@@ -1265,7 +1261,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { createBooking } = await import('./bookingProviders');
-      const booking = await createBooking(type, bookingData);
+      const booking = await createBooking({
+        type,
+        itemId: bookingData.itemId || 'default',
+        userDetails: bookingData
+      });
       
       // Save booking to trip if tripId provided
       if (tripId) {

@@ -158,8 +158,7 @@ async function enhanceTripWithRealData(aiTrip: any, request: BusinessTripRequest
         destination: request.destination,
         departureDate: request.startDate,
         returnDate: request.endDate,
-        passengers: request.groupSize,
-        cabin: request.preferences.accommodationType === 'luxury' ? 'business' : 'economy'
+        passengers: request.groupSize
       });
       
       if (flightResults && flightResults.length > 0) {
@@ -181,8 +180,7 @@ async function enhanceTripWithRealData(aiTrip: any, request: BusinessTripRequest
         checkIn: request.startDate,
         checkOut: request.endDate,
         guests: request.groupSize,
-        rooms: Math.ceil(request.groupSize / 2),
-        starRating: request.preferences.accommodationType === 'luxury' ? 5 : 4
+        rooms: Math.ceil(request.groupSize / 2)
       });
       
       if (hotelResults && hotelResults.length > 0) {
