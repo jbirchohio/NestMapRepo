@@ -175,7 +175,7 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
 
 // Session-based authentication middleware to populate req.user
 app.use(async (req: Request, res: Response, next: NextFunction) => {
-  // Skip for non-API routes and specific auth endpoints
+  // Skip for non-API routes and specific auth endpoints (but not /api/auth/me)
   if (!req.path.startsWith('/api') || 
       req.path === '/api/auth/login' || 
       req.path === '/api/auth/register' ||
