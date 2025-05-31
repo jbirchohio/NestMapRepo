@@ -1,4 +1,20 @@
 import type { Express, Request, Response } from "express";
+
+// Extend Express Request interface for Passport.js
+declare global {
+  namespace Express {
+    interface Request {
+      isAuthenticated(): boolean;
+      user?: {
+        auth_id: string;
+        id: number;
+        organizationId?: number | null;
+        role?: string;
+        [key: string]: any;
+      };
+    }
+  }
+}
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -83,90 +99,7 @@ const getDemoTrips = (roleType: string) => {
   return baseTrips;
 };
 
-const getDemoAnalytics = async (orgId: number | null, roleType: string) => {
-  // Try to fetch organization-specific demo data
-  if (orgId) {
-    try {
-      const orgDemoData = await db.select()
-        .from(organizations)
-        .where(eq(organizations.id, orgId))
-        .limit(1);
-      
-      if (orgDemoData.length > 0) {
-        const org = orgDemoData[0];
-        // Generate realistic demo data based on organization size and type
-        const baseMultiplier = Math.max(1, Math.floor((org.employee_count || 50) / 50));
-        
-        if (roleType === 'corporate') {
-          return {
-            totalTrips: 15 * baseMultiplier,
-            totalEmployees: org.employee_count || 156,
-            averageTripCost: 2500 + (baseMultiplier * 350),
-            totalBudget: (15 * baseMultiplier * (2500 + baseMultiplier * 350)),
-            pendingApprovals: Math.min(8, baseMultiplier + 1),
-            completedTrips: Math.floor((15 * baseMultiplier) * 0.8),
-            monthlySpend: [
-              { month: 'Jan', amount: 8000 * baseMultiplier },
-              { month: 'Feb', amount: 12000 * baseMultiplier },
-              { month: 'Mar', amount: 15000 * baseMultiplier },
-              { month: 'Apr', amount: 18000 * baseMultiplier }
-            ]
-          };
-        } else {
-          return {
-            totalProposals: 25 * baseMultiplier,
-            totalClients: 20 * baseMultiplier,
-            winRate: Math.min(85, 60 + (baseMultiplier * 5)),
-            totalRevenue: 120000 * baseMultiplier,
-            pendingProposals: Math.min(10, baseMultiplier + 3),
-            averageDealSize: 3500 + (baseMultiplier * 400),
-            monthlyRevenue: [
-              { month: 'Jan', amount: 22000 * baseMultiplier },
-              { month: 'Feb', amount: 28000 * baseMultiplier },
-              { month: 'Mar', amount: 35000 * baseMultiplier },
-              { month: 'Apr', amount: 32000 * baseMultiplier }
-            ]
-          };
-        }
-      }
-    } catch (error) {
-      console.warn('Could not fetch org demo data, using defaults');
-    }
-  }
 
-  // Fallback to default demo data
-  if (roleType === 'corporate') {
-    return {
-      totalTrips: 24,
-      totalEmployees: 156,
-      averageTripCost: 2850,
-      totalBudget: 68400,
-      pendingApprovals: 3,
-      completedTrips: 21,
-      monthlySpend: [
-        { month: 'Jan', amount: 12500 },
-        { month: 'Feb', amount: 15800 },
-        { month: 'Mar', amount: 18200 },
-        { month: 'Apr', amount: 22100 }
-      ]
-    };
-  } else {
-    return {
-      totalProposals: 48,
-      totalClients: 32,
-      winRate: 68,
-      totalRevenue: 145600,
-      pendingProposals: 7,
-      averageDealSize: 3900,
-      monthlyRevenue: [
-        { month: 'Jan', amount: 28500 },
-        { month: 'Feb', amount: 35800 },
-        { month: 'Mar', amount: 42200 },
-        { month: 'Apr', amount: 39100 }
-      ]
-    };
-  }
-};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // TODO: Re-enable organization context middleware after fixing compatibility issues
@@ -2932,7 +2865,7 @@ Include realistic business activities, meeting times, dining recommendations, an
       const trips = await storage.getUserTrips(userIdNum);
       
       const totalTrips = trips.length;
-      const totalBudget = trips.reduce((sum, trip) => sum + (trip.budget || 0), 0);
+      const totalBudget = trips.reduce((sum, trip) => sum + (typeof trip.budget === 'number' ? trip.budget : 0), 0);
       
       const avgDuration = trips.length > 0 ? Math.round(
         trips.reduce((sum, trip) => {
