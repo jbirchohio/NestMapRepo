@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import AppShell from "@/components/AppShell";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import MapView from "@/components/MapView";
@@ -249,26 +250,20 @@ export default function TripPlanner() {
     <AppShell trip={trip} onOpenShare={handleOpenShare}>
       {/* Mobile view toggle buttons */}
       <div className="md:hidden flex border rounded-md overflow-hidden shadow-sm m-2 relative z-50 bg-white dark:bg-[hsl(var(--card))]">
-        <button
+        <Button
           onClick={() => setMobileView('itinerary')}
-          className={`flex-1 py-3 px-4 font-medium ${
-            mobileView === 'itinerary' 
-              ? 'bg-[hsl(var(--primary))] text-white' 
-              : 'bg-white dark:bg-[hsl(var(--card))]'
-          }`}
+          variant={mobileView === 'itinerary' ? 'default' : 'outline'}
+          className="flex-1 py-3 px-4 font-medium h-auto rounded-r-none"
         >
           Itinerary
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => setMobileView('map')}
-          className={`flex-1 py-3 px-4 font-medium ${
-            mobileView === 'map' 
-              ? 'bg-[hsl(var(--primary))] text-white' 
-              : 'bg-white dark:bg-[hsl(var(--card))]'
-          }`}
+          variant={mobileView === 'map' ? 'default' : 'outline'}
+          className="flex-1 py-3 px-4 font-medium h-auto rounded-l-none"
         >
           Map
-        </button>
+        </Button>
       </div>
 
       {/* Desktop view: side-by-side layout */}

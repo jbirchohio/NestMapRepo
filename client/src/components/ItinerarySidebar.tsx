@@ -254,17 +254,14 @@ export default function ItinerarySidebar({
             <div className="mb-4">
               <div className="grid grid-cols-2 gap-2">
                 {trip.days?.map((day, index) => (
-                  <button
+                  <Button
                     key={day.toISOString()}
-                    className={`px-3 py-2 ${
-                      day.toDateString() === activeDay.toDateString() 
-                        ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' 
-                        : 'bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]'
-                    } rounded-md text-sm md:text-base`}
+                    variant={day.toDateString() === activeDay.toDateString() ? "default" : "outline"}
+                    className="px-3 py-2 text-sm md:text-base h-auto"
                     onClick={() => onChangeDayClick(day)}
                   >
                     Day {index + 1} - {formatDate(day)}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

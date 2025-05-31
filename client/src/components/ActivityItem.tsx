@@ -100,21 +100,25 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
       description: "Are you sure you want to delete this activity?",
       action: (
         <div className="flex gap-2">
-          <button 
+          <Button 
             onClick={() => {
               deleteActivity.mutate();
               dismiss();
             }}
-            className="bg-[hsl(var(--destructive))] text-white px-3 py-1 rounded text-xs"
+            variant="destructive"
+            size="sm"
+            className="h-8 px-3 text-xs"
           >
             Delete
-          </button>
-          <button 
+          </Button>
+          <Button 
             onClick={() => dismiss()}
-            className="bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] px-3 py-1 rounded text-xs"
+            variant="outline"
+            size="sm"
+            className="h-8 px-3 text-xs"
           >
             Cancel
-          </button>
+          </Button>
         </div>
       ),
     });

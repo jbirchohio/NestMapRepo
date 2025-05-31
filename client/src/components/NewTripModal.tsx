@@ -480,10 +480,11 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
               {hotelResults.length > 0 && (
                 <div className="mt-2 max-h-40 overflow-y-auto border rounded-md">
                   {hotelResults.map((hotel, index) => (
-                    <button
+                    <Button
                       key={index}
                       type="button"
-                      className="w-full p-2 text-left hover:bg-[hsl(var(--muted))] border-b last:border-b-0"
+                      variant="ghost"
+                      className="w-full p-2 h-auto text-left justify-start border-b last:border-b-0 rounded-none"
                       onClick={() => {
                         setValue("hotel", hotel.name, { shouldValidate: true });
                         setValue("hotelLatitude", hotel.latitude);
@@ -498,12 +499,12 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                     >
                       <div className="font-medium">{hotel.name}</div>
                       {hotel.address && (
-                        <div className="text-xs text-[hsl(var(--muted-foreground))]">{hotel.address}</div>
+                        <div className="text-xs text-muted-foreground">{hotel.address}</div>
                       )}
                       {hotel.description && (
-                        <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">{hotel.description}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{hotel.description}</div>
                       )}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
