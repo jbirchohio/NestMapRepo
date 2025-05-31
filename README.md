@@ -1,6 +1,6 @@
 # NestMap - Enterprise Travel Management Platform
 
-A comprehensive AI-powered travel planning platform designed for businesses, teams, and enterprise organizations. Built with modern web technologies, enterprise-grade security, and scalable B2B architecture.
+A comprehensive AI-powered travel planning platform designed for businesses, teams, and enterprise organizations. Built with modern web technologies, enterprise-grade security, and scalable B2B architecture with complete white-label customization capabilities.
 
 ## 🏢 Enterprise Features
 
@@ -33,6 +33,14 @@ A comprehensive AI-powered travel planning platform designed for businesses, tea
 - **Team Invitations**: Professional onboarding emails with company branding
 - **Welcome Sequences**: Automated user onboarding for new team members
 - **Notification System**: Customizable alerts and updates
+
+### 🎨 White-Label Customization
+- **Complete Branding Control**: Custom app names, colors, and logos
+- **Domain-Based Configuration**: Different branding per organization domain
+- **Environment-Based Setup**: Easy deployment with custom branding
+- **Dynamic Analytics**: Demo data scales based on organization size and type
+- **Configurable URLs**: All booking and support links are customizable
+- **Professional Interface**: Enterprise-ready UI with your brand identity
 
 ## 🌟 Core Travel Features
 
