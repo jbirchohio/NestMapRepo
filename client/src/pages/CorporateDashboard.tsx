@@ -59,19 +59,20 @@ export default function CorporateDashboard() {
   });
 
   const recentTrips = trips.slice(0, 3);
-  const upcomingTrips = trips.filter(trip => new Date(trip.start_date) > new Date()).slice(0, 3);
+  const upcomingTrips = trips.filter(trip => new Date(trip.startDate) > new Date()).slice(0, 3);
 
   // Calculate metrics from actual trip data
   const totalTrips = trips.length;
   
   const totalBudget = trips.reduce((sum, trip) => {
-    return sum + (trip.budget || 0);
+    const budget = trip.budget ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')) : 0;
+    return sum + (isNaN(budget) ? 0 : budget);
   }, 0);
   
   const avgTripDuration = trips.length > 0 ? Math.round(
     trips.reduce((sum, trip) => {
-      const startDate = trip.start_date;
-      const endDate = trip.end_date;
+      const startDate = trip.startDate;
+      const endDate = trip.endDate;
       if (!startDate || !endDate) return sum;
       
       const start = new Date(startDate);
@@ -191,17 +192,17 @@ export default function CorporateDashboard() {
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <p className="font-medium">{trip.title}</p>
-                          <p className="text-sm text-muted-foreground">{trip.destination}</p>
+                          <p className="text-sm text-muted-foreground">{trip.city || trip.country || 'Location TBD'}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge variant={trip.status === 'completed' ? 'default' : 'secondary'}>
-                          {trip.status}
+                        <Badge variant={trip.completed ? 'default' : 'secondary'}>
+                          {trip.completed ? 'Completed' : 'Active'}
                         </Badge>
                         <div className="text-xs text-muted-foreground mt-1">
                           {(() => {
-                            const startDate = trip.start_date;
-                            const endDate = trip.end_date;
+                            const startDate = trip.startDate;
+                            const endDate = trip.endDate;
                             
                             if (!startDate || !endDate) return <p>Dates not set</p>;
                             
@@ -257,15 +258,15 @@ export default function CorporateDashboard() {
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <p className="font-medium">{trip.title}</p>
-                          <p className="text-sm text-muted-foreground">{trip.destination}</p>
+                          <p className="text-sm text-muted-foreground">{trip.city || trip.country || 'Location TBD'}</p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">
-                          {new Date(trip.start_date).toLocaleDateString()}
+                          {new Date(trip.startDate).toLocaleDateString()}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {trip.traveler_count} travelers
+                          1 traveler
                         </p>
                       </div>
                     </div>

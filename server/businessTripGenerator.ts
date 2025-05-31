@@ -1,6 +1,6 @@
 import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
 import { calculateTripCost } from "./utils/tripCost";
-import { detectConflicts } from "./services/conflictDetector";
+import { detectTripConflicts } from "./services/conflictDetector";
 import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "./predictiveAI";
 import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer";
 import { calculateCarbonFootprint } from "./carbonTracker";

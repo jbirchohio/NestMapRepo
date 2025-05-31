@@ -1,5 +1,5 @@
 import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
-import { detectConflicts } from "./services/conflictDetector";
+import { detectTripConflicts } from "./services/conflictDetector";
 import { Activity, OptimizedSchedule, ConflictDetection } from "../shared/interfaces";
 
 interface ConflictDetection {
