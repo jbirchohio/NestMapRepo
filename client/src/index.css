@@ -55,6 +55,11 @@
   --background: 222 84% 5%; /* Deep Slate background */
   --foreground: 210 40% 98%; /* Light Blue-Gray text */
   
+  --primary: 221.2 83.2% 53.3%; /* Keep same blue primary for dark mode */
+  --primary-foreground: 210 40% 98%; /* Light text on primary button */
+  --secondary: 215 16% 20%; /* Dark secondary */
+  --secondary-foreground: 210 40% 90%; /* Light text on secondary */
+  
   --muted: 215 16% 16%; /* Dark Slate Gray */
   --muted-foreground: 215 16% 65%; /* Light Slate Gray for dark mode */
   
