@@ -258,8 +258,8 @@ export default function ItinerarySidebar({
                     key={day.toISOString()}
                     className={`px-3 py-2 ${
                       day.toDateString() === activeDay.toDateString() 
-                        ? 'bg-[hsl(var(--primary))] text-white' 
-                        : 'bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]'
+                        ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' 
+                        : 'bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]'
                     } rounded-md text-sm md:text-base`}
                     onClick={() => onChangeDayClick(day)}
                   >
@@ -295,7 +295,7 @@ export default function ItinerarySidebar({
               
               {/* AI Assistant Button */}
               <button 
-                className="w-full py-3 px-4 bg-primary/10 text-primary rounded-md border border-primary/20 flex items-center justify-center hover:bg-primary/15 transition-colors"
+                className="w-full py-3 px-4 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-md border border-[hsl(var(--primary))]/20 flex items-center justify-center hover:bg-[hsl(var(--primary))]/15 transition-colors"
                 onClick={() => setIsAIModalOpen(true)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
