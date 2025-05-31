@@ -60,7 +60,13 @@ export default function CorporateDashboard() {
   const recentTrips = trips.slice(0, 3);
   const upcomingTrips = trips.filter(trip => new Date(trip.start_date) > new Date()).slice(0, 3);
 
-  // Calculate actual average trip duration from real data
+  // Calculate metrics from actual trip data
+  const totalTrips = trips.length;
+  
+  const totalBudget = trips.reduce((sum, trip) => {
+    return sum + (trip.budget || 0);
+  }, 0);
+  
   const avgTripDuration = trips.length > 0 ? Math.round(
     trips.reduce((sum, trip) => {
       const startDate = trip.start_date || trip.startDate;
@@ -75,6 +81,11 @@ export default function CorporateDashboard() {
       return sum + duration;
     }, 0) / trips.length
   ) : 0;
+
+  // Count unique travelers (simplified - using trip count as proxy)
+  const teamMembers = trips.reduce((sum, trip) => {
+    return sum + (trip.traveler_count || 1);
+  }, 0);
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
@@ -109,9 +120,9 @@ export default function CorporateDashboard() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics?.totalTrips || 0}</div>
+              <div className="text-2xl font-bold">{totalTrips}</div>
               <p className="text-xs text-muted-foreground">
-                +12% from last quarter
+                Active company trips
               </p>
             </CardContent>
           </Card>
@@ -122,9 +133,9 @@ export default function CorporateDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${analytics?.totalBudget?.toLocaleString() || 0}</div>
+              <div className="text-2xl font-bold">${totalBudget.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                73% of annual budget
+                Total travel spending
               </p>
             </CardContent>
           </Card>
@@ -135,9 +146,9 @@ export default function CorporateDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics?.teamSize || 0}</div>
+              <div className="text-2xl font-bold">{teamMembers}</div>
               <p className="text-xs text-muted-foreground">
-                Across all departments
+                Total travelers
               </p>
             </CardContent>
           </Card>
