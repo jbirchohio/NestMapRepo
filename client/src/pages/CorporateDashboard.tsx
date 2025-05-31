@@ -82,10 +82,8 @@ export default function CorporateDashboard() {
     }, 0) / trips.length
   ) : 0;
 
-  // Count unique travelers (simplified - using trip count as proxy)
-  const teamMembers = trips.reduce((sum, trip) => {
-    return sum + (trip.traveler_count || 1);
-  }, 0);
+  // Count unique travelers by user ID (since trips are per user)
+  const uniqueTravelers = new Set(trips.map(trip => trip.userId)).size;
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
@@ -146,9 +144,9 @@ export default function CorporateDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{teamMembers}</div>
+              <div className="text-2xl font-bold">{uniqueTravelers}</div>
               <p className="text-xs text-muted-foreground">
-                Total travelers
+                Unique travelers
               </p>
             </CardContent>
           </Card>
