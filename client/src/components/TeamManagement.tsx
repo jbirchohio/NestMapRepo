@@ -524,7 +524,10 @@ export default function TeamManagement() {
                       </div>
                       <Switch 
                         defaultChecked={selectedMember.role === 'admin'} 
-                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700"
+                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700 border border-gray-300 data-[state=checked]:border-blue-600"
+                        style={{
+                          backgroundColor: selectedMember.role === 'admin' ? '#2563eb' : '#e5e7eb'
+                        }}
                       />
                     </div>
                   ))}
