@@ -268,11 +268,11 @@ function OptimizationTab({ optimization, onApplyOptimization, isApplying }: any)
               </div>
               <div className="flex justify-between items-center">
                 <span>Conflicts Resolved</span>
-                <span className="font-bold text-blue-600">{improvements.conflictsResolved}</span>
+                <span className="font-bold text-primary">{improvements.conflictsResolved}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>Overall Efficiency</span>
-                <span className="font-bold text-purple-600">{improvements.efficiencyGain}%</span>
+                <span className="font-bold text-primary">{improvements.efficiencyGain}%</span>
               </div>
             </div>
             <Progress value={improvements.efficiencyGain} className="mt-4" />
@@ -286,7 +286,7 @@ function OptimizationTab({ optimization, onApplyOptimization, isApplying }: any)
           <CardContent>
             <div className="space-y-2">
               {recommendations.map((rec: string, index: number) => (
-                <div key={index} className="flex items-start gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                <div key={index} className="flex items-start gap-2 p-2 bg-muted rounded">
                   <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">{rec}</span>
                 </div>
@@ -323,10 +323,10 @@ function ConflictsTab({ conflicts, onAutoFix, isFixing }: any) {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high': return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'low': return 'text-blue-600 bg-blue-50 border-blue-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'high': return 'text-destructive bg-destructive/10 border-destructive/20';
+      case 'medium': return 'text-yellow-700 bg-yellow-500/10 border-yellow-500/20';
+      case 'low': return 'text-primary bg-primary/10 border-primary/20';
+      default: return 'text-muted-foreground bg-muted border-border';
     }
   };
 
@@ -335,10 +335,10 @@ function ConflictsTab({ conflicts, onAutoFix, isFixing }: any) {
   return (
     <div className="space-y-4">
       {autoFixableConflicts.length > 0 && (
-        <div className="flex justify-between items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <div className="flex justify-between items-center p-4 bg-primary/10 rounded-lg">
           <div>
             <div className="font-medium">Auto-fix Available</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
+            <div className="text-sm text-muted-foreground">
               {autoFixableConflicts.length} conflicts can be automatically resolved
             </div>
           </div>
@@ -409,7 +409,7 @@ function RemindersTab({ reminders }: any) {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+      <div className="text-sm text-muted-foreground mb-4">
         Smart reminders are automatically generated based on your activities and will be sent at optimal times.
       </div>
 
