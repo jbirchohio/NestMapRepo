@@ -266,6 +266,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
       
+      // Check if this is guest mode (negative tripId indicates guest trip)
+      if (tripId < 0) {
+        console.log("Guest mode trip fetch detected for tripId:", tripId);
+        // For guest mode, return a minimal trip object since trips are stored in localStorage
+        const guestTrip = {
+          id: tripId,
+          title: "Guest Trip",
+          startDate: new Date().toISOString(),
+          endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+          city: "Guest Location",
+          userId: -1,
+          organizationId: null,
+          createdAt: new Date().toISOString()
+        };
+        return res.json(guestTrip);
+      }
+      
       // CRITICAL SECURITY FIX: Add organization filtering to prevent cross-tenant data access
       if (!req.user) {
         return res.status(401).json({ message: "Authentication required" });
