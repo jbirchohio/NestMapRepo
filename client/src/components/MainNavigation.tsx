@@ -311,14 +311,14 @@ export default function MainNavigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden pb-3">
-          <div className="flex flex-wrap gap-1">
+        <div className="md:hidden py-3">
+          <div className="flex flex-wrap gap-2">
             {navigationItems.filter(item => item.show).map((item) => (
               <Link key={item.path} href={item.path}>
                 <Button
                   variant={item.active ? 'default' : 'ghost'}
                   size="sm"
-                  className={`flex items-center gap-2 whitespace-nowrap transition-colors border ${
+                  className={`flex items-center gap-2 whitespace-nowrap transition-colors border min-h-[2.5rem] ${
                     item.active 
                       ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' 
                       : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 border-slate-200 dark:border-slate-700 hover:border-blue-300'
