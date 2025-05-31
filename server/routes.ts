@@ -4108,14 +4108,21 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Verify domain with real DNS checking
+  // Verify domain with real DNS checking - CRITICAL SECURITY: Organization scoped access
   app.post("/api/admin/domains/:id/verify", async (req: Request, res: Response) => {
     try {
-      if (!req.user || req.user.role !== 'admin') {
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
       const domainId = parseInt(req.params.id);
+      if (isNaN(domainId)) {
+        return res.status(400).json({ error: "Invalid domain ID" });
+      }
       
       // Get domain from database
       const [domain] = await db.select()
@@ -4124,6 +4131,17 @@ Include realistic business activities, meeting times, dining recommendations, an
 
       if (!domain) {
         return res.status(404).json({ error: "Domain not found" });
+      }
+
+      // For regular admins, verify they can only verify domains from their organization
+      if (req.user.role !== 'super_admin') {
+        if (!req.user.organizationId) {
+          return res.status(403).json({ error: "No organization assigned to user" });
+        }
+
+        if (domain.organization_id !== req.user.organizationId) {
+          return res.status(403).json({ error: "Access denied: Cannot verify other organizations' domains" });
+        }
       }
 
       // Import domain verification functions
