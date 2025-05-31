@@ -187,11 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/trips", async (req: Request, res: Response) => {
     try {
       // CRITICAL SECURITY FIX: Enforce authentication
-      console.log("Auth check - req.user:", req.user ? "exists" : "undefined");
-      console.log("Auth check - session userId:", req.session?.userId);
-      
       if (!req.user || !req.user.id) {
-        console.log("Authentication failed - rejecting request");
         return res.status(401).json({ message: "Authentication required" });
       }
 
