@@ -234,7 +234,7 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
         totalUsers: 1,
         usersWithTrips: 1,
         usersWithActivities: totalActivitiesResult[0]?.count > 0 ? 1 : 0,
-        usersWithCompletedTrips: completedTripsResult[0]?.count > 0 ? 1 : 0,
+        usersWithCompletedTrips: (completedTripsResult[0]?.count || 0) > 0 ? 1 : 0,
         usersWithExports: 0 // Not tracked for personal view
       }
     };
