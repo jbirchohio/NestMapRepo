@@ -178,37 +178,37 @@ export default function EnterpriseDashboard() {
           <CardContent className="p-4 pt-0">
             <div className="grid grid-cols-2 gap-3">
               <Link href="/ai-generator">
-                <Button variant="outline" className="quick-action-button w-full h-auto p-4">
+                <Button variant="outline" className="w-full h-auto p-4 border-dashed">
                   <div className="text-center">
-                    <Sparkles className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <span className="text-sm font-medium text-primary">AI Trip Generator</span>
+                    <Sparkles className="w-6 h-6 mx-auto mb-2" />
+                    <span className="text-sm font-medium">AI Trip Generator</span>
                   </div>
                 </Button>
               </Link>
               
               <Link href="/proposal-center">
-                <Button variant="outline" className="quick-action-button w-full h-auto p-4">
+                <Button variant="outline" className="w-full h-auto p-4 border-dashed">
                   <div className="text-center">
-                    <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <span className="text-sm font-medium text-primary">New Proposal</span>
+                    <FileText className="w-6 h-6 mx-auto mb-2" />
+                    <span className="text-sm font-medium">New Proposal</span>
                   </div>
                 </Button>
               </Link>
               
               <Link href="/analytics">
-                <Button variant="outline" className="quick-action-button w-full h-auto p-4">
+                <Button variant="outline" className="w-full h-auto p-4 border-dashed">
                   <div className="text-center">
-                    <BarChart3 className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <span className="text-sm font-medium text-primary">Analytics</span>
+                    <BarChart3 className="w-6 h-6 mx-auto mb-2" />
+                    <span className="text-sm font-medium">Analytics</span>
                   </div>
                 </Button>
               </Link>
               
               <Link href="/team">
-                <Button variant="outline" className="quick-action-button w-full h-auto p-4">
+                <Button variant="outline" className="w-full h-auto p-4 border-dashed">
                   <div className="text-center">
-                    <Building2 className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <span className="text-sm font-medium text-primary">Team Management</span>
+                    <Building2 className="w-6 h-6 mx-auto mb-2" />
+                    <span className="text-sm font-medium">Team Management</span>
                   </div>
                 </Button>
               </Link>
