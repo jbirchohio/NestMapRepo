@@ -189,7 +189,7 @@ export default function MapView({
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">
                   {markers.length} stops
                   {routes.length > 0 && routes[0]?.distance && 
-                    ` · ${(routes[0].distance / 1609.34).toFixed(1)} miles total`}
+                    ` · ${routes && routes.length > 0 ? (routes[0].distance / 1609.34).toFixed(1) : '0'} miles total`}
                 </p>
               </div>
               <Button variant="ghost" size="icon" className="text-[hsl(var(--primary))]">

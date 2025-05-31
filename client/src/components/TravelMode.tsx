@@ -83,8 +83,8 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
       
       // Send notification for nearby activities
       if (nearby.length > 0 && isTravelMode) {
-        const closestActivity = nearby[0];
-        if (!checkedInActivities.has(closestActivity.id)) {
+        const closestActivity = nearby && nearby.length > 0 ? nearby[0] : null;
+        if (closestActivity && !checkedInActivities.has(closestActivity.id)) {
           sendNotification(
             'You\'re near an activity!',
             `${closestActivity.title} is just ${Math.round(calculateDistance(
