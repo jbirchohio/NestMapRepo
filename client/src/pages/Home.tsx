@@ -297,14 +297,14 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="h-8 w-8 bg-blue-600 text-white rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📈</div>
+                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📈</div>
                     <div>
                       <h4 className="font-semibold text-slate-800 dark:text-slate-200">Share & Track Engagement</h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400">Send branded itineraries and track completion status and updates</p>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <div className="h-8 w-8 bg-blue-600 text-white rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">🤝</div>
+                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">🤝</div>
                     <div>
                       <h4 className="font-semibold text-slate-800 dark:text-slate-200">Collaborate Across Departments</h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400">Allow internal and external stakeholders to access or edit trips</p>

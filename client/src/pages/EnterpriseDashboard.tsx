@@ -86,7 +86,7 @@ export default function EnterpriseDashboard() {
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">Enterprise Dashboard</h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">Travel Management Console</p>
             </div>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+            <Button size="sm">
               <Plus className="w-4 h-4 mr-1" />
               New Project
             </Button>

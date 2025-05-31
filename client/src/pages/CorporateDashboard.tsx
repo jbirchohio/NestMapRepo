@@ -105,7 +105,7 @@ export default function CorporateDashboard() {
         <div className="mb-8">
           <Button 
             onClick={() => setIsNewTripModalOpen(true)}
-            className="h-16 px-8 flex items-center justify-center gap-3 bg-blue-600 text-white hover:bg-blue-700 border-0"
+            className="h-16 px-8 flex items-center justify-center gap-3"
             size="lg"
           >
             <Plus className="h-5 w-5" />
