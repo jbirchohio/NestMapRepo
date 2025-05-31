@@ -174,6 +174,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
             <div className="flex gap-2">
               <Button
                 size="sm"
+                className="text-[#0f172a]"
                 onClick={() => {
                   const autoFixableConflicts = conflicts
                     .filter((c: any) => c.autoFixAvailable)

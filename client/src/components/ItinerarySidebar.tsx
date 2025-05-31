@@ -270,7 +270,7 @@ export default function ItinerarySidebar({
             <div className="space-y-2 mb-4">
               {/* Add Activity Button */}
               <Button 
-                className="w-full"
+                className="w-full text-[#0f172a]"
                 onClick={() => {
                   if (onAddActivity) {
                     onAddActivity(null, activeDay);

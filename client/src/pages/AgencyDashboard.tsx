@@ -78,7 +78,7 @@ export default function AgencyDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Button 
             onClick={() => setIsNewTripModalOpen(true)}
-            className="h-16 flex items-center justify-center gap-3"
+            className="h-16 flex items-center justify-center gap-3 text-[#0f172a]"
             size="lg"
           >
             <Plus className="h-5 w-5" />
