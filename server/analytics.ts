@@ -58,6 +58,10 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     // Filter all queries to only include data for this specific user
     const userTripsFilter = eq(trips.userId, userId);
     
+    // Debug: Check if we can find any trips for this user
+    const userTrips = await db.select().from(trips).where(userTripsFilter);
+    console.log(`User ${userId} has ${userTrips.length} trips:`, userTrips.map(t => ({ id: t.id, title: t.title })));
+    
     // Overview statistics - user specific
     const totalTripsResult = await db.select({ count: count() }).from(trips).where(userTripsFilter);
     const totalUsersResult = [{ count: 1 }]; // Always 1 for personal analytics
