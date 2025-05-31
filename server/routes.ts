@@ -300,10 +300,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         // Store the trip data in demo storage for later retrieval
-        if (!global.demoTrips) {
-          global.demoTrips = {};
+        if (!(global as any).demoTrips) {
+          (global as any).demoTrips = {};
         }
-        global.demoTrips[mockTrip.id] = {
+        (global as any).demoTrips[mockTrip.id] = {
           ...mockTrip,
           selectedHotel: req.body.selectedHotel,
           selectedFlights: req.body.selectedFlights
@@ -2584,13 +2584,13 @@ Include realistic business activities, meeting times, dining recommendations, an
         
         // Enhance with real flight data if available
         if (realData.flights && realData.flights.length > 0) {
-          trip.flights = realData.flights.slice(0, 2).map(flight => {
+          trip.flights = realData.flights.slice(0, 2).map((flight: any) => {
             const segment = flight.itineraries?.[0]?.segments?.[0];
             const carrierCode = segment?.carrierCode || 'UA';
             const flightNum = segment?.number || '1234';
             
             // Format times more clearly
-            const formatFlightTime = (isoString) => {
+            const formatFlightTime = (isoString: string) => {
               if (!isoString) return '';
               const date = new Date(isoString);
               return date.toLocaleTimeString('en-US', { 
@@ -2600,7 +2600,7 @@ Include realistic business activities, meeting times, dining recommendations, an
               });
             };
 
-            const formatDate = (isoString) => {
+            const formatDate = (isoString: string) => {
               if (!isoString) return '';
               const date = new Date(isoString);
               return date.toISOString().split('T')[0];
@@ -2625,7 +2625,7 @@ Include realistic business activities, meeting times, dining recommendations, an
 
         // Enhance with real hotel data if available
         if (realData.hotels && realData.hotels.length > 0) {
-          trip.accommodation = realData.hotels.slice(0, 1).map(hotel => ({
+          trip.accommodation = realData.hotels.slice(0, 1).map((hotel: any) => ({
             name: hotel.hotel?.name || `Business Hotel ${tripInfo.destination}`,
             address: hotel.hotel?.address?.lines?.[0] || `Downtown ${tripInfo.destination}`,
             stars: 4,
