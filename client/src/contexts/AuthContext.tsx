@@ -31,19 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadUser() {
       try {
-        // Check for demo mode first
-        const demoMode = localStorage.getItem('demo-mode');
-        const demoUser = localStorage.getItem('demo-user');
-        
-        if (demoMode && demoUser) {
-          const userData = JSON.parse(demoUser);
-          setUser(userData);
-          setUserId(userData.id);
-          setRoleType(userData.roleType);
-          setLoading(false);
-          setAuthReady(true);
-          return;
-        }
+        // Clear any leftover demo mode data to ensure real authentication works
+        localStorage.removeItem('demo-mode');
+        localStorage.removeItem('demo-user');
 
         // Get current auth state
         const { user, error } = await auth.getUser();
