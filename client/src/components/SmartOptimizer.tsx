@@ -165,7 +165,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
 
       {/* Critical Alerts */}
       {hasConflicts && showConflicts && (
-        <Alert className="border-red-200 bg-red-50">
+        <Alert className="border-destructive/20 bg-destructive/10">
           <AlertTriangle className="w-4 h-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>

@@ -79,7 +79,7 @@ export default function EnterpriseDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Mobile-optimized header */}
-      <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -97,61 +97,61 @@ export default function EnterpriseDashboard() {
       <div className="px-4 py-6 space-y-6">
         {/* Key Metrics Cards */}
         <div className="grid grid-cols-2 gap-4">
-          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Trips</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{displayStats.activeTrips}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Active Trips</p>
+                  <p className="text-2xl font-bold text-foreground">{displayStats.activeTrips}</p>
                 </div>
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                  <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <MapPin className="w-5 h-5 text-primary" />
                 </div>
               </div>
               <div className="flex items-center mt-2">
                 <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-600 dark:text-green-400">+12% vs last month</span>
+                <span className="text-xs text-green-600">+12% vs last month</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Clients</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{displayStats.totalClients}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Clients</p>
+                  <p className="text-2xl font-bold text-foreground">{displayStats.totalClients}</p>
                 </div>
-                <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                  <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                  <Users className="w-5 h-5 text-emerald-600" />
                 </div>
               </div>
               <div className="flex items-center mt-2">
                 <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-600 dark:text-green-400">+8% vs last month</span>
+                <span className="text-xs text-green-600">+8% vs last month</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">${displayStats.monthlyRevenue.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Revenue</p>
+                  <p className="text-2xl font-bold text-foreground">${displayStats.monthlyRevenue.toLocaleString()}</p>
                 </div>
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <div className="p-2 bg-purple-500/10 rounded-lg">
+                  <DollarSign className="w-5 h-5 text-purple-600" />
                 </div>
               </div>
               <div className="flex items-center mt-2">
                 <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-600 dark:text-green-400">+23% vs last month</span>
+                <span className="text-xs text-green-600">+23% vs last month</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+          <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
