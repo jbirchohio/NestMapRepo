@@ -291,11 +291,7 @@ export default function MainNavigation() {
                 <Button
                   variant={item.active ? 'default' : 'ghost'}
                   size="sm"
-                  className={`flex items-center gap-2 whitespace-nowrap transition-colors border min-h-[2.5rem] ${
-                    item.active 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' 
-                      : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 border-slate-200 dark:border-slate-700 hover:border-blue-300'
-                  }`}
+                  className="flex items-center gap-2 whitespace-nowrap"
                 >
                   <item.icon className="h-4 w-4" />
                   <span className="text-sm font-medium">{item.label}</span>
