@@ -186,15 +186,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trips routes
   app.get("/api/trips", async (req: Request, res: Response) => {
     try {
+      // CRITICAL SECURITY FIX: Enforce authentication
+      console.log("Auth check - req.user:", req.user ? "exists" : "undefined");
+      console.log("Auth check - session userId:", req.session?.userId);
+      
+      if (!req.user || !req.user.id) {
+        console.log("Authentication failed - rejecting request");
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const userId = req.query.userId as string;
       
       // Handle demo users - but first check if they have real trips in database
       if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
-        // Try to get real database trips first using the numeric user ID from auth context
-        if (req.user?.id) {
+        // Demo users can only access their own data through authenticated session
+        if (req.user.id) {
           try {
             console.log("Demo user detected, checking for real trips for user ID:", req.user.id);
-            const realTrips = await storage.getTripsByUserId(req.user.id);
+            const realTrips = await storage.getTripsByUserId(req.user.id, req.user.organizationId);
             
             // If they have real trips, return those combined with demo trips
             if (realTrips.length > 0) {
@@ -219,21 +228,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(numericUserId)) {
         return res.status(400).json({ message: "Invalid user ID" });
       }
+
+      // CRITICAL SECURITY FIX: Prevent cross-tenant access
+      // Users can only access trips from their own organization unless they're super admin
+      if (req.user.role !== 'super_admin' && numericUserId !== req.user.id) {
+        return res.status(403).json({ message: "Access denied: Cannot access other users' trips" });
+      }
       
       // Log organization access for audit
       logOrganizationAccess(req, 'fetch', 'trips');
       
-      console.log("Attempting to fetch trips for user ID:", numericUserId);
-      const trips = await storage.getTripsByUserId(numericUserId);
+      console.log("Attempting to fetch trips for user ID:", numericUserId, "from organization:", req.user.organizationId);
       
-      // Filter trips by organization context for multi-tenant security
-      const filteredTrips = trips.filter(trip => {
-        if (!req.organizationContext) return true; // Skip filtering for non-authenticated requests
-        return req.organizationContext.canAccessOrganization(trip.organizationId);
-      });
+      // CRITICAL SECURITY FIX: Always filter by organization
+      const trips = await storage.getTripsByUserId(numericUserId, req.user.organizationId);
       
-      console.log("Trips fetched successfully:", filteredTrips.length);
-      res.json(filteredTrips);
+      console.log("Trips fetched successfully:", trips.length);
+      res.json(trips);
     } catch (error) {
       console.error("Error fetching trips:", error);
       res.status(500).json({ message: "Could not fetch trips", error: error instanceof Error ? error.message : "Unknown error" });
