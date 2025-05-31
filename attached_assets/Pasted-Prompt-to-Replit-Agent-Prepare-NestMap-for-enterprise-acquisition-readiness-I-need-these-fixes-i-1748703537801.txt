@@ -1,0 +1,93 @@
+Prompt to Replit Agent:
+
+“Prepare NestMap for enterprise acquisition readiness. I need these fixes implemented across the codebase in atomic commits with full comments and clear file-level diffs:”
+
+⸻
+
+🔐 Authentication & Authorization Fixes
+
+“Unify auth to Supabase only. Remove Passport.js and session logic entirely. Migrate all login/logout/session logic to JWT or Supabase client sessions. Fix redundant auth middleware.”
+
+Why? Simplifies dev handoff, removes unnecessary dual systems.
+
+⸻
+
+🧹 Code Cleanup & Technical Debt
+
+“Scan all middleware and routes for unused files or partial refactors. Remove unused files like fileUploadSecurity.ts. Fix all TypeScript compilation errors. Run tsc --noEmit and resolve all type issues.”
+
+Why? No one wants to buy a codebase with compile errors.
+
+⸻
+
+🧪 Automated Testing Suite
+
+“Add automated tests for key routes: /api/auth, /api/trips, /api/analytics, /api/proposals. Use Jest + Supertest. Include one test per route minimum for authentication, org-scoping, and success/error handling.”
+
+Why? This signals reliability and reduces buyer hesitation.
+
+⸻
+
+🔧 Migrations & DB Strategy
+
+“Replace Drizzle’s push system with proper migrations/ files. Add indexes to all organization_id and user_id fields. Add test migration logs. Ensure rollback support.”
+
+Why? Push-only DB changes scare buyers. Migrations are must-have.
+
+⸻
+
+📦 API Structure and Versioning
+
+“Move all API routes to /api/v1/ namespace. Prepare v2 routing folder (even if empty). Add middleware for version negotiation and deprecation warning headers.”
+
+Why? Signals long-term stability and scalability.
+
+⸻
+
+📊 Analytics Fixes
+
+**“Fix all analytics endpoints to:
+
+	1.	Enforce org-based filtering on every query
+	2.	Use logged-in user’s org ID from session
+	3.	Prevent role leakage (only allow access to matching roles)”**
+
+Why? You cannot leak enterprise data across clients.
+
+⸻
+
+🌐 White-label & Branding Cleanup
+
+“Consolidate all branding config (colors, logo, name) into /config/branding.ts. Replace hardcoded ‘NestMap’ strings with dynamic fallback using process.env.DEFAULT_BRAND_NAME. Fix all subdomain-based routing to load proper org branding dynamically.”
+
+Why? White-label must be hands-off and centralized.
+
+⸻
+
+📈 Performance + Monitoring
+
+“Implement express-status-monitor or similar lightweight tool for server performance dashboard. Add /api/health endpoint for uptime checks. Add logging middleware that logs user ID, org ID, and endpoint.”
+
+Why? Enterprise buyers want monitoring hooks out of the box.
+
+⸻
+
+⚙️ DevOps Readiness
+
+**“Add .github/workflows/main.yml CI pipeline with steps:
+
+	1.	Install deps
+	2.	Run tsc --noEmit
+	3.	Run eslint
+	4.	Run jest
+	5.	Lint Dockerfile and check railway.json syntax”**
+
+Why? This creates confidence and signals production maturity.
+
+⸻
+
+🧾 Licensing & Compliance
+
+“Audit all installed packages with npm audit and license-checker. Fix any vulnerable packages. Remove unlicensed or questionable sources. Create LICENSE-THIRD-PARTY.md for buyers.”
+
+Why? No buyer wants hidden legal risk.
