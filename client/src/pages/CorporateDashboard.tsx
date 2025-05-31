@@ -173,9 +173,7 @@ export default function CorporateDashboard() {
                           {trip.status}
                         </Badge>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {trip.start_date && !isNaN(new Date(trip.start_date).getTime()) 
-                            ? new Date(trip.start_date).toLocaleDateString() 
-                            : 'Start date not set'}
+                          {new Date(trip.start_date).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
