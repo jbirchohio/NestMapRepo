@@ -75,12 +75,11 @@ export default function ActivityTimeline({
           />
         ))
       )}
-      
-            {/* Always show the Add Activity button - but make it bigger when no activities */}
+      {/* Always show the Add Activity button - but make it bigger when no activities */}
       <Button 
         variant="default"
         size={sortedActivities.length === 0 ? "lg" : "sm"}
-        className={`w-full ${sortedActivities.length === 0 ? 'mt-4' : ''}`}
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary hover:bg-primary/90 h-11 rounded-md px-8 w-full mt-4 text-[#0f172a]"
         onClick={handleAddActivity}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -88,7 +87,6 @@ export default function ActivityTimeline({
         </svg>
         Add Activity
       </Button>
-      
       {isModalOpen && (
         <ActivityModal
           tripId={tripId}
