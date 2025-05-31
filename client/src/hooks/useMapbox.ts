@@ -444,6 +444,12 @@ export default function useMapbox() {
         // Use the highest scoring feature
         const bestMatch = scoredFeatures[0].feature;
         
+        // Safely extract coordinates with validation
+        if (!bestMatch.center || !Array.isArray(bestMatch.center) || bestMatch.center.length < 2) {
+          console.warn("Invalid coordinates in geocoding response:", bestMatch);
+          return null;
+        }
+        
         const [longitude, latitude] = bestMatch.center;
         const fullAddress = bestMatch.place_name;
         

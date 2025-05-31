@@ -453,12 +453,15 @@ export default function ActivityModal({
                                   if (mapboxData.features && mapboxData.features.length > 0) {
                                     const feature = mapboxData.features[0];
                                     
-                                    // Return location with coordinates
-                                    return {
-                                      ...loc,
-                                      latitude: feature.center[1].toString(),
-                                      longitude: feature.center[0].toString()
-                                    };
+                                    // Check if center exists and is an array with at least 2 elements
+                                    if (feature.center && Array.isArray(feature.center) && feature.center.length >= 2) {
+                                      // Return location with coordinates
+                                      return {
+                                        ...loc,
+                                        latitude: feature.center[1].toString(),
+                                        longitude: feature.center[0].toString()
+                                      };
+                                    }
                                   }
                                 }
                                 
