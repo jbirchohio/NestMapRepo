@@ -166,6 +166,19 @@ export default function TripPlanner() {
        !isNaN(parseFloat(trip.cityLatitude)) && !isNaN(parseFloat(trip.cityLongitude)))
     ? [parseFloat(trip.cityLongitude), parseFloat(trip.cityLatitude)] as [number, number]
     : [-74.006, 40.7128] as [number, number]; // Default to NYC coordinates instead of undefined
+
+  // Debug map center calculation
+  console.log('Map center calculation debug:', {
+    hasMarkers: mapMarkers.length > 0,
+    markerCount: mapMarkers.length,
+    tripCityLat: trip?.cityLatitude,
+    tripCityLng: trip?.cityLongitude,
+    parsedLat: trip?.cityLatitude ? parseFloat(trip.cityLatitude) : 'no lat',
+    parsedLng: trip?.cityLongitude ? parseFloat(trip.cityLongitude) : 'no lng',
+    isValidLat: trip?.cityLatitude ? !isNaN(parseFloat(trip.cityLatitude)) : false,
+    isValidLng: trip?.cityLongitude ? !isNaN(parseFloat(trip.cityLongitude)) : false,
+    calculatedCenter: mapCenter
+  });
   
   // Handle activity marker click
   const handleMarkerClick = (marker: MapMarker) => {
