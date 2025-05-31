@@ -26,9 +26,14 @@ export default function MapView({
   // Initialize map
   useEffect(() => {
     if (mapContainer.current && !isMapReady) {
-      initializeMap(mapContainer.current, center, zoom).then(() => {
-        setIsMapReady(true);
-      });
+      initializeMap(mapContainer.current, center, zoom)
+        .then(() => {
+          setIsMapReady(true);
+        })
+        .catch((error) => {
+          console.error("Failed to initialize map:", error);
+          // Don't set isMapReady to true on error - map will show fallback
+        });
     }
   }, [mapContainer, center, zoom, initializeMap, isMapReady]);
 
@@ -98,7 +103,20 @@ export default function MapView({
   return (
     <section className="relative w-full h-full overflow-hidden map-container" style={{height: '100%', position: 'relative'}}>
       <div className="w-full h-full bg-[hsl(var(--muted))]" style={{height: '100%', position: 'relative'}}>
-        <div className="absolute inset-0" ref={mapContainer} id="map" style={{height: '100%', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}>
+        {!isMapReady && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Loading map...</p>
+            </div>
+          </div>
+        )}
+        <div 
+          className={`absolute inset-0 ${isMapReady ? 'opacity-100' : 'opacity-0'}`} 
+          ref={mapContainer} 
+          id="map" 
+          style={{height: '100%', position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
+        >
           {/* Mapbox map will be rendered here */}
         </div>
 

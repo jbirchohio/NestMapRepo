@@ -20,8 +20,14 @@ export default function useMapbox() {
     if (mapInstance.current) return;
     
     try {
+      // Check if token is available
+      if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'undefined' || MAPBOX_TOKEN === '') {
+        throw new Error('Mapbox token is not configured. Please set VITE_MAPBOX_TOKEN in your environment variables.');
+      }
+      
       // Set the access token
       mapboxgl.accessToken = MAPBOX_TOKEN;
+      console.log('Mapbox token configured:', MAPBOX_TOKEN ? 'Yes' : 'No');
       
       // Create a new map instance
       const map = new mapboxgl.Map({
@@ -32,14 +38,29 @@ export default function useMapbox() {
         attributionControl: false,
       });
       
+      // Add error handler
+      map.on('error', (e) => {
+        console.error('Mapbox GL error:', e.error);
+      });
+      
       // Add zoom and rotation controls
       map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       
       // Wait for map to load
-      await new Promise<void>((resolve) => {
+      await new Promise<void>((resolve, reject) => {
         map.on('load', () => {
+          console.log('Mapbox map loaded successfully');
           resolve();
         });
+        
+        map.on('error', (e) => {
+          reject(new Error(`Mapbox load error: ${e.error?.message || 'Unknown error'}`));
+        });
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          reject(new Error('Mapbox initialization timeout'));
+        }, 10000);
       });
       
       mapInstance.current = map;
