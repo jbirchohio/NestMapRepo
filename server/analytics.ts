@@ -107,6 +107,15 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     }));
     console.log('Processed destinations:', destinations);
 
+    // Debug: Check trip dates
+    const tripDatesDebug = await db.select({
+      id: trips.id,
+      title: trips.title,
+      startDate: trips.startDate,
+      endDate: trips.endDate
+    }).from(trips).where(userTripsFilter).limit(5);
+    console.log('Trip dates debug:', tripDatesDebug);
+
     // User's trip duration distribution
     const tripDurationsResult = await db.select({
       duration: sql`CASE 
@@ -118,7 +127,7 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       count: count()
     })
     .from(trips)
-    .where(userTripsFilter)
+    .where(and(userTripsFilter, sql`${trips.startDate} IS NOT NULL AND ${trips.endDate} IS NOT NULL`))
     .groupBy(sql`CASE 
       WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 2 THEN 'Weekend (1-2 days)'
       WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
@@ -126,6 +135,7 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       ELSE 'Extended Trip (10+ days)'
     END`)
     .orderBy(desc(count()));
+    console.log('Trip durations result:', tripDurationsResult);
 
     const totalTripsForDuration = tripDurationsResult.reduce((sum, dur) => sum + dur.count, 0);
     const tripDurations = tripDurationsResult.map(dur => ({
