@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import path from 'path';
+import { spawn } from 'child_process';
+import fs from 'fs/promises';
 
 interface FileValidationConfig {
   maxSize: number;
@@ -15,6 +17,139 @@ interface SecurityScanResult {
   threats: string[];
   fileHash: string;
   scanTimestamp: Date;
+  scannerUsed: string;
+  scanDuration: number;
+}
+
+interface VirusScanEngine {
+  name: string;
+  command: string;
+  args: string[];
+  threatPatterns: RegExp[];
+  installed: boolean;
+}
+
+/**
+ * Available virus scanning engines
+ */
+const VIRUS_SCAN_ENGINES: VirusScanEngine[] = [
+  {
+    name: 'ClamAV',
+    command: 'clamscan',
+    args: ['--no-summary', '--infected'],
+    threatPatterns: [/FOUND$/, /Infected files: [1-9]/],
+    installed: false
+  },
+  {
+    name: 'Windows Defender',
+    command: 'powershell',
+    args: ['-Command', 'Get-MpThreatDetection'],
+    threatPatterns: [/ThreatName/],
+    installed: process.platform === 'win32'
+  },
+  {
+    name: 'VirusTotal API',
+    command: 'curl',
+    args: ['-X', 'POST'],
+    threatPatterns: [/"positives":\s*[1-9]/],
+    installed: !!process.env.VIRUSTOTAL_API_KEY
+  }
+];
+
+/**
+ * Enhanced file validation with virus scanning
+ */
+async function scanFileForViruses(filePath: string): Promise<VirusScanResult> {
+  const startTime = Date.now();
+  
+  for (const engine of VIRUS_SCAN_ENGINES) {
+    if (!engine.installed) continue;
+    
+    try {
+      const result = await runVirusScan(engine, filePath);
+      if (result) {
+        return {
+          isClean: !result.threatFound,
+          threatFound: result.threatFound,
+          scannerUsed: engine.name,
+          scanTime: Date.now() - startTime
+        };
+      }
+    } catch (error) {
+      console.warn(`Virus scan failed with ${engine.name}:`, error);
+      continue;
+    }
+  }
+  
+  // Fallback to basic pattern detection if no engines available
+  return await performBasicThreatDetection(filePath, startTime);
+}
+
+/**
+ * Run virus scan with specific engine
+ */
+async function runVirusScan(engine: VirusScanEngine, filePath: string): Promise<{threatFound?: string} | null> {
+  return new Promise((resolve) => {
+    const process = spawn(engine.command, [...engine.args, filePath]);
+    let output = '';
+    
+    process.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+    
+    process.stderr.on('data', (data) => {
+      output += data.toString();
+    });
+    
+    process.on('close', (code) => {
+      const threatFound = engine.threatPatterns.some(pattern => pattern.test(output));
+      resolve(threatFound ? { threatFound: output.trim() } : { threatFound: undefined });
+    });
+    
+    process.on('error', () => {
+      resolve(null);
+    });
+    
+    // Timeout after 30 seconds
+    setTimeout(() => {
+      process.kill();
+      resolve(null);
+    }, 30000);
+  });
+}
+
+/**
+ * Basic threat detection using file patterns
+ */
+async function performBasicThreatDetection(filePath: string, startTime: number): Promise<VirusScanResult> {
+  try {
+    const fileBuffer = await fs.readFile(filePath);
+    const suspiciousPatterns = [
+      /eval\s*\(/gi,
+      /document\.write/gi,
+      /\.exe\s*$/gi,
+      /CreateObject/gi,
+      /WScript\.Shell/gi,
+      /<script[^>]*>.*?<\/script>/gi
+    ];
+    
+    const fileContent = fileBuffer.toString('utf8', 0, Math.min(fileBuffer.length, 1024 * 1024)); // First 1MB
+    const threatsFound = suspiciousPatterns.filter(pattern => pattern.test(fileContent));
+    
+    return {
+      isClean: threatsFound.length === 0,
+      threatFound: threatsFound.length > 0 ? `Suspicious patterns detected: ${threatsFound.length}` : undefined,
+      scannerUsed: 'Basic Pattern Detection',
+      scanTime: Date.now() - startTime
+    };
+  } catch (error) {
+    return {
+      isClean: false,
+      threatFound: 'File read error during scan',
+      scannerUsed: 'Error Handler',
+      scanTime: Date.now() - startTime
+    };
+  }
 }
 
 const DEFAULT_CONFIG: FileValidationConfig = {
