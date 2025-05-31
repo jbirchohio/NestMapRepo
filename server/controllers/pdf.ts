@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { generateTripPdf } from "../pdfExport";
+import { generatePdfBuffer } from "../utils/pdfHelper";
 import { storage } from "../storage";
 
 /**
@@ -34,13 +34,13 @@ export async function generateTripProposal(req: Request, res: Response) {
     const activities = await storage.getActivitiesByTripId(tripId);
 
     // Generate PDF buffer - FIXED: Now returns actual PDF instead of HTML
-    const pdfData: any = {
+    const pdfData = {
       trip,
       activities,
       todos: [],
       notes: []
     };
-    const pdfBuffer = await generateTripPdf(pdfData);
+    const pdfBuffer = await generatePdfBuffer(pdfData);
 
     // Set proper headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
@@ -93,7 +93,13 @@ export async function generateItinerary(req: Request, res: Response) {
     });
 
     // Generate itinerary PDF
-    const pdfBuffer = await generateTripPdf(trip, sortedActivities);
+    const pdfData = {
+      trip,
+      activities: sortedActivities,
+      todos: [],
+      notes: []
+    };
+    const pdfBuffer = await generateTripPdf(pdfData);
 
     // Set proper headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
