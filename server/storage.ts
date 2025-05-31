@@ -17,8 +17,8 @@ export interface IStorage {
   
   // Trip operations
   getTrip(id: number): Promise<Trip | undefined>;
-  getTripsByUserId(userId: number): Promise<Trip[]>;
-  getUserTrips(userId: number): Promise<Trip[]>;
+  getTripsByUserId(userId: number, organizationId?: number | null): Promise<Trip[]>;
+  getUserTrips(userId: number, organizationId?: number | null): Promise<Trip[]>;
   getTripByShareCode(shareCode: string): Promise<Trip | undefined>;
   createTrip(trip: InsertTrip): Promise<Trip>;
   updateTrip(id: number, trip: Partial<InsertTrip>): Promise<Trip | undefined>;
@@ -360,7 +360,7 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 import { db } from "./db-connection";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
@@ -392,8 +392,16 @@ export class DatabaseStorage implements IStorage {
     return trip || undefined;
   }
 
-  async getTripsByUserId(userId: number): Promise<Trip[]> {
-    const tripList = await db.select().from(trips).where(eq(trips.userId, userId));
+  async getTripsByUserId(userId: number, organizationId?: number | null): Promise<Trip[]> {
+    // Critical security fix: Include organization filtering to prevent cross-tenant data access
+    let whereConditions = [eq(trips.userId, userId)];
+    
+    // If organization context is provided, filter by organization
+    if (organizationId !== undefined) {
+      whereConditions.push(eq(trips.organizationId, organizationId));
+    }
+    
+    const tripList = await db.select().from(trips).where(and(...whereConditions));
     return tripList;
   }
 
