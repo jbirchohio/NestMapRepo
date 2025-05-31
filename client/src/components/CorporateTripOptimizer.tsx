@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -59,67 +60,32 @@ export default function CorporateTripOptimizer() {
   const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
   const [appliedChanges, setAppliedChanges] = useState<Set<number>>(new Set());
 
-  // Mock corporate trips data for demonstration
-  const mockCorporateTrips = [
-    {
-      id: 1,
-      title: "Client Meeting - Tech Corp",
-      userId: 101,
-      userName: "Sarah Johnson",
-      department: "Sales",
-      city: "San Francisco",
-      country: "USA",
-      startDate: "2025-06-15",
-      endDate: "2025-06-17",
-      budget: "$2000",
-      travelMode: "flight"
-    },
-    {
-      id: 2,
-      title: "Conference Presentation",
-      userId: 102,
-      userName: "Mike Chen",
-      department: "Engineering",
-      city: "San Francisco",
-      country: "USA",
-      startDate: "2025-06-16",
-      endDate: "2025-06-18",
-      budget: "$1800",
-      travelMode: "flight"
-    },
-    {
-      id: 3,
-      title: "Partner Workshop",
-      userId: 103,
-      userName: "Emily Rodriguez",
-      department: "Marketing",
-      city: "New York",
-      country: "USA",
-      startDate: "2025-06-20",
-      endDate: "2025-06-22",
-      budget: "$1500",
-      travelMode: "flight"
-    },
-    {
-      id: 4,
-      title: "Trade Show Setup",
-      userId: 104,
-      userName: "James Wilson",
-      department: "Sales",
-      city: "Las Vegas",
-      country: "USA",
-      startDate: "2025-06-14",
-      endDate: "2025-06-16",
-      budget: "$2200",
-      travelMode: "flight"
+  // Fetch real corporate trips data from API
+  const { data: corporateTrips, isLoading: isLoadingTrips } = useQuery({
+    queryKey: ['/api/trips/corporate'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/trips/corporate");
+      if (!response.ok) {
+        throw new Error("Failed to fetch corporate trips");
+      }
+      return response.json();
     }
-  ];
+  });
 
   const handleOptimizeTrips = async () => {
+    if (!corporateTrips || corporateTrips.length === 0) {
+      toast({
+        title: "No Trips Found",
+        description: "No corporate trips available for optimization.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsOptimizing(true);
     try {
       const response = await apiRequest('POST', '/api/optimize-corporate-trips', {
-        trips: mockCorporateTrips
+        trips: corporateTrips
       });
       
       if (!response.ok) {
@@ -212,7 +178,7 @@ export default function CorporateTripOptimizer() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="text-sm text-muted-foreground">
-                <span className="font-medium">{mockCorporateTrips.length}</span> upcoming trips
+                <span className="font-medium">{corporateTrips?.length || 0}</span> upcoming trips
               </div>
               <Separator orientation="vertical" className="h-4" />
               <div className="text-sm text-muted-foreground">
@@ -463,27 +429,38 @@ export default function CorporateTripOptimizer() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockCorporateTrips.map((trip) => (
-                <div key={trip.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                      <Users className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium">{trip.title}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {trip.userName} • {trip.department} • {trip.city}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {trip.startDate} to {trip.endDate} • {trip.budget}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline">
-                    {trip.travelMode}
-                  </Badge>
+              {isLoadingTrips ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                  <p className="text-muted-foreground mt-2">Loading corporate trips...</p>
                 </div>
-              ))}
+              ) : corporateTrips && corporateTrips.length > 0 ? (
+                corporateTrips.map((trip: any) => (
+                  <div key={trip.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                        <Users className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">{trip.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {trip.city}, {trip.country}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {trip.startDate} to {trip.endDate} • {trip.budget || 'No budget set'}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline">
+                      business
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No corporate trips found for optimization.</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
