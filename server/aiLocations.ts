@@ -32,13 +32,10 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
       console.log("No city context provided, searching without city context");
     }
     
-    const openaiInstance = getOpenAI();
-    if (!openaiInstance) {
-      throw new Error("OpenAI not available");
-    }
+    const openaiInstance = getOpenAIClient();
     
     const response = await openaiInstance.chat.completions.create({
-      model: "gpt-4o",
+      model: OPENAI_MODEL,
       messages: [
         {
           role: "system",
