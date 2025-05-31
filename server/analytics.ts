@@ -60,7 +60,7 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     
     // Debug: Check if we can find any trips for this user
     const userTrips = await db.select().from(trips).where(userTripsFilter);
-    console.log(`User ${userId} has ${userTrips.length} trips:`, userTrips.map(t => ({ id: t.id, title: t.title })));
+    console.log(`User ${userId} has ${userTrips.length} trips:`, userTrips.map(t => ({ id: t.id, title: t.title, city: t.city, country: t.country, location: t.location })));
     
     // Overview statistics - user specific
     const totalTripsResult = await db.select({ count: count() }).from(trips).where(userTripsFilter);
