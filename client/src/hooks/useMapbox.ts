@@ -36,17 +36,42 @@ export default function useMapbox() {
       console.log('Mapbox token configured:', MAPBOX_TOKEN ? 'Yes' : 'No');
       console.log('Map center coordinates:', validCenter);
       
-      // Create a new map instance with validated coordinates
-      const map = new mapboxgl.Map({
-        container,
-        style: 'mapbox://styles/mapbox/streets-v12', // Use simplified style URL
-        center: validCenter, // Use validated coordinates instead of raw center
-        zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
-        attributionControl: false,
-        crossSourceCollisions: false,
-        preserveDrawingBuffer: true,
-        failIfMajorPerformanceCaveat: false
-      });
+      // Wrap entire map creation in defensive error handling
+      let map: mapboxgl.Map;
+      try {
+        // Create a new map instance with minimal configuration to avoid library errors
+        map = new mapboxgl.Map({
+          container,
+          style: {
+            version: 8,
+            sources: {
+              'mapbox-streets': {
+                type: 'raster',
+                tiles: ['https://api.mapbox.com/v4/mapbox.streets/{z}/{x}/{y}.png?access_token=' + MAPBOX_TOKEN],
+                tileSize: 256
+              }
+            },
+            layers: [{
+              id: 'background',
+              type: 'raster',
+              source: 'mapbox-streets'
+            }]
+          },
+          center: validCenter,
+          zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
+          attributionControl: false
+        });
+      } catch (mapError) {
+        console.warn('Failed to create Mapbox map with custom style, trying basic fallback:', mapError);
+        // Fallback to absolute minimal map
+        map = new mapboxgl.Map({
+          container,
+          style: 'mapbox://styles/mapbox/streets-v11', // Try older stable style
+          center: validCenter,
+          zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
+          attributionControl: false
+        });
+      }
       
       // Add zoom and rotation controls
       map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
