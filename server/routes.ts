@@ -29,6 +29,7 @@ import {
   exchangeMicrosoftCodeForToken
 } from "./calendarSync";
 import { getDemoAnalytics } from "./demoAnalytics";
+import { getBrandingConfig } from "./branding";
 import {
   organizationContextMiddleware,
   validateTripAccess,
@@ -4444,6 +4445,21 @@ Include realistic business activities, meeting times, dining recommendations, an
     } catch (error) {
       console.error("Error optimizing corporate trips:", error);
       res.status(500).json({ error: "Failed to optimize corporate trips" });
+    }
+  });
+
+  // Branding API endpoint for dynamic white-label configuration
+  app.get("/api/branding", async (req: Request, res: Response) => {
+    try {
+      const domain = req.get('host');
+      const orgId = req.user?.organization_id;
+      
+      const branding = getBrandingConfig(orgId, domain);
+      
+      res.json(branding);
+    } catch (error) {
+      console.error("Error fetching branding config:", error);
+      res.status(500).json({ error: "Failed to fetch branding configuration" });
     }
   });
 
