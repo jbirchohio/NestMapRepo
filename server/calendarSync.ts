@@ -1,5 +1,104 @@
 import { Request, Response } from "express";
 import { Activity, Trip } from "@shared/schema";
+import crypto from "crypto";
+
+/**
+ * CSRF Protection for Calendar Sync Operations
+ */
+interface CalendarCSRFToken {
+  token: string;
+  userId: number;
+  organizationId: number;
+  createdAt: Date;
+  expiresAt: Date;
+}
+
+const calendarCSRFTokens = new Map<string, CalendarCSRFToken>();
+
+/**
+ * Generate CSRF token for calendar operations
+ */
+export function generateCalendarCSRFToken(userId: number, organizationId: number): string {
+  const token = crypto.randomBytes(32).toString('hex');
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes
+
+  calendarCSRFTokens.set(token, {
+    token,
+    userId,
+    organizationId,
+    createdAt: now,
+    expiresAt
+  });
+
+  // Clean up expired tokens
+  cleanupExpiredCalendarTokens();
+
+  return token;
+}
+
+/**
+ * Validate CSRF token for calendar operations
+ */
+export function validateCalendarCSRFToken(
+  token: string, 
+  userId: number, 
+  organizationId: number
+): boolean {
+  const tokenData = calendarCSRFTokens.get(token);
+  
+  if (!tokenData) {
+    return false;
+  }
+
+  if (tokenData.expiresAt < new Date()) {
+    calendarCSRFTokens.delete(token);
+    return false;
+  }
+
+  if (tokenData.userId !== userId || tokenData.organizationId !== organizationId) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Clean up expired CSRF tokens
+ */
+function cleanupExpiredCalendarTokens(): void {
+  const now = new Date();
+  for (const [token, tokenData] of calendarCSRFTokens.entries()) {
+    if (tokenData.expiresAt < now) {
+      calendarCSRFTokens.delete(token);
+    }
+  }
+}
+
+/**
+ * Middleware to validate calendar CSRF tokens
+ */
+export function validateCalendarCSRF(req: Request, res: Response, next: Function): void {
+  const token = req.headers['x-calendar-csrf-token'] as string;
+  const user = req.user;
+
+  if (!user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  if (!token) {
+    res.status(403).json({ error: 'CSRF token required for calendar operations' });
+    return;
+  }
+
+  if (!validateCalendarCSRFToken(token, user.id, user.organizationId || 0)) {
+    res.status(403).json({ error: 'Invalid or expired CSRF token' });
+    return;
+  }
+
+  next();
+}
 
 // Google Calendar API integration
 export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], accessToken: string) {

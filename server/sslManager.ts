@@ -76,10 +76,24 @@ export class SSLManager {
       return {
         privateKey: keyPair.privateKey,
         publicKey: keyPair.publicKey,
-        accountUrl: accountUrl as string,
+        accountUrl: typeof accountUrl === 'string' ? accountUrl : await accountUrl.text(),
       };
     } catch (error) {
       throw new Error(`Failed to create ACME account: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Extract text content from ACME response
+   */
+  private async extractTextFromResponse(response: Response | string): Promise<string> {
+    if (typeof response === 'string') {
+      return response;
+    }
+    try {
+      return await response.text();
+    } catch (error) {
+      throw new Error('Failed to extract text from ACME response');
     }
   }
 
@@ -110,7 +124,11 @@ export class SSLManager {
       );
 
       // Get order details
-      const orderResponse = await this.sendACMERequest(orderUrl as string, '', account.privateKey);
+      const orderResponse = await this.sendACMERequest(
+        typeof orderUrl === 'string' ? orderUrl : await orderUrl.text(),
+        '',
+        account.privateKey
+      );
       const order = await orderResponse.json();
 
       // Process authorizations
