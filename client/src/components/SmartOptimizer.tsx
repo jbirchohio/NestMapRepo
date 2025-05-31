@@ -123,7 +123,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
               <div>
                 <div className="font-medium">Time Saved</div>
                 <div className="text-2xl font-bold text-green-600">
-                  {hasOptimizations ? `${optimization.improvements?.timeSaved || 0}m` : '0m'}
+                  {hasOptimizations ? `${(optimization as any).improvements?.timeSaved || 0}m` : '0m'}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Travel time reduced</div>
               </div>
@@ -220,7 +220,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
             <TabsContent value="conflicts" className="space-y-4">
               <ConflictsTab 
                 conflicts={conflicts || []} 
-                onAutoFix={(conflictIds) => autoFixMutation.mutate(conflictIds)}
+                onAutoFix={(conflictIds: any) => autoFixMutation.mutate(conflictIds)}
                 isFixing={autoFixMutation.isPending}
               />
             </TabsContent>
