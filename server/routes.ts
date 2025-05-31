@@ -15,7 +15,7 @@ import {
   trips
 } from "@shared/schema";
 import { db } from "./db-connection";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import * as openai from "./openai";
 import * as aiLocations from "./aiLocations";
@@ -28,6 +28,7 @@ import {
   exchangeGoogleCodeForToken,
   exchangeMicrosoftCodeForToken
 } from "./calendarSync";
+import { getDemoAnalytics } from "./demoAnalytics";
 import {
   organizationContextMiddleware,
   validateTripAccess,
@@ -4201,7 +4202,7 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Organization Members API - CRITICAL SECURITY: Add role-based access control
+  // Organization Members API - CRITICAL SECURITY: Organization-aware member access
   app.get("/api/organizations/members", async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication and role authorization
@@ -4214,8 +4215,27 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(403).json({ message: "Access denied: Admin role required" });
       }
       
-      // Get organization members from database
-      const members = await db.select().from(users).where(eq(users.role_type, 'corporate'));
+      // CRITICAL: Get user's organization context
+      const userOrgId = req.user.organization_id;
+      
+      // CRITICAL: Only allow access to members from same organization (unless super_admin)
+      let membersQuery = db.select().from(users);
+      
+      if (req.user.role === 'super_admin') {
+        // Super admins can see all users
+        membersQuery = membersQuery.where(eq(users.role_type, 'corporate'));
+      } else {
+        // Regular admins only see their organization members
+        if (!userOrgId) {
+          return res.status(403).json({ message: "Access denied: No organization context" });
+        }
+        membersQuery = membersQuery.where(and(
+          eq(users.role_type, 'corporate'),
+          eq(users.organization_id, userOrgId)
+        ));
+      }
+      
+      const members = await membersQuery;
       
       const formattedMembers = members.map(member => ({
         id: member.id,
@@ -4234,13 +4254,50 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Remove organization member
+  // Remove organization member - CRITICAL SECURITY: Organization-aware member removal
   app.delete("/api/organizations/members/:memberId", async (req: Request, res: Response) => {
     try {
-      const { memberId } = req.params;
+      // CRITICAL: Verify authentication and authorization
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
-      // Delete user from database
-      await db.delete(users).where(eq(users.id, parseInt(memberId)));
+      // CRITICAL: Only admins and super_admins can remove members
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Admin role required" });
+      }
+      
+      const { memberId } = req.params;
+      const memberIdNum = parseInt(memberId);
+      
+      if (isNaN(memberIdNum)) {
+        return res.status(400).json({ error: "Invalid member ID" });
+      }
+      
+      // CRITICAL: Get target member and verify organization boundaries
+      const [targetMember] = await db.select()
+        .from(users)
+        .where(eq(users.id, memberIdNum));
+      
+      if (!targetMember) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+      
+      // CRITICAL: Prevent self-deletion
+      if (targetMember.id === req.user.id) {
+        return res.status(400).json({ error: "Cannot remove yourself" });
+      }
+      
+      // CRITICAL: Organization boundary validation (unless super_admin)
+      if (req.user.role !== 'super_admin') {
+        const userOrgId = req.user.organization_id;
+        if (!userOrgId || targetMember.organization_id !== userOrgId) {
+          return res.status(403).json({ message: "Access denied: Cannot remove members from other organizations" });
+        }
+      }
+      
+      // Safe to delete - organization boundaries verified
+      await db.delete(users).where(eq(users.id, memberIdNum));
       
       res.json({ success: true, message: "Member removed successfully" });
     } catch (error) {
