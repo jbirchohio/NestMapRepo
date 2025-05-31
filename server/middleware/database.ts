@@ -225,8 +225,11 @@ export function monitorDatabasePerformance(req: Request, res: Response, next: Ne
   res.end = function(chunk?: any, encoding?: any, cb?: any) {
     const metrics = req.dbMetrics?.getMetrics();
     if (metrics && metrics.queryCount > 0) {
-      res.setHeader('X-DB-Query-Count', metrics.queryCount.toString());
-      res.setHeader('X-DB-Avg-Time', metrics.averageQueryTime.toFixed(2));
+      // Only set headers if response hasn't been sent
+      if (!res.headersSent) {
+        res.setHeader('X-DB-Query-Count', metrics.queryCount.toString());
+        res.setHeader('X-DB-Avg-Time', metrics.averageQueryTime.toFixed(2));
+      }
       
       if (metrics.slowQueries.length > 0) {
         console.warn('SLOW_DB_QUERIES:', {

@@ -23,8 +23,10 @@ export function performanceMonitor(req: Request, res: Response, next: NextFuncti
       });
     }
     
-    // Performance metrics
-    res.setHeader('X-Response-Time', `${duration.toFixed(2)}ms`);
+    // Performance metrics - only set header if response hasn't been sent
+    if (!res.headersSent) {
+      res.setHeader('X-Response-Time', `${duration.toFixed(2)}ms`);
+    }
     
     return originalEnd.call(this, chunk, encoding, cb);
   };
