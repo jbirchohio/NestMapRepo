@@ -113,6 +113,13 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id,
+      role: insertUser.role || null,
+      role_type: insertUser.role_type || null,
+      organization_id: insertUser.organization_id || null,
+      company: insertUser.company || null,
+      job_title: insertUser.job_title || null,
+      team_size: insertUser.team_size || null,
+      use_case: insertUser.use_case || null,
       created_at: new Date(),
       display_name: insertUser.display_name || null,
       avatar_url: insertUser.avatar_url || null
@@ -147,6 +154,7 @@ export class MemStorage implements IStorage {
     const trip: Trip = { 
       ...insertTrip, 
       id,
+      organizationId: insertTrip.organizationId || null,
       sharePermission: "read-only",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -161,7 +169,13 @@ export class MemStorage implements IStorage {
       cityLongitude: insertTrip.cityLongitude || null,
       hotel: insertTrip.hotel || null,
       hotelLatitude: insertTrip.hotelLatitude || null,
-      hotelLongitude: insertTrip.hotelLongitude || null
+      hotelLongitude: insertTrip.hotelLongitude || null,
+      completed: insertTrip.completed || false,
+      completedAt: insertTrip.completedAt || null,
+      tripType: insertTrip.tripType || "personal",
+      clientName: insertTrip.clientName || null,
+      projectType: insertTrip.projectType || null,
+      budget: insertTrip.budget || null
     };
     this.trips.set(id, trip);
     return trip;
@@ -242,6 +256,7 @@ export class MemStorage implements IStorage {
     const todo: Todo = { 
       ...insertTodo, 
       id,
+      organizationId: insertTodo.organizationId || null,
       assignedTo: insertTodo.assignedTo || null,
       completed: insertTodo.completed ?? false
     };
@@ -275,7 +290,11 @@ export class MemStorage implements IStorage {
 
   async createNote(insertNote: InsertNote): Promise<Note> {
     const id = this.noteIdCounter++;
-    const note: Note = { ...insertNote, id };
+    const note: Note = { 
+      ...insertNote, 
+      id,
+      organizationId: insertNote.organizationId || null
+    };
     this.notes.set(id, note);
     return note;
   }
