@@ -23,16 +23,30 @@ export default function MapView({
   const { initializeMap, addMarkers, addRoutes, flyToLocation, resizeMap } = useMapbox();
   const [isMapReady, setIsMapReady] = useState(false);
 
-  // Initialize map
+  // Initialize map with better error handling
   useEffect(() => {
     if (mapContainer.current && !isMapReady) {
+      // Clear container before initializing
+      if (mapContainer.current) {
+        mapContainer.current.innerHTML = '';
+      }
+      
+      const timeoutId = setTimeout(() => {
+        if (!isMapReady) {
+          console.log('Map initialization taking too long, showing fallback');
+          setIsMapReady(true); // Show map area anyway
+        }
+      }, 3000);
+      
       initializeMap(mapContainer.current, center, zoom)
         .then(() => {
+          clearTimeout(timeoutId);
           setIsMapReady(true);
         })
         .catch((error) => {
+          clearTimeout(timeoutId);
           console.error("Failed to initialize map:", error);
-          // Don't set isMapReady to true on error - map will show fallback
+          setIsMapReady(true); // Show map area with fallback content
         });
     }
   }, [mapContainer, center, zoom, initializeMap, isMapReady]);
@@ -111,6 +125,18 @@ export default function MapView({
             </div>
           </div>
         )}
+        
+        {/* Fallback map display for when Mapbox fails */}
+        {isMapReady && markers.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-600">
+            <div className="text-center p-8">
+              <div className="text-4xl mb-4">🗺️</div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Map View</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Add activities to see them plotted on the map</p>
+            </div>
+          </div>
+        )}
+        
         <div 
           className={`absolute inset-0 ${isMapReady ? 'opacity-100' : 'opacity-0'}`} 
           ref={mapContainer} 
