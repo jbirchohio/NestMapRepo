@@ -587,25 +587,27 @@ export default function TeamManagement() {
                     </Badge>
                     <div className="flex gap-1">
                       <Button 
-                        variant="ghost" 
+                        variant="outline" 
                         size="sm"
                         onClick={() => handleViewMember(member)}
                         title="View member details"
+                        className="bg-background hover:bg-muted"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button 
-                        variant="ghost" 
+                        variant="outline" 
                         size="sm"
                         onClick={() => handleEditMember(member)}
                         title="Edit member permissions"
+                        className="bg-background hover:bg-muted"
                       >
                         <Edit3 className="h-4 w-4" />
                       </Button>
                       <Button 
-                        variant="ghost" 
+                        variant="outline" 
                         size="sm" 
-                        className="text-destructive"
+                        className="text-destructive bg-background hover:bg-destructive/10 border-destructive/20"
                         onClick={() => handleRemoveMember(member)}
                         title="Remove member"
                       >
