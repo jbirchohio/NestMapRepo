@@ -524,7 +524,7 @@ export default function TeamManagement() {
                       </div>
                       <Switch 
                         defaultChecked={selectedMember.role === 'admin'} 
-                        className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700"
                       />
                     </div>
                   ))}
@@ -535,7 +535,7 @@ export default function TeamManagement() {
                 <Button 
                   variant="outline" 
                   onClick={() => setShowEditPermissions(false)}
-                  className="bg-background hover:bg-muted"
+                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </Button>
@@ -547,7 +547,7 @@ export default function TeamManagement() {
                     });
                     setShowEditPermissions(false);
                   }}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
                 >
                   Save Changes
                 </Button>
@@ -601,7 +601,7 @@ export default function TeamManagement() {
                         size="sm"
                         onClick={() => handleViewMember(member)}
                         title="View member details"
-                        className="bg-background hover:bg-muted"
+                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -610,14 +610,14 @@ export default function TeamManagement() {
                         size="sm"
                         onClick={() => handleEditMember(member)}
                         title="Edit member permissions"
-                        className="bg-background hover:bg-muted"
+                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
                         <Edit3 className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="text-destructive bg-background hover:bg-destructive/10 border-destructive/20"
+                        className="bg-white dark:bg-gray-800 border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         onClick={() => handleRemoveMember(member)}
                         title="Remove member"
                       >
