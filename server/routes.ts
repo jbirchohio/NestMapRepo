@@ -334,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Guest mode trip creation detected");
         // For guest mode, create a temporary trip with negative ID
         const guestTrip = {
-          id: -Date.now(), // Negative timestamp as unique ID for guest trips
+          id: -(Math.floor(Date.now() / 1000) % 100000), // Smaller negative ID for guest trips
           title: req.body.title,
           startDate: req.body.startDate,
           endDate: req.body.endDate,
@@ -846,6 +846,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
       
+      // Check if this is guest mode (negative tripId indicates guest trip)
+      if (tripId < 0) {
+        console.log("Guest mode todos fetch detected for tripId:", tripId);
+        // For guest mode, return empty array since todos are stored in localStorage
+        return res.json([]);
+      }
+      
       const todos = await storage.getTodosByTripId(tripId);
       res.json(todos);
     } catch (error) {
@@ -933,6 +940,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tripId = Number(tripIdParam);
       if (isNaN(tripId)) {
         return res.status(400).json({ message: "Invalid trip ID" });
+      }
+      
+      // Check if this is guest mode (negative tripId indicates guest trip)
+      if (tripId < 0) {
+        console.log("Guest mode notes fetch detected for tripId:", tripId);
+        // For guest mode, return empty array since notes are stored in localStorage
+        return res.json([]);
       }
       
       const notes = await storage.getNotesByTripId(tripId);
