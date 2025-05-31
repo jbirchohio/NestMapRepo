@@ -3891,7 +3891,7 @@ Include realistic business activities, meeting times, dining recommendations, an
   });
 
   // Admin API endpoints for white label management
-  // Get all organizations with white label status - CRITICAL SECURITY: Enhanced role checks
+  // Get organizations with white label status - CRITICAL SECURITY: Organization scoped access
   app.get("/api/admin/organizations", async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication first
@@ -3904,7 +3904,20 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(403).json({ error: "Admin access required" });
       }
 
-      const orgs = await db.select().from(organizations);
+      let orgs;
+      if (req.user.role === 'super_admin') {
+        // Super admins can see all organizations
+        orgs = await db.select().from(organizations);
+      } else {
+        // Regular admins can only see their own organization
+        if (!req.user.organizationId) {
+          return res.status(403).json({ error: "No organization assigned to user" });
+        }
+        orgs = await db.select()
+          .from(organizations)
+          .where(eq(organizations.id, req.user.organizationId));
+      }
+      
       res.json(orgs);
     } catch (error) {
       console.error("Error fetching organizations:", error);
@@ -3912,7 +3925,7 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Update organization white label settings - CRITICAL SECURITY: Enhanced role checks
+  // Update organization white label settings - CRITICAL SECURITY: Organization scoped access
   app.patch("/api/admin/organizations/:id", async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication first
@@ -3929,6 +3942,11 @@ Include realistic business activities, meeting times, dining recommendations, an
       if (isNaN(orgId)) {
         return res.status(400).json({ error: "Invalid organization ID" });
       }
+
+      // CRITICAL: Regular admins can only modify their own organization
+      if (req.user.role !== 'super_admin' && orgId !== req.user.organizationId) {
+        return res.status(403).json({ error: "Access denied: Cannot modify other organizations" });
+      }
       
       const updates = req.body;
 
@@ -3943,7 +3961,7 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Get white label requests pending approval - CRITICAL SECURITY: Enhanced role checks
+  // Get white label requests pending approval - CRITICAL SECURITY: Organization scoped access
   app.get("/api/admin/white-label-requests", async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication first
@@ -3954,6 +3972,21 @@ Include realistic business activities, meeting times, dining recommendations, an
       // CRITICAL: Only admins and super_admins can access white label requests
       if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
+      }
+
+      let whereCondition;
+      if (req.user.role === 'super_admin') {
+        // Super admins can see all pending requests
+        whereCondition = eq(whiteLabelRequests.status, 'pending');
+      } else {
+        // Regular admins can only see requests from their organization
+        if (!req.user.organizationId) {
+          return res.status(403).json({ error: "No organization assigned to user" });
+        }
+        whereCondition = and(
+          eq(whiteLabelRequests.status, 'pending'),
+          eq(whiteLabelRequests.organization_id, req.user.organizationId)
+        );
       }
 
       const requests = await db.select({
@@ -3970,7 +4003,7 @@ Include realistic business activities, meeting times, dining recommendations, an
       .from(whiteLabelRequests)
       .leftJoin(organizations, eq(whiteLabelRequests.organization_id, organizations.id))
       .leftJoin(users, eq(whiteLabelRequests.requested_by, users.id))
-      .where(eq(whiteLabelRequests.status, 'pending'));
+      .where(whereCondition);
 
       res.json(requests);
     } catch (error) {
@@ -3979,15 +4012,44 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Review white label request
+  // Review white label request - CRITICAL SECURITY: Organization scoped access
   app.patch("/api/admin/white-label-requests/:id", async (req: Request, res: Response) => {
     try {
-      if (!req.user || req.user.role !== 'admin') {
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
       const requestId = parseInt(req.params.id);
+      if (isNaN(requestId)) {
+        return res.status(400).json({ error: "Invalid request ID" });
+      }
+
       const { status, notes } = req.body;
+
+      // For regular admins, verify they can only review requests from their organization
+      if (req.user.role !== 'super_admin') {
+        if (!req.user.organizationId) {
+          return res.status(403).json({ error: "No organization assigned to user" });
+        }
+
+        // First check if the request belongs to the admin's organization
+        const existingRequest = await db.select({ organization_id: whiteLabelRequests.organization_id })
+          .from(whiteLabelRequests)
+          .where(eq(whiteLabelRequests.id, requestId))
+          .limit(1);
+
+        if (existingRequest.length === 0) {
+          return res.status(404).json({ error: "Request not found" });
+        }
+
+        if (existingRequest[0].organization_id !== req.user.organizationId) {
+          return res.status(403).json({ error: "Access denied: Cannot review other organizations' requests" });
+        }
+      }
 
       await db.update(whiteLabelRequests)
         .set({
@@ -4005,14 +4067,18 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Get custom domains
+  // Get custom domains - CRITICAL SECURITY: Organization scoped access
   app.get("/api/admin/custom-domains", async (req: Request, res: Response) => {
     try {
-      if (!req.user || req.user.role !== 'admin') {
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
+      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
-      const domains = await db.select({
+      let query = db.select({
         id: customDomains.id,
         organization_id: customDomains.organization_id,
         organization_name: organizations.name,
@@ -4026,6 +4092,15 @@ Include realistic business activities, meeting times, dining recommendations, an
       .from(customDomains)
       .leftJoin(organizations, eq(customDomains.organization_id, organizations.id));
 
+      // Regular admins can only see domains from their organization
+      if (req.user.role !== 'super_admin') {
+        if (!req.user.organizationId) {
+          return res.status(403).json({ error: "No organization assigned to user" });
+        }
+        query = query.where(eq(customDomains.organization_id, req.user.organizationId));
+      }
+
+      const domains = await query;
       res.json(domains);
     } catch (error) {
       console.error("Error fetching domains:", error);
