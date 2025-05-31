@@ -154,6 +154,18 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Run database migrations on startup
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🔄 Running database migrations...');
+    try {
+      await runMigrations();
+      console.log('✅ Database migrations completed');
+    } catch (error) {
+      console.error('❌ Migration failed:', error);
+      process.exit(1);
+    }
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
