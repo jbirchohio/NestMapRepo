@@ -385,7 +385,7 @@ export default function ItinerarySidebar({
                     <div key={todo.id} className="flex items-center space-x-2 p-2 hover:bg-[hsl(var(--muted))] rounded-md">
                       <Checkbox 
                         id={`todo-${todo.id}`} 
-                        checked={todo.completed}
+                        checked={todo.completed ?? false}
                         onCheckedChange={() => toggleTodo.mutate(todo)}
                       />
                       <label 

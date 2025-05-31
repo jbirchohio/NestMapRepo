@@ -59,12 +59,14 @@ export class MemStorage implements IStorage {
   private activities: Map<number, Activity>;
   private todos: Map<number, Todo>;
   private notes: Map<number, Note>;
+  private invitations: Map<number, Invitation>;
   
   private userIdCounter: number;
   private tripIdCounter: number;
   private activityIdCounter: number;
   private todoIdCounter: number;
   private noteIdCounter: number;
+  private invitationIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -72,12 +74,14 @@ export class MemStorage implements IStorage {
     this.activities = new Map();
     this.todos = new Map();
     this.notes = new Map();
+    this.invitations = new Map();
     
     this.userIdCounter = 1;
     this.tripIdCounter = 1;
     this.activityIdCounter = 1;
     this.todoIdCounter = 1;
     this.noteIdCounter = 1;
+    this.invitationIdCounter = 1;
     
     // Add sample user for testing
     this.createUser({
@@ -287,6 +291,50 @@ export class MemStorage implements IStorage {
 
   async deleteNote(id: number): Promise<boolean> {
     return this.notes.delete(id);
+  }
+
+  // Team invitation operations
+  async createInvitation(invitation: InsertInvitation): Promise<Invitation> {
+    const id = this.invitationIdCounter++;
+    const newInvitation: Invitation = { 
+      ...invitation, 
+      id,
+      status: 'pending',
+      createdAt: new Date(),
+      acceptedAt: null
+    };
+    this.invitations.set(id, newInvitation);
+    return newInvitation;
+  }
+
+  async getInvitationByToken(token: string): Promise<Invitation | undefined> {
+    for (const invitation of this.invitations.values()) {
+      if (invitation.token === token) {
+        return invitation;
+      }
+    }
+    return undefined;
+  }
+
+  async acceptInvitation(token: string, userId: number): Promise<Invitation | undefined> {
+    const invitation = await this.getInvitationByToken(token);
+    if (!invitation || invitation.status !== 'pending') {
+      return undefined;
+    }
+
+    // Update user's organization and role
+    const user = this.users.get(userId);
+    if (user) {
+      user.organization_id = invitation.organizationId;
+      user.role = invitation.role;
+      this.users.set(userId, user);
+    }
+
+    // Mark invitation as accepted
+    invitation.status = 'accepted';
+    invitation.acceptedAt = new Date();
+    this.invitations.set(invitation.id, invitation);
+    return invitation;
   }
 }
 

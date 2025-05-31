@@ -69,8 +69,8 @@ export default function CorporateDashboard() {
   
   const avgTripDuration = trips.length > 0 ? Math.round(
     trips.reduce((sum, trip) => {
-      const startDate = trip.startDate || trip.start_date;
-      const endDate = trip.endDate || trip.end_date;
+      const startDate = trip.start_date;
+      const endDate = trip.end_date;
       if (!startDate || !endDate) return sum;
       
       const start = new Date(startDate);
@@ -83,7 +83,7 @@ export default function CorporateDashboard() {
   ) : 0;
 
   // Count unique travelers by user ID (since trips are per user)
-  const uniqueTravelers = new Set(trips.map(trip => trip.userId)).size;
+  const uniqueTravelers = new Set(trips.map(trip => trip.user_id)).size;
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
