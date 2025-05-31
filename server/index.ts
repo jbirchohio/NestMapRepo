@@ -10,6 +10,7 @@ import { preventSQLInjection, configureCORS } from "./middleware/security";
 import { monitorDatabasePerformance } from "./middleware/database";
 import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
 import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
+import { globalErrorHandler } from "./middleware/globalErrorHandler";
 
 const app = express();
 

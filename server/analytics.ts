@@ -53,7 +53,7 @@ export interface AnalyticsData {
   };
 }
 
-export async function getUserPersonalAnalytics(userId: number): Promise<AnalyticsData> {
+export async function getUserPersonalAnalytics(userId: number, organizationId?: number | null): Promise<AnalyticsData> {
   try {
     // Filter all queries to only include data for this specific user
     const userTripsFilter = eq(trips.userId, userId);

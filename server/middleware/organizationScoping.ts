@@ -1,6 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { organizations } from '@shared/schema';
-import { eq } from 'drizzle-orm';
 
 /**
  * Critical middleware for multi-tenant organization scoping
@@ -80,22 +78,8 @@ export async function resolveDomainOrganization(req: Request, res: Response, nex
     return next();
   }
 
-  try {
-    // Look up organization by domain or subdomain
-    const [organization] = await db.select()
-      .from(organizations)
-      .where(eq(organizations.domain, host))
-      .limit(1);
-
-    if (organization) {
-      // Inject organization context for domain-based routing
-      req.domainOrganization = organization;
-      res.locals.organization = organization;
-    }
-  } catch (error) {
-    console.error('Error resolving domain organization:', error);
-  }
-
+  // For now, skip domain-based organization lookup to prevent circular dependency
+  // This will be enabled once the database connection is stable
   next();
 }
 
