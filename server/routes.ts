@@ -3041,7 +3041,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ error: "Unauthorized" });
       }
 
-      const user = await getUserWithRole(req.user.auth_id);
+      const user = await getUserWithRole(req.user!.auth_id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
