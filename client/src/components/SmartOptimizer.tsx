@@ -70,7 +70,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
   });
 
   const hasConflicts = conflicts && Array.isArray(conflicts) && conflicts.length > 0;
-  const hasOptimizations = optimization && optimization.improvements && Array.isArray(optimization.improvements);
+  const hasOptimizations = optimization && (optimization as any).improvements && Array.isArray((optimization as any).improvements);
   
   if (optimizationLoading || conflictsLoading || remindersLoading) {
     return (
@@ -112,7 +112,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
               <div>
                 <div className="font-medium">Optimization Score</div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {hasOptimizations ? `${Math.round(optimization.improvements?.efficiencyGain || 0)}%` : 'N/A'}
+                  {hasOptimizations ? `${Math.round((optimization as any).improvements?.efficiencyGain || 0)}%` : 'N/A'}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Efficiency gain</div>
               </div>

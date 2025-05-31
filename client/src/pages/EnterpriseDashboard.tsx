@@ -41,7 +41,7 @@ interface DashboardStats {
 }
 
 export default function EnterpriseDashboard() {
-  const { data: stats, isLoading } = useQuery({
+  const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['/api/dashboard-stats'],
     enabled: true
   });

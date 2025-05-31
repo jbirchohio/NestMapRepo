@@ -41,7 +41,7 @@ export function organizationContextMiddleware(req: Request, res: Response, next:
     // Set organization context on request
     req.organizationId = userOrgId;
     req.organizationContext = {
-      id: userOrgId,
+      id: userOrgId || null,
       
       /**
        * Check if user can access data from a specific organization
