@@ -4899,6 +4899,57 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // Booking provider search endpoints
+  app.get("/api/booking/searchFlights", async (req: Request, res: Response) => {
+    try {
+      const { origin, destination, departureDate, returnDate, passengers } = req.query;
+      
+      if (!origin || !destination || !departureDate) {
+        return res.status(400).json({ 
+          error: "Missing required parameters: origin, destination, departureDate" 
+        });
+      }
+
+      const flights = await searchFlights({
+        origin: origin as string,
+        destination: destination as string,
+        departureDate: departureDate as string,
+        returnDate: returnDate as string,
+        passengers: passengers ? parseInt(passengers as string) : 1,
+      });
+
+      res.json(flights);
+    } catch (error) {
+      console.error("Flight search error:", error);
+      res.status(500).json({ error: "Flight search failed" });
+    }
+  });
+
+  app.get("/api/booking/searchHotels", async (req: Request, res: Response) => {
+    try {
+      const { destination, checkIn, checkOut, guests, rooms } = req.query;
+      
+      if (!destination || !checkIn || !checkOut) {
+        return res.status(400).json({ 
+          error: "Missing required parameters: destination, checkIn, checkOut" 
+        });
+      }
+
+      const hotels = await searchHotels({
+        destination: destination as string,
+        checkIn: checkIn as string,
+        checkOut: checkOut as string,
+        guests: guests ? parseInt(guests as string) : 1,
+        rooms: rooms ? parseInt(rooms as string) : 1,
+      });
+
+      res.json(hotels);
+    } catch (error) {
+      console.error("Hotel search error:", error);
+      res.status(500).json({ error: "Hotel search failed" });
+    }
+  });
+
   // Authentication session endpoint to populate session with user ID
   app.post("/api/auth/session", async (req: Request, res: Response) => {
     try {
