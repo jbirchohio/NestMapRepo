@@ -441,6 +441,12 @@ export default function useMapbox() {
         // Sort by score descending
         scoredFeatures.sort((a: any, b: any) => b.score - a.score);
         
+        // Check if we have any scored features
+        if (scoredFeatures.length === 0) {
+          console.warn("No valid features found in geocoding response");
+          return null;
+        }
+        
         // Use the highest scoring feature
         const bestMatch = scoredFeatures[0].feature;
         
