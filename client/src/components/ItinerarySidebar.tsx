@@ -273,7 +273,7 @@ export default function ItinerarySidebar({
             <div className="space-y-2 mb-4">
               {/* Add Activity Button */}
               <button 
-                className="w-full py-3 px-4 bg-[hsl(var(--primary))] text-white rounded-md flex items-center justify-center"
+                className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-md flex items-center justify-center hover:bg-primary/90 transition-colors"
                 onClick={() => {
                   if (onAddActivity) {
                     onAddActivity(null, activeDay);
@@ -295,7 +295,7 @@ export default function ItinerarySidebar({
               
               {/* AI Assistant Button */}
               <button 
-                className="w-full py-3 px-4 bg-blue-50 dark:bg-blue-900/20 text-[hsl(var(--primary))] rounded-md border border-blue-100 dark:border-blue-900/40 flex items-center justify-center"
+                className="w-full py-3 px-4 bg-primary/10 text-primary rounded-md border border-primary/20 flex items-center justify-center hover:bg-primary/15 transition-colors"
                 onClick={() => setIsAIModalOpen(true)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">

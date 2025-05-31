@@ -25,6 +25,12 @@
   --ring: 221.2 83.2% 53.3%; /* Blue ring */
   --radius: 0.5rem;
   
+  /* Success and warning colors */
+  --success: 142 76% 36%;
+  --success-foreground: 210 40% 98%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 222.2 84% 4.9%;
+  
   /* Tag colors - updated to match professional blue theme */
   --tag-cerulean: 217 91% 60%; /* Cerulean Blue */
   --tag-steel: 207 44% 49%; /* Steel Blue */
@@ -104,6 +110,34 @@
 }
 
 /* Professional blue theme with proper visibility */
+
+/* Button and interactive element enhancements */
+.btn, button {
+  @apply border border-border shadow-sm;
+}
+
+/* Switch components */
+button[role="switch"] {
+  @apply border-2 border-border shadow-sm;
+}
+
+button[role="switch"][data-state="checked"] {
+  @apply bg-primary border-primary;
+}
+
+button[role="switch"][data-state="unchecked"] {
+  @apply bg-muted border-border;
+}
+
+/* Input and form elements */
+input, textarea, select {
+  @apply border border-border bg-background;
+}
+
+/* Badge components */
+.badge {
+  @apply border border-border/50 shadow-sm;
+}
 
 /* Mobile responsive adjustments */
 @media (max-width: 767px) {

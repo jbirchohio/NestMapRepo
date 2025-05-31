@@ -715,12 +715,11 @@ export default function WhiteLabelSettings() {
 
                     {/* CTA Button */}
                     <div className="flex justify-center pt-2">
-                      <button 
-                        className="px-4 py-2 rounded text-white text-sm font-medium"
-                        style={{ backgroundColor: currentValues.primaryColor }}
+                      <Button 
+                        className="px-4 py-2 rounded text-primary-foreground text-sm font-medium bg-primary hover:bg-primary/90"
                       >
                         Create New Team Trip
-                      </button>
+                      </Button>
                     </div>
                   </div>
 

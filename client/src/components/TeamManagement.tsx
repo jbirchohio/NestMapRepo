@@ -188,19 +188,19 @@ export default function TeamManagement() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'bg-red-100 text-red-800';
-      case 'manager': return 'bg-blue-100 text-blue-800';
-      case 'user': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'admin': return 'bg-destructive/10 text-destructive border border-destructive/20';
+      case 'manager': return 'bg-primary/10 text-primary border border-primary/20';
+      case 'user': return 'bg-green-500/10 text-green-700 border border-green-500/20';
+      default: return 'bg-muted text-muted-foreground border';
     }
   };
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active': return 'bg-green-500/10 text-green-700 border border-green-500/20';
+      case 'pending': return 'bg-yellow-500/10 text-yellow-700 border border-yellow-500/20';
+      case 'inactive': return 'bg-muted text-muted-foreground border';
+      default: return 'bg-muted text-muted-foreground border';
     }
   };
 
