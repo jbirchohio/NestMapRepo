@@ -318,6 +318,7 @@ export class MemStorage implements IStorage {
     const newInvitation: Invitation = { 
       ...invitation, 
       id,
+      organizationId: invitation.organizationId ?? null,
       status: 'pending',
       createdAt: new Date(),
       acceptedAt: null
@@ -449,6 +450,7 @@ export class DatabaseStorage implements IStorage {
         id: activities.id,
         tripId: activities.tripId,
         title: activities.title,
+        organizationId: activities.organizationId,
         date: activities.date,
         time: activities.time,
         locationName: activities.locationName,
@@ -472,6 +474,7 @@ export class DatabaseStorage implements IStorage {
         id: activities.id,
         tripId: activities.tripId,
         title: activities.title,
+        organizationId: activities.organizationId,
         date: activities.date,
         time: activities.time,
         locationName: activities.locationName,

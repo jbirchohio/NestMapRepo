@@ -25,12 +25,13 @@ import NewTripModal from "@/components/NewTripModal";
 interface Trip {
   id: number;
   title: string;
-  destination: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  budget?: number;
-  traveler_count?: number;
+  startDate: string;
+  endDate: string;
+  userId: number;
+  city?: string;
+  country?: string;
+  budget?: string;
+  completed?: boolean;
 }
 
 export default function CorporateDashboard() {
