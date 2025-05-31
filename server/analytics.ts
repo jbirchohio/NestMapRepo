@@ -176,11 +176,11 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const [newTripsLast7DaysResult] = await db.select({
+    const newTripsLast7DaysResult = await db.select({
       count: count()
     }).from(trips).where(and(userTripsFilter, sql`${trips.createdAt} >= ${sevenDaysAgo}`));
 
-    const [activitiesAddedLast7DaysResult] = await db.select({
+    const activitiesAddedLast7DaysResult = await db.select({
       count: count()
     }).from(activities)
     .innerJoin(trips, eq(activities.tripId, trips.id))
@@ -208,9 +208,9 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
 
     return {
       overview: {
-        totalTrips: totalTripsResult.count,
+        totalTrips: totalTripsResult[0]?.count || 0,
         totalUsers: 1, // Always 1 for personal analytics
-        totalActivities: totalActivitiesResult.count,
+        totalActivities: totalActivitiesResult[0]?.count || 0,
         averageTripLength: Math.round(Number(avgTripLengthResult.avgLength) || 0),
         averageActivitiesPerTrip: avgActivitiesPerTrip
       },
@@ -219,22 +219,22 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       activityTags,
       userEngagement: {
         usersWithTrips: 1, // Always 1 for personal view
-        usersWithMultipleTrips: totalTripsResult.count > 1 ? 1 : 0,
-        averageTripsPerUser: totalTripsResult.count,
+        usersWithMultipleTrips: totalTripsResult[0]?.count > 1 ? 1 : 0,
+        averageTripsPerUser: totalTripsResult[0]?.count || 0,
         tripCompletionRate,
         activityCompletionRate
       },
       recentActivity: {
-        newTripsLast7Days: newTripsLast7DaysResult.count,
+        newTripsLast7Days: newTripsLast7DaysResult[0]?.count || 0,
         newUsersLast7Days: 0, // Not relevant for personal analytics
-        activitiesAddedLast7Days: activitiesAddedLast7DaysResult.count
+        activitiesAddedLast7Days: activitiesAddedLast7DaysResult[0]?.count || 0
       },
       growthMetrics,
       userFunnel: {
         totalUsers: 1,
         usersWithTrips: 1,
-        usersWithActivities: totalActivitiesResult.count > 0 ? 1 : 0,
-        usersWithCompletedTrips: completedTripsResult.count > 0 ? 1 : 0,
+        usersWithActivities: totalActivitiesResult[0]?.count > 0 ? 1 : 0,
+        usersWithCompletedTrips: completedTripsResult[0]?.count > 0 ? 1 : 0,
         usersWithExports: 0 // Not tracked for personal view
       }
     };
