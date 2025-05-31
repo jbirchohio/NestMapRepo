@@ -25,18 +25,27 @@ export default function useMapbox() {
         throw new Error('Mapbox token is not configured. Please set VITE_MAPBOX_TOKEN in your environment variables.');
       }
       
+      // Validate coordinates - this is likely the source of the array access error
+      const validCenter: [number, number] = [
+        (center && typeof center[0] === 'number' && !isNaN(center[0])) ? center[0] : -74.006,
+        (center && typeof center[1] === 'number' && !isNaN(center[1])) ? center[1] : 40.7128
+      ];
+      
       // Set the access token
       mapboxgl.accessToken = MAPBOX_TOKEN;
       console.log('Mapbox token configured:', MAPBOX_TOKEN ? 'Yes' : 'No');
+      console.log('Map center coordinates:', validCenter);
       
-      // Create a new map instance with better error handling
+      // Create a new map instance with validated coordinates
       const map = new mapboxgl.Map({
         container,
         style: 'mapbox://styles/mapbox/streets-v12', // Use simplified style URL
-        center,
-        zoom,
+        center: validCenter, // Use validated coordinates instead of raw center
+        zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
         attributionControl: false,
-        crossSourceCollisions: false
+        crossSourceCollisions: false,
+        preserveDrawingBuffer: true,
+        failIfMajorPerformanceCaveat: false
       });
       
       // Add zoom and rotation controls
