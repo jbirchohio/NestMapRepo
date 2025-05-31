@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { BRANDING_CONFIG } from "./config";
 
 // Flight booking providers configuration
 export const FLIGHT_PROVIDERS = {
@@ -182,7 +183,7 @@ async function generateAIFlightSuggestions(params: FlightSearchParams): Promise<
         "price": {"amount": 450, "currency": "USD"},
         "cabin": "${params.cabin}",
         "availability": 8,
-        "bookingUrl": "https://example.com/book/flight123"
+        "bookingUrl": "https://${BRANDING_CONFIG.companyUrl}/book/flight123"
       }
     ]
   }
@@ -223,10 +224,10 @@ async function generateAIHotelSuggestions(params: HotelSearchParams): Promise<Ho
         "starRating": 4,
         "price": {"amount": 180, "currency": "USD", "per": "night"},
         "amenities": ["WiFi", "Pool", "Gym", "Breakfast"],
-        "images": ["https://example.com/image1.jpg"],
+        "images": ["https://${BRANDING_CONFIG.companyUrl}/image1.jpg"],
         "rating": {"score": 8.5, "reviews": 1250},
         "cancellation": "free",
-        "bookingUrl": "https://example.com/book/hotel123"
+        "bookingUrl": "https://${BRANDING_CONFIG.companyUrl}/book/hotel123"
       }
     ]
   }

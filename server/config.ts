@@ -9,10 +9,12 @@
 
 // Server configuration
 export const SERVER_CONFIG = {
-  port: parseInt(process.env.PORT || '5000', 10),
+  port: parseInt(process.env.PORT || process.env.SERVER_PORT || '5000', 10),
   env: process.env.NODE_ENV || 'development',
   corsOrigin: process.env.CORS_ORIGIN || '*',
-  sessionSecret: process.env.SESSION_SECRET || 'nestmap-dev-secret'
+  sessionSecret: process.env.SESSION_SECRET || 'nestmap-dev-secret',
+  host: process.env.HOST || '0.0.0.0',
+  baseUrl: process.env.BASE_URL || `http://localhost:${parseInt(process.env.PORT || process.env.SERVER_PORT || '5000', 10)}`
 };
 
 // Database configuration
