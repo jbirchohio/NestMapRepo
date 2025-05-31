@@ -5,6 +5,8 @@ import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { performanceMonitor, memoryMonitor } from "./middleware/performance";
+import { preventSQLInjection, configureCORS } from "./middleware/security";
 
 const app = express();
 
@@ -52,6 +54,16 @@ app.use((req, res, next) => {
 // Rate limiting for JSON parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Apply CORS configuration
+app.use(configureCORS);
+
+// Apply performance monitoring
+app.use(performanceMonitor);
+app.use(memoryMonitor);
+
+// Apply SQL injection prevention
+app.use(preventSQLInjection);
 
 // Enhanced session security middleware for OAuth flow
 app.use(session({
