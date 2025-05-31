@@ -85,6 +85,7 @@ export default function TeamManagement() {
   const [showMemberDetails, setShowMemberDetails] = useState(false);
   const [showEditPermissions, setShowEditPermissions] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch real team members from API
   const { data: teamMembers, isLoading: isLoadingMembers } = useQuery({
@@ -556,59 +557,69 @@ export default function TeamManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockTeamMembers.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-medium">
-                      {member.name.split(' ').map(n => n[0]).join('')}
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="font-medium">{member.name}</h4>
-                    <p className="text-sm text-muted-foreground">{member.email}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Joined {member.joinedAt} • Last active {member.lastActive}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge className={getRoleBadgeColor(member.role)}>
-                    {member.role}
-                  </Badge>
-                  <Badge className={getStatusBadgeColor(member.status)}>
-                    {member.status}
-                  </Badge>
-                  <div className="flex gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleViewMember(member)}
-                      title="View member details"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleEditMember(member)}
-                      title="Edit member permissions"
-                    >
-                      <Edit3 className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-destructive"
-                      onClick={() => handleRemoveMember(member)}
-                      title="Remove member"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+            {isLoadingMembers ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Loading team members...</p>
               </div>
-            ))}
+            ) : teamMembers && teamMembers.length > 0 ? (
+              teamMembers.map((member: any) => (
+                <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-sm font-medium">
+                        {member.name.split(' ').map((n: string) => n[0]).join('')}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium">{member.name}</h4>
+                      <p className="text-sm text-muted-foreground">{member.email}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Joined {member.joinedAt} • Last active {member.lastActive}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className={getRoleBadgeColor(member.role)}>
+                      {member.role}
+                    </Badge>
+                    <Badge className={getStatusBadgeColor(member.status)}>
+                      {member.status}
+                    </Badge>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleViewMember(member)}
+                        title="View member details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleEditMember(member)}
+                        title="Edit member permissions"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-destructive"
+                        onClick={() => handleRemoveMember(member)}
+                        title="Remove member"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No team members found. Invite your first member to get started.</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

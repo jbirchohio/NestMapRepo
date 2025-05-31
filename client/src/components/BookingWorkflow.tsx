@@ -593,6 +593,7 @@ export default function BookingWorkflow() {
                   type="submit"
                   disabled={isSearching}
                   size="lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {isSearching ? 'Searching Flights...' : 'Continue to Flight Selection'}
                 </Button>
