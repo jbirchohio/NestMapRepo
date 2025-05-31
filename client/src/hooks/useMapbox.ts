@@ -45,6 +45,8 @@ export default function useMapbox() {
       
       // Wrap in try-catch to handle Mapbox GL internal errors
       try {
+        console.log('Creating Mapbox map with:', { center, zoom, hasContainer: !!container });
+        
         map = new mapboxgl.Map({
           container,
           style: 'mapbox://styles/mapbox/streets-v12',
@@ -53,8 +55,18 @@ export default function useMapbox() {
           attributionControl: false,
           trackResize: false // Disable automatic resize tracking to prevent errors
         });
+        
+        console.log('Mapbox map created successfully');
+        
       } catch (mapboxError) {
         console.error('Mapbox GL initialization failed:', mapboxError);
+        console.error('Error details:', {
+          message: mapboxError?.message || 'Unknown error',
+          stack: mapboxError?.stack || 'No stack trace',
+          center,
+          zoom,
+          containerExists: !!container
+        });
         // Don't throw - just return silently to prevent React crashes
         return;
       }
