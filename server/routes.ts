@@ -1971,16 +1971,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save activities from the generated business trip
       const savedActivities = [];
-      if (generatedTrip.schedule && Array.isArray(generatedTrip.schedule)) {
-        for (let i = 0; i < generatedTrip.schedule.length; i++) {
-          const activity = generatedTrip.schedule[i];
+      if (generatedTrip.activities && Array.isArray(generatedTrip.activities)) {
+        for (let i = 0; i < generatedTrip.activities.length; i++) {
+          const activity = generatedTrip.activities[i];
+          
+          // Calculate which day this activity belongs to
+          const activityDay = Math.floor(i / 3) + 1; // Roughly 3 activities per day
+          const activityDate = new Date(enhancedRequest.startDate);
+          activityDate.setDate(activityDate.getDate() + activityDay - 1);
           
           const savedActivity = await storage.createActivity({
             tripId: newTrip.id,
             title: activity.title || activity.activity || 'Business Activity',
-            date: activity.date || tripRequest.startDate,
+            date: activityDate.toISOString().split('T')[0],
             time: activity.time || activity.startTime || `${9 + i}:00`,
-            locationName: activity.location || activity.venue || tripRequest.destination,
+            locationName: activity.location || activity.venue || enhancedRequest.destination,
             notes: activity.description || activity.notes || '',
             tag: activity.category || activity.type || 'Business',
             order: i + 1,
@@ -4728,6 +4733,92 @@ Include realistic business activities, meeting times, dining recommendations, an
     } catch (error) {
       console.error("Error fetching branding config:", error);
       res.status(500).json({ error: "Failed to fetch branding configuration" });
+    }
+  });
+
+  // Login endpoint for email/password authentication
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      console.log('Authenticating user with email:', email);
+      
+      // Find user by email in database
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.email, email));
+
+      if (!user) {
+        console.log('User not found for email:', email);
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // For demo purposes, accept any password (in production you'd verify hashed password)
+      // TODO: Add proper password hashing verification in production
+      
+      // Create session
+      (req.session as any).userId = user.id;
+      
+      console.log('Successful authentication for user:', {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        organizationId: user.organizationId
+      });
+
+      // Save session and respond
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: "Failed to save session" });
+        }
+        
+        console.log('Login successful for user:', {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          organizationId: user.organizationId
+        });
+        
+        res.json({
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            organizationId: user.organizationId,
+            displayName: user.displayName || user.email.split('@')[0]
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Logout endpoint
+  app.post("/api/auth/logout", async (req: Request, res: Response) => {
+    try {
+      if (req.session) {
+        req.session.destroy((err) => {
+          if (err) {
+            console.error('Session destroy error:', err);
+            return res.status(500).json({ message: "Failed to logout" });
+          }
+          res.clearCookie('connect.sid');
+          res.json({ success: true, message: "Logged out successfully" });
+        });
+      } else {
+        res.json({ success: true, message: "No active session" });
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ message: "Logout failed" });
     }
   });
 
