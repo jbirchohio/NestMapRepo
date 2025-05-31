@@ -127,7 +127,7 @@ button[role="switch"][data-state="unchecked"] {
 }
 
 /* Input and form elements */
-input, textarea, select {
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], textarea, select {
   @apply border border-border bg-background;
 }
 

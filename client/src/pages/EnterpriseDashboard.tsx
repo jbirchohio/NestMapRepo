@@ -155,16 +155,16 @@ export default function EnterpriseDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Success Rate</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{displayStats.completionRate}%</p>
+                  <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
+                  <p className="text-2xl font-bold text-foreground">{displayStats.completionRate}%</p>
                 </div>
-                <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
-                  <Target className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                  <Target className="w-5 h-5 text-orange-600" />
                 </div>
               </div>
               <div className="flex items-center mt-2">
                 <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-600 dark:text-green-400">+2% vs last month</span>
+                <span className="text-xs text-green-600">+2% vs last month</span>
               </div>
             </CardContent>
           </Card>
