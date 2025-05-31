@@ -462,6 +462,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid trip ID" });
       }
       
+      // CRITICAL SECURITY FIX: Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // CRITICAL: Get existing trip to verify organization access
+      const existingTrip = await storage.getTrip(tripId);
+      if (!existingTrip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // CRITICAL: Verify user can access this trip's organization
+      const userOrgId = req.user.organizationId || null;
+      if (req.user.role !== 'super_admin' && existingTrip.organizationId !== userOrgId) {
+        return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
+      }
+      
       // Create a partial schema with the same date transformation
       const partialTripSchema = z.object({
         title: z.string().optional(),
@@ -521,6 +538,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tripId = Number(req.params.id);
       if (isNaN(tripId)) {
         return res.status(400).json({ message: "Invalid trip ID" });
+      }
+      
+      // CRITICAL SECURITY FIX: Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // CRITICAL: Get existing trip to verify organization access
+      const existingTrip = await storage.getTrip(tripId);
+      if (!existingTrip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // CRITICAL: Verify user can access this trip's organization
+      const userOrgId = req.user.organizationId || null;
+      if (req.user.role !== 'super_admin' && existingTrip.organizationId !== userOrgId) {
+        return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
       }
       
       const deleted = await storage.deleteTrip(tripId);
