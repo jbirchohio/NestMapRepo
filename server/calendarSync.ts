@@ -48,7 +48,8 @@ export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], a
         results.push({ success: false, error, title: event.summary });
       }
     } catch (error) {
-      results.push({ success: false, error: error.message, title: event.summary });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      results.push({ success: false, error: errorMessage, title: event.summary });
     }
   }
   
@@ -107,7 +108,8 @@ export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], 
         results.push({ success: false, error, title: event.subject });
       }
     } catch (error) {
-      results.push({ success: false, error: error.message, title: event.subject });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      results.push({ success: false, error: errorMessage, title: event.subject });
     }
   }
   

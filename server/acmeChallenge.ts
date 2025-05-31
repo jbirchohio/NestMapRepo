@@ -161,7 +161,7 @@ export function getChallengeStats(): {
   let expiredChallenges = 0;
   const challengesByDomain: { [domain: string]: number } = {};
 
-  for (const challenge of challengeStore.values()) {
+  for (const challenge of Array.from(challengeStore.values())) {
     if (now > challenge.expiresAt) {
       expiredChallenges++;
     } else {

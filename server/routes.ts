@@ -1,20 +1,6 @@
 import type { Express, Request, Response } from "express";
 
-// Extend Express Request interface for Passport.js
-declare global {
-  namespace Express {
-    interface Request {
-      isAuthenticated(): boolean;
-      user?: {
-        auth_id: string;
-        id: number;
-        organizationId?: number | null;
-        role?: string;
-        [key: string]: any;
-      };
-    }
-  }
-}
+
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
