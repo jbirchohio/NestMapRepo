@@ -28,6 +28,14 @@ import {
   exchangeGoogleCodeForToken,
   exchangeMicrosoftCodeForToken
 } from "./calendarSync";
+import {
+  organizationContextMiddleware,
+  validateTripAccess,
+  withOrganizationFilter,
+  requireOrganizationContext,
+  setOrganizationId,
+  logOrganizationAccess
+} from "./organizationContext";
 import { generateTripPdf } from "./pdfExport";
 import { BRANDING_CONFIG } from "./config";
 import { getAllTemplates, getTemplateById } from "./tripTemplates";
@@ -662,8 +670,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(201).json(guestActivity);
       }
       
+      // Verify trip access and organization context for authenticated users
+      const trip = await storage.getTrip(activityData.tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // Check organization access
+      if (req.organizationContext) {
+        req.organizationContext.enforceOrganizationAccess(trip.organizationId);
+      }
+      
+      // Set organization context for the activity
+      const activityWithOrg = setOrganizationId(req, activityData);
+      
+      // Log organization access for audit
+      logOrganizationAccess(req, 'create', 'activity');
+      
       // For authenticated users, use database storage
-      const activity = await storage.createActivity(activityData);
+      const activity = await storage.createActivity(activityWithOrg);
       console.log("Created database activity successfully:", activity);
       res.status(201).json(activity);
     } catch (error) {
