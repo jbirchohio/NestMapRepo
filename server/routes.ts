@@ -2394,7 +2394,8 @@ If you have all required info, return JSON with:
       
       return [];
     } catch (error) {
-      console.log("Flight search failed:", error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Flight search failed';
+      console.log("Flight search failed:", errorMessage);
       return [];
     }
   }
@@ -2565,7 +2566,8 @@ If you have all required info, return JSON with:
         return null;
       }
     } catch (error) {
-      console.log("Amadeus test authentication error:", error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Test authentication failed';
+      console.log("Amadeus test authentication error:", errorMessage);
       return null;
     }
   }
@@ -4514,10 +4516,11 @@ Include realistic business activities, meeting times, dining recommendations, an
       const statusCode = isHealthy ? 200 : 503;
       res.status(statusCode).json(healthData);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Service unavailable';
       res.status(503).json({
         status: "unhealthy",
         timestamp: new Date().toISOString(),
-        error: process.env.NODE_ENV === 'production' ? 'Service unavailable' : error.message
+        error: process.env.NODE_ENV === 'production' ? 'Service unavailable' : errorMessage
       });
     }
   });
