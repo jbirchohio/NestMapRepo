@@ -2699,14 +2699,46 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.json(demoAnalytics);
       }
       
-      // For real users, return basic analytics
-      const basicAnalytics = {
-        totalTrips: 0,
-        totalBudget: 0,
-        avgDuration: 0,
-        teamSize: 0
+      // For real users, calculate analytics from actual trip data
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+
+      const userIdNum = parseInt(userId);
+      if (isNaN(userIdNum)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const trips = await storage.getUserTrips(userIdNum);
+      
+      const totalTrips = trips.length;
+      const totalBudget = trips.reduce((sum, trip) => sum + (trip.budget || 0), 0);
+      
+      const avgDuration = trips.length > 0 ? Math.round(
+        trips.reduce((sum, trip) => {
+          const startDate = trip.startDate;
+          const endDate = trip.endDate;
+          if (!startDate || !endDate) return sum;
+          
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          if (isNaN(start.getTime()) || isNaN(end.getTime())) return sum;
+          
+          const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          return sum + duration;
+        }, 0) / trips.length
+      ) : 0;
+
+      const teamSize = new Set(trips.map(trip => trip.userId)).size;
+
+      const realAnalytics = {
+        totalTrips,
+        totalBudget,
+        avgDuration,
+        teamSize
       };
-      res.json(basicAnalytics);
+      
+      res.json(realAnalytics);
     } catch (error) {
       console.error("Error fetching corporate analytics:", error);
       res.status(500).json({ message: "Could not fetch corporate analytics" });
