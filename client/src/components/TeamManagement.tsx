@@ -532,16 +532,23 @@ export default function TeamManagement() {
               </div>
               
               <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setShowEditPermissions(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEditPermissions(false)}
+                  className="bg-background hover:bg-muted"
+                >
                   Cancel
                 </Button>
-                <Button onClick={() => {
-                  toast({
-                    title: "Permissions Updated",
-                    description: `${selectedMember.name}'s permissions have been updated successfully`,
-                  });
-                  setShowEditPermissions(false);
-                }}>
+                <Button 
+                  onClick={() => {
+                    toast({
+                      title: "Permissions Updated",
+                      description: `${selectedMember.name}'s permissions have been updated successfully`,
+                    });
+                    setShowEditPermissions(false);
+                  }}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
                   Save Changes
                 </Button>
               </div>
