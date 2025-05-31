@@ -117,26 +117,28 @@ export const tripValidationSchema = z.object({
 });
 
 export const activityValidationSchema = z.object({
+  tripId: z.union([z.string(), z.number()]).transform(val =>
+    typeof val === "string" ? parseInt(val, 10) : val
+  ),
   title: z.string()
     .min(1, 'Activity title is required')
     .max(200, 'Activity title too long')
     .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in title'),
-  description: z.string()
-    .max(1000, 'Description too long')
-    .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in description')
-    .optional(),
-  location: z.string()
+  date: z.string().or(z.date()),
+  time: z.string(),
+  locationName: z.string()
     .max(200, 'Location too long')
-    .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in location')
+    .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in location'),
+  notes: z.string()
+    .max(2000, 'Notes too long')
+    .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in notes')
     .optional(),
-  startTime: z.string().datetime('Invalid start time').optional(),
-  endTime: z.string().datetime('Invalid end time').optional(),
-  cost: z.number().min(0, 'Cost must be positive').max(100000, 'Cost too high').optional(),
-  category: z.string().max(50, 'Category too long').optional(),
-  notes: z.string().max(2000, 'Notes too long').optional(),
-  url: z.string().url('Invalid URL').optional(),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional()
+  tag: z.string().max(50, 'Tag too long').optional(),
+  assignedTo: z.string().max(100, 'Assigned to too long').optional(),
+  order: z.number(),
+  travelMode: z.string().max(20, 'Travel mode too long').optional(),
+  latitude: z.string().optional(),
+  longitude: z.string().optional()
 });
 
 export const userValidationSchema = z.object({
