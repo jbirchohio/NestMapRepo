@@ -71,6 +71,16 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       .innerJoin(trips, eq(activities.tripId, trips.id))
       .where(userTripsFilter);
     
+    // Debug: Check activities for this user
+    const userActivities = await db.select({
+      id: activities.id,
+      title: activities.title,
+      tripId: activities.tripId
+    }).from(activities)
+      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .where(userTripsFilter);
+    console.log(`User ${userId} has ${userActivities.length} activities:`, userActivities.slice(0, 3));
+    
     // Average trip length for user's trips only
     const [avgTripLengthResult] = await db.select({
       avgLength: avg(sql`EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1`)
