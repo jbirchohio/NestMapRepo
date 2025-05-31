@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Search, Calendar, MapPin, Users, TrendingUp } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import ProposalGenerator from "@/components/ProposalGenerator";
 
 export default function ProposalCenter() {

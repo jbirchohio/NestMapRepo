@@ -11,7 +11,8 @@ import {
   users,
   organizations,
   whiteLabelRequests,
-  customDomains
+  customDomains,
+  trips
 } from "@shared/schema";
 import { db } from "./db-connection";
 import { eq } from "drizzle-orm";
@@ -3998,6 +3999,185 @@ Include realistic business activities, meeting times, dining recommendations, an
     } catch (error) {
       console.error("Error fetching branding config:", error);
       res.status(500).json({ error: "Failed to fetch branding configuration" });
+    }
+  });
+
+  // Organization Members API
+  app.get("/api/organizations/members", async (req: Request, res: Response) => {
+    try {
+      // Get organization members from database
+      const members = await db.select().from(users).where(eq(users.role_type, 'corporate'));
+      
+      const formattedMembers = members.map(member => ({
+        id: member.id,
+        name: member.display_name || member.username,
+        email: member.email,
+        role: member.role || 'user',
+        status: 'active',
+        joinedAt: member.created_at?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+        lastActive: '2 hours ago' // This would come from activity tracking
+      }));
+
+      res.json(formattedMembers);
+    } catch (error) {
+      console.error("Error fetching organization members:", error);
+      res.status(500).json({ error: "Failed to fetch organization members" });
+    }
+  });
+
+  // Remove organization member
+  app.delete("/api/organizations/members/:memberId", async (req: Request, res: Response) => {
+    try {
+      const { memberId } = req.params;
+      
+      // Delete user from database
+      await db.delete(users).where(eq(users.id, parseInt(memberId)));
+      
+      res.json({ success: true, message: "Member removed successfully" });
+    } catch (error) {
+      console.error("Error removing organization member:", error);
+      res.status(500).json({ error: "Failed to remove organization member" });
+    }
+  });
+
+  // Trip cost estimation API
+  app.get("/api/trips/:tripId/cost-estimate", async (req: Request, res: Response) => {
+    try {
+      const { tripId } = req.params;
+      
+      // Get trip and activities from database
+      const trip = await storage.getTrip(parseInt(tripId));
+      if (!trip) {
+        return res.status(404).json({ error: "Trip not found" });
+      }
+
+      const tripActivities = await db.select().from(activities).where(eq(activities.trip_id, parseInt(tripId)));
+      
+      // Calculate estimated costs based on activities and destination
+      let flightCost = 0;
+      let hotelCost = 0;
+      let activityCost = 0;
+      let mealCost = 0;
+      let transportCost = 0;
+      let miscCost = 0;
+
+      // Base costs by destination (simplified calculation)
+      if (trip.city && trip.country) {
+        // Flight estimation based on destination
+        const isInternational = trip.country !== 'USA';
+        flightCost = isInternational ? 800 + Math.random() * 400 : 300 + Math.random() * 200;
+        
+        // Hotel estimation based on duration
+        const startDate = new Date(trip.startDate);
+        const endDate = new Date(trip.endDate);
+        const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        hotelCost = nights * (100 + Math.random() * 100);
+        
+        // Activity costs based on number of activities
+        activityCost = tripActivities.length * (50 + Math.random() * 50);
+        
+        // Meal costs
+        mealCost = nights * (60 + Math.random() * 40);
+        
+        // Transportation
+        transportCost = 100 + Math.random() * 100;
+        
+        // Miscellaneous
+        miscCost = 80 + Math.random() * 40;
+      }
+
+      const costBreakdown = {
+        flights: Math.round(flightCost),
+        hotels: Math.round(hotelCost),
+        activities: Math.round(activityCost),
+        meals: Math.round(mealCost),
+        transportation: Math.round(transportCost),
+        miscellaneous: Math.round(miscCost)
+      };
+
+      const estimatedCost = Object.values(costBreakdown).reduce((sum, cost) => sum + cost, 0);
+
+      res.json({
+        estimatedCost,
+        costBreakdown
+      });
+    } catch (error) {
+      console.error("Error calculating cost estimate:", error);
+      res.status(500).json({ error: "Failed to calculate cost estimate" });
+    }
+  });
+
+  // Corporate trips API
+  app.get("/api/trips/corporate", async (req: Request, res: Response) => {
+    try {
+      // Get all trips for corporate users
+      const corporateTrips = await db.select({
+        id: trips.id,
+        title: trips.title,
+        city: trips.city,
+        country: trips.country,
+        startDate: trips.startDate,
+        endDate: trips.endDate,
+        budget: trips.budget,
+        userId: trips.userId
+      })
+      .from(trips)
+      .innerJoin(users, eq(trips.userId, users.id))
+      .where(eq(users.role_type, 'corporate'));
+
+      res.json(corporateTrips);
+    } catch (error) {
+      console.error("Error fetching corporate trips:", error);
+      res.status(500).json({ error: "Failed to fetch corporate trips" });
+    }
+  });
+
+  // Corporate trip optimization API
+  app.post("/api/optimize-corporate-trips", async (req: Request, res: Response) => {
+    try {
+      const { trips: tripsToOptimize } = req.body;
+      
+      if (!tripsToOptimize || !Array.isArray(tripsToOptimize)) {
+        return res.status(400).json({ error: "Invalid trips data" });
+      }
+
+      // Simulate optimization analysis
+      const optimizedTrips = tripsToOptimize.map((trip: any) => {
+        const originalCost = 2000 + Math.random() * 1000;
+        const savings = 100 + Math.random() * 300;
+        
+        return {
+          ...trip,
+          originalCost: Math.round(originalCost),
+          optimizedCost: Math.round(originalCost - savings),
+          savings: Math.round(savings),
+          hasOptimization: Math.random() > 0.3,
+          reasoning: "Suggested flight time change for better rates",
+          conflictFlags: Math.random() > 0.7 ? ["overlapping_dates"] : []
+        };
+      });
+
+      const totalSavings = optimizedTrips.reduce((sum: number, trip: any) => sum + trip.savings, 0);
+      const conflictsResolved = optimizedTrips.filter((trip: any) => trip.conflictFlags.length > 0).length;
+
+      const result = {
+        optimizedTrips,
+        savings: {
+          totalMoneySaved: totalSavings,
+          totalTimeSaved: Math.round(tripsToOptimize.length * 2), // hours saved
+          conflictsResolved
+        },
+        recommendations: [
+          "Consider consolidating trips to San Francisco",
+          "Book flights 3 weeks in advance for better rates",
+          "Use corporate hotel partnerships for discounts"
+        ]
+      };
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error optimizing corporate trips:", error);
+      res.status(500).json({ error: "Failed to optimize corporate trips" });
     }
   });
 
