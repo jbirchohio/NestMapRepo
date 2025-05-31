@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser(user);
         
-        // If user is authenticated, get their database user ID
+        // If user is authenticated, get their database user ID and establish session
         if (user) {
           try {
             const response = await fetch(`/api/users/auth/${user.id}`);
@@ -53,6 +53,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.log('Database user found:', dbUser);
               setUserId(dbUser.id);
               setRoleType(dbUser.roleType || null);
+              
+              // Establish backend session for authenticated user
+              try {
+                const sessionResponse = await fetch('/api/auth/session', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ authId: user.id })
+                });
+                
+                if (sessionResponse.ok) {
+                  const sessionData = await sessionResponse.json();
+                  console.log('Backend session established on load:', sessionData);
+                } else {
+                  console.warn('Failed to establish backend session on load');
+                }
+              } catch (sessionError) {
+                console.error('Error establishing backend session on load:', sessionError);
+              }
             } else if (response.status === 404) {
               // User not found in database - this is expected for new users
               console.log('Database user not found for auth user:', user.id, '- this is normal for new users');
