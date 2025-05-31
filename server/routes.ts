@@ -1772,6 +1772,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         country: template.country,
         isPublic: false,
         sharingEnabled: false,
+        sharePermission: "read-only",
         collaborators: [],
         completed: false,
         tripType: 'leisure'
