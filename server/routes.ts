@@ -1958,13 +1958,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newTrip = await storage.createTrip({
         userId: req.user.id,
         organizationId: req.user.organizationId,
-        title: `Business Trip to ${tripRequest.destination} for ${tripRequest.clientName}`,
-        description: `Professional business trip generated for ${tripRequest.clientName}`,
-        destination: tripRequest.destination,
-        startDate: tripRequest.startDate,
-        endDate: tripRequest.endDate,
-        budget: tripRequest.budget || generatedTrip.tripSummary?.totalCost || 0,
-        notes: `Business trip for client: ${tripRequest.clientName}. ${generatedTrip.tripSummary?.carbonFootprint ? `Carbon footprint: ${generatedTrip.tripSummary.carbonFootprint} kg CO2` : ''}`
+        title: `Business Trip to ${enhancedRequest.destination} for ${enhancedRequest.clientName}`,
+        description: `Professional business trip generated for ${enhancedRequest.clientName}`,
+        destination: enhancedRequest.destination,
+        startDate: new Date(enhancedRequest.startDate),
+        endDate: new Date(enhancedRequest.endDate),
+        budget: enhancedRequest.budget || generatedTrip.tripSummary?.totalCost || 0,
+        notes: `Business trip for client: ${enhancedRequest.clientName}. ${generatedTrip.tripSummary?.carbonFootprint ? `Carbon footprint: ${generatedTrip.tripSummary.carbonFootprint} kg CO2` : ''}`
       });
 
       console.log("Business trip saved to database with ID:", newTrip.id);
@@ -4767,7 +4767,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         id: user.id,
         email: user.email,
         role: user.role,
-        organizationId: user.organizationId
+        organizationId: user.organization_id
       });
 
       // Save session and respond
@@ -4790,8 +4790,8 @@ Include realistic business activities, meeting times, dining recommendations, an
             id: user.id,
             email: user.email,
             role: user.role,
-            organizationId: user.organizationId,
-            displayName: user.displayName || user.email.split('@')[0]
+            organizationId: user.organization_id,
+            displayName: user.display_name || user.email.split('@')[0]
           }
         });
       });
