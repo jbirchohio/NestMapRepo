@@ -17,6 +17,7 @@ export interface IStorage {
   // Trip operations
   getTrip(id: number): Promise<Trip | undefined>;
   getTripsByUserId(userId: number): Promise<Trip[]>;
+  getUserTrips(userId: number): Promise<Trip[]>;
   getTripByShareCode(shareCode: string): Promise<Trip | undefined>;
   createTrip(trip: InsertTrip): Promise<Trip>;
   updateTrip(id: number, trip: Partial<InsertTrip>): Promise<Trip | undefined>;
@@ -117,6 +118,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.trips.values()).filter(
       (trip) => trip.userId === userId
     );
+  }
+
+  async getUserTrips(userId: number): Promise<Trip[]> {
+    return this.getTripsByUserId(userId);
   }
 
   async getTripByShareCode(shareCode: string): Promise<Trip | undefined> {
@@ -304,6 +309,10 @@ export class DatabaseStorage implements IStorage {
   async getTripsByUserId(userId: number): Promise<Trip[]> {
     const tripList = await db.select().from(trips).where(eq(trips.userId, userId));
     return tripList;
+  }
+
+  async getUserTrips(userId: number): Promise<Trip[]> {
+    return this.getTripsByUserId(userId);
   }
 
   async getTripByShareCode(shareCode: string): Promise<Trip | undefined> {

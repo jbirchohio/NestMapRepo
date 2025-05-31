@@ -59,15 +59,13 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     const userTripsFilter = eq(trips.userId, userId);
     
     // Overview statistics - user specific
-    const [totalTripsResult] = await db.select({ count: count() }).from(trips).where(userTripsFilter);
-    const [totalUsersResult] = await db.select({ count: sql`1` }); // Always 1 for personal analytics
+    const totalTripsResult = await db.select({ count: count() }).from(trips).where(userTripsFilter);
+    const totalUsersResult = [{ count: 1 }]; // Always 1 for personal analytics
     
     // Get activities only for this user's trips
-    const userActivities = db.select().from(activities)
+    const totalActivitiesResult = await db.select({ count: count() }).from(activities)
       .innerJoin(trips, eq(activities.tripId, trips.id))
       .where(userTripsFilter);
-      
-    const [totalActivitiesResult] = await db.select({ count: count() }).from(userActivities.as('user_activities'));
     
     // Average trip length for user's trips only
     const [avgTripLengthResult] = await db.select({
@@ -168,11 +166,11 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       .as('user_trips_with_completed')
     );
 
-    const tripCompletionRate = totalTripsResult.count > 0 ? 
-      Math.round((completedTripsResult.count / totalTripsResult.count) * 100) : 0;
+    const tripCompletionRate = totalTripsResult[0]?.count > 0 ? 
+      Math.round((completedTripsResult[0]?.count / totalTripsResult[0]?.count) * 100) : 0;
 
-    const activityCompletionRate = totalTripsResult.count > 0 ? 
-      Math.round((tripsWithCompletedActivitiesResult.count / totalTripsResult.count) * 100) : 0;
+    const activityCompletionRate = totalTripsResult[0]?.count > 0 ? 
+      Math.round((tripsWithCompletedActivitiesResult[0]?.count / totalTripsResult[0]?.count) * 100) : 0;
 
     // Recent activity for user only
     const sevenDaysAgo = new Date();
