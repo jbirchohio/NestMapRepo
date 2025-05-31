@@ -12,7 +12,21 @@ export default function useTrip(tripId: string | number) {
     if (!stored) return null;
     
     const guestTrips = JSON.parse(stored);
-    return guestTrips.find((trip: ClientTrip) => trip.id === tripId) || null;
+    const foundTrip = guestTrips.find((trip: ClientTrip) => trip.id === tripId) || null;
+    
+    // Debug localStorage trip data
+    console.log('useTrip debug:', {
+      tripId,
+      storedData: stored,
+      guestTripsCount: guestTrips.length,
+      foundTrip,
+      foundTripCoords: foundTrip ? {
+        cityLatitude: foundTrip.cityLatitude,
+        cityLongitude: foundTrip.cityLongitude
+      } : null
+    });
+    
+    return foundTrip;
   };
 
   // Fetch trip details
@@ -25,13 +39,16 @@ export default function useTrip(tripId: string | number) {
     queryFn: async () => {
       if (!tripId) return null;
       
-      // First check if this is a guest trip
-      const guestTrip = getGuestTrip();
-      if (guestTrip) {
-        return guestTrip;
+      // For guest trips (negative IDs), always use localStorage
+      if (typeof tripId === 'number' && tripId < 0) {
+        const guestTrip = getGuestTrip();
+        if (guestTrip) {
+          console.log('Returning guest trip from localStorage:', guestTrip);
+          return guestTrip;
+        }
       }
       
-      // Otherwise fetch from server with authentication
+      // For regular trips, fetch from server with authentication
       const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}`, undefined);
       return res.json();
     },

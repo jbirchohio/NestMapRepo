@@ -173,6 +173,7 @@ export default function TripPlanner() {
     markerCount: mapMarkers.length,
     tripCityLat: trip?.cityLatitude,
     tripCityLng: trip?.cityLongitude,
+    tripObject: trip,
     parsedLat: trip?.cityLatitude ? parseFloat(trip.cityLatitude) : 'no lat',
     parsedLng: trip?.cityLongitude ? parseFloat(trip.cityLongitude) : 'no lng',
     isValidLat: trip?.cityLatitude ? !isNaN(parseFloat(trip.cityLatitude)) : false,
