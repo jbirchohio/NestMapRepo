@@ -116,6 +116,38 @@
   @apply border border-border shadow-sm;
 }
 
+/* Ensure button text is always visible */
+button, .btn {
+  color: hsl(var(--foreground)) !important;
+}
+
+button[data-variant="outline"] {
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+button[data-variant="outline"]:hover {
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+/* Specific fixes for quick action buttons */
+.quick-action-button {
+  background-color: hsl(var(--background)) !important;
+  border: 2px dashed hsl(var(--primary) / 0.3) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.quick-action-button:hover {
+  border-color: hsl(var(--primary)) !important;
+  background-color: hsl(var(--primary) / 0.05) !important;
+}
+
+.quick-action-button .text-primary {
+  color: hsl(var(--primary)) !important;
+}
+
 /* Switch components */
 button[role="switch"] {
   @apply border-2 border-border shadow-sm;

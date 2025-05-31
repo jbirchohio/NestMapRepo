@@ -178,7 +178,7 @@ export default function EnterpriseDashboard() {
           <CardContent className="p-4 pt-0">
             <div className="grid grid-cols-2 gap-3">
               <Link href="/ai-generator">
-                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground">
+                <Button variant="outline" className="quick-action-button w-full h-auto p-4">
                   <div className="text-center">
                     <Sparkles className="w-6 h-6 text-primary mx-auto mb-2" />
                     <span className="text-sm font-medium text-primary">AI Trip Generator</span>
@@ -187,7 +187,7 @@ export default function EnterpriseDashboard() {
               </Link>
               
               <Link href="/proposal-center">
-                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground">
+                <Button variant="outline" className="quick-action-button w-full h-auto p-4">
                   <div className="text-center">
                     <FileText className="w-6 h-6 text-primary mx-auto mb-2" />
                     <span className="text-sm font-medium text-primary">New Proposal</span>
@@ -196,7 +196,7 @@ export default function EnterpriseDashboard() {
               </Link>
               
               <Link href="/analytics">
-                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground">
+                <Button variant="outline" className="quick-action-button w-full h-auto p-4">
                   <div className="text-center">
                     <BarChart3 className="w-6 h-6 text-primary mx-auto mb-2" />
                     <span className="text-sm font-medium text-primary">Analytics</span>
@@ -205,7 +205,7 @@ export default function EnterpriseDashboard() {
               </Link>
               
               <Link href="/team">
-                <Button variant="outline" className="w-full h-auto p-4 border-2 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 text-foreground">
+                <Button variant="outline" className="quick-action-button w-full h-auto p-4">
                   <div className="text-center">
                     <Building2 className="w-6 h-6 text-primary mx-auto mb-2" />
                     <span className="text-sm font-medium text-primary">Team Management</span>
