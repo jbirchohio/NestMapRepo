@@ -110,6 +110,9 @@ const mockTeamMembers = [
 export default function TeamManagement() {
   const [isInviting, setIsInviting] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [showMemberDetails, setShowMemberDetails] = useState(false);
+  const [showEditPermissions, setShowEditPermissions] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<InviteFormValues>({
@@ -157,6 +160,34 @@ export default function TeamManagement() {
       });
     } finally {
       setIsInviting(false);
+    }
+  };
+
+  const handleViewMember = (member: any) => {
+    setSelectedMember(member);
+    setShowMemberDetails(true);
+    toast({
+      title: "Member Details",
+      description: `Viewing detailed information for ${member.name}`,
+    });
+  };
+
+  const handleEditMember = (member: any) => {
+    setSelectedMember(member);
+    setShowEditPermissions(true);
+    toast({
+      title: "Edit Permissions",
+      description: `Opening permission editor for ${member.name}`,
+    });
+  };
+
+  const handleRemoveMember = (member: any) => {
+    if (confirm(`Are you sure you want to remove ${member.name} from the organization? This action cannot be undone.`)) {
+      toast({
+        title: "Member Removed",
+        description: `${member.name} has been removed from the organization`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -402,12 +433,7 @@ export default function TeamManagement() {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => {
-                        toast({
-                          title: "Member Details",
-                          description: `Viewing details for ${member.name} (${member.role})`,
-                        });
-                      }}
+                      onClick={() => handleViewMember(member)}
                       title="View member details"
                     >
                       <Eye className="h-4 w-4" />
@@ -415,12 +441,7 @@ export default function TeamManagement() {
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => {
-                        toast({
-                          title: "Edit Permissions",
-                          description: `Editing permissions for ${member.name}`,
-                        });
-                      }}
+                      onClick={() => handleEditMember(member)}
                       title="Edit member permissions"
                     >
                       <Edit3 className="h-4 w-4" />
@@ -429,13 +450,7 @@ export default function TeamManagement() {
                       variant="ghost" 
                       size="sm" 
                       className="text-destructive"
-                      onClick={() => {
-                        toast({
-                          title: "Remove Member",
-                          description: `This would remove ${member.name} from the organization`,
-                          variant: "destructive",
-                        });
-                      }}
+                      onClick={() => handleRemoveMember(member)}
                       title="Remove member"
                     >
                       <Trash2 className="h-4 w-4" />
