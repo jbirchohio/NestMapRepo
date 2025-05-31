@@ -57,6 +57,10 @@ declare global {
       // Organization filtering
       organizationId?: number;
       organizationFilter?: (orgId: number | null) => boolean;
+      domainOrganization?: any;
+      analyticsScope?: {
+        organizationId: number;
+      };
     }
     
     interface Session {

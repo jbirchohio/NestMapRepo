@@ -7,8 +7,9 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
-import { injectOrganizationContext, enforceOrganizationQueries, auditDatabaseOperations, monitorDatabasePerformance } from "./middleware/database";
+import { monitorDatabasePerformance } from "./middleware/database";
 import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
+import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
 
 const app = express();
 
@@ -75,9 +76,10 @@ app.use(monitorEndpoints);
 
 // Apply database security middleware
 app.use(monitorDatabasePerformance);
+
+// Apply organization scoping middleware for multi-tenant security
+app.use(resolveDomainOrganization);
 app.use(injectOrganizationContext);
-app.use(enforceOrganizationQueries);
-app.use(auditDatabaseOperations);
 
 // Enhanced session security middleware for OAuth flow
 app.use(session({
