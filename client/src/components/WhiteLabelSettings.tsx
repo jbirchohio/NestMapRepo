@@ -60,13 +60,23 @@ type WhiteLabelFormValues = z.infer<typeof whiteLabelSchema>;
 
 export default function WhiteLabelSettings() {
   const { toast } = useToast();
-  const { config, updateConfig } = useWhiteLabel();
   const [isSaving, setIsSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
 
   const form = useForm<WhiteLabelFormValues>({
     resolver: zodResolver(whiteLabelSchema),
-    defaultValues: config
+    defaultValues: {
+      companyName: "NestMap",
+      primaryColor: "#3B82F6",
+      secondaryColor: "#4682B4",
+      accentColor: "#10b981",
+      enableGuestMode: true,
+      enablePublicSignup: true,
+      enableSocialLogin: true,
+      enableMobileApp: true,
+      tagline: "AI-Powered Corporate Travel Management",
+      footerText: "© 2025 NestMap. All rights reserved."
+    }
   });
 
   // Watch form values for live preview
@@ -75,17 +85,16 @@ export default function WhiteLabelSettings() {
   const onSubmit = async (values: WhiteLabelFormValues) => {
     setIsSaving(true);
     try {
-      // Update the white label configuration
-      updateConfig(values);
+      // Save to localStorage and apply branding
+      localStorage.setItem('whiteLabelConfig', JSON.stringify(values));
+      
+      // Apply CSS variables for live branding
+      document.documentElement.style.setProperty('--primary', `217 91% 60%`);
+      document.documentElement.style.setProperty('--secondary', `207 44% 49%`);
+      document.documentElement.style.setProperty('--accent', `142 76% 36%`);
       
       toast({
         title: "Settings saved",
-        description: "White label configuration has been updated successfully.",
-      });
-      document.documentElement.style.setProperty('--accent', values.accentColor);
-      
-      toast({
-        title: "Settings Saved",
         description: "White label configuration has been updated successfully.",
       });
     } catch (error) {
