@@ -108,16 +108,20 @@ export default function WhiteLabelSettings() {
     }
   };
 
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // In a real implementation, you'd upload to a file storage service
-      const fakeUrl = `https://example.com/logos/${file.name}`;
-      form.setValue('companyLogo', fakeUrl);
-      toast({
-        title: "Logo Uploaded",
-        description: "Company logo has been uploaded successfully.",
-      });
+      // Convert to base64 for immediate preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        form.setValue('companyLogo', base64);
+        toast({
+          title: "Logo Uploaded",
+          description: "Company logo has been uploaded successfully.",
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -255,6 +259,51 @@ export default function WhiteLabelSettings() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Branding Preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Branding Preview</CardTitle>
+                <CardDescription>
+                  See how your company branding will appear
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg p-4 bg-white dark:bg-slate-900">
+                  <div className="flex items-center gap-3 pb-3 border-b">
+                    {currentValues.companyLogo ? (
+                      <img 
+                        src={currentValues.companyLogo} 
+                        alt="Company Logo" 
+                        className="h-8 w-8 rounded object-cover"
+                      />
+                    ) : (
+                      <div 
+                        className="h-8 w-8 rounded flex items-center justify-center text-white text-sm font-bold"
+                        style={{ backgroundColor: currentValues.primaryColor }}
+                      >
+                        {currentValues.companyName.charAt(0)}
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="font-bold text-lg text-slate-900 dark:text-slate-100">
+                        {currentValues.companyName}
+                      </span>
+                      {currentValues.tagline && (
+                        <span className="text-sm text-muted-foreground">
+                          {currentValues.tagline}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="pt-3 text-center">
+                    <p className="text-xs text-slate-500">
+                      {currentValues.footerText}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Colors Tab */}
@@ -349,6 +398,67 @@ export default function WhiteLabelSettings() {
                       style={{ backgroundColor: currentValues.accentColor }}
                     >
                       Accent
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Color Scheme Preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Interface Preview</CardTitle>
+                <CardDescription>
+                  See how your color scheme will appear in the interface
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg bg-white dark:bg-slate-900">
+                  {/* Mock Navigation Bar */}
+                  <div 
+                    className="flex items-center justify-between p-3 rounded-t-lg text-white"
+                    style={{ backgroundColor: currentValues.primaryColor }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded bg-white/20"></div>
+                      <span className="font-medium">NestMap</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-white/20"></div>
+                    </div>
+                  </div>
+                  
+                  {/* Mock Content Area */}
+                  <div className="p-4 border-x">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div 
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: currentValues.accentColor }}
+                      ></div>
+                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                        Trip Planning Dashboard
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <div 
+                        className="px-3 py-1 rounded text-xs text-white"
+                        style={{ backgroundColor: currentValues.primaryColor }}
+                      >
+                        Primary Button
+                      </div>
+                      <div 
+                        className="px-3 py-1 rounded text-xs border"
+                        style={{ 
+                          borderColor: currentValues.secondaryColor,
+                          color: currentValues.secondaryColor 
+                        }}
+                      >
+                        Secondary Button
+                      </div>
                     </div>
                   </div>
                 </div>
