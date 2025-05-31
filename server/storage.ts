@@ -196,6 +196,7 @@ export class MemStorage implements IStorage {
     const activity: Activity = { 
       ...insertActivity, 
       id,
+      organizationId: insertActivity.organizationId || null,
       latitude: insertActivity.latitude || null,
       longitude: insertActivity.longitude || null,
       notes: insertActivity.notes || null,

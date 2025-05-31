@@ -69,8 +69,8 @@ export default function CorporateDashboard() {
   
   const avgTripDuration = trips.length > 0 ? Math.round(
     trips.reduce((sum, trip) => {
-      const startDate = trip.start_date || trip.startDate;
-      const endDate = trip.end_date || trip.endDate;
+      const startDate = trip.startDate || trip.start_date;
+      const endDate = trip.endDate || trip.end_date;
       if (!startDate || !endDate) return sum;
       
       const start = new Date(startDate);
@@ -199,8 +199,8 @@ export default function CorporateDashboard() {
                         </Badge>
                         <div className="text-xs text-muted-foreground mt-1">
                           {(() => {
-                            const startDate = trip.start_date || trip.startDate;
-                            const endDate = trip.end_date || trip.endDate;
+                            const startDate = trip.startDate || trip.start_date;
+                            const endDate = trip.endDate || trip.end_date;
                             
                             if (!startDate || !endDate) return <p>Dates not set</p>;
                             

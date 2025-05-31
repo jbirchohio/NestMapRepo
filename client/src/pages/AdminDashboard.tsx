@@ -54,17 +54,17 @@ export default function AdminDashboard() {
   const [reviewDialog, setReviewDialog] = useState<WhiteLabelRequest | null>(null);
 
   // Fetch organizations
-  const { data: organizations = [], isLoading: orgsLoading } = useQuery({
+  const { data: organizations = [], isLoading: orgsLoading } = useQuery<Organization[]>({
     queryKey: ['/api/admin/organizations'],
   });
 
   // Fetch white label requests
-  const { data: requests = [], isLoading: requestsLoading } = useQuery({
+  const { data: requests = [], isLoading: requestsLoading } = useQuery<WhiteLabelRequest[]>({
     queryKey: ['/api/admin/white-label-requests'],
   });
 
   // Fetch custom domains
-  const { data: domains = [], isLoading: domainsLoading } = useQuery({
+  const { data: domains = [], isLoading: domainsLoading } = useQuery<CustomDomain[]>({
     queryKey: ['/api/admin/custom-domains'],
   });
 
