@@ -67,9 +67,20 @@ export default function Home() {
   const clearGuestData = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("nestmap_guest_trips");
+      // Also clear any guest activities
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('guest_activities_')) {
+          localStorage.removeItem(key);
+        }
+      });
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS] });
     }
   };
+
+  // Auto-clear old guest data on page load to test the fix
+  React.useEffect(() => {
+    clearGuestData();
+  }, []);
 
 
 
