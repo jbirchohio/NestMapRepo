@@ -116,6 +116,13 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
   }
 
   try {
+    console.log('Auth middleware check:', {
+      path: req.path,
+      hasSession: !!req.session,
+      sessionUserId: req.session ? (req.session as any).userId : 'no session',
+      sessionKeys: req.session ? Object.keys(req.session) : []
+    });
+    
     // Check for session-based authentication
     if (req.session && (req.session as any).userId) {
       const userId = (req.session as any).userId;
