@@ -13,6 +13,9 @@ import { apiRateLimit, authRateLimit, organizationRateLimit, endpointRateLimit }
 import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
 import { runMigrations } from "../scripts/migrate";
+import { db } from "./db-connection";
+import { users } from "../shared/schema";
+import { eq } from "drizzle-orm";
 
 const app = express();
 
@@ -104,6 +107,39 @@ app.use(session({
   rolling: true, // Reset expiration on activity
   proxy: process.env.NODE_ENV === 'production' // Trust proxy in production
 }));
+
+// Session-based authentication middleware to populate req.user
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+  // Skip for non-API routes and specific auth endpoints only
+  if (!req.path.startsWith('/api') || req.path === '/api/auth/login' || req.path === '/api/auth/register') {
+    return next();
+  }
+
+  try {
+    // Check for session-based authentication
+    if (req.session && (req.session as any).userId) {
+      const userId = (req.session as any).userId;
+      
+      // Get user from database to populate req.user
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (user) {
+        req.user = {
+          id: user.id,
+          organizationId: user.organization_id,
+          role: user.role || 'user'
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Session authentication error:', error);
+  }
+  
+  next();
+});
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
