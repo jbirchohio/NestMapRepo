@@ -21,7 +21,8 @@ export default function useMapbox() {
     try {
       // Check if token is available
       if (!MAPBOX_TOKEN || MAPBOX_TOKEN === 'undefined' || MAPBOX_TOKEN === '') {
-        throw new Error('Mapbox token is not configured. Please set VITE_MAPBOX_TOKEN in your environment variables.');
+        console.error('Mapbox token not configured');
+        return;
       }
       
       // Validate coordinates with strict checking
@@ -36,17 +37,42 @@ export default function useMapbox() {
       console.log('Mapbox token configured:', MAPBOX_TOKEN ? 'Yes' : 'No');
       console.log('Map center coordinates:', center);
       
-      // Create a new map instance with basic configuration
-      const map = new mapboxgl.Map({
-        container,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: center as [number, number],
-        zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
-        attributionControl: false
+      // Add a delay to ensure DOM is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Create a new map instance with error handling
+      let map: mapboxgl.Map;
+      
+      // Wrap in try-catch to handle Mapbox GL internal errors
+      try {
+        map = new mapboxgl.Map({
+          container,
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: center as [number, number],
+          zoom: (typeof zoom === 'number' && !isNaN(zoom)) ? zoom : 12,
+          attributionControl: false,
+          trackResize: false // Disable automatic resize tracking to prevent errors
+        });
+      } catch (mapboxError) {
+        console.error('Mapbox GL initialization failed:', mapboxError);
+        // Don't throw - just return silently to prevent React crashes
+        return;
+      }
+      
+      // Add error handler for the map
+      map.on('error', (e) => {
+        console.error('Mapbox GL error:', e.error);
+        // Don't throw - just log the error
       });
       
-      // Add zoom and rotation controls
-      map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+      // Wait for map to load before adding controls
+      map.on('load', () => {
+        try {
+          map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+        } catch (controlError) {
+          console.warn('Failed to add navigation controls:', controlError);
+        }
+      });
       
       // Store the map instance
       mapInstance.current = map;
@@ -54,7 +80,8 @@ export default function useMapbox() {
     } catch (error) {
       console.error('Error initializing Mapbox:', error);
       console.error('Failed to initialize map:', error);
-      throw error;
+      // Don't throw - just return to prevent React crashes
+      return;
     }
   }, []);
 
