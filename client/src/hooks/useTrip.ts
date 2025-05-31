@@ -31,9 +31,8 @@ export default function useTrip(tripId: string | number) {
         return guestTrip;
       }
       
-      // Otherwise fetch from server
-      const res = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}`);
-      if (!res.ok) throw new Error("Failed to fetch trip");
+      // Otherwise fetch from server with authentication
+      const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}`, undefined);
       return res.json();
     },
     enabled: !!tripId,
@@ -55,8 +54,7 @@ export default function useTrip(tripId: string | number) {
         return [];
       }
       
-      const res = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}/todos`);
-      if (!res.ok) throw new Error("Failed to fetch todos");
+      const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/todos`, undefined);
       return res.json();
     },
     enabled: !!tripId,
@@ -78,8 +76,7 @@ export default function useTrip(tripId: string | number) {
         return [];
       }
       
-      const res = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}/notes`);
-      if (!res.ok) throw new Error("Failed to fetch notes");
+      const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/notes`, undefined);
       return res.json();
     },
     enabled: !!tripId,
