@@ -3693,7 +3693,7 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Verify domain
+  // Verify domain with real DNS checking
   app.post("/api/admin/domains/:id/verify", async (req: Request, res: Response) => {
     try {
       if (!req.user || req.user.role !== 'admin') {
@@ -3701,21 +3701,138 @@ Include realistic business activities, meeting times, dining recommendations, an
       }
 
       const domainId = parseInt(req.params.id);
+      
+      // Get domain from database
+      const [domain] = await db.select()
+        .from(customDomains)
+        .where(eq(customDomains.id, domainId));
 
-      // In production, implement actual DNS verification
+      if (!domain) {
+        return res.status(404).json({ error: "Domain not found" });
+      }
+
+      // Import domain verification functions
+      const { verifyDomainOwnership, verifySSLCertificate } = await import('./domainVerification');
+
+      // Verify DNS ownership
+      const dnsResult = await verifyDomainOwnership(domain.domain, domain.verification_token || '');
+      
+      // Check SSL certificate
+      const sslResult = await verifySSLCertificate(domain.domain);
+
+      // Update domain status based on verification results
       await db.update(customDomains)
         .set({
-          dns_verified: true,
-          ssl_verified: true,
-          status: 'active',
-          verified_at: new Date(),
+          dns_verified: dnsResult.verified,
+          ssl_verified: sslResult.verified,
+          status: dnsResult.verified && sslResult.verified ? 'active' : 'pending',
+          verified_at: dnsResult.verified ? new Date() : null,
         })
         .where(eq(customDomains.id, domainId));
 
-      res.json({ success: true });
+      res.json({ 
+        success: true,
+        dns_verified: dnsResult.verified,
+        ssl_verified: sslResult.verified,
+        dns_error: dnsResult.error,
+        ssl_error: sslResult.error
+      });
     } catch (error) {
       console.error("Error verifying domain:", error);
       res.status(500).json({ error: "Failed to verify domain" });
+    }
+  });
+
+  // Get domain verification instructions
+  app.get("/api/domains/:id/verification-instructions", async (req: Request, res: Response) => {
+    try {
+      const domainId = parseInt(req.params.id);
+      
+      const [domain] = await db.select()
+        .from(customDomains)
+        .where(eq(customDomains.id, domainId));
+
+      if (!domain) {
+        return res.status(404).json({ error: "Domain not found" });
+      }
+
+      const { getDomainVerificationInstructions } = await import('./domainVerification');
+      const instructions = getDomainVerificationInstructions(
+        domain.domain, 
+        domain.verification_token || ''
+      );
+
+      res.json(instructions);
+    } catch (error) {
+      console.error("Error getting verification instructions:", error);
+      res.status(500).json({ error: "Failed to get verification instructions" });
+    }
+  });
+
+  // Request SSL certificate for domain
+  app.post("/api/admin/domains/:id/ssl-certificate", async (req: Request, res: Response) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const domainId = parseInt(req.params.id);
+      
+      const [domain] = await db.select()
+        .from(customDomains)
+        .where(eq(customDomains.id, domainId));
+
+      if (!domain) {
+        return res.status(404).json({ error: "Domain not found" });
+      }
+
+      if (!domain.dns_verified) {
+        return res.status(400).json({ error: "Domain must be DNS verified before requesting SSL certificate" });
+      }
+
+      const { SSLManager } = await import('./sslManager');
+      const sslManager = new SSLManager(false); // Use staging for development
+
+      // Create ACME account if needed
+      const account = await sslManager.createAccount('admin@nestmap.com'); // Use your admin email
+
+      // Request certificate with HTTP-01 challenge validation
+      const certificate = await sslManager.requestCertificate(
+        domain.domain,
+        account,
+        async (token: string, keyAuthorization: string) => {
+          // Store challenge response for domain validation
+          // In production, you'd serve this at /.well-known/acme-challenge/${token}
+          console.log(`ACME Challenge for ${domain.domain}:`);
+          console.log(`Token: ${token}`);
+          console.log(`Key Authorization: ${keyAuthorization}`);
+          console.log(`Serve at: http://${domain.domain}/.well-known/acme-challenge/${token}`);
+          
+          // For now, return true - in production implement proper challenge serving
+          return true;
+        }
+      );
+
+      // Store certificate
+      await sslManager.storeCertificate(certificate);
+
+      // Update domain with SSL status
+      await db.update(customDomains)
+        .set({
+          ssl_verified: true,
+          ssl_certificate: certificate.certificate,
+          status: 'active',
+        })
+        .where(eq(customDomains.id, domainId));
+
+      res.json({ 
+        success: true, 
+        message: "SSL certificate generated successfully",
+        expiresAt: certificate.expiresAt
+      });
+    } catch (error) {
+      console.error("Error requesting SSL certificate:", error);
+      res.status(500).json({ error: `Failed to request SSL certificate: ${error instanceof Error ? error.message : 'Unknown error'}` });
     }
   });
 
