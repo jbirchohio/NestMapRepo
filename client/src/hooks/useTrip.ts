@@ -12,7 +12,7 @@ export default function useTrip(tripId: string | number) {
     if (!stored) return null;
     
     const guestTrips = JSON.parse(stored);
-    const foundTrip = guestTrips.find((trip: ClientTrip) => trip.id === tripId) || null;
+    const foundTrip = guestTrips.find((trip: ClientTrip) => trip.id === Number(tripId)) || null;
     
     // Debug localStorage trip data
     console.log('useTrip debug:', {
