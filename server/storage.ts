@@ -98,6 +98,12 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getUserByAuthId(authId: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.auth_id === authId
+    );
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
     const user: User = { 
@@ -179,6 +185,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.activities.values())
       .filter((activity) => activity.tripId === tripId)
       .sort((a, b) => a.order - b.order);
+  }
+
+  async getActivities(tripId: number): Promise<Activity[]> {
+    return this.getActivitiesByTripId(tripId);
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
