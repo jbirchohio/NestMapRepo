@@ -99,7 +99,7 @@ export async function generateItinerary(req: Request, res: Response) {
       todos: [],
       notes: []
     };
-    const pdfBuffer = await generateTripPdf(pdfData);
+    const pdfBuffer = await generatePdfBuffer(pdfData);
 
     // Set proper headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
