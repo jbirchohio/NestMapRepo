@@ -58,10 +58,6 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     // Filter all queries to only include data for this specific user
     const userTripsFilter = eq(trips.userId, userId);
     
-    // Debug: Check if we can find any trips for this user
-    const userTrips = await db.select().from(trips).where(userTripsFilter);
-    console.log(`User ${userId} has ${userTrips.length} trips:`, userTrips.map(t => ({ id: t.id, title: t.title, city: t.city, country: t.country, location: t.location })));
-    
     // Overview statistics - user specific
     const totalTripsResult = await db.select({ count: count() }).from(trips).where(userTripsFilter);
     const totalUsersResult = [{ count: 1 }]; // Always 1 for personal analytics
@@ -70,16 +66,6 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     const totalActivitiesResult = await db.select({ count: count() }).from(activities)
       .innerJoin(trips, eq(activities.tripId, trips.id))
       .where(userTripsFilter);
-    
-    // Debug: Check activities for this user
-    const userActivities = await db.select({
-      id: activities.id,
-      title: activities.title,
-      tripId: activities.tripId
-    }).from(activities)
-      .innerJoin(trips, eq(activities.tripId, trips.id))
-      .where(userTripsFilter);
-    console.log(`User ${userId} has ${userActivities.length} activities:`, userActivities.slice(0, 3));
     
     // Average trip length for user's trips only
     const [avgTripLengthResult] = await db.select({
@@ -111,6 +97,7 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
     .orderBy(desc(count()))
     .limit(10);
 
+    console.log('Destinations query result:', destinationsResult);
     const totalTripsWithDestination = destinationsResult.reduce((sum, dest) => sum + dest.tripCount, 0);
     const destinations = destinationsResult.map(dest => ({
       city: dest.city || 'Unknown',
@@ -118,6 +105,7 @@ export async function getUserPersonalAnalytics(userId: number): Promise<Analytic
       tripCount: dest.tripCount,
       percentage: totalTripsWithDestination > 0 ? Math.round((dest.tripCount / totalTripsWithDestination) * 100) : 0
     }));
+    console.log('Processed destinations:', destinations);
 
     // User's trip duration distribution
     const tripDurationsResult = await db.select({
