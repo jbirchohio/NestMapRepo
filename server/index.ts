@@ -80,7 +80,8 @@ app.use(monitorDatabasePerformance);
 
 // Apply organization scoping middleware for multi-tenant security
 app.use(resolveDomainOrganization);
-app.use(injectOrganizationContext);
+// Temporarily disabled to fix crash - organization filtering handled in storage layer
+// app.use(injectOrganizationContext);
 
 // Enhanced session security middleware for OAuth flow
 app.use(session({

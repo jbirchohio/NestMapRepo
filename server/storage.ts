@@ -394,15 +394,20 @@ export class DatabaseStorage implements IStorage {
 
   async getTripsByUserId(userId: number, organizationId?: number | null): Promise<Trip[]> {
     // Critical security fix: Include organization filtering to prevent cross-tenant data access
-    let whereConditions = [eq(trips.userId, userId)];
-    
-    // If organization context is provided, filter by organization
     if (organizationId !== undefined) {
-      whereConditions.push(eq(trips.organizationId, organizationId));
+      // Secure multi-tenant query with organization isolation
+      const tripList = await db.select().from(trips).where(
+        and(
+          eq(trips.userId, userId),
+          eq(trips.organizationId, organizationId)
+        )
+      );
+      return tripList;
+    } else {
+      // For non-organization users, filter by user only
+      const tripList = await db.select().from(trips).where(eq(trips.userId, userId));
+      return tripList;
     }
-    
-    const tripList = await db.select().from(trips).where(and(...whereConditions));
-    return tripList;
   }
 
   async getUserTrips(userId: number): Promise<Trip[]> {
