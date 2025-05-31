@@ -1,6 +1,6 @@
 import { db } from "./db-connection";
 import { trips, activities, todos, notes, users } from "@shared/schema";
-import { sql, count, avg, desc, asc, eq } from "drizzle-orm";
+import { sql, count, avg, desc, asc, eq, and } from "drizzle-orm";
 
 export interface AnalyticsData {
   overview: {
@@ -51,6 +51,199 @@ export interface AnalyticsData {
     usersWithCompletedTrips: number;
     usersWithExports: number;
   };
+}
+
+export async function getUserPersonalAnalytics(userId: number): Promise<AnalyticsData> {
+  try {
+    // Filter all queries to only include data for this specific user
+    const userTripsFilter = eq(trips.userId, userId);
+    
+    // Overview statistics - user specific
+    const [totalTripsResult] = await db.select({ count: count() }).from(trips).where(userTripsFilter);
+    const [totalUsersResult] = await db.select({ count: sql`1` }); // Always 1 for personal analytics
+    
+    // Get activities only for this user's trips
+    const userActivities = db.select().from(activities)
+      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .where(userTripsFilter);
+      
+    const [totalActivitiesResult] = await db.select({ count: count() }).from(userActivities.as('user_activities'));
+    
+    // Average trip length for user's trips only
+    const [avgTripLengthResult] = await db.select({
+      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1`)
+    }).from(trips).where(userTripsFilter);
+
+    // Average activities per trip for user only
+    const userTripActivities = await db.select({
+      tripId: activities.tripId,
+      activityCount: count()
+    })
+    .from(activities)
+    .innerJoin(trips, eq(activities.tripId, trips.id))
+    .where(userTripsFilter)
+    .groupBy(activities.tripId);
+
+    const avgActivitiesPerTrip = userTripActivities.length > 0 ? 
+      Math.round(userTripActivities.reduce((sum, trip) => sum + trip.activityCount, 0) / userTripActivities.length) : 0;
+
+    // User's destinations only
+    const destinationsResult = await db.select({
+      city: trips.city,
+      country: trips.country,
+      tripCount: count()
+    })
+    .from(trips)
+    .where(and(userTripsFilter, sql`${trips.city} IS NOT NULL AND ${trips.country} IS NOT NULL`))
+    .groupBy(trips.city, trips.country)
+    .orderBy(desc(count()))
+    .limit(10);
+
+    const totalTripsWithDestination = destinationsResult.reduce((sum, dest) => sum + dest.tripCount, 0);
+    const destinations = destinationsResult.map(dest => ({
+      city: dest.city || 'Unknown',
+      country: dest.country || 'Unknown',
+      tripCount: dest.tripCount,
+      percentage: totalTripsWithDestination > 0 ? Math.round((dest.tripCount / totalTripsWithDestination) * 100) : 0
+    }));
+
+    // User's trip duration distribution
+    const tripDurationsResult = await db.select({
+      duration: sql`CASE 
+        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 2 THEN 'Weekend (1-2 days)'
+        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
+        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
+        ELSE 'Extended Trip (10+ days)'
+      END`.as('duration'),
+      count: count()
+    })
+    .from(trips)
+    .where(userTripsFilter)
+    .groupBy(sql`CASE 
+      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 2 THEN 'Weekend (1-2 days)'
+      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
+      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
+      ELSE 'Extended Trip (10+ days)'
+    END`)
+    .orderBy(desc(count()));
+
+    const totalTripsForDuration = tripDurationsResult.reduce((sum, dur) => sum + dur.count, 0);
+    const tripDurations = tripDurationsResult.map(dur => ({
+      duration: dur.duration as string,
+      count: dur.count,
+      percentage: totalTripsForDuration > 0 ? Math.round((dur.count / totalTripsForDuration) * 100) : 0
+    }));
+
+    // User's activity tags distribution
+    const activityTagsResult = await db.select({
+      tag: activities.tag,
+      count: count()
+    })
+    .from(activities)
+    .innerJoin(trips, eq(activities.tripId, trips.id))
+    .where(and(userTripsFilter, sql`${activities.tag} IS NOT NULL`))
+    .groupBy(activities.tag)
+    .orderBy(desc(count()))
+    .limit(10);
+
+    const totalActivitiesWithTags = activityTagsResult.reduce((sum, tag) => sum + tag.count, 0);
+    const activityTags = activityTagsResult.map(tag => ({
+      tag: tag.tag || 'Untagged',
+      count: tag.count,
+      percentage: totalActivitiesWithTags > 0 ? Math.round((tag.count / totalActivitiesWithTags) * 100) : 0
+    }));
+
+    // User engagement metrics (simplified for personal view)
+    const [completedTripsResult] = await db.select({
+      count: count()
+    }).from(trips).where(and(userTripsFilter, eq(trips.completed, true)));
+
+    const [tripsWithCompletedActivitiesResult] = await db.select({
+      count: count()
+    }).from(
+      db.selectDistinct({ tripId: activities.tripId })
+      .from(activities)
+      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .where(and(userTripsFilter, sql`${activities.completed} = true`))
+      .as('user_trips_with_completed')
+    );
+
+    const tripCompletionRate = totalTripsResult.count > 0 ? 
+      Math.round((completedTripsResult.count / totalTripsResult.count) * 100) : 0;
+
+    const activityCompletionRate = totalTripsResult.count > 0 ? 
+      Math.round((tripsWithCompletedActivitiesResult.count / totalTripsResult.count) * 100) : 0;
+
+    // Recent activity for user only
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [newTripsLast7DaysResult] = await db.select({
+      count: count()
+    }).from(trips).where(and(userTripsFilter, sql`${trips.createdAt} >= ${sevenDaysAgo}`));
+
+    const [activitiesAddedLast7DaysResult] = await db.select({
+      count: count()
+    }).from(activities)
+    .innerJoin(trips, eq(activities.tripId, trips.id))
+    .where(userTripsFilter);
+
+    // Growth metrics for user
+    const eightWeeksAgo = new Date();
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+    
+    const growthMetricsResult = await db.select({
+      week: sql`DATE_TRUNC('week', ${trips.createdAt})`.as('week'),
+      tripCount: count(trips.id)
+    })
+    .from(trips)
+    .where(and(userTripsFilter, sql`${trips.createdAt} >= ${eightWeeksAgo}`))
+    .groupBy(sql`DATE_TRUNC('week', ${trips.createdAt})`)
+    .orderBy(sql`DATE_TRUNC('week', ${trips.createdAt})`);
+
+    const growthMetrics = growthMetricsResult.map(week => ({
+      date: new Date(week.week as string).toISOString().split('T')[0],
+      trips: week.tripCount,
+      users: 1, // Always 1 for personal analytics
+      activities: 0 // Simplified for now
+    }));
+
+    return {
+      overview: {
+        totalTrips: totalTripsResult.count,
+        totalUsers: 1, // Always 1 for personal analytics
+        totalActivities: totalActivitiesResult.count,
+        averageTripLength: Math.round(Number(avgTripLengthResult.avgLength) || 0),
+        averageActivitiesPerTrip: avgActivitiesPerTrip
+      },
+      destinations,
+      tripDurations,
+      activityTags,
+      userEngagement: {
+        usersWithTrips: 1, // Always 1 for personal view
+        usersWithMultipleTrips: totalTripsResult.count > 1 ? 1 : 0,
+        averageTripsPerUser: totalTripsResult.count,
+        tripCompletionRate,
+        activityCompletionRate
+      },
+      recentActivity: {
+        newTripsLast7Days: newTripsLast7DaysResult.count,
+        newUsersLast7Days: 0, // Not relevant for personal analytics
+        activitiesAddedLast7Days: activitiesAddedLast7DaysResult.count
+      },
+      growthMetrics,
+      userFunnel: {
+        totalUsers: 1,
+        usersWithTrips: 1,
+        usersWithActivities: totalActivitiesResult.count > 0 ? 1 : 0,
+        usersWithCompletedTrips: completedTripsResult.count > 0 ? 1 : 0,
+        usersWithExports: 0 // Not tracked for personal view
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching personal analytics:', error);
+    throw new Error('Failed to fetch personal analytics data');
+  }
 }
 
 export async function getAnalytics(): Promise<AnalyticsData> {

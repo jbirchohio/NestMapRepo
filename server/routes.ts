@@ -29,7 +29,7 @@ import {
 } from "./calendarSync";
 import { generateTripPdf } from "./pdfExport";
 import { getAllTemplates, getTemplateById } from "./tripTemplates";
-import { getAnalytics, exportAnalyticsCSV } from "./analytics";
+import { getAnalytics, getUserPersonalAnalytics, exportAnalyticsCSV } from "./analytics";
 import { sendTeamInvitationEmail, sendWelcomeEmail } from "./emailService";
 import { getUserWithRole, ROLE_PERMISSIONS } from "./rbac";
 import { 
@@ -2679,9 +2679,23 @@ Include realistic business activities, meeting times, dining recommendations, an
   app.get("/api/analytics", async (req: Request, res: Response) => {
     try {
       console.log("Fetching analytics data...");
-      const analyticsData = await getAnalytics();
-      console.log("Analytics data generated successfully");
-      res.json(analyticsData);
+      const userId = req.query.userId as string;
+      
+      if (userId) {
+        // For specific user, get their personal analytics
+        const userIdNum = parseInt(userId);
+        if (isNaN(userIdNum)) {
+          return res.status(400).json({ message: "Invalid user ID" });
+        }
+        const analyticsData = await getUserPersonalAnalytics(userIdNum);
+        console.log("Personal analytics data generated successfully");
+        res.json(analyticsData);
+      } else {
+        // For system-wide analytics (admin view)
+        const analyticsData = await getAnalytics();
+        console.log("System analytics data generated successfully");
+        res.json(analyticsData);
+      }
     } catch (error) {
       console.error("Error fetching analytics:", error);
       res.status(500).json({ message: "Could not fetch analytics data" });

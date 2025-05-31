@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Users, MapPin, Calendar, Activity, TrendingUp, Download, Globe } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AnalyticsData {
   overview: {
@@ -59,13 +60,17 @@ interface AnalyticsData {
 const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 
 export default function AnalyticsDashboard() {
+  const { user } = useUser();
+  
   const { data: analytics, isLoading, error } = useQuery({
-    queryKey: ["/api/analytics"],
+    queryKey: ["/api/analytics", user?.id],
     queryFn: async () => {
-      const response = await fetch("/api/analytics");
+      const url = user?.id ? `/api/analytics?userId=${user.id}` : "/api/analytics";
+      const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch analytics");
       return response.json() as Promise<AnalyticsData>;
-    }
+    },
+    enabled: !!user
   });
 
   const handleExportCSV = () => {
