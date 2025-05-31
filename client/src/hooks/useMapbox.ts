@@ -197,11 +197,48 @@ export default function useMapbox() {
     }
   }, []);
 
+  const geocodeLocation = useCallback(async (searchQuery: string, isCity?: boolean): Promise<{
+    latitude: number;
+    longitude: number;
+    fullAddress: string;
+  } | null> => {
+    if (!MAPBOX_TOKEN || !searchQuery) return null;
+    
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&limit=1`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.features && data.features.length > 0) {
+        const feature = data.features[0];
+        const [longitude, latitude] = feature.center;
+        
+        return {
+          latitude,
+          longitude,
+          fullAddress: feature.place_name
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
+  }, []);
+
   return {
     initializeMap,
     addMarkers,
     addRoutes,
     flyToLocation,
-    resizeMap
+    resizeMap,
+    geocodeLocation
   };
 }
