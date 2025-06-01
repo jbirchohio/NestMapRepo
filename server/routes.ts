@@ -58,6 +58,7 @@ import {
 } from "./calendarSync";
 import { getDemoAnalytics } from "./demoAnalytics";
 import { getBrandingConfig } from "./branding";
+import { getOrganizationAnalytics } from "./analytics";
 import {
   organizationContextMiddleware,
   validateTripAccess,

@@ -53,6 +53,66 @@ export interface AnalyticsData {
   };
 }
 
+export interface OrganizationAnalyticsData {
+  organizationId: number;
+  overview: {
+    totalTrips: number;
+    totalUsers: number;
+    totalActivities: number;
+    totalBudget: number;
+    averageTripLength: number;
+    averageActivitiesPerTrip: number;
+    averageTripBudget: number;
+  };
+  destinations: {
+    city: string;
+    country: string;
+    tripCount: number;
+    totalBudget: number;
+    percentage: number;
+  }[];
+  tripDurations: {
+    duration: string;
+    count: number;
+    percentage: number;
+  }[];
+  budgetAnalysis: {
+    totalBudget: number;
+    averageBudget: number;
+    budgetDistribution: {
+      range: string;
+      count: number;
+      percentage: number;
+    }[];
+  };
+  userEngagement: {
+    usersWithTrips: number;
+    usersWithMultipleTrips: number;
+    averageTripsPerUser: number;
+    tripCompletionRate: number;
+    activityCompletionRate: number;
+    mostActiveUsers: {
+      userId: number;
+      username: string;
+      tripCount: number;
+      totalBudget: number;
+    }[];
+  };
+  recentActivity: {
+    newTripsLast7Days: number;
+    newUsersLast7Days: number;
+    activitiesAddedLast7Days: number;
+    budgetSpentLast7Days: number;
+  };
+  growthMetrics: {
+    date: string;
+    trips: number;
+    users: number;
+    activities: number;
+    budget: number;
+  }[];
+}
+
 export async function getUserPersonalAnalytics(userId: number, organizationId?: number | null): Promise<AnalyticsData> {
   try {
     // Filter all queries to only include data for this specific user
@@ -567,4 +627,281 @@ export async function exportAnalyticsCSV(data: AnalyticsData): Promise<string> {
   });
 
   return csvRows.join('\n');
+}
+
+export async function getOrganizationAnalytics(organizationId: number): Promise<OrganizationAnalyticsData> {
+  try {
+    // Filter all queries to organization members only
+    const orgUsersFilter = eq(users.organization_id, organizationId);
+    const orgTripsFilter = eq(trips.organizationId, organizationId);
+
+    // Overview statistics for organization
+    const [totalTripsResult] = await db.select({ count: count() })
+      .from(trips)
+      .where(orgTripsFilter);
+
+    const [totalUsersResult] = await db.select({ count: count() })
+      .from(users)
+      .where(orgUsersFilter);
+
+    const [totalActivitiesResult] = await db.select({ count: count() })
+      .from(activities)
+      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .where(orgTripsFilter);
+
+    // Budget analysis
+    const [totalBudgetResult] = await db.select({
+      totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`
+    }).from(trips).where(orgTripsFilter);
+
+    const [avgBudgetResult] = await db.select({
+      avgBudget: avg(trips.budget)
+    }).from(trips).where(and(orgTripsFilter, sql`${trips.budget} IS NOT NULL`));
+
+    // Average trip length
+    const [avgTripLengthResult] = await db.select({
+      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1`)
+    }).from(trips).where(orgTripsFilter);
+
+    // Average activities per trip
+    const [avgActivitiesResult] = await db.select({
+      avgActivities: avg(sql`activity_count`)
+    }).from(
+      db.select({
+        tripId: activities.tripId,
+        activityCount: sql`COUNT(*)`.as('activity_count')
+      })
+      .from(activities)
+      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .where(orgTripsFilter)
+      .groupBy(activities.tripId)
+      .as('trip_activities')
+    );
+
+    // Top destinations with budget breakdown
+    const destinationsResult = await db.select({
+      city: trips.city,
+      country: trips.country,
+      tripCount: count(trips.id),
+      totalBudget: sql`COALESCE(SUM(CAST(${trips.budget} AS NUMERIC)), 0)`
+    })
+    .from(trips)
+    .where(orgTripsFilter)
+    .groupBy(trips.city, trips.country)
+    .orderBy(desc(count(trips.id)))
+    .limit(10);
+
+    const totalTrips = totalTripsResult[0]?.count || 0;
+    const destinations = destinationsResult.map(dest => ({
+      city: dest.city?.split(',')[0]?.trim() || 'Unknown',
+      country: dest.country || 'Unknown',
+      tripCount: dest.tripCount,
+      totalBudget: Number(dest.totalBudget) || 0,
+      percentage: totalTrips > 0 ? Math.round((dest.tripCount / totalTrips) * 100) : 0
+    }));
+
+    // Trip duration analysis
+    const tripDurationsResult = await db.select({
+      duration: sql`CASE 
+        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 3 THEN '1-3 days'
+        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 7 THEN '4-7 days'
+        WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 14 THEN '1-2 weeks'
+        ELSE '2+ weeks'
+      END`.as('duration'),
+      count: count()
+    })
+    .from(trips)
+    .where(orgTripsFilter)
+    .groupBy(sql`CASE 
+      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 3 THEN '1-3 days'
+      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 7 THEN '4-7 days'
+      WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 14 THEN '1-2 weeks'
+      ELSE '2+ weeks'
+    END`)
+    .orderBy(desc(count()));
+
+    const tripDurations = tripDurationsResult.map(duration => ({
+      duration: duration.duration,
+      count: duration.count,
+      percentage: totalTrips > 0 ? Math.round((duration.count / totalTrips) * 100) : 0
+    }));
+
+    // Budget distribution analysis
+    const budgetDistributionResult = await db.select({
+      range: sql`CASE 
+        WHEN ${trips.budget} IS NULL THEN 'Not set'
+        WHEN ${trips.budget} <= 500 THEN '$0-500'
+        WHEN ${trips.budget} <= 1000 THEN '$501-1000'
+        WHEN ${trips.budget} <= 2500 THEN '$1001-2500'
+        WHEN ${trips.budget} <= 5000 THEN '$2501-5000'
+        ELSE '$5000+'
+      END`.as('range'),
+      count: count()
+    })
+    .from(trips)
+    .where(orgTripsFilter)
+    .groupBy(sql`CASE 
+      WHEN ${trips.budget} IS NULL THEN 'Not set'
+      WHEN ${trips.budget} <= 500 THEN '$0-500'
+      WHEN ${trips.budget} <= 1000 THEN '$501-1000'
+      WHEN ${trips.budget} <= 2500 THEN '$1001-2500'
+      WHEN ${trips.budget} <= 5000 THEN '$2501-5000'
+      ELSE '$5000+'
+    END`)
+    .orderBy(desc(count()));
+
+    const budgetDistribution = budgetDistributionResult.map(budget => ({
+      range: budget.range,
+      count: budget.count,
+      percentage: totalTrips > 0 ? Math.round((budget.count / totalTrips) * 100) : 0
+    }));
+
+    // User engagement metrics
+    const [usersWithTripsResult] = await db.select({
+      count: sql`COUNT(DISTINCT ${users.id})`
+    })
+    .from(users)
+    .innerJoin(trips, eq(trips.userId, users.id))
+    .where(orgUsersFilter);
+
+    const [usersWithMultipleTripsResult] = await db.select({
+      count: sql`COUNT(*)`
+    })
+    .from(
+      db.select({
+        userId: trips.userId,
+        tripCount: count(trips.id)
+      })
+      .from(trips)
+      .where(orgTripsFilter)
+      .groupBy(trips.userId)
+      .having(sql`COUNT(${trips.id}) > 1`)
+      .as('multi_trip_users')
+    );
+
+    const [completedTripsResult] = await db.select({
+      count: count()
+    }).from(trips).where(and(orgTripsFilter, eq(trips.completed, true)));
+
+    const [tripsWithCompletedActivitiesResult] = await db.select({
+      count: count()
+    }).from(
+      db.selectDistinct({ tripId: activities.tripId })
+      .from(activities)
+      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .where(and(orgTripsFilter, sql`${activities.completed} = true`))
+      .as('completed_activities')
+    );
+
+    // Most active users
+    const mostActiveUsersResult = await db.select({
+      userId: users.id,
+      username: users.username,
+      tripCount: count(trips.id),
+      totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`
+    })
+    .from(users)
+    .innerJoin(trips, eq(trips.userId, users.id))
+    .where(orgUsersFilter)
+    .groupBy(users.id, users.username)
+    .orderBy(desc(count(trips.id)))
+    .limit(5);
+
+    const mostActiveUsers = mostActiveUsersResult.map(user => ({
+      userId: user.userId,
+      username: user.username || 'Unknown',
+      tripCount: user.tripCount,
+      totalBudget: Number(user.totalBudget) || 0
+    }));
+
+    // Recent activity (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [newTripsLast7DaysResult] = await db.select({
+      count: count()
+    }).from(trips).where(and(orgTripsFilter, sql`${trips.createdAt} >= ${sevenDaysAgo}`));
+
+    const [newUsersLast7DaysResult] = await db.select({
+      count: count()
+    }).from(users).where(and(orgUsersFilter, sql`${users.created_at} >= ${sevenDaysAgo}`));
+
+    const [activitiesAddedLast7DaysResult] = await db.select({
+      count: count()
+    }).from(activities)
+    .innerJoin(trips, eq(activities.tripId, trips.id))
+    .where(and(orgTripsFilter, sql`${activities.createdAt} >= ${sevenDaysAgo}`));
+
+    const [budgetSpentLast7DaysResult] = await db.select({
+      totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`
+    }).from(trips).where(and(orgTripsFilter, sql`${trips.createdAt} >= ${sevenDaysAgo}`));
+
+    // Growth metrics (last 8 weeks)
+    const eightWeeksAgo = new Date();
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+    
+    const growthMetricsResult = await db.select({
+      week: sql`DATE_TRUNC('week', ${trips.createdAt})`.as('week'),
+      tripCount: count(trips.id),
+      budget: sql`COALESCE(SUM(${trips.budget}), 0)`
+    })
+    .from(trips)
+    .where(and(orgTripsFilter, sql`${trips.createdAt} >= ${eightWeeksAgo}`))
+    .groupBy(sql`DATE_TRUNC('week', ${trips.createdAt})`)
+    .orderBy(asc(sql`DATE_TRUNC('week', ${trips.createdAt})`));
+
+    const growthMetrics = growthMetricsResult.map(week => ({
+      date: new Date(week.week).toISOString().split('T')[0],
+      trips: week.tripCount,
+      users: 0, // Would need separate query to calculate new users per week
+      activities: 0, // Would need separate query to calculate activities per week
+      budget: Number(week.budget) || 0
+    }));
+
+    const totalUsers = totalUsersResult[0]?.count || 0;
+    const usersWithTrips = Number(usersWithTripsResult[0]?.count) || 0;
+    const averageTripsPerUser = totalUsers > 0 ? Math.round((totalTrips / totalUsers) * 100) / 100 : 0;
+    const tripCompletionRate = totalTrips > 0 ? 
+      Math.round(((completedTripsResult[0]?.count || 0) / totalTrips) * 100) : 0;
+    const activityCompletionRate = totalTrips > 0 ? 
+      Math.round(((tripsWithCompletedActivitiesResult[0]?.count || 0) / totalTrips) * 100) : 0;
+
+    return {
+      organizationId,
+      overview: {
+        totalTrips,
+        totalUsers,
+        totalActivities: totalActivitiesResult[0]?.count || 0,
+        totalBudget: Number(totalBudgetResult[0]?.totalBudget) || 0,
+        averageTripLength: Math.round((Number(avgTripLengthResult[0]?.avgLength) || 0) * 100) / 100,
+        averageActivitiesPerTrip: Math.round((Number(avgActivitiesResult[0]?.avgActivities) || 0) * 100) / 100,
+        averageTripBudget: Math.round((Number(avgBudgetResult[0]?.avgBudget) || 0) * 100) / 100
+      },
+      destinations,
+      tripDurations,
+      budgetAnalysis: {
+        totalBudget: Number(totalBudgetResult[0]?.totalBudget) || 0,
+        averageBudget: Math.round((Number(avgBudgetResult[0]?.avgBudget) || 0) * 100) / 100,
+        budgetDistribution
+      },
+      userEngagement: {
+        usersWithTrips,
+        usersWithMultipleTrips: Number(usersWithMultipleTripsResult[0]?.count) || 0,
+        averageTripsPerUser,
+        tripCompletionRate,
+        activityCompletionRate,
+        mostActiveUsers
+      },
+      recentActivity: {
+        newTripsLast7Days: newTripsLast7DaysResult[0]?.count || 0,
+        newUsersLast7Days: newUsersLast7DaysResult[0]?.count || 0,
+        activitiesAddedLast7Days: activitiesAddedLast7DaysResult[0]?.count || 0,
+        budgetSpentLast7Days: Number(budgetSpentLast7DaysResult[0]?.totalBudget) || 0
+      },
+      growthMetrics
+    };
+  } catch (error) {
+    console.error('Error fetching organization analytics:', error);
+    throw new Error('Failed to fetch organization analytics data');
+  }
 }
