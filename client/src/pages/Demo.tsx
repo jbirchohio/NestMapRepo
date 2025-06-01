@@ -48,11 +48,19 @@ export default function Demo() {
   // Demo login mutation
   const loginMutation = useMutation({
     mutationFn: async (organizationId: number) => {
-      const response = await apiRequest(`/api/demo/login`, {
+      const response = await fetch(`/api/demo/login`, {
         method: "POST",
-        body: { organizationId },
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ organizationId }),
       });
-      return response;
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       toast({
@@ -77,10 +85,18 @@ export default function Demo() {
   // Reset demo data mutation
   const resetMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/demo/reset`, {
+      const response = await fetch(`/api/demo/reset`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
-      return response;
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
