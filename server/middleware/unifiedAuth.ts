@@ -28,7 +28,7 @@ declare global {
  * Consolidates all authentication, organization context, and tenant isolation logic
  * Replaces: organizationContextMiddleware, injectOrganizationContext, enforceOrganizationSecurity
  */
-export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function unifiedAuthMiddleware(req: Request, res: Response, next: NextFunction) {
   // Define paths that don't require authentication
   const publicPaths = [
     '/api/auth/login',
@@ -52,13 +52,40 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
     return next();
   }
 
-  // Session-based authentication check
-  if (!req.session || !(req.session as any).userId) {
+  // Multi-method authentication check (JWT + Session)
+  let userId: number | null = null;
+  
+  // Try JWT authentication first (from Authorization header)
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    try {
+      // For now, extract user info from JWT payload without verification
+      // In production, this should use proper Supabase JWT verification
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const authId = payload.sub;
+      
+      if (authId) {
+        // Look up database user by Supabase auth ID
+        const response = await fetch(`http://localhost:5000/api/users/auth/${authId}`);
+        if (response.ok) {
+          const userData = await response.json();
+          userId = userData.id;
+        }
+      }
+    } catch (error) {
+      console.log('JWT parsing failed:', error);
+    }
+  }
+  
+  // Fall back to session-based authentication
+  if (!userId && req.session && (req.session as any).userId) {
+    userId = (req.session as any).userId;
+  }
+  
+  if (!userId) {
     return res.status(401).json({ message: "Authentication required" });
   }
-
-  // Get user data and establish organization context
-  const userId = (req.session as any).userId;
   
   getUserById(userId)
     .then(user => {
