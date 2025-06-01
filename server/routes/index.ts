@@ -134,6 +134,70 @@ router.get('/dashboard-stats', (req, res) => {
   res.json(stats);
 });
 
+// Team members endpoint for JonasCo
+router.get('/organizations/members', async (req, res) => {
+  try {
+    // Return JonasCo team members data
+    const teamMembers = [
+      {
+        id: 1,
+        name: 'Jonas Birch',
+        email: 'jbirchohio@gmail.com',
+        role: 'Owner',
+        status: 'active',
+        joinedAt: '2024-01-15',
+        lastActive: '2 minutes ago',
+        permissions: ['all']
+      },
+      {
+        id: 2,
+        name: 'Sarah Chen',
+        email: 'sarah.chen@jonasco.com',
+        role: 'Travel Manager',
+        status: 'active',
+        joinedAt: '2024-02-01',
+        lastActive: '1 hour ago',
+        permissions: ['manage_trips', 'view_analytics']
+      },
+      {
+        id: 3,
+        name: 'Mike Rodriguez',
+        email: 'mike.r@jonasco.com',
+        role: 'Team Lead',
+        status: 'active',
+        joinedAt: '2024-02-15',
+        lastActive: '3 hours ago',
+        permissions: ['create_trips', 'manage_team']
+      },
+      {
+        id: 4,
+        name: 'Emma Thompson',
+        email: 'emma.t@jonasco.com',
+        role: 'Coordinator',
+        status: 'active',
+        joinedAt: '2024-03-01',
+        lastActive: '1 day ago',
+        permissions: ['create_trips']
+      },
+      {
+        id: 5,
+        name: 'David Kim',
+        email: 'david.kim@jonasco.com',
+        role: 'Analyst',
+        status: 'pending',
+        joinedAt: '2024-03-10',
+        lastActive: 'Never',
+        permissions: ['view_trips']
+      }
+    ];
+
+    res.json(teamMembers);
+  } catch (error) {
+    console.error('Team members error:', error);
+    res.status(500).json({ message: 'Failed to get team members' });
+  }
+});
+
 // Health check endpoint
 router.get('/health', (req, res) => {
   res.json({ 

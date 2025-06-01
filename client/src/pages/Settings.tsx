@@ -9,15 +9,16 @@ export default function Settings() {
   
   // Check user permissions for settings access
   const { data: userPermissions } = useQuery({
-    queryKey: ['/api/user/permissions', userId],
+    queryKey: ['/api/user/permissions'],
     queryFn: async () => {
-      if (!userId) return [];
-      const response = await fetch(`/api/user/permissions?userId=${userId}`);
+      const response = await fetch('/api/user/permissions', {
+        credentials: 'include'
+      });
       if (!response.ok) throw new Error('Failed to fetch permissions');
       const data = await response.json();
       return data.permissions || [];
     },
-    enabled: !!userId,
+    enabled: !!user,
   });
 
   const hasSettingsAccess = Array.isArray(userPermissions) && (
