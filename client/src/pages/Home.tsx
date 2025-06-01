@@ -243,7 +243,7 @@ export default function Home() {
                   <Button 
                     variant="default" 
                     onClick={handleSignUpClick}
-                    className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]"
+                    className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] text-[#000000]"
                   >
                     Sign Up
                   </Button>
