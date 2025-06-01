@@ -1,0 +1,21 @@
+Session Store Not Persistent (Scaling Risk): The application currently uses the default in-memory session store for Express, which is not suitable for production. Sessions are not shared across instances or persisted on restart
+GitHub
+. If the app scales to multiple servers or restarts, users will be logged out and state (like OAuth tokens in session) may be lost.
+📍 Evidence: In server/index.ts, express-session is configured with security flags but no store option
+GitHub
+. This implies the MemoryStore is in use. There is no mention of Redis or database-backed session storage in the config. The .env.example also has no config for an external session store
+GitHub
+GitHub
+.
+❗ Why it Matters: For enterprise deployment, you typically run multiple app instances behind a load balancer. Without a shared session store (Redis, DB, etc.), a user might bounce between instances and lose their session on each switch (invalidating login). Also, memory sessions will be cleared on crash or deployment, disrupting user experience. This is more of a stability/scalability issue than a security flaw, but it impacts production readiness.
+✅ Fix: Integrate a persistent session store. For example, use connect-pg-simple or connect-redis to store sessions in Postgres or Redis. Configure it in express-session like:
+js
+Copy
+app.use(session({
+  store: new RedisStore({ client: redisClient }),
+  secret: SESSION_SECRET, 
+  … 
+}));
+Also ensure sticky sessions or other load balancer strategies if needed. Update documentation and env config for the session store (e.g., Redis URL).
+🧠 Replit Agent Prompt: “Configure a persistent session store for Express. Use a Redis or database-backed store instead of the default MemoryStore. Modify the session middleware in server/index.ts to use this store, and test that sessions persist across server restarts and are shared between multiple instances.”
+🧪 Testing: After implementing, start the app, log in, then simulate a restart (or switch to another instance). The user’s session cookie should remain valid and GET /api/auth/me should still return the user info without requiring a new login. Also test load balancing by simulating two instances (or using a session store test script) – ensure a session set in one process is recognized in another

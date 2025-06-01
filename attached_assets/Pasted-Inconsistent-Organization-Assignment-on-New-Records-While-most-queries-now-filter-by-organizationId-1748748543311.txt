@@ -1,0 +1,20 @@
+Inconsistent Organization Assignment on New Records: While most queries now filter by organizationId, newly created records in some tables don’t have org IDs set, which could bypass isolation in edge cases. For instance, createActivity in the storage layer inserts an activity without setting its organizationId field
+GitHub
+. The schema defines activities.organizationId but the insert omits it, defaulting to NULL. Similarly, todos/notes creation uses whatever the client sends (or null).
+📍 Evidence: The createActivity implementation logs the data and inserts only fixed fields (tripId, title, date, etc.) – no org filtering or auto-fill
+GitHub
+. Thus activities created via AI-generation or user input may store with organizationId = NULL. The trips table does store org IDs (the fix was applied there
+GitHub
+GitHub
+), but child records might not.
+❗ Why it Matters: Every data row should carry tenant context to enforce isolation in all queries. Null or incorrect org IDs can cause security gaps (if any query filters by org, those records might be returned or excluded incorrectly). For example, an admin querying all activities for their org might miss ones with null orgId, or a malicious user might exploit an API that filters only by org field. Consistency is also crucial for audit and compliance.
+✅ Fix: Ensure all create functions include the organizationId. When creating child records, derive the org from the parent trip or current user. For example, in createActivity, fetch the trip’s org or use req.user.organizationId and include it in the insert:
+ts
+Copy
+const orgId = insertActivity.organizationId ?? (await db.select().from(trips).where(eq(trips.id, insertActivity.tripId)))[0]?.organizationId;
+… .values({ ...activityData, organizationId: orgId })…
+Alternatively, modify the API layer to always set organizationId before calling storage (similar to how setOrganizationId is used for trips
+GitHub
+). Audit all insert/update paths for todos, notes, etc., to enforce this.
+🧠 Replit Agent Prompt: “For each create/update function in storage (activities, todos, notes, etc.), include the current organizationId. Use the parent trip’s organizationId or the user’s org context to set the organizationId field on insert. Also update any schema or Zod schema if needed to require organizationId in those contexts.”
+🧪 Testing: Create a new activity via the API and then query the database to verify it has an organizationId. For example, log into an account in Org A, add an activity, then directly check the DB: SELECT organization_id FROM activities WHERE trip_id=<trip>;. It should show Org A’s ID (not NULL). Also, test that retrieving activities as another org’s admin does not return this activity (attempt via the API with credentials from Org B – expect 403 or empty list).

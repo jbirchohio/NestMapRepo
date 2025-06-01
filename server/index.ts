@@ -6,9 +6,14 @@ import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
-import { apiVersioning, monitorEndpoints } from "./middleware/api-security";
-import { injectOrganizationContext, resolveDomainOrganization } from "./middleware/organizationScoping";
+import { monitorDatabasePerformance } from "./middleware/database";
+import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
+import { apiRateLimit, authRateLimit, organizationRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
+import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
+import { globalErrorHandler } from "./middleware/globalErrorHandler";
+import { runMigrations } from "../scripts/migrate";
 import { db } from "./db-connection";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
@@ -110,12 +115,21 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Apply CORS configuration
 app.use(configureCORS);
 
+// Apply unified monitoring (replaces performance, memory, database, and endpoint monitoring)
+import { unifiedMonitoringMiddleware } from "./middleware/unified-monitoring";
+app.use(unifiedMonitoringMiddleware);
+
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
 
+// Apply comprehensive rate limiting first for maximum protection
+app.use('/api', apiRateLimit); // Global API rate limiting
+app.use('/api/auth', authRateLimit); // Stricter limits for authentication endpoints
+app.use('/api', organizationRateLimit); // Organization-tier based limiting
+
 // Apply API security middleware only to API routes
 app.use('/api', apiVersioning);
-app.use('/api', monitorEndpoints);
+app.use('/api', authenticateApiKey);
 
 // Apply organization scoping middleware for multi-tenant security
 app.use(resolveDomainOrganization);
