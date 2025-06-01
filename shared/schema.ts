@@ -726,8 +726,82 @@ export type InsertTripComment = z.infer<typeof insertTripCommentSchema>;
 export type ActivityLog = typeof activityLog.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
+// Approval Workflow Schema
+export const approvalRequests = pgTable("approval_requests", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  requesterId: integer("requester_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  approverId: integer("approver_id").references(() => users.id),
+  entityType: text("entity_type").notNull(), // trip, expense, budget_change, booking
+  entityId: integer("entity_id").notNull(),
+  requestType: text("request_type").notNull(), // create, modify, delete, budget_increase
+  currentData: jsonb("current_data").$type<Record<string, any>>(),
+  proposedData: jsonb("proposed_data").$type<Record<string, any>>().notNull(),
+  reason: text("reason"),
+  businessJustification: text("business_justification"),
+  status: text("status").default("pending").notNull(), // pending, approved, rejected, cancelled
+  priority: text("priority").default("normal").notNull(), // low, normal, high, urgent
+  approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
+  autoApprovalRule: text("auto_approval_rule"),
+  escalationLevel: integer("escalation_level").default(0),
+  dueDate: timestamp("due_date"),
+  notificationsSent: jsonb("notifications_sent").$type<Array<{
+    type: string;
+    sentAt: Date;
+    recipient: string;
+  }>>().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertApprovalRequestSchema = createInsertSchema(approvalRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  organizationId: true,
+});
+
+// Approval Rules Schema
+export const approvalRules = pgTable("approval_rules", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  entityType: text("entity_type").notNull(),
+  conditions: jsonb("conditions").$type<{
+    budgetThreshold?: number;
+    departmentIds?: number[];
+    userRoles?: string[];
+    tripDuration?: number;
+    destinationCountries?: string[];
+    expenseCategories?: string[];
+  }>().notNull(),
+  approverRoles: jsonb("approver_roles").$type<string[]>().notNull(),
+  autoApprove: boolean("auto_approve").default(false),
+  escalationDays: integer("escalation_days").default(3),
+  requiresBusinessJustification: boolean("requires_business_justification").default(false),
+  active: boolean("active").default(true),
+  priority: integer("priority").default(100),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertApprovalRuleSchema = createInsertSchema(approvalRules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  organizationId: true,
+});
+
 // Booking Types
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type BookingPayment = typeof bookingPayments.$inferSelect;
 export type InsertBookingPayment = z.infer<typeof insertBookingPaymentSchema>;
+
+// Approval Types
+export type ApprovalRequest = typeof approvalRequests.$inferSelect;
+export type InsertApprovalRequest = z.infer<typeof insertApprovalRequestSchema>;
+export type ApprovalRule = typeof approvalRules.$inferSelect;
+export type InsertApprovalRule = z.infer<typeof insertApprovalRuleSchema>;
