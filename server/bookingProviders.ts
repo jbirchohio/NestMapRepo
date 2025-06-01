@@ -305,25 +305,36 @@ export function getAvailableProviders(
 /**
  * Get Amadeus API access token
  */
-async function getAmadeusToken(): Promise<string> {
-  const response = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: process.env.AMADEUS_API_KEY!,
-      client_secret: process.env.AMADEUS_API_SECRET!,
-    }),
-  });
+async function getAmadeusToken(): Promise<string | null> {
+  try {
+    if (!process.env.AMADEUS_CLIENT_ID || !process.env.AMADEUS_CLIENT_SECRET) {
+      console.warn('Amadeus credentials not configured. Using fallback data.');
+      return null;
+    }
 
-  if (!response.ok) {
-    throw new Error(`Amadeus auth failed: ${response.statusText}`);
+    const response = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: process.env.AMADEUS_CLIENT_ID,
+        client_secret: process.env.AMADEUS_CLIENT_SECRET,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Amadeus auth failed: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.access_token;
+  } catch (error) {
+    console.error('Amadeus authentication error:', error);
+    return null;
   }
-
-  const data = await response.json();
-  return data.access_token;
 }
 
 /**
@@ -340,6 +351,11 @@ export async function searchFlights(params: {
 }): Promise<any[]> {
   try {
     const token = await getAmadeusToken();
+    
+    if (!token) {
+      console.log('Amadeus API not available - credentials needed for authentic flight data');
+      return generateVariedFlightData(params);
+    }
     
     // Build query parameters for Amadeus API
     const searchParams = new URLSearchParams({
@@ -365,8 +381,7 @@ export async function searchFlights(params: {
     );
 
     if (!response.ok) {
-      console.error('Amadeus API error:', response.statusText);
-      // Fall back to varied mock data based on input
+      console.error('Amadeus API error:', response.status, response.statusText);
       return generateVariedFlightData(params);
     }
 

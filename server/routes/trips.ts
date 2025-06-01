@@ -217,7 +217,18 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
       trip,
       activities,
       clientName,
-      message: message || "We're excited to present this customized travel itinerary tailored specifically for your needs.",
+      agentName: req.user?.displayName || "Travel Agent",
+      companyName: "NestMap Travel Services",
+      estimatedCost: trip.budget || 0,
+      costBreakdown: {
+        flights: Math.round((trip.budget || 0) * 0.4),
+        hotels: Math.round((trip.budget || 0) * 0.3),
+        activities: Math.round((trip.budget || 0) * 0.15),
+        meals: Math.round((trip.budget || 0) * 0.1),
+        transportation: Math.round((trip.budget || 0) * 0.03),
+        miscellaneous: Math.round((trip.budget || 0) * 0.02)
+      },
+      proposalNotes: message || "We're excited to present this customized travel itinerary tailored specifically for your needs.",
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       contactInfo: {
         email: contactEmail,

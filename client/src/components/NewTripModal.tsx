@@ -412,7 +412,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                       const aiData = await aiResponse.json();
                       
                       if (aiData.locations && Array.isArray(aiData.locations)) {
-                        const mapboxToken = "pk.eyJ1IjoicmV0bW91c2VyIiwiYSI6ImNtOXJtOHZ0MjA0dTgycG9ocDA3dXNpMGIifQ.WHYwcRzR3g8djNiBsVw1vg";
+                        const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
                         
                         const processedLocations = await Promise.all(
                           aiData.locations.map(async (loc: any) => {
