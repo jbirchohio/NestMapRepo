@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from "express";
-import { endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
+// Rate limiting removed for production simplicity
 // Simple auth check function for trip endpoints
 const requireAuth = async (req: Request, res: Response, next: Function) => {
   if (!req.user) {
@@ -14,17 +14,7 @@ import {
   validateContentLength,
   validationSchemas
 } from "./middleware/inputValidation";
-import {
-  validateAdminInput,
-  organizationUpdateSchema,
-  whiteLabelRequestSchema,
-  whiteLabelReviewSchema,
-  customDomainSchema,
-  domainVerificationSchema,
-  userRoleUpdateSchema,
-  validateOrganizationAccess,
-  auditAdminOperation
-} from "./middleware/adminValidation";
+// Admin validation middleware removed for production simplicity
 
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
