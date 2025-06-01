@@ -55,7 +55,10 @@ router.get('/user/permissions', (req, res) => {
       'BOOK_HOTELS',
       'CREATE_TRIPS',
       'USE_TRIP_OPTIMIZER',
-      'BULK_OPTIMIZE_TRIPS'
+      'BULK_OPTIMIZE_TRIPS',
+      'view_analytics',
+      'manage_organizations',
+      'manage_users'
     );
   } else if (role === 'manager') {
     permissions.push(

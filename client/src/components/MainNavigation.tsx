@@ -43,7 +43,7 @@ export default function MainNavigation() {
     queryKey: ['/api/user/permissions', userId],
     queryFn: async () => {
       if (!userId || !user) return [];
-      const response = await fetch(`/api/user/permissions?userId=${userId}`);
+      const response = await fetch('/api/user/permissions');
       if (!response.ok) throw new Error('Failed to fetch permissions');
       const data = await response.json();
       console.log('Permissions loaded:', data.permissions);
