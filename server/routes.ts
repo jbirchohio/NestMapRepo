@@ -116,7 +116,6 @@ import {
   createBillingPortalSession 
 } from "./billing";
 import { generateBusinessTrip } from "./businessTripGenerator";
-import { searchFlights, searchHotels } from "./bookingProviders";
 
 // Demo data for testing role-based features
 const getDemoTrips = (roleType: string) => {

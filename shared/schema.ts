@@ -501,3 +501,7 @@ export type InsertWhiteLabelRequest = z.infer<typeof insertWhiteLabelRequestSche
 export type WhiteLabelFeature = typeof whiteLabelFeatures.$inferSelect;
 
 export type WhiteLabelPlan = typeof WHITE_LABEL_PLANS[keyof typeof WHITE_LABEL_PLANS];
+
+// Organization Members Types
+export type OrganizationMember = typeof organizationMembers.$inferSelect;
+export type InsertOrganizationMember = z.infer<typeof insertOrganizationMemberSchema>;

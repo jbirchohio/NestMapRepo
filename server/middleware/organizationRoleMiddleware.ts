@@ -30,7 +30,7 @@ declare global {
 export async function loadOrganizationRole(req: Request, res: Response, next: NextFunction) {
   try {
     // Skip if user is not authenticated
-    if (!req.user || !req.user.organizationId) {
+    if (!req.user || !req.user.organization_id) {
       return next();
     }
 
@@ -41,7 +41,7 @@ export async function loadOrganizationRole(req: Request, res: Response, next: Ne
       .where(
         and(
           eq(organizationMembers.user_id, req.user.id),
-          eq(organizationMembers.organization_id, req.user.organizationId),
+          eq(organizationMembers.organization_id, req.user.organization_id!),
           eq(organizationMembers.status, 'active')
         )
       );
