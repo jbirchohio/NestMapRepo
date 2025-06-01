@@ -616,5 +616,50 @@ export type InsertExpense = z.infer<typeof insertExpenseSchema>;
 export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
 export type InsertCalendarIntegration = z.infer<typeof insertCalendarIntegrationSchema>;
 
+// Trip Comments Schema
+export const tripComments = pgTable("trip_comments", {
+  id: serial("id").primaryKey(),
+  tripId: integer("trip_id").references(() => trips.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  activityId: integer("activity_id").references(() => activities.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  parentId: integer("parent_id").references(() => tripComments.id, { onDelete: "cascade" }),
+  resolved: boolean("resolved").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Real-time Activity Log Schema
+export const activityLog = pgTable("activity_log", {
+  id: serial("id").primaryKey(),
+  tripId: integer("trip_id").references(() => trips.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  action: text("action").notNull(), // created, updated, deleted, commented
+  entityType: text("entity_type").notNull(), // trip, activity, expense, comment
+  entityId: integer("entity_id"),
+  changes: jsonb("changes").$type<Record<string, any>>(),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export const insertTripCommentSchema = createInsertSchema(tripComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  organizationId: true,
+});
+
+export const insertActivityLogSchema = createInsertSchema(activityLog).omit({
+  id: true,
+  timestamp: true,
+  organizationId: true,
+});
+
 // Trip Collaboration Types
 export type TripCollaboration = typeof tripCollaborations.$inferSelect;
+export type TripComment = typeof tripComments.$inferSelect;
+export type InsertTripComment = z.infer<typeof insertTripCommentSchema>;
+export type ActivityLog = typeof activityLog.$inferSelect;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
