@@ -1,6 +1,12 @@
 import type { Express, Request, Response } from "express";
 import { endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
-import { unifiedAuthMiddleware } from "./middleware/unifiedAuth";
+// Simple auth check function for trip endpoints
+const requireAuth = async (req: Request, res: Response, next: Function) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  next();
+};
 import { 
   validateAndSanitizeBody, 
   validateQueryParams, 
@@ -580,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Activities routes
-  app.get("/api/trips/:id/activities", unifiedAuth, async (req: Request, res: Response) => {
+  app.get("/api/trips/:id/activities", requireAuth, async (req: Request, res: Response) => {
     try {
       const tripIdParam = req.params.id;
       
@@ -841,7 +847,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Todos routes
-  app.get("/api/trips/:id/todos", async (req: Request, res: Response) => {
+  app.get("/api/trips/:id/todos", requireAuth, async (req: Request, res: Response) => {
     try {
       const tripIdParam = req.params.id;
       
@@ -861,6 +867,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Guest mode todos fetch detected for tripId:", tripId);
         // For guest mode, return empty array since todos are stored in localStorage
         return res.json([]);
+      }
+      
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // Check organization access - ensure user can only access trips from their organization
+      if (trip.organizationId !== req.user!.organizationId) {
+        return res.status(403).json({ message: "Access denied: Trip belongs to different organization" });
       }
       
       const todos = await storage.getTodosByTripId(tripId);
@@ -937,7 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Notes routes
-  app.get("/api/trips/:id/notes", async (req: Request, res: Response) => {
+  app.get("/api/trips/:id/notes", requireAuth, async (req: Request, res: Response) => {
     try {
       const tripIdParam = req.params.id;
       
@@ -957,6 +974,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Guest mode notes fetch detected for tripId:", tripId);
         // For guest mode, return empty array since notes are stored in localStorage
         return res.json([]);
+      }
+      
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // Check organization access - ensure user can only access trips from their organization
+      if (trip.organizationId !== req.user!.organizationId) {
+        return res.status(403).json({ message: "Access denied: Trip belongs to different organization" });
       }
       
       const notes = await storage.getNotesByTripId(tripId);
