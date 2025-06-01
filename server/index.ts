@@ -31,10 +31,6 @@ const sessionStore = new PgSession({
 
 // Security headers middleware with enhanced CSP
 app.use((req, res, next) => {
-  // Generate nonce for inline scripts
-  const nonce = Buffer.from(Math.random().toString()).toString('base64');
-  res.locals.nonce = nonce;
-  
   // Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
   // Prevent MIME type sniffing
@@ -46,10 +42,14 @@ app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
   
-  // Enhanced Content Security Policy - production hardened
+  // Enhanced Content Security Policy
   let csp;
   if (process.env.NODE_ENV === 'production') {
-    // Production CSP - strict security, no unsafe directives
+    // Generate nonce for production inline scripts
+    const nonce = Buffer.from(Math.random().toString()).toString('base64');
+    res.locals.nonce = nonce;
+    
+    // Production CSP - strict security with nonce-based scripts
     csp = [
       "default-src 'self'",
       `script-src 'self' 'nonce-${nonce}' https://cdn.jsdelivr.net https://unpkg.com`,
@@ -65,13 +65,22 @@ app.use((req, res, next) => {
       "upgrade-insecure-requests"
     ].join('; ');
   } else {
-    // Development - disable CSP temporarily to fix React preamble detection
-    csp = null;
+    // Development CSP - compatible with Vite React plugin (no nonce needed)
+    csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https: wss: ws: http://localhost:* http://127.0.0.1:*",
+      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
+      "worker-src 'self' blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join('; ');
   }
   
-  if (csp) {
-    res.setHeader('Content-Security-Policy', csp);
-  }
+  res.setHeader('Content-Security-Policy', csp);
   next();
 });
 
