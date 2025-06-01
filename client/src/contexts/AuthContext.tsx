@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               try {
                 // Get the current session to access the access token
                 const sessionResult = await auth.getSession();
-                const accessToken = sessionResult.data?.session?.access_token;
+                const accessToken = sessionResult.session?.access_token;
                 
                 if (accessToken) {
                   const sessionResponse = await fetch('/api/auth/session', {

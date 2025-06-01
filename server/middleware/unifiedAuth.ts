@@ -34,6 +34,7 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
     '/api/auth/login',
     '/api/auth/register', 
     '/api/auth/logout',
+    '/api/auth/session',
     '/api/health',
     '/api/templates',
     '/api/share/',
