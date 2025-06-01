@@ -21,6 +21,10 @@ export default function Analytics() {
     enabled: !!user,
   });
 
+  // Debug permissions
+  console.log('User permissions for analytics:', userPermissions);
+  console.log('User object:', user);
+
   const hasAnalyticsAccess = Array.isArray(userPermissions) && (
     userPermissions.includes('ACCESS_ANALYTICS') || 
     userPermissions.includes('view_analytics') ||

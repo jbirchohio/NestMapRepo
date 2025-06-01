@@ -63,9 +63,32 @@ const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d
 export default function AnalyticsDashboard() {
   const { userId } = useAuth();
 
+  console.log('AnalyticsDashboard - userId:', userId);
+
   const { data: analytics, isLoading, error } = useQuery({
     queryKey: ["/api/analytics"],
-    enabled: !!userId
+    enabled: !!userId, // Require authentication
+    queryFn: async () => {
+      // Get the current Supabase session for JWT token
+      const { data: { session } } = await import("@/lib/supabase").then(m => m.supabase.auth.getSession());
+
+      const response = await fetch("/api/analytics", {
+        headers: {
+          "Authorization": session?.access_token ? `Bearer ${session.access_token}` : "",
+          "Content-Type": "application/json"
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Analytics request failed: ${response.status}`);
+      }
+
+      return response.json();
+    },
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false
   });
 
   const handleExportCSV = () => {
