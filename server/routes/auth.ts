@@ -80,14 +80,30 @@ router.post("/login", async (req: Request, res: Response) => {
 
 // User logout
 router.post("/logout", (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error("Logout error:", err);
-      return res.status(500).json({ message: "Could not log out" });
+  try {
+    const session = req.session as any;
+    
+    // Check if this is a demo session
+    if (session?.isDemo) {
+      // Clear demo session data
+      session.isDemo = false;
+      session.demoUser = null;
+      session.demoRole = null;
+      session.demoOrganizationId = null;
     }
-    res.clearCookie('connect.sid');
-    res.json({ message: "Logged out successfully" });
-  });
+    
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Could not log out" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ success: true, message: "Logged out successfully" });
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Logout failed" });
+  }
 });
 
 // Get current user (requires authentication)
