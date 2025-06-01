@@ -65,22 +65,13 @@ app.use((req, res, next) => {
       "upgrade-insecure-requests"
     ].join('; ');
   } else {
-    // Development CSP - more permissive for hot reload and dev tools
-    csp = [
-      "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com`,
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https: wss: ws: http://localhost:* http://127.0.0.1:*",
-      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
-      "worker-src 'self' blob:",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'"
-    ].join('; ');
+    // Development - disable CSP temporarily to fix React preamble detection
+    csp = null;
   }
   
-  res.setHeader('Content-Security-Policy', csp);
+  if (csp) {
+    res.setHeader('Content-Security-Policy', csp);
+  }
   next();
 });
 
