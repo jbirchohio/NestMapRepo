@@ -68,7 +68,7 @@ app.use((req, res, next) => {
     // Development CSP - more permissive for hot reload and dev tools
     csp = [
       "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com`,
+      `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https: wss: ws: http://localhost:* http://127.0.0.1:*",
