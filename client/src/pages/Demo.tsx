@@ -68,10 +68,8 @@ export default function Demo() {
         description: `Welcome to ${data.organization.name}! You're now logged in as ${data.user.displayName}.`,
       });
       
-      // Redirect to dashboard
-      setTimeout(() => {
-        setLocation("/");
-      }, 1500);
+      // Force refresh of auth state and redirect
+      window.location.href = "/";
     },
     onError: (error: any) => {
       toast({

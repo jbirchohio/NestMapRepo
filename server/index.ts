@@ -216,19 +216,22 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
   
   // Check for demo session first
   if (session?.isDemo && session?.userId) {
-    const orgNames = {
+    const orgNames: { [key: number]: string } = {
       1: "Orbit Travel Co",
       2: "Haven Journeys", 
       3: "Velocity Trips"
     };
     
+    const orgName = orgNames[session.userId] || "Demo Organization";
+    
     return res.json({
       user: {
         id: session.userId,
-        email: `demo@${orgNames[session.userId]?.toLowerCase().replace(/\s+/g, '')}.com`,
+        email: `demo@${orgName.toLowerCase().replace(/\s+/g, '')}.com`,
         role: "admin",
         organizationId: session.organizationId,
-        displayName: "Demo User"
+        displayName: "Demo User",
+        isDemo: true
       }
     });
   }
@@ -241,7 +244,8 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
         email: req.user.email || 'Unknown',
         role: req.user.role,
         organizationId: req.user.organizationId,
-        displayName: req.user.displayName || 'Unknown'
+        displayName: req.user.displayName || 'Unknown',
+        isDemo: false
       }
     });
   } else {
