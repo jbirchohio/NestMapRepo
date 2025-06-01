@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
 
 export default function Analytics() {
-  const { user, userId } = useAuth();
+  const { user } = useAuth();
 
   // Check user permissions for analytics access
   const { data: userPermissions } = useQuery({

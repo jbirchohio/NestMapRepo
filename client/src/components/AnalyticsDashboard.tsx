@@ -61,13 +61,14 @@ interface AnalyticsData {
 const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 
 export default function AnalyticsDashboard() {
-  const { userId } = useAuth();
+  const { user, userId } = useAuth();
 
   console.log('AnalyticsDashboard - userId:', userId);
+  console.log('AnalyticsDashboard - user:', user);
 
   const { data: analytics, isLoading, error } = useQuery({
     queryKey: ["/api/analytics"],
-    enabled: !!userId, // Require authentication
+    enabled: !!user, // Use user instead of userId since userId might be null
     queryFn: async () => {
       // Get the current Supabase session for JWT token
       const { data: { session } } = await import("@/lib/supabase").then(m => m.supabase.auth.getSession());
