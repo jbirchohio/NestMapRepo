@@ -51,6 +51,8 @@ function Router() {
         <Route path="/dashboard/corporate" component={CorporateDashboard} />
         <Route path="/dashboard/agency" component={AgencyDashboard} />
         <Route path="/demo" component={Demo} />
+        <Route path="/demo/dashboard/corporate" component={CorporateDashboard} />
+        <Route path="/demo/dashboard/agency" component={AgencyDashboard} />
         <Route path="/profile" component={ProfileSettings} />
         <Route path="/help" component={HelpCenter} />
         <Route path="/calendar" component={CalendarSettings} />

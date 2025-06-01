@@ -35,9 +35,9 @@ export default function Home() {
     // Check if this is a demo user
     const isDemo = (user as any).isDemo || user.email?.includes('demo') || user.email?.includes('@orbit') || user.email?.includes('@velocitytrips.com');
     
-    // Demo users always go to corporate dashboard regardless of role
+    // Demo users always go to demo corporate dashboard regardless of role
     if (isDemo) {
-      setLocation('/dashboard/corporate');
+      setLocation('/demo/dashboard/corporate');
       return;
     }
     
