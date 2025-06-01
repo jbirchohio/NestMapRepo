@@ -38,7 +38,7 @@ export default function MainNavigation() {
   const [location] = useLocation();
   const { toast } = useToast();
 
-  // Get user permissions with proper auth state checks
+  // Get user permissions using standard production endpoint for all users
   const { data: userPermissions } = useQuery({
     queryKey: ['/api/user/permissions', userId],
     queryFn: async () => {
@@ -109,9 +109,6 @@ export default function MainNavigation() {
   if (!user) {
     return null; // Don't show navigation for unauthenticated users
   }
-
-  // Check if this is a demo user
-  const isDemo = (user as any).isDemo || user.email?.includes('demo') || user.email?.includes('@orbit') || user.email?.includes('@velocitytrips.com');
   
   // Role-based navigation items  
   const getRoleBasedDashboardPath = () => {
