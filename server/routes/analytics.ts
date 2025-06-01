@@ -85,8 +85,8 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-// Apply authentication to remaining analytics routes (commented out for testing)
-// router.use(unifiedAuthMiddleware);
+// Apply authentication to remaining analytics routes
+router.use(unifiedAuthMiddleware);
 
 // Get personal analytics for authenticated user
 router.get("/personal", async (req: Request, res: Response) => {

@@ -52,42 +52,39 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     return next();
   }
 
-  // Multi-method authentication check (JWT + Session)
-  let userId: number | null = null;
-  
-  // Try JWT authentication first (from Authorization header)
+  // JWT authentication check (Supabase)
   const authHeader = req.headers.authorization;
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    try {
-      // For now, extract user info from JWT payload without verification
-      // In production, this should use proper Supabase JWT verification
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const authId = payload.sub;
-      
-      if (authId) {
-        // Look up database user by Supabase auth ID
-        const response = await fetch(`http://localhost:5000/api/users/auth/${authId}`);
-        if (response.ok) {
-          const userData = await response.json();
-          userId = userData.id;
-        }
-      }
-    } catch (error) {
-      console.log('JWT parsing failed:', error);
-    }
-  }
   
-  // Fall back to session-based authentication
-  if (!userId && req.session && (req.session as any).userId) {
-    userId = (req.session as any).userId;
-  }
-  
-  if (!userId) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ message: "Authentication required" });
   }
+
+  const token = authHeader.substring(7);
+  let userId: number | null = null;
   
-  getUserById(userId)
+  try {
+    // Extract user info from JWT payload
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const authId = payload.sub;
+    
+    if (!authId) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    
+    // Look up database user by Supabase auth ID
+    const response = await fetch(`http://localhost:5000/api/users/auth/${authId}`);
+    if (!response.ok) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    
+    const userData = await response.json();
+    userId = userData.id;
+  } catch (error) {
+    console.log('JWT authentication failed:', error);
+    return res.status(401).json({ message: "Invalid token" });
+  }
+  
+  getUserById(userId!)
     .then(user => {
       if (!user) {
         // Clear invalid session
