@@ -3238,6 +3238,52 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
+  // Organization analytics endpoint for admins and managers
+  app.get("/api/analytics/organization", endpointRateLimit('analytics'), async (req: Request, res: Response) => {
+    try {
+      // CRITICAL: Verify authentication first
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // CRITICAL: Verify user has organization access
+      if (!req.user.organization_id) {
+        return res.status(403).json({ 
+          error: "Access denied", 
+          message: "User must be part of an organization to access analytics" 
+        });
+      }
+
+      // CRITICAL: Check if user has admin/manager role within their organization
+      const allowedRoles = ['admin', 'manager', 'super_admin'];
+      if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ 
+          error: "Access denied", 
+          message: "Admin or manager role required to access organization analytics" 
+        });
+      }
+
+      // Get analytics for the user's organization only - no cross-organization access
+      const organizationId = req.user.organization_id;
+      const analyticsData = await getOrganizationAnalytics(organizationId);
+      
+      console.log('ANALYTICS_ACCESS:', {
+        userId: req.user.id,
+        userRole: req.user.role,
+        organizationId,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json(analyticsData);
+    } catch (error) {
+      console.error("Error fetching organization analytics:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch organization analytics",
+        message: "An internal server error occurred while retrieving analytics data"
+      });
+    }
+  });
+
   // Team invitation endpoints
   app.post("/api/invitations", async (req: Request, res: Response) => {
     try {
