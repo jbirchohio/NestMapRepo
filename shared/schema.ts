@@ -134,53 +134,53 @@ export const insertInvitationSchema = createInsertSchema(invitations).pick({
 export const trips = pgTable("trips", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date").notNull(),
-  userId: integer("user_id").notNull(),
-  organizationId: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
+  start_date: timestamp("start_date").notNull(),
+  end_date: timestamp("end_date").notNull(),
+  user_id: integer("user_id").notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   collaborators: jsonb("collaborators").default([]),
   // Sharing and collaboration settings
   isPublic: boolean("is_public").default(false),
   shareCode: text("share_code").unique(),
-  sharingEnabled: boolean("sharing_enabled").default(false),
-  sharePermission: text("share_permission").default("read-only"), // "read-only" or "edit"
+  sharing_enabled: boolean("sharing_enabled").default(false),
+  share_permission: text("share_permission").default("read-only"), // "read-only" or "edit"
   // Location information
   city: text("city"),
   country: text("country"),
   location: text("location"),
   // City coordinates for map centering
-  cityLatitude: text("city_latitude"),
-  cityLongitude: text("city_longitude"),
+  city_latitude: text("city_latitude"),
+  city_longitude: text("city_longitude"),
   // Hotel/accommodation information
   hotel: text("hotel"),
-  hotelLatitude: text("hotel_latitude"),
-  hotelLongitude: text("hotel_longitude"),
+  hotel_latitude: text("hotel_latitude"),
+  hotel_longitude: text("hotel_longitude"),
   // Trip status
   completed: boolean("completed").default(false),
-  completedAt: timestamp("completed_at"),
+  completed_at: timestamp("completed_at"),
   // B2B/Client mode fields
-  tripType: text("trip_type").default("personal"), // "personal" or "business"
-  clientName: text("client_name"),
-  projectType: text("project_type"),
+  trip_type: text("trip_type").default("personal"), // "personal" or "business"
+  client_name: text("client_name"),
+  project_type: text("project_type"),
   budget: integer("budget"), // Budget in cents to avoid decimal precision issues
   // Metadata
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Create a custom schema that properly handles dates as strings from JSON
 export const insertTripSchema = z.object({
   title: z.string(),
-  startDate: z.string().or(z.date()).transform(val => 
+  start_date: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
   ),
-  endDate: z.string().or(z.date()).transform(val => 
+  end_date: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
   ),
-  userId: z.union([z.string(), z.number()]).transform(val =>
+  user_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organizationId: z.union([z.string(), z.number()]).transform(val =>
+  organization_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(), // Multi-tenant isolation
   collaborators: z.array(z.any()).default([]),
