@@ -33,9 +33,39 @@ router.use('/reporting', reportingRoutes);
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {
   try {
-    // For JonasCo owner account - return full enterprise permissions
-    const role = 'owner';
-    const organizationId = 1;
+    let role = 'owner';
+    let organizationId = 1;
+    
+    // Try to get user from JWT token if provided
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        // Decode JWT to get user ID
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.decode(token);
+        
+        if (decoded && decoded.sub) {
+          const { db } = await import('../db-connection');
+          const { users } = await import('../../shared/schema');
+          const { eq } = await import('drizzle-orm');
+          
+          const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.auth_id, decoded.sub))
+            .limit(1);
+            
+          if (user) {
+            role = user.role || 'owner';
+            organizationId = user.organization_id || 1;
+            console.log('Found user from JWT:', { role, organizationId, authId: decoded.sub });
+          }
+        }
+      } catch (jwtError: any) {
+        console.log('JWT processing failed, using defaults:', jwtError?.message || 'Unknown error');
+      }
+    }
     
     // Define permissions based on role
     const permissions = [];

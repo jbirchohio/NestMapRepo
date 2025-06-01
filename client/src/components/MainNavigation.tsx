@@ -43,7 +43,21 @@ export default function MainNavigation() {
     queryKey: ['/api/user/permissions', userId],
     queryFn: async () => {
       if (!userId || !user) return [];
-      const response = await fetch('/api/user/permissions');
+      
+      // Get Supabase session token
+      const { auth } = await import('@/lib/supabase');
+      const result = await auth.getSession();
+      
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Include JWT token if available
+      if (result.session?.access_token) {
+        headers['Authorization'] = `Bearer ${result.session.access_token}`;
+      }
+      
+      const response = await fetch('/api/user/permissions', { headers });
       if (!response.ok) throw new Error('Failed to fetch permissions');
       const data = await response.json();
       console.log('Permissions loaded:', data.permissions);
