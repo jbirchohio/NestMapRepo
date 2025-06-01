@@ -6,7 +6,7 @@ import { Shield } from "lucide-react";
 
 export default function Analytics() {
   const { user, userId } = useAuth();
-  
+
   // Check user permissions for analytics access
   const { data: userPermissions } = useQuery({
     queryKey: ['/api/user/permissions'],

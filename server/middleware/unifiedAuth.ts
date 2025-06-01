@@ -57,40 +57,40 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
 
   // JWT authentication check (Supabase)
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ message: "Authentication required" });
   }
 
   const token = authHeader.substring(7);
   let userId: number | null = null;
-  
+
   try {
     // Extract user info from JWT payload
     const payload = JSON.parse(atob(token.split('.')[1]));
     const authId = payload.sub;
-    
+
     if (!authId) {
       return res.status(401).json({ message: "Invalid token" });
     }
-    
+
     // Look up database user by Supabase auth ID directly from database
     const [dbUser] = await db
       .select()
       .from(users)
       .where(eq(users.auth_id, authId))
       .limit(1);
-    
+
     if (!dbUser) {
       return res.status(401).json({ message: "User not found" });
     }
-    
+
     userId = dbUser.id;
   } catch (error) {
     console.log('JWT authentication failed:', error);
     return res.status(401).json({ message: "Invalid token" });
   }
-  
+
   getUserById(userId!)
     .then(user => {
       if (!user) {
@@ -114,17 +114,17 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       // Create organization context utilities
       req.organizationContext = {
         id: user.organizationId,
-        
+
         canAccessOrganization: (targetOrgId: number | null): boolean => {
           // Super admins can access any organization
           if (user.role === 'super_admin') {
             return true;
           }
-          
+
           // Regular users can only access their own organization
           return user.organizationId === targetOrgId;
         },
-        
+
         enforceOrganizationAccess: (targetOrgId: number | null): void => {
           if (!req.organizationContext!.canAccessOrganization(targetOrgId)) {
             throw new Error('Access denied: Cannot access resources from other organizations');
@@ -152,7 +152,7 @@ export function withOrganizationScope<T extends Record<string, any>>(
   if (req.user?.role === 'super_admin' && !req.query.organizationId) {
     return baseWhere;
   }
-  
+
   // Add organization filter for all other users
   return {
     ...baseWhere,
@@ -167,7 +167,7 @@ export function validateOrganizationAccess(req: Request, resourceOrgId: number |
   if (!req.organizationContext) {
     return false;
   }
-  
+
   return req.organizationContext.canAccessOrganization(resourceOrgId);
 }
 
@@ -181,7 +181,7 @@ export function requireOrganizationContext(req: Request, res: Response, next: Ne
       message: 'This endpoint requires authenticated user with organization context'
     });
   }
-  
+
   next();
 }
 
@@ -194,7 +194,7 @@ export function requireAdminRole(req: Request, res: Response, next: NextFunction
       message: "Access denied: Admin role required" 
     });
   }
-  
+
   next();
 }
 
@@ -207,6 +207,6 @@ export function requireSuperAdminRole(req: Request, res: Response, next: NextFun
       message: "Access denied: Super admin role required" 
     });
   }
-  
+
   next();
 }

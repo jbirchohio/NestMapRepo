@@ -5,9 +5,17 @@ import { getAnalytics, getOrganizationAnalytics, getUserPersonalAnalytics, expor
 
 const router = Router();
 
-// Root analytics endpoint (bypasses auth for demo)
+// Apply authentication to all analytics routes
+router.use(unifiedAuthMiddleware);
+
+// Root analytics endpoint (requires JWT authentication)
 router.get("/", async (req: Request, res: Response) => {
   try {
+    // Require authentication
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
     // Return comprehensive analytics data for JonasCo
     const analyticsData = {
       overview: {
@@ -84,9 +92,6 @@ router.get("/", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Could not fetch analytics data" });
   }
 });
-
-// Apply authentication to remaining analytics routes
-router.use(unifiedAuthMiddleware);
 
 // Get personal analytics for authenticated user
 router.get("/personal", async (req: Request, res: Response) => {
