@@ -65,13 +65,6 @@ export default function AnalyticsDashboard() {
   
   const { data: analytics, isLoading, error } = useQuery({
     queryKey: ["/api/analytics"],
-    queryFn: async () => {
-      const response = await fetch("/api/analytics", {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error("Failed to fetch analytics");
-      return response.json() as Promise<AnalyticsData>;
-    },
     enabled: !!userId
   });
 

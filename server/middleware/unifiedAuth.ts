@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { getUserById } from '../auth';
+import { db } from '../db';
+import { users } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 // Extend Express Request interface for unified authorization
 declare global {
@@ -71,14 +74,18 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       return res.status(401).json({ message: "Invalid token" });
     }
     
-    // Look up database user by Supabase auth ID
-    const response = await fetch(`http://localhost:5000/api/users/auth/${authId}`);
-    if (!response.ok) {
+    // Look up database user by Supabase auth ID directly from database
+    const [dbUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.auth_id, authId))
+      .limit(1);
+    
+    if (!dbUser) {
       return res.status(401).json({ message: "User not found" });
     }
     
-    const userData = await response.json();
-    userId = userData.id;
+    userId = dbUser.id;
   } catch (error) {
     console.log('JWT authentication failed:', error);
     return res.status(401).json({ message: "Invalid token" });
