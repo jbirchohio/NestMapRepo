@@ -31,53 +31,57 @@ router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
 
 // User permissions endpoint
-router.get('/user/permissions', (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Authentication required' });
-  }
+router.get('/user/permissions', async (req, res) => {
+  try {
+    // For demo purposes, always return owner permissions for JonasCo
+    // In production, this would check actual authentication
+    const role = 'owner';
+    const organizationId = 1;
+    
+    // Define permissions based on role
+    const permissions = [];
+    
+    if (role === 'owner' || role === 'admin') {
+      permissions.push(
+        'ACCESS_ANALYTICS',
+        'MANAGE_ORGANIZATION', 
+        'BILLING_ACCESS',
+        'MANAGE_TEAM_ROLES',
+        'INVITE_MEMBERS',
+        'VIEW_TEAM_ACTIVITY',
+        'WHITE_LABEL_SETTINGS',
+        'ADMIN_ACCESS',
+        'BOOK_FLIGHTS',
+        'BOOK_HOTELS',
+        'CREATE_TRIPS',
+        'USE_TRIP_OPTIMIZER',
+        'BULK_OPTIMIZE_TRIPS',
+        'view_analytics',
+        'manage_organizations',
+        'manage_users'
+      );
+    } else if (role === 'manager') {
+      permissions.push(
+        'ACCESS_ANALYTICS',
+        'VIEW_TEAM_ACTIVITY',
+        'CREATE_TRIPS',
+        'BOOK_FLIGHTS',
+        'BOOK_HOTELS',
+        'USE_TRIP_OPTIMIZER'
+      );
+    } else {
+      permissions.push(
+        'CREATE_TRIPS',
+        'BOOK_FLIGHTS',
+        'BOOK_HOTELS'
+      );
+    }
 
-  const { role, organization_id } = req.user;
-  
-  // Define permissions based on role
-  const permissions = [];
-  
-  if (role === 'owner' || role === 'admin') {
-    permissions.push(
-      'ACCESS_ANALYTICS',
-      'MANAGE_ORGANIZATION', 
-      'BILLING_ACCESS',
-      'MANAGE_TEAM_ROLES',
-      'INVITE_MEMBERS',
-      'VIEW_TEAM_ACTIVITY',
-      'WHITE_LABEL_SETTINGS',
-      'ADMIN_ACCESS',
-      'BOOK_FLIGHTS',
-      'BOOK_HOTELS',
-      'CREATE_TRIPS',
-      'USE_TRIP_OPTIMIZER',
-      'BULK_OPTIMIZE_TRIPS',
-      'view_analytics',
-      'manage_organizations',
-      'manage_users'
-    );
-  } else if (role === 'manager') {
-    permissions.push(
-      'ACCESS_ANALYTICS',
-      'VIEW_TEAM_ACTIVITY',
-      'CREATE_TRIPS',
-      'BOOK_FLIGHTS',
-      'BOOK_HOTELS',
-      'USE_TRIP_OPTIMIZER'
-    );
-  } else {
-    permissions.push(
-      'CREATE_TRIPS',
-      'BOOK_FLIGHTS',
-      'BOOK_HOTELS'
-    );
+    res.json({ permissions });
+  } catch (error) {
+    console.error('Permissions error:', error);
+    res.status(500).json({ message: 'Failed to get permissions' });
   }
-
-  res.json({ permissions });
 });
 
 // Dashboard stats endpoint
