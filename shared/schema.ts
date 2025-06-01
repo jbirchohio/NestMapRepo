@@ -657,9 +657,77 @@ export const insertActivityLogSchema = createInsertSchema(activityLog).omit({
   organizationId: true,
 });
 
+// Booking Management Schema
+export const bookings = pgTable("bookings", {
+  id: serial("id").primaryKey(),
+  tripId: integer("trip_id").references(() => trips.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  type: text("type").notNull(), // flight, hotel, activity, transport
+  provider: text("provider").notNull(), // amadeus, booking.com, viator
+  providerBookingId: text("provider_booking_id"),
+  status: text("status").default("pending").notNull(), // pending, confirmed, cancelled, failed
+  bookingData: jsonb("booking_data").$type<Record<string, any>>().notNull(),
+  totalAmount: integer("total_amount"), // in cents
+  currency: text("currency").default("USD").notNull(),
+  passengerDetails: jsonb("passenger_details").$type<{
+    passengers: Array<{
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string;
+      dateOfBirth?: string;
+    }>;
+  }>(),
+  bookingReference: text("booking_reference"),
+  confirmationEmail: text("confirmation_email"),
+  checkInDate: timestamp("check_in_date"),
+  checkOutDate: timestamp("check_out_date"),
+  departureDate: timestamp("departure_date"),
+  returnDate: timestamp("return_date"),
+  cancellationPolicy: jsonb("cancellation_policy").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBookingSchema = createInsertSchema(bookings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  organizationId: true,
+});
+
+// Booking Payment Schema
+export const bookingPayments = pgTable("booking_payments", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").references(() => bookings.id, { onDelete: "cascade" }).notNull(),
+  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  amount: integer("amount").notNull(), // in cents
+  currency: text("currency").default("USD").notNull(),
+  status: text("status").default("pending").notNull(), // pending, completed, failed, refunded
+  paymentMethod: text("payment_method"), // card, bank_transfer, corporate_account
+  refundAmount: integer("refund_amount"),
+  refundReason: text("refund_reason"),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertBookingPaymentSchema = createInsertSchema(bookingPayments).omit({
+  id: true,
+  createdAt: true,
+  organizationId: true,
+});
+
 // Trip Collaboration Types
 export type TripCollaboration = typeof tripCollaborations.$inferSelect;
 export type TripComment = typeof tripComments.$inferSelect;
 export type InsertTripComment = z.infer<typeof insertTripCommentSchema>;
 export type ActivityLog = typeof activityLog.$inferSelect;
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
+
+// Booking Types
+export type Booking = typeof bookings.$inferSelect;
+export type InsertBooking = z.infer<typeof insertBookingSchema>;
+export type BookingPayment = typeof bookingPayments.$inferSelect;
+export type InsertBookingPayment = z.infer<typeof insertBookingPaymentSchema>;
