@@ -14,6 +14,17 @@ import {
   validateContentLength,
   validationSchemas
 } from "./middleware/inputValidation";
+import {
+  validateAdminInput,
+  organizationUpdateSchema,
+  whiteLabelRequestSchema,
+  whiteLabelReviewSchema,
+  customDomainSchema,
+  domainVerificationSchema,
+  userRoleUpdateSchema,
+  validateOrganizationAccess,
+  auditAdminOperation
+} from "./middleware/adminValidation";
 
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -4082,7 +4093,11 @@ Include realistic business activities, meeting times, dining recommendations, an
   });
 
   // Update organization white label settings - CRITICAL SECURITY: Organization scoped access
-  app.patch("/api/admin/organizations/:id", async (req: Request, res: Response) => {
+  app.patch("/api/admin/organizations/:id", 
+    validateAdminInput(organizationUpdateSchema),
+    validateOrganizationAccess,
+    auditAdminOperation('organization_update'),
+    async (req: Request, res: Response) => {
     try {
       // CRITICAL: Verify authentication first
       if (!req.user) {
@@ -4095,46 +4110,34 @@ Include realistic business activities, meeting times, dining recommendations, an
       }
 
       const orgId = parseInt(req.params.id);
-      if (isNaN(orgId)) {
-        return res.status(400).json({ error: "Invalid organization ID" });
-      }
       
-      // Import validation schema
-      const { validateWhiteLabelSettings } = await import('./whiteLabelValidation');
-      
-      // Validate request body
-      const validation = validateWhiteLabelSettings(req.body);
-      if (!validation.success) {
-        return res.status(400).json({ 
-          error: "Validation failed", 
-          details: validation.errors 
-        });
-      }
-
-      const updates = validation.data;
+      // req.body is already validated and sanitized by validateAdminInput middleware
+      const updates = req.body;
 
       // Update organization with validated data
-      await db.update(organizations)
+      const updatedOrg = await db.update(organizations)
         .set({ ...updates, updated_at: new Date() })
-        .where(eq(organizations.id, orgId));
-
-      // Fetch and return updated organization data
-      const updatedOrg = await db.select()
-        .from(organizations)
         .where(eq(organizations.id, orgId))
-        .limit(1);
+        .returning();
 
       if (updatedOrg.length === 0) {
-        return res.status(404).json({ error: "Organization not found" });
+        return res.status(404).json({ 
+          error: "Organization not found",
+          message: "No organization exists with the specified ID"
+        });
       }
 
       res.json({
         success: true,
-        organization: updatedOrg[0]
+        organization: updatedOrg[0],
+        message: "Organization updated successfully"
       });
     } catch (error) {
       console.error("Error updating organization:", error);
-      res.status(500).json({ error: "Failed to update organization" });
+      res.status(500).json({ 
+        error: "Failed to update organization",
+        message: "An internal server error occurred while updating the organization"
+      });
     }
   });
 
@@ -4178,7 +4181,10 @@ Include realistic business activities, meeting times, dining recommendations, an
   });
 
   // Review white label request - CRITICAL SECURITY: Organization scoped access
-  app.patch("/api/admin/white-label-requests/:id", async (req: Request, res: Response) => {
+  app.patch("/api/admin/white-label-requests/:id",
+    validateAdminInput(whiteLabelReviewSchema),
+    auditAdminOperation('white_label_review'),
+    async (req: Request, res: Response) => {
     try {
       if (!req.user) {
         return res.status(401).json({ error: "Authentication required" });
@@ -4190,24 +4196,45 @@ Include realistic business activities, meeting times, dining recommendations, an
 
       const requestId = parseInt(req.params.id);
       if (isNaN(requestId)) {
-        return res.status(400).json({ error: "Invalid request ID" });
+        return res.status(400).json({ 
+          error: "Invalid request ID",
+          message: "Request ID must be a valid number"
+        });
       }
 
-      const { status, notes } = req.body;
+      // req.body is already validated by validateAdminInput middleware
+      const { status, admin_notes, approved_features, rejection_reason } = req.body;
 
-      await db.update(whiteLabelRequests)
+      const updatedRequest = await db.update(whiteLabelRequests)
         .set({
           status,
           reviewed_by: req.user.id,
           reviewed_at: new Date(),
-          review_notes: notes,
+          review_notes: admin_notes,
+          approved_features: approved_features ? JSON.stringify(approved_features) : null,
+          rejection_reason: rejection_reason || null
         })
-        .where(eq(whiteLabelRequests.id, requestId));
+        .where(eq(whiteLabelRequests.id, requestId))
+        .returning();
 
-      res.json({ success: true });
+      if (updatedRequest.length === 0) {
+        return res.status(404).json({ 
+          error: "Request not found",
+          message: "No white-label request exists with the specified ID"
+        });
+      }
+
+      res.json({ 
+        success: true,
+        request: updatedRequest[0],
+        message: `Request ${status} successfully`
+      });
     } catch (error) {
       console.error("Error reviewing request:", error);
-      res.status(500).json({ error: "Failed to review request" });
+      res.status(500).json({ 
+        error: "Failed to review request",
+        message: "An internal server error occurred while reviewing the request"
+      });
     }
   });
 
