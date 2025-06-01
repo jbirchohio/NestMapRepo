@@ -228,6 +228,35 @@ export default function CorporateDashboard() {
             </Card>
           )}
           
+          {/* Premium AI Features for Admin */}
+          {userPermissions.includes('ACCESS_ANALYTICS') && (
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/ai-generator')}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-8 w-8 text-purple-600" />
+                  <div>
+                    <h3 className="font-semibold">AI Trip Generator</h3>
+                    <p className="text-sm text-muted-foreground">Generate complete trips with AI</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {userPermissions.includes('ACCESS_ANALYTICS') && (
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/optimizer')}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="h-8 w-8 text-orange-600" />
+                  <div>
+                    <h3 className="font-semibold">Trip Optimizer</h3>
+                    <p className="text-sm text-muted-foreground">Optimize schedules & costs</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           {canApproveTrips && (
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="p-6">
