@@ -326,6 +326,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  console.log('🚀 Starting server initialization...');
+  
   // Run database migrations on startup
   if (process.env.NODE_ENV === 'production') {
     console.log('🔄 Running database migrations...');
@@ -338,8 +340,15 @@ app.use((req, res, next) => {
     }
   }
 
-  // Mount API routes
-  app.use('/api', apiRoutes);
+  console.log('📍 Mounting API routes...');
+  try {
+    // Mount API routes
+    app.use('/api', apiRoutes);
+    console.log('✅ API routes mounted successfully');
+  } catch (error) {
+    console.error('❌ Failed to mount API routes:', error);
+    throw error;
+  }
   
   // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
