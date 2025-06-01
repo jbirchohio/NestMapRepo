@@ -12,6 +12,7 @@ import bookingRoutes from './bookings';
 import approvalRoutes from './approvals';
 import expenseRoutes from './expenses';
 import reportingRoutes from './reporting';
+import { getUserById } from '../auth';
 
 const router = Router();
 
@@ -136,31 +137,58 @@ router.get('/dashboard-stats', (req, res) => {
 
 // Analytics endpoint for JonasCo
 router.get('/analytics', async (req, res) => {
+  // Debug authentication flow
+  console.log('Analytics Auth Debug:');
+  console.log('- Headers:', {
+    authorization: req.headers.authorization ? 'Bearer [PRESENT]' : 'MISSING',
+    cookie: req.headers.cookie ? 'PRESENT' : 'MISSING'
+  });
+  console.log('- Session:', {
+    exists: !!req.session,
+    userId: (req.session as any)?.userId || 'MISSING'
+  });
+  
   // JWT Authentication & Organization Security
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'JWT token required' });
+  const sessionUserId = (req.session as any)?.userId;
+  
+  // Try multiple auth methods to diagnose issue
+  let userContext = null;
+  
+  if (authHeader?.startsWith('Bearer ')) {
+    console.log('- Attempting JWT auth...');
+    // JWT authentication path
+    const token = authHeader.substring(7);
+    try {
+      // For Supabase JWT verification (need proper implementation)
+      console.log('- JWT token present, but verification not implemented');
+    } catch (error) {
+      console.log('- JWT verification failed:', error);
+    }
   }
   
-  // Verify JWT and extract organization context
-  const token = authHeader.substring(7);
-  let userContext;
-  try {
-    // In production, verify JWT with Supabase public key
-    // For demo: extract organization context from session/auth
-    const sessionUserId = (req.session as any)?.userId;
-    if (!sessionUserId) {
-      return res.status(401).json({ message: 'Invalid session' });
+  if (sessionUserId) {
+    console.log('- Attempting session auth...');
+    try {
+      const user = await getUserById(sessionUserId);
+      if (user) {
+        userContext = user;
+        console.log('- Session auth successful:', { id: user.id, email: user.email, org: user.organizationId });
+      }
+    } catch (error) {
+      console.log('- Session auth failed:', error);
     }
-    
-    // Get user and verify organization access
-    const user = await getUserById(sessionUserId);
-    if (!user || user.organizationId !== 1) { // JonasCo org ID
-      return res.status(403).json({ message: 'Organization access denied' });
-    }
-    userContext = user;
-  } catch (error) {
-    return res.status(401).json({ message: 'Invalid JWT token' });
+  }
+  
+  if (!userContext) {
+    console.log('- Authentication failed - no valid user context');
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+  
+  // Organization-level security check
+  if (userContext.organizationId !== 1) {
+    console.log('- Organization access denied:', { userOrg: userContext.organizationId, requiredOrg: 1 });
+    return res.status(403).json({ message: 'Organization access denied' });
   }
   try {
     // Return comprehensive analytics data for JonasCo
