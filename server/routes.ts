@@ -685,6 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/activities", 
+    requireAuth,
     validateContentLength(5 * 1024), // 5KB max
     contentCreationRateLimit(),
     validateAndSanitizeBody(validationSchemas.activity),
@@ -707,15 +708,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(201).json(guestActivity);
       }
       
+      // Verify authentication for non-guest trips
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       // Verify trip access and organization context for authenticated users
       const trip = await storage.getTrip(activityData.tripId);
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
       }
       
-      // Check organization access
-      if (req.organizationContext) {
-        req.organizationContext.enforceOrganizationAccess(trip.organizationId);
+      // Ensure user can only create activities for trips in their organization
+      if (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Cannot create activity for trip in different organization" });
       }
       
       // Set organization context for the activity
@@ -774,8 +780,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Regular activity update endpoint
-  app.put("/api/activities/:id", async (req: Request, res: Response) => {
+  app.put("/api/activities/:id", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const activityId = Number(req.params.id);
       if (isNaN(activityId)) {
         return res.status(400).json({ message: "Invalid activity ID" });
@@ -790,6 +801,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Activity not found" });
       }
       console.log(`Existing activity data:`, existingActivity);
+      
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(existingActivity.tripId);
+      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+        return res.status(403).json({ message: "Access denied: Cannot modify activity for trip in different organization" });
+      }
       
       // Handle completed status updates through the dedicated endpoint
       if (Object.keys(req.body).length === 1 && typeof req.body.completed === 'boolean') {
@@ -839,18 +856,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/activities/:id", async (req: Request, res: Response) => {
+  app.delete("/api/activities/:id", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const activityId = Number(req.params.id);
       if (isNaN(activityId)) {
         return res.status(400).json({ message: "Invalid activity ID" });
       }
       
-      const deleted = await storage.deleteActivity(activityId);
-      if (!deleted) {
+      // Get existing activity to verify ownership
+      const existingActivity = await storage.getActivity(activityId);
+      if (!existingActivity) {
         return res.status(404).json({ message: "Activity not found" });
       }
       
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(existingActivity.tripId);
+      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+        return res.status(403).json({ message: "Access denied: Cannot delete activity for trip in different organization" });
+      }
+      
+      const deleted = await storage.deleteActivity(activityId);
       res.status(204).end();
     } catch (error) {
       console.error("Error deleting activity:", error);
