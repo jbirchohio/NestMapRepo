@@ -13,7 +13,9 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByAuthId(authId: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   
   // Trip operations
   getTrip(id: number): Promise<Trip | undefined>;
@@ -50,6 +52,14 @@ export interface IStorage {
   createInvitation(invitation: InsertInvitation): Promise<Invitation>;
   getInvitationByToken(token: string): Promise<Invitation | undefined>;
   acceptInvitation(token: string, userId: number): Promise<Invitation | undefined>;
+  
+  // Organization operations
+  getOrganization(id: number): Promise<any>;
+  updateOrganization(id: number, data: any): Promise<any>;
+  getOrganizationMembers(id: number): Promise<any[]>;
+  updateOrganizationMember(orgId: number, userId: number, data: any): Promise<any>;
+  removeOrganizationMember(orgId: number, userId: number): Promise<boolean>;
+  getAllTrips(): Promise<Trip[]>;
 }
 
 // In-memory implementation
@@ -106,6 +116,21 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(
       (user) => user.auth_id === authId
     );
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email
+    );
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, ...userData };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -355,6 +380,46 @@ export class MemStorage implements IStorage {
     invitation.acceptedAt = new Date();
     this.invitations.set(invitation.id, invitation);
     return invitation;
+  }
+
+  // Organization operations
+  async getOrganization(id: number): Promise<any> {
+    // Placeholder for organization data
+    return { id, name: `Organization ${id}`, settings: {} };
+  }
+
+  async updateOrganization(id: number, data: any): Promise<any> {
+    // Placeholder for organization update
+    return { id, ...data };
+  }
+
+  async getOrganizationMembers(id: number): Promise<any[]> {
+    // Return users in this organization
+    return Array.from(this.users.values()).filter(user => user.organization_id === id);
+  }
+
+  async updateOrganizationMember(orgId: number, userId: number, data: any): Promise<any> {
+    const user = this.users.get(userId);
+    if (user && user.organization_id === orgId) {
+      const updatedUser = { ...user, ...data };
+      this.users.set(userId, updatedUser);
+      return updatedUser;
+    }
+    return null;
+  }
+
+  async removeOrganizationMember(orgId: number, userId: number): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (user && user.organization_id === orgId) {
+      user.organization_id = null;
+      this.users.set(userId, user);
+      return true;
+    }
+    return false;
+  }
+
+  async getAllTrips(): Promise<Trip[]> {
+    return Array.from(this.trips.values());
   }
 }
 
@@ -749,6 +814,58 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return acceptedInvitation || undefined;
+  }
+
+  // Organization operations
+  async getOrganization(id: number): Promise<any> {
+    // Placeholder for organization data - would be implemented with proper organization table
+    return { id, name: `Organization ${id}`, settings: {} };
+  }
+
+  async updateOrganization(id: number, data: any): Promise<any> {
+    // Placeholder for organization update - would be implemented with proper organization table
+    return { id, ...data };
+  }
+
+  async getOrganizationMembers(id: number): Promise<any[]> {
+    const members = await db.select().from(users).where(eq(users.organization_id, id));
+    return members;
+  }
+
+  async updateOrganizationMember(orgId: number, userId: number, data: any): Promise<any> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(data)
+      .where(and(eq(users.id, userId), eq(users.organization_id, orgId)))
+      .returning();
+    return updatedUser || null;
+  }
+
+  async removeOrganizationMember(orgId: number, userId: number): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({ organization_id: null })
+      .where(and(eq(users.id, userId), eq(users.organization_id, orgId)))
+      .returning({ id: users.id });
+    return result.length > 0;
+  }
+
+  async getAllTrips(): Promise<Trip[]> {
+    return await db.select().from(trips);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
   }
 }
 
