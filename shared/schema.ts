@@ -43,6 +43,21 @@ export const organizations = pgTable("organizations", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Organization members with roles - enables granular permissions within organizations
+export const organizationMembers = pgTable("organization_members", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").notNull(),
+  user_id: integer("user_id").notNull(),
+  org_role: text("org_role").notNull().default("member"), // admin, manager, editor, member, viewer
+  permissions: jsonb("permissions"), // Specific permissions override
+  invited_by: integer("invited_by"), // User ID who sent invitation
+  invited_at: timestamp("invited_at").defaultNow(),
+  joined_at: timestamp("joined_at"),
+  status: text("status").default("active"), // active, invited, suspended, inactive
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Trip collaborators with roles
 export const tripCollaborators = pgTable("trip_collaborators", {
   id: serial("id").primaryKey(),
@@ -74,6 +89,14 @@ export const insertOrganizationSchema = createInsertSchema(organizations).pick({
   name: true,
   domain: true,
   plan: true,
+});
+
+export const insertOrganizationMemberSchema = createInsertSchema(organizationMembers).pick({
+  organization_id: true,
+  user_id: true,
+  org_role: true,
+  permissions: true,
+  invited_by: true,
 });
 
 export const insertTripCollaboratorSchema = createInsertSchema(tripCollaborators).pick({
