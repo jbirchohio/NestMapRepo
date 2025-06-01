@@ -3,6 +3,28 @@ import { users } from '../shared/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 
+// Secure password hashing using Node.js crypto
+const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
+
+export function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, SALT_ROUNDS * 1000, 64, 'sha512');
+  return `${salt}:${hash.toString('hex')}`;
+}
+
+export function verifyPassword(password: string, hashedPassword: string): boolean {
+  try {
+    const [salt, hash] = hashedPassword.split(':');
+    if (!salt || !hash) return false;
+    
+    const verifyHash = crypto.pbkdf2Sync(password, salt, SALT_ROUNDS * 1000, 64, 'sha512');
+    return hash === verifyHash.toString('hex');
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
+  }
+}
+
 // Simple authentication service without external dependencies
 export async function authenticateUser(email: string, password: string) {
   try {
@@ -20,10 +42,9 @@ export async function authenticateUser(email: string, password: string) {
       return null;
     }
 
-    // Temporary secure password validation
-    // TODO: Implement bcrypt hashing for production
+    // Secure password validation with proper hashing
     const isValidPassword = user.password_hash ? 
-      user.password_hash === password : 
+      verifyPassword(password, user.password_hash) : 
       (password === 'password' && process.env.NODE_ENV === 'development');
     
     if (!isValidPassword) {

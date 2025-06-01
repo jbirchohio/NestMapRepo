@@ -3360,9 +3360,9 @@ Include realistic business activities, meeting times, dining recommendations, an
         console.log("Personal analytics data generated successfully");
         res.json(analyticsData);
       } else {
-        // CRITICAL: Only admins and super_admins can access system-wide analytics
-        if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-          return res.status(403).json({ message: "Admin access required for system analytics" });
+        // CRITICAL: Only super_admin can access system-wide analytics across all organizations
+        if (req.user.role !== 'super_admin') {
+          return res.status(403).json({ message: "Super admin access required for system analytics" });
         }
         
         // For system-wide analytics (admin view)
@@ -3502,9 +3502,9 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      // CRITICAL: Only admins and super_admins can export system-wide analytics
-      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-        return res.status(403).json({ message: "Admin access required for analytics export" });
+      // CRITICAL: Only super_admin can export system-wide analytics across all organizations
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Super admin access required for analytics export" });
       }
       
       const analyticsData = await getAnalytics();
@@ -3566,18 +3566,24 @@ Include realistic business activities, meeting times, dining recommendations, an
   });
 
   // Team invitation endpoints
-  app.post("/api/invitations", async (req: Request, res: Response) => {
+  app.post("/api/invitations", requireAuth, async (req: Request, res: Response) => {
     try {
       const { email, role } = req.body;
-      const inviterUserId = parseInt(req.headers['x-user-id'] as string);
       
-      if (!inviterUserId) {
-        return res.status(401).json({ error: "Unauthorized" });
+      // CRITICAL: Use authenticated user from session, not client-supplied header
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
       }
 
-      // Get the inviter's organization context
-      const inviter = await storage.getUser(inviterUserId);
-      if (!inviter || !inviter.organization_id) {
+      // CRITICAL: Only allow admin and manager roles to create invitations
+      const allowedRoles = ['admin', 'manager', 'super_admin'];
+      if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ error: "Admin or manager role required to invite team members" });
+      }
+
+      // Get the authenticated user's organization context
+      const inviter = req.user;
+      if (!inviter.organizationId) {
         return res.status(403).json({ error: "Must be part of an organization to invite team members" });
       }
 
@@ -3588,8 +3594,8 @@ Include realistic business activities, meeting times, dining recommendations, an
 
       const invitation = await storage.createInvitation({
         email,
-        organizationId: inviter.organization_id, // Inherit organization from inviter
-        invitedBy: inviterUserId,
+        organizationId: inviter.organizationId, // Inherit organization from authenticated user
+        invitedBy: inviter.id,
         role,
         token,
         expiresAt
