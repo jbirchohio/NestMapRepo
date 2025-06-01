@@ -15,17 +15,62 @@ import { ROLE_PERMISSIONS } from "../rbac";
 // User permissions endpoint
 export async function getUserPermissions(req: Request, res: Response) {
   try {
-    const userId = req.query.userId as string;
+    // CRITICAL SECURITY: Require authentication
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const requestedUserId = req.query.userId as string;
     
     // Handle demo users
-    if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
+    if (requestedUserId && (requestedUserId.startsWith('demo-corp-') || requestedUserId.startsWith('demo-agency-'))) {
       const permissions = ["manage_users", "manage_organizations", "view_analytics", "export_data"];
       return res.json({ permissions, role: "admin" });
     }
     
-    const numericUserId = Number(userId);
+    const numericUserId = Number(requestedUserId);
     if (isNaN(numericUserId)) {
       return res.status(400).json({ error: "Invalid user ID" });
+    }
+
+    // CRITICAL SECURITY: Enforce organization-based access control
+    // Users can only view permissions for:
+    // 1. Their own account
+    // 2. Users in their organization (if they're admin/manager)
+    // 3. Any user (if they're super_admin)
+    
+    if (numericUserId !== req.user.id) {
+      // Requesting another user's permissions
+      if (req.user.role === 'super_admin') {
+        // Super admins can view any user's permissions
+      } else if (req.user.role === 'admin' || req.user.role === 'manager') {
+        // Admins/managers can only view users in their organization
+        const [targetUser] = await db
+          .select({ organization_id: users.organization_id })
+          .from(users)
+          .where(eq(users.id, numericUserId));
+          
+        if (!targetUser || targetUser.organization_id !== req.user.organization_id) {
+          console.warn('PERMISSIONS_ACCESS_DENIED: Cross-organization access attempt', {
+            requesterId: req.user.id,
+            requesterOrgId: req.user.organization_id,
+            targetUserId: numericUserId,
+            targetUserOrgId: targetUser?.organization_id,
+            endpoint: '/api/user/permissions',
+            timestamp: new Date().toISOString()
+          });
+          return res.status(403).json({ 
+            error: "Access denied", 
+            message: "Cannot view permissions for users outside your organization" 
+          });
+        }
+      } else {
+        // Regular users can only view their own permissions
+        return res.status(403).json({ 
+          error: "Access denied", 
+          message: "Can only view your own permissions" 
+        });
+      }
     }
     
     const [user] = await db
