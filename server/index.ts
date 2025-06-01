@@ -191,21 +191,12 @@ app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Query session table to get statistics
-    const sessionCountQuery = 'SELECT COUNT(*) as session_count FROM session';
-    const expiredSessionQuery = 'SELECT COUNT(*) as expired_count FROM session WHERE expire < NOW()';
+    // Use existing database connection to query session statistics
+    const sessionCountResult = await db.execute(`SELECT COUNT(*) as session_count FROM session`);
+    const expiredSessionResult = await db.execute(`SELECT COUNT(*) as expired_count FROM session WHERE expire < NOW()`);
     
-    // Use the same connection string as the session store
-    const { Pool } = require('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    
-    const [sessionResult, expiredResult] = await Promise.all([
-      pool.query(sessionCountQuery),
-      pool.query(expiredSessionQuery)
-    ]);
-    
-    const totalSessions = parseInt(sessionResult.rows[0].session_count);
-    const expiredSessions = parseInt(expiredResult.rows[0].expired_count);
+    const totalSessions = parseInt(sessionCountResult.rows[0].session_count as string);
+    const expiredSessions = parseInt(expiredSessionResult.rows[0].expired_count as string);
     
     res.json({
       totalSessions,
@@ -220,8 +211,6 @@ app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
         secure: process.env.NODE_ENV === 'production'
       }
     });
-    
-    await pool.end();
   } catch (error) {
     console.error('Session stats error:', error);
     res.status(500).json({ error: 'Failed to get session statistics' });
