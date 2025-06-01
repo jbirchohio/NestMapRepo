@@ -138,7 +138,7 @@ export const trips = pgTable("trips", {
   tripType: text("trip_type").default("personal"), // "personal" or "business"
   clientName: text("client_name"),
   projectType: text("project_type"),
-  budget: text("budget"),
+  budget: integer("budget"), // Budget in cents to avoid decimal precision issues
   // Metadata
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
