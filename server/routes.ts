@@ -48,6 +48,41 @@ import * as openai from "./openai";
 import * as aiLocations from "./aiLocations";
 import { searchFlights, searchHotels } from "./bookingProviders";
 import { generateICalContent, generateGoogleCalendarUrls, generateOutlookCalendarUrls } from "./calendar";
+import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer";
+
+/**
+ * Generate realistic activity times based on category and sequence
+ * Replaces the problematic sequential 9:00, 10:00, 11:00 timing
+ */
+function generateRealisticTime(index: number, category: string = 'Business', dayNumber: number = 1): string {
+  const activitySchedules = {
+    'Business': ['09:00', '14:00', '16:00'],
+    'Meeting': ['09:00', '11:00', '14:00', '16:00'],
+    'Dining': ['12:00', '18:00', '20:00'],
+    'Cultural': ['10:00', '14:00', '16:00'],
+    'Entertainment': ['19:00', '20:30', '21:00'],
+    'Shopping': ['10:00', '14:00', '16:00'],
+    'Transportation': ['08:00', '13:00', '17:00'],
+    'Hotel': ['15:00', '16:00', '17:00'],
+    'default': ['09:00', '12:00', '15:00', '18:00']
+  };
+
+  const categoryKey = category.toLowerCase().includes('business') ? 'Business' :
+                     category.toLowerCase().includes('meeting') ? 'Meeting' :
+                     category.toLowerCase().includes('dining') || category.toLowerCase().includes('restaurant') ? 'Dining' :
+                     category.toLowerCase().includes('cultural') || category.toLowerCase().includes('museum') ? 'Cultural' :
+                     category.toLowerCase().includes('entertainment') || category.toLowerCase().includes('show') ? 'Entertainment' :
+                     category.toLowerCase().includes('shopping') ? 'Shopping' :
+                     category.toLowerCase().includes('transport') || category.toLowerCase().includes('flight') ? 'Transportation' :
+                     category.toLowerCase().includes('hotel') || category.toLowerCase().includes('accommodation') ? 'Hotel' :
+                     'default';
+
+  const scheduleOptions = activitySchedules[categoryKey] || activitySchedules['default'];
+  
+  // Use modulo to cycle through available times if more activities than time slots
+  const timeIndex = index % scheduleOptions.length;
+  return scheduleOptions[timeIndex];
+}
 import { 
   syncToGoogleCalendar, 
   syncToOutlookCalendar, 
@@ -2179,7 +2214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tripId: newTrip.id,
             title: activity.title || activity.activity || 'Business Activity',
             date: activityDate.toISOString().split('T')[0],
-            time: activity.time || activity.startTime || `${9 + i}:00`,
+            time: activity.time || activity.startTime || generateRealisticTime(i, activity.category || activity.type, activityDay),
             locationName: activity.location || activity.venue || enhancedRequest.destination,
             notes: activity.description || activity.notes || '',
             tag: activity.category || activity.type || 'Business',
@@ -2192,6 +2227,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`Saved ${savedActivities.length} business activities for trip ${newTrip.id}`);
+
+      // Apply intelligent scheduling optimization to resolve conflicts
+      if (savedActivities.length > 0) {
+        try {
+          console.log("Applying intelligent scheduling optimization...");
+          const optimizationResult = await optimizeScheduleIntelligently(
+            savedActivities, 
+            enhancedRequest.preferences || {}, 
+            { workSchedule: enhancedRequest.workSchedule }
+          );
+
+          // Update activities with optimized times if improvements were found
+          if (optimizationResult.optimizedActivities && optimizationResult.optimizedActivities.length > 0) {
+            for (let i = 0; i < optimizationResult.optimizedActivities.length; i++) {
+              const optimizedActivity = optimizationResult.optimizedActivities[i];
+              const savedActivity = savedActivities[i];
+              
+              if (optimizedActivity.startTime && optimizedActivity.startTime !== savedActivity.time) {
+                await storage.updateActivity(savedActivity.id, {
+                  time: optimizedActivity.startTime,
+                  notes: `${savedActivity.notes}\n\nSchedule optimized: ${optimizedActivity.startTime} (was ${savedActivity.time})`
+                });
+                console.log(`Optimized activity ${savedActivity.id} time: ${savedActivity.time} → ${optimizedActivity.startTime}`);
+              }
+            }
+            
+            if (optimizationResult.conflicts && optimizationResult.conflicts.length > 0) {
+              console.log(`Resolved ${optimizationResult.conflicts.length} scheduling conflicts`);
+            }
+          }
+        } catch (optimizationError) {
+          console.log("Schedule optimization failed, keeping original times:", optimizationError);
+        }
+      }
 
       // Create business trip response with saved data
       const enhancedTrip = {
@@ -2313,7 +2382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tripId: newTrip.id,
             title: activity.title || 'AI Generated Activity',
             date: activityDate.toISOString().split('T')[0],
-            time: activity.startTime || `${9 + i}:00`,
+            time: activity.startTime || generateRealisticTime(i, activity.category || activity.type, activityDay),
             locationName: activity.location || tripInfo.destination,
             notes: activity.description || '',
             tag: activity.category || 'AI Generated',
