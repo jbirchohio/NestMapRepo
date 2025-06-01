@@ -113,10 +113,9 @@ export default function MainNavigation() {
   // Check if this is a demo user
   const isDemo = (user as any).isDemo || user.email?.includes('demo') || user.email?.includes('@orbit') || user.email?.includes('@velocitytrips.com');
   
-  // Role-based navigation items
+  // Role-based navigation items  
   const getRoleBasedDashboardPath = () => {
-    const basePath = roleType === 'agency' ? '/dashboard/agency' : '/dashboard/corporate';
-    return isDemo ? `/demo${basePath}` : basePath;
+    return roleType === 'agency' ? '/dashboard/agency' : '/dashboard/corporate';
   };
 
   const navigationItems = [
@@ -128,56 +127,56 @@ export default function MainNavigation() {
       show: true
     },
     {
-      path: isDemo ? '/demo/analytics' : '/analytics',
+      path: '/analytics',
       label: roleType === 'agency' ? 'Client Analytics' : 'Travel Analytics',
       icon: BarChart3,
-      active: location === (isDemo ? '/demo/analytics' : '/analytics'),
+      active: location === '/analytics',
       show: hasAnalyticsAccess,
       badge: 'Pro'
     },
     {
-      path: isDemo ? '/demo/bookings' : '/bookings',
+      path: '/bookings',
       label: roleType === 'agency' ? 'Client Bookings' : 'Team Bookings',
       icon: Plane,
-      active: location === (isDemo ? '/demo/bookings' : '/bookings'),
+      active: location === '/bookings',
       show: hasBookingAccess,
       badge: 'New'
     },
     {
-      path: isDemo ? '/demo/ai-generator' : '/ai-generator',
+      path: '/ai-generator',
       label: roleType === 'agency' ? 'AI Proposal Generator' : 'AI Trip Generator',
       icon: Sparkles,
-      active: location === (isDemo ? '/demo/ai-generator' : '/ai-generator'),
+      active: location === '/ai-generator',
       show: hasAIGeneratorAccess,
       badge: 'AI'
     },
     {
-      path: isDemo ? '/demo/optimizer' : '/optimizer',
+      path: '/optimizer',
       label: 'Trip Optimizer',
       icon: Brain,
-      active: location === (isDemo ? '/demo/optimizer' : '/optimizer'),
+      active: location === '/optimizer',
       show: hasOptimizerAccess,
       badge: 'Pro'
     },
     {
-      path: isDemo ? '/demo/team' : '/team',
+      path: '/team',
       label: roleType === 'agency' ? 'Team & Clients' : 'Team Management',
       icon: Users,
-      active: location === (isDemo ? '/demo/team' : '/team'),
+      active: location === '/team',
       show: hasTeamAccess
     },
     {
-      path: isDemo ? '/demo/billing' : '/billing',
+      path: '/billing',
       label: roleType === 'agency' ? 'Commission & Billing' : 'Company Billing',
       icon: CreditCard,
-      active: location === (isDemo ? '/demo/billing' : '/billing'),
+      active: location === '/billing',
       show: hasBillingAccess
     },
     {
-      path: isDemo ? '/demo/enterprise' : '/settings',
+      path: '/settings',
       label: roleType === 'agency' ? 'Agency Settings' : 'Enterprise Settings',
       icon: Settings,
-      active: location === (isDemo ? '/demo/enterprise' : '/settings'),
+      active: location === '/settings',
       show: hasSettingsAccess,
       badge: (user.role === 'admin' || user.role === 'owner') ? 'Admin' : undefined
     }

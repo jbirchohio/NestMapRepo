@@ -35,15 +35,15 @@ export default function Home() {
     // Check if this is a demo user
     const isDemo = (user as any).isDemo || user.email?.includes('demo') || user.email?.includes('@orbit') || user.email?.includes('@velocitytrips.com');
     
-    // Demo users always go to demo corporate dashboard regardless of role
-    if (isDemo) {
-      setLocation('/demo/dashboard/corporate');
+    // Admin users (including demo admins) go to enterprise dashboard
+    if (user.role === 'admin') {
+      setLocation('/enterprise');
       return;
     }
     
-    // Admin users go to enterprise dashboard
-    if (user.role === 'admin') {
-      setLocation('/enterprise');
+    // Demo users get the same treatment as production users
+    if (isDemo) {
+      setLocation('/dashboard/corporate');
       return;
     }
     
