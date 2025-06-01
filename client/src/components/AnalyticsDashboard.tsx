@@ -71,18 +71,31 @@ export default function AnalyticsDashboard() {
     enabled: !!user, // Use user instead of userId since userId might be null
     queryFn: async () => {
       // Get the current Supabase session for JWT token
-      const { data: { session } } = await import("@/lib/supabase").then(m => m.supabase.auth.getSession());
+      const { supabase } = await import("@/lib/supabase");
+      const { data: { session } } = await supabase.auth.getSession();
+
+      console.log('Analytics query - session exists:', !!session);
+      console.log('Analytics query - access token exists:', !!session?.access_token);
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json"
+      };
+
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
 
       const response = await fetch("/api/analytics", {
-        headers: {
-          "Authorization": session?.access_token ? `Bearer ${session.access_token}` : "",
-          "Content-Type": "application/json"
-        },
+        headers,
         credentials: 'include'
       });
 
+      console.log('Analytics response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Analytics request failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Analytics request failed:', response.status, errorText);
+        throw new Error(`Analytics request failed: ${response.status} - ${errorText}`);
       }
 
       return response.json();
