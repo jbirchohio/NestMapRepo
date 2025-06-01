@@ -263,3 +263,42 @@ NestMap represents a **complete enterprise SaaS travel platform** with sophistic
 **Technical Value Proposition:** This is not a prototype or MVP. It's a **fully operational enterprise platform** with sophisticated features that would cost $2M+ and 24+ months to rebuild from scratch. The AI integration, booking system, and multi-tenant architecture represent significant intellectual property and technical competitive advantages.
 
 **Acquisition Readiness:** 100% ready for enterprise acquisition with no technical debt or architectural limitations preventing immediate scaling to Fortune 500 clients.
+
+---
+
+## 📦 Post-Acquisition Deployment & Setup Requirements
+
+### Required API Credentials (Buyer Must Provide)
+- **OpenAI API Key:** For AI trip planning and optimization features
+- **Mapbox Token:** For map visualization and location services  
+- **Amadeus API Credentials:** Client ID and Secret for flight booking integration
+- **Stripe Keys:** Live and test keys for payment processing and subscription billing
+- **SendGrid API Key:** For branded email communications and notifications
+
+### Infrastructure Setup (Buyer Responsibility)
+- **Custom Domain Configuration:** DNS records and SSL certificates for white-label clients
+- **Database Deployment:** PostgreSQL instance with provided schema migrations
+- **Mobile App Publishing:** iOS App Store and Google Play developer accounts
+- **CDN Setup:** Asset delivery for logos, images, and static content
+
+### White-Label Admin System (Included & Operational)
+✅ **Admin Dashboard:** Complete UI at `/admin` for managing white-label requests  
+✅ **Branding Management:** Logo upload, color customization, domain assignment interface  
+✅ **Tenant Approval:** Workflow for reviewing and activating new organizations  
+✅ **Billing Integration:** Stripe subscription management with plan upgrades/downgrades  
+✅ **Email Template Engine:** Dynamic branding injection for all communications  
+
+### Deployment-Ready Features (No Additional Development)
+✅ **Automated Builds:** Scripts for iOS/Android app compilation included  
+✅ **Database Migrations:** Complete schema with seed data for demo organizations  
+✅ **Environment Configs:** Multi-environment deployment configurations provided  
+✅ **Security Hardening:** Production-ready security middleware and session management  
+✅ **Performance Monitoring:** Built-in slow query detection and memory usage tracking  
+
+### Estimated Setup Timeline
+- **Technical Deployment:** 2-3 days (API keys, DNS, database setup)
+- **Mobile App Deployment:** 1-2 weeks (app store review process)
+- **First White-Label Client:** Same day (admin dashboard operational)
+- **Full Production Readiness:** 1 week maximum
+
+The platform ships with everything needed for immediate enterprise deployment. No additional development work required.
