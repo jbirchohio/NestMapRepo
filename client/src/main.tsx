@@ -11,4 +11,8 @@ if (!root) {
   throw new Error("Root element not found in the document!");
 }
 
-createRoot(root).render(<App />);
+createRoot(root).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
