@@ -347,6 +347,28 @@ app.use((req, res, next) => {
 
   console.log('📍 Mounting API routes...');
   try {
+    // Add authentication middleware for API routes
+    app.use('/api', async (req: Request, res: Response, next: NextFunction) => {
+      const sessionUserId = (req.session as any)?.userId;
+      if (sessionUserId) {
+        try {
+          const user = await getUserById(sessionUserId);
+          if (user) {
+            req.user = {
+              id: user.id,
+              email: user.email,
+              organization_id: user.organizationId,
+              role: user.role,
+              displayName: user.displayName
+            };
+          }
+        } catch (error) {
+          console.error('Error loading user from session:', error);
+        }
+      }
+      next();
+    });
+    
     // Mount API routes
     app.use('/api', apiRoutes);
     console.log('✅ API routes mounted successfully');
