@@ -453,6 +453,17 @@ export const whiteLabelFeatures = pgTable("white_label_features", {
   monthly_price: integer("monthly_price").default(0), // in cents
 });
 
+// Admin Audit Log for tracking administrative actions
+export const adminAuditLog = pgTable("admin_audit_log", {
+  id: serial("id").primaryKey(),
+  admin_user_id: integer("admin_user_id").references(() => users.id).notNull(),
+  action_type: text("action_type").notNull(), // organization_updated, request_reviewed, domain_verified, etc.
+  target_organization_id: integer("target_organization_id").references(() => organizations.id),
+  action_data: jsonb("action_data"), // JSON data containing details of the action
+  ip_address: text("ip_address"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
 // Insert schemas for new tables
 export const insertWhiteLabelSettingsSchema = createInsertSchema(whiteLabelSettings).pick({
   organization_id: true,
@@ -516,6 +527,10 @@ export type InsertWhiteLabelRequest = z.infer<typeof insertWhiteLabelRequestSche
 export type WhiteLabelFeature = typeof whiteLabelFeatures.$inferSelect;
 
 export type WhiteLabelPlan = typeof WHITE_LABEL_PLANS[keyof typeof WHITE_LABEL_PLANS];
+
+// Admin Audit Log Types
+export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
+export type InsertAdminAuditLog = typeof adminAuditLog.$inferInsert;
 
 // Organization Members Types
 export type OrganizationMember = typeof organizationMembers.$inferSelect;

@@ -5,6 +5,7 @@ import activityRoutes from './activities';
 import organizationRoutes from './organizations';
 import analyticsRoutes from './analytics';
 import performanceRoutes from './performance';
+import adminRoutes from './admin';
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.use('/activities', activityRoutes);
 router.use('/organizations', organizationRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/performance', performanceRoutes);
+router.use('/admin', adminRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {
