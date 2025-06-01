@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   auth_id: text("auth_id").notNull().unique(), // Supabase auth ID
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
+  password_hash: text("password_hash"), // Secure password hash for authentication
   display_name: text("display_name"),
   avatar_url: text("avatar_url"),
   role: text("role").default("user"), // System-wide role: admin, manager, user, guest

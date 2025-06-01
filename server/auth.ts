@@ -1,6 +1,7 @@
 import { db } from './db-connection';
 import { users } from '../shared/schema';
 import { eq } from 'drizzle-orm';
+import crypto from 'crypto';
 
 // Simple authentication service without external dependencies
 export async function authenticateUser(email: string, password: string) {
