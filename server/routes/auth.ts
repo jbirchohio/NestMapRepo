@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { insertUserSchema } from '@shared/schema';
+import { insertUserSchema, registerUserSchema, loginSchema } from '@shared/schema';
 import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
 import { authenticateUser, hashPassword } from '../auth';
 import { storage } from '../storage';
@@ -10,7 +10,7 @@ const router = Router();
 // User registration
 router.post("/register", async (req: Request, res: Response) => {
   try {
-    const userData = insertUserSchema.parse(req.body);
+    const userData = registerUserSchema.parse(req.body);
     
     // Check if user already exists
     const existingUser = await storage.getUserByEmail(userData.email);
@@ -21,13 +21,15 @@ router.post("/register", async (req: Request, res: Response) => {
     // Hash password before storing
     const hashedPassword = hashPassword(userData.password);
     
+    // Create user data for storage (transform to database schema)
+    const { password, ...userDataForDb } = userData;
     const user = await storage.createUser({
-      ...userData,
-      password: hashedPassword
+      ...userDataForDb,
+      password_hash: hashedPassword
     });
 
-    // Remove password from response
-    const { password, ...userResponse } = user;
+    // Remove password hash from response
+    const { password_hash, ...userResponse } = user;
     res.status(201).json({ user: userResponse });
   } catch (error) {
     if (error instanceof z.ZodError) {

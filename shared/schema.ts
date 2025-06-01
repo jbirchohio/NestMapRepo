@@ -75,6 +75,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   auth_id: true,
   username: true,
   email: true,
+  password_hash: true,
   display_name: true,
   avatar_url: true,
   role: true,
@@ -84,6 +85,19 @@ export const insertUserSchema = createInsertSchema(users).pick({
   job_title: true,
   team_size: true,
   use_case: true,
+});
+
+// Authentication schema for registration (includes password field)
+export const registerUserSchema = insertUserSchema.omit({ 
+  password_hash: true 
+}).extend({
+  password: z.string().min(8, "Password must be at least 8 characters")
+});
+
+// Login schema
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required")
 });
 
 export const insertOrganizationSchema = createInsertSchema(organizations).pick({

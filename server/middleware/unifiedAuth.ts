@@ -69,13 +69,13 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
       req.user = {
         id: user.id,
         email: user.email,
-        organization_id: user.organizationId,
-        role: user.role,
-        displayName: user.displayName
+        organization_id: user.organizationId ?? undefined,
+        role: user.role ?? undefined,
+        displayName: user.displayName ?? undefined
       };
 
       // Set organization context for tenant isolation
-      req.organizationId = user.organizationId;
+      req.organizationId = user.organizationId ?? undefined;
 
       // Create organization context utilities
       req.organizationContext = {
