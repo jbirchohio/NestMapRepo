@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { insertUserSchema, registerUserSchema, loginSchema } from '@shared/schema';
 import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
-import { authenticateUser, hashPassword } from '../auth';
+import { authenticateUser, hashPassword, getUserById } from '../auth';
 import { storage } from '../storage';
 
 const router = Router();
@@ -88,6 +88,37 @@ router.post("/logout", (req: Request, res: Response) => {
     res.clearCookie('connect.sid');
     res.json({ message: "Logged out successfully" });
   });
+});
+
+// Session check endpoint (for middleware)
+router.get("/session", async (req: Request, res: Response) => {
+  try {
+    const sessionUserId = (req.session as any)?.userId;
+    
+    if (!sessionUserId) {
+      return res.status(401).json({ message: "No active session" });
+    }
+
+    const user = await getUserById(sessionUserId);
+    if (!user) {
+      // Clear invalid session
+      delete (req.session as any).userId;
+      return res.status(401).json({ message: "Invalid session" });
+    }
+
+    // Return user session data
+    const userResponse = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      organizationId: user.organizationId,
+      displayName: user.displayName
+    };
+    res.json({ user: userResponse });
+  } catch (error) {
+    console.error("Session check error:", error);
+    res.status(500).json({ message: "Session check failed" });
+  }
 });
 
 // Get current user (requires authentication)
