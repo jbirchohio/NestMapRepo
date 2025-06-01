@@ -696,7 +696,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       city: dest.city?.split(',')[0]?.trim() || 'Unknown',
       country: dest.country || 'Unknown',
       tripCount: dest.tripCount,
-      totalBudget: Number(dest.totalBudget) || 0,
+      totalBudget: Math.round((Number(dest.totalBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
       percentage: totalTrips > 0 ? Math.round((dest.tripCount / totalTrips) * 100) : 0
     }));
 
@@ -855,7 +855,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       trips: week.tripCount,
       users: 0, // Would need separate query to calculate new users per week
       activities: 0, // Would need separate query to calculate activities per week
-      budget: Number(week.budget) || 0
+      budget: Math.round((Number(week.budget) || 0) / 100 * 100) / 100 // Convert cents to dollars
     }));
 
     const totalUsers = totalUsersResult[0]?.count || 0;
@@ -872,16 +872,16 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
         totalTrips,
         totalUsers,
         totalActivities: totalActivitiesResult[0]?.count || 0,
-        totalBudget: Number(totalBudgetResult[0]?.totalBudget) || 0,
+        totalBudget: Math.round((Number(totalBudgetResult[0]?.totalBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
         averageTripLength: Math.round((Number(avgTripLengthResult[0]?.avgLength) || 0) * 100) / 100,
         averageActivitiesPerTrip: Math.round((Number(avgActivitiesResult[0]?.avgActivities) || 0) * 100) / 100,
-        averageTripBudget: Math.round((Number(avgBudgetResult[0]?.avgBudget) || 0) * 100) / 100
+        averageTripBudget: Math.round((Number(avgBudgetResult[0]?.avgBudget) || 0) / 100 * 100) / 100 // Convert cents to dollars
       },
       destinations,
       tripDurations,
       budgetAnalysis: {
-        totalBudget: Number(totalBudgetResult[0]?.totalBudget) || 0,
-        averageBudget: Math.round((Number(avgBudgetResult[0]?.avgBudget) || 0) * 100) / 100,
+        totalBudget: Math.round((Number(totalBudgetResult[0]?.totalBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
+        averageBudget: Math.round((Number(avgBudgetResult[0]?.avgBudget) || 0) / 100 * 100) / 100, // Convert cents to dollars
         budgetDistribution
       },
       userEngagement: {
@@ -896,7 +896,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
         newTripsLast7Days: newTripsLast7DaysResult[0]?.count || 0,
         newUsersLast7Days: newUsersLast7DaysResult[0]?.count || 0,
         activitiesAddedLast7Days: activitiesAddedLast7DaysResult[0]?.count || 0,
-        budgetSpentLast7Days: Number(budgetSpentLast7DaysResult[0]?.totalBudget) || 0
+        budgetSpentLast7Days: Math.round((Number(budgetSpentLast7DaysResult[0]?.totalBudget) || 0) / 100 * 100) / 100 // Convert cents to dollars
       },
       growthMetrics
     };
