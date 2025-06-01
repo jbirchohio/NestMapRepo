@@ -1355,9 +1355,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Hotel search endpoint
+  // Step 1: Search hotels (Hotel List API)
   app.post("/api/bookings/hotels/search", async (req: Request, res: Response) => {
     try {
-      const { destination, checkIn, checkOut, guests, rooms, starRating, amenities } = req.body;
+      const { destination, checkIn, checkOut, guests, rooms } = req.body;
       
       if (!destination || !checkIn || !checkOut || !guests) {
         return res.status(400).json({ message: "Missing required search parameters" });
@@ -1376,6 +1377,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Hotel search error:", error);
       res.status(500).json({ message: "Unable to search hotels: " + error.message });
+    }
+  });
+
+  // Step 2: Get hotel offers with pricing (Hotel Search API)
+  app.post("/api/bookings/hotels/offers", async (req: Request, res: Response) => {
+    try {
+      const { hotelId, checkIn, checkOut, guests, rooms } = req.body;
+      
+      if (!hotelId || !checkIn || !checkOut || !guests) {
+        return res.status(400).json({ message: "Missing required parameters for hotel offers" });
+      }
+
+      const { getHotelOffers } = await import('./bookingProviders');
+      const offers = await getHotelOffers({
+        hotelId,
+        checkIn,
+        checkOut,
+        guests,
+        rooms: rooms || 1
+      });
+      
+      res.json({ offers });
+    } catch (error: any) {
+      console.error("Hotel offers error:", error);
+      res.status(500).json({ message: "Unable to get hotel offers: " + error.message });
+    }
+  });
+
+  // Step 3: Book hotel room (Hotel Booking API)
+  app.post("/api/bookings/hotels/book", async (req: Request, res: Response) => {
+    try {
+      const { offerId, guestInfo, paymentInfo, tripId } = req.body;
+      
+      if (!offerId || !guestInfo) {
+        return res.status(400).json({ message: "Missing required booking information" });
+      }
+
+      const { bookHotel } = await import('./bookingProviders');
+      const booking = await bookHotel({
+        offerId,
+        guestInfo,
+        paymentInfo
+      });
+      
+      // Link booking to trip if provided
+      if (tripId && booking.bookingId) {
+        console.log(`Hotel booking ${booking.bookingId} linked to trip ${tripId}`);
+      }
+      
+      res.json({ booking });
+    } catch (error: any) {
+      console.error("Hotel booking error:", error);
+      res.status(500).json({ message: "Unable to complete hotel booking: " + error.message });
     }
   });
 
@@ -4943,55 +4997,7 @@ Include realistic business activities, meeting times, dining recommendations, an
   });
 
   // Booking provider search endpoints
-  app.get("/api/booking/searchFlights", async (req: Request, res: Response) => {
-    try {
-      const { origin, destination, departureDate, returnDate, passengers } = req.query;
-      
-      if (!origin || !destination || !departureDate) {
-        return res.status(400).json({ 
-          error: "Missing required parameters: origin, destination, departureDate" 
-        });
-      }
 
-      const flights = await searchFlights({
-        origin: origin as string,
-        destination: destination as string,
-        departureDate: departureDate as string,
-        returnDate: returnDate as string,
-        passengers: passengers ? parseInt(passengers as string) : 1,
-      });
-
-      res.json(flights);
-    } catch (error) {
-      console.error("Flight search error:", error);
-      res.status(500).json({ error: "Flight search failed" });
-    }
-  });
-
-  app.get("/api/booking/searchHotels", async (req: Request, res: Response) => {
-    try {
-      const { destination, checkIn, checkOut, guests, rooms } = req.query;
-      
-      if (!destination || !checkIn || !checkOut) {
-        return res.status(400).json({ 
-          error: "Missing required parameters: destination, checkIn, checkOut" 
-        });
-      }
-
-      const hotels = await searchHotels({
-        destination: destination as string,
-        checkIn: checkIn as string,
-        checkOut: checkOut as string,
-        guests: guests ? parseInt(guests as string) : 1,
-        rooms: rooms ? parseInt(rooms as string) : 1,
-      });
-
-      res.json(hotels);
-    } catch (error) {
-      console.error("Hotel search error:", error);
-      res.status(500).json({ error: "Hotel search failed" });
-    }
-  });
 
   // Authentication session endpoint with JWT verification
   app.post("/api/auth/session", async (req: Request, res: Response) => {
