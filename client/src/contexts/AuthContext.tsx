@@ -321,21 +321,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign out function
   const signOut = async () => {
     try {
+      console.log('Starting signOut process...');
       setLoading(true);
       setError(null);
       
       // Check if this is a demo user
-      const isDemo = (user as any)?.isDemo || user?.email?.includes('admin@orbit') || user?.email?.includes('manager@orbit') || user?.email?.includes('agent@orbit');
+      const isDemo = (user as any)?.isDemo || user?.email?.includes('@velocitytrips.com') || user?.email?.includes('@orbit') || user?.email?.includes('admin@orbit') || user?.email?.includes('manager@orbit') || user?.email?.includes('agent@orbit');
+      
+      console.log('Is demo user:', isDemo, 'User email:', user?.email);
       
       if (isDemo) {
+        console.log('Processing demo logout...');
         // For demo users, call the backend logout endpoint
         try {
-          await fetch('/api/auth/logout', {
+          const response = await fetch('/api/auth/logout', {
             method: 'POST',
             credentials: 'include'
           });
+          console.log('Logout response:', response.status, await response.text());
         } catch (e) {
-          console.warn('Demo logout request failed, but continuing with client-side cleanup');
+          console.warn('Demo logout request failed, but continuing with client-side cleanup', e);
         }
         
         // Clear demo mode
@@ -349,6 +354,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuthReady(false);
         setLoading(false);
         
+        console.log('Redirecting to demo page...');
         // Redirect to demo page
         window.location.href = '/demo';
         return;
