@@ -4919,43 +4919,80 @@ Include realistic business activities, meeting times, dining recommendations, an
     }
   });
 
-  // Authentication session endpoint to populate session with user ID
+  // Authentication session endpoint with JWT verification
   app.post("/api/auth/session", async (req: Request, res: Response) => {
     try {
-      const { authId } = req.body;
+      const { authId, token } = req.body;
       
-      if (!authId) {
-        return res.status(400).json({ message: "Auth ID is required" });
+      if (!authId || !token) {
+        return res.status(400).json({ message: "Auth ID and access token are required" });
       }
       
-      // Get user from database by auth ID
-      const user = await storage.getUserByAuthId(authId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      // Import Supabase JWT verification
+      const jwt = require('jsonwebtoken');
+      const { createClient } = require('@supabase/supabase-js');
       
-      // Set session data
-      (req.session as any).userId = user.id;
-      
-      console.log('Session created for user:', {
-        userId: user.id,
-        authId: authId,
-        username: user.username
-      });
-      
-      // Save session and send response
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error:', err);
-          return res.status(500).json({ message: "Failed to save session" });
+      try {
+        // Initialize Supabase client for JWT verification
+        const supabaseUrl = process.env.VITE_SUPABASE_URL;
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        
+        if (!supabaseUrl || !supabaseServiceKey) {
+          console.error('Missing Supabase configuration');
+          return res.status(500).json({ message: "Authentication service configuration error" });
         }
         
-        res.json({ 
-          success: true, 
-          message: "Session established",
-          userId: user.id 
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        
+        // Verify the JWT token with Supabase
+        const { data: { user }, error: verifyError } = await supabase.auth.getUser(token);
+        
+        if (verifyError || !user) {
+          console.error('JWT verification failed:', verifyError?.message);
+          return res.status(401).json({ message: "Invalid or expired token" });
+        }
+        
+        // Verify the user ID from token matches the provided authId
+        if (user.id !== authId) {
+          console.error('Token user ID mismatch:', { tokenUserId: user.id, providedAuthId: authId });
+          return res.status(401).json({ message: "Token user ID does not match provided auth ID" });
+        }
+        
+        // Get user from database by verified auth ID
+        const dbUser = await storage.getUserByAuthId(authId);
+        if (!dbUser) {
+          return res.status(404).json({ message: "User not found in database" });
+        }
+        
+        // Set session data only after successful JWT verification
+        (req.session as any).userId = dbUser.id;
+        
+        console.log('Secure session created for verified user:', {
+          userId: dbUser.id,
+          authId: authId,
+          username: dbUser.username,
+          tokenVerified: true
         });
-      });
+        
+        // Save session and send response
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err);
+            return res.status(500).json({ message: "Failed to save session" });
+          }
+          
+          res.json({ 
+            success: true, 
+            message: "Secure session established",
+            userId: dbUser.id 
+          });
+        });
+        
+      } catch (jwtError) {
+        console.error('JWT verification error:', jwtError);
+        return res.status(401).json({ message: "Token verification failed" });
+      }
+      
     } catch (error) {
       console.error("Error establishing session:", error);
       res.status(500).json({ message: "Failed to establish session" });

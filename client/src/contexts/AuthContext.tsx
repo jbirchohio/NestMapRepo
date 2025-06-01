@@ -54,24 +54,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setUserId(dbUser.id);
               setRoleType(dbUser.roleType || null);
               
-              // Establish backend session for authenticated user
+              // Establish backend session for authenticated user with JWT verification
               try {
-                const sessionResponse = await fetch('/api/auth/session', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ authId: user.id })
-                });
+                // Get the current session to access the access token
+                const sessionResult = await auth.getSession();
+                const accessToken = sessionResult.data?.session?.access_token;
                 
-                if (sessionResponse.ok) {
-                  const sessionData = await sessionResponse.json();
-                  console.log('Backend session established on load:', sessionData);
+                if (accessToken) {
+                  const sessionResponse = await fetch('/api/auth/session', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                      authId: user.id,
+                      token: accessToken 
+                    })
+                  });
+                  
+                  if (sessionResponse.ok) {
+                    const sessionResult = await sessionResponse.json();
+                    console.log('Secure backend session established on load:', sessionResult);
+                  } else {
+                    console.warn('Failed to establish secure backend session on load');
+                  }
                 } else {
-                  console.warn('Failed to establish backend session on load');
+                  console.warn('No access token available for session establishment');
                 }
               } catch (sessionError) {
-                console.error('Error establishing backend session on load:', sessionError);
+                console.error('Error establishing secure backend session on load:', sessionError);
               }
             } else if (response.status === 404) {
               // User not found in database - this is expected for new users
@@ -153,24 +164,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('Sign-in: Database user found:', dbUser);
             setUserId(dbUser.id);
             
-            // Establish backend session
+            // Establish secure backend session with JWT verification
             try {
-              const sessionResponse = await fetch('/api/auth/session', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ authId: data.user.id })
-              });
+              const accessToken = data.session?.access_token;
               
-              if (sessionResponse.ok) {
-                const sessionData = await sessionResponse.json();
-                console.log('Backend session established:', sessionData);
+              if (accessToken) {
+                const sessionResponse = await fetch('/api/auth/session', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ 
+                    authId: data.user.id,
+                    token: accessToken 
+                  })
+                });
+                
+                if (sessionResponse.ok) {
+                  const sessionResult = await sessionResponse.json();
+                  console.log('Secure backend session established:', sessionResult);
+                } else {
+                  console.warn('Failed to establish secure backend session');
+                }
               } else {
-                console.warn('Failed to establish backend session');
+                console.warn('No access token available for session establishment');
               }
             } catch (sessionError) {
-              console.error('Error establishing backend session:', sessionError);
+              console.error('Error establishing secure backend session:', sessionError);
             }
             
             setAuthReady(true);
