@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
@@ -19,6 +20,14 @@ import { eq } from "drizzle-orm";
 import { authenticateUser, getUserById } from "./auth";
 
 const app = express();
+
+// Initialize PostgreSQL session store
+const PgSession = connectPgSimple(session);
+const sessionStore = new PgSession({
+  conString: process.env.DATABASE_URL,
+  tableName: 'session',
+  createTableIfMissing: true
+});
 
 // Security headers middleware
 app.use((req, res, next) => {
@@ -89,8 +98,9 @@ app.use(resolveDomainOrganization);
 // Temporarily disabled to fix crash - organization filtering handled in storage layer
 // app.use(injectOrganizationContext);
 
-// Enhanced session security middleware for OAuth flow
+// Enhanced session security middleware with PostgreSQL store
 app.use(session({
+  store: sessionStore,
   secret: process.env.SESSION_SECRET || 'nestmap-calendar-sync-secret',
   resave: false,
   saveUninitialized: false,
@@ -170,6 +180,51 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
     });
   } else {
     res.status(401).json({ error: 'Not authenticated' });
+  }
+});
+
+// Session statistics endpoint for testing PostgreSQL store
+app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
+  try {
+    // Only allow authenticated users to see session stats
+    if (!(req.session as any)?.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Query session table to get statistics
+    const sessionCountQuery = 'SELECT COUNT(*) as session_count FROM session';
+    const expiredSessionQuery = 'SELECT COUNT(*) as expired_count FROM session WHERE expire < NOW()';
+    
+    // Use the same connection string as the session store
+    const { Pool } = require('pg');
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    
+    const [sessionResult, expiredResult] = await Promise.all([
+      pool.query(sessionCountQuery),
+      pool.query(expiredSessionQuery)
+    ]);
+    
+    const totalSessions = parseInt(sessionResult.rows[0].session_count);
+    const expiredSessions = parseInt(expiredResult.rows[0].expired_count);
+    
+    res.json({
+      totalSessions,
+      expiredSessions,
+      activeSessions: totalSessions - expiredSessions,
+      storeType: 'PostgreSQL',
+      tableName: 'session',
+      sessionConfig: {
+        name: 'nestmap.sid',
+        maxAge: 12 * 60 * 60 * 1000, // 12 hours
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+      }
+    });
+    
+    await pool.end();
+  } catch (error) {
+    console.error('Session stats error:', error);
+    res.status(500).json({ error: 'Failed to get session statistics' });
   }
 });
 
