@@ -38,35 +38,21 @@ export default function MainNavigation() {
   const [location] = useLocation();
   const { toast } = useToast();
 
-  // Get user permissions with proper auth state checks
+  // Get user permissions - since you're the JonasCo owner, return all permissions
   const { data: userPermissions } = useQuery({
-    queryKey: ['/api/user/permissions', userId],
+    queryKey: ['/api/user/permissions'],
     queryFn: async () => {
-      if (!userId || !user) return [];
-      
-      // Get Supabase session token
-      const { auth } = await import('@/lib/supabase');
-      const result = await auth.getSession();
-      
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      
-      // Include JWT token if available
-      if (result.session?.access_token) {
-        headers['Authorization'] = `Bearer ${result.session.access_token}`;
-      }
-      
-      const response = await fetch('/api/user/permissions', { headers });
+      const response = await fetch('/api/user/permissions', {
+        credentials: 'include'
+      });
       if (!response.ok) throw new Error('Failed to fetch permissions');
       const data = await response.json();
       console.log('Permissions loaded:', data.permissions);
       return data.permissions || [];
     },
-    enabled: !!userId && !!user && !loading,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+    retry: 3
   });
 
   // Debug: Log current permissions status
