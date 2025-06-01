@@ -7,6 +7,7 @@ import fs from "fs";
 import apiRoutes from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
+import { performanceOptimizer } from "./services/performanceOptimizer";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
 import { monitorDatabasePerformance } from "./middleware/database";
 import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
@@ -85,6 +86,10 @@ app.use((req, res, next) => {
   res.setHeader('Content-Security-Policy', csp);
   next();
 });
+
+// Performance optimization middleware (early in stack)
+app.use(performanceOptimizer.viteAssetOptimizer());
+app.use(performanceOptimizer.memoryReliefMiddleware());
 
 // Input validation and sanitization middleware
 app.use((req, res, next) => {
