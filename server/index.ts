@@ -212,6 +212,28 @@ app.post('/api/auth/logout', (req: Request, res: Response) => {
 });
 
 app.get('/api/auth/me', async (req: Request, res: Response) => {
+  const session = req.session as any;
+  
+  // Check for demo session first
+  if (session?.isDemo && session?.userId) {
+    const orgNames = {
+      1: "Orbit Travel Co",
+      2: "Haven Journeys", 
+      3: "Velocity Trips"
+    };
+    
+    return res.json({
+      user: {
+        id: session.userId,
+        email: `demo@${orgNames[session.userId]?.toLowerCase().replace(/\s+/g, '')}.com`,
+        role: "admin",
+        organizationId: session.organizationId,
+        displayName: "Demo User"
+      }
+    });
+  }
+  
+  // Regular user authentication
   if (req.user) {
     res.json({
       user: {

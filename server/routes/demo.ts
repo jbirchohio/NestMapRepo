@@ -48,19 +48,30 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Organization ID is required" });
     }
 
-    // For now, return success with minimal data
+    // Create a proper demo session
+    req.session.userId = organizationId; // Use org ID as user ID for demo
+    req.session.organizationId = organizationId;
+    req.session.isDemo = true;
+
+    // Get organization name from our demo data
+    const orgNames = {
+      1: "Orbit Travel Co",
+      2: "Haven Journeys", 
+      3: "Velocity Trips"
+    };
+
     res.json({
       success: true,
       user: {
-        id: 1,
-        email: "demo@example.com",
+        id: organizationId,
+        email: `demo@${orgNames[organizationId]?.toLowerCase().replace(/\s+/g, '')}.com`,
         displayName: "Demo User",
         role: "admin"
       },
       organization: {
         id: organizationId,
-        name: "Demo Organization",
-        domain: "demo.nestmap.app"
+        name: orgNames[organizationId] || "Demo Organization",
+        domain: `demo${organizationId}.nestmap.app`
       }
     });
 
