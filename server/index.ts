@@ -133,8 +133,7 @@ app.use('/api', authenticateApiKey);
 
 // Apply organization scoping middleware for multi-tenant security
 app.use(resolveDomainOrganization);
-// Temporarily disabled to fix crash - organization filtering handled in storage layer
-// app.use(injectOrganizationContext);
+app.use(injectOrganizationContext);
 
 // Enhanced session security middleware with PostgreSQL store
 app.use(session({

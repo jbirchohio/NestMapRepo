@@ -1,9 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 
+// Extend Express Request interface to include domain organization context
+declare global {
+  namespace Express {
+    interface Request {
+      domainOrganizationId?: number;
+      isWhiteLabelDomain?: boolean;
+      organizationId?: number;
+      organizationFilter?: (orgId: number | null) => boolean;
+    }
+  }
+}
+
 /**
  * Critical middleware for multi-tenant organization scoping
  * Automatically injects organization context into all requests
- * Prevents cross-organization data access
+ * Prevents cross-organization data access and enforces domain-based isolation
  */
 export function injectOrganizationContext(req: Request, res: Response, next: NextFunction) {
   // Skip for public endpoints, frontend routes, and auth routes
@@ -32,13 +44,46 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
     });
   }
 
-  // Inject organization ID into request for automatic query scoping
-  req.organizationId = req.user.organizationId;
+  // CRITICAL: Enforce domain-based organization isolation for white-label domains
+  if (req.isWhiteLabelDomain && req.domainOrganizationId) {
+    // For white-label domains, ensure user's organization matches the domain's organization
+    if (req.user.organizationId !== req.domainOrganizationId) {
+      console.warn('SECURITY_VIOLATION: Cross-organization access attempt via white-label domain', {
+        userId: req.user.id,
+        userOrgId: req.user.organizationId,
+        domainOrgId: req.domainOrganizationId,
+        domain: req.headers.host,
+        endpoint: req.path,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+      
+      return res.status(403).json({ 
+        error: 'Access denied',
+        message: 'You cannot access this organization\'s data through this domain. Please use the correct domain for your organization or contact your administrator.'
+      });
+    }
+    
+    // Set organization context to the domain's organization for extra security
+    req.organizationId = req.domainOrganizationId;
+  } else {
+    // For main domain, use user's organization
+    req.organizationId = req.user.organizationId;
+  }
   
   // Create organization filter function for queries
   req.organizationFilter = (orgId: number | null) => {
-    return orgId === req.user?.organizationId;
+    return orgId === req.organizationId;
   };
+
+  // Log successful organization context injection for audit trail
+  console.log('Organization context injected:', {
+    userId: req.user.id,
+    organizationId: req.organizationId,
+    isWhiteLabel: req.isWhiteLabelDomain || false,
+    domain: req.headers.host,
+    endpoint: req.path
+  });
 
   next();
 }
@@ -70,7 +115,7 @@ export function validateOrganizationAccess(req: Request, res: Response, next: Ne
 
 /**
  * Domain-based organization resolution middleware
- * Resolves organization context from subdomain for white-label routing
+ * Resolves organization context from custom domains for white-label routing
  */
 export async function resolveDomainOrganization(req: Request, res: Response, next: NextFunction) {
   const host = req.headers.host;
@@ -78,17 +123,54 @@ export async function resolveDomainOrganization(req: Request, res: Response, nex
     return next();
   }
 
-  // Extract subdomain (e.g., 'demo' from 'demo.nestmap.com')
-  const subdomain = host.split('.')[0];
-  
-  // Skip for localhost and main domain
-  if (host.includes('localhost') || subdomain === 'nestmap' || subdomain === 'www') {
-    return next();
-  }
+  try {
+    // Skip for localhost and main domain
+    if (host.includes('localhost') || host === 'nestmap.com' || host === 'www.nestmap.com') {
+      return next();
+    }
 
-  // For now, skip domain-based organization lookup to prevent circular dependency
-  // This will be enabled once the database connection is stable
-  next();
+    // Import database connection
+    const { db } = await import('../db');
+    const { customDomains } = await import('../../shared/schema');
+    const { eq } = await import('drizzle-orm');
+
+    // Look up organization by custom domain
+    const [domainConfig] = await db
+      .select({
+        organizationId: customDomains.organization_id,
+        status: customDomains.status,
+        domain: customDomains.domain
+      })
+      .from(customDomains)
+      .where(eq(customDomains.domain, host))
+      .limit(1);
+
+    if (domainConfig) {
+      // Verify domain is active
+      if (domainConfig.status !== 'active') {
+        return res.status(503).json({
+          error: 'Domain not active',
+          message: 'This domain is currently being configured. Please try again later.'
+        });
+      }
+
+      // Set domain organization context for later validation
+      req.domainOrganizationId = domainConfig.organizationId;
+      req.isWhiteLabelDomain = true;
+      
+      console.log('Domain organization resolved:', {
+        domain: host,
+        organizationId: domainConfig.organizationId,
+        status: domainConfig.status
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Domain organization resolution error:', error);
+    // Don't fail the request, just proceed without domain context
+    next();
+  }
 }
 
 /**
