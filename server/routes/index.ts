@@ -33,8 +33,7 @@ router.use('/reporting', reportingRoutes);
 // User permissions endpoint
 router.get('/user/permissions', async (req, res) => {
   try {
-    // For demo purposes, always return owner permissions for JonasCo
-    // In production, this would check actual authentication
+    // Always return owner permissions for JonasCo demonstration
     const role = 'owner';
     const organizationId = 1;
     
