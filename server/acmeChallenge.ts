@@ -115,7 +115,7 @@ export async function validateACMEChallenge(
     const responseText = await response.text();
     const isValid = responseText.trim() === expectedKeyAuthorization.trim();
     
-    console.log(`ACME challenge validation result: ${isValid}`);
+    // ACME challenge validation completed
     if (!isValid) {
       console.log(`Expected: ${expectedKeyAuthorization}`);
       console.log(`Received: ${responseText}`);

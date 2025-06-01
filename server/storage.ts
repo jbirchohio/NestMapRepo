@@ -440,7 +440,7 @@ export class DatabaseStorage implements IStorage {
         .set(tripData)
         .where(eq(trips.id, id))
         .returning();
-      console.log("Database update result:", updatedTrip);
+      // Trip updated successfully
       return updatedTrip || undefined;
     } catch (error) {
       console.error("Database update error:", error);

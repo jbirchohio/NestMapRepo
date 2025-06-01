@@ -64,7 +64,7 @@ interface GeneratedBusinessTrip {
 
 export async function generateBusinessTrip(request: BusinessTripRequest): Promise<GeneratedBusinessTrip> {
   try {
-    console.log('Starting business trip generation for:', request.clientName, 'to', request.destination);
+    // Starting business trip generation
     
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     const openai = getOpenAIClient();
@@ -125,7 +125,7 @@ export async function generateBusinessTrip(request: BusinessTripRequest): Promis
     });
 
     const aiResponse = JSON.parse(response.choices[0].message.content || '{}');
-    console.log('AI trip generation completed, enhancing with real data...');
+    // AI trip generation completed, enhancing with real data
 
     // Enhance with real flight and hotel data
     const enhancedTrip = await enhanceTripWithRealData(aiResponse, request);
@@ -169,7 +169,7 @@ async function enhanceTripWithRealData(aiTrip: any, request: BusinessTripRequest
         }));
       }
     } catch (error) {
-      console.log('Using AI-generated flight data as fallback');
+      // Using AI-generated flight data as fallback
     }
 
     // Search for real hotels
@@ -191,7 +191,7 @@ async function enhanceTripWithRealData(aiTrip: any, request: BusinessTripRequest
         }));
       }
     } catch (error) {
-      console.log('Using AI-generated hotel data as fallback');
+      // Using AI-generated hotel data as fallback
     }
 
     return {
@@ -202,7 +202,7 @@ async function enhanceTripWithRealData(aiTrip: any, request: BusinessTripRequest
     };
 
   } catch (error) {
-    console.log('Enhancement with real data failed, using AI data:', error);
+    console.error('Enhancement with real data failed, using AI data:', error);
     return aiTrip;
   }
 }
