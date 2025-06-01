@@ -1,4 +1,5 @@
 import { MailService } from '@sendgrid/mail';
+import { getBrandingConfig } from '../config/branding';
 
 let mailService: MailService | null = null;
 
@@ -9,6 +10,11 @@ if (process.env.SENDGRID_API_KEY) {
   console.log('✓ SendGrid email service initialized');
 } else {
   console.warn('⚠ SENDGRID_API_KEY not found - email features will be disabled');
+}
+
+interface BrandingContext {
+  organizationId?: number;
+  domain?: string;
 }
 
 interface TeamInvitationEmailParams {

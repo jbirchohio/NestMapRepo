@@ -5,12 +5,10 @@ const config: CapacitorConfig = {
   appName: 'NestMap',
   webDir: 'dist',
   server: {
-    // During development, you can use this for local testing
-    // url: 'http://localhost:5000',
-    // For production, use your hosted URL when ready to deploy
-    // url: 'https://nestmap.vercel.app',
+    // Production URL - update this to your custom domain for enterprise deployment
+    url: process.env.CAPACITOR_SERVER_URL || 'https://your-domain.com',
     androidScheme: 'https',
-    cleartext: true
+    cleartext: false // Disable cleartext for production security
   },
   android: {
     buildOptions: {
