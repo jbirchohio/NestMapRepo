@@ -140,7 +140,7 @@ router.put("/profile", unifiedAuthMiddleware, async (req: Request, res: Response
 // Check authentication status
 router.get("/status", (req: Request, res: Response) => {
   res.json({ 
-    authenticated: !!req.session.userId,
+    authenticated: !!(req.session as any).userId,
     sessionId: req.sessionID
   });
 });
