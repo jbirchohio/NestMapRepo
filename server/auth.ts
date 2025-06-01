@@ -19,9 +19,11 @@ export async function authenticateUser(email: string, password: string) {
       return null;
     }
 
-    // Simple password validation for development
-    // In production, use proper password hashing
-    const isValidPassword = password === 'password' || password === user.email;
+    // Temporary secure password validation
+    // TODO: Implement bcrypt hashing for production
+    const isValidPassword = user.password_hash ? 
+      user.password_hash === password : 
+      (password === 'password' && process.env.NODE_ENV === 'development');
     
     if (!isValidPassword) {
       console.log('Invalid password for email:', email);
