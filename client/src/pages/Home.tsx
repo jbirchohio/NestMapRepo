@@ -32,6 +32,15 @@ export default function Home() {
   useEffect(() => {
     if (!authReady || !user) return;
     
+    // Check if this is a demo user
+    const isDemo = (user as any).isDemo || user.email?.includes('demo') || user.email?.includes('admin@orbit') || user.email?.includes('manager@orbit') || user.email?.includes('agent@orbit');
+    
+    // Demo users always go to corporate dashboard regardless of role
+    if (isDemo) {
+      setLocation('/dashboard/corporate');
+      return;
+    }
+    
     // Admin users go to enterprise dashboard
     if (user.role === 'admin') {
       setLocation('/enterprise');
