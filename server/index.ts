@@ -4,7 +4,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import path from "path";
 import fs from "fs";
-import apiRoutes from "./routes";
+import apiRoutes from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
