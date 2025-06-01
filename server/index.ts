@@ -323,8 +323,10 @@ app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
 
 // Import unified authentication middleware
 import { unifiedAuthMiddleware } from './middleware/unifiedAuth';
+import { demoRouterMiddleware } from './middleware/demoRouter';
 
-// Apply unified authentication and organization context
+// Apply demo router first (before auth), then unified authentication
+app.use(demoRouterMiddleware);
 app.use(unifiedAuthMiddleware);
 
 // Global error handling middleware

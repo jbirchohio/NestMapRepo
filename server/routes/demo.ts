@@ -103,6 +103,188 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+// Demo analytics endpoint
+router.get("/analytics", async (req: Request, res: Response) => {
+  try {
+    const session = req.session as any;
+    if (!session?.isDemo) {
+      return res.status(403).json({ error: "Demo access only" });
+    }
+
+    const mockAnalytics = {
+      overview: {
+        totalTrips: 127,
+        totalUsers: 45,
+        totalActivities: 892,
+        averageTripLength: 4.2,
+        averageActivitiesPerTrip: 7.0
+      },
+      destinations: [
+        { city: "Tokyo", country: "Japan", tripCount: 23, percentage: 18.1 },
+        { city: "London", country: "UK", tripCount: 19, percentage: 15.0 },
+        { city: "New York", country: "USA", tripCount: 16, percentage: 12.6 },
+        { city: "Paris", country: "France", tripCount: 14, percentage: 11.0 },
+        { city: "Singapore", country: "Singapore", tripCount: 12, percentage: 9.4 }
+      ],
+      userEngagement: {
+        usersWithTrips: 42,
+        usersWithMultipleTrips: 28,
+        averageTripsPerUser: 2.8,
+        tripCompletionRate: 0.89,
+        activityCompletionRate: 0.76
+      },
+      recentActivity: {
+        newTripsLast7Days: 8,
+        newUsersLast7Days: 3,
+        activitiesAddedLast7Days: 47
+      }
+    };
+
+    res.json(mockAnalytics);
+  } catch (error) {
+    console.error("Demo analytics error:", error);
+    res.status(500).json({ error: "Failed to load demo analytics" });
+  }
+});
+
+// Demo dashboard stats endpoint
+router.get("/dashboard-stats", async (req: Request, res: Response) => {
+  try {
+    const session = req.session as any;
+    if (!session?.isDemo) {
+      return res.status(403).json({ error: "Demo access only" });
+    }
+
+    const mockStats = {
+      totalTrips: 47,
+      activeTrips: 12,
+      upcomingTrips: 8,
+      completedTrips: 27,
+      totalBudget: 245000,
+      spentBudget: 187500,
+      teamMembers: 15,
+      pendingApprovals: 3
+    };
+
+    res.json(mockStats);
+  } catch (error) {
+    console.error("Demo dashboard stats error:", error);
+    res.status(500).json({ error: "Failed to load demo dashboard stats" });
+  }
+});
+
+// Demo user permissions endpoint
+router.get("/permissions", async (req: Request, res: Response) => {
+  try {
+    const session = req.session as any;
+    if (!session?.isDemo) {
+      return res.status(403).json({ error: "Demo access only" });
+    }
+
+    const role = session.role || "admin";
+    const permissions = {
+      admin: ["ACCESS_ANALYTICS", "MANAGE_ORGANIZATION", "INVITE_MEMBERS", "BILLING_ACCESS", "CREATE_TRIPS", "ADMIN_ACCESS"],
+      manager: ["ACCESS_ANALYTICS", "INVITE_MEMBERS", "CREATE_TRIPS", "APPROVE_TRIPS"],
+      user: ["CREATE_TRIPS", "VIEW_TRIPS"]
+    };
+
+    res.json(permissions[role as keyof typeof permissions] || permissions.user);
+  } catch (error) {
+    console.error("Demo permissions error:", error);
+    res.status(500).json({ error: "Failed to load demo permissions" });
+  }
+});
+
+// Demo trips endpoint
+router.get("/trips", async (req: Request, res: Response) => {
+  try {
+    const session = req.session as any;
+    if (!session?.isDemo) {
+      return res.status(403).json({ error: "Demo access only" });
+    }
+
+    const mockTrips = [
+      {
+        id: 1,
+        title: "Q1 Sales Conference - Tokyo",
+        destination: "Tokyo, Japan",
+        startDate: "2024-03-15",
+        endDate: "2024-03-18",
+        status: "completed",
+        budget: 8500,
+        activities: 12
+      },
+      {
+        id: 2,
+        title: "Client Meeting - London", 
+        destination: "London, UK",
+        startDate: "2024-04-10",
+        endDate: "2024-04-12",
+        status: "active",
+        budget: 6200,
+        activities: 8
+      },
+      {
+        id: 3,
+        title: "Team Retreat - Bali",
+        destination: "Bali, Indonesia", 
+        startDate: "2024-05-20",
+        endDate: "2024-05-25",
+        status: "planning",
+        budget: 12000,
+        activities: 15
+      }
+    ];
+
+    res.json(mockTrips);
+  } catch (error) {
+    console.error("Demo trips error:", error);
+    res.status(500).json({ error: "Failed to load demo trips" });
+  }
+});
+
+// Demo notifications endpoint
+router.get("/notifications", async (req: Request, res: Response) => {
+  try {
+    const session = req.session as any;
+    if (!session?.isDemo) {
+      return res.status(403).json({ error: "Demo access only" });
+    }
+
+    const mockNotifications = [
+      {
+        id: 1,
+        type: "trip_approval",
+        title: "Trip Approval Required",
+        message: "Tokyo conference trip needs your approval",
+        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        read: false
+      },
+      {
+        id: 2,
+        type: "budget_alert", 
+        title: "Budget Alert",
+        message: "Q1 travel budget 85% utilized",
+        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        read: false
+      },
+      {
+        id: 3,
+        type: "info",
+        title: "New Feature",
+        message: "AI trip optimizer now available",
+        timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
+        read: true
+      }
+    ];
+
+    res.json(mockNotifications);
+  } catch (error) {
+    console.error("Demo notifications error:", error);
+    res.status(500).json({ error: "Failed to load demo notifications" });
+  }
+});
+
 // Reset demo data
 router.post("/reset", async (req: Request, res: Response) => {
   try {
