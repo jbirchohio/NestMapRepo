@@ -34,8 +34,8 @@ router.post('/generate-ical/:tripId', async (req, res) => {
       .select()
       .from(activities)
       .where(and(
-        eq(activities.trip_id, tripId),
-        eq(activities.organization_id, organizationId)
+        eq(activities.tripId, tripId),
+        eq(activities.organizationId, organizationId)
       ));
     
     // Generate iCal format
@@ -193,8 +193,8 @@ async function generateCalendarEvents(trip: any, tripId: number, organizationId:
     .select()
     .from(activities)
     .where(and(
-      eq(activities.trip_id, tripId),
-      eq(activities.organization_id, organizationId)
+      eq(activities.tripId, tripId),
+      eq(activities.organizationId, organizationId)
     ));
   
   return [
@@ -210,8 +210,8 @@ async function generateCalendarEvents(trip: any, tripId: number, organizationId:
       title: activity.title,
       start: `${activity.date}T${activity.time || '09:00'}:00`,
       end: `${activity.date}T${addHour(activity.time || '09:00')}:00`,
-      description: activity.description || '',
-      location: activity.location || trip.city
+      description: activity.notes || '',
+      location: activity.locationName || trip.city
     }))
   ];
 }
