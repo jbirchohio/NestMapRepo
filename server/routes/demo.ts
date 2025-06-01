@@ -285,6 +285,109 @@ router.get("/notifications", async (req: Request, res: Response) => {
   }
 });
 
+// Demo organization members endpoint
+router.get("/members", async (req: Request, res: Response) => {
+  try {
+    const session = req.session as any;
+    if (!session?.isDemo) {
+      return res.status(403).json({ error: "Demo access only" });
+    }
+
+    const mockMembers = [
+      {
+        id: 11,
+        email: "admin@orbittravelco.com",
+        displayName: "Company Admin",
+        role: "admin",
+        department: "Operations",
+        joinedAt: "2024-01-15"
+      },
+      {
+        id: 12,
+        email: "manager@orbittravelco.com", 
+        displayName: "Travel Manager",
+        role: "manager",
+        department: "Travel Operations",
+        joinedAt: "2024-02-01"
+      },
+      {
+        id: 13,
+        email: "agent@orbittravelco.com",
+        displayName: "Travel Agent",
+        role: "user",
+        department: "Customer Service",
+        joinedAt: "2024-02-15"
+      },
+      {
+        id: 14,
+        email: "sarah.chen@orbittravelco.com",
+        displayName: "Sarah Chen",
+        role: "user",
+        department: "Sales",
+        joinedAt: "2024-03-01"
+      },
+      {
+        id: 15,
+        email: "mike.johnson@orbittravelco.com",
+        displayName: "Mike Johnson", 
+        role: "manager",
+        department: "Finance",
+        joinedAt: "2024-03-10"
+      }
+    ];
+
+    res.json(mockMembers);
+  } catch (error) {
+    console.error("Demo members error:", error);
+    res.status(500).json({ error: "Failed to load demo members" });
+  }
+});
+
+// Demo analytics endpoint for corporate dashboard
+router.get("/analytics/corporate", async (req: Request, res: Response) => {
+  try {
+    const session = req.session as any;
+    if (!session?.isDemo) {
+      return res.status(403).json({ error: "Demo access only" });
+    }
+
+    const mockCorporateAnalytics = {
+      overview: {
+        totalTrips: 127,
+        totalUsers: 45,
+        totalBudget: 485000,
+        averageTripCost: 3819,
+        topDestinations: ["Tokyo", "London", "New York", "Singapore"],
+        costSavings: 67500
+      },
+      departmentBreakdown: [
+        { department: "Sales", trips: 42, budget: 185000 },
+        { department: "Marketing", trips: 28, budget: 125000 },
+        { department: "Operations", trips: 35, budget: 115000 },
+        { department: "Finance", trips: 22, budget: 60000 }
+      ],
+      monthlyTrends: [
+        { month: "Jan", trips: 8, budget: 32000 },
+        { month: "Feb", trips: 12, budget: 48000 },
+        { month: "Mar", trips: 15, budget: 58000 },
+        { month: "Apr", trips: 18, budget: 72000 },
+        { month: "May", trips: 14, budget: 55000 },
+        { month: "Jun", trips: 16, budget: 62000 }
+      ],
+      complianceMetrics: {
+        approvalRate: 0.94,
+        policyViolations: 3,
+        avgApprovalTime: 1.2
+      }
+    };
+
+    res.json(mockCorporateAnalytics);
+  } catch (error) {
+    console.error("Demo corporate analytics error:", error);
+    res.status(500).json({ error: "Failed to load demo corporate analytics" });
+  }
+});
+
 // Reset demo data
 router.post("/reset", async (req: Request, res: Response) => {
   try {

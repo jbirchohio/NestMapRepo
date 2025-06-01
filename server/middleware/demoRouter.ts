@@ -14,7 +14,8 @@ export function demoRouterMiddleware(req: Request, res: Response, next: NextFunc
 
   // Map regular API endpoints to demo equivalents for demo users
   const demoRouteMap: { [key: string]: string } = {
-    '/api/analytics/corporate': '/api/demo/analytics',
+    '/api/analytics/corporate': '/api/demo/analytics/corporate',
+    '/api/analytics': '/api/demo/analytics',
     '/api/dashboard-stats': '/api/demo/dashboard-stats', 
     '/api/user/permissions': '/api/demo/permissions',
     '/api/trips': '/api/demo/trips',
