@@ -324,10 +324,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       
-      // Clear demo mode if active
-      localStorage.removeItem('demo-mode');
-      localStorage.removeItem('demo-user');
+      // Check if this is a demo user
+      const isDemo = (user as any)?.isDemo || user?.email?.includes('admin@orbit') || user?.email?.includes('manager@orbit') || user?.email?.includes('agent@orbit');
       
+      if (isDemo) {
+        // For demo users, call the backend logout endpoint
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+        } catch (e) {
+          console.warn('Demo logout request failed, but continuing with client-side cleanup');
+        }
+        
+        // Clear demo mode
+        localStorage.removeItem('demo-mode');
+        localStorage.removeItem('demo-user');
+        
+        // Clear all state immediately
+        setUser(null);
+        setUserId(null);
+        setRoleType(null);
+        setAuthReady(false);
+        setLoading(false);
+        
+        // Redirect to demo page
+        window.location.href = '/demo';
+        return;
+      }
+      
+      // For regular Supabase users
       const { error } = await auth.signOut();
       
       if (error) {
@@ -341,7 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthReady(false);
       setLoading(false);
       
-      // Force reload to clear any cached state - do this without showing toast
+      // Force reload to clear any cached state
       window.location.reload();
       
     } catch (err: any) {
