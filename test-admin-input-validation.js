@@ -3,7 +3,7 @@
  * Tests comprehensive input validation for admin endpoints
  */
 
-const http = require('http');
+import http from 'http';
 
 const BASE_URL = 'http://localhost:5000';
 
@@ -353,8 +353,4 @@ async function runAdminValidationTests() {
 }
 
 // Run the tests
-if (require.main === module) {
-  runAdminValidationTests();
-}
-
-module.exports = { runAdminValidationTests };
+runAdminValidationTests();
