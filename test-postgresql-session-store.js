@@ -3,7 +3,7 @@
  * Tests that sessions are properly stored in PostgreSQL and persist across server restarts
  */
 
-const axios = require('axios');
+import axios from 'axios';
 
 const BASE_URL = 'http://localhost:5000';
 
@@ -166,8 +166,4 @@ app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
 }
 
 // Run the test
-if (require.main === module) {
-  testPostgreSQLSessionStore();
-}
-
-module.exports = { testPostgreSQLSessionStore };
+testPostgreSQLSessionStore();
