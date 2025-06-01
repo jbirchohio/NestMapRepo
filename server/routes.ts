@@ -901,6 +901,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/todos", 
+    requireAuth,
     validateContentLength(2 * 1024), // 2KB max
     contentCreationRateLimit(),
     validateAndSanitizeBody(z.object({
@@ -910,7 +911,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })),
     async (req: Request, res: Response) => {
     try {
+      // Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const todoData = insertTodoSchema.parse(req.body);
+      
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(todoData.tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // Ensure user can only create todos for trips in their organization
+      if (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Cannot create todo for trip in different organization" });
+      }
+      
       const todo = await storage.createTodo(todoData);
       res.status(201).json(todo);
     } catch (error) {
@@ -922,19 +940,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/todos/:id", async (req: Request, res: Response) => {
+  app.put("/api/todos/:id", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const todoId = Number(req.params.id);
       if (isNaN(todoId)) {
         return res.status(400).json({ message: "Invalid todo ID" });
       }
       
-      const todoData = insertTodoSchema.partial().parse(req.body);
-      const updatedTodo = await storage.updateTodo(todoId, todoData);
-      
-      if (!updatedTodo) {
+      // Get existing todo to verify ownership
+      const existingTodo = await storage.getTodo(todoId);
+      if (!existingTodo) {
         return res.status(404).json({ message: "Todo not found" });
       }
+      
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(existingTodo.tripId);
+      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+        return res.status(403).json({ message: "Access denied: Cannot modify todo for trip in different organization" });
+      }
+      
+      const todoData = insertTodoSchema.partial().parse(req.body);
+      const updatedTodo = await storage.updateTodo(todoId, todoData);
       
       res.json(updatedTodo);
     } catch (error) {
@@ -946,18 +977,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/todos/:id", async (req: Request, res: Response) => {
+  app.delete("/api/todos/:id", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const todoId = Number(req.params.id);
       if (isNaN(todoId)) {
         return res.status(400).json({ message: "Invalid todo ID" });
       }
       
-      const deleted = await storage.deleteTodo(todoId);
-      if (!deleted) {
+      // Get existing todo to verify ownership
+      const existingTodo = await storage.getTodo(todoId);
+      if (!existingTodo) {
         return res.status(404).json({ message: "Todo not found" });
       }
       
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(existingTodo.tripId);
+      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+        return res.status(403).json({ message: "Access denied: Cannot delete todo for trip in different organization" });
+      }
+      
+      const deleted = await storage.deleteTodo(todoId);
       res.status(204).end();
     } catch (error) {
       console.error("Error deleting todo:", error);
@@ -1008,6 +1052,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/notes", 
+    requireAuth,
     validateContentLength(5 * 1024), // 5KB max
     contentCreationRateLimit(),
     validateAndSanitizeBody(z.object({
@@ -1017,7 +1062,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })),
     async (req: Request, res: Response) => {
     try {
+      // Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const noteData = insertNoteSchema.parse(req.body);
+      
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(noteData.tripId);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // Ensure user can only create notes for trips in their organization
+      if (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Cannot create note for trip in different organization" });
+      }
+      
       const note = await storage.createNote(noteData);
       res.status(201).json(note);
     } catch (error) {
@@ -1029,19 +1091,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/notes/:id", async (req: Request, res: Response) => {
+  app.put("/api/notes/:id", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const noteId = Number(req.params.id);
       if (isNaN(noteId)) {
         return res.status(400).json({ message: "Invalid note ID" });
       }
       
-      const noteData = insertNoteSchema.partial().parse(req.body);
-      const updatedNote = await storage.updateNote(noteId, noteData);
-      
-      if (!updatedNote) {
+      // Get existing note to verify ownership
+      const existingNote = await storage.getNote(noteId);
+      if (!existingNote) {
         return res.status(404).json({ message: "Note not found" });
       }
+      
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(existingNote.tripId);
+      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+        return res.status(403).json({ message: "Access denied: Cannot modify note for trip in different organization" });
+      }
+      
+      const noteData = insertNoteSchema.partial().parse(req.body);
+      const updatedNote = await storage.updateNote(noteId, noteData);
       
       res.json(updatedNote);
     } catch (error) {
@@ -1053,18 +1128,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/notes/:id", async (req: Request, res: Response) => {
+  app.delete("/api/notes/:id", requireAuth, async (req: Request, res: Response) => {
     try {
+      // Verify authentication
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const noteId = Number(req.params.id);
       if (isNaN(noteId)) {
         return res.status(400).json({ message: "Invalid note ID" });
       }
       
-      const deleted = await storage.deleteNote(noteId);
-      if (!deleted) {
+      // Get existing note to verify ownership
+      const existingNote = await storage.getNote(noteId);
+      if (!existingNote) {
         return res.status(404).json({ message: "Note not found" });
       }
       
+      // Verify trip ownership and organization access
+      const trip = await storage.getTrip(existingNote.tripId);
+      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+        return res.status(403).json({ message: "Access denied: Cannot delete note for trip in different organization" });
+      }
+      
+      const deleted = await storage.deleteNote(noteId);
       res.status(204).end();
     } catch (error) {
       console.error("Error deleting note:", error);
