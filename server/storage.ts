@@ -518,9 +518,18 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Creating activity with data:", insertActivity);
       
+      // Get the organization ID from the parent trip if not provided
+      let organizationId = insertActivity.organizationId;
+      if (!organizationId) {
+        const [trip] = await db.select({ organizationId: trips.organizationId }).from(trips).where(eq(trips.id, insertActivity.tripId));
+        organizationId = trip?.organizationId || undefined;
+        console.log("Derived organization ID from trip:", organizationId);
+      }
+      
       // Ensure required fields are present and properly formatted
       const activityData = {
         tripId: insertActivity.tripId,
+        organizationId: organizationId,
         title: insertActivity.title,
         date: insertActivity.date,
         time: insertActivity.time,
@@ -535,7 +544,7 @@ export class DatabaseStorage implements IStorage {
         completed: insertActivity.completed || false,
       };
       
-      console.log("Formatted activity data:", activityData);
+      console.log("Formatted activity data with organization ID:", activityData);
       
       const [activity] = await db
         .insert(activities)
@@ -600,11 +609,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTodo(insertTodo: InsertTodo): Promise<Todo> {
-    const [todo] = await db
-      .insert(todos)
-      .values(insertTodo)
-      .returning();
-    return todo;
+    try {
+      // Get the organization ID from the parent trip if not provided
+      let organizationId = insertTodo.organizationId;
+      if (!organizationId) {
+        const [trip] = await db.select({ organizationId: trips.organizationId }).from(trips).where(eq(trips.id, insertTodo.tripId));
+        organizationId = trip?.organizationId || undefined;
+        console.log("Derived organization ID from trip for todo:", organizationId);
+      }
+
+      const todoData = {
+        ...insertTodo,
+        organizationId: organizationId
+      };
+
+      const [todo] = await db
+        .insert(todos)
+        .values(todoData)
+        .returning();
+      return todo;
+    } catch (error) {
+      console.error("Database error creating todo:", error);
+      throw error;
+    }
   }
 
   async updateTodo(id: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined> {
@@ -636,11 +663,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createNote(insertNote: InsertNote): Promise<Note> {
-    const [note] = await db
-      .insert(notes)
-      .values(insertNote)
-      .returning();
-    return note;
+    try {
+      // Get the organization ID from the parent trip if not provided
+      let organizationId = insertNote.organizationId;
+      if (!organizationId) {
+        const [trip] = await db.select({ organizationId: trips.organizationId }).from(trips).where(eq(trips.id, insertNote.tripId));
+        organizationId = trip?.organizationId || undefined;
+        console.log("Derived organization ID from trip for note:", organizationId);
+      }
+
+      const noteData = {
+        ...insertNote,
+        organizationId: organizationId
+      };
+
+      const [note] = await db
+        .insert(notes)
+        .values(noteData)
+        .returning();
+      return note;
+    } catch (error) {
+      console.error("Database error creating note:", error);
+      throw error;
+    }
   }
 
   async updateNote(id: number, noteData: Partial<InsertNote>): Promise<Note | undefined> {
