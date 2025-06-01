@@ -29,8 +29,12 @@ const sessionStore = new PgSession({
   createTableIfMissing: true
 });
 
-// Security headers middleware
+// Security headers middleware with enhanced CSP
 app.use((req, res, next) => {
+  // Generate nonce for inline scripts
+  const nonce = Buffer.from(Math.random().toString()).toString('base64');
+  res.locals.nonce = nonce;
+  
   // Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
   // Prevent MIME type sniffing
@@ -41,8 +45,42 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
-  // Content Security Policy
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' https:; worker-src 'self' blob:;");
+  
+  // Enhanced Content Security Policy - production hardened
+  let csp;
+  if (process.env.NODE_ENV === 'production') {
+    // Production CSP - strict security, no unsafe directives
+    csp = [
+      "default-src 'self'",
+      `script-src 'self' 'nonce-${nonce}' https://cdn.jsdelivr.net https://unpkg.com`,
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https: wss: ws:",
+      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
+      "worker-src 'self' blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "upgrade-insecure-requests"
+    ].join('; ');
+  } else {
+    // Development CSP - more permissive for hot reload and dev tools
+    csp = [
+      "default-src 'self'",
+      `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com`,
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https: wss: ws: http://localhost:* http://127.0.0.1:*",
+      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
+      "worker-src 'self' blob:",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join('; ');
+  }
+  
+  res.setHeader('Content-Security-Policy', csp);
   next();
 });
 
