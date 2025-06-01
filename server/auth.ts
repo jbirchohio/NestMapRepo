@@ -1,4 +1,4 @@
-import { db } from './db-connection';
+import { db } from './db';
 import { users } from '../shared/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
@@ -43,9 +43,18 @@ export async function authenticateUser(email: string, password: string) {
     }
 
     // Secure password validation with proper hashing
+    console.log('Password verification debug:', {
+      hasPasswordHash: !!user.password_hash,
+      passwordHashPrefix: user.password_hash?.substring(0, 20) + '...',
+      providedPassword: password,
+      isDevelopment: process.env.NODE_ENV === 'development'
+    });
+    
     const isValidPassword = user.password_hash ? 
       verifyPassword(password, user.password_hash) : 
       (password === 'password' && process.env.NODE_ENV === 'development');
+    
+    console.log('Password verification result:', isValidPassword);
     
     if (!isValidPassword) {
       console.log('Invalid password for email:', email);
