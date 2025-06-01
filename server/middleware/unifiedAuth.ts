@@ -41,8 +41,7 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
     '/api/templates',
     '/api/share/',
     '/.well-known/',
-    '/api/amadeus',
-    '/api/demo' // Allow public access to demo endpoints
+    '/api/amadeus'
   ];
 
   // Skip authentication for public paths and non-API routes
@@ -55,39 +54,8 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
     return res.status(401).json({ message: "Authentication required" });
   }
 
-  const session = req.session as any;
-  
-  // Handle demo sessions
-  if (session.isDemo) {
-    const orgNames: { [key: number]: string } = {
-      11: "Orbit Travel Co", 12: "Orbit Travel Co", 13: "Orbit Travel Co",
-      21: "Haven Journeys", 22: "Haven Journeys", 23: "Haven Journeys", 
-      31: "Velocity Trips", 32: "Velocity Trips", 33: "Velocity Trips"
-    };
-    
-    const userRole = session.role || "admin";
-    const roleNames = {
-      admin: 'Company Admin',
-      manager: 'Travel Manager', 
-      user: 'Travel Agent'
-    };
-
-    // Create demo user context
-    req.user = {
-      id: session.userId,
-      email: `${userRole}@${orgNames[session.userId]?.toLowerCase().replace(/\s+/g, '')}.com`,
-      organization_id: session.organizationId,
-      role: userRole,
-      displayName: roleNames[userRole as keyof typeof roleNames] || 'Demo User',
-      isDemo: true
-    };
-
-    req.organizationId = session.organizationId;
-    return next();
-  }
-
   // Get user data and establish organization context
-  const userId = session.userId;
+  const userId = (req.session as any).userId;
   
   getUserById(userId)
     .then(user => {

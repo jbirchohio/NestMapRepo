@@ -12,7 +12,6 @@ import bookingRoutes from './bookings';
 import approvalRoutes from './approvals';
 import expenseRoutes from './expenses';
 import reportingRoutes from './reporting';
-import demoRoutes from './demo';
 
 const router = Router();
 
@@ -30,7 +29,6 @@ router.use('/bookings', bookingRoutes);
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
-router.use('/demo', demoRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

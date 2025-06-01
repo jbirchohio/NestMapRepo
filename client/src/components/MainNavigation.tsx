@@ -38,7 +38,7 @@ export default function MainNavigation() {
   const [location] = useLocation();
   const { toast } = useToast();
 
-  // Get user permissions using standard production endpoint for all users
+  // Get user permissions with proper auth state checks
   const { data: userPermissions } = useQuery({
     queryKey: ['/api/user/permissions', userId],
     queryFn: async () => {
@@ -109,10 +109,11 @@ export default function MainNavigation() {
   if (!user) {
     return null; // Don't show navigation for unauthenticated users
   }
-  
-  // Role-based navigation items  
+
+  // Role-based navigation items
   const getRoleBasedDashboardPath = () => {
-    return roleType === 'agency' ? '/dashboard/agency' : '/dashboard/corporate';
+    if (roleType === 'agency') return '/dashboard/agency';
+    return '/dashboard/corporate';
   };
 
   const navigationItems = [
@@ -171,7 +172,7 @@ export default function MainNavigation() {
     },
     {
       path: '/settings',
-      label: roleType === 'agency' ? 'Agency Settings' : 'Enterprise Settings',
+      label: roleType === 'agency' ? 'Agency Settings' : 'Company Settings',
       icon: Settings,
       active: location === '/settings',
       show: hasSettingsAccess,

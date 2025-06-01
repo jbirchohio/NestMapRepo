@@ -212,50 +212,6 @@ app.post('/api/auth/logout', (req: Request, res: Response) => {
 });
 
 app.get('/api/auth/me', async (req: Request, res: Response) => {
-  const session = req.session as any;
-  
-  // Check for demo session first
-  if (session?.isDemo && session?.userId) {
-    const orgNames: { [key: number]: string } = {
-      11: "Orbit Travel Co",  // orgId 1 * 10 + 1 (admin)
-      12: "Orbit Travel Co",  // orgId 1 * 10 + 2 (manager)
-      13: "Orbit Travel Co",  // orgId 1 * 10 + 3 (user)
-      21: "Haven Journeys",   // orgId 2 * 10 + 1 (admin)
-      22: "Haven Journeys",   // orgId 2 * 10 + 2 (manager)
-      23: "Haven Journeys",   // orgId 2 * 10 + 3 (user)
-      31: "Velocity Trips",   // orgId 3 * 10 + 1 (admin)
-      32: "Velocity Trips",   // orgId 3 * 10 + 2 (manager)
-      33: "Velocity Trips"    // orgId 3 * 10 + 3 (user)
-    };
-    
-    const orgName = orgNames[session.userId] || "Demo Organization";
-    const userRole = session.role || "admin";
-    
-    const roleEmails = {
-      admin: `admin@${orgName.toLowerCase().replace(/\s+/g, '')}.com`,
-      manager: `manager@${orgName.toLowerCase().replace(/\s+/g, '')}.com`,
-      user: `agent@${orgName.toLowerCase().replace(/\s+/g, '')}.com`
-    };
-
-    const roleNames = {
-      admin: 'Company Admin',
-      manager: 'Travel Manager', 
-      user: 'Travel Agent'
-    };
-    
-    return res.json({
-      user: {
-        id: session.userId,
-        email: roleEmails[userRole as keyof typeof roleEmails] || roleEmails.admin,
-        role: userRole,
-        organizationId: session.organizationId,
-        displayName: roleNames[userRole as keyof typeof roleNames] || 'Demo User',
-        isDemo: true
-      }
-    });
-  }
-  
-  // Regular user authentication
   if (req.user) {
     res.json({
       user: {
@@ -263,8 +219,7 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
         email: req.user.email || 'Unknown',
         role: req.user.role,
         organizationId: req.user.organizationId,
-        displayName: req.user.displayName || 'Unknown',
-        isDemo: false
+        displayName: req.user.displayName || 'Unknown'
       }
     });
   } else {
@@ -323,10 +278,8 @@ app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
 
 // Import unified authentication middleware
 import { unifiedAuthMiddleware } from './middleware/unifiedAuth';
-import { demoRouterMiddleware } from './middleware/demoRouter';
 
-// Apply demo router first (before auth), then unified authentication
-app.use(demoRouterMiddleware);
+// Apply unified authentication and organization context
 app.use(unifiedAuthMiddleware);
 
 // Global error handling middleware

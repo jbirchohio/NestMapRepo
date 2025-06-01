@@ -31,32 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadUser() {
       try {
-        // First check for demo session
-        const demoCheck = await fetch('/api/auth/me', {
-          credentials: 'include'
-        });
-        
-        if (demoCheck.ok) {
-          const demoData = await demoCheck.json();
-          if (demoData.user && demoData.user.isDemo) {
-            // Handle demo user
-            setUser({
-              id: String(demoData.user.id),
-              email: demoData.user.email,
-              role: demoData.user.role,
-              user_metadata: { 
-                display_name: demoData.user.displayName,
-                role: demoData.user.role
-              }
-            } as User);
-            setUserId(demoData.user.id);
-            setRoleType('corporate');
-            setAuthReady(true);
-            setLoading(false);
-            return;
-          }
-        }
-
         // Clear any leftover demo mode data to ensure real authentication works
         localStorage.removeItem('demo-mode');
         localStorage.removeItem('demo-user');
@@ -321,46 +295,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign out function
   const signOut = async () => {
     try {
-      console.log('Starting signOut process...');
       setLoading(true);
       setError(null);
       
-      // Check if this is a demo user
-      const isDemo = (user as any)?.isDemo || user?.email?.includes('@velocitytrips.com') || user?.email?.includes('@orbit') || user?.email?.includes('admin@orbit') || user?.email?.includes('manager@orbit') || user?.email?.includes('agent@orbit');
+      // Clear demo mode if active
+      localStorage.removeItem('demo-mode');
+      localStorage.removeItem('demo-user');
       
-      console.log('Is demo user:', isDemo, 'User email:', user?.email);
-      
-      if (isDemo) {
-        console.log('Processing demo logout...');
-        // For demo users, call the backend logout endpoint
-        try {
-          const response = await fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include'
-          });
-          console.log('Logout response:', response.status, await response.text());
-        } catch (e) {
-          console.warn('Demo logout request failed, but continuing with client-side cleanup', e);
-        }
-        
-        // Clear demo mode
-        localStorage.removeItem('demo-mode');
-        localStorage.removeItem('demo-user');
-        
-        // Clear all state immediately
-        setUser(null);
-        setUserId(null);
-        setRoleType(null);
-        setAuthReady(false);
-        setLoading(false);
-        
-        console.log('Redirecting to demo page...');
-        // Redirect to demo page
-        window.location.href = '/demo';
-        return;
-      }
-      
-      // For regular Supabase users
       const { error } = await auth.signOut();
       
       if (error) {
@@ -374,7 +315,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthReady(false);
       setLoading(false);
       
-      // Force reload to clear any cached state
+      // Force reload to clear any cached state - do this without showing toast
       window.location.reload();
       
     } catch (err: any) {

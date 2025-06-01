@@ -32,18 +32,9 @@ export default function Home() {
   useEffect(() => {
     if (!authReady || !user) return;
     
-    // Check if this is a demo user
-    const isDemo = (user as any).isDemo || user.email?.includes('demo') || user.email?.includes('@orbit') || user.email?.includes('@velocitytrips.com');
-    
-    // Admin users (including demo admins) go to enterprise dashboard
+    // Admin users go to enterprise dashboard
     if (user.role === 'admin') {
       setLocation('/enterprise');
-      return;
-    }
-    
-    // Demo users get the same treatment as production users
-    if (isDemo) {
-      setLocation('/dashboard/corporate');
       return;
     }
     

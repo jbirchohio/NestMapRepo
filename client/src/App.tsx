@@ -22,7 +22,6 @@ import EnterpriseDashboard from "@/pages/EnterpriseDashboard";
 import CorporateDashboard from "@/pages/CorporateDashboard";
 import AgencyDashboard from "@/pages/AgencyDashboard";
 import DemoModeSelector from "@/components/DemoModeSelector";
-import Demo from "@/pages/Demo";
 import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import CalendarSettings from "@/pages/CalendarSettings";
@@ -50,17 +49,7 @@ function Router() {
         <Route path="/enterprise" component={EnterpriseDashboard} />
         <Route path="/dashboard/corporate" component={CorporateDashboard} />
         <Route path="/dashboard/agency" component={AgencyDashboard} />
-        <Route path="/demo" component={Demo} />
-        <Route path="/demo/dashboard/corporate" component={CorporateDashboard} />
-        <Route path="/demo/dashboard/agency" component={AgencyDashboard} />
-        <Route path="/demo/ai-generator" component={AITripGeneratorPage} />
-        <Route path="/demo/optimizer" component={TripOptimizer} />
-        <Route path="/demo/analytics" component={Analytics} />
-        <Route path="/demo/team" component={TeamManagement} />
-        <Route path="/demo/bookings" component={Bookings} />
-        <Route path="/demo/enterprise" component={EnterpriseDashboard} />
-        <Route path="/demo/billing" component={BillingDashboard} />
-        <Route path="/demo/proposals" component={ProposalCenter} />
+        <Route path="/demo" component={DemoModeSelector} />
         <Route path="/profile" component={ProfileSettings} />
         <Route path="/help" component={HelpCenter} />
         <Route path="/calendar" component={CalendarSettings} />

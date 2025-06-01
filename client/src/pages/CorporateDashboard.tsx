@@ -39,27 +39,6 @@ export default function CorporateDashboard() {
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [, setLocation] = useLocation();
 
-  // Fetch user permissions for role-based access control
-  const { data: userPermissions = [] } = useQuery({
-    queryKey: ['/api/demo/permissions', userId],
-    queryFn: async () => {
-      const response = await fetch('/api/demo/permissions');
-      if (!response.ok) return [];
-      return response.json();
-    },
-    enabled: !!userId,
-  });
-
-  // Permission helpers
-  const hasPermission = (permission: string) => userPermissions.includes(permission);
-  const canAccessAnalytics = hasPermission('ACCESS_ANALYTICS');
-  const canManageOrganization = hasPermission('MANAGE_ORGANIZATION');
-  const canManageTeam = hasPermission('MANAGE_TEAM');
-  const canInviteMembers = hasPermission('INVITE_MEMBERS');
-  const canCreateTrips = hasPermission('CREATE_TRIPS');
-  const canViewTrips = hasPermission('VIEW_TRIPS');
-  const canApproveTrips = hasPermission('APPROVE_TRIPS');
-
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
     queryKey: ['/api/trips', { userId }],
     queryFn: async () => {
@@ -87,7 +66,7 @@ export default function CorporateDashboard() {
   const totalTrips = trips.length;
   
   const totalBudget = trips.reduce((sum, trip) => {
-    const budget = trip.budget ? (typeof trip.budget === 'string' ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')) : trip.budget) : 0;
+    const budget = trip.budget ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')) : 0;
     return sum + (isNaN(budget) ? 0 : budget);
   }, 0);
   
@@ -122,25 +101,16 @@ export default function CorporateDashboard() {
           </p>
         </div>
 
-        {/* Primary Action - Only show if user can create trips */}
-        {canCreateTrips && (
-          <div className="mb-8">
-            <Button 
-              onClick={() => setIsNewTripModalOpen(true)}
-              className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md px-8 h-16 gap-3 bg-primary hover:bg-primary/90 text-[#0f172a]"
-              size="lg"
-            >
-              <Plus className="h-5 w-5" />
-              Plan Team Trip
-            </Button>
-          </div>
-        )}
-
-        {/* Role indicator for demo purposes */}
-        <div className="mb-4">
-          <Badge variant="outline" className="text-sm">
-            Role: {user?.role || 'User'} | Permissions: {userPermissions.length > 0 ? userPermissions.slice(0, 2).join(', ') + (userPermissions.length > 2 ? '...' : '') : 'Loading...'}
-          </Badge>
+        {/* Primary Action */}
+        <div className="mb-8">
+          <Button 
+            onClick={() => setIsNewTripModalOpen(true)}
+            className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md px-8 h-16 gap-3 bg-primary hover:bg-primary/90 text-[#0f172a]"
+            size="lg"
+          >
+            <Plus className="h-5 w-5" />
+            Plan Team Trip
+          </Button>
         </div>
 
         {/* Metrics Cards */}
@@ -196,154 +166,6 @@ export default function CorporateDashboard() {
               </p>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Quick Actions - Role-based */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {canAccessAnalytics && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/analytics')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <h3 className="font-semibold">Analytics Dashboard</h3>
-                    <p className="text-sm text-muted-foreground">View travel insights & reports</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {canManageTeam && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/team')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Users className="h-8 w-8 text-green-600" />
-                  <div>
-                    <h3 className="font-semibold">Team Management</h3>
-                    <p className="text-sm text-muted-foreground">Manage members & permissions</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Premium AI Features for Admin */}
-          {userPermissions.includes('ACCESS_ANALYTICS') && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/ai-generator')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Sparkles className="h-8 w-8 text-purple-600" />
-                  <div>
-                    <h3 className="font-semibold">AI Trip Generator</h3>
-                    <p className="text-sm text-muted-foreground">Generate complete trips with AI</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {userPermissions.includes('ACCESS_ANALYTICS') && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/optimizer')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="h-8 w-8 text-orange-600" />
-                  <div>
-                    <h3 className="font-semibold">Trip Optimizer</h3>
-                    <p className="text-sm text-muted-foreground">Optimize schedules & costs</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Booking Management for Admin */}
-          {userPermissions.includes('ACCESS_ANALYTICS') && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/bookings')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Plane className="h-8 w-8 text-blue-500" />
-                  <div>
-                    <h3 className="font-semibold">Booking Center</h3>
-                    <p className="text-sm text-muted-foreground">Manage flights & hotels</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Enterprise Settings */}
-          {userPermissions.includes('MANAGE_ORGANIZATION') && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/enterprise')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Settings className="h-8 w-8 text-gray-600" />
-                  <div>
-                    <h3 className="font-semibold">Enterprise Settings</h3>
-                    <p className="text-sm text-muted-foreground">Organization configuration</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Billing & Subscriptions */}
-          {userPermissions.includes('MANAGE_ORGANIZATION') && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/billing')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <DollarSign className="h-8 w-8 text-green-600" />
-                  <div>
-                    <h3 className="font-semibold">Billing Center</h3>
-                    <p className="text-sm text-muted-foreground">Manage subscriptions & invoices</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Proposal Center */}
-          {userPermissions.includes('ACCESS_ANALYTICS') && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/proposals')}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-8 w-8 text-indigo-600" />
-                  <div>
-                    <h3 className="font-semibold">Proposal Center</h3>
-                    <p className="text-sm text-muted-foreground">Create client proposals</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {canApproveTrips && (
-            <Card className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Sparkles className="h-8 w-8 text-purple-600" />
-                  <div>
-                    <h3 className="font-semibold">Approval Center</h3>
-                    <p className="text-sm text-muted-foreground">Review pending trip requests</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {!canAccessAnalytics && !canManageTeam && !canApproveTrips && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Plane className="h-8 w-8 text-gray-600" />
-                  <div>
-                    <h3 className="font-semibold">Basic Access</h3>
-                    <p className="text-sm text-muted-foreground">Create and view your trips</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* Trip Management */}
