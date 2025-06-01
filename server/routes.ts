@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
+import { unifiedAuthMiddleware } from "./middleware/unifiedAuth";
 import { 
   validateAndSanitizeBody, 
   validateQueryParams, 
@@ -579,7 +580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Activities routes
-  app.get("/api/trips/:id/activities", async (req: Request, res: Response) => {
+  app.get("/api/trips/:id/activities", unifiedAuth, async (req: Request, res: Response) => {
     try {
       const tripIdParam = req.params.id;
       
@@ -652,13 +653,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trip not found" });
       }
       
-      // Check organization access
-      if (req.organizationContext) {
-        req.organizationContext.enforceOrganizationAccess(trip.organizationId);
+      // Check organization access - ensure user can only access trips from their organization
+      if (trip.organizationId !== req.user!.organizationId) {
+        return res.status(403).json({ message: "Access denied: Trip belongs to different organization" });
       }
-      
-      // Log organization access for audit
-      logOrganizationAccess(req, 'fetch', 'activities', tripId);
       
       const activities = await storage.getActivitiesByTripId(tripId);
       res.json(activities);
