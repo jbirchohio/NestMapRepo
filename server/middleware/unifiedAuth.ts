@@ -35,6 +35,8 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
     '/api/auth/register', 
     '/api/auth/logout',
     '/api/auth/session',
+    '/api/users', // Allow user creation for signup flow
+    '/api/users/auth/', // Allow user lookup by auth ID for Supabase integration
     '/api/health',
     '/api/templates',
     '/api/share/',

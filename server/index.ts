@@ -228,6 +228,21 @@ app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
+    // CRITICAL SECURITY: Only super_admin users can access system-wide session statistics
+    if (!req.user || req.user.role !== 'super_admin') {
+      console.warn('ADMIN_ACCESS_DENIED: Non-super-admin attempted to access session stats', {
+        userId: req.user?.id,
+        role: req.user?.role,
+        endpoint: '/api/admin/session-stats',
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Super admin privileges required for session statistics' 
+      });
+    }
+
     // Use existing database connection to query session statistics
     const sessionCountResult = await db.execute(`SELECT COUNT(*) as session_count FROM session`);
     const expiredSessionResult = await db.execute(`SELECT COUNT(*) as expired_count FROM session WHERE expire < NOW()`);
