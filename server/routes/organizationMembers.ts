@@ -21,7 +21,7 @@ router.use(loadOrganizationRole);
  */
 router.get('/members', requireOrgPermission('manageMembers'), async (req: Request, res: Response) => {
   try {
-    if (!req.user?.organizationId) {
+    if (!req.user?.organization_id) {
       return res.status(400).json({ error: 'Organization ID required' });
     }
 
@@ -42,7 +42,7 @@ router.get('/members', requireOrgPermission('manageMembers'), async (req: Reques
       })
       .from(organizationMembers)
       .innerJoin(users, eq(organizationMembers.user_id, users.id))
-      .where(eq(organizationMembers.organization_id, req.user.organizationId));
+      .where(eq(organizationMembers.organization_id, req.user.organization_id));
 
     // Add role descriptions
     const membersWithDescriptions = members.map(member => ({
