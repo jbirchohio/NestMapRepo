@@ -170,13 +170,13 @@ export async function optimizeItinerary(activities: any[], tripContext: any): Pr
       return { optimizedActivities: [], recommendations: ["No activities to optimize."] };
     }
 
-    // Debug: Log what we're actually sending to AI
-    console.log("DEBUG: Activities being sent to AI for optimization:", JSON.stringify(activities.map(a => ({
-      id: a.id,
-      title: a.title,
-      time: a.time,
-      locationName: a.locationName
-    })), null, 2));
+    // Debug: Activities count for optimization
+    // console.log("DEBUG: Activities being sent to AI for optimization:", JSON.stringify(activities.map(a => ({
+    //   id: a.id,
+    //   title: a.title,
+    //   time: a.time,
+    //   locationName: a.locationName
+    // })), null, 2));
 
     const prompt = `CRITICAL SCHEDULING CONFLICT RESOLVER
 
@@ -239,7 +239,7 @@ ${activities.map(a => `    {
     const result = JSON.parse(response.choices[0].message.content || '{}');
     
     // Debug: Log the AI's optimization response
-    console.log("AI optimization response:", JSON.stringify(result, null, 2));
+    // AI optimization completed successfully
     
     return {
       optimizedActivities: result.optimizedActivities || [],
@@ -796,7 +796,7 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
       try {
         const functionArgs = JSON.parse(response.choices[0].message.function_call.arguments || "{}");
         activities = functionArgs.activities || [];
-        console.log(`Extracted ${activities.length} activities from itinerary using function call`);
+        // Extracted activities from itinerary using function call
       } catch (error) {
         console.error("Error parsing function call arguments:", error);
       }
@@ -807,7 +807,7 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
         const result = JSON.parse(response.choices[0].message.content || "{}");
         activities = result.activities || [];
         answer = result.answer || answer;
-        console.log(`Extracted ${activities.length} activities from itinerary using content parsing`);
+        // Extracted activities from itinerary using content parsing
       } catch (error) {
         console.error("Error parsing content:", error);
       }
@@ -819,7 +819,7 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
       activities
     };
     
-    console.log("Parsed itinerary result:", result);
+    // Itinerary parsing completed
     
     // Process locations to get coordinates where possible
     if (result.activities && Array.isArray(result.activities)) {
@@ -833,7 +833,7 @@ IMPORTANT: Each activity MUST have a specific locationName that can be found on 
         try {
           // Try to find the location
           const locationResult = await findLocation(activity.locationName, city);
-          console.log(`Location search for "${activity.locationName}":`, locationResult);
+          // Location search completed for activity
           
           // If we have location results, use the first one
           if (locationResult.locations && locationResult.locations.length > 0) {
