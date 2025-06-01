@@ -24,39 +24,70 @@ export function detectTripConflicts(trips: any[]): { conflicts: TripConflict[], 
   const conflicts: TripConflict[] = [];
   const opportunities: TripConflict[] = [];
   
-  for (let i = 0; i < trips.length; i++) {
-    for (let j = i + 1; j < trips.length; j++) {
-      const trip1 = trips[i];
-      const trip2 = trips[j];
-      
-      // Date overlap check
-      const start1 = new Date(trip1.startDate);
-      const end1 = new Date(trip1.endDate);
-      const start2 = new Date(trip2.startDate);
-      const end2 = new Date(trip2.endDate);
-      
-      if (start1 <= end2 && start2 <= end1) {
-        conflicts.push({
-          trips: [trip1.id, trip2.id],
-          type: 'date_overlap',
-          users: [trip1.userId, trip2.userId],
-          departments: [trip1.department, trip2.department],
-          severity: 'high',
-          description: `Overlapping travel dates for ${trip1.title} and ${trip2.title}`
-        });
+  // Optimize conflict detection using sorted arrays and efficient lookups
+  const sortedTrips = trips
+    .map((trip, index) => ({
+      ...trip,
+      originalIndex: index,
+      startTime: new Date(trip.startDate).getTime(),
+      endTime: new Date(trip.endDate).getTime()
+    }))
+    .sort((a, b) => a.startTime - b.startTime);
+  
+  // Group trips by city for efficient geo-clustering
+  const tripsByCity = new Map<string, typeof sortedTrips>();
+  for (const trip of sortedTrips) {
+    if (trip.city) {
+      if (!tripsByCity.has(trip.city)) {
+        tripsByCity.set(trip.city, []);
       }
+      tripsByCity.get(trip.city)!.push(trip);
+    }
+  }
+  
+  // Efficient date overlap detection using sorted order
+  for (let i = 0; i < sortedTrips.length; i++) {
+    const trip1 = sortedTrips[i];
+    
+    // Only check trips that could potentially overlap
+    for (let j = i + 1; j < sortedTrips.length; j++) {
+      const trip2 = sortedTrips[j];
       
-      // Geo-clustering opportunity
-      const timeDiff = Math.abs(start1.getTime() - start2.getTime());
-      const withinWeek = timeDiff <= 7 * 24 * 60 * 60 * 1000;
+      // If trip2 starts after trip1 ends, no more overlaps possible
+      if (trip2.startTime > trip1.endTime) break;
       
-      if (trip1.city === trip2.city && withinWeek) {
-        const groupDiscount = 0.15;
-        const baseCost = 2000; // Estimate
+      // Date overlap detected
+      conflicts.push({
+        trips: [trip1.id, trip2.id],
+        type: 'date_overlap',
+        users: [trip1.userId, trip2.userId],
+        departments: [trip1.department, trip2.department],
+        severity: 'high',
+        description: `Overlapping travel dates for ${trip1.title} and ${trip2.title}`
+      });
+    }
+  }
+  
+  // Efficient geo-clustering opportunities
+  const weekInMs = 7 * 24 * 60 * 60 * 1000;
+  const groupDiscount = 0.15;
+  const baseCost = 2000;
+  
+  for (const [city, cityTrips] of tripsByCity) {
+    if (cityTrips.length < 2) continue;
+    
+    for (let i = 0; i < cityTrips.length; i++) {
+      for (let j = i + 1; j < cityTrips.length; j++) {
+        const trip1 = cityTrips[i];
+        const trip2 = cityTrips[j];
+        
+        // If trips are more than a week apart, skip
+        if (trip2.startTime - trip1.startTime > weekInMs) break;
+        
         opportunities.push({
           trips: [trip1.id, trip2.id],
           type: 'geo_clustering',
-          city: trip1.city,
+          city: city,
           potentialSavings: baseCost * groupDiscount,
           severity: 'medium',
           description: `Group booking opportunity in ${trip1.city}`

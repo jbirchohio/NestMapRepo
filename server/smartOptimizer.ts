@@ -96,13 +96,28 @@ export async function optimizeScheduleIntelligently(
 export async function detectScheduleConflicts(activities: Activity[]): Promise<ConflictDetection[]> {
   const conflicts: ConflictDetection[] = [];
   
-  for (let i = 0; i < activities.length; i++) {
-    for (let j = i + 1; j < activities.length; j++) {
-      const activity1 = activities[i];
-      const activity2 = activities[j];
-      
-      // Same day activities only
-      if (activity1.day !== activity2.day) continue;
+  // Optimize by grouping activities by day first
+  const activitiesByDay = new Map<number, Activity[]>();
+  for (const activity of activities) {
+    if (!activitiesByDay.has(activity.day)) {
+      activitiesByDay.set(activity.day, []);
+    }
+    activitiesByDay.get(activity.day)!.push(activity);
+  }
+  
+  // Check conflicts only within same-day activities
+  for (const [day, dayActivities] of activitiesByDay) {
+    if (dayActivities.length < 2) continue;
+    
+    // Sort activities by time for efficient conflict detection
+    const sortedActivities = dayActivities
+      .filter(a => a.time) // Only activities with time
+      .sort((a, b) => a.time!.localeCompare(b.time!));
+    
+    // Check overlapping time slots efficiently
+    for (let i = 0; i < sortedActivities.length - 1; i++) {
+      const activity1 = sortedActivities[i];
+      const activity2 = sortedActivities[i + 1];
       
       const conflict = checkActivityConflict(activity1, activity2);
       if (conflict) {
@@ -111,7 +126,7 @@ export async function detectScheduleConflicts(activities: Activity[]): Promise<C
     }
   }
   
-  // Check venue operating hours
+  // Check venue operating hours efficiently
   const venueConflicts = await checkVenueHours(activities);
   conflicts.push(...venueConflicts);
   

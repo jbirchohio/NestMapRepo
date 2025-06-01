@@ -97,13 +97,24 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     .orderBy(desc(count()))
     .limit(10);
 
-    const totalTripsWithDestination = destinationsResult.reduce((sum, dest) => sum + dest.tripCount, 0);
-    const destinations = destinationsResult.map(dest => ({
-      city: dest.city || 'Unknown',
-      country: dest.country || 'USA', // Default to USA when country is null
-      tripCount: dest.tripCount,
-      percentage: totalTripsWithDestination > 0 ? Math.round((dest.tripCount / totalTripsWithDestination) * 100) : 0
-    }));
+    // Optimize destinations processing - calculate percentages in single pass
+    let totalTripsWithDestination = 0;
+    const destinations = destinationsResult.map(dest => {
+      totalTripsWithDestination += dest.tripCount;
+      return {
+        city: dest.city || 'Unknown',
+        country: dest.country || 'USA',
+        tripCount: dest.tripCount,
+        percentage: 0 // Will be calculated in second pass
+      };
+    });
+    
+    // Calculate percentages in place
+    if (totalTripsWithDestination > 0) {
+      for (const dest of destinations) {
+        dest.percentage = Math.round((dest.tripCount / totalTripsWithDestination) * 100);
+      }
+    }
 
     // User's trip duration distribution
     const tripDurationsResult = await db.select({
@@ -125,12 +136,23 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     END`)
     .orderBy(desc(count()));
 
-    const totalTripsForDuration = tripDurationsResult.reduce((sum, dur) => sum + dur.count, 0);
-    const tripDurations = tripDurationsResult.map(dur => ({
-      duration: dur.duration as string,
-      count: dur.count,
-      percentage: totalTripsForDuration > 0 ? Math.round((dur.count / totalTripsForDuration) * 100) : 0
-    }));
+    // Optimize trip durations processing - single pass calculation
+    let totalTripsForDuration = 0;
+    const tripDurations = tripDurationsResult.map(dur => {
+      totalTripsForDuration += dur.count;
+      return {
+        duration: dur.duration as string,
+        count: dur.count,
+        percentage: 0 // Will be calculated in second pass
+      };
+    });
+    
+    // Calculate percentages in place
+    if (totalTripsForDuration > 0) {
+      for (const dur of tripDurations) {
+        dur.percentage = Math.round((dur.count / totalTripsForDuration) * 100);
+      }
+    }
 
     // User's activity types distribution (using activity titles as categories)
     const activityTagsResult = await db.select({
@@ -144,12 +166,23 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     .orderBy(desc(count()))
     .limit(10);
 
-    const totalActivitiesWithTags = activityTagsResult.reduce((sum, tag) => sum + tag.count, 0);
-    const activityTags = activityTagsResult.map(tag => ({
-      tag: (tag.tag || 'Untagged').toString(),
-      count: tag.count,
-      percentage: totalActivitiesWithTags > 0 ? Math.round((tag.count / totalActivitiesWithTags) * 100) : 0
-    }));
+    // Optimize activity tags processing - single pass calculation
+    let totalActivitiesWithTags = 0;
+    const activityTags = activityTagsResult.map(tag => {
+      totalActivitiesWithTags += tag.count;
+      return {
+        tag: (tag.tag || 'Untagged').toString(),
+        count: tag.count,
+        percentage: 0 // Will be calculated in second pass
+      };
+    });
+    
+    // Calculate percentages in place
+    if (totalActivitiesWithTags > 0) {
+      for (const tag of activityTags) {
+        tag.percentage = Math.round((tag.count / totalActivitiesWithTags) * 100);
+      }
+    }
 
     // User engagement metrics (simplified for personal view)
     const [completedTripsResult] = await db.select({
@@ -269,11 +302,12 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       .as('trip_activities')
     );
 
-    // Most popular destinations
-    const destinationsResult = await db.select({
+    // Most popular destinations - optimized with SQL aggregation
+    const destinationsWithTotalResult = await db.select({
       city: trips.city,
       country: trips.country,
-      tripCount: count()
+      tripCount: count(),
+      totalTrips: sql`SUM(COUNT(*)) OVER()`.as('total_trips')
     })
     .from(trips)
     .where(sql`${trips.city} IS NOT NULL AND ${trips.country} IS NOT NULL`)
@@ -281,23 +315,26 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     .orderBy(desc(count()))
     .limit(10);
 
-    const totalTripsWithDestination = destinationsResult.reduce((sum, dest) => sum + dest.tripCount, 0);
-    const destinations = destinationsResult.map(dest => ({
-      city: dest.city || 'Unknown',
-      country: dest.country || 'Unknown',
-      tripCount: dest.tripCount,
-      percentage: totalTripsWithDestination > 0 ? Math.round((dest.tripCount / totalTripsWithDestination) * 100) : 0
-    }));
+    const destinations = destinationsWithTotalResult.map(dest => {
+      const totalTrips = Number(dest.totalTrips);
+      return {
+        city: dest.city || 'Unknown',
+        country: dest.country || 'Unknown',
+        tripCount: dest.tripCount,
+        percentage: totalTrips > 0 ? Math.round((dest.tripCount / totalTrips) * 100) : 0
+      };
+    });
 
-    // Trip duration distribution
-    const tripDurationsResult = await db.select({
+    // Trip duration distribution - optimized with SQL windowing
+    const tripDurationsWithTotalResult = await db.select({
       duration: sql`CASE 
         WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 2 THEN 'Weekend (1-2 days)'
         WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 5 THEN 'Short Trip (3-5 days)'
         WHEN EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1 <= 10 THEN 'Long Trip (6-10 days)'
         ELSE 'Extended Trip (10+ days)'
       END`.as('duration'),
-      count: count()
+      count: count(),
+      totalTrips: sql`SUM(COUNT(*)) OVER()`.as('total_trips')
     })
     .from(trips)
     .groupBy(sql`CASE 
@@ -308,17 +345,20 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     END`)
     .orderBy(desc(count()));
 
-    const totalTripsForDuration = tripDurationsResult.reduce((sum, dur) => sum + dur.count, 0);
-    const tripDurations = tripDurationsResult.map(dur => ({
-      duration: dur.duration as string,
-      count: dur.count,
-      percentage: totalTripsForDuration > 0 ? Math.round((dur.count / totalTripsForDuration) * 100) : 0
-    }));
+    const tripDurations = tripDurationsWithTotalResult.map(dur => {
+      const totalTrips = Number(dur.totalTrips);
+      return {
+        duration: dur.duration as string,
+        count: dur.count,
+        percentage: totalTrips > 0 ? Math.round((dur.count / totalTrips) * 100) : 0
+      };
+    });
 
-    // Activity tags distribution
-    const activityTagsResult = await db.select({
+    // Activity tags distribution - optimized with SQL windowing
+    const activityTagsWithTotalResult = await db.select({
       tag: activities.tag,
-      count: count()
+      count: count(),
+      totalTags: sql`SUM(COUNT(*)) OVER()`.as('total_tags')
     })
     .from(activities)
     .where(sql`${activities.tag} IS NOT NULL`)
@@ -326,12 +366,14 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     .orderBy(desc(count()))
     .limit(10);
 
-    const totalActivitiesWithTags = activityTagsResult.reduce((sum, tag) => sum + tag.count, 0);
-    const activityTags = activityTagsResult.map(tag => ({
-      tag: tag.tag || 'Untagged',
-      count: tag.count,
-      percentage: totalActivitiesWithTags > 0 ? Math.round((tag.count / totalActivitiesWithTags) * 100) : 0
-    }));
+    const activityTags = activityTagsWithTotalResult.map(tag => {
+      const totalTags = Number(tag.totalTags);
+      return {
+        tag: tag.tag || 'Untagged',
+        count: tag.count,
+        percentage: totalTags > 0 ? Math.round((tag.count / totalTags) * 100) : 0
+      };
+    });
 
     // User engagement metrics
     const [usersWithTripsResult] = await db.select({
