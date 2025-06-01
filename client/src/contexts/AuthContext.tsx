@@ -43,7 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser({
               id: String(demoData.user.id),
               email: demoData.user.email,
-              user_metadata: { display_name: demoData.user.displayName }
+              role: demoData.user.role,
+              user_metadata: { 
+                display_name: demoData.user.displayName,
+                role: demoData.user.role
+              }
             } as User);
             setUserId(demoData.user.id);
             setRoleType('corporate');
