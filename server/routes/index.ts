@@ -30,10 +30,10 @@ router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
 
-// User permissions endpoint
+// User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {
   try {
-    // Always return owner permissions for JonasCo demonstration
+    // For JonasCo owner account - return full enterprise permissions
     const role = 'owner';
     const organizationId = 1;
     

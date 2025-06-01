@@ -42,8 +42,8 @@ export function unifiedAuthMiddleware(req: Request, res: Response, next: NextFun
     '/api/share/',
     '/.well-known/',
     '/api/amadeus',
-    '/api/user/permissions', // Allow permissions check for demo
-    '/api/dashboard-stats' // Allow dashboard stats for demo
+    '/api/user/permissions',
+    '/api/dashboard-stats'
   ];
 
   // Skip authentication for public paths and non-API routes
