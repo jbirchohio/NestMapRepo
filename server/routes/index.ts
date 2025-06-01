@@ -136,10 +136,6 @@ router.get('/dashboard-stats', (req, res) => {
 
 // Analytics endpoint for JonasCo
 router.get('/analytics', async (req, res) => {
-  // Check authentication
-  if (!req.user) {
-    return res.status(401).json({ message: 'Authentication required' });
-  }
   try {
     // Return comprehensive analytics data for JonasCo
     const analyticsData = {
@@ -216,10 +212,6 @@ router.get('/analytics', async (req, res) => {
 
 // Team members endpoint for JonasCo
 router.get('/organizations/members', async (req, res) => {
-  // Check authentication
-  if (!req.user) {
-    return res.status(401).json({ message: 'Authentication required' });
-  }
   try {
     // Return JonasCo team members data
     const teamMembers = [
