@@ -10,6 +10,8 @@ import calendarRoutes from './calendar';
 import collaborationRoutes from './collaboration';
 import bookingRoutes from './bookings';
 import approvalRoutes from './approvals';
+import expenseRoutes from './expenses';
+import reportingRoutes from './reporting';
 
 const router = Router();
 
@@ -25,6 +27,8 @@ router.use('/calendar', calendarRoutes);
 router.use('/collaboration', collaborationRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/approvals', approvalRoutes);
+router.use('/expenses', expenseRoutes);
+router.use('/reporting', reportingRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

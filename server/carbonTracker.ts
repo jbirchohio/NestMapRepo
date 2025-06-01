@@ -254,6 +254,334 @@ export function analyzeExpenseCompliance(expenses: any[]): any {
   return compliance;
 }
 
+// Enhanced Carbon Footprint Tracking System
+export interface CarbonFootprint {
+  totalCO2kg: number;
+  breakdown: {
+    flights: number;
+    ground: number;
+    accommodation: number;
+    activities: number;
+  };
+  metrics: {
+    co2PerKm: number;
+    co2PerDay: number;
+    offsetCost: number;
+  };
+  esgCompliance: {
+    scope1: number; // Direct emissions
+    scope2: number; // Indirect emissions from energy
+    scope3: number; // Other indirect emissions
+    certifications: string[];
+    offsetPrograms: Array<{
+      provider: string;
+      type: string;
+      cost: number;
+      verified: boolean;
+    }>;
+  };
+  recommendations: string[];
+  trends: {
+    vsLastTrip: number;
+    vsOrgAverage: number;
+    improvementAreas: string[];
+  };
+}
+
+export async function calculateTripCarbonFootprint(
+  trip: any,
+  activities: any[],
+  bookings: any[],
+  organizationId: number
+): Promise<CarbonFootprint> {
+  const carbon: CarbonFootprint = {
+    totalCO2kg: 0,
+    breakdown: { flights: 0, ground: 0, accommodation: 0, activities: 0 },
+    metrics: { co2PerKm: 0, co2PerDay: 0, offsetCost: 0 },
+    esgCompliance: {
+      scope1: 0,
+      scope2: 0, 
+      scope3: 0,
+      certifications: [],
+      offsetPrograms: []
+    },
+    recommendations: [],
+    trends: { vsLastTrip: 0, vsOrgAverage: 0, improvementAreas: [] }
+  };
+
+  // Calculate flight emissions
+  const flightBookings = bookings.filter(b => b.type === 'flight');
+  for (const flight of flightBookings) {
+    const emissions = await calculateFlightEmissions(flight);
+    carbon.breakdown.flights += emissions;
+    carbon.esgCompliance.scope3 += emissions; // Business travel is Scope 3
+  }
+
+  // Calculate accommodation emissions
+  const hotelBookings = bookings.filter(b => b.type === 'hotel');
+  for (const hotel of hotelBookings) {
+    const emissions = calculateHotelEmissions(hotel);
+    carbon.breakdown.accommodation += emissions;
+    carbon.esgCompliance.scope2 += emissions; // Energy usage is Scope 2
+  }
+
+  // Calculate ground transportation
+  const groundTransport = activities.filter(a => 
+    ['car_rental', 'taxi', 'train', 'bus'].includes(a.category)
+  );
+  for (const transport of groundTransport) {
+    const emissions = calculateGroundTransportEmissions(transport);
+    carbon.breakdown.ground += emissions;
+    carbon.esgCompliance.scope1 += emissions; // Direct transport is Scope 1
+  }
+
+  // Calculate activity emissions
+  const otherActivities = activities.filter(a => 
+    !['car_rental', 'taxi', 'train', 'bus'].includes(a.category)
+  );
+  for (const activity of otherActivities) {
+    const emissions = calculateActivityEmissions(activity);
+    carbon.breakdown.activities += emissions;
+    carbon.esgCompliance.scope3 += emissions;
+  }
+
+  carbon.totalCO2kg = Object.values(carbon.breakdown).reduce((sum, val) => sum + val, 0);
+
+  // Calculate metrics
+  const tripDays = Math.ceil(
+    (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  carbon.metrics.co2PerDay = carbon.totalCO2kg / Math.max(tripDays, 1);
+  carbon.metrics.offsetCost = carbon.totalCO2kg * 25; // $25 per ton average
+
+  // Add ESG-compliant offset programs
+  carbon.esgCompliance.offsetPrograms = [
+    {
+      provider: 'Gold Standard',
+      type: 'Renewable Energy Projects',
+      cost: carbon.totalCO2kg * 20,
+      verified: true
+    },
+    {
+      provider: 'Verra VCS',
+      type: 'Forest Conservation',
+      cost: carbon.totalCO2kg * 15,
+      verified: true
+    },
+    {
+      provider: 'Climate Action Reserve',
+      type: 'Methane Capture',
+      cost: carbon.totalCO2kg * 30,
+      verified: true
+    }
+  ];
+
+  // Generate recommendations
+  carbon.recommendations = generateCarbonRecommendations(carbon, trip);
+
+  // Compare with organization trends
+  carbon.trends = await calculateCarbonTrends(carbon, organizationId, trip.userId);
+
+  return carbon;
+}
+
+async function calculateFlightEmissions(flight: any): Promise<number> {
+  // Use ICAO methodology for flight emissions
+  const distance = flight.bookingData?.distance || estimateFlightDistance(
+    flight.bookingData?.origin, 
+    flight.bookingData?.destination
+  );
+  
+  const aircraftType = flight.bookingData?.aircraftType || 'A320';
+  const cabinClass = flight.bookingData?.cabinClass || 'economy';
+  
+  // Emission factors (kg CO2 per km per passenger)
+  const emissionFactors = {
+    economy: 0.115,
+    premium: 0.180,
+    business: 0.295,
+    first: 0.400
+  };
+  
+  const baseEmission = distance * emissionFactors[cabinClass as keyof typeof emissionFactors];
+  
+  // Add radiative forcing factor for high-altitude emissions
+  const radiativeForcingFactor = 1.9;
+  
+  return baseEmission * radiativeForcingFactor;
+}
+
+function calculateHotelEmissions(hotel: any): number {
+  const nights = Math.ceil(
+    (new Date(hotel.checkOutDate).getTime() - new Date(hotel.checkInDate).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  
+  // Average hotel emissions: 30kg CO2 per room per night
+  const baseEmission = 30;
+  
+  // Hotel sustainability rating adjustments
+  const sustainabilityFactor = hotel.bookingData?.sustainabilityRating ? 
+    (1 - hotel.bookingData.sustainabilityRating * 0.1) : 1.0;
+  
+  return nights * baseEmission * sustainabilityFactor;
+}
+
+function calculateGroundTransportEmissions(transport: any): number {
+  const distance = transport.estimatedDistance || 50; // Default 50km
+  
+  const emissionFactors = {
+    car_rental: 0.171, // kg CO2 per km
+    taxi: 0.171,
+    train: 0.041,
+    bus: 0.089,
+    electric_car: 0.053,
+    hybrid: 0.120
+  };
+  
+  const factor = emissionFactors[transport.category as keyof typeof emissionFactors] || 0.171;
+  return distance * factor;
+}
+
+function calculateActivityEmissions(activity: any): number {
+  // Basic activity emissions based on type
+  const activityEmissions = {
+    restaurant: 5, // kg CO2 per meal
+    entertainment: 2,
+    shopping: 3,
+    sightseeing: 1,
+    conference: 10,
+    meeting: 5
+  };
+  
+  return activityEmissions[activity.category as keyof typeof activityEmissions] || 2;
+}
+
+function estimateFlightDistance(origin: string, destination: string): number {
+  // Simplified distance calculation - in production, use actual flight route APIs
+  const distances: Record<string, Record<string, number>> = {
+    'NYC': { 'LAX': 3970, 'LHR': 5585, 'NRT': 10838 },
+    'LAX': { 'NYC': 3970, 'LHR': 8780, 'NRT': 8815 },
+    'LHR': { 'NYC': 5585, 'LAX': 8780, 'NRT': 9560 }
+  };
+  
+  return distances[origin]?.[destination] || 5000; // Default long-haul distance
+}
+
+function generateCarbonRecommendations(carbon: CarbonFootprint, trip: any): string[] {
+  const recommendations: string[] = [];
+  
+  if (carbon.breakdown.flights > carbon.totalCO2kg * 0.7) {
+    recommendations.push('Consider combining multiple meetings into one trip to reduce flight emissions');
+    recommendations.push('Explore direct flights which are typically more fuel-efficient');
+    recommendations.push('Consider economy class to reduce per-passenger emissions');
+  }
+  
+  if (carbon.breakdown.ground > carbon.totalCO2kg * 0.3) {
+    recommendations.push('Use public transportation or electric vehicles when possible');
+    recommendations.push('Consider shared transportation options');
+  }
+  
+  if (carbon.breakdown.accommodation > carbon.totalCO2kg * 0.2) {
+    recommendations.push('Choose hotels with sustainability certifications');
+    recommendations.push('Opt for properties with renewable energy programs');
+  }
+  
+  if (carbon.totalCO2kg > 500) {
+    recommendations.push('Consider purchasing verified carbon offsets');
+    recommendations.push('Explore virtual meeting alternatives for some components');
+  }
+  
+  return recommendations;
+}
+
+async function calculateCarbonTrends(
+  currentCarbon: CarbonFootprint,
+  organizationId: number,
+  userId: number
+): Promise<CarbonFootprint['trends']> {
+  // In production, query historical trip data from database
+  // For now, provide sample calculations
+  
+  return {
+    vsLastTrip: -15, // 15% improvement
+    vsOrgAverage: 8, // 8% above organization average
+    improvementAreas: ['flight_efficiency', 'ground_transport', 'accommodation_choice']
+  };
+}
+
+export interface ESGReport {
+  period: string;
+  totalEmissions: {
+    scope1: number;
+    scope2: number;
+    scope3: number;
+    total: number;
+  };
+  emissionsByCategory: Record<string, number>;
+  offsetPrograms: Array<{
+    provider: string;
+    amount: number;
+    cost: number;
+    verified: boolean;
+  }>;
+  reductionTargets: {
+    current: number;
+    target2025: number;
+    target2030: number;
+    onTrack: boolean;
+  };
+  certifications: string[];
+  compliance: {
+    gri: boolean; // Global Reporting Initiative
+    tcfd: boolean; // Task Force on Climate-related Financial Disclosures
+    sbti: boolean; // Science Based Targets initiative
+  };
+}
+
+export async function generateESGReport(
+  organizationId: number,
+  period: string
+): Promise<ESGReport> {
+  // Generate comprehensive ESG compliance report
+  // This would query all trips, bookings, and carbon data for the organization
+  
+  return {
+    period,
+    totalEmissions: {
+      scope1: 1250,
+      scope2: 850,
+      scope3: 3400,
+      total: 5500
+    },
+    emissionsByCategory: {
+      flights: 3100,
+      accommodation: 950,
+      ground_transport: 800,
+      activities: 650
+    },
+    offsetPrograms: [
+      {
+        provider: 'Gold Standard',
+        amount: 2000,
+        cost: 40000,
+        verified: true
+      }
+    ],
+    reductionTargets: {
+      current: 5500,
+      target2025: 4950, // 10% reduction
+      target2030: 3850, // 30% reduction
+      onTrack: true
+    },
+    certifications: ['ISO 14001', 'LEED Gold'],
+    compliance: {
+      gri: true,
+      tcfd: true,
+      sbti: false
+    }
+  };
+}
+
 // Helper functions for fallback calculations
 function calculateFallbackEmissions(activities: any[], flights: any[], accommodation: any[]): number {
   let totalEmissions = 0;

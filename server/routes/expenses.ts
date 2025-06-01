@@ -1,99 +1,227 @@
 import { Router } from 'express';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
 import { db } from '../db';
-import { expenses, trips, insertExpenseSchema } from '@shared/schema';
-import { requireAuth } from '../middleware/auth';
+import { expenses, trips, users, insertExpenseSchema } from '@shared/schema';
 import { z } from 'zod';
+import { approvalEngine } from '../approvalEngine';
 
 const router = Router();
 
-// Apply authentication middleware to all routes
-router.use(requireAuth);
-
-// Get expenses for a trip (organization-scoped)
-router.get('/trip/:tripId', async (req, res) => {
+// Get expenses for organization
+router.get('/', async (req, res) => {
   try {
-    const tripId = parseInt(req.params.tripId);
-    const organizationId = req.user!.organization_id!;
-    
-    // Verify trip belongs to user's organization
-    const [trip] = await db
-      .select()
-      .from(trips)
-      .where(and(
-        eq(trips.id, tripId),
-        eq(trips.organization_id, organizationId)
-      ));
-    
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
     }
+
+    const organizationId = req.user.organization_id;
+    const { tripId, status, category, startDate, endDate, page = 1, limit = 50 } = req.query;
     
-    // Get expenses for this trip within organization
-    const tripExpenses = await db
+    let query = db
       .select({
         id: expenses.id,
-        tripId: expenses.tripId,
-        userId: expenses.userId,
-        category: expenses.category,
-        description: expenses.description,
         amount: expenses.amount,
         currency: expenses.currency,
+        category: expenses.category,
+        description: expenses.description,
         date: expenses.date,
-        receiptUrl: expenses.receiptUrl,
         status: expenses.status,
-        approvedBy: expenses.approvedBy,
-        approvedAt: expenses.approvedAt,
+        receiptUrl: expenses.receiptUrl,
+        isReimbursable: expenses.isReimbursable,
+        tripId: expenses.tripId,
         createdAt: expenses.createdAt,
+        trip: {
+          id: trips.id,
+          title: trips.title,
+          destination: trips.destination
+        },
+        user: {
+          id: users.id,
+          displayName: users.display_name,
+          email: users.email
+        }
       })
       .from(expenses)
-      .where(and(
-        eq(expenses.tripId, tripId),
-        eq(expenses.organizationId, organizationId)
-      ))
-      .orderBy(desc(expenses.date));
-    
-    res.json(tripExpenses);
+      .leftJoin(trips, eq(expenses.tripId, trips.id))
+      .leftJoin(users, eq(expenses.userId, users.id))
+      .where(eq(expenses.organizationId, organizationId));
+
+    // Apply filters
+    if (tripId) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        eq(expenses.tripId, parseInt(tripId as string))
+      ));
+    }
+
+    if (status) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        eq(expenses.status, status as string)
+      ));
+    }
+
+    if (category) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        eq(expenses.category, category as string)
+      ));
+    }
+
+    if (startDate) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        gte(expenses.date, new Date(startDate as string))
+      ));
+    }
+
+    if (endDate) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        lte(expenses.date, new Date(endDate as string))
+      ));
+    }
+
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const expenseList = await query
+      .orderBy(desc(expenses.createdAt))
+      .limit(parseInt(limit as string))
+      .offset(offset);
+
+    res.json(expenseList);
   } catch (error) {
-    console.error('Error fetching trip expenses:', error);
+    console.error('Error fetching expenses:', error);
     res.status(500).json({ error: "Failed to fetch expenses" });
   }
 });
 
-// Create new expense (organization-scoped)
+// Get expense statistics
+router.get('/stats', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { year, month } = req.query;
+    
+    let dateFilter = eq(expenses.organizationId, organizationId);
+    
+    if (year) {
+      const startDate = new Date(parseInt(year as string), month ? parseInt(month as string) - 1 : 0, 1);
+      const endDate = month 
+        ? new Date(parseInt(year as string), parseInt(month as string), 0)
+        : new Date(parseInt(year as string) + 1, 0, 0);
+      
+      dateFilter = and(
+        eq(expenses.organizationId, organizationId),
+        gte(expenses.date, startDate),
+        lte(expenses.date, endDate)
+      );
+    }
+
+    // Get total expenses by status
+    const statusStats = await db
+      .select({
+        status: expenses.status,
+        count: sql<number>`count(*)::int`,
+        total: sql<number>`sum(${expenses.amount})::int`
+      })
+      .from(expenses)
+      .where(dateFilter)
+      .groupBy(expenses.status);
+
+    // Get expenses by category
+    const categoryStats = await db
+      .select({
+        category: expenses.category,
+        count: sql<number>`count(*)::int`,
+        total: sql<number>`sum(${expenses.amount})::int`
+      })
+      .from(expenses)
+      .where(dateFilter)
+      .groupBy(expenses.category);
+
+    // Get monthly trends
+    const monthlyStats = await db
+      .select({
+        month: sql<string>`to_char(${expenses.date}, 'YYYY-MM')`,
+        count: sql<number>`count(*)::int`,
+        total: sql<number>`sum(${expenses.amount})::int`,
+        avgAmount: sql<number>`avg(${expenses.amount})::int`
+      })
+      .from(expenses)
+      .where(eq(expenses.organizationId, organizationId))
+      .groupBy(sql`to_char(${expenses.date}, 'YYYY-MM')`)
+      .orderBy(sql`to_char(${expenses.date}, 'YYYY-MM') DESC`)
+      .limit(12);
+
+    res.json({
+      byStatus: statusStats,
+      byCategory: categoryStats,
+      monthlyTrends: monthlyStats
+    });
+  } catch (error) {
+    console.error('Error fetching expense statistics:', error);
+    res.status(500).json({ error: "Failed to fetch expense statistics" });
+  }
+});
+
+// Create expense
 router.post('/', async (req, res) => {
   try {
-    const organizationId = req.user!.organization_id!;
-    const userId = req.user!.id;
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const organizationId = req.user.organization_id;
+    const userId = req.user.id;
     
-    // Validate input
     const validatedData = insertExpenseSchema.parse(req.body);
     
-    // Verify trip belongs to user's organization
-    const [trip] = await db
-      .select()
-      .from(trips)
-      .where(and(
-        eq(trips.id, validatedData.tripId),
-        eq(trips.organization_id, organizationId)
-      ));
-    
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
+    // Check if approval is required for this expense
+    const approvalResult = await approvalEngine.processApprovalWorkflow({
+      organizationId,
+      entityType: 'expense',
+      requestType: 'create',
+      data: {
+        ...validatedData,
+        amount: validatedData.amount,
+        category: validatedData.category
+      },
+      requesterId: userId,
+      businessJustification: req.body.businessJustification
+    });
+
+    let expenseStatus = 'pending';
+    if (!approvalResult.requiresApproval || approvalResult.autoApproved) {
+      expenseStatus = 'approved';
     }
-    
-    // Create expense with organization and user context
+
+    // Create expense
     const [newExpense] = await db
       .insert(expenses)
       .values({
         ...validatedData,
-        userId,
         organizationId,
-        status: 'pending'
+        userId,
+        status: expenseStatus
       })
       .returning();
-    
-    res.status(201).json(newExpense);
+
+    // If approval is required, update the approval request with the expense ID
+    if (approvalResult.requiresApproval && approvalResult.requestId) {
+      await db
+        .update(db.approvalRequests)
+        .set({ entityId: newExpense.id })
+        .where(eq(db.approvalRequests.id, approvalResult.requestId));
+    }
+
+    res.status(201).json({
+      expense: newExpense,
+      approvalRequired: approvalResult.requiresApproval,
+      approvalRequestId: approvalResult.requestId
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
@@ -107,14 +235,19 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update expense (organization-scoped)
-router.put('/:id', async (req, res) => {
+// Update expense
+router.patch('/:expenseId', async (req, res) => {
   try {
-    const expenseId = parseInt(req.params.id);
-    const organizationId = req.user!.organization_id!;
-    const userId = req.user!.id;
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const expenseId = parseInt(req.params.expenseId);
+    const organizationId = req.user.organization_id;
+    const userId = req.user.id;
+    const userRole = req.user.role;
     
-    // Verify expense belongs to user's organization
+    // Get existing expense
     const [existingExpense] = await db
       .select()
       .from(expenses)
@@ -127,13 +260,32 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: "Expense not found" });
     }
     
-    // Only allow updates by expense owner or managers
-    if (existingExpense.userId !== userId && !['admin', 'manager'].includes(req.user!.role)) {
-      return res.status(403).json({ error: "Not authorized to update this expense" });
+    // Check permissions - user can edit their own expenses or managers can edit any
+    if (existingExpense.userId !== userId && !['admin', 'manager'].includes(userRole)) {
+      return res.status(403).json({ error: "Permission denied" });
     }
     
-    // Validate update data
-    const updateData = insertExpenseSchema.partial().parse(req.body);
+    const updateData = req.body;
+    
+    // If significant changes require approval
+    const requiresApproval = await checkUpdateRequiresApproval(existingExpense, updateData);
+    
+    if (requiresApproval && !['admin', 'manager'].includes(userRole)) {
+      // Create approval request for modification
+      const approvalResult = await approvalEngine.processApprovalWorkflow({
+        organizationId,
+        entityType: 'expense',
+        requestType: 'modify',
+        data: updateData,
+        requesterId: userId,
+        businessJustification: req.body.businessJustification
+      });
+      
+      return res.json({
+        message: "Changes require approval",
+        approvalRequestId: approvalResult.requestId
+      });
+    }
     
     // Update expense
     const [updatedExpense] = await db
@@ -147,37 +299,35 @@ router.put('/:id', async (req, res) => {
     
     res.json(updatedExpense);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: "Invalid input", 
-        details: error.errors 
-      });
-    }
-    
     console.error('Error updating expense:', error);
     res.status(500).json({ error: "Failed to update expense" });
   }
 });
 
-// Approve/reject expense (managers only)
-router.patch('/:id/approval', async (req, res) => {
+// Approve/reject expense (for managers)
+router.patch('/:expenseId/approval', async (req, res) => {
   try {
-    const expenseId = parseInt(req.params.id);
-    const organizationId = req.user!.organization_id!;
-    const userId = req.user!.id;
-    const { status, notes } = req.body;
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const expenseId = parseInt(req.params.expenseId);
+    const organizationId = req.user.organization_id;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const { action, reason } = req.body;
     
-    // Only managers and admins can approve expenses
-    if (!['admin', 'manager'].includes(req.user!.role)) {
-      return res.status(403).json({ error: "Manager role required to approve expenses" });
+    // Only managers and admins can approve/reject expenses
+    if (!['admin', 'manager'].includes(userRole)) {
+      return res.status(403).json({ error: "Manager role required for expense approval" });
     }
     
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ error: "Status must be 'approved' or 'rejected'" });
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: "Action must be 'approve' or 'reject'" });
     }
     
-    // Verify expense belongs to user's organization
-    const [existingExpense] = await db
+    // Get expense
+    const [expense] = await db
       .select()
       .from(expenses)
       .where(and(
@@ -185,17 +335,20 @@ router.patch('/:id/approval', async (req, res) => {
         eq(expenses.organizationId, organizationId)
       ));
     
-    if (!existingExpense) {
+    if (!expense) {
       return res.status(404).json({ error: "Expense not found" });
     }
     
-    // Update expense approval
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    
+    // Update expense status
     const [updatedExpense] = await db
       .update(expenses)
       .set({
-        status,
-        approvedBy: userId,
-        approvedAt: new Date(),
+        status: newStatus,
+        approvedBy: action === 'approve' ? userId : null,
+        approvedAt: action === 'approve' ? new Date() : null,
+        rejectionReason: action === 'reject' ? reason : null,
         updatedAt: new Date()
       })
       .where(eq(expenses.id, expenseId))
@@ -203,20 +356,24 @@ router.patch('/:id/approval', async (req, res) => {
     
     res.json(updatedExpense);
   } catch (error) {
-    console.error('Error updating expense approval:', error);
-    res.status(500).json({ error: "Failed to update expense approval" });
+    console.error('Error processing expense approval:', error);
+    res.status(500).json({ error: "Failed to process expense approval" });
   }
 });
 
-// Delete expense (organization-scoped)
-router.delete('/:id', async (req, res) => {
+// Upload receipt
+router.post('/:expenseId/receipt', async (req, res) => {
   try {
-    const expenseId = parseInt(req.params.id);
-    const organizationId = req.user!.organization_id!;
-    const userId = req.user!.id;
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const expenseId = parseInt(req.params.expenseId);
+    const organizationId = req.user.organization_id;
+    const { receiptUrl, receiptData } = req.body;
     
-    // Verify expense belongs to user's organization
-    const [existingExpense] = await db
+    // Verify expense exists and user has permission
+    const [expense] = await db
       .select()
       .from(expenses)
       .where(and(
@@ -224,69 +381,157 @@ router.delete('/:id', async (req, res) => {
         eq(expenses.organizationId, organizationId)
       ));
     
-    if (!existingExpense) {
+    if (!expense) {
       return res.status(404).json({ error: "Expense not found" });
     }
     
-    // Only allow deletion by expense owner or managers
-    if (existingExpense.userId !== userId && !['admin', 'manager'].includes(req.user!.role)) {
-      return res.status(403).json({ error: "Not authorized to delete this expense" });
-    }
+    // Update expense with receipt information
+    const [updatedExpense] = await db
+      .update(expenses)
+      .set({
+        receiptUrl,
+        receiptData: receiptData ? JSON.stringify(receiptData) : null,
+        updatedAt: new Date()
+      })
+      .where(eq(expenses.id, expenseId))
+      .returning();
     
-    await db
-      .delete(expenses)
-      .where(eq(expenses.id, expenseId));
-    
-    res.status(204).send();
+    res.json(updatedExpense);
   } catch (error) {
-    console.error('Error deleting expense:', error);
-    res.status(500).json({ error: "Failed to delete expense" });
+    console.error('Error uploading receipt:', error);
+    res.status(500).json({ error: "Failed to upload receipt" });
   }
 });
 
-// Get organization expense summary (managers only)
-router.get('/organization/summary', async (req, res) => {
+// Generate expense report
+router.get('/report', async (req, res) => {
   try {
-    const organizationId = req.user!.organization_id!;
-    
-    // Only managers and admins can view organization summary
-    if (!['admin', 'manager'].includes(req.user!.role)) {
-      return res.status(403).json({ error: "Manager role required to view organization summary" });
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
     }
+
+    const organizationId = req.user.organization_id;
+    const { format = 'json', startDate, endDate, tripId, userId: filterUserId } = req.query;
     
-    // Get expense summary for organization
-    const orgExpenses = await db
+    let query = db
       .select({
-        category: expenses.category,
-        status: expenses.status,
-        amount: expenses.amount,
-        currency: expenses.currency,
-        date: expenses.date,
+        expense: expenses,
+        trip: {
+          id: trips.id,
+          title: trips.title,
+          destination: trips.destination,
+          startDate: trips.start_date,
+          endDate: trips.end_date
+        },
+        user: {
+          id: users.id,
+          displayName: users.display_name,
+          email: users.email
+        }
       })
       .from(expenses)
+      .leftJoin(trips, eq(expenses.tripId, trips.id))
+      .leftJoin(users, eq(expenses.userId, users.id))
       .where(eq(expenses.organizationId, organizationId));
+
+    // Apply filters
+    if (startDate) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        gte(expenses.date, new Date(startDate as string))
+      ));
+    }
+
+    if (endDate) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        lte(expenses.date, new Date(endDate as string))
+      ));
+    }
+
+    if (tripId) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        eq(expenses.tripId, parseInt(tripId as string))
+      ));
+    }
+
+    if (filterUserId) {
+      query = query.where(and(
+        eq(expenses.organizationId, organizationId),
+        eq(expenses.userId, parseInt(filterUserId as string))
+      ));
+    }
+
+    const reportData = await query.orderBy(desc(expenses.date));
     
-    // Calculate summaries
-    const summary = {
-      totalExpenses: orgExpenses.length,
-      totalAmount: orgExpenses.reduce((sum, exp) => sum + exp.amount, 0),
-      pendingAmount: orgExpenses
-        .filter(exp => exp.status === 'pending')
-        .reduce((sum, exp) => sum + exp.amount, 0),
-      approvedAmount: orgExpenses
-        .filter(exp => exp.status === 'approved')
-        .reduce((sum, exp) => sum + exp.amount, 0),
-      byCategory: orgExpenses.reduce((acc, exp) => {
-        acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
-        return acc;
-      }, {} as Record<string, number>)
-    };
-    
-    res.json(summary);
+    if (format === 'csv') {
+      // Generate CSV format
+      const csvHeader = 'Date,Description,Category,Amount,Currency,Status,Trip,Employee,Receipt\n';
+      const csvRows = reportData.map(row => {
+        const expense = row.expense;
+        return [
+          expense.date.toISOString().split('T')[0],
+          `"${expense.description.replace(/"/g, '""')}"`,
+          expense.category,
+          (expense.amount / 100).toFixed(2),
+          expense.currency,
+          expense.status,
+          `"${row.trip?.title || 'N/A'}"`,
+          `"${row.user?.displayName || 'Unknown'}"`,
+          expense.receiptUrl ? 'Yes' : 'No'
+        ].join(',');
+      }).join('\n');
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=expense-report.csv');
+      res.send(csvHeader + csvRows);
+    } else {
+      res.json({
+        reportData,
+        summary: {
+          totalExpenses: reportData.length,
+          totalAmount: reportData.reduce((sum, row) => sum + row.expense.amount, 0),
+          byStatus: reportData.reduce((acc, row) => {
+            acc[row.expense.status] = (acc[row.expense.status] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>),
+          byCategory: reportData.reduce((acc, row) => {
+            acc[row.expense.category] = (acc[row.expense.category] || 0) + row.expense.amount;
+            return acc;
+          }, {} as Record<string, number>)
+        }
+      });
+    }
   } catch (error) {
-    console.error('Error fetching organization expense summary:', error);
-    res.status(500).json({ error: "Failed to fetch expense summary" });
+    console.error('Error generating expense report:', error);
+    res.status(500).json({ error: "Failed to generate expense report" });
   }
 });
+
+// Helper function to check if update requires approval
+async function checkUpdateRequiresApproval(
+  existingExpense: any, 
+  updateData: any
+): Promise<boolean> {
+  // Significant changes that require approval
+  const significantFields = ['amount', 'category', 'description'];
+  
+  for (const field of significantFields) {
+    if (updateData[field] !== undefined && updateData[field] !== existingExpense[field]) {
+      // Amount increases over $100 require approval
+      if (field === 'amount' && updateData[field] > existingExpense[field] + 10000) { // $100 in cents
+        return true;
+      }
+      
+      // Category changes require approval
+      if (field === 'category') {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
 
 export default router;
