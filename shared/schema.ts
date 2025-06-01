@@ -181,7 +181,13 @@ export const insertTripSchema = z.object({
   clientName: z.string().optional(),
   projectType: z.string().optional(),
   organization: z.string().optional(),
-  budget: z.string().optional(),
+  budget: z.union([z.string(), z.number()]).optional().transform(val => {
+    if (!val) return undefined;
+    if (typeof val === 'number') return Math.round(val * 100); // Convert dollars to cents
+    // Parse string budget (e.g., "$5000", "5000", "5,000")
+    const parsed = parseFloat(val.replace(/[$,\s]/g, ''));
+    return isNaN(parsed) ? undefined : Math.round(parsed * 100); // Convert to cents
+  }),
   // Trip completion tracking
   completed: z.boolean().optional().default(false),
   completedAt: z.date().optional(),

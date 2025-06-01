@@ -726,14 +726,14 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       percentage: totalTrips > 0 ? Math.round((duration.count / totalTrips) * 100) : 0
     }));
 
-    // Budget distribution analysis
+    // Budget distribution analysis (budget stored in cents)
     const budgetDistributionResult = await db.select({
       range: sql`CASE 
         WHEN ${trips.budget} IS NULL THEN 'Not set'
-        WHEN ${trips.budget} <= 500 THEN '$0-500'
-        WHEN ${trips.budget} <= 1000 THEN '$501-1000'
-        WHEN ${trips.budget} <= 2500 THEN '$1001-2500'
-        WHEN ${trips.budget} <= 5000 THEN '$2501-5000'
+        WHEN ${trips.budget} <= 50000 THEN '$0-500'
+        WHEN ${trips.budget} <= 100000 THEN '$501-1000'
+        WHEN ${trips.budget} <= 250000 THEN '$1001-2500'
+        WHEN ${trips.budget} <= 500000 THEN '$2501-5000'
         ELSE '$5000+'
       END`.as('range'),
       count: count()
@@ -742,10 +742,10 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     .where(orgTripsFilter)
     .groupBy(sql`CASE 
       WHEN ${trips.budget} IS NULL THEN 'Not set'
-      WHEN ${trips.budget} <= 500 THEN '$0-500'
-      WHEN ${trips.budget} <= 1000 THEN '$501-1000'
-      WHEN ${trips.budget} <= 2500 THEN '$1001-2500'
-      WHEN ${trips.budget} <= 5000 THEN '$2501-5000'
+      WHEN ${trips.budget} <= 50000 THEN '$0-500'
+      WHEN ${trips.budget} <= 100000 THEN '$501-1000'
+      WHEN ${trips.budget} <= 250000 THEN '$1001-2500'
+      WHEN ${trips.budget} <= 500000 THEN '$2501-5000'
       ELSE '$5000+'
     END`)
     .orderBy(desc(count()));
