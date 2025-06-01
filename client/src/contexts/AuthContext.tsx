@@ -31,6 +31,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadUser() {
       try {
+        // First check for demo session
+        const demoCheck = await fetch('/api/auth/me', {
+          credentials: 'include'
+        });
+        
+        if (demoCheck.ok) {
+          const demoData = await demoCheck.json();
+          if (demoData.user && demoData.user.isDemo) {
+            // Handle demo user
+            setUser({
+              id: String(demoData.user.id),
+              email: demoData.user.email,
+              user_metadata: { display_name: demoData.user.displayName }
+            } as User);
+            setUserId(demoData.user.id);
+            setRoleType('corporate');
+            setAuthReady(true);
+            setLoading(false);
+            return;
+          }
+        }
+
         // Clear any leftover demo mode data to ensure real authentication works
         localStorage.removeItem('demo-mode');
         localStorage.removeItem('demo-user');
