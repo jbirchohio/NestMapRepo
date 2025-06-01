@@ -42,35 +42,57 @@ router.get("/organizations", async (req: Request, res: Response) => {
 // Demo login - creates session for a demo user
 router.post("/login", async (req: Request, res: Response) => {
   try {
-    const { organizationId } = req.body;
+    const { organizationId, role = 'admin' } = req.body;
     
     if (!organizationId) {
       return res.status(400).json({ error: "Organization ID is required" });
     }
 
+    // Validate role
+    const validRoles = ['admin', 'manager', 'user'];
+    const userRole = validRoles.includes(role) ? role : 'admin';
+
+    // Create role-specific user ID
+    const baseUserId = organizationId * 10;
+    const userId = userRole === 'admin' ? baseUserId + 1 : userRole === 'manager' ? baseUserId + 2 : baseUserId + 3;
+
     // Create a proper demo session
-    req.session.userId = organizationId; // Use org ID as user ID for demo
-    req.session.organizationId = organizationId;
-    req.session.isDemo = true;
+    (req.session as any).userId = userId;
+    (req.session as any).organizationId = organizationId;
+    (req.session as any).isDemo = true;
+    (req.session as any).role = userRole;
 
     // Get organization name from our demo data
     const orgNames = {
       1: "Orbit Travel Co",
       2: "Haven Journeys", 
       3: "Velocity Trips"
+    } as const;
+
+    // Role-specific email and display names
+    const roleEmails = {
+      admin: `admin@${orgNames[organizationId as keyof typeof orgNames]?.toLowerCase().replace(/\s+/g, '')}.com`,
+      manager: `manager@${orgNames[organizationId as keyof typeof orgNames]?.toLowerCase().replace(/\s+/g, '')}.com`,
+      user: `agent@${orgNames[organizationId as keyof typeof orgNames]?.toLowerCase().replace(/\s+/g, '')}.com`
+    };
+
+    const roleNames = {
+      admin: 'Company Admin',
+      manager: 'Travel Manager', 
+      user: 'Travel Agent'
     };
 
     res.json({
       success: true,
       user: {
-        id: organizationId,
-        email: `demo@${orgNames[organizationId]?.toLowerCase().replace(/\s+/g, '')}.com`,
-        displayName: "Demo User",
-        role: "admin"
+        id: userId,
+        email: roleEmails[userRole as keyof typeof roleEmails],
+        displayName: roleNames[userRole as keyof typeof roleNames],
+        role: userRole
       },
       organization: {
         id: organizationId,
-        name: orgNames[organizationId] || "Demo Organization",
+        name: orgNames[organizationId as keyof typeof orgNames] || "Demo Organization",
         domain: `demo${organizationId}.nestmap.app`
       }
     });

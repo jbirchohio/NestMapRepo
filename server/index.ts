@@ -217,20 +217,39 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
   // Check for demo session first
   if (session?.isDemo && session?.userId) {
     const orgNames: { [key: number]: string } = {
-      1: "Orbit Travel Co",
-      2: "Haven Journeys", 
-      3: "Velocity Trips"
+      11: "Orbit Travel Co",  // orgId 1 * 10 + 1 (admin)
+      12: "Orbit Travel Co",  // orgId 1 * 10 + 2 (manager)
+      13: "Orbit Travel Co",  // orgId 1 * 10 + 3 (user)
+      21: "Haven Journeys",   // orgId 2 * 10 + 1 (admin)
+      22: "Haven Journeys",   // orgId 2 * 10 + 2 (manager)
+      23: "Haven Journeys",   // orgId 2 * 10 + 3 (user)
+      31: "Velocity Trips",   // orgId 3 * 10 + 1 (admin)
+      32: "Velocity Trips",   // orgId 3 * 10 + 2 (manager)
+      33: "Velocity Trips"    // orgId 3 * 10 + 3 (user)
     };
     
     const orgName = orgNames[session.userId] || "Demo Organization";
+    const userRole = session.role || "admin";
+    
+    const roleEmails = {
+      admin: `admin@${orgName.toLowerCase().replace(/\s+/g, '')}.com`,
+      manager: `manager@${orgName.toLowerCase().replace(/\s+/g, '')}.com`,
+      user: `agent@${orgName.toLowerCase().replace(/\s+/g, '')}.com`
+    };
+
+    const roleNames = {
+      admin: 'Company Admin',
+      manager: 'Travel Manager', 
+      user: 'Travel Agent'
+    };
     
     return res.json({
       user: {
         id: session.userId,
-        email: `demo@${orgName.toLowerCase().replace(/\s+/g, '')}.com`,
-        role: "admin",
+        email: roleEmails[userRole as keyof typeof roleEmails] || roleEmails.admin,
+        role: userRole,
         organizationId: session.organizationId,
-        displayName: "Demo User",
+        displayName: roleNames[userRole as keyof typeof roleNames] || 'Demo User',
         isDemo: true
       }
     });

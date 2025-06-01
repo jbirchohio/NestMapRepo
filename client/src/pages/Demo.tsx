@@ -47,13 +47,13 @@ export default function Demo() {
 
   // Demo login mutation
   const loginMutation = useMutation({
-    mutationFn: async (organizationId: number) => {
+    mutationFn: async (loginData: { organizationId: number; role: string }) => {
       const response = await fetch(`/api/demo/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ organizationId }),
+        body: JSON.stringify(loginData),
       });
       
       if (!response.ok) {
@@ -112,8 +112,8 @@ export default function Demo() {
     },
   });
 
-  const handleDemoLogin = (org: DemoOrganization) => {
-    loginMutation.mutate(org.id);
+  const handleDemoLoginWithRole = (org: DemoOrganization, role: string) => {
+    loginMutation.mutate({ organizationId: org.id, role });
   };
 
   const handleResetDemo = () => {
@@ -241,18 +241,50 @@ export default function Demo() {
                           <Users className="w-4 h-4" />
                           <span className="text-sm">Role-based Access</span>
                         </div>
-                        <Button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDemoLogin(org);
-                          }}
-                          disabled={loginMutation.isPending}
-                          className="w-full mt-4"
-                          style={{ backgroundColor: org.primary_color }}
-                        >
-                          <LogIn className="w-4 h-4 mr-2" />
-                          Demo Login
-                        </Button>
+                        <div className="space-y-2 mt-4">
+                          <p className="text-xs text-gray-600 mb-2">Login as:</p>
+                          <div className="grid grid-cols-1 gap-2">
+                            <Button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDemoLoginWithRole(org, 'admin');
+                              }}
+                              disabled={loginMutation.isPending}
+                              size="sm"
+                              className="w-full"
+                              style={{ backgroundColor: org.primary_color }}
+                            >
+                              <LogIn className="w-3 h-3 mr-2" />
+                              Admin
+                            </Button>
+                            <Button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDemoLoginWithRole(org, 'manager');
+                              }}
+                              disabled={loginMutation.isPending}
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                            >
+                              <LogIn className="w-3 h-3 mr-2" />
+                              Manager
+                            </Button>
+                            <Button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDemoLoginWithRole(org, 'user');
+                              }}
+                              disabled={loginMutation.isPending}
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                            >
+                              <LogIn className="w-3 h-3 mr-2" />
+                              Agent
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
