@@ -1,0 +1,50 @@
+You are now acting as a senior systems auditor for a high-value enterprise SaaS application called NestMap. I need a full internal intelligence report to prove the app’s technical value and feature depth for acquisition purposes.
+
+⚙️ Task:
+Scan the **entire codebase** and produce a comprehensive system architecture + feature report that includes:
+
+1. 📦 Tech Stack Breakdown
+   - Frontend frameworks, component libraries, state management
+   - Backend runtime, database ORM, API layer, session handling
+   - DevOps: CI/CD tools, deployment environments, build systems
+   - Mobile: Capacitor, native builds, PWA configs
+
+2. 🔐 Auth & Security Architecture
+   - Authentication (Supabase? Passport?)
+   - Role-based access control (RBAC)
+   - Tenant isolation (how it’s enforced in middleware + DB queries)
+   - Rate limiting, CSRF, session protection
+
+3. 🧩 Core Business Features
+   - AI trip planner: what files are involved, how OpenAI is called
+   - Map integration: how Mapbox is used (UI + routing)
+   - Booking system: how Amadeus API works
+   - Analytics: what’s collected, where calculated, how scoped per org
+   - PDF exports: what tech (Puppeteer?) generates them
+   - Proposal + budgeting: where tracked, how editable, what roles allowed
+   - Mobile/PWA: responsiveness + deployment readiness
+
+4. 🏢 White Labeling & Multi-Tenant Support
+   - How orgs are created, isolated, and switched (custom domains?)
+   - Which components change per org (branding, theme, access scope)
+   - Where orgs are scoped in database & middleware
+
+5. 💾 Data Models & Relationships
+   - Overview of key tables (users, trips, activities, bookings)
+   - Show schema links between user/org/trip/booking
+   - Highlight any foreign key structure enforcing tenant safety
+
+6. 🧠 Intelligent Inference
+   - Identify features that “look” like enterprise-grade even if not labeled
+   - Point out any “clever” architecture decisions that add value
+   - Identify anything that *pretends* to work but is fake (e.g., success toasts)
+
+7. 🧪 Testing & Verification
+   - Which routes are protected?
+   - Are auth/role/org checks actually enforced?
+   - Which critical systems (trip creation, booking, analytics) are tested?
+
+🎯 Output Format:
+Make this a clearly organized markdown-style **internal product intelligence doc** with 7 sections matching the points above.
+
+This will be used to justify a 7-figure valuation for an AI-powered enterprise SaaS travel platform. Be honest and detailed. Skip filler. Focus on proving real-world implementation and acquisition-readiness.
