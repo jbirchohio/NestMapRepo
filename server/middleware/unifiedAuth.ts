@@ -46,8 +46,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     '/.well-known/',
     '/api/amadeus',
     '/api/user/permissions',
-    '/api/dashboard-stats',
-    '/api/analytics'
+    '/api/dashboard-stats'
   ];
 
   // Skip authentication for public paths and non-API routes
