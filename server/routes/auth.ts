@@ -54,16 +54,22 @@ router.post("/login", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Set user session
-    req.session.userId = user.id;
+    // Set user session with proper typing
+    (req.session as any).userId = user.id;
     req.session.save((err) => {
       if (err) {
         console.error("Session save error:", err);
         return res.status(500).json({ message: "Session error" });
       }
       
-      // Remove password from response
-      const { password: _, ...userResponse } = user;
+      // Return user response without sensitive data
+      const userResponse = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        organizationId: user.organizationId,
+        displayName: user.displayName
+      };
       res.json({ user: userResponse });
     });
   } catch (error) {
@@ -109,9 +115,9 @@ router.put("/profile", unifiedAuthMiddleware, async (req: Request, res: Response
 
     const updateData = insertUserSchema.partial().parse(req.body);
     
-    // If password is being updated, hash it
-    if (updateData.password) {
-      updateData.password = hashPassword(updateData.password);
+    // If password_hash is being updated, hash it
+    if (updateData.password_hash) {
+      updateData.password_hash = hashPassword(updateData.password_hash);
     }
 
     const updatedUser = await storage.updateUser(req.user.id, updateData);
@@ -119,8 +125,8 @@ router.put("/profile", unifiedAuthMiddleware, async (req: Request, res: Response
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Remove password from response
-    const { password, ...userResponse } = updatedUser;
+    // Remove password hash from response
+    const { password_hash, ...userResponse } = updatedUser;
     res.json({ user: userResponse });
   } catch (error) {
     if (error instanceof z.ZodError) {

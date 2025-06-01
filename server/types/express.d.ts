@@ -1,70 +1,42 @@
-import { Session } from 'express-session';
+import { User } from '@shared/schema';
 
 declare global {
   namespace Express {
     interface Request {
-      isAuthenticated(): boolean;
       user?: {
         id: number;
-        organizationId?: number | null;
+        email: string;
+        organization_id?: number;
         role?: string;
-        [key: string]: any;
+        displayName?: string;
       };
-      
-      // Security middleware extensions
-      apiVersion?: string;
-      apiKeyAuth?: {
-        keyId: string;
-        organizationId: number;
-        permissions: string[];
-      };
-      authSession?: {
-        id: string;
-        userId: number;
-        organizationId: number;
-        lastActivity: Date;
-        deviceId?: string;
-        ipAddress: string;
-      };
-      authIdentifier?: string;
-      
-      // Database middleware extensions
-      secureQuery?: any;
-      secureDbOps?: {
-        select: any;
-        insert: any;
-        update: any;
-        delete: any;
+      organizationId?: number;
+      organizationContext?: {
+        id?: number;
+        name?: string;
+        isOwner: boolean;
+        canInvite: boolean;
+        canManage: boolean;
       };
       dbMetrics?: {
-        startTime: number;
         queryCount: number;
+        totalQueryTime: number;
         slowQueries: any[];
+        recordQuery: (queryName: string, duration: number) => void;
+        getMetrics: () => any;
       };
-      
-      // File upload extensions
-      file?: {
-        fieldname: string;
-        originalname: string;
-        encoding: string;
-        mimetype: string;
-        size: number;
-        buffer: Buffer;
-        filename?: string;
-        path?: string;
+      unifiedMetrics?: {
+        startTime: bigint;
+        dbQueries: number;
+        dbTotalTime: number;
+        slowQueries: any[];
+        memoryBefore: number;
       };
-      
-      // Organization filtering
-      organizationId?: number;
-      organizationFilter?: (orgId: number | null) => boolean;
-      domainOrganization?: any;
-      analyticsScope?: {
-        organizationId: number;
-      };
+      trackQuery?: (duration: number, query?: string) => void;
     }
-    
+
     interface Session {
-      sessionId?: string;
+      userId?: number;
     }
   }
 }
