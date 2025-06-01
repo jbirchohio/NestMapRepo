@@ -4055,9 +4055,9 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      // CRITICAL: Only admins and super_admins can access organization data
-      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-        return res.status(403).json({ error: "Admin access required" });
+      // CRITICAL: Only super_admins can access global organization data
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ error: "Super admin access required" });
       }
 
       let orgs;
@@ -4089,19 +4089,14 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      // CRITICAL: Only admins and super_admins can modify organization data
-      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-        return res.status(403).json({ error: "Admin access required" });
+      // CRITICAL: Only super_admins can modify organization data
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ error: "Super admin access required" });
       }
 
       const orgId = parseInt(req.params.id);
       if (isNaN(orgId)) {
         return res.status(400).json({ error: "Invalid organization ID" });
-      }
-
-      // CRITICAL: Regular admins can only modify their own organization
-      if (req.user.role !== 'super_admin' && orgId !== req.user.organizationId) {
-        return res.status(403).json({ error: "Access denied: Cannot modify other organizations" });
       }
       
       // Import validation schema
@@ -4151,25 +4146,13 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      // CRITICAL: Only admins and super_admins can access white label requests
-      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-        return res.status(403).json({ error: "Admin access required" });
+      // CRITICAL: Only super_admins can access white label requests
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ error: "Super admin access required" });
       }
 
-      let whereCondition;
-      if (req.user.role === 'super_admin') {
-        // Super admins can see all pending requests
-        whereCondition = eq(whiteLabelRequests.status, 'pending');
-      } else {
-        // Regular admins can only see requests from their organization
-        if (!req.user.organizationId) {
-          return res.status(403).json({ error: "No organization assigned to user" });
-        }
-        whereCondition = and(
-          eq(whiteLabelRequests.status, 'pending'),
-          eq(whiteLabelRequests.organization_id, req.user.organizationId)
-        );
-      }
+      // Super admins can see all pending requests
+      const whereCondition = eq(whiteLabelRequests.status, 'pending');
 
       const requests = await db.select({
         id: whiteLabelRequests.id,
@@ -4201,8 +4184,8 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-        return res.status(403).json({ error: "Admin access required" });
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ error: "Super admin access required" });
       }
 
       const requestId = parseInt(req.params.id);
@@ -4211,27 +4194,6 @@ Include realistic business activities, meeting times, dining recommendations, an
       }
 
       const { status, notes } = req.body;
-
-      // For regular admins, verify they can only review requests from their organization
-      if (req.user.role !== 'super_admin') {
-        if (!req.user.organizationId) {
-          return res.status(403).json({ error: "No organization assigned to user" });
-        }
-
-        // First check if the request belongs to the admin's organization
-        const existingRequest = await db.select({ organization_id: whiteLabelRequests.organization_id })
-          .from(whiteLabelRequests)
-          .where(eq(whiteLabelRequests.id, requestId))
-          .limit(1);
-
-        if (existingRequest.length === 0) {
-          return res.status(404).json({ error: "Request not found" });
-        }
-
-        if (existingRequest[0].organization_id !== req.user.organizationId) {
-          return res.status(403).json({ error: "Access denied: Cannot review other organizations' requests" });
-        }
-      }
 
       await db.update(whiteLabelRequests)
         .set({
@@ -4256,11 +4218,11 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-        return res.status(403).json({ error: "Admin access required" });
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ error: "Super admin access required" });
       }
 
-      let query = db.select({
+      const query = db.select({
         id: customDomains.id,
         organization_id: customDomains.organization_id,
         organization_name: organizations.name,
@@ -4273,14 +4235,6 @@ Include realistic business activities, meeting times, dining recommendations, an
       })
       .from(customDomains)
       .leftJoin(organizations, eq(customDomains.organization_id, organizations.id));
-
-      // Regular admins can only see domains from their organization
-      if (req.user.role !== 'super_admin') {
-        if (!req.user.organizationId) {
-          return res.status(403).json({ error: "No organization assigned to user" });
-        }
-        query = query.where(eq(customDomains.organization_id, req.user.organizationId));
-      }
 
       const domains = await query;
       res.json(domains);
