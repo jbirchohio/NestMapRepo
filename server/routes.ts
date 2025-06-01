@@ -4251,8 +4251,8 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ error: "Authentication required" });
       }
       
-      if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-        return res.status(403).json({ error: "Admin access required" });
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ error: "Super admin access required" });
       }
 
       const domainId = parseInt(req.params.id);
@@ -4267,17 +4267,6 @@ Include realistic business activities, meeting times, dining recommendations, an
 
       if (!domain) {
         return res.status(404).json({ error: "Domain not found" });
-      }
-
-      // For regular admins, verify they can only verify domains from their organization
-      if (req.user.role !== 'super_admin') {
-        if (!req.user.organizationId) {
-          return res.status(403).json({ error: "No organization assigned to user" });
-        }
-
-        if (domain.organization_id !== req.user.organizationId) {
-          return res.status(403).json({ error: "Access denied: Cannot verify other organizations' domains" });
-        }
       }
 
       // Import domain verification functions
