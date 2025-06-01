@@ -4,7 +4,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import path from "path";
 import fs from "fs";
-import { registerRoutes } from "./routes";
+import apiRoutes from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { performanceMonitor, memoryMonitor } from "./middleware/performance";
 import { preventSQLInjection, configureCORS } from "./middleware/security";
@@ -20,6 +20,8 @@ import { eq } from "drizzle-orm";
 import { authenticateUser, getUserById } from "./auth";
 
 const app = express();
+const PORT = Number(process.env.PORT) || 5000;
+const HOST = process.env.HOST || "0.0.0.0";
 
 // Initialize PostgreSQL session store
 const PgSession = connectPgSimple(session);
@@ -336,7 +338,12 @@ app.use((req, res, next) => {
     }
   }
 
-  const server = await registerRoutes(app);
+  // Mount API routes
+  app.use('/api', apiRoutes);
+  
+  const server = app.listen(PORT, HOST, () => {
+    log(`serving on http://${HOST}:${PORT}`);
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
