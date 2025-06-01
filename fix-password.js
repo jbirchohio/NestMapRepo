@@ -1,5 +1,5 @@
 // Quick script to hash password for JonasCo owner account
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
