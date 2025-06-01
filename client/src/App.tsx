@@ -57,6 +57,10 @@ function Router() {
         <Route path="/demo/optimizer" component={TripOptimizer} />
         <Route path="/demo/analytics" component={Analytics} />
         <Route path="/demo/team" component={TeamManagement} />
+        <Route path="/demo/bookings" component={Bookings} />
+        <Route path="/demo/enterprise" component={EnterpriseDashboard} />
+        <Route path="/demo/billing" component={BillingDashboard} />
+        <Route path="/demo/proposals" component={ProposalCenter} />
         <Route path="/profile" component={ProfileSettings} />
         <Route path="/help" component={HelpCenter} />
         <Route path="/calendar" component={CalendarSettings} />

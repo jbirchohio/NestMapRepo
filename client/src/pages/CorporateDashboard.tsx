@@ -257,6 +257,66 @@ export default function CorporateDashboard() {
             </Card>
           )}
           
+          {/* Booking Management for Admin */}
+          {userPermissions.includes('ACCESS_ANALYTICS') && (
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/bookings')}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <Plane className="h-8 w-8 text-blue-500" />
+                  <div>
+                    <h3 className="font-semibold">Booking Center</h3>
+                    <p className="text-sm text-muted-foreground">Manage flights & hotels</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Enterprise Settings */}
+          {userPermissions.includes('MANAGE_ORGANIZATION') && (
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/enterprise')}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <Settings className="h-8 w-8 text-gray-600" />
+                  <div>
+                    <h3 className="font-semibold">Enterprise Settings</h3>
+                    <p className="text-sm text-muted-foreground">Organization configuration</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Billing & Subscriptions */}
+          {userPermissions.includes('MANAGE_ORGANIZATION') && (
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/billing')}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <DollarSign className="h-8 w-8 text-green-600" />
+                  <div>
+                    <h3 className="font-semibold">Billing Center</h3>
+                    <p className="text-sm text-muted-foreground">Manage subscriptions & invoices</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* Proposal Center */}
+          {userPermissions.includes('ACCESS_ANALYTICS') && (
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation('/demo/proposals')}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <Building2 className="h-8 w-8 text-indigo-600" />
+                  <div>
+                    <h3 className="font-semibold">Proposal Center</h3>
+                    <p className="text-sm text-muted-foreground">Create client proposals</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           {canApproveTrips && (
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="p-6">
