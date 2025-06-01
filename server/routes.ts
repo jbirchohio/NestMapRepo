@@ -2232,8 +2232,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (savedActivities.length > 0) {
         try {
           console.log("Applying intelligent scheduling optimization...");
+          // Create activities in the format expected by the optimizer
+          const activitiesForOptimization = savedActivities.map(activity => ({
+            ...activity,
+            startTime: activity.time,
+            day: Math.floor((new Date(activity.date).getTime() - new Date(enhancedRequest.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
+          }));
+
           const optimizationResult = await optimizeScheduleIntelligently(
-            savedActivities, 
+            activitiesForOptimization, 
             enhancedRequest.preferences || {}, 
             { workSchedule: enhancedRequest.workSchedule }
           );
@@ -2247,7 +2254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (optimizedActivity.startTime && optimizedActivity.startTime !== savedActivity.time) {
                 await storage.updateActivity(savedActivity.id, {
                   time: optimizedActivity.startTime,
-                  notes: `${savedActivity.notes}\n\nSchedule optimized: ${optimizedActivity.startTime} (was ${savedActivity.time})`
+                  notes: `${savedActivity.notes || ''}\n\nSchedule optimized: ${optimizedActivity.startTime} (was ${savedActivity.time})`
                 });
                 console.log(`Optimized activity ${savedActivity.id} time: ${savedActivity.time} → ${optimizedActivity.startTime}`);
               }
@@ -2395,6 +2402,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`Saved ${savedActivities.length} activities for trip ${newTrip.id}`);
+
+      // Apply intelligent scheduling optimization to resolve conflicts
+      if (savedActivities.length > 0) {
+        try {
+          console.log("Applying intelligent scheduling optimization...");
+          const optimizationResult = await optimizeScheduleIntelligently(
+            savedActivities, 
+            tripInfo.preferences || {}, 
+            { workSchedule: tripInfo.workSchedule }
+          );
+
+          // Update activities with optimized times if improvements were found
+          if (optimizationResult.optimizedActivities && optimizationResult.optimizedActivities.length > 0) {
+            for (let i = 0; i < optimizationResult.optimizedActivities.length; i++) {
+              const optimizedActivity = optimizationResult.optimizedActivities[i];
+              const savedActivity = savedActivities[i];
+              
+              if (optimizedActivity.startTime && optimizedActivity.startTime !== savedActivity.time) {
+                await storage.updateActivity(savedActivity.id, {
+                  time: optimizedActivity.startTime,
+                  notes: `${savedActivity.notes}\n\nSchedule optimized: ${optimizedActivity.startTime} (was ${savedActivity.time})`
+                });
+                console.log(`Optimized activity ${savedActivity.id} time: ${savedActivity.time} → ${optimizedActivity.startTime}`);
+              }
+            }
+            
+            if (optimizationResult.conflicts && optimizationResult.conflicts.length > 0) {
+              console.log(`Resolved ${optimizationResult.conflicts.length} scheduling conflicts`);
+            }
+          }
+        } catch (optimizationError) {
+          console.log("Schedule optimization failed, keeping original times:", optimizationError);
+        }
+      }
 
       // Add budget breakdown if available
       if (generatedTrip.tripSummary?.totalCost) {
