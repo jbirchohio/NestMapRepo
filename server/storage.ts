@@ -484,10 +484,10 @@ export class DatabaseStorage implements IStorage {
     if (organizationId !== undefined) {
       // Secure multi-tenant query with organization isolation
       const tripList = await db.select().from(trips).where(
-        and(
+        organizationId ? and(
           eq(trips.user_id, userId),
           eq(trips.organization_id, organizationId)
-        )
+        ) : eq(trips.user_id, userId)
       );
       return tripList;
     } else {
@@ -794,8 +794,7 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-import { desc } from "drizzle-orm";
-import { organizations } from '@shared/schema';
+
 
 // Extend DatabaseStorage class
 export class ExtendedDatabaseStorage extends DatabaseStorage {

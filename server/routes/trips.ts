@@ -381,7 +381,7 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
     const updatedTrip = await storage.updateTrip(tripId, {
       sharingEnabled: sharing_enabled ?? trip.sharing_enabled,
       sharePermission: share_permission ?? trip.share_permission,
-      shareCode
+      shareCode: shareCode || undefined
     });
 
     if (!updatedTrip) {

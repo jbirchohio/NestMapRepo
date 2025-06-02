@@ -673,15 +673,15 @@ export type InsertCalendarIntegration = z.infer<typeof insertCalendarIntegration
 // Trip Comments Schema
 export const tripComments = pgTable("trip_comments", {
   id: serial("id").primaryKey(),
-  tripId: integer("trip_id").references(() => trips.id, { onDelete: "cascade" }).notNull(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
-  activityId: integer("activity_id").references(() => activities.id, { onDelete: "cascade" }),
+  trip_id: integer("trip_id").references(() => trips.id, { onDelete: "cascade" }).notNull(),
+  user_id: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
+  activity_id: integer("activity_id").references(() => activities.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
-  parentId: integer("parent_id").references(() => tripComments.id, { onDelete: "cascade" }),
+  parent_id: integer("parent_id").references((): any => tripComments.id, { onDelete: "cascade" }),
   resolved: boolean("resolved").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Real-time Activity Log Schema
@@ -700,9 +700,9 @@ export const activityLog = pgTable("activity_log", {
 
 export const insertTripCommentSchema = createInsertSchema(tripComments).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
-  organizationId: true,
+  created_at: true,
+  updated_at: true,
+  organization_id: true,
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLog).omit({
