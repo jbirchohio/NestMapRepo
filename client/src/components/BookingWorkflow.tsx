@@ -290,8 +290,14 @@ export default function BookingWorkflow() {
 
               const response = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
               
+              console.log('Flight search response status:', response.status);
+              console.log('Flight search response ok:', response.ok);
+              
               if (response.ok) {
                 const flightSearchData = await response.json();
+                console.log('Flight search data received:', flightSearchData);
+                console.log('Number of flights:', flightSearchData.flights?.length);
+                
                 setFlightResults(flightSearchData.flights || []);
                 setCurrentStep('flights');
                 
@@ -300,7 +306,9 @@ export default function BookingWorkflow() {
                   description: `Found ${flightSearchData.flights?.length || 0} flights for ${flightData.travelerName} from ${flightData.departureCity} to ${flightData.arrivalCity}`,
                 });
               } else {
-                throw new Error('Flight search failed');
+                const errorData = await response.text();
+                console.log('Flight search error response:', errorData);
+                throw new Error(`Flight search failed: ${response.status} - ${errorData}`);
               }
             } catch (error) {
               console.error('Error searching flights:', error);
