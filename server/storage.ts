@@ -584,16 +584,26 @@ export class DatabaseStorage implements IStorage {
 
   async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
     try {
-      console.log(`Fetching activities for trip ID: ${tripId}`);
-      // Try the query without orderBy first to see if that's the issue
+      console.log(`🔍 Fetching activities for trip ID: ${tripId}`);
       const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId));
-      console.log(`Found ${activityList.length} activities for trip ${tripId}`);
-      // Sort in memory as a fallback
-      return activityList.sort((a, b) => (a.order || 0) - (b.order || 0));
+      console.log(`✅ Query successful - Found ${activityList.length} activities for trip ${tripId}`);
+      
+      // Handle empty results gracefully
+      if (activityList.length === 0) {
+        console.log(`📝 No activities found for trip ${tripId} - returning empty array`);
+        return [];
+      }
+      
+      // Sort in memory
+      const sorted = activityList.sort((a, b) => (a.order || 0) - (b.order || 0));
+      console.log(`🔢 Sorted ${sorted.length} activities`);
+      return sorted;
     } catch (error) {
-      console.error("Database error fetching activities by trip ID:", tripId);
+      console.error(`❌ Database error fetching activities for trip ${tripId}:`);
       console.error("Error details:", error);
+      console.error("Error message:", error instanceof Error ? error.message : 'Unknown error');
       console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      console.log(`🔄 Returning empty array due to error`);
       return [];
     }
   }
