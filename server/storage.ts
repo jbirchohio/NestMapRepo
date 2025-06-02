@@ -587,7 +587,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`Fetching activities for trip ID: ${tripId}`);
       const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId)).orderBy(activities.order);
       console.log(`Found ${activityList.length} activities for trip ${tripId}`);
-      return activityList || [];
+      return activityList;
     } catch (error) {
       console.error("Error fetching activities by trip ID:", tripId, error);
       return [];
