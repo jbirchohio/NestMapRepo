@@ -175,6 +175,31 @@ export default function SequentialBooking() {
 
     setIsSearching(true);
 
+    // Convert city names to airport codes for Amadeus API
+    const convertCityToAirportCode = async (cityName: string): Promise<string> => {
+      try {
+        const response = await fetch('/api/locations/airport-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ cityName }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          return data.airportCode;
+        }
+      } catch (error) {
+        console.error('Error converting city to airport code:', error);
+      }
+      return cityName;
+    };
+
+    const originCode = await convertCityToAirportCode(currentTraveler.departureCity);
+    const destinationCode = await convertCityToAirportCode(bookingData.tripDestination);
+
+    console.log(`Converting "${currentTraveler.departureCity}" to "${originCode}" and "${bookingData.tripDestination}" to "${destinationCode}"`);
+
     // Search for flights using authentic Amadeus API
     try {
       const response = await fetch('/api/bookings/flights/search', {
@@ -183,8 +208,8 @@ export default function SequentialBooking() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          origin: currentTraveler.departureCity,
-          destination: bookingData.tripDestination,
+          origin: originCode,
+          destination: destinationCode,
           departureDate: bookingData.departureDate,
           returnDate: bookingData.returnDate,
           passengers: 1,
