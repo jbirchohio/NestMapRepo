@@ -16,7 +16,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
-  
+
   // Trip operations
   getTrip(id: number): Promise<Trip | undefined>;
   getTripsByUserId(userId: number, organizationId?: number | null): Promise<Trip[]>;
@@ -26,7 +26,7 @@ export interface IStorage {
   createTrip(trip: InsertTrip): Promise<Trip>;
   updateTrip(id: number, trip: Partial<InsertTrip>): Promise<Trip | undefined>;
   deleteTrip(id: number): Promise<boolean>;
-  
+
   // Activity operations
   getActivity(id: number): Promise<Activity | undefined>;
   getActivitiesByTripId(tripId: number): Promise<Activity[]>;
@@ -34,26 +34,26 @@ export interface IStorage {
   createActivity(activity: InsertActivity): Promise<Activity>;
   updateActivity(id: number, activity: Partial<InsertActivity>): Promise<Activity | undefined>;
   deleteActivity(id: number): Promise<boolean>;
-  
+
   // Todo operations
   getTodo(id: number): Promise<Todo | undefined>;
   getTodosByTripId(tripId: number): Promise<Todo[]>;
   createTodo(todo: InsertTodo): Promise<Todo>;
   updateTodo(id: number, todo: Partial<InsertTodo>): Promise<Todo | undefined>;
   deleteTodo(id: number): Promise<boolean>;
-  
+
   // Note operations
   getNote(id: number): Promise<Note | undefined>;
   getNotesByTripId(tripId: number): Promise<Note[]>;
   createNote(note: InsertNote): Promise<Note>;
   updateNote(id: number, note: Partial<InsertNote>): Promise<Note | undefined>;
   deleteNote(id: number): Promise<boolean>;
-  
+
   // Team invitation operations
   createInvitation(invitation: InsertInvitation): Promise<Invitation>;
   getInvitationByToken(token: string): Promise<Invitation | undefined>;
   acceptInvitation(token: string, userId: number): Promise<Invitation | undefined>;
-  
+
   // Organization operations
   getOrganization(id: number): Promise<any>;
   updateOrganization(id: number, data: any): Promise<any>;
@@ -71,7 +71,7 @@ export class MemStorage implements IStorage {
   private todos: Map<number, Todo>;
   private notes: Map<number, Note>;
   private invitations: Map<number, Invitation>;
-  
+
   private userIdCounter: number;
   private tripIdCounter: number;
   private activityIdCounter: number;
@@ -86,14 +86,14 @@ export class MemStorage implements IStorage {
     this.todos = new Map();
     this.notes = new Map();
     this.invitations = new Map();
-    
+
     this.userIdCounter = 1;
     this.tripIdCounter = 1;
     this.activityIdCounter = 1;
     this.todoIdCounter = 1;
     this.noteIdCounter = 1;
     this.invitationIdCounter = 1;
-    
+
     // Add sample user for testing
     this.createUser({
       auth_id: "test-auth-id",
@@ -128,7 +128,7 @@ export class MemStorage implements IStorage {
   async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
-    
+
     const updatedUser = { ...user, ...userData };
     this.users.set(id, updatedUser);
     return updatedUser;
@@ -216,7 +216,7 @@ export class MemStorage implements IStorage {
   async updateTrip(id: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
     const trip = this.trips.get(id);
     if (!trip) return undefined;
-    
+
     const updatedTrip = { ...trip, ...tripData };
     this.trips.set(id, updatedTrip);
     return updatedTrip;
@@ -262,7 +262,7 @@ export class MemStorage implements IStorage {
   async updateActivity(id: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
     const activity = this.activities.get(id);
     if (!activity) return undefined;
-    
+
     const updatedActivity = { ...activity, ...activityData };
     this.activities.set(id, updatedActivity);
     return updatedActivity;
@@ -299,7 +299,7 @@ export class MemStorage implements IStorage {
   async updateTodo(id: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined> {
     const todo = this.todos.get(id);
     if (!todo) return undefined;
-    
+
     const updatedTodo = { ...todo, ...todoData };
     this.todos.set(id, updatedTodo);
     return updatedTodo;
@@ -334,7 +334,7 @@ export class MemStorage implements IStorage {
   async updateNote(id: number, noteData: Partial<InsertNote>): Promise<Note | undefined> {
     const note = this.notes.get(id);
     if (!note) return undefined;
-    
+
     const updatedNote = { ...note, ...noteData };
     this.notes.set(id, updatedNote);
     return updatedNote;
@@ -431,7 +431,8 @@ export class MemStorage implements IStorage {
 }
 
 // Database storage implementation
-import { db } from "./db-connection";
+import { db } from './db';
+import { trips, activities, todos, notes, users, organizations, type Trip, type Activity, type Todo, type Note, type User } from '@shared/schema';
 import { eq, and } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
@@ -457,7 +458,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
-  
+
   // Trip operations
   async getTrip(id: number): Promise<Trip | undefined> {
     const [trip] = await db.select().from(trips).where(eq(trips.id, id));
@@ -532,7 +533,7 @@ export class DatabaseStorage implements IStorage {
       .returning({ id: trips.id });
     return result.length > 0;
   }
-  
+
   // Activity operations
   async getActivity(id: number): Promise<Activity | undefined> {
     const [activity] = await db
@@ -580,10 +581,10 @@ export class DatabaseStorage implements IStorage {
       .from(activities)
       .where(eq(activities.tripId, tripId))
       .orderBy(activities.order);
-    
+
     // Debug log to see what's being retrieved from the database
     console.log("Activities with travel modes:", activityList.map(a => ({id: a.id, title: a.title, travelMode: a.travelMode})));
-    
+
     return activityList;
   }
 
@@ -594,7 +595,7 @@ export class DatabaseStorage implements IStorage {
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     try {
       console.log("Creating activity with data:", insertActivity);
-      
+
       // Get the organization ID from the parent trip if not provided
       let organizationId = insertActivity.organizationId;
       if (!organizationId) {
@@ -602,7 +603,7 @@ export class DatabaseStorage implements IStorage {
         organizationId = trip?.organizationId || undefined;
         console.log("Derived organization ID from trip:", organizationId);
       }
-      
+
       // Ensure required fields are present and properly formatted
       const activityData = {
         tripId: insertActivity.tripId,
@@ -620,14 +621,14 @@ export class DatabaseStorage implements IStorage {
         travelMode: insertActivity.travelMode || "walking",
         completed: insertActivity.completed || false,
       };
-      
+
       console.log("Formatted activity data with organization ID:", activityData);
-      
+
       const [activity] = await db
         .insert(activities)
         .values(activityData)
         .returning();
-      
+
       console.log("Successfully created activity:", activity);
       return activity;
     } catch (error) {
@@ -641,24 +642,24 @@ export class DatabaseStorage implements IStorage {
       // Special handling for completion toggle
       if (Object.keys(activityData).length === 1 && 'completed' in activityData) {
         console.log(`Direct DB update for activity completion: ${id}, value: ${activityData.completed}`);
-        
+
         // Direct SQL query to update just the completion field
         const [updatedActivity] = await db
           .update(activities)
           .set({ completed: activityData.completed === true })
           .where(eq(activities.id, id))
           .returning();
-        
+
         return updatedActivity;
       }
-      
+
       // Normal update for other cases
       const [updatedActivity] = await db
         .update(activities)
         .set(activityData)
         .where(eq(activities.id, id))
         .returning();
-        
+
       return updatedActivity || undefined;
     } catch (error) {
       console.error("Error in updateActivity:", error);
@@ -673,7 +674,7 @@ export class DatabaseStorage implements IStorage {
       .returning({ id: activities.id });
     return result.length > 0;
   }
-  
+
   // Todo operations
   async getTodo(id: number): Promise<Todo | undefined> {
     const [todo] = await db.select().from(todos).where(eq(todos.id, id));
@@ -727,7 +728,7 @@ export class DatabaseStorage implements IStorage {
       .returning({ id: todos.id });
     return result.length > 0;
   }
-  
+
   // Note operations
   async getNote(id: number): Promise<Note | undefined> {
     const [note] = await db.select().from(notes).where(eq(notes.id, id));
@@ -883,3 +884,95 @@ export class DatabaseStorage implements IStorage {
 
 // Create and export storage instance
 export const storage = new DatabaseStorage();
+import { desc } from "drizzle-orm";
+import { organizations } from '@shared/schema';
+
+// Extend DatabaseStorage class
+export class ExtendedDatabaseStorage extends DatabaseStorage {
+  // Method to get trips by organization ID
+  async getTripsByOrganizationId(organizationId: number): Promise<Trip[]> {
+    try {
+      console.log('Fetching trips for organization:', organizationId);
+      const results = await this.db
+        .select()
+        .from(trips)
+        .where(eq(trips.organization_id, organizationId))
+        .orderBy(desc(trips.createdAt));
+
+      console.log(`Found ${results.length} trips for organization ${organizationId}`);
+      return results;
+    } catch (error) {
+      console.error('Error fetching trips by organization ID:', error);
+      throw new Error('Failed to fetch organization trips');
+    }
+  }
+
+  private db = db;
+
+  private async initializeTestData() {
+    console.log("🎯 Initializing test data...");
+
+    // First create an organization if it doesn't exist
+    try {
+      await this.db.insert(organizations).values({
+        id: 1,
+        name: "JonasCo",
+        domain: "jonasco.com",
+        created_at: new Date(),
+        updated_at: new Date()
+      }).onConflictDoNothing();
+      console.log('Organization JonasCo created/verified');
+    } catch (error) {
+      console.log('Organization already exists or error creating:', error);
+    }
+
+    this.createUser({
+      auth_id: "test-auth-id",
+      username: "testuser",
+      email: "demo@nestmap.com",
+      organization_id: 1
+    });
+
+    // Add sample corporate user
+    const userPromise = this.createUser({
+      auth_id: "20e22e11-048f-4f69-b8e8-42d0c8c8c88e",
+      username: "jbirchohio",
+      email: "jbirchohio@gmail.com",
+      display_name: "Jonas Birch",
+      organization_id: 1,
+      role: "admin"
+    }).then(user => {
+      console.log('Created/updated user with organization:', user);
+      return user;
+    }).then(user => {
+      // Example of creating trips associated with the user and organization
+      this.createTrip({
+        userId: user.id,
+        name: "Corporate Trip 1",
+        description: "First corporate trip",
+        city: "New York",
+        country: "USA",
+        organizationId: user.organization_id || 1,
+        clientName: "Acme Corp",
+        projectType: "Consulting",
+        budget: 10000
+      });
+
+      this.createTrip({
+        userId: user.id,
+        name: "Corporate Trip 2",
+        description: "Second corporate trip",
+        city: "London",
+        country: "UK",
+        organizationId: user.organization_id || 1,
+        clientName: "Beta Ltd",
+        projectType: "Software Development",
+        budget: 15000
+      });
+      return user;
+    });
+  }
+}
+
+// Create and export storage instance
+export const storage = new ExtendedDatabaseStorage();
