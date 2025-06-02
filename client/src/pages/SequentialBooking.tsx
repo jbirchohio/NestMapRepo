@@ -806,13 +806,13 @@ export default function SequentialBooking() {
                           <div className="flex-1">
                             <div className="flex items-center gap-4 mb-2">
                               <div className="text-lg font-semibold">{hotel.name}</div>
-                              <Badge variant="outline">{hotel.rating} ⭐</Badge>
+                              <Badge variant="outline">{hotel.starRating} ⭐</Badge>
                             </div>
                             
                             <div className="flex items-center gap-6 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-4 w-4" />
-                                {hotel.location}
+                                {hotel.address}
                               </div>
                               <div>Rooms: {bookingData.roomsNeeded}</div>
                             </div>
@@ -820,7 +820,7 @@ export default function SequentialBooking() {
                           
                           <div className="text-right">
                             <div className="text-2xl font-bold text-primary">
-                              ${hotel.price}
+                              ${hotel.price.amount}
                             </div>
                             <div className="text-sm text-muted-foreground">per night</div>
                           </div>
