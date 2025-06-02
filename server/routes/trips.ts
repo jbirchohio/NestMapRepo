@@ -45,8 +45,8 @@ router.get('/corporate', async (req: Request, res: Response) => {
       return res.status(400).json({ message: "User and organization context required" });
     }
 
-    // Use secure storage method that automatically enforces organization isolation
-    const trips = await storage.getTripsByUserId(userId, orgId);
+    // Get all trips for the organization, not just the current user
+    const trips = await storage.getTripsByOrganizationId(orgId);
     
     // Add user details safely through storage layer
     const tripsWithUserDetails = await Promise.all(
@@ -60,6 +60,7 @@ router.get('/corporate', async (req: Request, res: Response) => {
       })
     );
 
+    console.log(`Found ${trips.length} trips for organization ${orgId}`);
     res.json(tripsWithUserDetails);
   } catch (error) {
     console.error('Error fetching corporate trips:', error);

@@ -20,6 +20,7 @@ export interface IStorage {
   // Trip operations
   getTrip(id: number): Promise<Trip | undefined>;
   getTripsByUserId(userId: number, organizationId?: number | null): Promise<Trip[]>;
+  getTripsByOrganizationId(organizationId: number): Promise<Trip[]>;
   getUserTrips(userId: number, organizationId?: number | null): Promise<Trip[]>;
   getTripByShareCode(shareCode: string): Promise<Trip | undefined>;
   createTrip(trip: InsertTrip): Promise<Trip>;
@@ -161,6 +162,12 @@ export class MemStorage implements IStorage {
   async getTripsByUserId(userId: number): Promise<Trip[]> {
     return Array.from(this.trips.values()).filter(
       (trip) => trip.userId === userId
+    );
+  }
+
+  async getTripsByOrganizationId(organizationId: number): Promise<Trip[]> {
+    return Array.from(this.trips.values()).filter(
+      (trip) => trip.organizationId === organizationId
     );
   }
 
@@ -473,6 +480,11 @@ export class DatabaseStorage implements IStorage {
       const tripList = await db.select().from(trips).where(eq(trips.userId, userId));
       return tripList;
     }
+  }
+
+  async getTripsByOrganizationId(organizationId: number): Promise<Trip[]> {
+    const tripList = await db.select().from(trips).where(eq(trips.organizationId, organizationId));
+    return tripList;
   }
 
   async getUserTrips(userId: number): Promise<Trip[]> {
