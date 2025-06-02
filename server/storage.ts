@@ -209,7 +209,7 @@ export class MemStorage implements IStorage {
       hotel_longitude: insertTrip.hotel_longitude || null,
       completed: insertTrip.completed || false,
       completed_at: insertTrip.completed_at || null,
-      trip_type: insertTrip.trip_type || "personal",
+      trip_type: insertTrip.trip_type || "personal", 
       client_name: insertTrip.client_name || null,
       project_type: insertTrip.project_type || null,
       budget: insertTrip.budget || null,
