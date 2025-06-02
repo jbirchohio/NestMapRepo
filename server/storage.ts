@@ -583,8 +583,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
-    const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId)).orderBy(activities.order);
-    return activityList;
+    try {
+      const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId)).orderBy(activities.order);
+      return activityList || [];
+    } catch (error) {
+      console.error("Error fetching activities by trip ID:", error);
+      return [];
+    }
   }
 
   async getActivities(tripId: number): Promise<Activity[]> {
