@@ -116,7 +116,7 @@ class PerformanceOptimizer {
   private generateCacheKey(req: Request): string {
     const url = req.url || '';
     const userId = (req as any).user?.id || 'anonymous';
-    const orgId = (req as any).organizationId || 'no-org';
+    const orgId = (req as any).organization_id || 'no-org';
     
     return `${req.method}:${url}:${userId}:${orgId}`;
   }

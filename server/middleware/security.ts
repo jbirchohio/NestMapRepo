@@ -61,13 +61,13 @@ export function enforceOrganizationSecurity(req: Request, res: Response, next: N
  */
 export const securitySchemas = {
   tripAccess: z.object({
-    tripId: z.number().positive(),
-    userId: z.number().positive(),
+    trip_id: z.number().positive(),
+    user_id: z.number().positive(),
     organizationId: z.number().positive().optional()
   }),
 
   userPermissions: z.object({
-    userId: z.number().positive(),
+    user_id: z.number().positive(),
     action: z.enum(['read', 'write', 'delete', 'admin']),
     resource: z.string().min(1)
   }),
@@ -86,7 +86,7 @@ export function auditLogger(action: string, resource: string) {
     const auditData = {
       action,
       resource,
-      userId: req.user?.id,
+      user_id: req.user?.id,
       organizationId: req.user?.organizationId,
       ip: req.ip,
       userAgent: req.get('user-agent'),

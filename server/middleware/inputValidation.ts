@@ -99,7 +99,7 @@ export const tripValidationSchema = z.object({
     .refine(val => PATTERNS.NO_SCRIPT_TAGS.test(val), 'Invalid characters in city'),
   startDate: z.string().datetime('Invalid start date'),
   endDate: z.string().datetime('Invalid end date'),
-  userId: z.union([z.number(), z.string()]).optional(),
+  user_id: z.union([z.number(), z.string()]).optional(),
   location: z.string().optional(),
   collaborators: z.array(z.any()).optional(),
   cityLatitude: z.string().optional(),
@@ -117,7 +117,7 @@ export const tripValidationSchema = z.object({
 });
 
 export const activityValidationSchema = z.object({
-  tripId: z.union([z.string(), z.number()]).transform(val =>
+  trip_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
   title: z.string()

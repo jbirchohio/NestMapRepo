@@ -143,7 +143,7 @@ export function validateOrganizationAccess(req: Request, res: Response, next: Ne
   }
   
   // Regular admins can only access their own organization
-  if (req.user?.role === 'admin' && req.user.organizationId === orgId) {
+  if (req.user?.role === 'admin' && req.user.organization_id === orgId) {
     return next();
   }
   

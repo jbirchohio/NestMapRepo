@@ -13,7 +13,7 @@ if (process.env.STRIPE_SECRET_KEY) {
 }
 
 interface CreateOrganizationSubscriptionParams {
-  organizationId: number;
+  organization_id: number;
   plan: 'team' | 'enterprise';
   customerEmail: string;
   customerName: string;
@@ -42,7 +42,7 @@ export async function createOrganizationSubscription(params: CreateOrganizationS
       email: params.customerEmail,
       name: params.customerName,
       metadata: {
-        organizationId: params.organizationId.toString(),
+        organization_id: params.organization_id.toString(),
         plan: params.plan
       }
     });
@@ -68,7 +68,7 @@ export async function createOrganizationSubscription(params: CreateOrganizationS
 
     const paymentIntent = subscription.latest_invoice?.payment_intent as Stripe.PaymentIntent;
 
-    console.log(`✓ Created ${params.plan} subscription for organization ${params.organizationId}`);
+    console.log(`✓ Created ${params.plan} subscription for organization ${params.organization_id}`);
     
     return {
       clientSecret: paymentIntent.client_secret!,

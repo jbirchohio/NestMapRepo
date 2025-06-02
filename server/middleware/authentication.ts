@@ -5,7 +5,7 @@ import crypto from 'crypto';
  * Enhanced authentication middleware with MFA support
  */
 export interface AuthSession {
-  userId: number;
+  user_id: number;
   organizationId: number | null;
   role: string;
   mfaVerified: boolean;
@@ -22,11 +22,11 @@ class SessionStore {
   private sessions = new Map<string, AuthSession>();
   private userSessions = new Map<number, Set<string>>();
 
-  createSession(userId: number, organizationId: number | null, role: string, req: Request): string {
+  createSession(user_id: number, organizationId: number | null, role: string, req: Request): string {
     const sessionId = crypto.randomUUID();
     
     const session: AuthSession = {
-      userId,
+      user_id,
       organizationId,
       role,
       mfaVerified: false,
@@ -39,10 +39,10 @@ class SessionStore {
     this.sessions.set(sessionId, session);
     
     // Track user sessions for multi-device management
-    if (!this.userSessions.has(userId)) {
-      this.userSessions.set(userId, new Set());
+    if (!this.userSessions.has(user_id)) {
+      this.userSessions.set(user_id, new Set());
     }
-    this.userSessions.get(userId)!.add(sessionId);
+    this.userSessions.get(user_id)!.add(sessionId);
 
     return sessionId;
   }
@@ -64,19 +64,19 @@ class SessionStore {
 
     this.sessions.delete(sessionId);
     
-    const userSessions = this.userSessions.get(session.userId);
+    const userSessions = this.userSessions.get(session.user_id);
     if (userSessions) {
       userSessions.delete(sessionId);
       if (userSessions.size === 0) {
-        this.userSessions.delete(session.userId);
+        this.userSessions.delete(session.user_id);
       }
     }
 
     return true;
   }
 
-  invalidateUserSessions(userId: number): number {
-    const userSessions = this.userSessions.get(userId);
+  invalidateUserSessions(user_id: number): number {
+    const userSessions = this.userSessions.get(user_id);
     if (!userSessions) return 0;
 
     let count = 0;
@@ -86,7 +86,7 @@ class SessionStore {
       }
     }
     
-    this.userSessions.delete(userId);
+    this.userSessions.delete(user_id);
     return count;
   }
 
@@ -109,8 +109,8 @@ class SessionStore {
     return this.sessions.size;
   }
 
-  getUserSessionsCount(userId: number): number {
-    return this.userSessions.get(userId)?.size || 0;
+  getUserSessionsCount(user_id: number): number {
+    return this.userSessions.get(user_id)?.size || 0;
   }
 }
 
@@ -145,7 +145,7 @@ export function validateSession(req: Request, res: Response, next: NextFunction)
       sessionId,
       originalIp: session.ipAddress,
       currentIp: req.ip,
-      userId: session.userId
+      user_id: session.user_id
     });
     
     sessionStore.invalidateSession(sessionId);
@@ -158,7 +158,7 @@ export function validateSession(req: Request, res: Response, next: NextFunction)
   // Attach session info to request
   req.authSession = session;
   req.user = {
-    id: session.userId,
+    id: session.user_id,
     organization_id: session.organizationId,
     role: session.role
   };

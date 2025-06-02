@@ -49,7 +49,7 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
     // For white-label domains, ensure user's organization matches the domain's organization
     if (req.user.organizationId !== req.domainOrganizationId) {
       console.warn('SECURITY_VIOLATION: Cross-organization access attempt via white-label domain', {
-        userId: req.user.id,
+        user_id: req.user.id,
         userOrgId: req.user.organizationId,
         domainOrgId: req.domainOrganizationId,
         domain: req.headers.host,
@@ -78,7 +78,7 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
 
   // Log successful organization context injection for audit trail
   console.log('Organization context injected:', {
-    userId: req.user.id,
+    user_id: req.user.id,
     organizationId: req.organizationId,
     isWhiteLabel: req.isWhiteLabelDomain || false,
     domain: req.headers.host,
@@ -97,7 +97,7 @@ export function validateOrganizationAccess(req: Request, res: Response, next: Ne
   
   if (requestedOrgId && requestedOrgId !== req.user?.organizationId) {
     console.warn('SECURITY_VIOLATION: Cross-organization access attempt', {
-      userId: req.user?.id,
+      user_id: req.user?.id,
       userOrgId: req.user?.organizationId,
       requestedOrgId,
       endpoint: req.path,
@@ -189,7 +189,7 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
 
   if (!hasAnalyticsAccess) {
     console.warn('ANALYTICS_ACCESS_DENIED:', {
-      userId: req.user.id,
+      user_id: req.user.id,
       organizationId: req.user.organizationId,
       role: req.user.role,
       endpoint: req.path,
