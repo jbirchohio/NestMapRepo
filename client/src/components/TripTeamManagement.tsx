@@ -72,6 +72,12 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     enabled: !!tripId
   });
 
+  // Fetch trip details to get destination information
+  const { data: tripData } = useQuery({
+    queryKey: [`/api/trips/${tripId}`],
+    enabled: !!tripId
+  });
+
   const addTravelerMutation = useMutation({
     mutationFn: (data: any) =>
       apiRequest("POST", `/api/trips/${tripId}/travelers`, data),
@@ -529,7 +535,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Departure: {getDepartureInfo(traveler)} → Trip destination
+                    Departure: {getDepartureInfo(traveler)} → {tripData ? `${tripData.city}, ${tripData.country}` : 'Trip destination'}
                   </p>
                 </div>
 
