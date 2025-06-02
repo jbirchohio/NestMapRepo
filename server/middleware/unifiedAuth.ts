@@ -17,6 +17,7 @@ declare global {
         [key: string]: any;
       };
       organizationId?: number | null;
+      organization_id?: number | null;
       organizationContext?: {
         id: number | null;
         canAccessOrganization: (orgId: number | null) => boolean;
@@ -122,17 +123,17 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       req.user = {
         id: user.id,
         email: user.email,
-        organization_id: user.organization_id ?? undefined,
+        organization_id: user.organizationId ?? undefined,
         role: user.role ?? undefined,
-        displayName: user.display_name ?? undefined
+        displayName: user.displayName ?? undefined
       };
 
-      // Set organization context for tenant isolation
-      req.organization_id = user.organization_id ?? undefined;
+      // Set organization context for tenant isolation  
+      (req as any).organization_id = user.organizationId ?? undefined;
 
       // Create organization context utilities
       req.organizationContext = {
-        id: user.organization_id,
+        id: user.organizationId,
 
         canAccessOrganization: (targetOrgId: number | null): boolean => {
           // Super admins can access any organization
@@ -141,7 +142,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
           }
 
           // Regular users can only access their own organization
-          return user.organization_id === targetOrgId;
+          return user.organizationId === targetOrgId;
         },
 
         enforceOrganizationAccess: (targetOrgId: number | null): void => {
@@ -175,7 +176,7 @@ export function withOrganizationScope<T extends Record<string, any>>(
   // Add organization filter for all other users
   return {
     ...baseWhere,
-    organization_id: req.organization_id
+    organization_id: (req as any).organization_id
   };
 }
 

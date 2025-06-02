@@ -40,11 +40,17 @@ router.get("/", async (req: Request, res: Response) => {
 // Add organization-scoped trips endpoint for corporate features
 router.get('/corporate', async (req: Request, res: Response) => {
   try {
+    console.log('Corporate endpoint - req.user:', req.user);
     const userId = req.user?.id;
     const orgId = req.user?.organization_id;
     
+    console.log('Corporate endpoint - userId:', userId, 'orgId:', orgId);
+    
     if (!userId || !orgId) {
-      return res.status(400).json({ message: "User and organization context required" });
+      return res.status(400).json({ 
+        message: "User and organization context required",
+        debug: { userId, orgId, hasUser: !!req.user }
+      });
     }
 
     // Get all trips for the organization, not just the current user
