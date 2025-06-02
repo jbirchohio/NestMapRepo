@@ -563,23 +563,23 @@ export class DatabaseStorage implements IStorage {
     const activityList = await db
       .select({
         id: activities.id,
-        tripId: activities.tripId,
+        tripId: activities.trip_id,
         title: activities.title,
-        organizationId: activities.organizationId,
+        organizationId: activities.organization_id,
         date: activities.date,
         time: activities.time,
-        locationName: activities.locationName,
+        locationName: activities.location_name,
         latitude: activities.latitude,
         longitude: activities.longitude,
         notes: activities.notes,
         tag: activities.tag,
-        assignedTo: activities.assignedTo,
+        assignedTo: activities.assigned_to,
         order: activities.order,
-        travelMode: activities.travelMode,
+        travelMode: activities.travel_mode,
         completed: activities.completed,
       })
       .from(activities)
-      .where(eq(activities.tripId, tripId))
+      .where(eq(activities.trip_id, tripId))
       .orderBy(activities.order);
 
     // Debug log to see what's being retrieved from the database
