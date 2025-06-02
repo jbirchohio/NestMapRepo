@@ -140,19 +140,26 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
   const canManageTeam = userRole === 'admin' || userRole === 'editor';
 
   const handleIndividualFlightBooking = (traveler: TripTraveler) => {
-    // Navigate to individual flight booking with pre-filled departure city
-    // This would integrate with the main booking workflow
+    // Create booking URL with pre-filled data for individual traveler
+    const bookingParams = new URLSearchParams({
+      origin: `${traveler.departure_city}, ${traveler.departure_country}`,
+      travelerName: traveler.name,
+      travelerEmail: traveler.email || '',
+      travelClass: traveler.travel_class,
+      budget: (traveler.budget_allocation ? traveler.budget_allocation / 100 : 0).toString(),
+      dietaryRequirements: traveler.dietary_requirements || '',
+      tripId: tripId.toString(),
+      travelerId: traveler.id.toString()
+    });
+    
+    // Open booking workflow in new tab with pre-filled data
+    const bookingUrl = `/bookings?${bookingParams.toString()}`;
+    window.open(bookingUrl, '_blank');
+    
     toast({
       title: "Individual flight booking",
       description: `Opening flight search from ${traveler.departure_city} for ${traveler.name}`,
     });
-    
-    // In a real implementation, this would:
-    // 1. Open the booking workflow in a modal/new tab
-    // 2. Pre-fill origin as traveler.departure_city
-    // 3. Pre-fill destination as trip destination
-    // 4. Set traveler preferences (class, dietary, etc.)
-    // 5. Allow individual booking coordination
   };
 
   return (

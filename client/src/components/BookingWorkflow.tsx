@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -93,6 +93,51 @@ export default function BookingWorkflow() {
   const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightResult | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<HotelResult | null>(null);
   const [additionalTravelers, setAdditionalTravelers] = useState<Array<{firstName: string; lastName: string; dateOfBirth: string}>>([]);
+  
+  // Check for pre-filled data from URL parameters (team member booking)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const origin = urlParams.get('origin');
+    const travelerName = urlParams.get('travelerName');
+    const travelerEmail = urlParams.get('travelerEmail');
+    const tripId = urlParams.get('tripId');
+    
+    if (origin && travelerName && tripId) {
+      // Pre-fill form with team member data
+      const [firstName, ...lastNameParts] = travelerName.split(' ');
+      const lastName = lastNameParts.join(' ');
+      
+      clientForm.reset({
+        origin: origin,
+        destination: '',
+        departureDate: '',
+        returnDate: '',
+        tripType: 'round-trip',
+        passengers: 1,
+        primaryTraveler: {
+          firstName: firstName || '',
+          lastName: lastName || '',
+          email: travelerEmail || user?.email || '',
+          phone: '',
+          dateOfBirth: '',
+        },
+        emergencyContact: {
+          name: '',
+          phone: '',
+          relationship: '',
+        },
+        specialRequests: urlParams.get('dietaryRequirements') || '',
+        tripPurpose: 'business',
+        companyName: '',
+        costCenter: '',
+      });
+
+      toast({
+        title: "Individual booking mode",
+        description: `Booking flight for ${travelerName} from ${origin}`,
+      });
+    }
+  }, [user?.email, toast]);
   
   const clientForm = useForm<ClientInfoValues>({
     resolver: zodResolver(clientInfoSchema),
