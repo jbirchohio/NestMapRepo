@@ -674,60 +674,89 @@ export async function searchHotels(params: {
     
     console.log('Found city code:', cityCode, 'for destination:', cleanDestination);
 
-    // Search for hotels in the city
-    const searchParams = new URLSearchParams({
+    // Step 1: Get hotels in the city
+    const hotelSearchParams = new URLSearchParams({
       cityCode: cityCode,
       radius: '5',
       radiusUnit: 'KM',
       hotelSource: 'ALL'
     });
 
-    const hotelSearchUrl = `https://api.amadeus.com/v1/reference-data/locations/hotels/by-city?${searchParams}`;
-    console.log('Hotel search URL:', hotelSearchUrl);
+    const hotelListResponse = await fetch(
+      `https://api.amadeus.com/v1/reference-data/locations/hotels/by-city?${hotelSearchParams}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-    const hotelResponse = await fetch(hotelSearchUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!hotelResponse.ok) {
-      console.error('Amadeus hotel search error:', hotelResponse.statusText);
+    if (!hotelListResponse.ok) {
+      console.error('Amadeus hotel list error:', hotelListResponse.statusText);
       return generateVariedHotelData(params);
     }
 
-    const hotelData = await hotelResponse.json();
+    const hotelListData = await hotelListResponse.json();
+    const hotels = hotelListData.data?.slice(0, 5) || []; // Get first 5 hotels
+
+    // Step 2: Get offers for each hotel
+    const hotelResults = [];
     
-    // Transform Amadeus hotel response to our format
-    return hotelData.data?.map((hotel: any, index: number) => {
-      const offer = hotel.offers?.[0];
-      const price = offer?.price;
-      
-      return {
-        id: `amadeus-hotel-${hotel.hotel?.hotelId}`,
-        name: hotel.hotel?.name || `Hotel in ${params.destination}`,
-        starRating: hotel.hotel?.rating ? Math.floor(parseFloat(hotel.hotel.rating)) : 4,
-        rating: {
-          score: hotel.hotel?.rating ? parseFloat(hotel.hotel.rating) : 4.0,
-          reviews: Math.floor(Math.random() * 500) + 100
-        },
-        price: {
-          amount: price?.total ? parseFloat(price.total) : 150,
-          per: 'night'
-        },
-        currency: price?.currency || 'USD',
-        address: hotel.hotel?.address?.lines?.join(', ') || params.destination,
-        amenities: hotel.hotel?.amenities?.slice(0, 4) || ['WiFi', 'Reception', 'Parking'],
-        description: hotel.hotel?.description?.text || `Comfortable accommodation in ${params.destination}`,
-        images: hotel.hotel?.media?.map((m: any) => m.uri).slice(0, 3) || [],
-        distance: hotel.hotel?.geoCode ? '0.5 km from city center' : null,
-        checkInTime: offer?.checkInDate || params.checkIn,
-        checkOutTime: offer?.checkOutDate || params.checkOut,
-        roomType: offer?.room?.type || 'Standard Room',
-        cancellation: offer?.policies?.cancellation?.type || 'Non-refundable'
-      };
-    }).slice(0, 10) || generateVariedHotelData(params);
+    for (const hotel of hotels) {
+      try {
+        const offerParams = new URLSearchParams({
+          hotelIds: hotel.hotelId,
+          checkInDate: params.checkIn,
+          checkOutDate: params.checkOut,
+          adults: (params.guests || 1).toString(),
+          roomQuantity: (params.rooms || 1).toString(),
+        });
+
+        const offerResponse = await fetch(
+          `https://api.amadeus.com/v3/shopping/hotel-offers?${offerParams}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (offerResponse.ok) {
+          const offerData = await offerResponse.json();
+          const offer = offerData.data?.[0]?.offers?.[0];
+          
+          hotelResults.push({
+            id: `amadeus-hotel-${hotel.hotelId}`,
+            name: hotel.name || `Hotel in ${cleanDestination}`,
+            starRating: 4, // Default rating
+            rating: {
+              score: 4.0,
+              reviews: Math.floor(Math.random() * 500) + 100
+            },
+            price: {
+              amount: offer?.price?.total ? parseFloat(offer.price.total) : 150,
+              per: 'night'
+            },
+            currency: offer?.price?.currency || 'USD',
+            address: `${cleanDestination}, ${hotel.address?.countryCode || 'US'}`,
+            amenities: ['WiFi', 'Reception', 'Room Service', 'Parking'],
+            description: `Comfortable accommodation in ${cleanDestination}`,
+            images: [],
+            distance: hotel.distance ? `${hotel.distance.value} ${hotel.distance.unit.toLowerCase()} from city center` : null,
+            checkInTime: params.checkIn,
+            checkOutTime: params.checkOut,
+            roomType: offer?.room?.type || 'Standard Room',
+            cancellation: offer?.policies?.cancellation?.type || 'Non-refundable'
+          });
+        }
+      } catch (error) {
+        console.warn('Error getting offer for hotel:', hotel.hotelId, error);
+      }
+    }
+
+    return hotelResults.length > 0 ? hotelResults : generateVariedHotelData(params);
     
   } catch (error) {
     console.error('Hotel search error:', error);
