@@ -97,48 +97,63 @@ export default function BookingWorkflow() {
   // Check for pre-filled data from URL parameters (team member booking)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const origin = urlParams.get('origin');
-    const travelerName = urlParams.get('travelerName');
-    const travelerEmail = urlParams.get('travelerEmail');
-    const tripId = urlParams.get('tripId');
     const coordinatorMode = urlParams.get('coordinatorMode');
+    const teamData = urlParams.get('teamData');
+    const tripId = urlParams.get('tripId');
     
-    if (origin && travelerName && tripId) {
-      // Pre-fill form with team member data
-      const [firstName, ...lastNameParts] = travelerName.split(' ');
-      const lastName = lastNameParts.join(' ');
-      
-      clientForm.reset({
-        origin: origin,
-        destination: '',
-        departureDate: '',
-        returnDate: '',
-        tripType: 'round-trip',
-        passengers: 1,
-        primaryTraveler: {
-          firstName: firstName || '',
-          lastName: lastName || '',
-          email: travelerEmail || user?.email || '',
-          phone: '',
-          dateOfBirth: '',
-        },
-        emergencyContact: {
-          name: '',
-          phone: '',
-          relationship: '',
-        },
-        specialRequests: urlParams.get('dietaryRequirements') || '',
-        tripPurpose: 'business',
-        companyName: '',
-        costCenter: '',
-      });
+    if (coordinatorMode === 'group' && teamData && tripId) {
+      try {
+        const parsedTeamData = JSON.parse(teamData);
+        const travelers = parsedTeamData.travelers;
+        
+        if (travelers && travelers.length > 0) {
+          // Set up additional travelers from team data
+          setAdditionalTravelers(travelers.map((traveler: any) => ({
+            firstName: traveler.name.split(' ')[0] || '',
+            lastName: traveler.name.split(' ').slice(1).join(' ') || '',
+            dateOfBirth: '',
+            departureCity: traveler.departureCity,
+            departureCountry: traveler.departureCountry,
+            travelClass: traveler.travelClass,
+            dietaryRequirements: traveler.dietaryRequirements,
+            budget: traveler.budget
+          })));
+          
+          // Pre-fill primary traveler with first team member
+          const primaryTraveler = travelers[0];
+          clientForm.reset({
+            origin: `${primaryTraveler.departureCity}, ${primaryTraveler.departureCountry}`,
+            destination: '',
+            departureDate: '',
+            returnDate: '',
+            tripType: 'round-trip',
+            passengers: travelers.length,
+            primaryTraveler: {
+              firstName: primaryTraveler.name.split(' ')[0] || '',
+              lastName: primaryTraveler.name.split(' ').slice(1).join(' ') || '',
+              email: primaryTraveler.email || user?.email || '',
+              phone: '',
+              dateOfBirth: '',
+            },
+            emergencyContact: {
+              name: '',
+              phone: '',
+              relationship: '',
+            },
+            specialRequests: `Group booking for ${travelers.length} travelers with individual departure cities`,
+            tripPurpose: 'business',
+            companyName: '',
+            costCenter: '',
+          });
 
-      toast({
-        title: coordinatorMode ? "Coordinator booking mode" : "Individual booking mode",
-        description: coordinatorMode 
-          ? `Booking flight for team member ${travelerName} from ${origin}`
-          : `Booking flight for ${travelerName} from ${origin}`,
-      });
+          toast({
+            title: "Group coordinator booking",
+            description: `Setting up coordinated booking for ${travelers.length} team members from multiple cities`,
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing team data:', error);
+      }
     }
   }, [user?.email, toast]);
   

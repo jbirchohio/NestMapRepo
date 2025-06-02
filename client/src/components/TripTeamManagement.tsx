@@ -139,28 +139,39 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
 
   const canManageTeam = userRole === 'admin' || userRole === 'editor';
 
-  const handleCoordinatedFlightBooking = (traveler: TripTraveler) => {
-    // Switch to the Flight Bookings tab with pre-filled data for this specific traveler
-    // This keeps the coordinator in control of all bookings
-    const bookingParams = new URLSearchParams({
-      origin: `${traveler.departure_city}, ${traveler.departure_country}`,
-      travelerName: traveler.name,
-      travelerEmail: traveler.email || '',
-      travelClass: traveler.travel_class,
-      budget: (traveler.budget_allocation ? traveler.budget_allocation / 100 : 0).toString(),
-      dietaryRequirements: traveler.dietary_requirements || '',
+  const handleCoordinatedGroupBooking = () => {
+    // Create a comprehensive booking flow for all team members
+    const teamBookingData = {
       tripId: tripId.toString(),
-      travelerId: traveler.id.toString(),
-      coordinatorMode: 'true'
+      coordinatorMode: 'group',
+      travelers: travelers.map(traveler => ({
+        id: traveler.id,
+        name: traveler.name,
+        email: traveler.email || '',
+        departureCity: traveler.departure_city,
+        departureCountry: traveler.departure_country,
+        travelClass: traveler.travel_class,
+        budget: traveler.budget_allocation ? traveler.budget_allocation / 100 : 0,
+        dietaryRequirements: traveler.dietary_requirements || '',
+        notes: traveler.notes || ''
+      })),
+      roomsNeeded: travelers.length,
+      totalBudget: travelers.reduce((sum, t) => sum + (t.budget_allocation || 0), 0) / 100
+    };
+    
+    // Navigate to Flight Bookings tab with all team data
+    const bookingParams = new URLSearchParams({
+      coordinatorMode: 'group',
+      tripId: tripId.toString(),
+      teamData: JSON.stringify(teamBookingData)
     });
     
-    // Navigate to the Flight Bookings tab in the same window
     const bookingUrl = `/bookings?${bookingParams.toString()}`;
     window.location.href = bookingUrl;
     
     toast({
-      title: "Coordinated booking",
-      description: `Booking flight for ${traveler.name} from ${traveler.departure_city}`,
+      title: "Group booking initiated",
+      description: `Coordinating flights and hotels for ${travelers.length} team members`,
     });
   };
 
@@ -355,22 +366,16 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                   </div>
                 </div>
 
-                {/* Coordinated Flight Booking Section */}
+                {/* Flight Status */}
                 <div className="pt-3 border-t">
                   <div className="flex items-center justify-between mb-2">
-                    <h5 className="text-sm font-medium text-muted-foreground">Flight Coordination</h5>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs"
-                      onClick={() => handleCoordinatedFlightBooking(traveler)}
-                    >
-                      <Plane className="h-3 w-3 mr-1" />
-                      Book for {traveler.name}
-                    </Button>
+                    <h5 className="text-sm font-medium text-muted-foreground">Flight Status</h5>
+                    <Badge variant="outline" className="text-xs">
+                      {traveler.status === 'confirmed' ? 'Ready for booking' : traveler.status}
+                    </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Book coordinated flight from {getDepartureInfo(traveler)} as travel coordinator
+                    Departure: {getDepartureInfo(traveler)} → Trip destination
                   </p>
                 </div>
 
@@ -390,6 +395,48 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                 )}
               </div>
             ))}
+          </div>
+        )}
+        
+        {/* Coordinated Booking Section */}
+        {travelers.length > 0 && (
+          <div className="mt-6 pt-6 border-t">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="font-medium">Coordinated Booking</h4>
+                <p className="text-sm text-muted-foreground">
+                  Book flights and hotels for all {travelers.length} team member{travelers.length !== 1 ? 's' : ''} at once
+                </p>
+              </div>
+              <Button
+                onClick={handleCoordinatedGroupBooking}
+                disabled={travelers.length === 0}
+                className="flex items-center gap-2"
+              >
+                <Plane className="h-4 w-4" />
+                Book All Flights & Hotels
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <h5 className="font-medium mb-2">Departure Cities</h5>
+                <ul className="space-y-1">
+                  {travelers.map((traveler) => (
+                    <li key={traveler.id} className="flex items-center justify-between">
+                      <span>{traveler.name}</span>
+                      <span className="text-muted-foreground">{getDepartureInfo(traveler)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h5 className="font-medium mb-2">Accommodation</h5>
+                <p className="text-muted-foreground">
+                  {travelers.length} room{travelers.length !== 1 ? 's' : ''} needed at destination
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
