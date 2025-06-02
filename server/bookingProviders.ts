@@ -677,25 +677,20 @@ export async function searchHotels(params: {
     // Search for hotels in the city
     const searchParams = new URLSearchParams({
       cityCode: cityCode,
-      checkInDate: params.checkIn,
-      checkOutDate: params.checkOut,
-      adults: (params.guests || 1).toString(),
-      roomQuantity: (params.rooms || 1).toString(),
-      radius: '20',
+      radius: '5',
       radiusUnit: 'KM',
-      hotelSource: 'ALL',
-      ratings: '1,2,3,4,5',
+      hotelSource: 'ALL'
     });
 
-    const hotelResponse = await fetch(
-      `https://api.amadeus.com/v3/shopping/hotel-offers?${searchParams}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const hotelSearchUrl = `https://api.amadeus.com/v1/reference-data/locations/hotels/by-city?${searchParams}`;
+    console.log('Hotel search URL:', hotelSearchUrl);
+
+    const hotelResponse = await fetch(hotelSearchUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!hotelResponse.ok) {
       console.error('Amadeus hotel search error:', hotelResponse.statusText);
