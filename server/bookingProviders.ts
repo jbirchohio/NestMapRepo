@@ -640,9 +640,10 @@ export async function searchHotels(params: {
   try {
     const token = await getAmadeusToken();
     
-    // First, get city code for the destination
+    // First, get city code for the destination - clean the destination name
+    const cleanDestination = params.destination.split(',')[0].trim(); // Extract just the city name
     const cityResponse = await fetch(
-      `https://api.amadeus.com/v1/reference-data/locations/cities?keyword=${encodeURIComponent(params.destination)}&max=1`,
+      `https://api.amadeus.com/v1/reference-data/locations/cities?keyword=${encodeURIComponent(cleanDestination)}&max=1`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
