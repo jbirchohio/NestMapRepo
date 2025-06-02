@@ -185,24 +185,24 @@ export const trips = pgTable("trips", {
 // Create a custom schema that properly handles dates as strings from JSON
 export const insertTripSchema = z.object({
   title: z.string(),
-  start_date: z.string().or(z.date()).transform(val => 
+  startDate: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
   ),
-  end_date: z.string().or(z.date()).transform(val => 
+  endDate: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
   ),
-  user_id: z.union([z.string(), z.number()]).transform(val =>
+  userId: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organization_id: z.union([z.string(), z.number()]).transform(val =>
+  organizationId: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(), // Multi-tenant isolation
   collaborators: z.array(z.any()).default([]),
   // Sharing and collaboration settings
-  is_public: z.boolean().optional().default(false),
-  share_code: z.string().optional(),
-  sharing_enabled: z.boolean().optional().default(false),
-  share_permission: z.string().optional().default("read-only"),
+  isPublic: z.boolean().optional().default(false),
+  shareCode: z.string().optional(),
+  sharingEnabled: z.boolean().optional().default(false),
+  sharePermission: z.string().optional().default("read-only"),
   // Location fields are optional
   city: z.string().optional(),
   country: z.string().optional(),
@@ -241,8 +241,8 @@ export function transformTripToFrontend(trip: Trip) {
     userId: trip.user_id,
     organizationId: trip.organization_id,
     collaborators: trip.collaborators,
-    isPublic: trip.isPublic,
-    shareCode: trip.shareCode,
+    isPublic: trip.is_public,
+    shareCode: trip.share_code,
     sharingEnabled: trip.sharing_enabled,
     sharePermission: trip.share_permission,
     city: trip.city,
@@ -268,19 +268,19 @@ export function transformTripToFrontend(trip: Trip) {
 export function transformActivityToFrontend(activity: Activity) {
   return {
     id: activity.id,
-    tripId: activity.tripId,
-    organizationId: activity.organizationId,
+    tripId: activity.trip_id,
+    organizationId: activity.organization_id,
     title: activity.title,
     date: activity.date,
     time: activity.time,
-    locationName: activity.locationName,
+    locationName: activity.location_name,
     latitude: activity.latitude,
     longitude: activity.longitude,
     notes: activity.notes,
     tag: activity.tag,
-    assignedTo: activity.assignedTo,
+    assignedTo: activity.assigned_to,
     order: activity.order,
-    travelMode: activity.travelMode,
+    travelMode: activity.travel_mode,
     completed: activity.completed,
   };
 }
@@ -306,10 +306,10 @@ export const activities = pgTable("activities", {
 
 // Create a custom schema that properly handles dates as strings from JSON
 export const insertActivitySchema = z.object({
-  trip_id: z.union([z.string(), z.number()]).transform(val =>
+  tripId: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organization_id: z.union([z.string(), z.number()]).transform(val =>
+  organizationId: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(), // Multi-tenant isolation
   title: z.string(),
@@ -317,14 +317,14 @@ export const insertActivitySchema = z.object({
     val instanceof Date ? val : new Date(val)
   ),
   time: z.string(),
-  location_name: z.string(),
+  locationName: z.string(),
   latitude: z.string().nullable().optional(),
   longitude: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tag: z.string().nullable().optional(),
-  assigned_to: z.string().nullable().optional(),
+  assignedTo: z.string().nullable().optional(),
   order: z.number(),
-  travel_mode: z.string().nullable().optional(),
+  travelMode: z.string().nullable().optional(),
   completed: z.boolean().optional().default(false),
 });
 
@@ -339,15 +339,15 @@ export const todos = pgTable("todos", {
 });
 
 export const insertTodoSchema = z.object({
-  trip_id: z.union([z.string(), z.number()]).transform(val =>
+  tripId: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organization_id: z.union([z.string(), z.number()]).transform(val =>
+  organizationId: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(),
   task: z.string(),
   completed: z.boolean().optional().default(false),
-  assigned_to: z.string().optional(),
+  assignedTo: z.string().optional(),
 });
 
 // Notes schema

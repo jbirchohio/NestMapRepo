@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { insertActivitySchema } from '@shared/schema';
+import { insertActivitySchema, transformActivityToFrontend } from '@shared/schema';
+import { transformActivityToDatabase } from '@shared/fieldTransforms';
 import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
 import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { storage } from '../storage';
