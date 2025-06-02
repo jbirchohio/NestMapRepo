@@ -288,28 +288,28 @@ export function transformActivityToFrontend(activity: Activity) {
 // Activity schema
 export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
-  tripId: integer("trip_id").notNull(),
-  organizationId: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
+  trip_id: integer("trip_id").notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   title: text("title").notNull(),
   date: timestamp("date").notNull(),
   time: text("time").notNull(),
-  locationName: text("location_name").notNull(),
+  location_name: text("location_name").notNull(),
   latitude: text("latitude"),
   longitude: text("longitude"),
   notes: text("notes"),
   tag: text("tag"),
-  assignedTo: text("assigned_to"),
+  assigned_to: text("assigned_to"),
   order: integer("order").notNull(),
-  travelMode: text("travel_mode").default("walking"),
+  travel_mode: text("travel_mode").default("walking"),
   completed: boolean("completed").default(false),
 });
 
 // Create a custom schema that properly handles dates as strings from JSON
 export const insertActivitySchema = z.object({
-  tripId: z.union([z.string(), z.number()]).transform(val =>
+  trip_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organizationId: z.union([z.string(), z.number()]).transform(val =>
+  organization_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(), // Multi-tenant isolation
   title: z.string(),
@@ -317,52 +317,52 @@ export const insertActivitySchema = z.object({
     val instanceof Date ? val : new Date(val)
   ),
   time: z.string(),
-  locationName: z.string(),
+  location_name: z.string(),
   latitude: z.string().nullable().optional(),
   longitude: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   tag: z.string().nullable().optional(),
-  assignedTo: z.string().nullable().optional(),
+  assigned_to: z.string().nullable().optional(),
   order: z.number(),
-  travelMode: z.string().nullable().optional(),
+  travel_mode: z.string().nullable().optional(),
   completed: z.boolean().optional().default(false),
 });
 
 // Todo schema
 export const todos = pgTable("todos", {
   id: serial("id").primaryKey(),
-  tripId: integer("trip_id").notNull(),
-  organizationId: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
+  trip_id: integer("trip_id").notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   task: text("task").notNull(),
   completed: boolean("completed").default(false),
-  assignedTo: text("assigned_to"),
+  assigned_to: text("assigned_to"),
 });
 
 export const insertTodoSchema = z.object({
-  tripId: z.union([z.string(), z.number()]).transform(val =>
+  trip_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organizationId: z.union([z.string(), z.number()]).transform(val =>
+  organization_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(),
   task: z.string(),
   completed: z.boolean().optional().default(false),
-  assignedTo: z.string().optional(),
+  assigned_to: z.string().optional(),
 });
 
 // Notes schema
 export const notes = pgTable("notes", {
   id: serial("id").primaryKey(),
-  tripId: integer("trip_id").notNull(),
-  organizationId: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
+  trip_id: integer("trip_id").notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   content: text("content").notNull(),
 });
 
 export const insertNoteSchema = z.object({
-  tripId: z.union([z.string(), z.number()]).transform(val =>
+  trip_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organizationId: z.union([z.string(), z.number()]).transform(val =>
+  organization_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(),
   content: z.string(),
