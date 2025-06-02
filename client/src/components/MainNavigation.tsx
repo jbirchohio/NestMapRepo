@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -30,13 +38,16 @@ import {
   UserCircle,
   Edit3,
   Key,
-  HelpCircle
+  HelpCircle,
+  Menu,
+  X
 } from 'lucide-react';
 
 export default function MainNavigation() {
   const { user, userId, roleType, signOut, loading } = useAuth();
   const [location] = useLocation();
   const { toast } = useToast();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Get user permissions - since you're the JonasCo owner, return all permissions
   const { data: userPermissions } = useQuery({
@@ -184,8 +195,52 @@ export default function MainNavigation() {
     <nav className="border-b bg-white dark:bg-slate-900 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between min-h-[4rem] py-2">
-          {/* Logo/Brand Section */}
+          {/* Mobile hamburger menu */}
           <div className="flex items-center gap-4">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle className="text-left">Navigation</SheetTitle>
+                  <SheetDescription className="text-left">
+                    {roleType === 'agency' ? 'Client Travel Management' : 'Company Travel Management'}
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="mt-6 space-y-2">
+                  {navigationItems.filter(item => item.show).map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <Link 
+                        key={item.path} 
+                        href={item.path}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                          item.active 
+                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <IconComponent className="h-5 w-5" />
+                          <span className="font-medium">{item.label}</span>
+                        </div>
+                        {item.badge && (
+                          <Badge variant="secondary" className="text-xs">
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* Logo/Brand Section */}
             <Link href={getRoleBasedDashboardPath()} className="flex items-center gap-2 flex-shrink-0">
               <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">N</span>
@@ -194,11 +249,35 @@ export default function MainNavigation() {
                 <span className="font-bold text-xl text-slate-900 dark:text-slate-100">
                   NestMap
                 </span>
-                <span className="text-xs text-muted-foreground -mt-1">
+                <span className="text-xs text-muted-foreground -mt-1 hidden sm:block">
                   {roleType === 'agency' ? 'Client Travel Proposals' : 'Company Travel Management'}
                 </span>
               </div>
             </Link>
+          </div>
+
+          {/* Desktop Navigation - Hidden on mobile */}
+          <div className="hidden md:flex items-center gap-2 flex-1 justify-center">
+            {navigationItems.filter(item => item.show).map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <Link key={item.path} href={item.path}>
+                  <Button
+                    variant={item.active ? "default" : "ghost"}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <IconComponent className="h-4 w-4" />
+                    <span className="hidden lg:inline">{item.label}</span>
+                    {item.badge && (
+                      <Badge variant="secondary" className="ml-1 text-xs">
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+              );
+            })}
           </div>
 
           {/* User Section */}
