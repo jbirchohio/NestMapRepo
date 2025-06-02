@@ -84,6 +84,11 @@ router.get('/corporate', async (req: Request, res: Response) => {
 // Get activities for a specific trip
 router.get("/:id/activities", async (req: Request, res: Response) => {
   console.log(`🔍 ACTIVITIES ENDPOINT HIT - Trip ID: ${req.params.id}`);
+  
+  // Simple test - just return empty array to see if endpoint works
+  console.log(`🧪 Testing endpoint - returning empty array immediately`);
+  return res.json([]);
+  
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
