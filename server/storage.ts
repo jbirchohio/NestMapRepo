@@ -394,7 +394,7 @@ export class MemStorage implements IStorage {
     // Update user's organization and role
     const user = this.users.get(userId);
     if (user) {
-      user.organizationId = invitation.organizationId;
+      user.organization_id = invitation.organizationId;
       user.role = invitation.role;
       this.users.set(userId, user);
     }
@@ -724,7 +724,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(users)
       .set({
-        organization_id: invitation.organization_id,
+        organization_id: invitation.organizationId,
         role: invitation.role
       })
       .where(eq(users.id, userId));
