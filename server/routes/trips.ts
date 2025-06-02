@@ -83,22 +83,23 @@ router.get('/corporate', async (req: Request, res: Response) => {
 
 // Get activities for a specific trip
 router.get("/:id/activities", async (req: Request, res: Response) => {
+  console.log(`🔍 ACTIVITIES ENDPOINT HIT - Trip ID: ${req.params.id}`);
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
+      console.log(`❌ Invalid trip ID: ${req.params.id}`);
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
-    console.log(`Activities request for trip ${tripId}`);
-    console.log(`Request user object:`, req.user);
-    console.log(`Request session:`, req.session);
+    console.log(`✅ Valid trip ID: ${tripId}`);
+    console.log(`👤 User object:`, req.user);
     
     if (!req.user?.id) {
-      console.log(`Authentication failed - no user ID found`);
+      console.log(`❌ Authentication failed - no user ID found`);
       return res.status(401).json({ message: "Authentication required" });
     }
     
-    console.log(`User authenticated, ID: ${req.user.id}, org: ${req.user.organization_id}`);
+    console.log(`✅ User authenticated, ID: ${req.user.id}, org: ${req.user.organization_id}`);
 
     // Verify trip exists and user has access
     const trip = await storage.getTrip(tripId);
