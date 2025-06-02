@@ -106,8 +106,8 @@ export default function BookingWorkflow() {
   const [currentTravelerIndex, setCurrentTravelerIndex] = useState<number>(0);
   const [travelerBookings, setTravelerBookings] = useState<Array<{
     traveler: any;
-    departureFlight?: FlightResult;
-    returnFlight?: FlightResult;
+    departureFlight?: FlightResult | null;
+    returnFlight?: FlightResult | null;
   }>>([]);
   
   // Get all travelers for the booking
@@ -127,7 +127,7 @@ export default function BookingWorkflow() {
     }
     
     // Add additional travelers
-    additionalTravelers.forEach(t => {
+    additionalTravelers.forEach((t: any) => {
       travelers.push({
         firstName: t.firstName,
         lastName: t.lastName,
@@ -474,8 +474,8 @@ export default function BookingWorkflow() {
     const updatedBookings = [...travelerBookings];
     const currentTravelerBooking = {
       traveler: currentTraveler,
-      departureFlight: selectedDepartureFlight,
-      returnFlight: selectedReturnFlight
+      departureFlight: selectedDepartureFlight || undefined,
+      returnFlight: selectedReturnFlight || undefined
     };
 
     if (updatedBookings[currentTravelerIndex]) {
@@ -1335,6 +1335,44 @@ export default function BookingWorkflow() {
             <CardTitle>Select Accommodation</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Flight Summary for all travelers */}
+            {travelerBookings.length > 0 && (
+              <div className="bg-green-50 p-4 rounded-lg mb-6">
+                <h4 className="font-medium mb-3">Selected Flights Summary</h4>
+                <div className="space-y-3">
+                  {travelerBookings.map((booking, index) => (
+                    <div key={index} className="border-l-4 border-green-500 pl-4">
+                      <div className="font-medium text-green-800">
+                        {booking.traveler?.firstName} {booking.traveler?.lastName}
+                      </div>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        {booking.departureFlight && (
+                          <div>
+                            Departure: {booking.departureFlight.airline} {booking.departureFlight.flightNumber} 
+                            - ${booking.departureFlight.price.amount}
+                          </div>
+                        )}
+                        {booking.returnFlight && (
+                          <div>
+                            Return: {booking.returnFlight.airline} {booking.returnFlight.flightNumber} 
+                            - ${booking.returnFlight.price.amount}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-green-200">
+                  <div className="font-medium text-green-800">
+                    Total Flight Cost: ${travelerBookings.reduce((total, booking) => {
+                      const depCost = booking.departureFlight?.price.amount || 0;
+                      const retCost = booking.returnFlight?.price.amount || 0;
+                      return total + depCost + retCost;
+                    }, 0)}
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="mb-4">
               <p className="text-gray-600">
                 {clientInfo.destination} • {clientInfo.departureDate} to {clientInfo.returnDate || clientInfo.departureDate}
