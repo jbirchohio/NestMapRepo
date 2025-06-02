@@ -101,6 +101,7 @@ export default function BookingWorkflow() {
     const travelerName = urlParams.get('travelerName');
     const travelerEmail = urlParams.get('travelerEmail');
     const tripId = urlParams.get('tripId');
+    const coordinatorMode = urlParams.get('coordinatorMode');
     
     if (origin && travelerName && tripId) {
       // Pre-fill form with team member data
@@ -133,8 +134,10 @@ export default function BookingWorkflow() {
       });
 
       toast({
-        title: "Individual booking mode",
-        description: `Booking flight for ${travelerName} from ${origin}`,
+        title: coordinatorMode ? "Coordinator booking mode" : "Individual booking mode",
+        description: coordinatorMode 
+          ? `Booking flight for team member ${travelerName} from ${origin}`
+          : `Booking flight for ${travelerName} from ${origin}`,
       });
     }
   }, [user?.email, toast]);

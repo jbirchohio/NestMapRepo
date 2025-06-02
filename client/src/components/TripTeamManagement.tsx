@@ -139,8 +139,9 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
 
   const canManageTeam = userRole === 'admin' || userRole === 'editor';
 
-  const handleIndividualFlightBooking = (traveler: TripTraveler) => {
-    // Create booking URL with pre-filled data for individual traveler
+  const handleCoordinatedFlightBooking = (traveler: TripTraveler) => {
+    // Switch to the Flight Bookings tab with pre-filled data for this specific traveler
+    // This keeps the coordinator in control of all bookings
     const bookingParams = new URLSearchParams({
       origin: `${traveler.departure_city}, ${traveler.departure_country}`,
       travelerName: traveler.name,
@@ -149,16 +150,17 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       budget: (traveler.budget_allocation ? traveler.budget_allocation / 100 : 0).toString(),
       dietaryRequirements: traveler.dietary_requirements || '',
       tripId: tripId.toString(),
-      travelerId: traveler.id.toString()
+      travelerId: traveler.id.toString(),
+      coordinatorMode: 'true'
     });
     
-    // Open booking workflow in new tab with pre-filled data
+    // Navigate to the Flight Bookings tab in the same window
     const bookingUrl = `/bookings?${bookingParams.toString()}`;
-    window.open(bookingUrl, '_blank');
+    window.location.href = bookingUrl;
     
     toast({
-      title: "Individual flight booking",
-      description: `Opening flight search from ${traveler.departure_city} for ${traveler.name}`,
+      title: "Coordinated booking",
+      description: `Booking flight for ${traveler.name} from ${traveler.departure_city}`,
     });
   };
 
@@ -353,22 +355,22 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                   </div>
                 </div>
 
-                {/* Individual Flight Booking Section */}
+                {/* Coordinated Flight Booking Section */}
                 <div className="pt-3 border-t">
                   <div className="flex items-center justify-between mb-2">
-                    <h5 className="text-sm font-medium text-muted-foreground">Individual Flight Booking</h5>
+                    <h5 className="text-sm font-medium text-muted-foreground">Flight Coordination</h5>
                     <Button
                       size="sm"
                       variant="outline"
                       className="text-xs"
-                      onClick={() => handleIndividualFlightBooking(traveler)}
+                      onClick={() => handleCoordinatedFlightBooking(traveler)}
                     >
                       <Plane className="h-3 w-3 mr-1" />
-                      Book Flight from {traveler.departure_city}
+                      Book for {traveler.name}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Coordinate individual flight from {getDepartureInfo(traveler)} to trip destination
+                    Book coordinated flight from {getDepartureInfo(traveler)} as travel coordinator
                   </p>
                 </div>
 
