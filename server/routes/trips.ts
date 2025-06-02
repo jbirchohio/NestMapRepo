@@ -35,6 +35,38 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
+// Add organization-scoped trips endpoint for corporate features
+router.get('/corporate', async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const orgId = req.user?.organization_id;
+    
+    if (!userId || !orgId) {
+      return res.status(400).json({ message: "User and organization context required" });
+    }
+
+    // Use secure storage method that automatically enforces organization isolation
+    const trips = await storage.getTripsByUserId(userId, orgId);
+    
+    // Add user details safely through storage layer
+    const tripsWithUserDetails = await Promise.all(
+      trips.map(async (trip) => {
+        const user = await storage.getUser(trip.userId);
+        return {
+          ...trip,
+          userName: user?.display_name || 'Unknown User',
+          userEmail: user?.email || 'No Email'
+        };
+      })
+    );
+
+    res.json(tripsWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching corporate trips:', error);
+    res.status(500).json({ message: "Failed to fetch corporate trips" });
+  }
+});
+
 // Get specific trip by ID with organization access control
 router.get("/:id", async (req: Request, res: Response) => {
   try {
@@ -324,38 +356,6 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error updating sharing settings:", error);
     res.status(500).json({ message: "Could not update sharing settings" });
-  }
-});
-
-// Add organization-scoped trips endpoint for corporate features
-router.get('/corporate', async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.id;
-    const orgId = req.user?.organization_id;
-    
-    if (!userId || !orgId) {
-      return res.status(400).json({ message: "User and organization context required" });
-    }
-
-    // Use secure storage method that automatically enforces organization isolation
-    const trips = await storage.getTripsByUserId(userId, orgId);
-    
-    // Add user details safely through storage layer
-    const tripsWithUserDetails = await Promise.all(
-      trips.map(async (trip) => {
-        const user = await storage.getUser(trip.userId);
-        return {
-          ...trip,
-          userName: user?.display_name || 'Unknown User',
-          userEmail: user?.email || 'No Email'
-        };
-      })
-    );
-
-    res.json(tripsWithUserDetails);
-  } catch (error) {
-    console.error('Error fetching corporate trips:', error);
-    res.status(500).json({ message: "Failed to fetch corporate trips" });
   }
 });
 
