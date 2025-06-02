@@ -96,31 +96,46 @@ export default function Bookings() {
                 </p>
               </CardHeader>
               <CardContent>
-                {trips.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No corporate trips found. Create a trip first to manage team bookings.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {trips.map((trip: any) => (
-                      <div key={trip.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="font-semibold">{trip.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {trip.city}, {trip.country} • {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Badge variant={trip.tripType === 'business' ? 'default' : 'secondary'}>
-                            {trip.tripType || 'personal'}
-                          </Badge>
-                        </div>
-                        <TripTeamManagement tripId={trip.id} userRole="admin" />
+                {(() => {
+                  // Filter to show only current and future trips
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  
+                  const currentAndUpcomingTrips = trips.filter((trip: any) => {
+                    const tripEndDate = new Date(trip.endDate || trip.end_date);
+                    return tripEndDate >= today;
+                  });
+
+                  if (currentAndUpcomingTrips.length === 0) {
+                    return (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No current or upcoming corporate trips found. Create a trip to manage team bookings.</p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      {currentAndUpcomingTrips.map((trip: any) => (
+                        <div key={trip.id} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h3 className="font-semibold">{trip.title}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {trip.city}, {trip.country} • {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <Badge variant={trip.tripType === 'business' ? 'default' : 'secondary'}>
+                              {trip.tripType || 'personal'}
+                            </Badge>
+                          </div>
+                          <TripTeamManagement tripId={trip.id} userRole="admin" />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
