@@ -585,8 +585,7 @@ export class DatabaseStorage implements IStorage {
   async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
     try {
       console.log(`Fetching activities for trip ID: ${tripId}`);
-      // Remove orderBy temporarily to see if that's causing the issue
-      const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId));
+      const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId)).orderBy(activities.order);
       console.log(`Found ${activityList.length} activities for trip ${tripId}`);
       return activityList || [];
     } catch (error) {
