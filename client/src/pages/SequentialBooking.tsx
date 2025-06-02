@@ -175,28 +175,103 @@ export default function SequentialBooking() {
 
     setIsSearching(true);
 
-    // Convert city names to airport codes for Amadeus API
-    const convertCityToAirportCode = async (cityName: string): Promise<string> => {
-      try {
-        const response = await fetch('/api/locations/airport-code', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ cityName }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          return data.airportCode;
-        }
-      } catch (error) {
-        console.error('Error converting city to airport code:', error);
+    // Convert city names to airport codes for Amadeus API (local function)
+    const convertCityToAirportCode = (cityName: string): string => {
+      const airportMap: { [key: string]: string } = {
+        'san francisco': 'SFO',
+        'san francisco, ca': 'SFO',
+        'san francisco, united states': 'SFO',
+        'san francisco, california': 'SFO',
+        'sf': 'SFO',
+        'new york': 'JFK',
+        'new york city': 'JFK',
+        'new york, united states': 'JFK',
+        'new york, ny': 'JFK',
+        'nyc': 'JFK',
+        'ny': 'JFK',
+        'chicago': 'ORD',
+        'chicago, il': 'ORD',
+        'los angeles': 'LAX',
+        'la': 'LAX',
+        'seattle': 'SEA',
+        'seattle, wa': 'SEA',
+        'seattle, washington': 'SEA',
+        'denver': 'DEN',
+        'denver, co': 'DEN',
+        'miami': 'MIA',
+        'miami, fl': 'MIA',
+        'austin': 'AUS',
+        'austin, tx': 'AUS',
+        'boston': 'BOS',
+        'boston, ma': 'BOS',
+        'atlanta': 'ATL',
+        'atlanta, ga': 'ATL',
+        'washington': 'DCA',
+        'washington dc': 'DCA',
+        'dc': 'DCA',
+        'philadelphia': 'PHL',
+        'phoenix': 'PHX',
+        'las vegas': 'LAS',
+        'vegas': 'LAS',
+        'orlando': 'MCO',
+        'dallas': 'DFW',
+        'houston': 'IAH',
+        'detroit': 'DTW',
+        'minneapolis': 'MSP',
+        'charlotte': 'CLT',
+        'portland': 'PDX',
+        'salt lake city': 'SLC',
+        'nashville': 'BNA',
+        'london': 'LHR',
+        'uk': 'LHR',
+        'england': 'LHR',
+        'paris': 'CDG',
+        'france': 'CDG',
+        'tokyo': 'NRT',
+        'japan': 'NRT',
+        'singapore': 'SIN',
+        'amsterdam': 'AMS',
+        'netherlands': 'AMS'
+      };
+      
+      const city = cityName?.toLowerCase().trim() || '';
+      
+      console.log(`Converting city "${cityName}" (normalized: "${city}") to airport code`);
+      
+      // Direct match
+      if (airportMap[city]) {
+        console.log(`Direct match found: ${airportMap[city]}`);
+        return airportMap[city];
       }
-      return cityName;
+      
+      // Check if it's already a 3-letter code
+      if (city.length === 3 && /^[A-Za-z]{3}$/.test(city)) {
+        console.log(`Already airport code: ${city.toUpperCase()}`);
+        return city.toUpperCase();
+      }
+      
+      // Try partial matches for compound city names - check if city starts with any key
+      for (const [key, code] of Object.entries(airportMap)) {
+        if (city.startsWith(key) || key.startsWith(city)) {
+          console.log(`Partial match found: ${key} -> ${code}`);
+          return code;
+        }
+      }
+      
+      // Try contains matches
+      for (const [key, code] of Object.entries(airportMap)) {
+        if (city.includes(key) || key.includes(city)) {
+          console.log(`Contains match found: ${key} -> ${code}`);
+          return code;
+        }
+      }
+      
+      console.log(`No match found for "${city}", defaulting to JFK`);
+      return 'JFK'; // Default fallback
     };
 
-    const originCode = await convertCityToAirportCode(currentTraveler.departureCity);
-    const destinationCode = await convertCityToAirportCode(bookingData.tripDestination);
+    const originCode = convertCityToAirportCode(currentTraveler.departureCity);
+    const destinationCode = convertCityToAirportCode(bookingData.tripDestination);
 
     console.log(`Converting "${currentTraveler.departureCity}" to "${originCode}" and "${bookingData.tripDestination}" to "${destinationCode}"`);
 
