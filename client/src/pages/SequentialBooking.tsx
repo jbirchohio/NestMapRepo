@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Plane, Hotel, CheckCircle, ArrowRight, ArrowLeft, User } from 'lucide-react';
+import { Plane, Hotel, CheckCircle, ArrowRight, ArrowLeft, User, Clock, MapPin } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface SequentialBookingData {
@@ -41,10 +41,30 @@ interface SequentialBookingData {
   bookingStatus: 'flights' | 'room-preferences' | 'hotels' | 'complete';
 }
 
+interface FlightOffer {
+  id: string;
+  price: { amount: number; currency: string };
+  itineraries: Array<{
+    duration: string;
+    segments: Array<{
+      departure: { iataCode: string; at: string };
+      arrival: { iataCode: string; at: string };
+      carrierCode: string;
+      number: string;
+      aircraft: { code: string };
+      duration: string;
+    }>;
+  }>;
+}
+
 export default function SequentialBooking() {
   const [, setLocation] = useLocation();
   const [bookingData, setBookingData] = useState<SequentialBookingData | null>(null);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0); // 0: traveler info, 1: flight selection, 2: booking confirmation
+  const [flightOffers, setFlightOffers] = useState<FlightOffer[]>([]);
+  const [selectedFlight, setSelectedFlight] = useState<FlightOffer | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     try {
@@ -142,29 +162,67 @@ export default function SequentialBooking() {
     );
   }
 
-  const handleFlightBooking = () => {
-    // Pre-populate flight booking form with trip destination as arrival
-    const flightBookingData = {
-      travelerName: currentTraveler.name,
-      travelerEmail: currentTraveler.email,
-      travelerPhone: currentTraveler.phone,
-      travelerDateOfBirth: currentTraveler.dateOfBirth || '', // Allow empty, will be collected in booking form
-      departureCity: currentTraveler.departureCity,
-      arrivalCity: bookingData.tripDestination, // Auto-populate from trip
-      departureDate: bookingData.departureDate,
-      returnDate: bookingData.returnDate,
-      travelClass: currentTraveler.travelClass,
-      dietaryRequirements: currentTraveler.dietaryRequirements,
-      emergencyContact: currentTraveler.emergencyContact,
-      sequentialBooking: true, // Flag to indicate this is part of sequential flow
-      requiresInfoCompletion: !currentTraveler.dateOfBirth // Flag missing required info
-    };
+  const handleFlightBooking = async () => {
+    // Check if date of birth is missing and show form to collect it
+    if (!currentTraveler.dateOfBirth) {
+      toast({
+        title: "Missing Information",
+        description: "Date of birth is required for flight booking. Please add this information in the team management page first.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Store current flight booking data
-    sessionStorage.setItem('currentFlightBooking', JSON.stringify(flightBookingData));
-    
-    // Navigate to main bookings page with flight tab and pre-populated data
-    setLocation(`/bookings?tab=bookings&sequential=true&traveler=${currentTraveler.id}&action=complete-info`);
+    setIsSearching(true);
+
+    // Search for flights using authentic Amadeus API
+    try {
+      const response = await fetch('/api/bookings/search-flights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          origin: currentTraveler.departureCity,
+          destination: bookingData.tripDestination,
+          departureDate: bookingData.departureDate,
+          returnDate: bookingData.returnDate,
+          adults: 1,
+          travelClass: currentTraveler.travelClass || 'ECONOMY'
+        }),
+      });
+
+      if (response.ok) {
+        const flightData = await response.json();
+        console.log('Flight search results:', flightData);
+        
+        // Set flight offers for selection
+        setFlightOffers(flightData.offers || []);
+        
+        // Move to flight selection step
+        setCurrentStep(1);
+        
+        toast({
+          title: "Flights found",
+          description: `Found ${flightData.offers?.length || 0} flight options for ${currentTraveler.name}`,
+        });
+      } else {
+        toast({
+          title: "Flight search failed",
+          description: "Unable to search for flights. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Flight search error:', error);
+      toast({
+        title: "Flight search error",
+        description: "Unable to search for flights. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleNextTraveler = () => {
@@ -309,8 +367,12 @@ export default function SequentialBooking() {
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={handleFlightBooking} className="flex-1">
-                {currentTraveler.dateOfBirth ? 'Book Flight' : 'Complete Info & Book Flight'} for {currentTraveler.name}
+              <Button 
+                onClick={handleFlightBooking} 
+                className="flex-1"
+                disabled={isSearching}
+              >
+                {isSearching ? 'Searching Flights...' : (currentTraveler.dateOfBirth ? 'Search Flights' : 'Complete Info & Search Flights')} for {currentTraveler.name}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               
@@ -326,6 +388,98 @@ export default function SequentialBooking() {
             <p className="text-sm text-muted-foreground mt-3">
               Step {bookingData.currentTravelerIndex + 1} of {bookingData.travelers.length} travelers
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Flight Selection Step */}
+      {currentStep === 1 && bookingData.bookingStatus === 'flights' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plane className="h-5 w-5" />
+              Select Flight for {currentTraveler.name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                {currentTraveler.departureCity} → {bookingData.tripDestination} • {flightOffers.length} options available
+              </p>
+            </div>
+
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {flightOffers.map((offer, index) => (
+                <Card 
+                  key={offer.id} 
+                  className={`cursor-pointer transition-colors ${
+                    selectedFlight?.id === offer.id ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
+                  }`}
+                  onClick={() => setSelectedFlight(offer)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="text-lg font-semibold">
+                            {offer.itineraries[0].segments[0].departure.iataCode} → {offer.itineraries[0].segments[offer.itineraries[0].segments.length - 1].arrival.iataCode}
+                          </div>
+                          <Badge variant="outline">
+                            {offer.itineraries[0].segments[0].carrierCode} {offer.itineraries[0].segments[0].number}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {new Date(offer.itineraries[0].segments[0].departure.at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
+                            {new Date(offer.itineraries[0].segments[offer.itineraries[0].segments.length - 1].arrival.at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          </div>
+                          <div>Duration: {offer.itineraries[0].duration.replace('PT', '').replace('H', 'h ').replace('M', 'm')}</div>
+                          <div>Stops: {offer.itineraries[0].segments.length - 1}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-primary">
+                          ${parseFloat(offer.price.amount).toFixed(2)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">{offer.price.currency}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setCurrentStep(0)}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Traveler Info
+              </Button>
+              
+              <Button 
+                onClick={() => {
+                  if (selectedFlight) {
+                    // TODO: Implement actual booking
+                    toast({
+                      title: "Flight selected",
+                      description: `Selected ${selectedFlight.price.currency} ${selectedFlight.price.amount} flight for ${currentTraveler.name}`,
+                    });
+                    setCurrentStep(0);
+                    handleNextTraveler();
+                  }
+                }}
+                disabled={!selectedFlight}
+                className="flex-1"
+              >
+                Confirm Flight Selection
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
