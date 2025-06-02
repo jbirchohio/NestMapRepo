@@ -7,8 +7,7 @@ import { storage } from '../storage';
 import { generatePdfBuffer } from '../utils/pdfHelper';
 import { generateAIProposal } from '../proposalGenerator';
 import { db } from '../db';
-import { trips as tripsTable } from '../db/schema';
-import { users } from '../db/schema';
+import { trips as tripsTable, users } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 
 const router = Router();
