@@ -934,8 +934,12 @@ export default function BookingWorkflow() {
                         <div className="flex justify-between items-center">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <div className="font-semibold text-blue-600">{flight.airline}</div>
-                              <div className="text-sm text-gray-500">{flight.flightNumber}</div>
+                              <div className="font-semibold text-blue-600">
+                                {flight.departure?.airport || 'JFK'} → {flight.arrival?.airport || 'SFO'}
+                              </div>
+                              <div className="text-sm font-medium text-gray-700">
+                                {flight.airline} {flight.flightNumber}
+                              </div>
                               {isRedEyeFlight(
                                 flight.departure?.time || flight.departureTime, 
                                 flight.arrival?.time || flight.arrivalTime
@@ -982,8 +986,12 @@ export default function BookingWorkflow() {
                           <div className="flex justify-between items-center">
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
-                                <div className="font-semibold text-blue-600">{flight.airline}</div>
-                                <div className="text-sm text-gray-500">{flight.flightNumber}</div>
+                                <div className="font-semibold text-blue-600">
+                                  {flight.departure?.airport || 'SFO'} → {flight.arrival?.airport || 'JFK'}
+                                </div>
+                                <div className="text-sm font-medium text-gray-700">
+                                  {flight.airline} {flight.flightNumber}
+                                </div>
                                 {isRedEyeFlight(
                                   flight.departure?.time || flight.departureTime, 
                                   flight.arrival?.time || flight.arrivalTime
