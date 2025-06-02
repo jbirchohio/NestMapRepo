@@ -166,7 +166,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         notes: traveler.notes || ''
       })),
       roomsNeeded: travelers.length,
-      totalBudget: travelers.reduce((sum, t) => sum + (t.budget_allocation || 0), 0) / 100
+      totalBudget: travelers.reduce((sum, t) => sum + (t.budgetAllocation || 0), 0) / 100
     };
     
     // Navigate to Flight Bookings tab with all team data
