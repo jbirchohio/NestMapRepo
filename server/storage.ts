@@ -471,20 +471,20 @@ export class DatabaseStorage implements IStorage {
       // Secure multi-tenant query with organization isolation
       const tripList = await db.select().from(trips).where(
         and(
-          eq(trips.userId, userId),
-          eq(trips.organizationId, organizationId)
+          eq(trips.user_id, userId),
+          eq(trips.organization_id, organizationId)
         )
       );
       return tripList;
     } else {
       // For non-organization users, filter by user only
-      const tripList = await db.select().from(trips).where(eq(trips.userId, userId));
+      const tripList = await db.select().from(trips).where(eq(trips.user_id, userId));
       return tripList;
     }
   }
 
   async getTripsByOrganizationId(organizationId: number): Promise<Trip[]> {
-    const tripList = await db.select().from(trips).where(eq(trips.organizationId, organizationId));
+    const tripList = await db.select().from(trips).where(eq(trips.organization_id, organizationId));
     return tripList;
   }
 
@@ -563,23 +563,23 @@ export class DatabaseStorage implements IStorage {
     const activityList = await db
       .select({
         id: activities.id,
-        tripId: activities.trip_id,
+        tripId: activities.tripId,
         title: activities.title,
-        organizationId: activities.organization_id,
+        organizationId: activities.organizationId,
         date: activities.date,
         time: activities.time,
-        locationName: activities.location_name,
+        locationName: activities.locationName,
         latitude: activities.latitude,
         longitude: activities.longitude,
         notes: activities.notes,
         tag: activities.tag,
-        assignedTo: activities.assigned_to,
+        assignedTo: activities.assignedTo,
         order: activities.order,
-        travelMode: activities.travel_mode,
+        travelMode: activities.travelMode,
         completed: activities.completed,
       })
       .from(activities)
-      .where(eq(activities.trip_id, tripId))
+      .where(eq(activities.tripId, tripId))
       .orderBy(activities.order);
 
     // Debug log to see what's being retrieved from the database
