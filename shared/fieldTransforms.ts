@@ -40,33 +40,38 @@ export function snakeToCamel(obj: any): any {
 
 // Transform frontend trip data to database format
 export function transformTripToDatabase(tripData: any) {
-  return {
-    title: tripData.title,
-    start_date: tripData.startDate,
-    end_date: tripData.endDate,
-    user_id: tripData.user_id,
-    organization_id: tripData.organization_id,
-    collaborators: tripData.collaborators || [],
-    is_public: tripData.isPublic || false,
-    share_code: tripData.share_code,
-    sharing_enabled: tripData.sharingEnabled || false,
-    share_permission: tripData.sharePermission || 'read-only',
-    city: tripData.city,
-    country: tripData.country,
-    location: tripData.location,
-    city_latitude: tripData.cityLatitude,
-    city_longitude: tripData.cityLongitude,
-    hotel: tripData.hotel,
-    hotel_latitude: tripData.hotelLatitude,
-    hotel_longitude: tripData.hotelLongitude,
-    completed: tripData.completed || false,
-    completed_at: tripData.completedAt,
-    trip_type: tripData.tripType || 'personal',
-    client_name: tripData.clientName,
-    project_type: tripData.projectType,
-    organization: tripData.organization,
-    budget: tripData.budget
-  };
+  const result: any = {};
+  
+  // Handle fields that need camelCase to snake_case transformation
+  if (tripData.title !== undefined) result.title = tripData.title;
+  if (tripData.startDate !== undefined) result.start_date = tripData.startDate;
+  if (tripData.endDate !== undefined) result.end_date = tripData.endDate;
+  if (tripData.userId !== undefined) result.user_id = tripData.userId;
+  if (tripData.organizationId !== undefined) result.organization_id = tripData.organizationId;
+  if (tripData.isPublic !== undefined) result.is_public = tripData.isPublic;
+  if (tripData.shareCode !== undefined) result.share_code = tripData.shareCode;
+  if (tripData.sharingEnabled !== undefined) result.sharing_enabled = tripData.sharingEnabled;
+  if (tripData.sharePermission !== undefined) result.share_permission = tripData.sharePermission;
+  if (tripData.cityLatitude !== undefined) result.city_latitude = tripData.cityLatitude;
+  if (tripData.cityLongitude !== undefined) result.city_longitude = tripData.cityLongitude;
+  if (tripData.hotelLatitude !== undefined) result.hotel_latitude = tripData.hotelLatitude;
+  if (tripData.hotelLongitude !== undefined) result.hotel_longitude = tripData.hotelLongitude;
+  if (tripData.completedAt !== undefined) result.completed_at = tripData.completedAt;
+  if (tripData.tripType !== undefined) result.trip_type = tripData.tripType;
+  if (tripData.clientName !== undefined) result.client_name = tripData.clientName;
+  if (tripData.projectType !== undefined) result.project_type = tripData.projectType;
+  
+  // Handle fields that don't need transformation
+  if (tripData.city !== undefined) result.city = tripData.city;
+  if (tripData.country !== undefined) result.country = tripData.country;
+  if (tripData.location !== undefined) result.location = tripData.location;
+  if (tripData.hotel !== undefined) result.hotel = tripData.hotel;
+  if (tripData.completed !== undefined) result.completed = tripData.completed;
+  if (tripData.budget !== undefined) result.budget = tripData.budget;
+  if (tripData.collaborators !== undefined) result.collaborators = tripData.collaborators;
+  if (tripData.organization !== undefined) result.organization = tripData.organization;
+  
+  return result;
 }
 
 // Transform database trip data to frontend format

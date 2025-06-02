@@ -453,6 +453,7 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 import { db } from './db';
+import { transformTripToDatabase } from '../shared/fieldTransforms';
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
