@@ -163,13 +163,13 @@ export class MemStorage implements IStorage {
 
   async getTripsByUserId(userId: number): Promise<Trip[]> {
     return Array.from(this.trips.values()).filter(
-      (trip) => trip.userId === userId
+      (trip) => trip.user_id === userId
     );
   }
 
   async getTripsByOrganizationId(organizationId: number): Promise<Trip[]> {
     return Array.from(this.trips.values()).filter(
-      (trip) => trip.organizationId === organizationId
+      (trip) => trip.organization_id === organizationId
     );
   }
 
@@ -179,7 +179,7 @@ export class MemStorage implements IStorage {
 
   async getTripByShareCode(shareCode: string): Promise<Trip | undefined> {
     return Array.from(this.trips.values()).find(
-      (trip) => trip.shareCode === shareCode
+      (trip) => trip.share_code === shareCode
     );
   }
 
@@ -188,28 +188,31 @@ export class MemStorage implements IStorage {
     const trip: Trip = { 
       ...insertTrip, 
       id,
-      organizationId: insertTrip.organizationId || null,
-      sharePermission: "read-only",
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      organization_id: insertTrip.organizationId || null,
+      share_permission: "read-only",
+      created_at: new Date(),
+      updated_at: new Date(),
       collaborators: insertTrip.collaborators || [],
-      isPublic: insertTrip.isPublic || false,
-      sharingEnabled: insertTrip.sharingEnabled || false,
-      shareCode: insertTrip.shareCode || null,
+      is_public: insertTrip.isPublic || false,
+      sharing_enabled: insertTrip.sharingEnabled || false,
+      share_code: insertTrip.shareCode || null,
       city: insertTrip.city || null,
       country: insertTrip.country || null,
       location: insertTrip.location || null,
-      cityLatitude: insertTrip.cityLatitude || null,
-      cityLongitude: insertTrip.cityLongitude || null,
+      city_latitude: insertTrip.city_latitude || null,
+      city_longitude: insertTrip.city_longitude || null,
       hotel: insertTrip.hotel || null,
-      hotelLatitude: insertTrip.hotelLatitude || null,
-      hotelLongitude: insertTrip.hotelLongitude || null,
+      hotel_latitude: insertTrip.hotel_latitude || null,
+      hotel_longitude: insertTrip.hotel_longitude || null,
       completed: insertTrip.completed || false,
-      completedAt: insertTrip.completedAt || null,
-      tripType: insertTrip.tripType || "personal",
-      clientName: insertTrip.clientName || null,
-      projectType: insertTrip.projectType || null,
-      budget: insertTrip.budget || null
+      completed_at: insertTrip.completed_at || null,
+      trip_type: insertTrip.trip_type || "personal",
+      client_name: insertTrip.client_name || null,
+      project_type: insertTrip.project_type || null,
+      budget: insertTrip.budget || null,
+      start_date: insertTrip.startDate,
+      end_date: insertTrip.endDate,
+      user_id: insertTrip.userId
     };
     this.trips.set(id, trip);
     return trip;
@@ -235,7 +238,7 @@ export class MemStorage implements IStorage {
 
   async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
     return Array.from(this.activities.values())
-      .filter((activity) => activity.tripId === tripId)
+      .filter((activity) => activity.trip_id === tripId)
       .sort((a, b) => a.order - b.order);
   }
 
@@ -248,14 +251,19 @@ export class MemStorage implements IStorage {
     const activity: Activity = { 
       ...insertActivity, 
       id,
-      organizationId: insertActivity.organizationId || null,
+      organization_id: insertActivity.organizationId || null,
       latitude: insertActivity.latitude || null,
       longitude: insertActivity.longitude || null,
       notes: insertActivity.notes || null,
       tag: insertActivity.tag || null,
-      assignedTo: insertActivity.assignedTo || null,
-      travelMode: insertActivity.travelMode || null,
-      completed: insertActivity.completed ?? false
+      assigned_to: insertActivity.assignedTo || null,
+      travel_mode: insertActivity.travelMode || null,
+      completed: insertActivity.completed ?? false,
+      trip_id: insertActivity.tripId,
+      date: insertActivity.date,
+      time: insertActivity.time,
+      title: insertActivity.title,
+      location_name: insertActivity.locationName
     };
     this.activities.set(id, activity);
     return activity;
