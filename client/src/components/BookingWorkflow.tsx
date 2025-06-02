@@ -298,7 +298,27 @@ export default function BookingWorkflow() {
                 console.log('Flight search data received:', flightSearchData);
                 console.log('Number of flights:', flightSearchData.flights?.length);
                 
-                setFlightResults(flightSearchData.flights || []);
+                // Transform flight data to match frontend interface
+                const transformedFlights = (flightSearchData.flights || []).map((flight: any) => ({
+                  id: flight.id,
+                  airline: flight.airline,
+                  flightNumber: flight.flightNumber,
+                  origin: flight.departure?.airport || originCode,
+                  destination: flight.arrival?.airport || destinationCode,
+                  departureTime: flight.departure?.time || '00:00',
+                  arrivalTime: flight.arrival?.time || '00:00',
+                  duration: flight.duration || '0h 0m',
+                  stops: flight.stops || 0,
+                  price: {
+                    amount: flight.price || 0,
+                    currency: flight.currency || 'USD'
+                  },
+                  cabin: 'economy',
+                  availability: 9,
+                  bookingUrl: '#'
+                }));
+                
+                setFlightResults(transformedFlights);
                 setCurrentStep('flights');
                 
                 toast({
