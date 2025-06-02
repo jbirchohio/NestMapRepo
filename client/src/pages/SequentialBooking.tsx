@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Plane, Hotel, CheckCircle, ArrowRight, ArrowLeft, User, Clock, MapPin } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface SequentialBookingData {
   tripId: string;
@@ -275,49 +276,49 @@ export default function SequentialBooking() {
 
     console.log(`Converting "${currentTraveler.departureCity}" to "${originCode}" and "${bookingData.tripDestination}" to "${destinationCode}"`);
 
-    // Search for flights using authentic Amadeus API
+    // Search for flights using authentic Amadeus API with same format as BookingWorkflow
     try {
-      const response = await fetch('/api/bookings/flights/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          origin: originCode,
-          destination: destinationCode,
-          departureDate: bookingData.departureDate,
-          returnDate: bookingData.returnDate,
-          passengers: 1,
-          cabin: currentTraveler.travelClass || 'economy'
-        }),
-      });
+      const searchParams = {
+        origin: originCode,
+        destination: destinationCode,
+        departureDate: bookingData.departureDate,
+        returnDate: bookingData.returnDate,
+        passengers: 1,
+        cabin: currentTraveler.travelClass || 'economy',
+        tripType: bookingData.returnDate ? 'round-trip' : 'one-way',
+      };
+
+      console.log('Flight search params:', searchParams);
+
+      const response = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
 
       if (response.ok) {
         const flightData = await response.json();
-        console.log('Flight search results:', flightData);
+        console.log('Flight search response:', flightData);
         
-        // Set flight offers for selection
-        setFlightOffers(flightData.offers || []);
-        
-        // Move to flight selection step
-        setCurrentStep(1);
-        
-        toast({
-          title: "Flights found",
-          description: `Found ${flightData.offers?.length || 0} flight options for ${currentTraveler.name}`,
-        });
+        if (flightData.flights && flightData.flights.length > 0) {
+          setFlightOffers(flightData.flights);
+          setCurrentStep(1);
+          
+          toast({
+            title: "Flights Found",
+            description: `Found ${flightData.flights.length} flights for ${currentTraveler.name} from ${currentTraveler.departureCity} to ${bookingData.tripDestination}`,
+          });
+        } else {
+          toast({
+            title: "No Flights Found",
+            description: `No flights available for the selected route and dates.`,
+            variant: "destructive",
+          });
+        }
       } else {
-        toast({
-          title: "Flight search failed",
-          description: "Unable to search for flights. Please try again.",
-          variant: "destructive",
-        });
+        throw new Error('Flight search failed');
       }
     } catch (error) {
-      console.error('Flight search error:', error);
+      console.error('Error searching flights:', error);
       toast({
-        title: "Flight search error",
-        description: "Unable to search for flights. Please try again.",
+        title: "Flight Search Error",
+        description: "Unable to search for flights. Please check your travel details and try again.",
         variant: "destructive",
       });
     } finally {
