@@ -589,7 +589,9 @@ export class DatabaseStorage implements IStorage {
       console.log(`Found ${activityList.length} activities for trip ${tripId}`);
       return activityList;
     } catch (error) {
-      console.error("Error fetching activities by trip ID:", tripId, error);
+      console.error("Database error fetching activities by trip ID:", tripId);
+      console.error("Error details:", error);
+      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
       return [];
     }
   }
