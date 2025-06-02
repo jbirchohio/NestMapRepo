@@ -8,7 +8,7 @@ import {
   organizations,
   transformTripToFrontend, transformActivityToFrontend
 } from "@shared/schema";
-import { transformActivityToDatabase, transformTripToDatabase } from "@shared/fieldTransforms";
+
 import { eq, and, desc } from "drizzle-orm";
 
 // Interface for storage operations
@@ -523,7 +523,23 @@ export class DatabaseStorage implements IStorage {
 
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
     // Transform camelCase frontend data to snake_case database format
-    const dbData = transformTripToDatabase(insertTrip);
+    const dbData = {
+      title: insertTrip.title,
+      start_date: insertTrip.startDate,
+      end_date: insertTrip.endDate,
+      user_id: insertTrip.userId,
+      organization_id: insertTrip.organizationId || null,
+      is_public: insertTrip.isPublic || false,
+      sharing_enabled: insertTrip.sharingEnabled || false,
+      share_permission: insertTrip.sharePermission || 'read-only',
+      collaborators: insertTrip.collaborators || [],
+      city: insertTrip.city,
+      country: insertTrip.country,
+      location: insertTrip.location,
+      hotel: insertTrip.hotel,
+      completed: insertTrip.completed || false,
+      budget: insertTrip.budget
+    };
     
     const [trip] = await db
       .insert(trips)
@@ -535,8 +551,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTrip(id: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
-    // Transform camelCase frontend data to snake_case database format
-    const dbData = transformTripToDatabase(tripData);
+    // Transform camelCase frontend data to snake_case database format  
+    const dbData: any = {};
+    if (tripData.title !== undefined) dbData.title = tripData.title;
+    if (tripData.startDate !== undefined) dbData.start_date = tripData.startDate;
+    if (tripData.endDate !== undefined) dbData.end_date = tripData.endDate;
+    if (tripData.isPublic !== undefined) dbData.is_public = tripData.isPublic;
+    if (tripData.budget !== undefined) dbData.budget = tripData.budget;
     
     const [updatedTrip] = await db
       .update(trips)
@@ -572,7 +593,16 @@ export class DatabaseStorage implements IStorage {
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     // Transform camelCase frontend data to snake_case database format
-    const dbData = transformActivityToDatabase(insertActivity);
+    const dbData = {
+      trip_id: insertActivity.tripId,
+      title: insertActivity.title,
+      date: insertActivity.date,
+      time: insertActivity.time,
+      location_name: insertActivity.locationName,
+      order: insertActivity.order || 0,
+      completed: insertActivity.completed || false,
+      organization_id: insertActivity.organizationId || null
+    };
     
     const [activity] = await db
       .insert(activities)
@@ -633,7 +663,12 @@ export class DatabaseStorage implements IStorage {
 
   async createTodo(insertTodo: InsertTodo): Promise<Todo> {
     // Transform camelCase frontend data to snake_case database format
-    const dbData = transformTodoToDatabase(insertTodo);
+    const dbData = {
+      trip_id: insertTodo.tripId,
+      task: insertTodo.task,
+      completed: insertTodo.completed || false,
+      organization_id: insertTodo.organizationId || null
+    };
     
     const [todo] = await db
       .insert(todos)
@@ -673,7 +708,11 @@ export class DatabaseStorage implements IStorage {
 
   async createNote(insertNote: InsertNote): Promise<Note> {
     // Transform camelCase frontend data to snake_case database format
-    const dbData = transformNoteToDatabase(insertNote);
+    const dbData = {
+      trip_id: insertNote.tripId,
+      content: insertNote.content,
+      organization_id: insertNote.organizationId || null
+    };
     
     const [note] = await db
       .insert(notes)
