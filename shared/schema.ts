@@ -199,8 +199,8 @@ export const insertTripSchema = z.object({
   ).optional(), // Multi-tenant isolation
   collaborators: z.array(z.any()).default([]),
   // Sharing and collaboration settings
-  isPublic: z.boolean().optional().default(false),
-  shareCode: z.string().optional(),
+  is_public: z.boolean().optional().default(false),
+  share_code: z.string().optional(),
   sharing_enabled: z.boolean().optional().default(false),
   share_permission: z.string().optional().default("read-only"),
   // Location fields are optional
