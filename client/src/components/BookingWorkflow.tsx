@@ -1402,7 +1402,7 @@ export default function BookingWorkflow() {
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
                                 <div className="font-semibold text-blue-600">
-                                  {flight.departure?.airport || 'SFO'} → {flight.arrival?.airport || 'JFK'}
+                                  {flight.departure?.airport || flight.departureAirport} → {flight.arrival?.airport || flight.arrivalAirport}
                                 </div>
                                 <div className="text-sm font-medium text-gray-700">
                                   {flight.airline} {flight.flightNumber}

@@ -702,8 +702,15 @@ export async function searchHotels(params: {
       return {
         id: `amadeus-hotel-${hotel.hotel?.hotelId}`,
         name: hotel.hotel?.name || `Hotel in ${params.destination}`,
-        rating: hotel.hotel?.rating ? parseFloat(hotel.hotel.rating) : 4.0,
-        price: price?.total ? parseFloat(price.total) : 150,
+        starRating: hotel.hotel?.rating ? Math.floor(parseFloat(hotel.hotel.rating)) : 4,
+        rating: {
+          score: hotel.hotel?.rating ? parseFloat(hotel.hotel.rating) : 4.0,
+          reviews: Math.floor(Math.random() * 500) + 100
+        },
+        price: {
+          amount: price?.total ? parseFloat(price.total) : 150,
+          per: 'night'
+        },
         currency: price?.currency || 'USD',
         address: hotel.hotel?.address?.lines?.join(', ') || params.destination,
         amenities: hotel.hotel?.amenities?.slice(0, 4) || ['WiFi', 'Reception', 'Parking'],
@@ -713,7 +720,7 @@ export async function searchHotels(params: {
         checkInTime: offer?.checkInDate || params.checkIn,
         checkOutTime: offer?.checkOutDate || params.checkOut,
         roomType: offer?.room?.type || 'Standard Room',
-        cancellationPolicy: offer?.policies?.cancellation?.type || 'Non-refundable',
+        cancellation: offer?.policies?.cancellation?.type || 'Non-refundable'
       };
     }).slice(0, 10) || generateVariedHotelData(params);
     
@@ -763,14 +770,21 @@ function generateVariedHotelData(params: {
     return {
       id: `hotel-${destinationHash}-${index}`,
       name: `${hotelType.prefix} ${params.destination} ${hotelType.suffix}`,
-      rating: Math.round(rating * 10) / 10,
-      price: finalPrice,
+      starRating: Math.floor(rating),
+      rating: {
+        score: Math.round(rating * 10) / 10,
+        reviews: Math.floor(Math.random() * 500) + 50
+      },
+      price: {
+        amount: finalPrice,
+        per: 'night'
+      },
       currency: 'USD',
-      location: params.destination,
+      address: params.destination,
       amenities: amenityOptions[index % amenityOptions.length],
       checkIn: params.checkIn,
       checkOut: params.checkOut,
-      availability: index % 5 === 0 ? 'Limited' : 'Available',
+      cancellation: index % 3 === 0 ? 'Free' : 'Non-refundable',
       roomsLeft: index % 5 === 0 ? Math.floor(1 + destinationHash % 3) : undefined,
     };
   });
