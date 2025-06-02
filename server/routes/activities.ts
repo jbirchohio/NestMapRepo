@@ -13,7 +13,7 @@ router.use(unifiedAuthMiddleware);
 router.use(injectOrganizationContext);
 
 // Get activities for a specific trip
-router.get("/trip/:tripId", async (req: Request, res: Response) => {
+router.get("/trip/:trip_id", async (req: Request, res: Response) => {
   try {
     const tripId = parseInt(req.params.trip_id);
     if (isNaN(tripId)) {
@@ -48,7 +48,7 @@ router.post("/", async (req: Request, res: Response) => {
     });
 
     // Verify trip exists and user has access
-    const trip = await storage.getTrip(activityData.trip_id);
+    const trip = await storage.getTrip(activityData.tripId);
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { insertTripSchema } from '@shared/schema';
 import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
 import { injectOrganizationContext } from '../middleware/organizationScoping';
+import { fieldTransformMiddleware } from '../middleware/fieldTransform';
 import { storage } from '../storage';
 import { generatePdfBuffer } from '../utils/pdfHelper';
 import { generateAIProposal } from '../proposalGenerator';
@@ -15,6 +16,7 @@ const router = Router();
 // Apply authentication and organization context to all trip routes
 router.use(unifiedAuthMiddleware);
 router.use(injectOrganizationContext);
+router.use(fieldTransformMiddleware);
 
 // Get all trips for authenticated user with organization filtering
 router.get("/", async (req: Request, res: Response) => {
