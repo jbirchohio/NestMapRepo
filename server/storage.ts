@@ -857,26 +857,40 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
       // Example of creating trips associated with the user and organization
       this.createTrip({
         userId: user.id,
-        name: "Corporate Trip 1",
-        description: "First corporate trip",
+        title: "Corporate Trip 1",
         city: "New York",
         country: "USA",
         organizationId: user.organization_id || 1,
-        clientName: "Acme Corp",
-        projectType: "Consulting",
-        budget: 10000
+        client_name: "Acme Corp",
+        project_type: "Consulting",
+        budget: 10000,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        collaborators: [],
+        completed: false,
+        trip_type: "business",
+        isPublic: false,
+        sharingEnabled: false,
+        sharePermission: "view"
       });
 
       this.createTrip({
         userId: user.id,
-        name: "Corporate Trip 2",
-        description: "Second corporate trip",
+        title: "Corporate Trip 2",
         city: "London",
         country: "UK",
         organizationId: user.organization_id || 1,
-        clientName: "Beta Ltd",
-        projectType: "Software Development",
-        budget: 15000
+        client_name: "Beta Ltd",
+        project_type: "Software Development",
+        budget: 15000,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        collaborators: [],
+        completed: false,
+        trip_type: "business",
+        isPublic: false,
+        sharingEnabled: false,
+        sharePermission: "view"
       });
       return user;
     });
