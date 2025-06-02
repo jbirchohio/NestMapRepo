@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Plane, Hotel, CheckCircle, ArrowRight, ArrowLeft, User, Clock, MapPin } from 'lucide-react';
+import { Plane, Hotel, CheckCircle, ArrowRight, ArrowLeft, User, Clock, MapPin, CreditCard } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -39,7 +39,10 @@ interface SequentialBookingData {
   }>;
   roomsNeeded: number;
   roomConfiguration: 'shared' | 'separate' | null;
-  bookingStatus: 'flights' | 'room-preferences' | 'hotels' | 'complete';
+  bookingStatus: 'flights' | 'room-preferences' | 'hotels' | 'payment' | 'complete';
+  selectedHotel?: any;
+  confirmationNumber?: string;
+  bookingDate?: string;
 }
 
 interface FlightOffer {
@@ -844,7 +847,8 @@ export default function SequentialBooking() {
                       if (selectedHotel) {
                         const updatedData = {
                           ...bookingData,
-                          bookingStatus: 'complete' as const
+                          bookingStatus: 'payment' as const,
+                          selectedHotel: selectedHotel
                         };
                         setBookingData(updatedData);
                         sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
@@ -858,7 +862,7 @@ export default function SequentialBooking() {
                     disabled={!selectedHotel}
                     className="flex-1"
                   >
-                    Confirm Hotel Selection
+                    Continue to Payment
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
@@ -879,22 +883,324 @@ export default function SequentialBooking() {
         </Card>
       )}
 
+      {bookingData.bookingStatus === 'payment' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Payment & Booking Confirmation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Booking Summary */}
+              <div className="border rounded-lg p-4 bg-muted/20">
+                <h3 className="font-semibold text-lg mb-4">Booking Summary</h3>
+                
+                {/* Flight Bookings */}
+                <div className="mb-4">
+                  <h4 className="font-medium mb-2">Flights</h4>
+                  {bookingData.travelers.map((traveler: any, index: number) => {
+                    const selectedFlights = traveler.selectedFlights || [];
+                    const totalFlightCost = selectedFlights.reduce((sum: number, flight: any) => sum + parseFloat(flight.price), 0);
+                    
+                    return (
+                      <div key={index} className="flex justify-between items-center py-2 border-b">
+                        <div>
+                          <span className="font-medium">{traveler.name}</span>
+                          <p className="text-sm text-muted-foreground">
+                            {traveler.departureCity} → {bookingData.tripDestination}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold">${totalFlightCost.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Hotel Booking */}
+                {bookingData.selectedHotel && (
+                  <div className="mb-4">
+                    <h4 className="font-medium mb-2">Hotel</h4>
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <div>
+                        <span className="font-medium">{bookingData.selectedHotel.name}</span>
+                        <p className="text-sm text-muted-foreground">
+                          {bookingData.roomsNeeded} rooms for {bookingData.travelers.length} travelers
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-semibold">${(bookingData.selectedHotel.price.amount * 3).toFixed(2)}</span>
+                        <p className="text-xs text-muted-foreground">3 nights total</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Total */}
+                <div className="pt-4 border-t">
+                  <div className="flex justify-between items-center text-lg font-bold">
+                    <span>Total Amount</span>
+                    <span>${(() => {
+                      const flightTotal = bookingData.travelers.reduce((sum: number, traveler: any) => {
+                        const selectedFlights = traveler.selectedFlights || [];
+                        return sum + selectedFlights.reduce((flightSum: number, flight: any) => flightSum + parseFloat(flight.price), 0);
+                      }, 0);
+                      const hotelTotal = bookingData.selectedHotel ? (bookingData.selectedHotel.price.amount * 3) : 0;
+                      return (flightTotal + hotelTotal).toFixed(2);
+                    })()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Form */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Payment Information</h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Card Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="1234 5678 9012 3456"
+                      className="w-full mt-1 p-2 border rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Cardholder Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="John Doe"
+                      className="w-full mt-1 p-2 border rounded-md"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Expiry Month</label>
+                    <input 
+                      type="text" 
+                      placeholder="MM"
+                      className="w-full mt-1 p-2 border rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Expiry Year</label>
+                    <input 
+                      type="text" 
+                      placeholder="YYYY"
+                      className="w-full mt-1 p-2 border rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">CVV</label>
+                    <input 
+                      type="text" 
+                      placeholder="123"
+                      className="w-full mt-1 p-2 border rounded-md"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Billing Address</label>
+                  <input 
+                    type="text" 
+                    placeholder="123 Main Street, City, State, ZIP"
+                    className="w-full mt-1 p-2 border rounded-md"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setBookingData(prev => prev ? {...prev, bookingStatus: 'hotels'} : null)}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Hotels
+                </Button>
+                
+                <Button 
+                  onClick={async () => {
+                    setIsBooking(true);
+                    
+                    try {
+                      // Process actual bookings here
+                      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate processing
+                      
+                      const updatedData = {
+                        ...bookingData,
+                        bookingStatus: 'complete' as const,
+                        confirmationNumber: `NM${Date.now()}`,
+                        bookingDate: new Date().toISOString()
+                      };
+                      setBookingData(updatedData);
+                      sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
+                      
+                      toast({
+                        title: "Booking Confirmed",
+                        description: "All reservations have been successfully processed!",
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Booking Error",
+                        description: "Failed to process booking. Please try again.",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsBooking(false);
+                    }
+                  }}
+                  disabled={isBooking}
+                  className="flex-1"
+                >
+                  {isBooking ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Processing Payment...
+                    </>
+                  ) : (
+                    <>
+                      Confirm & Pay
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {bookingData.bookingStatus === 'complete' && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
-              Booking Complete
+              Booking Confirmed
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-lg mb-4">
-              All bookings have been processed for your team trip to {bookingData.tripDestination}.
-            </p>
-            
-            <Button onClick={handleComplete} className="w-full">
-              Return to Trip Details
-            </Button>
+            <div className="space-y-6">
+              {/* Confirmation Summary */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="font-semibold text-green-800">Payment Successful</span>
+                </div>
+                <p className="text-green-700">
+                  All reservations have been confirmed for your team trip to {bookingData.tripDestination}
+                </p>
+              </div>
+
+              {/* Confirmation Details */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Confirmation Number</label>
+                    <p className="text-lg font-mono font-semibold">{bookingData.confirmationNumber}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Booking Date</label>
+                    <p className="text-lg">{new Date(bookingData.bookingDate || '').toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                {/* Flight Confirmations */}
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Flight Confirmations</h3>
+                  {bookingData.travelers.map((traveler: any, index: number) => (
+                    <div key={index} className="border rounded-lg p-3 mb-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="font-medium">{traveler.name}</span>
+                          <p className="text-sm text-muted-foreground">
+                            {traveler.departureCity} → {bookingData.tripDestination}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                            FL{(Date.now() + index).toString().slice(-6)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Confirmation sent to: {traveler.email}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Hotel Confirmation */}
+                {bookingData.selectedHotel && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">Hotel Confirmation</h3>
+                    <div className="border rounded-lg p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="font-medium">{bookingData.selectedHotel.name}</span>
+                          <p className="text-sm text-muted-foreground">
+                            {bookingData.roomsNeeded} rooms, 3 nights
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                            HT{Date.now().toString().slice(-6)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Check-in: {new Date(bookingData.departureDate).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Total Amount */}
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center text-lg">
+                    <span className="font-medium">Total Paid</span>
+                    <span className="font-bold">${(() => {
+                      const flightTotal = bookingData.travelers.reduce((sum: number, traveler: any) => {
+                        const selectedFlights = traveler.selectedFlights || [];
+                        return sum + selectedFlights.reduce((flightSum: number, flight: any) => flightSum + parseFloat(flight.price), 0);
+                      }, 0);
+                      const hotelTotal = bookingData.selectedHotel ? (bookingData.selectedHotel.price.amount * 3) : 0;
+                      return (flightTotal + hotelTotal).toFixed(2);
+                    })()}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Charged to card ending in ****1234
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" className="flex-1">
+                  Download Receipt
+                </Button>
+                <Button onClick={handleComplete} className="flex-1">
+                  Return to Trip Details
+                </Button>
+              </div>
+
+              {/* Next Steps */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-800 mb-2">Next Steps</h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• Confirmation emails sent to all travelers</li>
+                  <li>• Check-in opens 24 hours before departure</li>
+                  <li>• Hotel vouchers will be available in your account</li>
+                  <li>• Contact support for any changes or questions</li>
+                </ul>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
