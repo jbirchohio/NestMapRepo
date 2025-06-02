@@ -6,6 +6,31 @@ import { z } from 'zod';
 
 const router = Router();
 
+// Flight search endpoint
+router.post('/flights/search', async (req, res) => {
+  try {
+    const { origin, destination, departureDate, returnDate, passengers, cabin, directFlights } = req.body;
+    
+    if (!origin || !destination || !departureDate || !passengers) {
+      return res.status(400).json({ message: "Missing required search parameters" });
+    }
+
+    const { searchFlights } = await import('../bookingProviders');
+    const flights = await searchFlights({
+      origin,
+      destination,
+      departureDate,
+      returnDate,
+      passengers
+    });
+    
+    res.json({ flights });
+  } catch (error: any) {
+    console.error("Flight search error:", error);
+    res.status(500).json({ message: "Unable to search flights: " + error.message });
+  }
+});
+
 // Get bookings for a trip (organization-scoped)
 router.get('/trip/:tripId', async (req, res) => {
   try {
