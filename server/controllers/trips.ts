@@ -283,7 +283,7 @@ export async function updateTrip(req: Request, res: Response) {
       collaborators: z.array(z.any()).optional(),
       // Sharing and collaboration settings
       isPublic: z.boolean().optional(),
-      shareCode: z.string().nullable().optional(),
+      shareCode: z.string().optional(),
       sharingEnabled: z.boolean().optional(),
       sharePermission: z.enum(["read-only", "edit"]).optional(),
       // Location information
@@ -298,10 +298,15 @@ export async function updateTrip(req: Request, res: Response) {
     
     const updateData = partialTripSchema.parse(req.body);
     
+    // Filter out null values to avoid type conflicts
+    const filteredUpdateData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, value]) => value !== null)
+    );
+    
     // Log organization access for audit
     logOrganizationAccess(req, 'update', 'trip');
     
-    const trip = await storage.updateTrip(tripId, updateData);
+    const trip = await storage.updateTrip(tripId, filteredUpdateData);
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }

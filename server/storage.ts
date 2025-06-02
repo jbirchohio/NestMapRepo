@@ -152,7 +152,8 @@ export class MemStorage implements IStorage {
       use_case: insertUser.use_case || null,
       created_at: new Date(),
       display_name: insertUser.display_name || null,
-      avatar_url: insertUser.avatar_url || null
+      avatar_url: insertUser.avatar_url || null,
+      password_hash: insertUser.password_hash ?? null
     };
     this.users.set(id, user);
     return user;

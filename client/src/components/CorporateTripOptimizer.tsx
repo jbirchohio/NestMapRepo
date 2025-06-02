@@ -66,7 +66,7 @@ export default function CorporateTripOptimizer() {
   });
 
   const handleOptimizeTrips = async () => {
-    if (!corporateTrips || corporateTrips.length === 0) {
+    if (!corporateTrips || !Array.isArray(corporateTrips) || corporateTrips.length === 0) {
       toast({
         title: "No Trips Found",
         description: "No corporate trips available for optimization.",
@@ -171,7 +171,7 @@ export default function CorporateTripOptimizer() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="text-sm text-muted-foreground">
-                <span className="font-medium">{corporateTrips?.length || 0}</span> upcoming trips
+                <span className="font-medium">{Array.isArray(corporateTrips) ? corporateTrips.length : 0}</span> upcoming trips
               </div>
               <Separator orientation="vertical" className="h-4" />
               <div className="text-sm text-muted-foreground">
@@ -427,7 +427,7 @@ export default function CorporateTripOptimizer() {
                   <RefreshCw className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                   <p className="text-muted-foreground mt-2">Loading corporate trips...</p>
                 </div>
-              ) : corporateTrips && corporateTrips.length > 0 ? (
+              ) : corporateTrips && Array.isArray(corporateTrips) && corporateTrips.length > 0 ? (
                 corporateTrips.map((trip: any) => (
                   <div key={trip.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
