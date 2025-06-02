@@ -1,3 +1,5 @@
+import { kiwiProvider } from './kiwiProvider';
+
 interface BookingProvider {
   name: string;
   urlTemplate: string;
@@ -1179,4 +1181,14 @@ export async function createBooking(params: {
     confirmationCode: `CONF${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
     createdAt: new Date().toISOString()
   };
+}
+
+// Kiwi API integration functions - replacing previous implementations
+export async function searchCars(params: {
+  pickUpLocation: string;
+  dropOffLocation: string;
+  pickUpDate: string;
+  dropOffDate: string;
+}) {
+  return await kiwiProvider.searchCars(params);
 }

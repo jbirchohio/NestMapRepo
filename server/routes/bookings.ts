@@ -375,6 +375,30 @@ router.get('/:bookingId', async (req, res) => {
   }
 });
 
+// Car search endpoint
+router.post('/cars/search', async (req, res) => {
+  try {
+    const { pickUpLocation, dropOffLocation, pickUpDate, dropOffDate } = req.body;
+    
+    if (!pickUpLocation || !dropOffLocation || !pickUpDate || !dropOffDate) {
+      return res.status(400).json({ message: "Missing required search parameters" });
+    }
+
+    const { searchCars } = await import('../bookingProviders');
+    const cars = await searchCars({
+      pickUpLocation,
+      dropOffLocation,
+      pickUpDate,
+      dropOffDate
+    });
+    
+    res.json(cars);
+  } catch (error: any) {
+    console.error("Car search error:", error);
+    res.status(500).json({ message: "Unable to search cars: " + error.message });
+  }
+});
+
 // Hotel search endpoint
 router.post('/hotels/search', async (req, res) => {
   try {
