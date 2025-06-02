@@ -102,6 +102,48 @@ export default function BookingWorkflow() {
   const [maxPrice, setMaxPrice] = useState<number>(2000);
   const [additionalTravelers, setAdditionalTravelers] = useState<Array<{firstName: string; lastName: string; dateOfBirth: string}>>([]);
   
+  // Traveler management for sequential booking
+  const [currentTravelerIndex, setCurrentTravelerIndex] = useState<number>(0);
+  const [travelerBookings, setTravelerBookings] = useState<Array<{
+    traveler: any;
+    departureFlight?: FlightResult;
+    returnFlight?: FlightResult;
+  }>>([]);
+  
+  // Get all travelers for the booking
+  const getAllTravelers = () => {
+    const travelers = [];
+    
+    // Add primary traveler
+    if (clientInfo) {
+      travelers.push({
+        firstName: clientInfo.primaryTraveler.firstName,
+        lastName: clientInfo.primaryTraveler.lastName,
+        email: clientInfo.primaryTraveler.email,
+        phone: clientInfo.primaryTraveler.phone,
+        dateOfBirth: clientInfo.primaryTraveler.dateOfBirth,
+        isPrimary: true
+      });
+    }
+    
+    // Add additional travelers
+    additionalTravelers.forEach(t => {
+      travelers.push({
+        firstName: t.firstName,
+        lastName: t.lastName,
+        email: '',
+        phone: '',
+        dateOfBirth: t.dateOfBirth,
+        isPrimary: false
+      });
+    });
+    
+    return travelers;
+  };
+  
+  const currentTraveler = getAllTravelers()[currentTravelerIndex];
+  const totalTravelers = getAllTravelers().length;
+  
   const clientForm = useForm<ClientInfoValues>({
     resolver: zodResolver(clientInfoSchema),
     defaultValues: {
@@ -428,15 +470,47 @@ export default function BookingWorkflow() {
       return;
     }
 
-    // Auto-search hotels
+    // Save current traveler's flight selections
+    const updatedBookings = [...travelerBookings];
+    const currentTravelerBooking = {
+      traveler: currentTraveler,
+      departureFlight: selectedDepartureFlight,
+      returnFlight: selectedReturnFlight
+    };
+
+    if (updatedBookings[currentTravelerIndex]) {
+      updatedBookings[currentTravelerIndex] = currentTravelerBooking;
+    } else {
+      updatedBookings.push(currentTravelerBooking);
+    }
+    setTravelerBookings(updatedBookings);
+
+    // Check if there are more travelers to process
+    if (currentTravelerIndex < totalTravelers - 1) {
+      // Move to next traveler
+      setCurrentTravelerIndex(currentTravelerIndex + 1);
+      
+      // Clear current selections for next traveler
+      setSelectedDepartureFlight(null);
+      setSelectedReturnFlight(null);
+      
+      toast({
+        title: "Flights Saved",
+        description: `Flights saved for ${currentTraveler?.firstName}. Now selecting flights for ${getAllTravelers()[currentTravelerIndex + 1]?.firstName}.`,
+      });
+      
+      return; // Stay on flight selection step
+    }
+
+    // All travelers processed, move to hotels
     setIsSearching(true);
     try {
       const searchParams = {
         destination: clientInfo.destination,
         checkIn: clientInfo.departureDate,
         checkOut: clientInfo.returnDate || clientInfo.departureDate,
-        guests: clientInfo.passengers,
-        rooms: Math.ceil(clientInfo.passengers / 2),
+        guests: totalTravelers,
+        rooms: totalTravelers, // Default to one room per traveler
       };
 
       const response = await apiRequest('POST', '/api/bookings/hotels/search', searchParams);
@@ -446,8 +520,8 @@ export default function BookingWorkflow() {
         setHotelResults(hotelData.hotels || []);
         
         toast({
-          title: "Flights Selected",
-          description: `Found ${hotelData.hotels?.length || 0} hotels for your stay. Select your accommodation.`,
+          title: "All Flights Selected",
+          description: `Flights selected for all ${totalTravelers} travelers. Found ${hotelData.hotels?.length || 0} hotels for your stay.`,
         });
         
         setCurrentStep('hotels');
@@ -460,7 +534,6 @@ export default function BookingWorkflow() {
         description: "Unable to search for hotels. You can skip this step and add accommodation later.",
         variant: "destructive",
       });
-      // Allow proceeding without hotels
       setCurrentStep('confirmation');
     } finally {
       setIsSearching(false);
@@ -938,7 +1011,14 @@ export default function BookingWorkflow() {
       {currentStep === 'flights' && clientInfo && (
         <Card>
           <CardHeader>
-            <CardTitle>Select Flights for {clientInfo.primaryTraveler.firstName} {clientInfo.primaryTraveler.lastName}</CardTitle>
+            <CardTitle>
+              Select Flights for {currentTraveler ? `${currentTraveler.firstName} ${currentTraveler.lastName}` : 'Traveler'}
+              {totalTravelers > 1 && (
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                  ({currentTravelerIndex + 1} of {totalTravelers})
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-4">
@@ -1165,10 +1245,33 @@ export default function BookingWorkflow() {
                 )}
                 </Tabs>
 
+                {/* Traveler Progress Indicator */}
+                {totalTravelers > 1 && (
+                  <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                    <h4 className="font-medium mb-2">Booking Progress</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getAllTravelers().map((traveler, index) => (
+                        <div 
+                          key={index}
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            index < currentTravelerIndex 
+                              ? 'bg-green-100 text-green-800' 
+                              : index === currentTravelerIndex 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {traveler.firstName} {index < currentTravelerIndex ? '✓' : index === currentTravelerIndex ? '→' : ''}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Flight Selection Summary */}
                 {(selectedDepartureFlight || selectedReturnFlight) && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Selected Flights</h4>
+                    <h4 className="font-medium mb-2">Selected Flights for {currentTraveler?.firstName}</h4>
                     {selectedDepartureFlight && (
                       <div className="flex justify-between">
                         <span>Departure: {selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</span>
@@ -1200,7 +1303,10 @@ export default function BookingWorkflow() {
                     onClick={handleFlightSelectionComplete}
                     disabled={!selectedDepartureFlight && !selectedReturnFlight}
                   >
-                    Continue to Hotels
+                    {currentTravelerIndex < totalTravelers - 1 
+                      ? `Continue to Next Traveler (${getAllTravelers()[currentTravelerIndex + 1]?.firstName || 'Next'})` 
+                      : 'Continue to Hotels'
+                    }
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
