@@ -225,9 +225,79 @@ export default function BookingWorkflow() {
             costCenter: '',
           });
           
+          // Set client info and automatically search flights
+          setClientInfo({
+            origin: flightData.departureCity || '',
+            destination: flightData.arrivalCity || '',
+            departureDate: flightData.departureDate || '',
+            returnDate: flightData.returnDate || '',
+            tripType: flightData.returnDate ? 'round-trip' : 'one-way',
+            passengers: 1,
+            primaryTraveler: {
+              firstName: flightData.travelerName?.split(' ')[0] || '',
+              lastName: flightData.travelerName?.split(' ').slice(1).join(' ') || '',
+              email: flightData.travelerEmail || '',
+              phone: flightData.travelerPhone || '',
+              dateOfBirth: flightData.travelerDateOfBirth || '',
+            },
+            emergencyContact: {
+              name: flightData.emergencyContact?.name || '',
+              phone: flightData.emergencyContact?.phone || '',
+              relationship: flightData.emergencyContact?.relationship || '',
+            },
+            specialRequests: flightData.dietaryRequirements || '',
+            tripPurpose: 'business',
+            companyName: '',
+            costCenter: '',
+          });
+
+          // Skip client info step and go directly to flight search
+          setCurrentStep('flights');
+          setIsSearching(true);
+
+          // Auto-search flights with the provided information
+          setTimeout(async () => {
+            try {
+              const searchParams = {
+                origin: flightData.departureCity,
+                destination: flightData.arrivalCity,
+                departureDate: flightData.departureDate,
+                returnDate: flightData.returnDate || undefined,
+                passengers: 1,
+                cabin: 'economy',
+                tripType: flightData.returnDate ? 'round-trip' : 'one-way',
+              };
+
+              const response = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
+              
+              if (response.ok) {
+                const flightSearchData = await response.json();
+                setFlightResults(flightSearchData.flights || []);
+                setCurrentStep('flights');
+                
+                toast({
+                  title: "Sequential booking",
+                  description: `Found ${flightSearchData.flights?.length || 0} flights for ${flightData.travelerName} from ${flightData.departureCity} to ${flightData.arrivalCity}`,
+                });
+              } else {
+                throw new Error('Flight search failed');
+              }
+            } catch (error) {
+              console.error('Error searching flights:', error);
+              toast({
+                title: "Search error",
+                description: "Unable to search flights. Please check your travel details and try again.",
+                variant: "destructive",
+              });
+              setCurrentStep('client-info'); // Fallback to client info if search fails
+            } finally {
+              setIsSearching(false);
+            }
+          }, 1000);
+        
           toast({
             title: "Sequential booking",
-            description: `Booking flight for ${flightData.travelerName} from ${flightData.departureCity} to ${flightData.arrivalCity}`,
+            description: `Searching flights for ${flightData.travelerName}...`,
           });
         } catch (error) {
           console.error('Error parsing sequential flight booking data:', error);
