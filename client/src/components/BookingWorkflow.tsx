@@ -121,31 +121,37 @@ export default function BookingWorkflow() {
           
           // Pre-fill primary traveler with first team member
           const primaryTraveler = travelers[0];
+          const origin = primaryTraveler.departureCity && primaryTraveler.departureCountry 
+            ? `${primaryTraveler.departureCity}, ${primaryTraveler.departureCountry}`
+            : 'Multiple Origins';
+            
           clientForm.reset({
-            origin: `${primaryTraveler.departureCity}, ${primaryTraveler.departureCountry}`,
-            destination: '',
-            departureDate: '',
+            origin: origin,
+            destination: 'Group Destination (TBD)',
+            departureDate: new Date().toISOString().split('T')[0],
             returnDate: '',
             tripType: 'round-trip',
             passengers: travelers.length,
             primaryTraveler: {
-              firstName: primaryTraveler.name.split(' ')[0] || '',
-              lastName: primaryTraveler.name.split(' ').slice(1).join(' ') || '',
-              email: primaryTraveler.email || user?.email || '',
-              phone: '',
-              dateOfBirth: '',
+              firstName: primaryTraveler.name.split(' ')[0] || 'Group',
+              lastName: primaryTraveler.name.split(' ').slice(1).join(' ') || 'Coordinator',
+              email: primaryTraveler.email || user?.email || 'coordinator@company.com',
+              phone: '000-000-0000',
+              dateOfBirth: '1990-01-01',
             },
             emergencyContact: {
-              name: '',
-              phone: '',
-              relationship: '',
+              name: 'Company HR',
+              phone: '000-000-0000',
+              relationship: 'Employer',
             },
-            specialRequests: `Group booking for ${travelers.length} travelers with individual departure cities`,
+            specialRequests: `Multi-origin group booking: ${travelers.map(t => `${t.name} from ${t.departureCity || 'TBD'}`).join(', ')}`,
             tripPurpose: 'business',
-            companyName: '',
-            costCenter: '',
+            companyName: 'Corporate Travel',
+            costCenter: 'Group Travel',
           });
 
+          setIsGroupBooking(true);
+          
           toast({
             title: "Group coordinator booking",
             description: `Setting up coordinated booking for ${travelers.length} team members from multiple cities`,
