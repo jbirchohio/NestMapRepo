@@ -894,8 +894,7 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
       const results = await this.db
         .select()
         .from(trips)
-        .where(eq(trips.organization_id, organizationId))
-        .orderBy(desc(trips.createdAt));
+        .where(eq(trips.organization_id, organizationId));
 
       console.log(`Found ${results.length} trips for organization ${organizationId}`);
       return results;
