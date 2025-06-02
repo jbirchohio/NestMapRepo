@@ -119,11 +119,21 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       return;
     }
 
+    if (!newTraveler.departure_city.trim()) {
+      toast({
+        title: "Departure city required",
+        description: "Please enter the traveler's departure city.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const travelerData = {
       ...newTraveler,
       budget_allocation: newTraveler.budget_allocation ? parseInt(newTraveler.budget_allocation) * 100 : null, // Convert to cents
     };
 
+    console.log('Adding traveler with data:', travelerData); // Debug log
     addTravelerMutation.mutate(travelerData);
   };
 
@@ -217,24 +227,37 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="departure_city">Departure City</Label>
-                      <Input
-                        id="departure_city"
-                        value={newTraveler.departure_city}
-                        onChange={(e) => setNewTraveler({ ...newTraveler, departure_city: e.target.value })}
-                        placeholder="e.g. Los Angeles"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="departure_country">Country</Label>
-                      <Input
-                        id="departure_country"
-                        value={newTraveler.departure_country}
-                        onChange={(e) => setNewTraveler({ ...newTraveler, departure_country: e.target.value })}
-                        placeholder="e.g. United States"
-                      />
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Multi-Origin Travel Setup</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                      Each team member can depart from different cities (LA, NYC, etc.) and coordinate at the destination.
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="departure_city" className="text-blue-900 dark:text-blue-100">
+                          Departure City *
+                        </Label>
+                        <Input
+                          id="departure_city"
+                          value={newTraveler.departure_city}
+                          onChange={(e) => setNewTraveler({ ...newTraveler, departure_city: e.target.value })}
+                          placeholder="e.g. Los Angeles, New York"
+                          className="border-blue-200 dark:border-blue-700"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="departure_country" className="text-blue-900 dark:text-blue-100">
+                          Country
+                        </Label>
+                        <Input
+                          id="departure_country"
+                          value={newTraveler.departure_country}
+                          onChange={(e) => setNewTraveler({ ...newTraveler, departure_country: e.target.value })}
+                          placeholder="e.g. United States"
+                          className="border-blue-200 dark:border-blue-700"
+                        />
+                      </div>
                     </div>
                   </div>
 
