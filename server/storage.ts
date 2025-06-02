@@ -289,7 +289,7 @@ export class MemStorage implements IStorage {
 
   async getTodosByTripId(tripId: number): Promise<Todo[]> {
     return Array.from(this.todos.values()).filter(
-      (todo) => todo.tripId === tripId
+      (todo) => todo.trip_id === tripId
     );
   }
 
@@ -298,9 +298,11 @@ export class MemStorage implements IStorage {
     const todo: Todo = { 
       ...insertTodo, 
       id,
-      organizationId: insertTodo.organizationId || null,
-      assignedTo: insertTodo.assignedTo || null,
-      completed: insertTodo.completed ?? false
+      organization_id: insertTodo.organizationId || null,
+      assigned_to: insertTodo.assignedTo || null,
+      completed: insertTodo.completed ?? false,
+      trip_id: insertTodo.tripId,
+      task: insertTodo.task
     };
     this.todos.set(id, todo);
     return todo;
@@ -326,7 +328,7 @@ export class MemStorage implements IStorage {
 
   async getNotesByTripId(tripId: number): Promise<Note[]> {
     return Array.from(this.notes.values()).filter(
-      (note) => note.tripId === tripId
+      (note) => note.trip_id === tripId
     );
   }
 
@@ -335,7 +337,9 @@ export class MemStorage implements IStorage {
     const note: Note = { 
       ...insertNote, 
       id,
-      organizationId: insertNote.organizationId || null
+      organization_id: insertNote.organizationId || null,
+      trip_id: insertNote.tripId,
+      content: insertNote.content
     };
     this.notes.set(id, note);
     return note;
