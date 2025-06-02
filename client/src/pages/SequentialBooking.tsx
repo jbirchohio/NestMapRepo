@@ -46,26 +46,62 @@ export default function SequentialBooking() {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    // Load sequential booking data from sessionStorage
-    const storedData = sessionStorage.getItem('sequentialBookingData');
-    if (storedData) {
-      try {
-        const data = JSON.parse(storedData);
-        setBookingData(data);
-      } catch (error) {
+    try {
+      // Load sequential booking data from sessionStorage
+      const storedData = sessionStorage.getItem('sequentialBookingData');
+      console.log('Stored sequential booking data:', storedData);
+      
+      if (storedData) {
+        try {
+          const data = JSON.parse(storedData);
+          console.log('Parsed sequential booking data:', data);
+          
+          // Validate that required data exists
+          if (data && data.travelers && Array.isArray(data.travelers) && data.travelers.length > 0) {
+            // Validate each traveler has required properties
+            const validTravelers = data.travelers.every(t => 
+              t && typeof t.name === 'string' && typeof t.email === 'string'
+            );
+            
+            if (validTravelers) {
+              setBookingData(data);
+            } else {
+              console.error('Invalid traveler data structure:', data.travelers);
+              toast({
+                title: "Invalid traveler data",
+                description: "Please restart the booking process from the team management page.",
+                variant: "destructive",
+              });
+              setLocation('/');
+            }
+          } else {
+            console.error('Invalid booking data structure:', data);
+            toast({
+              title: "Invalid booking data",
+              description: "Please restart the booking process from the team management page.",
+              variant: "destructive",
+            });
+            setLocation('/');
+          }
+        } catch (parseError) {
+          console.error('Error parsing booking data:', parseError);
+          toast({
+            title: "Error loading booking data",
+            description: "Please restart the booking process from the team management page.",
+            variant: "destructive",
+          });
+          setLocation('/');
+        }
+      } else {
         toast({
-          title: "Error loading booking data",
-          description: "Please restart the booking process from the team management page.",
+          title: "No booking data found",
+          description: "Please start the booking process from the team management page.",
           variant: "destructive",
         });
         setLocation('/');
       }
-    } else {
-      toast({
-        title: "No booking data found",
-        description: "Please start the booking process from the team management page.",
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error('Critical error in SequentialBooking useEffect:', error);
       setLocation('/');
     }
   }, [setLocation]);

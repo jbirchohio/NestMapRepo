@@ -223,22 +223,35 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       return;
     }
 
+    // Validate required trip data fields
+    const city = tripData.city || tripData.location || 'Unknown';
+    const country = tripData.country || 'Unknown';
+    
+    if (!city || city === 'Unknown') {
+      toast({
+        title: "Trip destination missing",
+        description: "Please set the trip destination before starting sequential booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Create sequential booking workflow data using existing tripData
     const sequentialBookingData = {
       tripId: tripId.toString(),
-      tripDestination: `${tripData.city}, ${tripData.country}`,
+      tripDestination: `${city}, ${country}`,
       departureDate: tripData.start_date || tripData.startDate,
       returnDate: tripData.end_date || tripData.endDate,
       currentTravelerIndex: 0,
       travelers: travelers.map(traveler => ({
         id: traveler.id,
-        name: traveler.name,
+        name: traveler.name || '',
         email: traveler.email || '',
         phone: traveler.phone || '',
         dateOfBirth: traveler.date_of_birth || '',
-        departureCity: traveler.departure_city,
-        departureCountry: traveler.departure_country,
-        travelClass: traveler.travel_class,
+        departureCity: traveler.departure_city || '',
+        departureCountry: traveler.departure_country || '',
+        travelClass: traveler.travel_class || 'economy',
         dietaryRequirements: traveler.dietary_requirements || '',
         emergencyContact: {
           name: traveler.emergency_contact_name || '',
@@ -250,6 +263,9 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       bookingStatus: 'flights' // flights -> hotels -> complete
     };
     
+    // Debug log the data being stored
+    console.log('Sequential booking data being stored:', sequentialBookingData);
+    
     // Store booking data for sequential processing
     sessionStorage.setItem('sequentialBookingData', JSON.stringify(sequentialBookingData));
     
@@ -258,7 +274,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     
     toast({
       title: "Sequential booking started",
-      description: `Starting with ${travelers[0].name}'s flight from ${travelers[0].departureCity} to ${tripData.city}`,
+      description: `Starting with ${travelers[0].name || 'first traveler'}'s flight from ${travelers[0].departure_city || 'departure city'} to ${city}`,
     });
   };
 
