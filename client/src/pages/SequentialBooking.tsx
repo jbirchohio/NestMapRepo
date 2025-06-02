@@ -44,18 +44,24 @@ interface SequentialBookingData {
 
 interface FlightOffer {
   id: string;
-  price: { amount: number; currency: string };
-  itineraries: Array<{
-    duration: string;
-    segments: Array<{
-      departure: { iataCode: string; at: string };
-      arrival: { iataCode: string; at: string };
-      carrierCode: string;
-      number: string;
-      aircraft: { code: string };
-      duration: string;
-    }>;
-  }>;
+  airline: string;
+  flightNumber: string;
+  price: number;
+  currency: string;
+  departure: {
+    airport: string;
+    time: string;
+    date: string;
+  };
+  arrival: {
+    airport: string;
+    time: string;
+    date: string;
+  };
+  duration: string;
+  stops: number;
+  type: string;
+  validatingAirlineCodes: string[];
 }
 
 export default function SequentialBooking() {
@@ -523,29 +529,28 @@ export default function SequentialBooking() {
                       <div className="flex-1">
                         <div className="flex items-center gap-4 mb-2">
                           <div className="text-lg font-semibold">
-                            {offer.itineraries[0].segments[0].departure.iataCode} → {offer.itineraries[0].segments[offer.itineraries[0].segments.length - 1].arrival.iataCode}
+                            {offer.departure?.airport} → {offer.arrival?.airport}
                           </div>
                           <Badge variant="outline">
-                            {offer.itineraries[0].segments[0].carrierCode} {offer.itineraries[0].segments[0].number}
+                            {offer.airline} {offer.flightNumber}
                           </Badge>
                         </div>
                         
                         <div className="flex items-center gap-6 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            {new Date(offer.itineraries[0].segments[0].departure.at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
-                            {new Date(offer.itineraries[0].segments[offer.itineraries[0].segments.length - 1].arrival.at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            {offer.departure?.time} - {offer.arrival?.time}
                           </div>
-                          <div>Duration: {offer.itineraries[0].duration.replace('PT', '').replace('H', 'h ').replace('M', 'm')}</div>
-                          <div>Stops: {offer.itineraries[0].segments.length - 1}</div>
+                          <div>Duration: {offer.duration}</div>
+                          <div>Stops: {offer.stops}</div>
                         </div>
                       </div>
                       
                       <div className="text-right">
                         <div className="text-2xl font-bold text-primary">
-                          ${parseFloat(offer.price.amount).toFixed(2)}
+                          ${parseFloat(offer.price).toFixed(2)}
                         </div>
-                        <div className="text-sm text-muted-foreground">{offer.price.currency}</div>
+                        <div className="text-sm text-muted-foreground">{offer.currency}</div>
                       </div>
                     </div>
                   </CardContent>
@@ -568,7 +573,7 @@ export default function SequentialBooking() {
                     // TODO: Implement actual booking
                     toast({
                       title: "Flight selected",
-                      description: `Selected ${selectedFlight.price.currency} ${selectedFlight.price.amount} flight for ${currentTraveler.name}`,
+                      description: `Selected ${selectedFlight.currency} $${selectedFlight.price} flight for ${currentTraveler.name}`,
                     });
                     setCurrentStep(0);
                     handleNextTraveler();
