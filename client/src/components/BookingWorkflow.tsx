@@ -1692,31 +1692,70 @@ export default function BookingWorkflow() {
               {/* Booking Summary */}
               <div>
                 <h3 className="font-medium mb-2">Selected Services</h3>
-                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                  {selectedDepartureFlight && (
-                    <div className="flex justify-between">
-                      <span>Departure Flight: {selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</span>
-                      <span>${selectedDepartureFlight.price.amount}</span>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                  {/* Show all travelers' flight bookings */}
+                  {travelerBookings.length > 0 ? (
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-800">Flight Bookings</h4>
+                      {travelerBookings.map((booking, index) => (
+                        <div key={index} className="border-l-4 border-blue-500 pl-4 bg-white p-3 rounded">
+                          <div className="font-medium text-blue-800 mb-2">
+                            {booking.traveler?.firstName} {booking.traveler?.lastName}
+                          </div>
+                          <div className="space-y-1 text-sm">
+                            {booking.departureFlight && (
+                              <div className="flex justify-between">
+                                <span>Departure: {booking.departureFlight.airline} {booking.departureFlight.flightNumber}</span>
+                                <span className="font-medium">${booking.departureFlight.price.amount}</span>
+                              </div>
+                            )}
+                            {booking.returnFlight && (
+                              <div className="flex justify-between">
+                                <span>Return: {booking.returnFlight.airline} {booking.returnFlight.flightNumber}</span>
+                                <span className="font-medium">${booking.returnFlight.price.amount}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  ) : (
+                    // Fallback to individual selections if travelerBookings is empty
+                    <>
+                      {selectedDepartureFlight && (
+                        <div className="flex justify-between">
+                          <span>Departure Flight: {selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</span>
+                          <span>${selectedDepartureFlight.price.amount}</span>
+                        </div>
+                      )}
+                      {selectedReturnFlight && (
+                        <div className="flex justify-between">
+                          <span>Return Flight: {selectedReturnFlight.airline} {selectedReturnFlight.flightNumber}</span>
+                          <span>${selectedReturnFlight.price.amount}</span>
+                        </div>
+                      )}
+                    </>
                   )}
-                  {selectedReturnFlight && (
-                    <div className="flex justify-between">
-                      <span>Return Flight: {selectedReturnFlight.airline} {selectedReturnFlight.flightNumber}</span>
-                      <span>${selectedReturnFlight.price.amount}</span>
-                    </div>
-                  )}
+                  
                   {selectedHotel && (
-                    <div className="flex justify-between">
-                      <span>Hotel: {selectedHotel.name}</span>
-                      <span>${selectedHotel.price.amount} per {selectedHotel.price.per}</span>
+                    <div className="border-t pt-3">
+                      <h4 className="font-medium text-gray-800 mb-2">Hotel Accommodation</h4>
+                      <div className="flex justify-between">
+                        <span>{selectedHotel.name}</span>
+                        <span>${selectedHotel.price.amount} per {selectedHotel.price.per}</span>
+                      </div>
                     </div>
                   )}
-                  <div className="border-t pt-2 flex justify-between font-bold">
+                  
+                  <div className="border-t pt-3 flex justify-between font-bold text-lg">
                     <span>Total Estimated Cost:</span>
                     <span>${
-                      (selectedDepartureFlight?.price.amount || 0) + 
-                      (selectedReturnFlight?.price.amount || 0) + 
-                      (selectedHotel?.price.amount || 0)
+                      // Calculate total from all traveler bookings
+                      travelerBookings.reduce((total, booking) => {
+                        const depCost = booking.departureFlight?.price.amount || 0;
+                        const retCost = booking.returnFlight?.price.amount || 0;
+                        return total + depCost + retCost;
+                      }, 0) + (selectedHotel?.price.amount || 0)
                     }</span>
                   </div>
                 </div>
