@@ -222,7 +222,8 @@ router.get("/:id/analytics", requireOrgPermission('access_analytics'), async (re
 // Add members endpoint for organization management
 router.get('/members', async (req: Request, res: Response) => {
   try {
-    if (!req.user?.organization_id) {
+    const userOrgId = req.user?.organization_id || req.user?.organizationId;
+    if (!userOrgId) {
       return res.status(400).json({ message: "Organization context required" });
     }
 
@@ -237,7 +238,7 @@ router.get('/members', async (req: Request, res: Response) => {
         avatar_url: users.avatar_url
       })
       .from(users)
-      .where(eq(users.organization_id, req.user.organization_id))
+      .where(eq(users.organization_id, userOrgId))
       .orderBy(users.display_name);
 
     res.json(members);
