@@ -44,7 +44,7 @@ const getDemoTrips = (roleType: string) => {
 
 export async function getTrips(req: Request, res: Response) {
   try {
-    const userId = req.query.userId as string;
+    const userId = req.query.user_id as string;
     
     // Handle demo users
     if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
@@ -115,7 +115,7 @@ export async function getTripById(req: Request, res: Response) {
     }
     
     // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organizationId || null;
+    const userOrgId = req.user.organization_id || null;
     if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
@@ -133,8 +133,8 @@ export async function createTrip(req: Request, res: Response) {
     console.log("Creating trip with validated data:", req.body);
     
     // Handle demo users - return mock success response
-    if (req.body.userId && typeof req.body.userId === 'string' && 
-        (req.body.userId.startsWith('demo-corp-') || req.body.userId.startsWith('demo-agency-'))) {
+    if (req.body.user_id && typeof req.body.user_id === 'string' && 
+        (req.body.user_id.startsWith('demo-corp-') || req.body.user_id.startsWith('demo-agency-'))) {
       
       const mockTrip = {
         id: `demo-trip-${Date.now()}`,
@@ -144,7 +144,7 @@ export async function createTrip(req: Request, res: Response) {
         endDate: req.body.endDate,
         city: req.body.city,
         country: req.body.country,
-        userId: req.body.userId,
+        userId: req.body.user_id,
         status: 'confirmed',
         created_at: new Date().toISOString(),
         hasHotelButton: !!req.body.selectedHotel // Track if hotel was selected
@@ -168,8 +168,8 @@ export async function createTrip(req: Request, res: Response) {
       ...req.body,
       start_date: req.body.start_date || req.body.startDate,
       end_date: req.body.end_date || req.body.endDate,
-      user_id: req.body.user_id || req.body.userId,
-      organization_id: req.body.organization_id || req.body.organizationId,
+      user_id: req.body.user_id || req.body.user_id,
+      organization_id: req.body.organization_id || req.body.organization_id,
       sharing_enabled: req.body.sharing_enabled || req.body.sharingEnabled,
       share_permission: req.body.share_permission || req.body.sharePermission,
       city_latitude: req.body.city_latitude || req.body.cityLatitude,
@@ -269,7 +269,7 @@ export async function updateTrip(req: Request, res: Response) {
     }
     
     // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organizationId || null;
+    const userOrgId = req.user.organization_id || null;
     if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
@@ -340,7 +340,7 @@ export async function deleteTrip(req: Request, res: Response) {
     }
     
     // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organizationId || null;
+    const userOrgId = req.user.organization_id || null;
     if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
     }

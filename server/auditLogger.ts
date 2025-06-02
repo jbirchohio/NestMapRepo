@@ -21,8 +21,8 @@ export class AuditLogger {
   async logAction(event: AuditEvent): Promise<void> {
     try {
       await db.insert(adminAuditLog).values({
-        userId: event.userId,
-        organizationId: event.organizationId,
+        userId: event.user_id,
+        organizationId: event.organization_id,
         action: event.action,
         entityType: event.entityType,
         entityId: event.entityId,
@@ -137,10 +137,10 @@ export class AuditLogger {
     let query = db
       .select()
       .from(adminAuditLog)
-      .where(eq(adminAuditLog.organizationId, organizationId));
+      .where(eq(adminAuditLog.organization_id, organizationId));
 
     if (userId) {
-      query = query.where(eq(adminAuditLog.userId, userId));
+      query = query.where(eq(adminAuditLog.user_id, userId));
     }
 
     if (entityType) {
@@ -271,7 +271,7 @@ export class DataRetentionManager {
     const deletedCount = await db
       .delete(adminAuditLog)
       .where(and(
-        eq(adminAuditLog.organizationId, organizationId),
+        eq(adminAuditLog.organization_id, organizationId),
         lte(adminAuditLog.timestamp, cutoffDate)
       ));
 

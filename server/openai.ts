@@ -322,7 +322,7 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
             conflicts.push({
               trips: [trip1.id, trip2.id],
               type: 'date_overlap',
-              users: [trip1.userId, trip2.userId],
+              users: [trip1.user_id, trip2.user_id],
               departments: [trip1.department, trip2.department]
             });
           }
@@ -394,7 +394,7 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
     // Apply optimizations to trips
     const optimizedTrips = trips.map(trip => {
       const originalCost = calculateTripCost(trip);
-      const optimization = aiResult.optimizations?.find((opt: any) => opt.tripId === trip.id);
+      const optimization = aiResult.optimizations?.find((opt: any) => opt.trip_id === trip.id);
       
       if (optimization) {
         const hasGroupBooking = opportunities.some(opp => opp.trips.includes(trip.id));

@@ -175,13 +175,13 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     }
 
     // Store user ID in session
-    (req.session as any).userId = user.id;
+    (req.session as any).user_id = user.id;
     
     console.log('Login successful for user:', {
       id: user.id,
       email: user.email,
       role: user.role,
-      organizationId: user.organizationId
+      organizationId: user.organization_id
     });
 
     res.json({
@@ -190,7 +190,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         role: user.role,
-        organizationId: user.organizationId,
+        organizationId: user.organization_id,
         displayName: user.displayName
       }
     });
@@ -218,7 +218,7 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
         id: req.user.id,
         email: req.user.email || 'Unknown',
         role: req.user.role,
-        organizationId: req.user.organizationId,
+        organizationId: req.user.organization_id,
         displayName: req.user.displayName || 'Unknown'
       }
     });
@@ -231,7 +231,7 @@ app.get('/api/auth/me', async (req: Request, res: Response) => {
 app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
   try {
     // Only allow authenticated users to see session stats
-    if (!(req.session as any)?.userId) {
+    if (!(req.session as any)?.user_id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 

@@ -116,7 +116,7 @@ export interface OrganizationAnalyticsData {
 export async function getUserPersonalAnalytics(userId: number, organizationId?: number | null): Promise<AnalyticsData> {
   try {
     // Filter all queries to only include data for this specific user
-    const userTripsFilter = eq(trips.userId, userId);
+    const userTripsFilter = eq(trips.user_id, userId);
     
     // Overview statistics - user specific
     const totalTripsResult = await db.select({ count: count() }).from(trips).where(userTripsFilter);
@@ -124,7 +124,7 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     
     // Get activities only for this user's trips
     const totalActivitiesResult = await db.select({ count: count() }).from(activities)
-      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .innerJoin(trips, eq(activities.trip_id, trips.id))
       .where(userTripsFilter);
     
     // Average trip length for user's trips only
@@ -134,13 +134,13 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
 
     // Average activities per trip for user only
     const userTripActivities = await db.select({
-      tripId: activities.tripId,
+      tripId: activities.trip_id,
       activityCount: count()
     })
     .from(activities)
-    .innerJoin(trips, eq(activities.tripId, trips.id))
+    .innerJoin(trips, eq(activities.trip_id, trips.id))
     .where(userTripsFilter)
-    .groupBy(activities.tripId);
+    .groupBy(activities.trip_id);
 
     const avgActivitiesPerTrip = userTripActivities.length > 0 ? 
       Math.round(userTripActivities.reduce((sum, trip) => sum + trip.activityCount, 0) / userTripActivities.length) : 0;
@@ -220,7 +220,7 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
       count: count()
     })
     .from(activities)
-    .innerJoin(trips, eq(activities.tripId, trips.id))
+    .innerJoin(trips, eq(activities.trip_id, trips.id))
     .where(and(userTripsFilter, sql`${activities.title} IS NOT NULL`))
     .groupBy(sql`LOWER(${activities.title})`)
     .orderBy(desc(count()))
@@ -252,9 +252,9 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     const [tripsWithCompletedActivitiesResult] = await db.select({
       count: count()
     }).from(
-      db.selectDistinct({ tripId: activities.tripId })
+      db.selectDistinct({ tripId: activities.trip_id })
       .from(activities)
-      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .innerJoin(trips, eq(activities.trip_id, trips.id))
       .where(and(userTripsFilter, sql`${activities.completed} = true`))
       .as('user_trips_with_completed')
     );
@@ -276,7 +276,7 @@ export async function getUserPersonalAnalytics(userId: number, organizationId?: 
     const activitiesAddedLast7DaysResult = await db.select({
       count: count()
     }).from(activities)
-    .innerJoin(trips, eq(activities.tripId, trips.id))
+    .innerJoin(trips, eq(activities.trip_id, trips.id))
     .where(userTripsFilter);
 
     // Growth metrics for user
@@ -354,11 +354,11 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       avgActivities: avg(sql`activity_count`)
     }).from(
       db.select({
-        tripId: activities.tripId,
+        tripId: activities.trip_id,
         activityCount: sql`COUNT(*)`.as('activity_count')
       })
       .from(activities)
-      .groupBy(activities.tripId)
+      .groupBy(activities.trip_id)
       .as('trip_activities')
     );
 
@@ -439,18 +439,18 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     const [usersWithTripsResult] = await db.select({
       count: count()
     }).from(
-      db.selectDistinct({ userId: trips.userId }).from(trips).as('users_with_trips')
+      db.selectDistinct({ userId: trips.user_id }).from(trips).as('users_with_trips')
     );
 
     const [usersWithMultipleTripsResult] = await db.select({
       count: count()
     }).from(
       db.select({
-        userId: trips.userId,
+        userId: trips.user_id,
         tripCount: count()
       })
       .from(trips)
-      .groupBy(trips.userId)
+      .groupBy(trips.user_id)
       .having(sql`COUNT(*) > 1`)
       .as('users_multiple_trips')
     );
@@ -459,11 +459,11 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       avgTrips: avg(sql`trip_count`)
     }).from(
       db.select({
-        userId: trips.userId,
+        userId: trips.user_id,
         tripCount: sql`COUNT(*)`.as('trip_count')
       })
       .from(trips)
-      .groupBy(trips.userId)
+      .groupBy(trips.user_id)
       .as('user_trip_counts')
     );
 
@@ -476,7 +476,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     const [tripsWithCompletedActivitiesResult] = await db.select({
       count: count()
     }).from(
-      db.selectDistinct({ tripId: activities.tripId })
+      db.selectDistinct({ tripId: activities.trip_id })
       .from(activities)
       .where(sql`${activities.completed} = true`)
       .as('trips_with_completed')
@@ -531,9 +531,9 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     const [usersWithActivitiesResult] = await db.select({
       count: count()
     }).from(
-      db.selectDistinct({ userId: activities.tripId })
+      db.selectDistinct({ userId: activities.trip_id })
       .from(activities)
-      .innerJoin(trips, sql`${activities.tripId} = ${trips.id}`)
+      .innerJoin(trips, sql`${activities.trip_id} = ${trips.id}`)
       .as('users_with_activities')
     );
 
@@ -541,7 +541,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     const [usersWithCompletedTripsResult] = await db.select({
       count: count()
     }).from(
-      db.selectDistinct({ userId: trips.userId })
+      db.selectDistinct({ userId: trips.user_id })
       .from(trips)
       .where(eq(trips.completed, true))
       .as('users_with_completed_trips')
@@ -633,7 +633,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
   try {
     // Filter all queries to organization members only
     const orgUsersFilter = eq(users.organization_id, organizationId);
-    const orgTripsFilter = eq(trips.organizationId, organizationId);
+    const orgTripsFilter = eq(trips.organization_id, organizationId);
 
     // Overview statistics for organization
     const [totalTripsResult] = await db.select({ count: count() })
@@ -646,7 +646,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
 
     const [totalActivitiesResult] = await db.select({ count: count() })
       .from(activities)
-      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .innerJoin(trips, eq(activities.trip_id, trips.id))
       .where(orgTripsFilter);
 
     // Budget analysis
@@ -668,13 +668,13 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       avgActivities: avg(sql`activity_count`)
     }).from(
       db.select({
-        tripId: activities.tripId,
+        tripId: activities.trip_id,
         activityCount: sql`COUNT(*)`.as('activity_count')
       })
       .from(activities)
-      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .innerJoin(trips, eq(activities.trip_id, trips.id))
       .where(orgTripsFilter)
-      .groupBy(activities.tripId)
+      .groupBy(activities.trip_id)
       .as('trip_activities')
     );
 
@@ -761,7 +761,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       count: sql`COUNT(DISTINCT ${users.id})`
     })
     .from(users)
-    .innerJoin(trips, eq(trips.userId, users.id))
+    .innerJoin(trips, eq(trips.user_id, users.id))
     .where(orgUsersFilter);
 
     const [usersWithMultipleTripsResult] = await db.select({
@@ -769,12 +769,12 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     })
     .from(
       db.select({
-        userId: trips.userId,
+        userId: trips.user_id,
         tripCount: count(trips.id)
       })
       .from(trips)
       .where(orgTripsFilter)
-      .groupBy(trips.userId)
+      .groupBy(trips.user_id)
       .having(sql`COUNT(${trips.id}) > 1`)
       .as('multi_trip_users')
     );
@@ -786,9 +786,9 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     const [tripsWithCompletedActivitiesResult] = await db.select({
       count: count()
     }).from(
-      db.selectDistinct({ tripId: activities.tripId })
+      db.selectDistinct({ tripId: activities.trip_id })
       .from(activities)
-      .innerJoin(trips, eq(activities.tripId, trips.id))
+      .innerJoin(trips, eq(activities.trip_id, trips.id))
       .where(and(orgTripsFilter, sql`${activities.completed} = true`))
       .as('completed_activities')
     );
@@ -801,14 +801,14 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`
     })
     .from(users)
-    .innerJoin(trips, eq(trips.userId, users.id))
+    .innerJoin(trips, eq(trips.user_id, users.id))
     .where(orgUsersFilter)
     .groupBy(users.id, users.username)
     .orderBy(desc(count(trips.id)))
     .limit(5);
 
     const mostActiveUsers = mostActiveUsersResult.map(user => ({
-      userId: user.userId,
+      userId: user.user_id,
       username: user.username || 'Unknown',
       tripCount: user.tripCount,
       totalBudget: Number(user.totalBudget) || 0
@@ -829,7 +829,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     const [activitiesAddedLast7DaysResult] = await db.select({
       count: count()
     }).from(activities)
-    .innerJoin(trips, eq(activities.tripId, trips.id))
+    .innerJoin(trips, eq(activities.trip_id, trips.id))
     .where(and(orgTripsFilter, sql`${activities.createdAt} >= ${sevenDaysAgo}`));
 
     const [budgetSpentLast7DaysResult] = await db.select({

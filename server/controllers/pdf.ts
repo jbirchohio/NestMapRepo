@@ -8,7 +8,7 @@ import { storage } from "../storage";
 
 export async function generateTripProposal(req: Request, res: Response) {
   try {
-    const tripId = Number(req.params.tripId);
+    const tripId = Number(req.params.trip_id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
@@ -25,8 +25,8 @@ export async function generateTripProposal(req: Request, res: Response) {
     }
 
     // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organizationId || null;
-    if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
+    const userOrgId = req.user.organization_id || null;
+    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
@@ -60,7 +60,7 @@ export async function generateTripProposal(req: Request, res: Response) {
 
 export async function generateItinerary(req: Request, res: Response) {
   try {
-    const tripId = Number(req.params.tripId);
+    const tripId = Number(req.params.trip_id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
@@ -77,8 +77,8 @@ export async function generateItinerary(req: Request, res: Response) {
     }
 
     // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organizationId || null;
-    if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
+    const userOrgId = req.user.organization_id || null;
+    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 

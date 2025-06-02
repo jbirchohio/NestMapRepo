@@ -71,7 +71,7 @@ const inviteMemberSchema = z.object({
 
 router.post('/members/invite', requireOrgPermission('inviteMembers'), async (req: Request, res: Response) => {
   try {
-    if (!req.user?.organizationId) {
+    if (!req.user?.organization_id) {
       return res.status(400).json({ error: 'Organization ID required' });
     }
 
@@ -106,7 +106,7 @@ router.post('/members/invite', requireOrgPermission('inviteMembers'), async (req
       .where(
         and(
           eq(organizationMembers.user_id, existingUser.id),
-          eq(organizationMembers.organization_id, req.user.organizationId)
+          eq(organizationMembers.organization_id, req.user.organization_id)
         )
       );
 
@@ -121,7 +121,7 @@ router.post('/members/invite', requireOrgPermission('inviteMembers'), async (req
     const [newMember] = await db
       .insert(organizationMembers)
       .values({
-        organization_id: req.user.organizationId,
+        organization_id: req.user.organization_id,
         user_id: existingUser.id,
         org_role: orgRole,
         permissions: customPermissions ? JSON.stringify(customPermissions) : null,
@@ -167,7 +167,7 @@ const updateMemberSchema = z.object({
 
 router.patch('/members/:memberId', requireOrgPermission('assignRoles'), async (req: Request, res: Response) => {
   try {
-    if (!req.user?.organizationId) {
+    if (!req.user?.organization_id) {
       return res.status(400).json({ error: 'Organization ID required' });
     }
 
@@ -181,7 +181,7 @@ router.patch('/members/:memberId', requireOrgPermission('assignRoles'), async (r
       .where(
         and(
           eq(organizationMembers.id, memberId),
-          eq(organizationMembers.organization_id, req.user.organizationId)
+          eq(organizationMembers.organization_id, req.user.organization_id)
         )
       );
 
@@ -255,7 +255,7 @@ router.patch('/members/:memberId', requireOrgPermission('assignRoles'), async (r
  */
 router.delete('/members/:memberId', requireOrgPermission('manageMembers'), async (req: Request, res: Response) => {
   try {
-    if (!req.user?.organizationId) {
+    if (!req.user?.organization_id) {
       return res.status(400).json({ error: 'Organization ID required' });
     }
 
@@ -268,7 +268,7 @@ router.delete('/members/:memberId', requireOrgPermission('manageMembers'), async
       .where(
         and(
           eq(organizationMembers.id, memberId),
-          eq(organizationMembers.organization_id, req.user.organizationId)
+          eq(organizationMembers.organization_id, req.user.organization_id)
         )
       );
 

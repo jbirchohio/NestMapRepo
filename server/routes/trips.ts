@@ -264,7 +264,7 @@ router.get("/:id/export/pdf", async (req: Request, res: Response) => {
 // Generate AI-powered trip proposal
 router.post("/:tripId/proposal", async (req: Request, res: Response) => {
   try {
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
@@ -326,7 +326,7 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
 // Trip sharing endpoints
 router.get("/:tripId/share", async (req: Request, res: Response) => {
   try {
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
@@ -355,7 +355,7 @@ router.get("/:tripId/share", async (req: Request, res: Response) => {
 
 router.put("/:tripId/share", async (req: Request, res: Response) => {
   try {
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }

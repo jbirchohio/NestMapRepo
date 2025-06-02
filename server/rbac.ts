@@ -107,7 +107,7 @@ export async function getUserTripRole(userId: number, tripId: number): Promise<T
       .from(trips)
       .where(eq(trips.id, tripId));
 
-    if (trip && trip.userId === userId) {
+    if (trip && trip.user_id === userId) {
       return TRIP_ROLES.ADMIN;
     }
 
@@ -155,7 +155,7 @@ export function requireSystemPermission(permission: string) {
 export function requireTripPermission(permission: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as AuthenticatedUser;
-    const tripId = parseInt(req.params.id || req.body.tripId);
+    const tripId = parseInt(req.params.id || req.body.trip_id);
     
     if (!user) {
       return res.status(401).json({ message: 'Authentication required' });
@@ -232,7 +232,7 @@ export async function getUserTripsWithRoles(userId: number) {
         userRole: 'admin' as const,
       })
       .from(trips)
-      .where(eq(trips.userId, userId));
+      .where(eq(trips.user_id, userId));
 
     // Get trips user collaborates on
     const collaboratedTrips = await db

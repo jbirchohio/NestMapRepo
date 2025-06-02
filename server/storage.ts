@@ -91,8 +91,8 @@ export class MemStorage implements IStorage {
     this.notes = new Map();
     this.invitations = new Map();
 
-    this.userIdCounter = 1;
-    this.tripIdCounter = 1;
+    this.user_idCounter = 1;
+    this.trip_idCounter = 1;
     this.activityIdCounter = 1;
     this.todoIdCounter = 1;
     this.noteIdCounter = 1;
@@ -139,7 +139,7 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userIdCounter++;
+    const id = this.user_idCounter++;
     const user: User = { 
       ...insertUser, 
       id,
@@ -187,18 +187,18 @@ export class MemStorage implements IStorage {
   }
 
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
-    const id = this.tripIdCounter++;
+    const id = this.trip_idCounter++;
     const trip: Trip = { 
       ...insertTrip, 
       id,
-      organization_id: insertTrip.organizationId || null,
+      organization_id: insertTrip.organization_id || null,
       share_permission: "read-only",
       created_at: new Date(),
       updated_at: new Date(),
       collaborators: insertTrip.collaborators || [],
       is_public: insertTrip.isPublic || false,
       sharing_enabled: insertTrip.sharingEnabled || false,
-      share_code: insertTrip.shareCode || null,
+      share_code: insertTrip.share_code || null,
       city: insertTrip.city || null,
       country: insertTrip.country || null,
       location: insertTrip.location || null,
@@ -215,7 +215,7 @@ export class MemStorage implements IStorage {
       budget: insertTrip.budget || null,
       start_date: insertTrip.startDate,
       end_date: insertTrip.endDate,
-      user_id: insertTrip.userId
+      user_id: insertTrip.user_id
     };
     this.trips.set(id, trip);
     return trip;
@@ -254,7 +254,7 @@ export class MemStorage implements IStorage {
     const activity: Activity = { 
       ...insertActivity, 
       id,
-      organization_id: insertActivity.organizationId || null,
+      organization_id: insertActivity.organization_id || null,
       latitude: insertActivity.latitude || null,
       longitude: insertActivity.longitude || null,
       notes: insertActivity.notes || null,
@@ -262,7 +262,7 @@ export class MemStorage implements IStorage {
       assigned_to: insertActivity.assignedTo || null,
       travel_mode: insertActivity.travelMode || null,
       completed: insertActivity.completed ?? false,
-      trip_id: insertActivity.tripId,
+      trip_id: insertActivity.trip_id,
       date: insertActivity.date,
       time: insertActivity.time,
       title: insertActivity.title,
@@ -301,10 +301,10 @@ export class MemStorage implements IStorage {
     const todo: Todo = { 
       ...insertTodo, 
       id,
-      organization_id: insertTodo.organizationId || null,
+      organization_id: insertTodo.organization_id || null,
       assigned_to: insertTodo.assignedTo || null,
       completed: insertTodo.completed ?? false,
-      trip_id: insertTodo.tripId,
+      trip_id: insertTodo.trip_id,
       task: insertTodo.task
     };
     this.todos.set(id, todo);
@@ -340,8 +340,8 @@ export class MemStorage implements IStorage {
     const note: Note = { 
       ...insertNote, 
       id,
-      organization_id: insertNote.organizationId || null,
-      trip_id: insertNote.tripId,
+      organization_id: insertNote.organization_id || null,
+      trip_id: insertNote.trip_id,
       content: insertNote.content
     };
     this.notes.set(id, note);
@@ -367,7 +367,7 @@ export class MemStorage implements IStorage {
     const newInvitation: Invitation = { 
       ...invitation, 
       id,
-      organizationId: invitation.organizationId ?? null,
+      organizationId: invitation.organization_id ?? null,
       status: 'pending',
       createdAt: new Date(),
       acceptedAt: null
@@ -394,7 +394,7 @@ export class MemStorage implements IStorage {
     // Update user's organization and role
     const user = this.users.get(userId);
     if (user) {
-      user.organization_id = invitation.organizationId;
+      user.organization_id = invitation.organization_id;
       user.role = invitation.role;
       this.users.set(userId, user);
     }
@@ -724,7 +724,7 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(users)
       .set({
-        organization_id: invitation.organizationId,
+        organization_id: invitation.organization_id,
         role: invitation.role
       })
       .where(eq(users.id, userId));

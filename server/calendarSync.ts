@@ -56,7 +56,7 @@ export function validateCalendarCSRFToken(
     return false;
   }
 
-  if (tokenData.userId !== userId || tokenData.organizationId !== organizationId) {
+  if (tokenData.user_id !== userId || tokenData.organization_id !== organizationId) {
     return false;
   }
 
@@ -92,7 +92,7 @@ export function validateCalendarCSRF(req: Request, res: Response, next: Function
     return;
   }
 
-  if (!validateCalendarCSRFToken(token, user.id, user.organizationId || 0)) {
+  if (!validateCalendarCSRFToken(token, user.id, user.organization_id || 0)) {
     res.status(403).json({ error: 'Invalid or expired CSRF token' });
     return;
   }

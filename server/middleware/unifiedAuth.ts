@@ -94,7 +94,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     .then(user => {
       if (!user) {
         // Clear invalid session
-        delete (req.session as any).userId;
+        delete (req.session as any).user_id;
         return res.status(401).json({ message: "Invalid session" });
       }
 
@@ -102,17 +102,17 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       req.user = {
         id: user.id,
         email: user.email,
-        organization_id: user.organizationId ?? undefined,
+        organization_id: user.organization_id ?? undefined,
         role: user.role ?? undefined,
         displayName: user.displayName ?? undefined
       };
 
       // Set organization context for tenant isolation
-      req.organizationId = user.organizationId ?? undefined;
+      req.organization_id = user.organization_id ?? undefined;
 
       // Create organization context utilities
       req.organizationContext = {
-        id: user.organizationId,
+        id: user.organization_id,
 
         canAccessOrganization: (targetOrgId: number | null): boolean => {
           // Super admins can access any organization
@@ -121,7 +121,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
           }
 
           // Regular users can only access their own organization
-          return user.organizationId === targetOrgId;
+          return user.organization_id === targetOrgId;
         },
 
         enforceOrganizationAccess: (targetOrgId: number | null): void => {
@@ -148,14 +148,14 @@ export function withOrganizationScope<T extends Record<string, any>>(
   baseWhere: T = {} as T
 ): T & { organization_id?: number | null } {
   // Super admins bypass organization filtering unless explicitly requested
-  if (req.user?.role === 'super_admin' && !req.query.organizationId) {
+  if (req.user?.role === 'super_admin' && !req.query.organization_id) {
     return baseWhere;
   }
 
   // Add organization filter for all other users
   return {
     ...baseWhere,
-    organization_id: req.organizationId
+    organization_id: req.organization_id
   };
 }
 

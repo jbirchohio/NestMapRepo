@@ -134,7 +134,7 @@ router.post("/:id/invite", requireOrgPermission('invite_members'), async (req: R
 router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async (req: Request, res: Response) => {
   try {
     const orgId = parseInt(req.params.id);
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(req.params.user_id);
 
     if (isNaN(orgId) || isNaN(userId)) {
       return res.status(400).json({ message: "Invalid organization or user ID" });
@@ -168,7 +168,7 @@ router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async
 router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), async (req: Request, res: Response) => {
   try {
     const orgId = parseInt(req.params.id);
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(req.params.user_id);
 
     if (isNaN(orgId) || isNaN(userId)) {
       return res.status(400).json({ message: "Invalid organization or user ID" });
@@ -222,7 +222,7 @@ router.get("/:id/analytics", requireOrgPermission('access_analytics'), async (re
 // Add members endpoint for organization management
 router.get('/members', async (req: Request, res: Response) => {
   try {
-    const userOrgId = req.user?.organization_id || req.user?.organizationId;
+    const userOrgId = req.user?.organization_id || req.user?.organization_id;
     if (!userOrgId) {
       return res.status(400).json({ message: "Organization context required" });
     }

@@ -13,7 +13,7 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
 
   // For authenticated users, ensure organization context is available
   if (req.user && req.user.organization_id) {
-    req.organizationId = req.user.organization_id;
+    req.organization_id = req.user.organization_id;
     req.organizationContext = {
       id: req.user.organization_id,
       canAccessOrganization: (orgId: number | null) => {
@@ -42,11 +42,11 @@ export class SecureQueryBuilder {
    * Add organization filter to where clause
    */
   withOrganizationFilter(table: any, additionalConditions?: any) {
-    if (!this.organizationId) {
+    if (!this.organization_id) {
       throw new Error('Organization context required for database operations');
     }
 
-    const orgCondition = eq(table.organization_id, this.organizationId);
+    const orgCondition = eq(table.organization_id, this.organization_id);
     
     if (additionalConditions) {
       return and(orgCondition, additionalConditions);
@@ -67,10 +67,10 @@ export class SecureQueryBuilder {
    * Validate organization access before operations
    */
   validateOrganizationAccess(resourceOrgId: number | null): boolean {
-    if (!this.organizationId || !resourceOrgId) {
+    if (!this.organization_id || !resourceOrgId) {
       return false;
     }
-    return resourceOrgId === this.organizationId;
+    return resourceOrgId === this.organization_id;
   }
 }
 
@@ -79,12 +79,12 @@ export class SecureQueryBuilder {
  */
 export function enforceOrganizationQueries(req: Request, res: Response, next: NextFunction) {
   // Skip for non-authenticated routes
-  if (!req.organizationId) {
+  if (!req.organization_id) {
     return next();
   }
 
   // Attach secure query builder to request
-  req.secureQuery = new SecureQueryBuilder(req.organizationId);
+  req.secureQuery = new SecureQueryBuilder(req.organization_id);
 
   // Override database operations to include organization filtering
   const originalQuery = req.query;
@@ -133,11 +133,11 @@ export function auditDatabaseOperations(req: Request, res: Response, next: NextF
   
   res.end = function(chunk?: any, encoding?: any, cb?: any) {
     // Log database operations for audit trail
-    if (req.organizationId && req.method !== 'GET') {
+    if (req.organization_id && req.method !== 'GET') {
       console.log('DB_AUDIT:', {
         operation: req.method,
         endpoint: req.path,
-        organizationId: req.organizationId,
+        organizationId: req.organization_id,
         userId: req.user?.id,
         timestamp: new Date().toISOString(),
         statusCode: res.statusCode,

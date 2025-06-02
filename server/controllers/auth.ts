@@ -20,7 +20,7 @@ export async function getUserPermissions(req: Request, res: Response) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const requestedUserId = req.query.userId as string;
+    const requestedUserId = req.query.user_id as string;
     
     // Handle demo users
     if (requestedUserId && (requestedUserId.startsWith('demo-corp-') || requestedUserId.startsWith('demo-agency-'))) {

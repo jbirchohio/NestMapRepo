@@ -27,7 +27,7 @@ export class ApprovalEngine {
    * Process approval workflow for any entity
    */
   async processApprovalWorkflow(config: ApprovalWorkflowConfig): Promise<ApprovalResult> {
-    const rules = await this.getApplicableRules(config.organizationId, config.entityType);
+    const rules = await this.getApplicableRules(config.organization_id, config.entityType);
     
     // Check each rule in priority order
     for (const rule of rules) {
@@ -62,7 +62,7 @@ export class ApprovalEngine {
       .select()
       .from(approvalRules)
       .where(and(
-        eq(approvalRules.organizationId, organizationId),
+        eq(approvalRules.organization_id, organizationId),
         eq(approvalRules.entityType, entityType),
         eq(approvalRules.active, true)
       ))
@@ -136,14 +136,14 @@ export class ApprovalEngine {
     config: ApprovalWorkflowConfig, 
     rule: any
   ): Promise<ApprovalResult> {
-    const approver = await this.findApprover(config.organizationId, rule.approverRoles);
+    const approver = await this.findApprover(config.organization_id, rule.approverRoles);
     const priority = this.calculatePriority(config.data, rule);
     const dueDate = new Date(Date.now() + (rule.escalationDays || 3) * 24 * 60 * 60 * 1000);
 
     const [request] = await db
       .insert(approvalRequests)
       .values({
-        organizationId: config.organizationId,
+        organizationId: config.organization_id,
         requesterId: config.requesterId,
         approverId: approver?.id,
         entityType: config.entityType,
@@ -237,7 +237,7 @@ export class ApprovalEngine {
       .select()
       .from(approvalRequests)
       .where(and(
-        eq(approvalRequests.organizationId, organizationId),
+        eq(approvalRequests.organization_id, organizationId),
         eq(approvalRequests.status, 'pending')
       ));
 
@@ -277,7 +277,7 @@ export class ApprovalEngine {
       .select({ id: users.id })
       .from(users)
       .where(and(
-        eq(users.organization_id, request.organizationId),
+        eq(users.organization_id, request.organization_id),
         eq(users.role, 'admin')
       ))
       .limit(1);

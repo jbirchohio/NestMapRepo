@@ -261,7 +261,7 @@ export class SSOManager {
   private async getOrganizationFromState(state: string): Promise<number> {
     // Decode state parameter to get organization ID
     const decoded = Buffer.from(state, 'base64').toString();
-    return parseInt(JSON.parse(decoded).organizationId);
+    return parseInt(JSON.parse(decoded).organization_id);
   }
 
   private async exchangeOAuthCode(code: string, state: string): Promise<any> {
@@ -291,7 +291,7 @@ export class SSOManager {
 
   private generateSAMLRequest(config: SSOConfig, returnUrl?: string): string {
     const baseUrl = process.env.BASE_URL || 'https://your-domain.com';
-    const acsUrl = `${baseUrl}/sso/acs/${config.organizationId}`;
+    const acsUrl = `${baseUrl}/sso/acs/${config.organization_id}`;
     const relayState = returnUrl ? encodeURIComponent(returnUrl) : '';
     
     // Generate SAML AuthnRequest (simplified)
@@ -312,7 +312,7 @@ export class SSOManager {
     const baseUrl = process.env.BASE_URL || 'https://your-domain.com';
     const redirectUri = `${baseUrl}/sso/oauth/callback`;
     const state = Buffer.from(JSON.stringify({ 
-      organizationId: config.organizationId, 
+      organizationId: config.organization_id, 
       returnUrl 
     })).toString('base64');
     
@@ -336,7 +336,7 @@ export const ssoRouter = Router();
 // SAML metadata endpoint
 ssoRouter.get('/metadata/:organizationId', async (req, res) => {
   try {
-    const organizationId = parseInt(req.params.organizationId);
+    const organizationId = parseInt(req.params.organization_id);
     const metadata = ssoManager.generateSAMLMetadata(organizationId);
     
     res.set('Content-Type', 'application/xml');
@@ -350,7 +350,7 @@ ssoRouter.get('/metadata/:organizationId', async (req, res) => {
 // Initiate SSO login
 ssoRouter.get('/login/:organizationId', async (req, res) => {
   try {
-    const organizationId = parseInt(req.params.organizationId);
+    const organizationId = parseInt(req.params.organization_id);
     const returnUrl = req.query.returnUrl as string;
     
     const ssoUrl = ssoManager.initiateSSO(organizationId, returnUrl);
@@ -364,7 +364,7 @@ ssoRouter.get('/login/:organizationId', async (req, res) => {
 // SAML ACS endpoint
 ssoRouter.post('/acs/:organizationId', async (req, res) => {
   try {
-    const organizationId = parseInt(req.params.organizationId);
+    const organizationId = parseInt(req.params.organization_id);
     const samlResponse = req.body.SAMLResponse;
     const relayState = req.body.RelayState;
     
@@ -374,11 +374,11 @@ ssoRouter.post('/acs/:organizationId', async (req, res) => {
       return res.status(401).json({ error: 'SSO authentication failed' });
     }
 
-    const user = await ssoManager.createOrUpdateSSOUser(result.user, result.organizationId);
+    const user = await ssoManager.createOrUpdateSSOUser(result.user, result.organization_id);
     
     // Set session or JWT token
-    req.session.userId = user.id;
-    req.session.organizationId = user.organization_id;
+    req.session.user_id = user.id;
+    req.session.organization_id = user.organization_id;
     
     const redirectUrl = relayState || '/dashboard';
     res.redirect(redirectUrl);
@@ -400,11 +400,11 @@ ssoRouter.get('/oauth/callback', async (req, res) => {
       return res.status(401).json({ error: 'OAuth authentication failed' });
     }
 
-    const user = await ssoManager.createOrUpdateSSOUser(result.user, result.organizationId);
+    const user = await ssoManager.createOrUpdateSSOUser(result.user, result.organization_id);
     
     // Set session or JWT token
-    req.session.userId = user.id;
-    req.session.organizationId = user.organization_id;
+    req.session.user_id = user.id;
+    req.session.organization_id = user.organization_id;
     
     const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
     const redirectUrl = stateData.returnUrl || '/dashboard';

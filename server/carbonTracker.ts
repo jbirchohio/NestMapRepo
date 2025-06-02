@@ -380,7 +380,7 @@ export async function calculateTripCarbonFootprint(
   carbon.recommendations = generateCarbonRecommendations(carbon, trip);
 
   // Compare with organization trends
-  carbon.trends = await calculateCarbonTrends(carbon, organizationId, trip.userId);
+  carbon.trends = await calculateCarbonTrends(carbon, organizationId, trip.user_id);
 
   return carbon;
 }

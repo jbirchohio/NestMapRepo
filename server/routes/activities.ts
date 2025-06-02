@@ -15,7 +15,7 @@ router.use(injectOrganizationContext);
 // Get activities for a specific trip
 router.get("/trip/:tripId", async (req: Request, res: Response) => {
   try {
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
@@ -26,7 +26,7 @@ router.get("/trip/:tripId", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organizationId;
+    const userOrgId = req.user?.organization_id || req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip's activities" });
     }
@@ -44,16 +44,16 @@ router.post("/", async (req: Request, res: Response) => {
   try {
     const activityData = insertActivitySchema.parse({
       ...req.body,
-      organization_id: req.user?.organization_id || req.user?.organizationId
+      organization_id: req.user?.organization_id || req.user?.organization_id
     });
 
     // Verify trip exists and user has access
-    const trip = await storage.getTrip(activityData.tripId);
+    const trip = await storage.getTrip(activityData.trip_id);
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organizationId;
+    const userOrgId = req.user?.organization_id || req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot add activities to this trip" });
     }
@@ -89,7 +89,7 @@ router.put("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organizationId;
+    const userOrgId = req.user?.organization_id || req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this activity" });
     }
@@ -131,7 +131,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organizationId;
+    const userOrgId = req.user?.organization_id || req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot delete this activity" });
     }
@@ -170,7 +170,7 @@ router.put("/:id/order", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organizationId;
+    const userOrgId = req.user?.organization_id || req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot reorder this activity" });
     }
@@ -208,7 +208,7 @@ router.patch("/:id/complete", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organizationId;
+    const userOrgId = req.user?.organization_id || req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this activity" });
     }

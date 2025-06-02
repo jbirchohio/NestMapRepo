@@ -155,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User permissions endpoint
   app.get("/api/user/permissions", async (req: Request, res: Response) => {
     try {
-      const userId = req.query.userId as string;
+      const userId = req.query.user_id as string;
       
       // Handle demo users
       if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
@@ -240,14 +240,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trips routes - using unified authorization middleware
   app.get("/api/trips", async (req: Request, res: Response) => {
     try {
-      const userId = req.query.userId as string;
+      const userId = req.query.user_id as string;
       const targetUserId = userId || req.user!.id.toString();
       
       // Handle demo users with real trip fallback
       if (targetUserId && (targetUserId.startsWith('demo-corp-') || targetUserId.startsWith('demo-agency-'))) {
         try {
           console.log("Demo user detected, checking for real trips for user ID:", req.user!.id);
-          const realTrips = await storage.getTripsByUserId(req.user!.id, req.organizationId);
+          const realTrips = await storage.getTripsByUserId(req.user!.id, req.organization_id);
           
           if (realTrips.length > 0) {
             const roleType = userId.startsWith('demo-corp-') ? 'corporate' : 'agency';
@@ -275,10 +275,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       logOrganizationAccess(req, 'fetch', 'trips');
-      console.log("Fetching trips for user ID:", numericUserId, "from organization:", req.organizationId);
+      console.log("Fetching trips for user ID:", numericUserId, "from organization:", req.organization_id);
       
       // Organization-scoped query (automatically filtered by unified middleware)
-      const trips = await storage.getTripsByUserId(numericUserId, req.organizationId);
+      const trips = await storage.getTripsByUserId(numericUserId, req.organization_id);
       
       console.log("Trips fetched successfully:", trips.length);
       res.json(trips);
@@ -342,8 +342,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // CRITICAL: Verify user can access this trip's organization
-      const userOrgId = req.user.organizationId || null;
-      if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
+      const userOrgId = req.user.organization_id || null;
+      if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
         return res.status(403).json({ message: "Access denied: Cannot access this trip" });
       }
       
@@ -364,8 +364,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Creating trip with validated data:", req.body);
       
       // Handle demo users - return mock success response
-      if (req.body.userId && typeof req.body.userId === 'string' && 
-          (req.body.userId.startsWith('demo-corp-') || req.body.userId.startsWith('demo-agency-'))) {
+      if (req.body.user_id && typeof req.body.user_id === 'string' && 
+          (req.body.user_id.startsWith('demo-corp-') || req.body.user_id.startsWith('demo-agency-'))) {
         
         const mockTrip = {
           id: `demo-trip-${Date.now()}`,
@@ -375,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           endDate: req.body.endDate,
           city: req.body.city,
           country: req.body.country,
-          userId: req.body.userId,
+          userId: req.body.user_id,
           status: 'confirmed',
           created_at: new Date().toISOString(),
           hasHotelButton: !!req.body.selectedHotel // Track if hotel was selected
@@ -395,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Handle guest mode trip creation (when userId is null)
-      if (!req.body.userId && req.body.userId !== 0) {
+      if (!req.body.user_id && req.body.user_id !== 0) {
         console.log("Guest mode trip creation detected");
         // For guest mode, create a temporary trip with negative ID
         const guestTrip = {
@@ -508,8 +508,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // CRITICAL: Verify user can access this trip's organization
-      const userOrgId = req.user.organizationId || null;
-      if (req.user.role !== 'super_admin' && existingTrip.organizationId !== userOrgId) {
+      const userOrgId = req.user.organization_id || null;
+      if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
         return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
       }
       
@@ -586,8 +586,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // CRITICAL: Verify user can access this trip's organization
-      const userOrgId = req.user.organizationId || null;
-      if (req.user.role !== 'super_admin' && existingTrip.organizationId !== userOrgId) {
+      const userOrgId = req.user.organization_id || null;
+      if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
         return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
       }
       
@@ -706,7 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check organization access - ensure user can only access trips from their organization
-      if (trip.organizationId !== req.user!.organizationId) {
+      if (trip.organization_id !== req.user!.organization_id) {
         return res.status(403).json({ message: "Access denied: Trip belongs to different organization" });
       }
       
@@ -730,7 +730,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Parsed activity data:", activityData);
       
       // Check if this is guest mode (negative tripId indicates guest trip)
-      if (activityData.tripId < 0) {
+      if (activityData.trip_id < 0) {
         console.log("Guest mode activity creation detected");
         // For guest mode, return the activity data with a generated ID
         const guestActivity = {
@@ -748,13 +748,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify trip access and organization context for authenticated users
-      const trip = await storage.getTrip(activityData.tripId);
+      const trip = await storage.getTrip(activityData.trip_id);
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
       }
       
       // Ensure user can only create activities for trips in their organization
-      if (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin') {
+      if (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin') {
         return res.status(403).json({ message: "Access denied: Cannot create activity for trip in different organization" });
       }
       
@@ -837,8 +837,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Existing activity data:`, existingActivity);
       
       // Verify trip ownership and organization access
-      const trip = await storage.getTrip(existingActivity.tripId);
-      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+      const trip = await storage.getTrip(existingActivity.trip_id);
+      if (!trip || (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin')) {
         return res.status(403).json({ message: "Access denied: Cannot modify activity for trip in different organization" });
       }
       
@@ -909,8 +909,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify trip ownership and organization access
-      const trip = await storage.getTrip(existingActivity.tripId);
-      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+      const trip = await storage.getTrip(existingActivity.trip_id);
+      if (!trip || (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin')) {
         return res.status(403).json({ message: "Access denied: Cannot delete activity for trip in different organization" });
       }
       
@@ -952,7 +952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check organization access - ensure user can only access trips from their organization
-      if (trip.organizationId !== req.user!.organizationId) {
+      if (trip.organization_id !== req.user!.organization_id) {
         return res.status(403).json({ message: "Access denied: Trip belongs to different organization" });
       }
       
@@ -983,13 +983,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const todoData = insertTodoSchema.parse(req.body);
       
       // Verify trip ownership and organization access
-      const trip = await storage.getTrip(todoData.tripId);
+      const trip = await storage.getTrip(todoData.trip_id);
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
       }
       
       // Ensure user can only create todos for trips in their organization
-      if (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin') {
+      if (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin') {
         return res.status(403).json({ message: "Access denied: Cannot create todo for trip in different organization" });
       }
       
@@ -1023,8 +1023,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify trip ownership and organization access
-      const trip = await storage.getTrip(existingTodo.tripId);
-      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+      const trip = await storage.getTrip(existingTodo.trip_id);
+      if (!trip || (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin')) {
         return res.status(403).json({ message: "Access denied: Cannot modify todo for trip in different organization" });
       }
       
@@ -1060,8 +1060,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify trip ownership and organization access
-      const trip = await storage.getTrip(existingTodo.tripId);
-      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+      const trip = await storage.getTrip(existingTodo.trip_id);
+      if (!trip || (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin')) {
         return res.status(403).json({ message: "Access denied: Cannot delete todo for trip in different organization" });
       }
       
@@ -1103,7 +1103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check organization access - ensure user can only access trips from their organization
-      if (trip.organizationId !== req.user!.organizationId) {
+      if (trip.organization_id !== req.user!.organization_id) {
         return res.status(403).json({ message: "Access denied: Trip belongs to different organization" });
       }
       
@@ -1134,13 +1134,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const noteData = insertNoteSchema.parse(req.body);
       
       // Verify trip ownership and organization access
-      const trip = await storage.getTrip(noteData.tripId);
+      const trip = await storage.getTrip(noteData.trip_id);
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
       }
       
       // Ensure user can only create notes for trips in their organization
-      if (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin') {
+      if (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin') {
         return res.status(403).json({ message: "Access denied: Cannot create note for trip in different organization" });
       }
       
@@ -1174,8 +1174,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify trip ownership and organization access
-      const trip = await storage.getTrip(existingNote.tripId);
-      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+      const trip = await storage.getTrip(existingNote.trip_id);
+      if (!trip || (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin')) {
         return res.status(403).json({ message: "Access denied: Cannot modify note for trip in different organization" });
       }
       
@@ -1211,8 +1211,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify trip ownership and organization access
-      const trip = await storage.getTrip(existingNote.tripId);
-      if (!trip || (trip.organizationId !== req.user.organizationId && req.user.role !== 'super_admin')) {
+      const trip = await storage.getTrip(existingNote.trip_id);
+      if (!trip || (trip.organization_id !== req.user.organization_id && req.user.role !== 'super_admin')) {
         return res.status(403).json({ message: "Access denied: Cannot delete note for trip in different organization" });
       }
       
@@ -2186,7 +2186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Save the generated business trip to the database
       const newTrip = await storage.createTrip({
         userId: req.user.id,
-        organizationId: req.user.organizationId,
+        organizationId: req.user.organization_id,
         title: `Business Trip to ${enhancedRequest.destination} for ${enhancedRequest.clientName}`,
         description: `Professional business trip generated for ${enhancedRequest.clientName}`,
         destination: enhancedRequest.destination,
@@ -2361,7 +2361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const newTrip = await storage.createTrip({
         userId: req.user.id,
-        organizationId: req.user.organizationId,
+        organizationId: req.user.organization_id,
         title: generatedTrip.tripSummary?.title || `AI Trip to ${tripInfo.destination}`,
         description: generatedTrip.tripSummary?.description || `AI-generated itinerary for ${tripInfo.destination}`,
         destination: tripInfo.destination,
@@ -3333,7 +3333,7 @@ Include realistic business activities, meeting times, dining recommendations, an
       }
       
       console.log("Fetching analytics data...");
-      const userId = req.query.userId as string;
+      const userId = req.query.user_id as string;
       console.log("Raw userId from query:", userId);
       console.log("All query params:", req.query);
       
@@ -3384,7 +3384,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const userId = req.query.userId as string;
+      const userId = req.query.user_id as string;
       
       // Handle demo users
       if (userId && userId.startsWith('demo-corp-')) {
@@ -3434,7 +3434,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         }, 0) / trips.length
       ) : 0;
 
-      const teamSize = new Set(trips.map(trip => trip.userId)).size;
+      const teamSize = new Set(trips.map(trip => trip.user_id)).size;
 
       const realAnalytics = {
         totalTrips,
@@ -3458,7 +3458,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const userId = req.query.userId as string;
+      const userId = req.query.user_id as string;
       
       // Handle demo users
       if (userId && userId.startsWith('demo-agency-')) {
@@ -3583,7 +3583,7 @@ Include realistic business activities, meeting times, dining recommendations, an
 
       // Get the authenticated user's organization context
       const inviter = req.user;
-      if (!inviter.organizationId) {
+      if (!inviter.organization_id) {
         return res.status(403).json({ error: "Must be part of an organization to invite team members" });
       }
 
@@ -3594,7 +3594,7 @@ Include realistic business activities, meeting times, dining recommendations, an
 
       const invitation = await storage.createInvitation({
         email,
-        organizationId: inviter.organizationId, // Inherit organization from authenticated user
+        organizationId: inviter.organization_id, // Inherit organization from authenticated user
         invitedBy: inviter.id,
         role,
         token,
@@ -3677,7 +3677,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         await sendWelcomeEmail({
           to: user.email,
           name: user.display_name || user.username,
-          organizationName: `Organization ${invitation.organizationId}`
+          organizationName: `Organization ${invitation.organization_id}`
         });
       }
 
@@ -4411,12 +4411,12 @@ Include realistic business activities, meeting times, dining recommendations, an
         orgs = await db.select().from(organizations);
       } else {
         // Regular admins can only see their own organization
-        if (!req.user.organizationId) {
+        if (!req.user.organization_id) {
           return res.status(403).json({ error: "No organization assigned to user" });
         }
         orgs = await db.select()
           .from(organizations)
-          .where(eq(organizations.id, req.user.organizationId));
+          .where(eq(organizations.id, req.user.organization_id));
       }
       
       res.json(orgs);
@@ -4932,7 +4932,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         return res.status(404).json({ error: "Trip not found" });
       }
 
-      const tripActivities = await db.select().from(activities).where(eq(activities.tripId, parseInt(tripId)));
+      const tripActivities = await db.select().from(activities).where(eq(activities.trip_id, parseInt(tripId)));
       
       // Calculate estimated costs based on activities and destination
       let flightCost = 0;
@@ -5000,10 +5000,10 @@ Include realistic business activities, meeting times, dining recommendations, an
         startDate: trips.startDate,
         endDate: trips.endDate,
         budget: trips.budget,
-        userId: trips.userId
+        userId: trips.user_id
       })
       .from(trips)
-      .innerJoin(users, eq(trips.userId, users.id))
+      .innerJoin(users, eq(trips.user_id, users.id))
       .where(eq(users.role_type, 'corporate'));
 
       res.json(corporateTrips);
@@ -5102,7 +5102,7 @@ Include realistic business activities, meeting times, dining recommendations, an
       // TODO: Add proper password hashing verification in production
       
       // Create session
-      (req.session as any).userId = user.id;
+      (req.session as any).user_id = user.id;
       
       console.log('Successful authentication for user:', {
         id: user.id,
@@ -5122,7 +5122,7 @@ Include realistic business activities, meeting times, dining recommendations, an
           id: user.id,
           email: user.email,
           role: user.role,
-          organizationId: user.organizationId
+          organizationId: user.organization_id
         });
         
         res.json({
@@ -5278,7 +5278,7 @@ Include realistic business activities, meeting times, dining recommendations, an
         }
         
         // Set session data only after successful JWT verification
-        (req.session as any).userId = dbUser.id;
+        (req.session as any).user_id = dbUser.id;
         
         console.log('Secure session created for verified user:', {
           userId: dbUser.id,

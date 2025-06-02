@@ -342,7 +342,7 @@ async function getExpenseAnalytics(organizationId: number, startDate: Date, endD
     })
     .from(expenses)
     .where(and(
-      eq(expenses.organizationId, organizationId),
+      eq(expenses.organization_id, organizationId),
       gte(expenses.createdAt, startDate),
       lte(expenses.createdAt, endDate)
     ));
@@ -355,7 +355,7 @@ async function getExpenseAnalytics(organizationId: number, startDate: Date, endD
     })
     .from(expenses)
     .where(and(
-      eq(expenses.organizationId, organizationId),
+      eq(expenses.organization_id, organizationId),
       gte(expenses.createdAt, startDate),
       lte(expenses.createdAt, endDate)
     ))
@@ -377,7 +377,7 @@ async function getBookingAnalytics(organizationId: number, startDate: Date, endD
     })
     .from(bookings)
     .where(and(
-      eq(bookings.organizationId, organizationId),
+      eq(bookings.organization_id, organizationId),
       gte(bookings.createdAt, startDate),
       lte(bookings.createdAt, endDate)
     ));
@@ -413,7 +413,7 @@ async function getApprovalAnalytics(organizationId: number, startDate: Date, end
     })
     .from(approvalRequests)
     .where(and(
-      eq(approvalRequests.organizationId, organizationId),
+      eq(approvalRequests.organization_id, organizationId),
       gte(approvalRequests.createdAt, startDate),
       lte(approvalRequests.createdAt, endDate)
     ))
@@ -437,7 +437,7 @@ async function getCostAnalytics(organizationId: number, startDate: Date, endDate
     .select({ total: sql<number>`SUM(${expenses.amount})` })
     .from(expenses)
     .where(and(
-      eq(expenses.organizationId, organizationId),
+      eq(expenses.organization_id, organizationId),
       gte(expenses.createdAt, startDate),
       lte(expenses.createdAt, endDate)
     ));
@@ -446,7 +446,7 @@ async function getCostAnalytics(organizationId: number, startDate: Date, endDate
     .select({ total: sql<number>`SUM(${bookings.totalAmount})` })
     .from(bookings)
     .where(and(
-      eq(bookings.organizationId, organizationId),
+      eq(bookings.organization_id, organizationId),
       gte(bookings.createdAt, startDate),
       lte(bookings.createdAt, endDate)
     ));
@@ -527,7 +527,7 @@ async function getExpenseCompliance(organizationId: number, startDate: Date, end
     .select({ count: count() })
     .from(expenses)
     .where(and(
-      eq(expenses.organizationId, organizationId),
+      eq(expenses.organization_id, organizationId),
       gte(expenses.createdAt, startDate),
       lte(expenses.createdAt, endDate)
     ));
@@ -536,7 +536,7 @@ async function getExpenseCompliance(organizationId: number, startDate: Date, end
     .select({ count: count() })
     .from(expenses)
     .where(and(
-      eq(expenses.organizationId, organizationId),
+      eq(expenses.organization_id, organizationId),
       gte(expenses.createdAt, startDate),
       lte(expenses.createdAt, endDate),
       sql`${expenses.receiptUrl} IS NOT NULL`
@@ -558,7 +558,7 @@ async function getApprovalCompliance(organizationId: number, startDate: Date, en
     .select({ count: count() })
     .from(approvalRequests)
     .where(and(
-      eq(approvalRequests.organizationId, organizationId),
+      eq(approvalRequests.organization_id, organizationId),
       gte(approvalRequests.createdAt, startDate),
       lte(approvalRequests.createdAt, endDate)
     ));
@@ -567,7 +567,7 @@ async function getApprovalCompliance(organizationId: number, startDate: Date, en
     .select({ count: count() })
     .from(approvalRequests)
     .where(and(
-      eq(approvalRequests.organizationId, organizationId),
+      eq(approvalRequests.organization_id, organizationId),
       gte(approvalRequests.createdAt, startDate),
       lte(approvalRequests.createdAt, endDate),
       sql`${approvalRequests.approvedAt} <= ${approvalRequests.dueDate}`,
@@ -594,7 +594,7 @@ async function getTaxComplianceData(organizationId: number, startDate: Date, end
     })
     .from(expenses)
     .where(and(
-      eq(expenses.organizationId, organizationId),
+      eq(expenses.organization_id, organizationId),
       gte(expenses.createdAt, startDate),
       lte(expenses.createdAt, endDate),
       sql`${expenses.category} IN ('meals', 'accommodation', 'transportation')`
@@ -658,9 +658,9 @@ async function exportExpensesData(organizationId: number, startDate?: string, en
   return await db
     .select()
     .from(expenses)
-    .leftJoin(trips, eq(expenses.tripId, trips.id))
-    .leftJoin(users, eq(expenses.userId, users.id))
-    .where(eq(expenses.organizationId, organizationId));
+    .leftJoin(trips, eq(expenses.trip_id, trips.id))
+    .leftJoin(users, eq(expenses.user_id, users.id))
+    .where(eq(expenses.organization_id, organizationId));
 }
 
 async function exportBookingsData(organizationId: number, startDate?: string, endDate?: string) {
@@ -668,9 +668,9 @@ async function exportBookingsData(organizationId: number, startDate?: string, en
   return await db
     .select()
     .from(bookings)
-    .leftJoin(trips, eq(bookings.tripId, trips.id))
-    .leftJoin(users, eq(bookings.userId, users.id))
-    .where(eq(bookings.organizationId, organizationId));
+    .leftJoin(trips, eq(bookings.trip_id, trips.id))
+    .leftJoin(users, eq(bookings.user_id, users.id))
+    .where(eq(bookings.organization_id, organizationId));
 }
 
 async function exportComplianceData(organizationId: number, startDate?: string, endDate?: string) {
@@ -679,7 +679,7 @@ async function exportComplianceData(organizationId: number, startDate?: string, 
     .select()
     .from(approvalRequests)
     .leftJoin(users, eq(approvalRequests.requesterId, users.id))
-    .where(eq(approvalRequests.organizationId, organizationId));
+    .where(eq(approvalRequests.organization_id, organizationId));
 }
 
 function convertToCSV(data: any[]): string {

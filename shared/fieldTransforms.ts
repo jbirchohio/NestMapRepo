@@ -44,11 +44,11 @@ export function transformTripToDatabase(tripData: any) {
     title: tripData.title,
     start_date: tripData.startDate,
     end_date: tripData.endDate,
-    user_id: tripData.userId,
-    organization_id: tripData.organizationId,
+    user_id: tripData.user_id,
+    organization_id: tripData.organization_id,
     collaborators: tripData.collaborators || [],
     is_public: tripData.isPublic || false,
-    share_code: tripData.shareCode,
+    share_code: tripData.share_code,
     sharing_enabled: tripData.sharingEnabled || false,
     share_permission: tripData.sharePermission || 'read-only',
     city: tripData.city,
@@ -106,8 +106,8 @@ export function transformTripToFrontend(dbTrip: any) {
 // Transform frontend activity data to database format
 export function transformActivityToDatabase(activityData: any) {
   return {
-    trip_id: activityData.tripId,
-    organization_id: activityData.organizationId,
+    trip_id: activityData.trip_id,
+    organization_id: activityData.organization_id,
     title: activityData.title,
     date: activityData.date,
     time: activityData.time,
@@ -126,8 +126,8 @@ export function transformActivityToDatabase(activityData: any) {
 // Transform frontend todo data to database format
 export function transformTodoToDatabase(todoData: any) {
   return {
-    trip_id: todoData.tripId,
-    organization_id: todoData.organizationId,
+    trip_id: todoData.trip_id,
+    organization_id: todoData.organization_id,
     task: todoData.task,
     completed: todoData.completed || false,
     assigned_to: todoData.assignedTo
