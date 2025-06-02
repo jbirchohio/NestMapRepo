@@ -48,12 +48,23 @@ router.get('/corporate', async (req: Request, res: Response) => {
     // Get all trips for the organization, not just the current user
     const trips = await storage.getTripsByOrganizationId(orgId);
     
-    // Add user details safely through storage layer
+    // Transform database field names to match frontend expectations and add user details
     const tripsWithUserDetails = await Promise.all(
       trips.map(async (trip) => {
-        const user = await storage.getUser(trip.userId);
+        const user = await storage.getUser(trip.user_id);
         return {
-          ...trip,
+          id: trip.id,
+          title: trip.title,
+          startDate: trip.start_date.toISOString(),
+          endDate: trip.end_date.toISOString(),
+          userId: trip.user_id,
+          city: trip.city,
+          country: trip.country,
+          budget: trip.budget,
+          completed: trip.completed,
+          trip_type: trip.trip_type,
+          client_name: trip.client_name,
+          project_type: trip.project_type,
           userName: user?.display_name || 'Unknown User',
           userEmail: user?.email || 'No Email'
         };
