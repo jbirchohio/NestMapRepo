@@ -19,16 +19,16 @@ router.use(injectOrganizationContext);
 // Get all trips for authenticated user with organization filtering
 router.get("/", async (req: Request, res: Response) => {
   try {
+    const userId = req.user?.id;
     const orgId = req.user?.organization_id;
-    const trips = await storage.getAllTrips();
+    
+    if (!userId) {
+      return res.status(401).json({ message: "User ID required" });
+    }
 
-    // Filter trips by organization for multi-tenant isolation
-    const filteredTrips = trips.filter(trip => {
-      if (req.user?.role === 'super_admin') return true;
-      return trip.organization_id === orgId;
-    });
-
-    res.json(filteredTrips);
+    // Use secure storage method that enforces organization isolation
+    const trips = await storage.getTripsByUserId(userId, orgId);
+    res.json(trips);
   } catch (error) {
     console.error("Error fetching trips:", error);
     res.status(500).json({ message: "Could not fetch trips" });
@@ -330,32 +330,29 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
 // Add organization-scoped trips endpoint for corporate features
 router.get('/corporate', async (req: Request, res: Response) => {
   try {
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ message: "Organization context required" });
+    const userId = req.user?.id;
+    const orgId = req.user?.organization_id;
+    
+    if (!userId || !orgId) {
+      return res.status(400).json({ message: "User and organization context required" });
     }
 
-    const trips = await db
-      .select({
-        id: tripsTable.id,
-        title: tripsTable.title,
-        destination: tripsTable.destination,
-        startDate: tripsTable.startDate,
-        endDate: tripsTable.endDate,
-        status: tripsTable.status,
-        budget: tripsTable.budget,
-        userId: tripsTable.userId,
-        organizationId: tripsTable.organizationId,
-        createdAt: tripsTable.createdAt,
-        // Add user details
-        userName: users.display_name,
-        userEmail: users.email
+    // Use secure storage method that automatically enforces organization isolation
+    const trips = await storage.getTripsByUserId(userId, orgId);
+    
+    // Add user details safely through storage layer
+    const tripsWithUserDetails = await Promise.all(
+      trips.map(async (trip) => {
+        const user = await storage.getUser(trip.userId);
+        return {
+          ...trip,
+          userName: user?.display_name || 'Unknown User',
+          userEmail: user?.email || 'No Email'
+        };
       })
-      .from(tripsTable)
-      .leftJoin(users, eq(tripsTable.userId, users.id))
-      .where(eq(tripsTable.organizationId, req.user.organization_id))
-      .orderBy(desc(tripsTable.createdAt));
+    );
 
-    res.json(trips);
+    res.json(tripsWithUserDetails);
   } catch (error) {
     console.error('Error fetching corporate trips:', error);
     res.status(500).json({ message: "Failed to fetch corporate trips" });
