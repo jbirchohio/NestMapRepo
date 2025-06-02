@@ -79,6 +79,34 @@ router.get('/corporate', async (req: Request, res: Response) => {
   }
 });
 
+// Get activities for a specific trip
+router.get("/:id/activities", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ message: "Invalid trip ID" });
+    }
+
+    // Verify trip exists and user has access
+    const trip = await storage.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    // Verify organization access
+    const userOrgId = req.user?.organization_id;
+    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
+    }
+
+    const activities = await storage.getActivitiesByTripId(tripId);
+    res.json(activities);
+  } catch (error) {
+    console.error("Error fetching activities:", error);
+    res.status(500).json({ message: "Could not fetch activities" });
+  }
+});
+
 // Get specific trip by ID with organization access control
 router.get("/:id", async (req: Request, res: Response) => {
   try {
