@@ -148,21 +148,23 @@ export default function SequentialBooking() {
       travelerName: currentTraveler.name,
       travelerEmail: currentTraveler.email,
       travelerPhone: currentTraveler.phone,
-      travelerDateOfBirth: currentTraveler.dateOfBirth,
+      travelerDateOfBirth: currentTraveler.dateOfBirth || '', // Allow empty, will be collected in booking form
       departureCity: currentTraveler.departureCity,
       arrivalCity: bookingData.tripDestination, // Auto-populate from trip
       departureDate: bookingData.departureDate,
       returnDate: bookingData.returnDate,
       travelClass: currentTraveler.travelClass,
       dietaryRequirements: currentTraveler.dietaryRequirements,
-      emergencyContact: currentTraveler.emergencyContact
+      emergencyContact: currentTraveler.emergencyContact,
+      sequentialBooking: true, // Flag to indicate this is part of sequential flow
+      requiresInfoCompletion: !currentTraveler.dateOfBirth // Flag missing required info
     };
 
     // Store current flight booking data
     sessionStorage.setItem('currentFlightBooking', JSON.stringify(flightBookingData));
     
-    // Navigate to main bookings page with flight tab and pre-populated data using React router
-    setLocation(`/bookings?tab=bookings&sequential=true&traveler=${currentTraveler.id}`);
+    // Navigate to main bookings page with flight tab and pre-populated data
+    setLocation(`/bookings?tab=bookings&sequential=true&traveler=${currentTraveler.id}&action=complete-info`);
   };
 
   const handleNextTraveler = () => {
