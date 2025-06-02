@@ -285,13 +285,6 @@ export default function MainNavigation() {
             <NotificationCenter />
 
             <div className="flex items-center gap-2">
-              <Badge 
-                variant="outline"
-                className="text-xs"
-              >
-                {user.role || 'User'}
-              </Badge>
-              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center gap-2">
