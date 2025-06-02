@@ -355,18 +355,18 @@ export default function SequentialBooking() {
   };
 
   const handleHotelBooking = () => {
-    // Pre-populate hotel booking with trip destination and room requirements
-    const hotelBookingData = {
-      destination: bookingData.tripDestination,
-      checkInDate: bookingData.departureDate,
-      checkOutDate: bookingData.returnDate,
-      roomsNeeded: bookingData.roomsNeeded,
-      roomConfiguration: bookingData.roomConfiguration,
-      travelers: bookingData.travelers
+    // Move to hotels step within sequential booking
+    const updatedData = {
+      ...bookingData,
+      bookingStatus: 'hotels' as const
     };
-
-    sessionStorage.setItem('currentHotelBooking', JSON.stringify(hotelBookingData));
-    window.location.href = `/bookings?tab=bookings&sequential=true&type=hotel&trip=${bookingData.tripId}`;
+    setBookingData(updatedData);
+    sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
+    
+    toast({
+      title: "Searching Hotels",
+      description: `Looking for accommodation in ${bookingData.tripDestination} for ${bookingData.travelers.length} travelers`,
+    });
   };
 
   const handleComplete = () => {
