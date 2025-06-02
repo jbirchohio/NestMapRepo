@@ -124,7 +124,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
         email: user.email,
         organization_id: user.organization_id ?? undefined,
         role: user.role ?? undefined,
-        displayName: user.displayName ?? undefined
+        displayName: user.display_name ?? undefined
       };
 
       // Set organization context for tenant isolation

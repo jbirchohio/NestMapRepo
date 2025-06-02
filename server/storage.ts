@@ -210,13 +210,13 @@ export class MemStorage implements IStorage {
       city_latitude: (insertTrip as any).city_latitude || null,
       city_longitude: (insertTrip as any).city_longitude || null,
       hotel: insertTrip.hotel || null,
-      hotel_latitude: insertTrip.hotel_latitude || null,
-      hotel_longitude: insertTrip.hotel_longitude || null,
+      hotel_latitude: (insertTrip as any).hotel_latitude || null,
+      hotel_longitude: (insertTrip as any).hotel_longitude || null,
       completed: insertTrip.completed || false,
-      completed_at: insertTrip.completed_at || null,
+      completed_at: (insertTrip as any).completed_at || null,
       trip_type: insertTrip.trip_type || "personal",
-      client_name: insertTrip.client_name || null,
-      project_type: insertTrip.project_type || null,
+      client_name: (insertTrip as any).client_name || null,
+      project_type: (insertTrip as any).project_type || null,
       budget: insertTrip.budget || null
     };
     this.trips.set(id, trip);
@@ -262,15 +262,15 @@ export class MemStorage implements IStorage {
       time: insertActivity.time,
       order: insertActivity.order || 0,
       completed: insertActivity.completed ?? false,
-      trip_id: insertActivity.tripId || insertActivity.trip_id,
-      location_name: insertActivity.locationName || insertActivity.location_name,
-      organization_id: insertActivity.organizationId || insertActivity.organization_id || null,
+      trip_id: insertActivity.tripId,
+      location_name: insertActivity.locationName,
+      organization_id: insertActivity.organizationId || null,
       latitude: insertActivity.latitude || null,
       longitude: insertActivity.longitude || null,
       notes: insertActivity.notes || null,
       tag: insertActivity.tag || null,
-      assigned_to: insertActivity.assignedTo || insertActivity.assigned_to || null,
-      travel_mode: insertActivity.travelMode || insertActivity.travel_mode || null
+      assigned_to: insertActivity.assignedTo || null,
+      travel_mode: insertActivity.travelMode || null
     };
     this.activities.set(id, activity);
     return activity;
