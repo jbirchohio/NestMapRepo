@@ -1,4 +1,4 @@
-import { kiwiProvider } from './kiwiProvider';
+import { duffelProvider } from './duffelProvider';
 
 interface BookingProvider {
   name: string;
@@ -126,7 +126,7 @@ export async function searchFlights(params: {
   passengers?: number;
 }): Promise<any[]> {
   try {
-    const result = await kiwiProvider.searchFlights({
+    const result = await duffelProvider.searchFlights({
       departure: params.origin,
       destination: params.destination,
       departureDate: params.departureDate,
@@ -134,10 +134,10 @@ export async function searchFlights(params: {
       passengers: params.passengers || 1
     });
     
-    console.log('Kiwi flight search completed for:', params.origin, '→', params.destination);
+    console.log('Duffel flight search completed for:', params.origin, '→', params.destination);
     return result.flights || [];
   } catch (error) {
-    console.error('Kiwi flight search error:', error);
+    console.error('Duffel flight search error:', error);
     throw error;
   }
 }
@@ -153,7 +153,7 @@ export async function searchHotels(params: {
   rooms?: number;
 }): Promise<any[]> {
   try {
-    const result = await kiwiProvider.searchHotels({
+    const result = await duffelProvider.searchHotels({
       destination: params.destination,
       checkin: params.checkIn,
       checkout: params.checkOut,
@@ -161,10 +161,10 @@ export async function searchHotels(params: {
       guests: params.guests || 1
     });
     
-    console.log('Kiwi hotel search completed for:', params.destination);
+    console.log('Duffel hotel search completed for:', params.destination);
     return result.hotels || [];
   } catch (error) {
-    console.error('Kiwi hotel search error:', error);
+    console.error('Duffel hotel search error:', error);
     throw error;
   }
 }
@@ -179,11 +179,11 @@ export async function searchCars(params: {
   dropOffDate: string;
 }): Promise<any[]> {
   try {
-    const result = await kiwiProvider.searchCars(params);
-    console.log('Kiwi car search completed for:', params.pickUpLocation);
+    const result = await duffelProvider.searchCars(params);
+    console.log('Duffel car search completed for:', params.pickUpLocation);
     return result.cars || [];
   } catch (error) {
-    console.error('Kiwi car search error:', error);
+    console.error('Duffel car search error:', error);
     throw error;
   }
 }
