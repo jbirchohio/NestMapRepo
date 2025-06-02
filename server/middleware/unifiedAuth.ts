@@ -107,8 +107,16 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
 
     userId = dbUser.id;
   } catch (error) {
-    console.log('JWT authentication failed:', error);
-    return res.status(401).json({ message: "Invalid token" });
+    console.error('CRITICAL JWT AUTHENTICATION FAILURE:', error);
+    // Log detailed error for security audit
+    console.error('JWT Error Details:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      token: token ? 'Token present' : 'No token',
+      timestamp: new Date().toISOString(),
+      ip: req.ip,
+      userAgent: req.get('user-agent')
+    });
+    return res.status(401).json({ message: "Authentication failed" });
   }
 
   getUserById(userId!)
