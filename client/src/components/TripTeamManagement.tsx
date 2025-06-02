@@ -14,24 +14,24 @@ import { Users, UserPlus, MapPin, Plane, DollarSign, X } from 'lucide-react';
 
 interface TripTraveler {
   id: number;
-  trip_id: number;
-  user_id?: number;
+  tripId: number;
+  userId?: number;
   name: string;
   email?: string;
-  departure_city?: string;
-  departure_country?: string;
-  departure_latitude?: string;
-  departure_longitude?: string;
-  arrival_preferences: Record<string, any>;
-  accommodation_preferences: Record<string, any>;
-  dietary_requirements?: string;
-  budget_allocation?: number;
-  travel_class: string;
-  is_trip_organizer: boolean;
+  departureCity?: string;
+  departureCountry?: string;
+  departureLatitude?: string;
+  departureLongitude?: string;
+  arrivalPreferences: Record<string, any>;
+  accommodationPreferences: Record<string, any>;
+  dietaryRequirements?: string;
+  budgetAllocation?: number;
+  travelClass: string;
+  isTripOrganizer: boolean;
   status: string;
   notes?: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface TripTeamManagementProps {
@@ -143,8 +143,8 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
   };
 
   const getDepartureInfo = (traveler: TripTraveler) => {
-    if (!traveler.departure_city && !traveler.departure_country) return 'Not specified';
-    return `${traveler.departure_city || 'Unknown city'}, ${traveler.departure_country || 'Unknown country'}`;
+    if (!traveler.departureCity && !traveler.departureCountry) return 'Not specified';
+    return `${traveler.departureCity || 'Unknown city'}, ${traveler.departureCountry || 'Unknown country'}`;
   };
 
   const canManageTeam = userRole === 'admin' || userRole === 'editor';
@@ -158,11 +158,11 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         id: traveler.id,
         name: traveler.name,
         email: traveler.email || '',
-        departureCity: traveler.departure_city,
-        departureCountry: traveler.departure_country,
-        travelClass: traveler.travel_class,
-        budget: traveler.budget_allocation ? traveler.budget_allocation / 100 : 0,
-        dietaryRequirements: traveler.dietary_requirements || '',
+        departureCity: traveler.departureCity,
+        departureCountry: traveler.departureCountry,
+        travelClass: traveler.travelClass,
+        budget: traveler.budgetAllocation ? traveler.budgetAllocation / 100 : 0,
+        dietaryRequirements: traveler.dietaryRequirements || '',
         notes: traveler.notes || ''
       })),
       roomsNeeded: travelers.length,
