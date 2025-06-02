@@ -307,18 +307,18 @@ export function getAvailableProviders(
  */
 async function getAmadeusToken(): Promise<string | null> {
   try {
-    // Use production credentials if available, fallback to test credentials
-    const clientId = process.env.AMADEUS_PRODUCTION_CLIENT_ID || process.env.AMADEUS_CLIENT_ID;
-    const clientSecret = process.env.AMADEUS_PRODUCTION_CLIENT_SECRET || process.env.AMADEUS_CLIENT_SECRET;
+    // Use test environment for booking capabilities
+    const clientId = process.env.AMADEUS_CLIENT_ID || 'UchRP3ww17qYAxFw2f7GUdjG3S2stVBU';
+    const clientSecret = process.env.AMADEUS_CLIENT_SECRET || '0gCQHHEk2cReUaYR';
     
     if (!clientId || !clientSecret) {
-      console.warn('Amadeus credentials not configured.');
+      console.warn('Amadeus test credentials not configured.');
       return null;
     }
 
-    console.log('Using Amadeus', process.env.AMADEUS_PRODUCTION_CLIENT_ID ? 'production' : 'test', 'environment');
+    console.log('Using Amadeus test environment for booking');
 
-    const response = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
+    const response = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -331,14 +331,14 @@ async function getAmadeusToken(): Promise<string | null> {
     });
 
     if (!response.ok) {
-      console.error(`Amadeus auth failed: ${response.status} ${response.statusText}`);
+      console.error(`Amadeus test auth failed: ${response.status} ${response.statusText}`);
       return null;
     }
 
     const data = await response.json();
     return data.access_token;
   } catch (error) {
-    console.error('Amadeus authentication error:', error);
+    console.error('Amadeus test authentication error:', error);
     return null;
   }
 }
@@ -386,7 +386,7 @@ export async function searchFlights(params: {
     }
 
     const response = await fetch(
-      `https://api.amadeus.com/v2/shopping/flight-offers?${searchParams}`,
+      `https://test.api.amadeus.com/v2/shopping/flight-offers?${searchParams}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -849,7 +849,7 @@ export async function getHotelOffers(params: {
     });
 
     const response = await fetch(
-      `https://api.amadeus.com/v3/shopping/hotel-offers?${searchParams}`,
+      `https://test.api.amadeus.com/v3/shopping/hotel-offers?${searchParams}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
