@@ -87,14 +87,14 @@ export default function CorporateTripOptimizer() {
       const response = await apiRequest('POST', '/api/optimize-corporate-trips', {
         trips: corporateTrips
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to optimize trips');
       }
-      
+
       const result = await response.json();
       setOptimizationResult(result);
-      
+
       toast({
         title: "Optimization Complete!",
         description: `Found ${result.savings.conflictsResolved} conflicts and potential savings of $${result.savings.totalMoneySaved}`,
@@ -128,7 +128,7 @@ export default function CorporateTripOptimizer() {
 
   const exportToCSV = () => {
     if (!optimizationResult) return;
-    
+
     const csvData = optimizationResult.optimizedTrips.map(trip => ({
       'Trip Title': trip.title,
       'Traveler': trip.userName || `User ${trip.userId}`,

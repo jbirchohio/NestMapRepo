@@ -42,21 +42,31 @@ export default function CorporateDashboard() {
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
     queryKey: ['/api/trips', { userId }],
     queryFn: async () => {
-      const res = await fetch(`/api/trips?userId=${userId}`);
+      const res = await fetch('/api/trips', {
+        credentials: 'include'
+      });
       if (!res.ok) throw new Error("Failed to fetch trips");
       return res.json();
     },
-    enabled: !!userId,
+    enabled: !!user,
   });
 
   const { data: analytics } = useQuery({
     queryKey: ['/api/analytics/corporate', { userId }],
     queryFn: async () => {
-      const res = await fetch(`/api/analytics/corporate?userId=${userId}`);
+      const res = await fetch('/api/analytics', {
+        credentials: 'include'
+      });
       if (!res.ok) return { totalTrips: 0, totalBudget: 0, avgDuration: 0, teamSize: 0 };
-      return res.json();
+      const data = await res.json();
+      return {
+        totalTrips: data.overview?.totalTrips || 0,
+        totalBudget: data.overview?.totalBudget || 0,
+        avgDuration: data.overview?.averageTripLength || 0,
+        teamSize: data.overview?.totalUsers || 0
+      };
     },
-    enabled: !!userId,
+    enabled: !!user,
   });
 
   const recentTrips = trips.slice(0, 3);
