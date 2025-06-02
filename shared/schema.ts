@@ -426,6 +426,11 @@ export const tripTravelers = pgTable("trip_travelers", {
   user_id: integer("user_id"), // Linked to actual user account (optional for guests)
   name: text("name").notNull(), // Full name of traveler
   email: text("email"), // Contact email
+  phone: text("phone"), // Contact phone number
+  date_of_birth: text("date_of_birth"), // Date of birth for flight bookings
+  emergency_contact_name: text("emergency_contact_name"), // Emergency contact name
+  emergency_contact_phone: text("emergency_contact_phone"), // Emergency contact phone
+  emergency_contact_relationship: text("emergency_contact_relationship"), // Emergency contact relationship
   departure_city: text("departure_city"), // Where they're flying from
   departure_country: text("departure_country"),
   departure_latitude: text("departure_latitude"),
@@ -447,6 +452,11 @@ export const insertTripTravelerSchema = createInsertSchema(tripTravelers).pick({
   user_id: true,
   name: true,
   email: true,
+  phone: true,
+  date_of_birth: true,
+  emergency_contact_name: true,
+  emergency_contact_phone: true,
+  emergency_contact_relationship: true,
   departure_city: true,
   departure_country: true,
   departure_latitude: true,

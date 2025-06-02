@@ -172,8 +172,20 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     }
 
     const travelerData = {
-      ...newTraveler,
-      budget_allocation: newTraveler.budget_allocation ? parseInt(newTraveler.budget_allocation) * 100 : null, // Convert to cents
+      trip_id: tripId,
+      name: newTraveler.name,
+      email: newTraveler.email,
+      phone: newTraveler.phone,
+      date_of_birth: newTraveler.dateOfBirth,
+      emergency_contact_name: newTraveler.emergencyContactName,
+      emergency_contact_phone: newTraveler.emergencyContactPhone,
+      emergency_contact_relationship: newTraveler.emergencyContactRelationship,
+      departure_city: newTraveler.departure_city,
+      departure_country: newTraveler.departure_country,
+      travel_class: newTraveler.travel_class,
+      dietary_requirements: newTraveler.dietary_requirements,
+      budget_allocation: newTraveler.budget_allocation ? parseInt(newTraveler.budget_allocation) * 100 : null,
+      notes: newTraveler.notes
     };
 
     console.log('Adding traveler with data:', travelerData); // Debug log
@@ -223,15 +235,15 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         name: traveler.name,
         email: traveler.email || '',
         phone: traveler.phone || '',
-        dateOfBirth: traveler.dateOfBirth || '',
-        departureCity: traveler.departureCity,
-        departureCountry: traveler.departureCountry,
-        travelClass: traveler.travelClass,
-        dietaryRequirements: traveler.dietaryRequirements || '',
+        dateOfBirth: traveler.date_of_birth || '',
+        departureCity: traveler.departure_city,
+        departureCountry: traveler.departure_country,
+        travelClass: traveler.travel_class,
+        dietaryRequirements: traveler.dietary_requirements || '',
         emergencyContact: {
-          name: traveler.emergencyContactName || '',
-          phone: traveler.emergencyContactPhone || '',
-          relationship: traveler.emergencyContactRelationship || ''
+          name: traveler.emergency_contact_name || '',
+          phone: traveler.emergency_contact_phone || '',
+          relationship: traveler.emergency_contact_relationship || ''
         }
       })),
       roomsNeeded: travelers.length,
