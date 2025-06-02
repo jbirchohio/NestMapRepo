@@ -143,6 +143,12 @@ export default function BookingWorkflow() {
   
   const currentTraveler = getAllTravelers()[currentTravelerIndex];
   const totalTravelers = getAllTravelers().length;
+
+  // Debug logging
+  console.log('Debug - Current traveler index:', currentTravelerIndex);
+  console.log('Debug - Total travelers:', totalTravelers);
+  console.log('Debug - All travelers:', getAllTravelers());
+  console.log('Debug - Additional travelers:', additionalTravelers);
   
   const clientForm = useForm<ClientInfoValues>({
     resolver: zodResolver(clientInfoSchema),
