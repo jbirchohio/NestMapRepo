@@ -8,7 +8,7 @@ import {
   organizations,
   transformTripToFrontend, transformActivityToFrontend
 } from "@shared/schema";
-import { transformActivityToDatabase, transformTodoToDatabase, transformNoteToDatabase, transformTripToDatabase } from "@shared/fieldTransforms";
+import { transformActivityToDatabase, transformTripToDatabase } from "@shared/fieldTransforms";
 import { eq, and, desc } from "drizzle-orm";
 
 // Interface for storage operations
@@ -453,7 +453,6 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 import { db } from './db';
-import { transformTripToDatabase } from '../shared/fieldTransforms';
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
