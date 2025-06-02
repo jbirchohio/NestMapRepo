@@ -7,12 +7,7 @@ import {
   invitations, type Invitation, type InsertInvitation,
   transformTripToFrontend, transformActivityToFrontend
 } from "@shared/schema";
-import { 
-  transformTripToDatabase, 
-  transformActivityToDatabase, 
-  transformTodoToDatabase, 
-  transformNoteToDatabase 
-} from "@shared/fieldTransforms";
+import { transformActivityToDatabase, transformTodoToDatabase, transformNoteToDatabase, transformTripToDatabase } from "@shared/fieldTransforms";
 
 // Interface for storage operations
 export interface IStorage {
@@ -618,34 +613,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTodosByTripId(tripId: number): Promise<Todo[]> {
-    const todoList = await db.select().from(todos).where(eq(todos.tripId, tripId));
+    const todoList = await db.select().from(todos).where(eq(todos.trip_id, tripId));
     return todoList;
   }
 
   async createTodo(insertTodo: InsertTodo): Promise<Todo> {
-    try {
-      // Get the organization ID from the parent trip if not provided
-      let organizationId = insertTodo.organizationId;
-      if (!organizationId) {
-        const [trip] = await db.select({ organizationId: trips.organizationId }).from(trips).where(eq(trips.id, insertTodo.tripId));
-        organizationId = trip?.organizationId || undefined;
-        console.log("Derived organization ID from trip for todo:", organizationId);
-      }
-
-      const todoData = {
-        ...insertTodo,
-        organizationId: organizationId
-      };
-
-      const [todo] = await db
-        .insert(todos)
-        .values(todoData)
-        .returning();
-      return todo;
-    } catch (error) {
-      console.error("Database error creating todo:", error);
-      throw error;
-    }
+    // Transform camelCase frontend data to snake_case database format
+    const dbData = transformTodoToDatabase(insertTodo);
+    
+    const [todo] = await db
+      .insert(todos)
+      .values(dbData)
+      .returning();
+    
+    return todo;
   }
 
   async updateTodo(id: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined> {
