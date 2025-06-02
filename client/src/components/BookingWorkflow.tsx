@@ -61,6 +61,9 @@ interface FlightResult {
   cabin: string;
   availability: number;
   bookingUrl: string;
+  type?: string;
+  departure?: { airport: string; time: string; date: string };
+  arrival?: { airport: string; time: string; date: string };
 }
 
 interface HotelResult {
@@ -527,15 +530,29 @@ export default function BookingWorkflow() {
     }
   };
 
-  const formatFlightTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleTimeString('en-US', {
+  const formatFlightTime = (timeString: string) => {
+    // Handle time in HH:MM format
+    if (timeString && timeString.match(/^\d{2}:\d{2}$/)) {
+      return timeString;
+    }
+    // Fallback for datetime strings
+    return new Date(timeString).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     });
   };
 
-  const formatFlightDate = (dateTime: string) => {
-    return new Date(dateTime).toLocaleDateString('en-US', {
+  const formatFlightDate = (dateString: string) => {
+    // Handle date in YYYY-MM-DD format
+    if (dateString && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const date = new Date(dateString + 'T00:00:00');
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+    // Fallback for datetime strings
+    return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
     });
@@ -885,7 +902,7 @@ export default function BookingWorkflow() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    {flightResults.filter(f => !f.id.startsWith('return_')).map((flight) => (
+                    {flightResults.filter(f => f.type === 'outbound' || !f.type).map((flight) => (
                       <div 
                         key={flight.id} 
                         className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -897,7 +914,7 @@ export default function BookingWorkflow() {
                           <div className="space-y-1">
                             <div className="font-medium">{flight.airline} {flight.flightNumber}</div>
                             <div className="text-sm text-gray-600">
-                              {formatFlightTime(flight.departureTime)} - {formatFlightTime(flight.arrivalTime)}
+                              {flight.departure ? formatFlightTime(flight.departure.time) : formatFlightTime(flight.departureTime)} - {flight.arrival ? formatFlightTime(flight.arrival.time) : formatFlightTime(flight.arrivalTime)}
                             </div>
                             <div className="text-sm text-gray-500">
                               {flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`} • {formatDuration(flight.duration)}
@@ -922,7 +939,7 @@ export default function BookingWorkflow() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      {flightResults.filter(f => f.id.startsWith('return_')).map((flight) => (
+                      {flightResults.filter(f => f.type === 'return').map((flight) => (
                         <div 
                           key={flight.id} 
                           className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -934,7 +951,7 @@ export default function BookingWorkflow() {
                             <div className="space-y-1">
                               <div className="font-medium">{flight.airline} {flight.flightNumber}</div>
                               <div className="text-sm text-gray-600">
-                                {formatFlightTime(flight.departureTime)} - {formatFlightTime(flight.arrivalTime)}
+                                {flight.departure ? formatFlightTime(flight.departure.time) : formatFlightTime(flight.departureTime)} - {flight.arrival ? formatFlightTime(flight.arrival.time) : formatFlightTime(flight.arrivalTime)}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`} • {formatDuration(flight.duration)}
