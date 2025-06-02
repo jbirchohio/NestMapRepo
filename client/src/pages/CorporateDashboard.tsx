@@ -40,13 +40,22 @@ export default function CorporateDashboard() {
   const [, setLocation] = useLocation();
 
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
-    queryKey: ['/api/trips', { userId }],
+    queryKey: ['/api/trips/corporate', { organizationId: user?.user_metadata?.organization_id }],
     queryFn: async () => {
-      const res = await fetch('/api/trips', {
-        credentials: 'include'
+      const res = await fetch('/api/trips/corporate', {
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${user?.access_token || ''}`,
+          'Content-Type': 'application/json'
+        }
       });
-      if (!res.ok) throw new Error("Failed to fetch trips");
-      return res.json();
+      if (!res.ok) {
+        console.error('Failed to fetch corporate trips:', res.status, res.statusText);
+        throw new Error("Failed to fetch corporate trips");
+      }
+      const data = await res.json();
+      console.log('Fetched corporate trips:', data);
+      return data;
     },
     enabled: !!user,
   });
@@ -74,22 +83,22 @@ export default function CorporateDashboard() {
 
   // Calculate metrics from actual trip data
   const totalTrips = trips.length;
-  
+
   const totalBudget = trips.reduce((sum, trip) => {
     const budget = trip.budget ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')) : 0;
     return sum + (isNaN(budget) ? 0 : budget);
   }, 0);
-  
+
   const avgTripDuration = trips.length > 0 ? Math.round(
     trips.reduce((sum, trip) => {
       const startDate = trip.startDate;
       const endDate = trip.endDate;
       if (!startDate || !endDate) return sum;
-      
+
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (isNaN(start.getTime()) || isNaN(end.getTime())) return sum;
-      
+
       const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       return sum + duration;
     }, 0) / trips.length
@@ -218,18 +227,18 @@ export default function CorporateDashboard() {
                           {(() => {
                             const startDate = trip.startDate;
                             const endDate = trip.endDate;
-                            
+
                             if (!startDate || !endDate) return <p>Dates not set</p>;
-                            
+
                             const start = new Date(startDate);
                             const end = new Date(endDate);
-                            
+
                             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
                               return <p>Invalid dates</p>;
                             }
-                            
+
                             const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                            
+
                             return (
                               <div>
                                 <p>{start.toLocaleDateString()} - {end.toLocaleDateString()}</p>

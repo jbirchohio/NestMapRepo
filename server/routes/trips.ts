@@ -6,6 +6,10 @@ import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { storage } from '../storage';
 import { generatePdfBuffer } from '../utils/pdfHelper';
 import { generateAIProposal } from '../proposalGenerator';
+import { db } from '../db';
+import { trips as tripsTable } from '../db/schema';
+import { users } from '../db/schema';
+import { eq, desc } from 'drizzle-orm';
 
 const router = Router();
 
@@ -18,13 +22,13 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const orgId = req.user?.organization_id;
     const trips = await storage.getAllTrips();
-    
+
     // Filter trips by organization for multi-tenant isolation
     const filteredTrips = trips.filter(trip => {
       if (req.user?.role === 'super_admin') return true;
       return trip.organization_id === orgId;
     });
-    
+
     res.json(filteredTrips);
   } catch (error) {
     console.error("Error fetching trips:", error);
@@ -99,7 +103,7 @@ router.put("/:id", async (req: Request, res: Response) => {
 
     const updateData = insertTripSchema.partial().parse(req.body);
     const updatedTrip = await storage.updateTrip(tripId, updateData);
-    
+
     if (!updatedTrip) {
       return res.status(404).json({ message: "Trip not found" });
     }
@@ -152,7 +156,7 @@ router.get("/:id/export/pdf", async (req: Request, res: Response) => {
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
-    
+
     const trip = await storage.getTrip(tripId);
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
@@ -163,20 +167,20 @@ router.get("/:id/export/pdf", async (req: Request, res: Response) => {
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot export this trip" });
     }
-    
+
     const [activities, todos, notes] = await Promise.all([
       storage.getActivitiesByTripId(tripId),
       storage.getTodosByTripId(tripId),
       storage.getNotesByTripId(tripId)
     ]);
-    
+
     const pdfBuffer = await generatePdfBuffer({
       trip,
       activities,
       todos,
       notes
     });
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${trip.title.replace(/[^a-z0-9]/gi, '_')}_itinerary.pdf"`);
     res.send(pdfBuffer);
@@ -195,7 +199,7 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
     }
 
     const { clientName, contactEmail, contactPhone, contactWebsite, message } = req.body;
-    
+
     if (!clientName || !contactEmail) {
       return res.status(400).json({ message: "Client name and contact email are required" });
     }
@@ -212,7 +216,7 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
     }
 
     const activities = await storage.getActivitiesByTripId(tripId);
-    
+
     const proposalData = {
       trip,
       activities,
@@ -236,9 +240,9 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
         website: contactWebsite
       }
     };
-    
+
     const pdfBuffer = await generateAIProposal(proposalData);
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Travel_Proposal_${clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`);
     res.send(pdfBuffer);
@@ -297,7 +301,7 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
     }
 
     const { sharing_enabled, share_permission } = req.body;
-    
+
     let shareCode = trip.shareCode;
     if (sharing_enabled && !shareCode) {
       shareCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -324,4 +328,40 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
   }
 });
 
+// Add organization-scoped trips endpoint for corporate features
+router.get('/corporate', async (req: Request, res: Response) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(400).json({ message: "Organization context required" });
+    }
+
+    const trips = await db
+      .select({
+        id: tripsTable.id,
+        title: tripsTable.title,
+        destination: tripsTable.destination,
+        startDate: tripsTable.startDate,
+        endDate: tripsTable.endDate,
+        status: tripsTable.status,
+        budget: tripsTable.budget,
+        userId: tripsTable.userId,
+        organizationId: tripsTable.organizationId,
+        createdAt: tripsTable.createdAt,
+        // Add user details
+        userName: users.display_name,
+        userEmail: users.email
+      })
+      .from(tripsTable)
+      .leftJoin(users, eq(tripsTable.userId, users.id))
+      .where(eq(tripsTable.organizationId, req.user.organization_id))
+      .orderBy(desc(tripsTable.createdAt));
+
+    res.json(trips);
+  } catch (error) {
+    console.error('Error fetching corporate trips:', error);
+    res.status(500).json({ message: "Failed to fetch corporate trips" });
+  }
+});
+
+// Export the router
 export default router;

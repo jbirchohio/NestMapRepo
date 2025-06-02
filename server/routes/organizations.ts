@@ -5,6 +5,9 @@ import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { storage } from '../storage';
 import { getOrganizationAnalytics } from '../analytics';
+import { db } from '../db';
+import { users } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 const router = Router();
 
@@ -53,7 +56,7 @@ router.put("/:id", requireOrgPermission('manage_organization'), async (req: Requ
 
     const updateData = insertOrganizationSchema.partial().parse(req.body);
     const updatedOrganization = await storage.updateOrganization(orgId, updateData);
-    
+
     if (!updatedOrganization) {
       return res.status(404).json({ message: "Organization not found" });
     }
@@ -105,7 +108,7 @@ router.post("/:id/invite", requireOrgPermission('invite_members'), async (req: R
     }
 
     const { email, org_role = 'member' } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -132,7 +135,7 @@ router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async
   try {
     const orgId = parseInt(req.params.id);
     const userId = parseInt(req.params.userId);
-    
+
     if (isNaN(orgId) || isNaN(userId)) {
       return res.status(400).json({ message: "Invalid organization or user ID" });
     }
@@ -144,7 +147,7 @@ router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async
     }
 
     const { org_role, permissions } = req.body;
-    
+
     const updatedMember = await storage.updateOrganizationMember(orgId, userId, {
       org_role,
       permissions
@@ -166,7 +169,7 @@ router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), as
   try {
     const orgId = parseInt(req.params.id);
     const userId = parseInt(req.params.userId);
-    
+
     if (isNaN(orgId) || isNaN(userId)) {
       return res.status(400).json({ message: "Invalid organization or user ID" });
     }
@@ -216,4 +219,33 @@ router.get("/:id/analytics", requireOrgPermission('access_analytics'), async (re
   }
 });
 
+// Add members endpoint for organization management
+router.get('/members', async (req: Request, res: Response) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(400).json({ message: "Organization context required" });
+    }
+
+    const members = await db
+      .select({
+        id: users.id,
+        display_name: users.display_name,
+        email: users.email,
+        role: users.role,
+        organization_id: users.organization_id,
+        created_at: users.created_at,
+        avatar_url: users.avatar_url
+      })
+      .from(users)
+      .where(eq(users.organization_id, req.user.organization_id))
+      .orderBy(users.display_name);
+
+    res.json(members);
+  } catch (error) {
+    console.error('Error fetching organization members:', error);
+    res.status(500).json({ message: "Failed to fetch organization members" });
+  }
+});
+
+// Export the router
 export default router;
