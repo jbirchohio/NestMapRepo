@@ -94,8 +94,8 @@ export default function SequentialBooking() {
     // Store current flight booking data
     sessionStorage.setItem('currentFlightBooking', JSON.stringify(flightBookingData));
     
-    // Navigate to flight booking with pre-populated data
-    window.location.href = `/bookings/flights?sequential=true&traveler=${currentTraveler.id}`;
+    // Navigate to main bookings page with flight tab and pre-populated data
+    window.location.href = `/bookings?tab=bookings&sequential=true&traveler=${currentTraveler.id}`;
   };
 
   const handleNextTraveler = () => {
@@ -131,7 +131,7 @@ export default function SequentialBooking() {
     };
 
     sessionStorage.setItem('currentHotelBooking', JSON.stringify(hotelBookingData));
-    window.location.href = `/bookings/hotels?sequential=true&trip=${bookingData.tripId}`;
+    window.location.href = `/bookings?tab=bookings&sequential=true&type=hotel&trip=${bookingData.tripId}`;
   };
 
   const handleComplete = () => {

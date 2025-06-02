@@ -98,6 +98,7 @@ export default function BookingWorkflow() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const mode = urlParams.get('mode');
+    const sequential = urlParams.get('sequential');
     const tripId = urlParams.get('trip');
     
     if (mode === 'group' && tripId) {
@@ -163,8 +164,49 @@ export default function BookingWorkflow() {
           console.error('Error parsing team data:', error);
         }
       }
+    } else if (sequential === 'true') {
+      // Handle sequential booking data from new workflow
+      const currentFlightBooking = sessionStorage.getItem('currentFlightBooking');
+      if (currentFlightBooking) {
+        try {
+          const flightData = JSON.parse(currentFlightBooking);
+          
+          // Pre-fill form with individual traveler data
+          clientForm.reset({
+            origin: flightData.departureCity || '',
+            destination: flightData.arrivalCity || '',
+            departureDate: flightData.departureDate || '',
+            returnDate: flightData.returnDate || '',
+            tripType: flightData.returnDate ? 'round-trip' : 'one-way',
+            passengers: 1,
+            primaryTraveler: {
+              firstName: flightData.travelerName?.split(' ')[0] || '',
+              lastName: flightData.travelerName?.split(' ').slice(1).join(' ') || '',
+              email: flightData.travelerEmail || '',
+              phone: flightData.travelerPhone || '',
+              dateOfBirth: flightData.travelerDateOfBirth || '',
+            },
+            emergencyContact: {
+              name: flightData.emergencyContact?.name || '',
+              phone: flightData.emergencyContact?.phone || '',
+              relationship: flightData.emergencyContact?.relationship || '',
+            },
+            specialRequests: flightData.dietaryRequirements || '',
+            tripPurpose: 'business',
+            companyName: '',
+            costCenter: '',
+          });
+          
+          toast({
+            title: "Sequential booking",
+            description: `Booking flight for ${flightData.travelerName} from ${flightData.departureCity} to ${flightData.arrivalCity}`,
+          });
+        } catch (error) {
+          console.error('Error parsing sequential flight booking data:', error);
+        }
+      }
     }
-  }, [user?.email, toast]);
+  }, [user?.email, toast, clientForm]);
   
   const clientForm = useForm<ClientInfoValues>({
     resolver: zodResolver(clientInfoSchema),
