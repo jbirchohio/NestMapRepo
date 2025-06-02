@@ -362,8 +362,8 @@ export default function MainNavigation() {
           </div>
         </div>
 
-        {/* Main Navigation - Full Width Row */}
-        <div className="border-t border-slate-200 dark:border-slate-700 py-3">
+        {/* Main Navigation - Full Width Row - Hidden on mobile */}
+        <div className="hidden md:block border-t border-slate-200 dark:border-slate-700 py-3">
           <div className="flex flex-wrap gap-2">
             {navigationItems.filter(item => item.show).map((item) => (
               <Link key={item.path} href={item.path}>
