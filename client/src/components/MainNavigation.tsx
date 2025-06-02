@@ -256,29 +256,7 @@ export default function MainNavigation() {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Hidden on mobile */}
-          <div className="hidden md:flex items-center gap-2 flex-1 justify-center">
-            {navigationItems.filter(item => item.show).map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <Link key={item.path} href={item.path}>
-                  <Button
-                    variant={item.active ? "default" : "ghost"}
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <IconComponent className="h-4 w-4" />
-                    <span className="hidden lg:inline">{item.label}</span>
-                    {item.badge && (
-                      <Badge variant="secondary" className="ml-1 text-xs">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </Button>
-                </Link>
-              );
-            })}
-          </div>
+
 
           {/* User Section */}
           <div className="flex items-center gap-3 flex-shrink-0">
