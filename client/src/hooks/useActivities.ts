@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientActivity } from "@/lib/types";
 
@@ -43,9 +44,7 @@ export default function useActivities(tripId: string | number) {
         return [];
       }
       
-      const res = await fetch(`${API_ENDPOINTS.TRIPS}/${tripId}/activities`);
-      if (!res.ok) throw new Error("Failed to fetch activities");
-      
+      const res = await apiRequest("GET", `${API_ENDPOINTS.TRIPS}/${tripId}/activities`);
       const activitiesData = await res.json();
       
       // Process activities to add travel time information
