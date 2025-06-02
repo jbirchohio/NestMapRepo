@@ -23,12 +23,16 @@ export function transformResponseFields(req: Request, res: Response, next: NextF
   res.json = function(data: any) {
     try {
       // Transform snake_case response data to camelCase for frontend
-      if (data && typeof data === 'object') {
-        data = snakeToCamel(data);
+      if (data && typeof data === 'object' && !Buffer.isBuffer(data)) {
+        console.log(`Transforming response for ${req.path}:`, typeof data, Array.isArray(data));
+        const transformed = snakeToCamel(data);
+        console.log(`Transformation successful for ${req.path}`);
+        return originalJson.call(this, transformed);
       }
       return originalJson.call(this, data);
     } catch (error) {
-      console.error("Response transformation error:", error);
+      console.error(`Response transformation error for ${req.path}:`, error);
+      console.error("Original data:", JSON.stringify(data, null, 2));
       return originalJson.call(this, data);
     }
   };
