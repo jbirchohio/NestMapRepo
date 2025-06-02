@@ -37,7 +37,8 @@ interface SequentialBookingData {
     };
   }>;
   roomsNeeded: number;
-  bookingStatus: 'flights' | 'hotels' | 'complete';
+  roomConfiguration: 'shared' | 'separate' | null;
+  bookingStatus: 'flights' | 'room-preferences' | 'hotels' | 'complete';
 }
 
 export default function SequentialBooking() {
@@ -115,11 +116,21 @@ export default function SequentialBooking() {
   }
 
   const currentTraveler = bookingData.travelers?.[bookingData.currentTravelerIndex];
-  const totalSteps = bookingData.travelers?.length + 1 || 1; // All travelers + hotels
-  const progress = ((bookingData.currentTravelerIndex + (bookingData.bookingStatus === 'hotels' ? 1 : 0)) / totalSteps) * 100;
+  const totalSteps = bookingData.travelers?.length + 2 || 1; // All travelers + room preferences + hotels
+  
+  let completedSteps = bookingData.currentTravelerIndex;
+  if (bookingData.bookingStatus === 'room-preferences') {
+    completedSteps = bookingData.travelers?.length || 0;
+  } else if (bookingData.bookingStatus === 'hotels') {
+    completedSteps = (bookingData.travelers?.length || 0) + 1;
+  } else if (bookingData.bookingStatus === 'complete') {
+    completedSteps = totalSteps;
+  }
+  
+  const progress = (completedSteps / totalSteps) * 100;
 
   // Handle case where no current traveler is available
-  if (!currentTraveler && bookingData.bookingStatus !== 'hotels') {
+  if (!currentTraveler && bookingData.bookingStatus !== 'hotels' && bookingData.bookingStatus !== 'room-preferences') {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">
@@ -166,10 +177,10 @@ export default function SequentialBooking() {
       setBookingData(updatedData);
       sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
     } else {
-      // All travelers done, move to hotels
+      // All travelers done, move to room preferences
       const updatedData = {
         ...bookingData,
-        bookingStatus: 'hotels' as const
+        bookingStatus: 'room-preferences' as const
       };
       setBookingData(updatedData);
       sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
@@ -183,6 +194,7 @@ export default function SequentialBooking() {
       checkInDate: bookingData.departureDate,
       checkOutDate: bookingData.returnDate,
       roomsNeeded: bookingData.roomsNeeded,
+      roomConfiguration: bookingData.roomConfiguration,
       travelers: bookingData.travelers
     };
 
@@ -299,6 +311,90 @@ export default function SequentialBooking() {
             <p className="text-sm text-muted-foreground mt-3">
               Step {bookingData.currentTravelerIndex + 1} of {bookingData.travelers.length} travelers
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {bookingData.bookingStatus === 'room-preferences' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Hotel className="h-5 w-5" />
+              Room Configuration
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">How would you like to arrange rooms?</h3>
+              <p className="text-muted-foreground mb-4">
+                You have {bookingData.travelers.length} travelers for your trip to {bookingData.tripDestination}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <Card 
+                className={`cursor-pointer border-2 transition-colors ${
+                  bookingData.roomConfiguration === 'shared' 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => setBookingData(prev => prev ? {...prev, roomConfiguration: 'shared', roomsNeeded: 1} : null)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-4 h-4 rounded-full border-2 mt-1 ${
+                      bookingData.roomConfiguration === 'shared' 
+                        ? 'border-primary bg-primary' 
+                        : 'border-border'
+                    }`}></div>
+                    <div>
+                      <h4 className="font-semibold">Shared Room</h4>
+                      <p className="text-sm text-muted-foreground">
+                        One room with multiple beds for all travelers (recommended for 2 travelers)
+                      </p>
+                      <p className="text-sm font-medium mt-1">1 room needed</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className={`cursor-pointer border-2 transition-colors ${
+                  bookingData.roomConfiguration === 'separate' 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => setBookingData(prev => prev ? {...prev, roomConfiguration: 'separate', roomsNeeded: prev.travelers.length} : null)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-4 h-4 rounded-full border-2 mt-1 ${
+                      bookingData.roomConfiguration === 'separate' 
+                        ? 'border-primary bg-primary' 
+                        : 'border-border'
+                    }`}></div>
+                    <div>
+                      <h4 className="font-semibold">Separate Rooms</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Individual rooms for each traveler (recommended for privacy)
+                      </p>
+                      <p className="text-sm font-medium mt-1">{bookingData.travelers.length} rooms needed</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button 
+                onClick={() => setBookingData(prev => prev ? {...prev, bookingStatus: 'hotels'} : null)}
+                disabled={!bookingData.roomConfiguration}
+                className="flex-1"
+              >
+                Continue to Hotel Search
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
