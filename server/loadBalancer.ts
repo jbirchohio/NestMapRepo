@@ -60,7 +60,7 @@ export async function domainRoutingMiddleware(req: Request, res: Response, next:
 
     // Add white label headers for frontend
     res.setHeader('X-White-Label-Domain', domainConfig.domain);
-    res.setHeader('X-Organization-ID', domainConfig.organizationId.toString());
+    res.setHeader('X-Organization-ID', domainConfig.organization_id.toString());
     
     if (domainConfig.branding) {
       res.setHeader('X-White-Label-Config', JSON.stringify(domainConfig.branding));
@@ -110,7 +110,7 @@ async function getDomainConfig(domain: string): Promise<DomainConfig | null> {
     
     return {
       domain: row.domain,
-      organizationId: row.organizationId,
+      organizationId: row.organization_id,
       ssl_verified: row.ssl_verified || false,
       status: row.status || 'pending',
       branding: row.companyName ? {
@@ -249,7 +249,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-White-Label-Domain ${domain.domain};
-        proxy_set_header X-Organization-ID ${domain.organizationId};
+        proxy_set_header X-Organization-ID ${domain.organization_id};
     }
 }
 
@@ -278,7 +278,7 @@ export async function updateLoadBalancerConfig(): Promise<void> {
 
     const domainConfigs: DomainConfig[] = domains.map(d => ({
       domain: d.domain,
-      organizationId: d.organizationId,
+      organizationId: d.organization_id,
       ssl_verified: d.ssl_verified,
       status: d.status,
       branding: null
@@ -323,7 +323,7 @@ async function handleRequest(request) {
     // Forward to origin with white label headers
     const modifiedRequest = new Request(request)
     modifiedRequest.headers.set('X-White-Label-Domain', hostname)
-    modifiedRequest.headers.set('X-Organization-ID', config.organizationId.toString())
+    modifiedRequest.headers.set('X-Organization-ID', config.organization_id.toString())
     
     return fetch('https://origin.nestmap.com', modifiedRequest)
   }

@@ -49,8 +49,8 @@ export function enforceOrganizationSecurity(req: Request, res: Response, next: N
   }
 
   // Ensure user has organization context for protected resources
-  if (req.user && req.user.organizationId) {
-    req.organizationFilter = { organizationId: req.user.organizationId };
+  if (req.user && req.user.organization_id) {
+    req.organizationFilter = { organization_id: req.user.organization_id };
   }
 
   next();
@@ -87,7 +87,7 @@ export function auditLogger(action: string, resource: string) {
       action,
       resource,
       user_id: req.user?.id,
-      organizationId: req.user?.organizationId,
+      organizationId: req.user?.organization_id,
       ip: req.ip,
       userAgent: req.get('user-agent'),
       timestamp: new Date().toISOString(),

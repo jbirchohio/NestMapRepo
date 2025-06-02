@@ -54,7 +54,7 @@ router.get('/pending', async (req, res) => {
       .from(approvalRequests)
       .leftJoin(users, eq(approvalRequests.requesterId, users.id))
       .where(and(
-        eq(approvalRequests.organizationId, organizationId),
+        eq(approvalRequests.organization_id, organizationId),
         eq(approvalRequests.status, 'pending'),
         or(
           eq(approvalRequests.approverId, userId),
@@ -98,7 +98,7 @@ router.patch('/:requestId/decision', async (req, res) => {
       .from(approvalRequests)
       .where(and(
         eq(approvalRequests.id, requestId),
-        eq(approvalRequests.organizationId, organizationId)
+        eq(approvalRequests.organization_id, organizationId)
       ));
     
     if (!request) {
@@ -217,7 +217,7 @@ router.get('/rules', async (req, res) => {
     const rules = await db
       .select()
       .from(approvalRules)
-      .where(eq(approvalRules.organizationId, organizationId))
+      .where(eq(approvalRules.organization_id, organizationId))
       .orderBy(approvalRules.priority);
     
     res.json(rules);
@@ -276,7 +276,7 @@ async function checkApprovalRequired(
     .select()
     .from(approvalRules)
     .where(and(
-      eq(approvalRules.organizationId, organizationId),
+      eq(approvalRules.organization_id, organizationId),
       eq(approvalRules.entityType, entityType),
       eq(approvalRules.active, true)
     ))
@@ -363,7 +363,7 @@ async function applyApprovedChanges(request: any): Promise<void> {
           // Create the trip with approved data
           await db.insert(trips).values({
             ...request.proposedData,
-            organization_id: request.organizationId,
+            organization_id: request.organization_id,
             user_id: request.requesterId
           });
         } else if (request.requestType === 'modify') {

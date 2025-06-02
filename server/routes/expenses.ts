@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
         status: expenses.status,
         receiptUrl: expenses.receiptUrl,
         isReimbursable: expenses.isReimbursable,
-        tripId: expenses.tripId,
+        tripId: expenses.trip_id,
         createdAt: expenses.createdAt,
         trip: {
           id: trips.id,
@@ -42,42 +42,42 @@ router.get('/', async (req, res) => {
         }
       })
       .from(expenses)
-      .leftJoin(trips, eq(expenses.tripId, trips.id))
-      .leftJoin(users, eq(expenses.userId, users.id))
-      .where(eq(expenses.organizationId, organizationId));
+      .leftJoin(trips, eq(expenses.trip_id, trips.id))
+      .leftJoin(users, eq(expenses.user_id, users.id))
+      .where(eq(expenses.organization_id, organizationId));
 
     // Apply filters
     if (tripId) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
-        eq(expenses.tripId, parseInt(tripId as string))
+        eq(expenses.organization_id, organizationId),
+        eq(expenses.trip_id, parseInt(tripId as string))
       ));
     }
 
     if (status) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
+        eq(expenses.organization_id, organizationId),
         eq(expenses.status, status as string)
       ));
     }
 
     if (category) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
+        eq(expenses.organization_id, organizationId),
         eq(expenses.category, category as string)
       ));
     }
 
     if (startDate) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
+        eq(expenses.organization_id, organizationId),
         gte(expenses.date, new Date(startDate as string))
       ));
     }
 
     if (endDate) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
+        eq(expenses.organization_id, organizationId),
         lte(expenses.date, new Date(endDate as string))
       ));
     }
@@ -105,7 +105,7 @@ router.get('/stats', async (req, res) => {
     const organizationId = req.user.organization_id;
     const { year, month } = req.query;
     
-    let dateFilter = eq(expenses.organizationId, organizationId);
+    let dateFilter = eq(expenses.organization_id, organizationId);
     
     if (year) {
       const startDate = new Date(parseInt(year as string), month ? parseInt(month as string) - 1 : 0, 1);
@@ -114,7 +114,7 @@ router.get('/stats', async (req, res) => {
         : new Date(parseInt(year as string) + 1, 0, 0);
       
       dateFilter = and(
-        eq(expenses.organizationId, organizationId),
+        eq(expenses.organization_id, organizationId),
         gte(expenses.date, startDate),
         lte(expenses.date, endDate)
       );
@@ -151,7 +151,7 @@ router.get('/stats', async (req, res) => {
         avgAmount: sql<number>`avg(${expenses.amount})::int`
       })
       .from(expenses)
-      .where(eq(expenses.organizationId, organizationId))
+      .where(eq(expenses.organization_id, organizationId))
       .groupBy(sql`to_char(${expenses.date}, 'YYYY-MM')`)
       .orderBy(sql`to_char(${expenses.date}, 'YYYY-MM') DESC`)
       .limit(12);
@@ -253,7 +253,7 @@ router.patch('/:expenseId', async (req, res) => {
       .from(expenses)
       .where(and(
         eq(expenses.id, expenseId),
-        eq(expenses.organizationId, organizationId)
+        eq(expenses.organization_id, organizationId)
       ));
     
     if (!existingExpense) {
@@ -261,7 +261,7 @@ router.patch('/:expenseId', async (req, res) => {
     }
     
     // Check permissions - user can edit their own expenses or managers can edit any
-    if (existingExpense.userId !== userId && !['admin', 'manager'].includes(userRole)) {
+    if (existingExpense.user_id !== userId && !['admin', 'manager'].includes(userRole)) {
       return res.status(403).json({ error: "Permission denied" });
     }
     
@@ -332,7 +332,7 @@ router.patch('/:expenseId/approval', async (req, res) => {
       .from(expenses)
       .where(and(
         eq(expenses.id, expenseId),
-        eq(expenses.organizationId, organizationId)
+        eq(expenses.organization_id, organizationId)
       ));
     
     if (!expense) {
@@ -378,7 +378,7 @@ router.post('/:expenseId/receipt', async (req, res) => {
       .from(expenses)
       .where(and(
         eq(expenses.id, expenseId),
-        eq(expenses.organizationId, organizationId)
+        eq(expenses.organization_id, organizationId)
       ));
     
     if (!expense) {
@@ -430,36 +430,36 @@ router.get('/report', async (req, res) => {
         }
       })
       .from(expenses)
-      .leftJoin(trips, eq(expenses.tripId, trips.id))
-      .leftJoin(users, eq(expenses.userId, users.id))
-      .where(eq(expenses.organizationId, organizationId));
+      .leftJoin(trips, eq(expenses.trip_id, trips.id))
+      .leftJoin(users, eq(expenses.user_id, users.id))
+      .where(eq(expenses.organization_id, organizationId));
 
     // Apply filters
     if (startDate) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
+        eq(expenses.organization_id, organizationId),
         gte(expenses.date, new Date(startDate as string))
       ));
     }
 
     if (endDate) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
+        eq(expenses.organization_id, organizationId),
         lte(expenses.date, new Date(endDate as string))
       ));
     }
 
     if (tripId) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
-        eq(expenses.tripId, parseInt(tripId as string))
+        eq(expenses.organization_id, organizationId),
+        eq(expenses.trip_id, parseInt(tripId as string))
       ));
     }
 
     if (filterUserId) {
       query = query.where(and(
-        eq(expenses.organizationId, organizationId),
-        eq(expenses.userId, parseInt(filterUserId as string))
+        eq(expenses.organization_id, organizationId),
+        eq(expenses.user_id, parseInt(filterUserId as string))
       ));
     }
 

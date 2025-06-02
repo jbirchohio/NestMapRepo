@@ -13,7 +13,7 @@ router.get('/trip/:tripId', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     const organizationId = req.user.organization_id;
     
     // Verify trip belongs to user's organization
@@ -34,8 +34,8 @@ router.get('/trip/:tripId', async (req, res) => {
       .select()
       .from(bookings)
       .where(and(
-        eq(bookings.tripId, tripId),
-        eq(bookings.organizationId, organizationId)
+        eq(bookings.trip_id, tripId),
+        eq(bookings.organization_id, organizationId)
       ))
       .orderBy(desc(bookings.createdAt));
     
@@ -272,7 +272,7 @@ router.patch('/:bookingId/cancel', async (req, res) => {
       .from(bookings)
       .where(and(
         eq(bookings.id, bookingId),
-        eq(bookings.organizationId, organizationId)
+        eq(bookings.organization_id, organizationId)
       ));
     
     if (!booking) {
@@ -336,7 +336,7 @@ router.get('/:bookingId', async (req, res) => {
       .leftJoin(bookingPayments, eq(bookings.id, bookingPayments.bookingId))
       .where(and(
         eq(bookings.id, bookingId),
-        eq(bookings.organizationId, organizationId)
+        eq(bookings.organization_id, organizationId)
       ));
     
     if (!booking) {

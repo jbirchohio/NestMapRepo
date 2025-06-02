@@ -159,7 +159,7 @@ export function validateSession(req: Request, res: Response, next: NextFunction)
   req.authSession = session;
   req.user = {
     id: session.user_id,
-    organization_id: session.organizationId,
+    organization_id: session.organization_id,
     role: session.role
   };
 
@@ -204,7 +204,7 @@ export function requireRole(allowedRoles: string[]) {
  * Organization access control middleware
  */
 export function requireOrganization(req: Request, res: Response, next: NextFunction) {
-  if (!req.authSession?.organizationId) {
+  if (!req.authSession?.organization_id) {
     return res.status(403).json({ 
       message: 'Organization membership required' 
     });

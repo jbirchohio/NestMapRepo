@@ -38,7 +38,7 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
   }
 
   // Ensure user has organization context
-  if (!req.user?.organizationId) {
+  if (!req.user?.organization_id) {
     return res.status(403).json({ 
       message: 'Organization context required. Please contact your administrator.' 
     });
@@ -47,10 +47,10 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
   // CRITICAL: Enforce domain-based organization isolation for white-label domains
   if (req.isWhiteLabelDomain && req.domainOrganizationId) {
     // For white-label domains, ensure user's organization matches the domain's organization
-    if (req.user.organizationId !== req.domainOrganizationId) {
+    if (req.user.organization_id !== req.domainOrganizationId) {
       console.warn('SECURITY_VIOLATION: Cross-organization access attempt via white-label domain', {
         user_id: req.user.id,
-        userOrgId: req.user.organizationId,
+        userOrgId: req.user.organization_id,
         domainOrgId: req.domainOrganizationId,
         domain: req.headers.host,
         endpoint: req.path,
@@ -65,21 +65,21 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
     }
     
     // Set organization context to the domain's organization for extra security
-    req.organizationId = req.domainOrganizationId;
+    req.organization_id = req.domainOrganizationId;
   } else {
     // For main domain, use user's organization
-    req.organizationId = req.user.organizationId;
+    req.organization_id = req.user.organization_id;
   }
   
   // Create organization filter function for queries
   req.organizationFilter = (orgId: number | null) => {
-    return orgId === req.organizationId;
+    return orgId === req.organization_id;
   };
 
   // Log successful organization context injection for audit trail
   console.log('Organization context injected:', {
     user_id: req.user.id,
-    organizationId: req.organizationId,
+    organizationId: req.organization_id,
     isWhiteLabel: req.isWhiteLabelDomain || false,
     domain: req.headers.host,
     endpoint: req.path
@@ -93,12 +93,12 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
  * Used for routes that accept organization ID as parameter
  */
 export function validateOrganizationAccess(req: Request, res: Response, next: NextFunction) {
-  const requestedOrgId = parseInt(req.params.organizationId || req.body.organizationId);
+  const requestedOrgId = parseInt(req.params.organization_id || req.body.organization_id);
   
-  if (requestedOrgId && requestedOrgId !== req.user?.organizationId) {
+  if (requestedOrgId && requestedOrgId !== req.user?.organization_id) {
     console.warn('SECURITY_VIOLATION: Cross-organization access attempt', {
       user_id: req.user?.id,
-      userOrgId: req.user?.organizationId,
+      userOrgId: req.user?.organization_id,
       requestedOrgId,
       endpoint: req.path,
       ip: req.ip,
@@ -155,12 +155,12 @@ export async function resolveDomainOrganization(req: Request, res: Response, nex
       }
 
       // Set domain organization context for later validation
-      req.domainOrganizationId = domainConfig.organizationId;
+      req.domainOrganizationId = domainConfig.organization_id;
       req.isWhiteLabelDomain = true;
       
       console.log('Domain organization resolved:', {
         domain: host,
-        organizationId: domainConfig.organizationId,
+        organizationId: domainConfig.organization_id,
         status: domainConfig.status
       });
     }
@@ -190,7 +190,7 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
   if (!hasAnalyticsAccess) {
     console.warn('ANALYTICS_ACCESS_DENIED:', {
       user_id: req.user.id,
-      organizationId: req.user.organizationId,
+      organizationId: req.user.organization_id,
       role: req.user.role,
       endpoint: req.path,
       timestamp: new Date().toISOString()
@@ -203,7 +203,7 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
 
   // Ensure analytics are scoped to user's organization only
   req.analyticsScope = {
-    organizationId: req.user.organizationId
+    organizationId: req.user.organization_id
   };
 
   next();
@@ -213,25 +213,25 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
  * Query helper to automatically add organization scoping
  */
 export function addOrganizationScope(baseQuery: any, req: Request, tableName: string) {
-  if (!req.organizationId) {
+  if (!req.organization_id) {
     throw new Error('Organization context required for scoped queries');
   }
 
   // Add organization_id filter to all queries
-  return baseQuery.where(eq(`${tableName}.organization_id`, req.organizationId));
+  return baseQuery.where(eq(`${tableName}.organization_id`, req.organization_id));
 }
 
 /**
  * Validation helper for organization-scoped inserts
  */
 export function validateOrganizationData(data: any, req: Request) {
-  if (!req.organizationId) {
+  if (!req.organization_id) {
     throw new Error('Organization context required');
   }
 
   // Automatically inject organization ID into create operations
   return {
     ...data,
-    organizationId: req.organizationId
+    organizationId: req.organization_id
   };
 }

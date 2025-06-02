@@ -13,7 +13,7 @@ router.get('/trips/:tripId/comments', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     const organizationId = req.user.organization_id;
     
     // Verify trip belongs to user's organization
@@ -33,7 +33,7 @@ router.get('/trips/:tripId/comments', async (req, res) => {
     const comments = await db
       .select({
         id: tripComments.id,
-        tripId: tripComments.tripId,
+        tripId: tripComments.trip_id,
         activityId: tripComments.activityId,
         content: tripComments.content,
         parentId: tripComments.parentId,
@@ -47,10 +47,10 @@ router.get('/trips/:tripId/comments', async (req, res) => {
         }
       })
       .from(tripComments)
-      .leftJoin(users, eq(tripComments.userId, users.id))
+      .leftJoin(users, eq(tripComments.user_id, users.id))
       .where(and(
-        eq(tripComments.tripId, tripId),
-        eq(tripComments.organizationId, organizationId)
+        eq(tripComments.trip_id, tripId),
+        eq(tripComments.organization_id, organizationId)
       ))
       .orderBy(desc(tripComments.createdAt));
     
@@ -68,7 +68,7 @@ router.post('/trips/:tripId/comments', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     const organizationId = req.user.organization_id;
     const userId = req.user.id;
     
@@ -119,7 +119,7 @@ router.post('/trips/:tripId/comments', async (req, res) => {
     const [commentWithUser] = await db
       .select({
         id: tripComments.id,
-        tripId: tripComments.tripId,
+        tripId: tripComments.trip_id,
         activityId: tripComments.activityId,
         content: tripComments.content,
         parentId: tripComments.parentId,
@@ -133,7 +133,7 @@ router.post('/trips/:tripId/comments', async (req, res) => {
         }
       })
       .from(tripComments)
-      .leftJoin(users, eq(tripComments.userId, users.id))
+      .leftJoin(users, eq(tripComments.user_id, users.id))
       .where(eq(tripComments.id, newComment.id));
     
     res.status(201).json(commentWithUser);
@@ -167,7 +167,7 @@ router.patch('/comments/:commentId/resolve', async (req, res) => {
       .from(tripComments)
       .where(and(
         eq(tripComments.id, commentId),
-        eq(tripComments.organizationId, organizationId)
+        eq(tripComments.organization_id, organizationId)
       ));
     
     if (!comment) {
@@ -198,7 +198,7 @@ router.get('/trips/:tripId/activity', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     const organizationId = req.user.organization_id;
     const limit = parseInt(req.query.limit as string) || 50;
     
@@ -232,10 +232,10 @@ router.get('/trips/:tripId/activity', async (req, res) => {
         }
       })
       .from(activityLog)
-      .leftJoin(users, eq(activityLog.userId, users.id))
+      .leftJoin(users, eq(activityLog.user_id, users.id))
       .where(and(
-        eq(activityLog.tripId, tripId),
-        eq(activityLog.organizationId, organizationId)
+        eq(activityLog.trip_id, tripId),
+        eq(activityLog.organization_id, organizationId)
       ))
       .orderBy(desc(activityLog.timestamp))
       .limit(limit);

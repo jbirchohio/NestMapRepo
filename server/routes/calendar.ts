@@ -13,7 +13,7 @@ router.post('/generate-ical/:tripId', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     const organizationId = req.user.organization_id;
     
     // Verify trip belongs to user's organization
@@ -34,8 +34,8 @@ router.post('/generate-ical/:tripId', async (req, res) => {
       .select()
       .from(activities)
       .where(and(
-        eq(activities.tripId, tripId),
-        eq(activities.organizationId, organizationId)
+        eq(activities.trip_id, tripId),
+        eq(activities.organization_id, organizationId)
       ));
     
     // Generate iCal format
@@ -70,8 +70,8 @@ router.get('/integrations', async (req, res) => {
       })
       .from(calendarIntegrations)
       .where(and(
-        eq(calendarIntegrations.userId, userId),
-        eq(calendarIntegrations.organizationId, organizationId)
+        eq(calendarIntegrations.user_id, userId),
+        eq(calendarIntegrations.organization_id, organizationId)
       ));
     
     res.json(integrations);
@@ -88,7 +88,7 @@ router.post('/sync-trip/:tripId', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.tripId);
+    const tripId = parseInt(req.params.trip_id);
     const organizationId = req.user.organization_id;
     
     // Verify trip belongs to user's organization
@@ -193,8 +193,8 @@ async function generateCalendarEvents(trip: any, tripId: number, organizationId:
     .select()
     .from(activities)
     .where(and(
-      eq(activities.tripId, tripId),
-      eq(activities.organizationId, organizationId)
+      eq(activities.trip_id, tripId),
+      eq(activities.organization_id, organizationId)
     ));
   
   return [

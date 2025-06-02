@@ -122,7 +122,7 @@ class ApiKeyManager {
 
     return {
       valid: true,
-      organizationId: keyData.organizationId,
+      organizationId: keyData.organization_id,
       permissions: keyData.permissions,
       rateLimit: keyData.rateLimit
     };
@@ -149,7 +149,7 @@ export function authenticateApiKey(req: Request, res: Response, next: NextFuncti
   }
 
   req.apiKeyAuth = {
-    organizationId: validation.organizationId!,
+    organizationId: validation.organization_id!,
     permissions: validation.permissions!,
     rateLimit: validation.rateLimit!
   };
