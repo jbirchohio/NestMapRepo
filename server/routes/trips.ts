@@ -91,12 +91,14 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
 
     console.log(`Activities request for trip ${tripId}`);
     console.log(`Request user object:`, req.user);
-    console.log(`Request session:`, req.session?.userId);
+    console.log(`Request session:`, req.session);
     
     if (!req.user?.id) {
       console.log(`Authentication failed - no user ID found`);
       return res.status(401).json({ message: "Authentication required" });
     }
+    
+    console.log(`User authenticated, ID: ${req.user.id}, org: ${req.user.organization_id}`);
 
     // Verify trip exists and user has access
     const trip = await storage.getTrip(tripId);
