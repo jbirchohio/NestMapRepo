@@ -83,54 +83,35 @@ router.get('/corporate', async (req: Request, res: Response) => {
 
 // Get activities for a specific trip
 router.get("/:id/activities", async (req: Request, res: Response) => {
-  console.log(`🔍 ACTIVITIES ENDPOINT HIT - Trip ID: ${req.params.id}`);
-  
-  // Simple test - just return empty array to see if endpoint works
-  console.log(`🧪 Testing endpoint - returning empty array immediately`);
-  return res.json([]);
-  
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
-      console.log(`❌ Invalid trip ID: ${req.params.id}`);
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
-    console.log(`✅ Valid trip ID: ${tripId}`);
-    console.log(`👤 User object:`, req.user);
+    // Get user from session (same pattern as todos/notes endpoints)
+    const userId = req.user?.id;
+    const orgId = req.user?.organization_id;
     
-    if (!req.user?.id) {
-      console.log(`❌ Authentication failed - no user ID found`);
-      return res.status(401).json({ message: "Authentication required" });
+    if (!userId) {
+      return res.status(401).json({ message: "User ID required" });
     }
-    
-    console.log(`✅ User authenticated, ID: ${req.user.id}, org: ${req.user.organization_id}`);
 
     // Verify trip exists and user has access
     const trip = await storage.getTrip(tripId);
     if (!trip) {
-      console.log(`Trip ${tripId} not found`);
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    console.log(`Trip ${tripId} found, org: ${trip.organization_id}`);
-
     // Verify organization access
-    const userOrgId = req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      console.log(`Access denied: user org ${userOrgId} vs trip org ${trip.organization_id}`);
+    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
-    console.log(`Authorization passed, fetching activities for trip ${tripId}`);
+    // Fetch activities for the trip
     const activities = await storage.getActivitiesByTripId(tripId);
     
-    // Always return a successful response, even if no activities exist
-    if (activities.length === 0) {
-      console.log(`No activities found for trip ${tripId}, returning empty array`);
-      return res.json([]);
-    }
-    
+    // Return activities (empty array if none exist)
     res.json(activities);
   } catch (error) {
     console.error("Error fetching activities for trip", req.params.id, ":", error);
