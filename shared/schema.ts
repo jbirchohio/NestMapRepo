@@ -359,10 +359,10 @@ export const notes = pgTable("notes", {
 });
 
 export const insertNoteSchema = z.object({
-  trip_id: z.union([z.string(), z.number()]).transform(val =>
+  tripId: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organization_id: z.union([z.string(), z.number()]).transform(val =>
+  organizationId: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(),
   content: z.string(),

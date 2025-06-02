@@ -69,6 +69,40 @@ export function transformTripToDatabase(tripData: any) {
   };
 }
 
+// Transform database trip data to frontend format
+export function transformTripToFrontend(dbTrip: any) {
+  return {
+    id: dbTrip.id,
+    title: dbTrip.title,
+    startDate: dbTrip.start_date,
+    endDate: dbTrip.end_date,
+    userId: dbTrip.user_id,
+    organizationId: dbTrip.organization_id,
+    collaborators: dbTrip.collaborators || [],
+    isPublic: dbTrip.is_public || false,
+    shareCode: dbTrip.share_code,
+    sharingEnabled: dbTrip.sharing_enabled || false,
+    sharePermission: dbTrip.share_permission || 'read-only',
+    city: dbTrip.city,
+    country: dbTrip.country,
+    location: dbTrip.location,
+    cityLatitude: dbTrip.city_latitude,
+    cityLongitude: dbTrip.city_longitude,
+    hotel: dbTrip.hotel,
+    hotelLatitude: dbTrip.hotel_latitude,
+    hotelLongitude: dbTrip.hotel_longitude,
+    completed: dbTrip.completed || false,
+    completedAt: dbTrip.completed_at,
+    tripType: dbTrip.trip_type || 'personal',
+    clientName: dbTrip.client_name,
+    projectType: dbTrip.project_type,
+    organization: dbTrip.organization,
+    budget: dbTrip.budget,
+    createdAt: dbTrip.created_at,
+    updatedAt: dbTrip.updated_at
+  };
+}
+
 // Transform frontend activity data to database format
 export function transformActivityToDatabase(activityData: any) {
   return {

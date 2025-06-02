@@ -4,8 +4,15 @@ import {
   activities, type Activity, type InsertActivity,
   todos, type Todo, type InsertTodo,
   notes, type Note, type InsertNote,
-  invitations, type Invitation, type InsertInvitation
+  invitations, type Invitation, type InsertInvitation,
+  transformTripToFrontend, transformActivityToFrontend
 } from "@shared/schema";
+import { 
+  transformTripToDatabase, 
+  transformActivityToDatabase, 
+  transformTodoToDatabase, 
+  transformNoteToDatabase 
+} from "@shared/fieldTransforms";
 
 // Interface for storage operations
 export interface IStorage {
@@ -503,10 +510,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
+    // Transform camelCase frontend data to snake_case database format
+    const dbData = transformTripToDatabase(insertTrip);
+    
     const [trip] = await db
       .insert(trips)
-      .values(insertTrip)
+      .values(dbData)
       .returning();
+    
+    // Return the trip as-is since the database now uses snake_case
     return trip;
   }
 
