@@ -59,6 +59,12 @@ export interface IStorage {
   getInvitationByToken(token: string): Promise<Invitation | undefined>;
   acceptInvitation(token: string, userId: number): Promise<Invitation | undefined>;
 
+  // Trip travelers operations
+  getTripTravelers(tripId: number): Promise<TripTraveler[]>;
+  addTripTraveler(traveler: InsertTripTraveler): Promise<TripTraveler>;
+  updateTripTraveler(travelerId: number, data: Partial<InsertTripTraveler>): Promise<TripTraveler | undefined>;
+  removeTripTraveler(travelerId: number): Promise<boolean>;
+
   // Organization operations
   getOrganization(id: number): Promise<any>;
   updateOrganization(id: number, data: any): Promise<any>;
@@ -959,6 +965,40 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
       });
       return user;
     });
+  }
+
+  // Trip travelers operations
+  async getTripTravelers(tripId: number): Promise<TripTraveler[]> {
+    const results = await db
+      .select()
+      .from(tripTravelers)
+      .where(eq(tripTravelers.trip_id, tripId))
+      .orderBy(tripTravelers.is_trip_organizer, tripTravelers.created_at);
+    return results;
+  }
+
+  async addTripTraveler(traveler: InsertTripTraveler): Promise<TripTraveler> {
+    const [newTraveler] = await db
+      .insert(tripTravelers)
+      .values(traveler)
+      .returning();
+    return newTraveler;
+  }
+
+  async updateTripTraveler(travelerId: number, data: Partial<InsertTripTraveler>): Promise<TripTraveler | undefined> {
+    const [updatedTraveler] = await db
+      .update(tripTravelers)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(tripTravelers.id, travelerId))
+      .returning();
+    return updatedTraveler || undefined;
+  }
+
+  async removeTripTraveler(travelerId: number): Promise<boolean> {
+    const result = await db
+      .delete(tripTravelers)
+      .where(eq(tripTravelers.id, travelerId));
+    return result.rowCount > 0;
   }
 }
 

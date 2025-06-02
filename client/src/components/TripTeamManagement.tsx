@@ -62,17 +62,14 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: travelers = [], isLoading } = useQuery({
+  const { data: travelers = [], isLoading } = useQuery<TripTraveler[]>({
     queryKey: [`/api/trips/${tripId}/travelers`],
     enabled: !!tripId
   });
 
   const addTravelerMutation = useMutation({
     mutationFn: (data: any) =>
-      apiRequest(`/api/trips/${tripId}/travelers`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
+      apiRequest("POST", `/api/trips/${tripId}/travelers`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/trips/${tripId}/travelers`] });
       setIsAddModalOpen(false);
@@ -102,9 +99,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
 
   const removeTravelerMutation = useMutation({
     mutationFn: (travelerId: number) =>
-      apiRequest(`/api/trips/${tripId}/travelers/${travelerId}`, {
-        method: "DELETE",
-      }),
+      apiRequest("DELETE", `/api/trips/${tripId}/travelers/${travelerId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/trips/${tripId}/travelers`] });
       toast({
