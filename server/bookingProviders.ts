@@ -435,11 +435,18 @@ function generateVariedFlightData(params: {
   const basePrice = 200 + Math.random() * 500;
   const routeHash = (params.origin + params.destination).length;
   
-  return Array.from({ length: 3 + (routeHash % 3) }, (_, index) => {
+  const flights: any[] = [];
+  
+  // Generate outbound flights
+  const outboundFlights = Array.from({ length: 3 + (routeHash % 3) }, (_, index) => {
     const airline = airlines[routeHash % airlines.length];
     const flightNum = Math.floor(100 + (routeHash * index) % 8999);
     const departHour = 6 + (routeHash + index) % 16;
     const duration = 2 + (routeHash % 8);
+    
+    // Format departure date properly
+    const depDate = new Date(params.departureDate);
+    const formattedDepDate = depDate.toISOString().split('T')[0];
     
     return {
       id: `flight-${routeHash}-${index}`,
@@ -450,17 +457,59 @@ function generateVariedFlightData(params: {
       departure: {
         airport: params.origin,
         time: `${departHour.toString().padStart(2, '0')}:${(index * 15) % 60}0`.substring(0, 5),
-        date: params.departureDate,
+        date: formattedDepDate,
       },
       arrival: {
         airport: params.destination,
         time: `${(departHour + duration).toString().padStart(2, '0')}:${(index * 20) % 60}0`.substring(0, 5),
-        date: params.departureDate,
+        date: formattedDepDate,
       },
       duration: `${duration}h ${(routeHash % 60)}m`,
       stops: index % 2,
+      type: 'outbound'
     };
   });
+  
+  flights.push(...outboundFlights);
+  
+  // Generate return flights if returnDate is provided
+  if (params.returnDate) {
+    const returnFlights = Array.from({ length: 3 + (routeHash % 3) }, (_, index) => {
+      const airline = airlines[(routeHash + 1) % airlines.length];
+      const flightNum = Math.floor(200 + (routeHash * index) % 8999);
+      const departHour = 8 + (routeHash + index + 2) % 14;
+      const duration = 2 + (routeHash % 8);
+      
+      // Format return date properly
+      const retDate = new Date(params.returnDate!);
+      const formattedRetDate = retDate.toISOString().split('T')[0];
+      
+      return {
+        id: `flight-return-${routeHash}-${index}`,
+        airline: getAirlineName(airline),
+        flightNumber: `${airline}${flightNum}`,
+        price: Math.round(basePrice + (index * 50) + (routeHash % 100) + 50), // Slightly higher for return
+        currency: 'USD',
+        departure: {
+          airport: params.destination,
+          time: `${departHour.toString().padStart(2, '0')}:${(index * 15) % 60}0`.substring(0, 5),
+          date: formattedRetDate,
+        },
+        arrival: {
+          airport: params.origin,
+          time: `${(departHour + duration).toString().padStart(2, '0')}:${(index * 20) % 60}0`.substring(0, 5),
+          date: formattedRetDate,
+        },
+        duration: `${duration}h ${(routeHash % 60)}m`,
+        stops: index % 2,
+        type: 'return'
+      };
+    });
+    
+    flights.push(...returnFlights);
+  }
+  
+  return flights;
 }
 
 function getAirlineName(code: string): string {
