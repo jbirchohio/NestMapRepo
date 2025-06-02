@@ -642,28 +642,37 @@ export async function searchHotels(params: {
     
     // First, get city code for the destination - clean the destination name
     const cleanDestination = params.destination.split(',')[0].trim(); // Extract just the city name
-    const cityResponse = await fetch(
-      `https://api.amadeus.com/v1/reference-data/locations/cities?keyword=${encodeURIComponent(cleanDestination)}&max=1`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const citySearchUrl = `https://api.amadeus.com/v1/reference-data/locations/cities?keyword=${encodeURIComponent(cleanDestination)}&max=1`;
+    
+    console.log('Amadeus city search URL:', citySearchUrl);
+    console.log('Searching for city:', cleanDestination);
+    
+    const cityResponse = await fetch(citySearchUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
+    console.log('City search response status:', cityResponse.status);
+    
     if (!cityResponse.ok) {
-      console.error('Amadeus city search error:', cityResponse.statusText);
+      const errorText = await cityResponse.text();
+      console.error('Amadeus city search error:', cityResponse.statusText, errorText);
       return generateVariedHotelData(params);
     }
 
     const cityData = await cityResponse.json();
+    console.log('City search response data:', JSON.stringify(cityData, null, 2));
+    
     const cityCode = cityData.data?.[0]?.iataCode;
 
     if (!cityCode) {
-      console.warn('No city code found for destination:', params.destination);
+      console.warn('No city code found for destination:', params.destination, 'City data:', cityData);
       return generateVariedHotelData(params);
     }
+    
+    console.log('Found city code:', cityCode, 'for destination:', cleanDestination);
 
     // Search for hotels in the city
     const searchParams = new URLSearchParams({
