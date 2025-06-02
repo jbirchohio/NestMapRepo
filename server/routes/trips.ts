@@ -104,8 +104,8 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
     const activities = await storage.getActivitiesByTripId(tripId);
     res.json(activities);
   } catch (error) {
-    console.error("Error fetching activities for trip", tripId, ":", error);
-    res.status(500).json({ message: "Could not fetch activities", error: error.message });
+    console.error("Error fetching activities for trip", req.params.id, ":", error);
+    res.status(500).json({ message: "Could not fetch activities", error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
 
