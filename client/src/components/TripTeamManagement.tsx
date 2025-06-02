@@ -202,63 +202,52 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       return;
     }
 
-    // Get trip details for destination and dates
-    try {
-      const tripResponse = await fetch(`/api/trips/${tripId}`, {
-        credentials: 'include'
-      });
-      
-      if (!tripResponse.ok) {
-        throw new Error('Failed to get trip details');
-      }
-      
-      const trip = await tripResponse.json();
-      
-      // Create sequential booking workflow data
-      const sequentialBookingData = {
-        tripId: tripId.toString(),
-        tripDestination: `${trip.city}, ${trip.country}`,
-        departureDate: trip.start_date,
-        returnDate: trip.end_date,
-        currentTravelerIndex: 0,
-        travelers: travelers.map(traveler => ({
-          id: traveler.id,
-          name: traveler.name,
-          email: traveler.email || '',
-          phone: traveler.phone || '',
-          dateOfBirth: traveler.dateOfBirth || '',
-          departureCity: traveler.departureCity,
-          departureCountry: traveler.departureCountry,
-          travelClass: traveler.travelClass,
-          dietaryRequirements: traveler.dietaryRequirements || '',
-          emergencyContact: {
-            name: traveler.emergencyContactName || '',
-            phone: traveler.emergencyContactPhone || '',
-            relationship: traveler.emergencyContactRelationship || ''
-          }
-        })),
-        roomsNeeded: travelers.length,
-        bookingStatus: 'flights' // flights -> hotels -> complete
-      };
-      
-      // Store booking data for sequential processing
-      sessionStorage.setItem('sequentialBookingData', JSON.stringify(sequentialBookingData));
-      
-      // Navigate directly to sequential booking (bypass general bookings tab)
-      window.location.href = `/sequential-booking?trip=${tripId}`;
-      
+    if (!tripData) {
       toast({
-        title: "Sequential booking started",
-        description: `Starting with ${travelers[0].name}'s flight from ${travelers[0].departureCity} to ${trip.city}`,
-      });
-      
-    } catch (error) {
-      toast({
-        title: "Error starting booking",
-        description: "Could not retrieve trip details. Please try again.",
+        title: "Trip data not available",
+        description: "Please wait for trip details to load.",
         variant: "destructive",
       });
+      return;
     }
+
+    // Create sequential booking workflow data using existing tripData
+    const sequentialBookingData = {
+      tripId: tripId.toString(),
+      tripDestination: `${tripData.city}, ${tripData.country}`,
+      departureDate: tripData.start_date,
+      returnDate: tripData.end_date,
+      currentTravelerIndex: 0,
+      travelers: travelers.map(traveler => ({
+        id: traveler.id,
+        name: traveler.name,
+        email: traveler.email || '',
+        phone: '', // Will be collected during booking
+        dateOfBirth: '', // Will be collected during booking
+        departureCity: traveler.departureCity,
+        departureCountry: traveler.departureCountry,
+        travelClass: traveler.travelClass,
+        dietaryRequirements: traveler.dietaryRequirements || '',
+        emergencyContact: {
+          name: '', // Will be collected during booking
+          phone: '', // Will be collected during booking
+          relationship: '' // Will be collected during booking
+        }
+      })),
+      roomsNeeded: travelers.length,
+      bookingStatus: 'flights' // flights -> hotels -> complete
+    };
+    
+    // Store booking data for sequential processing
+    sessionStorage.setItem('sequentialBookingData', JSON.stringify(sequentialBookingData));
+    
+    // Navigate directly to sequential booking (bypass general bookings tab)
+    window.location.href = `/sequential-booking?trip=${tripId}`;
+    
+    toast({
+      title: "Sequential booking started",
+      description: `Starting with ${travelers[0].name}'s flight from ${travelers[0].departureCity} to ${tripData.city}`,
+    });
   };
 
   return (
