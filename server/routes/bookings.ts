@@ -375,6 +375,31 @@ router.get('/:bookingId', async (req, res) => {
   }
 });
 
+// Hotel search endpoint
+router.post('/hotels/search', async (req, res) => {
+  try {
+    const { destination, checkIn, checkOut, guests, rooms } = req.body;
+    
+    if (!destination || !checkIn || !checkOut || !guests) {
+      return res.status(400).json({ message: "Missing required search parameters" });
+    }
+
+    const { searchHotels } = await import('../bookingProviders');
+    const hotels = await searchHotels({
+      destination,
+      checkIn,
+      checkOut,
+      guests,
+      rooms: rooms || 1
+    });
+    
+    res.json({ hotels });
+  } catch (error: any) {
+    console.error("Hotel search error:", error);
+    res.status(500).json({ message: "Unable to search hotels: " + error.message });
+  }
+});
+
 // Flight booking helper function
 async function bookFlightWithAmadeus(params: {
   offer: any;
