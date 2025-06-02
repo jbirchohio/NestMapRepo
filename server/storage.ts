@@ -548,55 +548,12 @@ export class DatabaseStorage implements IStorage {
 
   // Activity operations
   async getActivity(id: number): Promise<Activity | undefined> {
-    const [activity] = await db
-      .select({
-        id: activities.id,
-        tripId: activities.tripId,
-        title: activities.title,
-        organizationId: activities.organizationId,
-        date: activities.date,
-        time: activities.time,
-        locationName: activities.locationName,
-        latitude: activities.latitude,
-        longitude: activities.longitude,
-        notes: activities.notes,
-        tag: activities.tag,
-        assignedTo: activities.assignedTo,
-        order: activities.order,
-        travelMode: activities.travelMode,
-        completed: activities.completed,
-      })
-      .from(activities)
-      .where(eq(activities.id, id));
+    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
     return activity || undefined;
   }
 
   async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
-    const activityList = await db
-      .select({
-        id: activities.id,
-        tripId: activities.tripId,
-        title: activities.title,
-        organizationId: activities.organizationId,
-        date: activities.date,
-        time: activities.time,
-        locationName: activities.locationName,
-        latitude: activities.latitude,
-        longitude: activities.longitude,
-        notes: activities.notes,
-        tag: activities.tag,
-        assignedTo: activities.assignedTo,
-        order: activities.order,
-        travelMode: activities.travelMode,
-        completed: activities.completed,
-      })
-      .from(activities)
-      .where(eq(activities.tripId, tripId))
-      .orderBy(activities.order);
-
-    // Debug log to see what's being retrieved from the database
-    console.log("Activities with travel modes:", activityList.map(a => ({id: a.id, title: a.title, travelMode: a.travelMode})));
-
+    const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId)).orderBy(activities.order);
     return activityList;
   }
 
@@ -605,48 +562,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
-    try {
-      console.log("Creating activity with data:", insertActivity);
-
-      // Get the organization ID from the parent trip if not provided
-      let organizationId = insertActivity.organizationId;
-      if (!organizationId) {
-        const [trip] = await db.select({ organizationId: trips.organizationId }).from(trips).where(eq(trips.id, insertActivity.tripId));
-        organizationId = trip?.organizationId || undefined;
-        console.log("Derived organization ID from trip:", organizationId);
-      }
-
-      // Ensure required fields are present and properly formatted
-      const activityData = {
-        tripId: insertActivity.tripId,
-        organizationId: organizationId,
-        title: insertActivity.title,
-        date: insertActivity.date,
-        time: insertActivity.time,
-        locationName: insertActivity.locationName,
-        latitude: insertActivity.latitude || null,
-        longitude: insertActivity.longitude || null,
-        notes: insertActivity.notes || null,
-        tag: insertActivity.tag || null,
-        assignedTo: insertActivity.assignedTo || null,
-        order: insertActivity.order,
-        travelMode: insertActivity.travelMode || "walking",
-        completed: insertActivity.completed || false,
-      };
-
-      console.log("Formatted activity data with organization ID:", activityData);
-
-      const [activity] = await db
-        .insert(activities)
-        .values(activityData)
-        .returning();
-
-      console.log("Successfully created activity:", activity);
-      return activity;
-    } catch (error) {
-      console.error("Database error creating activity:", error);
-      throw error;
-    }
+    // Transform camelCase frontend data to snake_case database format
+    const dbData = transformActivityToDatabase(insertActivity);
+    
+    const [activity] = await db
+      .insert(activities)
+      .values(dbData)
+      .returning();
+    
+    return activity;
   }
 
   async updateActivity(id: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
@@ -748,34 +672,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNotesByTripId(tripId: number): Promise<Note[]> {
-    const noteList = await db.select().from(notes).where(eq(notes.tripId, tripId));
+    const noteList = await db.select().from(notes).where(eq(notes.trip_id, tripId));
     return noteList;
   }
 
   async createNote(insertNote: InsertNote): Promise<Note> {
-    try {
-      // Get the organization ID from the parent trip if not provided
-      let organizationId = insertNote.organizationId;
-      if (!organizationId) {
-        const [trip] = await db.select({ organizationId: trips.organizationId }).from(trips).where(eq(trips.id, insertNote.tripId));
-        organizationId = trip?.organizationId || undefined;
-        console.log("Derived organization ID from trip for note:", organizationId);
-      }
-
-      const noteData = {
-        ...insertNote,
-        organizationId: organizationId
-      };
-
-      const [note] = await db
-        .insert(notes)
-        .values(noteData)
-        .returning();
-      return note;
-    } catch (error) {
-      console.error("Database error creating note:", error);
-      throw error;
-    }
+    // Transform camelCase frontend data to snake_case database format
+    const dbData = transformNoteToDatabase(insertNote);
+    
+    const [note] = await db
+      .insert(notes)
+      .values(dbData)
+      .returning();
+    
+    return note;
   }
 
   async updateNote(id: number, noteData: Partial<InsertNote>): Promise<Note | undefined> {
