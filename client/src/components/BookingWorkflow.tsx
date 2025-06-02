@@ -97,14 +97,16 @@ export default function BookingWorkflow() {
   // Check for pre-filled data from URL parameters (team member booking)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const coordinatorMode = urlParams.get('coordinatorMode');
-    const teamData = urlParams.get('teamData');
-    const tripId = urlParams.get('tripId');
+    const mode = urlParams.get('mode');
+    const tripId = urlParams.get('trip');
     
-    if (coordinatorMode === 'group' && teamData && tripId) {
-      try {
-        const parsedTeamData = JSON.parse(teamData);
-        const travelers = parsedTeamData.travelers;
+    if (mode === 'group' && tripId) {
+      // Get team data from sessionStorage
+      const groupBookingData = sessionStorage.getItem('groupBookingData');
+      if (groupBookingData) {
+        try {
+          const parsedTeamData = JSON.parse(groupBookingData);
+          const travelers = parsedTeamData.travelers;
         
         if (travelers && travelers.length > 0) {
           // Set up additional travelers from team data
@@ -150,15 +152,16 @@ export default function BookingWorkflow() {
             costCenter: 'Group Travel',
           });
 
-          setIsGroupBooking(true);
+          // Group booking mode enabled
           
           toast({
             title: "Group coordinator booking",
             description: `Setting up coordinated booking for ${travelers.length} team members from multiple cities`,
           });
         }
-      } catch (error) {
-        console.error('Error parsing team data:', error);
+        } catch (error) {
+          console.error('Error parsing team data:', error);
+        }
       }
     }
   }, [user?.email, toast]);

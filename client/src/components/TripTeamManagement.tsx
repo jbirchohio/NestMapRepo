@@ -169,14 +169,10 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       totalBudget: travelers.reduce((sum, t) => sum + (t.budgetAllocation || 0), 0) / 100
     };
     
-    // Navigate to Flight Bookings tab with all team data
-    const bookingParams = new URLSearchParams({
-      coordinatorMode: 'group',
-      tripId: tripId.toString(),
-      teamData: JSON.stringify(teamBookingData)
-    });
+    // Store team data in sessionStorage and navigate with simple parameters
+    sessionStorage.setItem('groupBookingData', JSON.stringify(teamBookingData));
     
-    const bookingUrl = `/bookings?${bookingParams.toString()}`;
+    const bookingUrl = `/bookings?mode=group&trip=${tripId}`;
     window.location.href = bookingUrl;
     
     toast({
