@@ -119,7 +119,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
         return res.status(401).json({ message: "Invalid session" });
       }
 
-      // Populate unified user context
+      // Populate unified user context (getUserById returns organizationId in camelCase)
       req.user = {
         id: user.id,
         email: user.email,

@@ -89,18 +89,29 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
+    console.log(`Activities request for trip ${tripId}, user:`, { 
+      id: req.user?.id, 
+      orgId: req.user?.organization_id, 
+      role: req.user?.role 
+    });
+
     // Verify trip exists and user has access
     const trip = await storage.getTrip(tripId);
     if (!trip) {
+      console.log(`Trip ${tripId} not found`);
       return res.status(404).json({ message: "Trip not found" });
     }
+
+    console.log(`Trip ${tripId} found, org: ${trip.organization_id}`);
 
     // Verify organization access
     const userOrgId = req.user?.organization_id;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+      console.log(`Access denied: user org ${userOrgId} vs trip org ${trip.organization_id}`);
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
+    console.log(`Authorization passed, fetching activities for trip ${tripId}`);
     const activities = await storage.getActivitiesByTripId(tripId);
     res.json(activities);
   } catch (error) {
