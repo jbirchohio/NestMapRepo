@@ -300,10 +300,12 @@ function getAirportCode(cityName: string): string {
     'san francisco': 'SFO',
     'san francisco, ca': 'SFO',
     'san francisco, united states': 'SFO',
+    'san francisco, california': 'SFO',
     'sf': 'SFO',
     'new york': 'JFK',
     'new york city': 'JFK',
     'new york, united states': 'JFK',
+    'new york, ny': 'JFK',
     'nyc': 'JFK',
     'ny': 'JFK',
     'chicago': 'ORD',
@@ -312,6 +314,7 @@ function getAirportCode(cityName: string): string {
     'la': 'LAX',
     'seattle': 'SEA',
     'seattle, wa': 'SEA',
+    'seattle, washington': 'SEA',
     'denver': 'DEN',
     'denver, co': 'DEN',
     'miami': 'MIA',
@@ -352,23 +355,37 @@ function getAirportCode(cityName: string): string {
   
   const city = cityName?.toLowerCase().trim() || '';
   
+  console.log(`Converting city "${cityName}" (normalized: "${city}") to airport code`);
+  
   // Direct match
   if (airportMap[city]) {
+    console.log(`Direct match found: ${airportMap[city]}`);
     return airportMap[city];
   }
   
   // Check if it's already a 3-letter code
   if (city.length === 3 && /^[A-Za-z]{3}$/.test(city)) {
+    console.log(`Already airport code: ${city.toUpperCase()}`);
     return city.toUpperCase();
   }
   
-  // Try partial matches for compound city names
+  // Try partial matches for compound city names - check if city starts with any key
   for (const [key, code] of Object.entries(airportMap)) {
-    if (city.includes(key) || key.includes(city)) {
+    if (city.startsWith(key) || key.startsWith(city)) {
+      console.log(`Partial match found: ${key} -> ${code}`);
       return code;
     }
   }
   
+  // Try contains matches
+  for (const [key, code] of Object.entries(airportMap)) {
+    if (city.includes(key) || key.includes(city)) {
+      console.log(`Contains match found: ${key} -> ${code}`);
+      return code;
+    }
+  }
+  
+  console.log(`No match found for "${city}", defaulting to JFK`);
   // Default fallback to major airports
   return 'JFK'; // Default to JFK if no match found
 }
