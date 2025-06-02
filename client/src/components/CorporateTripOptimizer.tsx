@@ -62,14 +62,7 @@ export default function CorporateTripOptimizer() {
 
   // Fetch real corporate trips data from API
   const { data: corporateTrips, isLoading: isLoadingTrips } = useQuery({
-    queryKey: ['/api/trips/corporate'],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/trips/corporate");
-      if (!response.ok) {
-        throw new Error("Failed to fetch corporate trips");
-      }
-      return response.json();
-    }
+    queryKey: ['/api/trips/corporate']
   });
 
   const handleOptimizeTrips = async () => {

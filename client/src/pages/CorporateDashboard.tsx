@@ -40,23 +40,7 @@ export default function CorporateDashboard() {
   const [, setLocation] = useLocation();
 
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
-    queryKey: ['/api/trips/corporate', { organizationId: user?.user_metadata?.organization_id }],
-    queryFn: async () => {
-      const res = await fetch('/api/trips/corporate', {
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${user?.access_token || ''}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!res.ok) {
-        console.error('Failed to fetch corporate trips:', res.status, res.statusText);
-        throw new Error("Failed to fetch corporate trips");
-      }
-      const data = await res.json();
-      console.log('Fetched corporate trips:', data);
-      return data;
-    },
+    queryKey: ['/api/trips/corporate'],
     enabled: !!user,
   });
 
