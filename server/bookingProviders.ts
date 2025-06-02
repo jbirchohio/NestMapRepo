@@ -307,10 +307,16 @@ export function getAvailableProviders(
  */
 async function getAmadeusToken(): Promise<string | null> {
   try {
-    if (!process.env.AMADEUS_CLIENT_ID || !process.env.AMADEUS_CLIENT_SECRET) {
-      console.warn('Amadeus credentials not configured. Using fallback data.');
+    // Use production credentials if available, fallback to test credentials
+    const clientId = process.env.AMADEUS_PRODUCTION_CLIENT_ID || process.env.AMADEUS_CLIENT_ID;
+    const clientSecret = process.env.AMADEUS_PRODUCTION_CLIENT_SECRET || process.env.AMADEUS_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      console.warn('Amadeus credentials not configured.');
       return null;
     }
+
+    console.log('Using Amadeus', process.env.AMADEUS_PRODUCTION_CLIENT_ID ? 'production' : 'test', 'environment');
 
     const response = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
       method: 'POST',
@@ -319,8 +325,8 @@ async function getAmadeusToken(): Promise<string | null> {
       },
       body: new URLSearchParams({
         grant_type: 'client_credentials',
-        client_id: process.env.AMADEUS_CLIENT_ID,
-        client_secret: process.env.AMADEUS_CLIENT_SECRET,
+        client_id: clientId,
+        client_secret: clientSecret,
       }),
     });
 
@@ -363,14 +369,16 @@ export async function searchFlights(params: {
       return date.toISOString().split('T')[0];
     };
 
-    // Build query parameters for Amadeus API
+    // Build query parameters for Amadeus API with additional parameters for better results
     const searchParams = new URLSearchParams({
       originLocationCode: params.origin,
       destinationLocationCode: params.destination,
       departureDate: formatDateForAmadeus(params.departureDate),
       adults: (params.passengers || 1).toString(),
-      max: '10',
+      max: '20',
       currencyCode: 'USD',
+      nonStop: 'false', // Allow connecting flights
+      travelClass: 'ECONOMY',
     });
 
     if (params.returnDate) {
@@ -438,8 +446,11 @@ export async function searchFlights(params: {
         const lastSegment = outboundItinerary.segments[outboundItinerary.segments.length - 1];
         
         // Only include flights that actually go from origin to destination
-        if (firstSegment?.departure?.iataCode === params.origin && 
-            lastSegment?.arrival?.iataCode === params.destination) {
+        // Be more flexible with airport codes (sometimes API uses different codes for same city)
+        const originMatches = firstSegment?.departure?.iataCode === params.origin;
+        const destinationMatches = lastSegment?.arrival?.iataCode === params.destination;
+        
+        if (originMatches && destinationMatches) {
           
           flights.push({
             id: `amadeus-${offer.id}-outbound`,
