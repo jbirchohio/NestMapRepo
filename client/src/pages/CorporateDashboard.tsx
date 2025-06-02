@@ -69,7 +69,7 @@ export default function CorporateDashboard() {
   const totalTrips = trips.length;
 
   const totalBudget = trips.reduce((sum, trip) => {
-    const budget = trip.budget ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')) : 0;
+    const budget = trip.budget ? (typeof trip.budget === 'string' ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')) : trip.budget) : 0;
     return sum + (isNaN(budget) ? 0 : budget);
   }, 0);
 
