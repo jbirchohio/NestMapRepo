@@ -531,9 +531,13 @@ export default function BookingWorkflow() {
   };
 
   const formatFlightTime = (timeString: string) => {
-    // Handle time in HH:MM format
+    // Handle time in HH:MM format (convert military time to standard)
     if (timeString && timeString.match(/^\d{2}:\d{2}$/)) {
-      return timeString;
+      const [hours, minutes] = timeString.split(':');
+      const hour24 = parseInt(hours);
+      const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+      const ampm = hour24 >= 12 ? 'PM' : 'AM';
+      return `${hour12}:${minutes} ${ampm}`;
     }
     // Fallback for datetime strings
     return new Date(timeString).toLocaleTimeString('en-US', {
@@ -560,6 +564,23 @@ export default function BookingWorkflow() {
 
   const formatDuration = (duration: string) => {
     return duration.replace('PT', '').replace('H', 'h ').replace('M', 'm');
+  };
+
+  const isRedEyeFlight = (departureTime: string, arrivalTime: string) => {
+    // Check if departure is after 9 PM or arrival is before 6 AM
+    const depHour = parseInt(departureTime.split(':')[0]);
+    const arrHour = parseInt(arrivalTime.split(':')[0]);
+    return depHour >= 21 || arrHour <= 6;
+  };
+
+  const formatTripDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -873,8 +894,8 @@ export default function BookingWorkflow() {
           <CardContent>
             <div className="mb-4">
               <p className="text-gray-600">
-                {clientInfo.origin} → {clientInfo.destination} • {clientInfo.departureDate}
-                {clientInfo.returnDate && ` • Return: ${clientInfo.returnDate}`}
+                {clientInfo.origin} → {clientInfo.destination} • {formatTripDate(clientInfo.departureDate)}
+                {clientInfo.returnDate && ` • Return: ${formatTripDate(clientInfo.returnDate)}`}
               </p>
             </div>
 
@@ -911,9 +932,20 @@ export default function BookingWorkflow() {
                         onClick={() => setSelectedDepartureFlight(flight)}
                       >
                         <div className="flex justify-between items-center">
-                          <div className="space-y-1">
-                            <div className="font-medium">{flight.airline} {flight.flightNumber}</div>
-                            <div className="text-sm text-gray-600">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="font-semibold text-blue-600">{flight.airline}</div>
+                              <div className="text-sm text-gray-500">{flight.flightNumber}</div>
+                              {isRedEyeFlight(
+                                flight.departure?.time || flight.departureTime, 
+                                flight.arrival?.time || flight.arrivalTime
+                              ) && (
+                                <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                  Red-eye
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-600 font-medium">
                               {flight.departure ? formatFlightTime(flight.departure.time) : formatFlightTime(flight.departureTime)} - {flight.arrival ? formatFlightTime(flight.arrival.time) : formatFlightTime(flight.arrivalTime)}
                             </div>
                             <div className="text-sm text-gray-500">
@@ -922,7 +954,7 @@ export default function BookingWorkflow() {
                           </div>
                           <div className="text-right">
                             <div className="font-bold text-green-600">${flight.price.amount}</div>
-                            <div className="text-sm text-gray-500">{flight.cabin}</div>
+                            <div className="text-sm text-gray-500 capitalize">{flight.cabin}</div>
                           </div>
                         </div>
                       </div>
@@ -948,9 +980,20 @@ export default function BookingWorkflow() {
                           onClick={() => setSelectedReturnFlight(flight)}
                         >
                           <div className="flex justify-between items-center">
-                            <div className="space-y-1">
-                              <div className="font-medium">{flight.airline} {flight.flightNumber}</div>
-                              <div className="text-sm text-gray-600">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <div className="font-semibold text-blue-600">{flight.airline}</div>
+                                <div className="text-sm text-gray-500">{flight.flightNumber}</div>
+                                {isRedEyeFlight(
+                                  flight.departure?.time || flight.departureTime, 
+                                  flight.arrival?.time || flight.arrivalTime
+                                ) && (
+                                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                    Red-eye
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-600 font-medium">
                                 {flight.departure ? formatFlightTime(flight.departure.time) : formatFlightTime(flight.departureTime)} - {flight.arrival ? formatFlightTime(flight.arrival.time) : formatFlightTime(flight.arrivalTime)}
                               </div>
                               <div className="text-sm text-gray-500">
@@ -959,7 +1002,7 @@ export default function BookingWorkflow() {
                             </div>
                             <div className="text-right">
                               <div className="font-bold text-green-600">${flight.price.amount}</div>
-                              <div className="text-sm text-gray-500">{flight.cabin}</div>
+                              <div className="text-sm text-gray-500 capitalize">{flight.cabin}</div>
                             </div>
                           </div>
                         </div>
