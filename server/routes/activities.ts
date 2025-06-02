@@ -84,7 +84,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     }
 
     // Verify trip access
-    const trip = await storage.getTrip(existingActivity.tripId);
+    const trip = await storage.getTrip(existingActivity.trip_id);
     if (!trip) {
       return res.status(404).json({ message: "Associated trip not found" });
     }
@@ -126,7 +126,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     }
 
     // Verify trip access
-    const trip = await storage.getTrip(existingActivity.tripId);
+    const trip = await storage.getTrip(existingActivity.trip_id);
     if (!trip) {
       return res.status(404).json({ message: "Associated trip not found" });
     }
@@ -165,7 +165,7 @@ router.put("/:id/order", async (req: Request, res: Response) => {
     }
 
     // Verify trip access
-    const trip = await storage.getTrip(existingActivity.tripId);
+    const trip = await storage.getTrip(existingActivity.trip_id);
     if (!trip) {
       return res.status(404).json({ message: "Associated trip not found" });
     }
@@ -203,7 +203,7 @@ router.patch("/:id/complete", async (req: Request, res: Response) => {
     }
 
     // Verify trip access
-    const trip = await storage.getTrip(existingActivity.tripId);
+    const trip = await storage.getTrip(existingActivity.trip_id);
     if (!trip) {
       return res.status(404).json({ message: "Associated trip not found" });
     }

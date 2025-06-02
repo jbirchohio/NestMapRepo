@@ -345,7 +345,7 @@ router.get("/:tripId/share", async (req: Request, res: Response) => {
     res.json({
       sharing_enabled: trip.sharing_enabled,
       share_permission: trip.share_permission,
-      shareCode: trip.shareCode
+      shareCode: trip.share_code
     });
   } catch (error) {
     console.error("Error fetching sharing settings:", error);
@@ -373,14 +373,14 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
 
     const { sharing_enabled, share_permission } = req.body;
 
-    let shareCode = trip.shareCode;
+    let shareCode = trip.share_code;
     if (sharing_enabled && !shareCode) {
       shareCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     }
 
     const updatedTrip = await storage.updateTrip(tripId, {
-      sharing_enabled: sharing_enabled ?? trip.sharing_enabled,
-      share_permission: share_permission ?? trip.share_permission,
+      sharingEnabled: sharing_enabled ?? trip.sharing_enabled,
+      sharePermission: share_permission ?? trip.share_permission,
       shareCode
     });
 
@@ -391,7 +391,7 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
     res.json({
       sharing_enabled: updatedTrip.sharing_enabled,
       share_permission: updatedTrip.share_permission,
-      shareCode: updatedTrip.shareCode
+      shareCode: updatedTrip.share_code
     });
   } catch (error) {
     console.error("Error updating sharing settings:", error);
