@@ -81,15 +81,14 @@ router.get('/corporate', async (req: Request, res: Response) => {
   }
 });
 
-// Get activities for a specific trip
-router.get("/:id/activities", async (req: Request, res: Response) => {
+// Get todos for a specific trip
+router.get("/:id/todos", async (req: Request, res: Response) => {
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
-    // Get user from session (same pattern as todos/notes endpoints)
     const userId = req.user?.id;
     const orgId = req.user?.organization_id;
     
@@ -108,10 +107,75 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
-    // Fetch activities for the trip
-    const activities = await storage.getActivitiesByTripId(tripId);
+    const todos = await storage.getTodosByTripId(tripId);
+    res.json(todos);
+  } catch (error) {
+    console.error("Error fetching todos for trip", req.params.id, ":", error);
+    res.status(500).json({ message: "Could not fetch todos", error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Get notes for a specific trip
+router.get("/:id/notes", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ message: "Invalid trip ID" });
+    }
+
+    const userId = req.user?.id;
+    const orgId = req.user?.organization_id;
     
-    // Return activities (empty array if none exist)
+    if (!userId) {
+      return res.status(401).json({ message: "User ID required" });
+    }
+
+    // Verify trip exists and user has access
+    const trip = await storage.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    // Verify organization access
+    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
+      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
+    }
+
+    const notes = await storage.getNotesByTripId(tripId);
+    res.json(notes);
+  } catch (error) {
+    console.error("Error fetching notes for trip", req.params.id, ":", error);
+    res.status(500).json({ message: "Could not fetch notes", error: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// Get activities for a specific trip
+router.get("/:id/activities", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ message: "Invalid trip ID" });
+    }
+
+    const userId = req.user?.id;
+    const orgId = req.user?.organization_id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "User ID required" });
+    }
+
+    // Verify trip exists and user has access
+    const trip = await storage.getTrip(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    // Verify organization access
+    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
+      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
+    }
+
+    const activities = await storage.getActivitiesByTripId(tripId);
     res.json(activities);
   } catch (error) {
     console.error("Error fetching activities for trip", req.params.id, ":", error);
