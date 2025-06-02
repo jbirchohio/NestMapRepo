@@ -476,4 +476,83 @@ router.put("/:tripId/share", async (req: Request, res: Response) => {
 });
 
 // Export the router
+// Trip Travelers Routes - Team member management for corporate trips
+
+// Get all travelers for a specific trip
+router.get("/:id/travelers", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ message: "Invalid trip ID" });
+    }
+
+    const travelers = await storage.getTripTravelers(tripId);
+    res.json(travelers);
+  } catch (error) {
+    console.error("Error fetching trip travelers:", error);
+    res.status(500).json({ message: "Could not fetch trip travelers" });
+  }
+});
+
+// Add a traveler to a trip
+router.post("/:id/travelers", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ message: "Invalid trip ID" });
+    }
+
+    const travelerData = {
+      trip_id: tripId,
+      ...req.body
+    };
+
+    const newTraveler = await storage.addTripTraveler(travelerData);
+    res.status(201).json(newTraveler);
+  } catch (error) {
+    console.error("Error adding trip traveler:", error);
+    res.status(500).json({ message: "Could not add trip traveler" });
+  }
+});
+
+// Update a traveler's information
+router.put("/:id/travelers/:travelerId", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const travelerId = parseInt(req.params.travelerId);
+    
+    if (isNaN(tripId) || isNaN(travelerId)) {
+      return res.status(400).json({ message: "Invalid trip or traveler ID" });
+    }
+
+    const updatedTraveler = await storage.updateTripTraveler(travelerId, req.body);
+    if (!updatedTraveler) {
+      return res.status(404).json({ message: "Traveler not found" });
+    }
+    
+    res.json(updatedTraveler);
+  } catch (error) {
+    console.error("Error updating trip traveler:", error);
+    res.status(500).json({ message: "Could not update trip traveler" });
+  }
+});
+
+// Remove a traveler from a trip
+router.delete("/:id/travelers/:travelerId", async (req: Request, res: Response) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const travelerId = parseInt(req.params.travelerId);
+    
+    if (isNaN(tripId) || isNaN(travelerId)) {
+      return res.status(400).json({ message: "Invalid trip or traveler ID" });
+    }
+
+    await storage.removeTripTraveler(travelerId);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error removing trip traveler:", error);
+    res.status(500).json({ message: "Could not remove trip traveler" });
+  }
+});
+
 export default router;

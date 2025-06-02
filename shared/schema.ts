@@ -419,8 +419,53 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Organization = typeof organizations.$inferSelect;
 export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
 
+// Trip travelers table for individual traveler information within a trip
+export const tripTravelers = pgTable("trip_travelers", {
+  id: serial("id").primaryKey(),
+  trip_id: integer("trip_id").notNull(),
+  user_id: integer("user_id"), // Linked to actual user account (optional for guests)
+  name: text("name").notNull(), // Full name of traveler
+  email: text("email"), // Contact email
+  departure_city: text("departure_city"), // Where they're flying from
+  departure_country: text("departure_country"),
+  departure_latitude: text("departure_latitude"),
+  departure_longitude: text("departure_longitude"),
+  arrival_preferences: jsonb("arrival_preferences").default({}), // Flight preferences, times, etc.
+  accommodation_preferences: jsonb("accommodation_preferences").default({}), // Room type, special needs
+  dietary_requirements: text("dietary_requirements"),
+  budget_allocation: integer("budget_allocation"), // Individual budget in cents
+  travel_class: text("travel_class").default("economy"), // economy, business, first
+  is_trip_organizer: boolean("is_trip_organizer").default(false),
+  status: text("status").default("confirmed"), // confirmed, pending, cancelled
+  notes: text("notes"), // Special requirements or notes
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTripTravelerSchema = createInsertSchema(tripTravelers).pick({
+  trip_id: true,
+  user_id: true,
+  name: true,
+  email: true,
+  departure_city: true,
+  departure_country: true,
+  departure_latitude: true,
+  departure_longitude: true,
+  arrival_preferences: true,
+  accommodation_preferences: true,
+  dietary_requirements: true,
+  budget_allocation: true,
+  travel_class: true,
+  is_trip_organizer: true,
+  status: true,
+  notes: true,
+});
+
 export type TripCollaborator = typeof tripCollaborators.$inferSelect;
 export type InsertTripCollaborator = z.infer<typeof insertTripCollaboratorSchema>;
+
+export type TripTraveler = typeof tripTravelers.$inferSelect;
+export type InsertTripTraveler = z.infer<typeof insertTripTravelerSchema>;
 
 export type Trip = typeof trips.$inferSelect;
 export type InsertTrip = z.infer<typeof insertTripSchema>;

@@ -5,6 +5,7 @@ import {
   todos, type Todo, type InsertTodo,
   notes, type Note, type InsertNote,
   invitations, type Invitation, type InsertInvitation,
+  tripTravelers, type TripTraveler, type InsertTripTraveler,
   organizations,
   transformTripToFrontend, transformActivityToFrontend
 } from "@shared/schema";
