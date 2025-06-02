@@ -114,6 +114,33 @@ export default function BookingWorkflow() {
   const getAllTravelers = () => {
     const travelers = [];
     
+    // Check if this is a sequential team booking
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSequential = urlParams.get('sequential') === 'true';
+    
+    if (isSequential) {
+      // Get travelers from sequential booking data
+      const sequentialData = sessionStorage.getItem('sequentialBookingData');
+      if (sequentialData) {
+        try {
+          const data = JSON.parse(sequentialData);
+          if (data.travelers && Array.isArray(data.travelers)) {
+            return data.travelers.map((traveler: any) => ({
+              firstName: traveler.name.split(' ')[0] || '',
+              lastName: traveler.name.split(' ').slice(1).join(' ') || '',
+              email: traveler.email || '',
+              phone: traveler.phone || '',
+              dateOfBirth: traveler.dateOfBirth || '',
+              isPrimary: false
+            }));
+          }
+        } catch (error) {
+          console.error('Error parsing sequential booking data:', error);
+        }
+      }
+    }
+    
+    // Fallback to regular booking workflow
     // Add primary traveler
     if (clientInfo) {
       travelers.push({
