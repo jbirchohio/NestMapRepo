@@ -186,36 +186,73 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
 
   const canManageTeam = userRole === 'admin' || userRole === 'editor';
 
-  const handleCoordinatedGroupBooking = () => {
-    // Create a comprehensive booking flow for all team members
-    const teamBookingData = {
-      tripId: tripId.toString(),
-      coordinatorMode: 'group',
-      travelers: travelers.map(traveler => ({
-        id: traveler.id,
-        name: traveler.name,
-        email: traveler.email || '',
-        departureCity: traveler.departureCity,
-        departureCountry: traveler.departureCountry,
-        travelClass: traveler.travelClass,
-        budget: traveler.budgetAllocation ? traveler.budgetAllocation / 100 : 0,
-        dietaryRequirements: traveler.dietaryRequirements || '',
-        notes: traveler.notes || ''
-      })),
-      roomsNeeded: travelers.length,
-      totalBudget: travelers.reduce((sum, t) => sum + (t.budgetAllocation || 0), 0) / 100
-    };
-    
-    // Store team data in sessionStorage and navigate with simple parameters
-    sessionStorage.setItem('groupBookingData', JSON.stringify(teamBookingData));
-    
-    const bookingUrl = `/bookings?mode=group&trip=${tripId}`;
-    window.location.href = bookingUrl;
-    
-    toast({
-      title: "Group booking initiated",
-      description: `Coordinating flights and hotels for ${travelers.length} team members`,
-    });
+  const handleCoordinatedGroupBooking = async () => {
+    if (!travelers || travelers.length === 0) {
+      toast({
+        title: "No team members",
+        description: "Please add team members before booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get trip details for destination and dates
+    try {
+      const tripResponse = await fetch(`/api/trips/${tripId}`, {
+        credentials: 'include'
+      });
+      
+      if (!tripResponse.ok) {
+        throw new Error('Failed to get trip details');
+      }
+      
+      const trip = await tripResponse.json();
+      
+      // Create sequential booking workflow data
+      const sequentialBookingData = {
+        tripId: tripId.toString(),
+        tripDestination: `${trip.city}, ${trip.country}`,
+        departureDate: trip.start_date,
+        returnDate: trip.end_date,
+        currentTravelerIndex: 0,
+        travelers: travelers.map(traveler => ({
+          id: traveler.id,
+          name: traveler.name,
+          email: traveler.email || '',
+          phone: traveler.phone || '',
+          dateOfBirth: traveler.dateOfBirth || '',
+          departureCity: traveler.departureCity,
+          departureCountry: traveler.departureCountry,
+          travelClass: traveler.travelClass,
+          dietaryRequirements: traveler.dietaryRequirements || '',
+          emergencyContact: {
+            name: traveler.emergencyContactName || '',
+            phone: traveler.emergencyContactPhone || '',
+            relationship: traveler.emergencyContactRelationship || ''
+          }
+        })),
+        roomsNeeded: travelers.length,
+        bookingStatus: 'flights' // flights -> hotels -> complete
+      };
+      
+      // Store booking data for sequential processing
+      sessionStorage.setItem('sequentialBookingData', JSON.stringify(sequentialBookingData));
+      
+      // Navigate directly to sequential booking (bypass general bookings tab)
+      window.location.href = `/sequential-booking?trip=${tripId}`;
+      
+      toast({
+        title: "Sequential booking started",
+        description: `Starting with ${travelers[0].name}'s flight from ${travelers[0].departureCity} to ${trip.city}`,
+      });
+      
+    } catch (error) {
+      toast({
+        title: "Error starting booking",
+        description: "Could not retrieve trip details. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
