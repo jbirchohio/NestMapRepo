@@ -137,8 +137,8 @@ export function transformTodoToDatabase(todoData: any) {
 // Transform frontend note data to database format
 export function transformNoteToDatabase(noteData: any) {
   return {
-    trip_id: noteData.tripId,
-    organization_id: noteData.organizationId,
+    trip_id: noteData.trip_id,
+    organization_id: noteData.organization_id,
     content: noteData.content
   };
 }
