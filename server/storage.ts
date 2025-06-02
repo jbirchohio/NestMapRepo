@@ -188,34 +188,36 @@ export class MemStorage implements IStorage {
 
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
     const id = this.tripIdCounter++;
+    
+    // Create trip object with proper snake_case database field names
     const trip: Trip = { 
-      ...insertTrip, 
       id,
+      title: insertTrip.title,
+      start_date: insertTrip.startDate,
+      end_date: insertTrip.endDate,
+      user_id: insertTrip.userId,
       organization_id: insertTrip.organizationId || null,
-      share_permission: "read-only",
-      created_at: new Date(),
-      updated_at: new Date(),
       collaborators: insertTrip.collaborators || [],
       is_public: insertTrip.isPublic || false,
       sharing_enabled: insertTrip.sharingEnabled || false,
-      share_code: insertTrip.shareCode || null,
+      share_permission: insertTrip.sharePermission || "read-only",
+      share_code: insertTrip.shareCode || `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      created_at: new Date(),
+      updated_at: new Date(),
       city: insertTrip.city || null,
       country: insertTrip.country || null,
       location: insertTrip.location || null,
-      city_latitude: insertTrip.city_latitude || null,
-      city_longitude: insertTrip.city_longitude || null,
+      city_latitude: (insertTrip as any).city_latitude || null,
+      city_longitude: (insertTrip as any).city_longitude || null,
       hotel: insertTrip.hotel || null,
       hotel_latitude: insertTrip.hotel_latitude || null,
       hotel_longitude: insertTrip.hotel_longitude || null,
       completed: insertTrip.completed || false,
       completed_at: insertTrip.completed_at || null,
-      trip_type: insertTrip.trip_type || "personal", 
+      trip_type: insertTrip.trip_type || "personal",
       client_name: insertTrip.client_name || null,
       project_type: insertTrip.project_type || null,
-      budget: insertTrip.budget || null,
-      start_date: insertTrip.startDate,
-      end_date: insertTrip.endDate,
-      user_id: insertTrip.userId
+      budget: insertTrip.budget || null
     };
     this.trips.set(id, trip);
     return trip;
@@ -251,22 +253,24 @@ export class MemStorage implements IStorage {
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     const id = this.activityIdCounter++;
+    
+    // Create activity object with proper snake_case database field names
     const activity: Activity = { 
-      ...insertActivity, 
       id,
-      organization_id: insertActivity.organizationId || null,
+      title: insertActivity.title,
+      date: insertActivity.date,
+      time: insertActivity.time,
+      order: insertActivity.order || 0,
+      completed: insertActivity.completed ?? false,
+      trip_id: insertActivity.tripId || insertActivity.trip_id,
+      location_name: insertActivity.locationName || insertActivity.location_name,
+      organization_id: insertActivity.organizationId || insertActivity.organization_id || null,
       latitude: insertActivity.latitude || null,
       longitude: insertActivity.longitude || null,
       notes: insertActivity.notes || null,
       tag: insertActivity.tag || null,
-      assigned_to: insertActivity.assignedTo || null,
-      travel_mode: insertActivity.travelMode || null,
-      completed: insertActivity.completed ?? false,
-      trip_id: insertActivity.tripId,
-      date: insertActivity.date,
-      time: insertActivity.time,
-      title: insertActivity.title,
-      location_name: insertActivity.locationName
+      assigned_to: insertActivity.assignedTo || insertActivity.assigned_to || null,
+      travel_mode: insertActivity.travelMode || insertActivity.travel_mode || null
     };
     this.activities.set(id, activity);
     return activity;
