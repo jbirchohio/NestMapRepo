@@ -177,7 +177,7 @@ export default function SequentialBooking() {
 
     // Search for flights using authentic Amadeus API
     try {
-      const response = await fetch('/api/bookings/search-flights', {
+      const response = await fetch('/api/bookings/flights/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,8 +187,8 @@ export default function SequentialBooking() {
           destination: bookingData.tripDestination,
           departureDate: bookingData.departureDate,
           returnDate: bookingData.returnDate,
-          adults: 1,
-          travelClass: currentTraveler.travelClass || 'ECONOMY'
+          passengers: 1,
+          cabin: currentTraveler.travelClass || 'economy'
         }),
       });
 
