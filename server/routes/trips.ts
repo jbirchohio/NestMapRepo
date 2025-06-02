@@ -16,8 +16,7 @@ const router = Router();
 // Apply authentication and organization context to all trip routes
 router.use(unifiedAuthMiddleware);
 router.use(injectOrganizationContext);
-// Temporarily disabled field transform middleware to isolate activities endpoint issue
-// router.use(fieldTransformMiddleware);
+router.use(fieldTransformMiddleware);
 
 // Get all trips for authenticated user with organization filtering
 router.get("/", async (req: Request, res: Response) => {

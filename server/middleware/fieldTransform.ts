@@ -21,11 +21,16 @@ export function transformResponseFields(req: Request, res: Response, next: NextF
   const originalJson = res.json;
   
   res.json = function(data: any) {
-    // Transform snake_case response data to camelCase for frontend
-    if (data && typeof data === 'object') {
-      data = snakeToCamel(data);
+    try {
+      // Transform snake_case response data to camelCase for frontend
+      if (data && typeof data === 'object') {
+        data = snakeToCamel(data);
+      }
+      return originalJson.call(this, data);
+    } catch (error) {
+      console.error("Response transformation error:", error);
+      return originalJson.call(this, data);
     }
-    return originalJson.call(this, data);
   };
   
   next();
@@ -35,9 +40,14 @@ export function transformResponseFields(req: Request, res: Response, next: NextF
  * Combined middleware for full field transformation
  */
 export function fieldTransformMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Transform request
-  transformRequestFields(req, res, () => {
-    // Transform response
-    transformResponseFields(req, res, next);
-  });
+  try {
+    // Transform request
+    transformRequestFields(req, res, () => {
+      // Transform response
+      transformResponseFields(req, res, next);
+    });
+  } catch (error) {
+    console.error("Field transform middleware error:", error);
+    next(error);
+  }
 }

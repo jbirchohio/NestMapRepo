@@ -10,6 +10,10 @@ export function snakeToCamel(obj: any): any {
     return obj.map(item => snakeToCamel(item));
   }
   
+  if (obj instanceof Date) {
+    return obj;
+  }
+  
   const result: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -26,6 +30,10 @@ export function camelToSnake(obj: any): any {
   
   if (Array.isArray(obj)) {
     return obj.map(item => camelToSnake(item));
+  }
+  
+  if (obj instanceof Date) {
+    return obj;
   }
   
   const result: any = {};
