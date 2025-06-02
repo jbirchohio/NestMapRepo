@@ -70,7 +70,7 @@ export class DuffelProvider {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
-          'Duffel-Version': 'v1'
+          'Duffel-Version': 'v2'
         },
         body: JSON.stringify(searchParams)
       });
@@ -104,7 +104,7 @@ export class DuffelProvider {
       const response = await fetch(`${this.baseUrl}/air/offers?offer_request_id=${offerRequestId}`, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
-          'Duffel-Version': 'v1'
+          'Duffel-Version': 'v2'
         }
       });
 
@@ -241,7 +241,7 @@ export class DuffelProvider {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
-          'Duffel-Version': 'v1'
+          'Duffel-Version': 'v2'
         },
         body: JSON.stringify(bookingData)
       });
