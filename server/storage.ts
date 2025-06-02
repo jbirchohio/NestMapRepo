@@ -882,8 +882,6 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Create and export storage instance
-export const storage = new DatabaseStorage();
 import { desc } from "drizzle-orm";
 import { organizations } from '@shared/schema';
 
