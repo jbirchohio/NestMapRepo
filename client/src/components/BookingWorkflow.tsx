@@ -299,24 +299,36 @@ export default function BookingWorkflow() {
                 console.log('Number of flights:', flightSearchData.flights?.length);
                 
                 // Transform flight data to match frontend interface
-                const transformedFlights = (flightSearchData.flights || []).map((flight: any) => ({
-                  id: flight.id,
-                  airline: flight.airline,
-                  flightNumber: flight.flightNumber,
-                  origin: flight.departure?.airport || originCode,
-                  destination: flight.arrival?.airport || destinationCode,
-                  departureTime: flight.departure?.time || '00:00',
-                  arrivalTime: flight.arrival?.time || '00:00',
-                  duration: flight.duration || '0h 0m',
-                  stops: flight.stops || 0,
-                  price: {
-                    amount: flight.price || 0,
-                    currency: flight.currency || 'USD'
-                  },
-                  cabin: 'economy',
-                  availability: 9,
-                  bookingUrl: '#'
-                }));
+                const transformedFlights = (flightSearchData.flights || []).map((flight: any) => {
+                  // Format departure and arrival times properly
+                  const formatTime = (timeStr: string) => {
+                    if (!timeStr) return '00:00';
+                    // If it's already in HH:MM format, return as is
+                    if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+                    // If it's a longer format, extract HH:MM
+                    return timeStr.substring(0, 5);
+                  };
+
+                  return {
+                    id: flight.id,
+                    airline: flight.airline,
+                    flightNumber: flight.flightNumber,
+                    origin: flight.departure?.airport || originCode,
+                    destination: flight.arrival?.airport || destinationCode,
+                    departureTime: formatTime(flight.departure?.time || '00:00'),
+                    arrivalTime: formatTime(flight.arrival?.time || '00:00'),
+                    duration: flight.duration || '0h 0m',
+                    stops: flight.stops || 0,
+                    price: {
+                      amount: flight.price || 0,
+                      currency: flight.currency || 'USD'
+                    },
+                    cabin: 'economy',
+                    availability: 9,
+                    bookingUrl: '#',
+                    type: flight.type || 'outbound' // Add flight type for filtering
+                  };
+                });
                 
                 setFlightResults(transformedFlights);
                 setCurrentStep('flights');

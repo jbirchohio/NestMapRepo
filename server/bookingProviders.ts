@@ -394,6 +394,11 @@ export async function searchFlights(params: {
 
     const data = await response.json();
     
+    console.log('Amadeus API raw response for', params.origin, '→', params.destination, ':', {
+      totalOffers: data.data?.length || 0,
+      sampleOffer: data.data?.[0],
+    });
+    
     // Helper function to convert ISO duration to readable format
     const parseDuration = (isoDuration: string): string => {
       if (!isoDuration || !isoDuration.startsWith('PT')) return '0h 0m';
@@ -426,60 +431,76 @@ export async function searchFlights(params: {
     const flights: any[] = [];
     
     data.data?.forEach((offer: any) => {
-      // Process outbound flight
-      const outbound = offer.itineraries[0]?.segments[0];
-      if (outbound) {
-        flights.push({
-          id: `amadeus-${offer.id}-outbound`,
-          airline: getAirlineDisplayName(outbound.carrierCode || 'Unknown'),
-          flightNumber: `${outbound.carrierCode}${outbound.number}`,
-          price: parseFloat(offer.price?.total || '0'),
-          currency: offer.price?.currency || 'USD',
-          departure: {
-            airport: outbound.departure?.iataCode || params.origin,
-            time: outbound.departure?.at?.split('T')[1]?.substring(0, 5) || '08:00',
-            date: outbound.departure?.at?.split('T')[0] || formatDateForAmadeus(params.departureDate),
-          },
-          arrival: {
-            airport: outbound.arrival?.iataCode || params.destination,
-            time: outbound.arrival?.at?.split('T')[1]?.substring(0, 5) || '11:30',
-            date: outbound.arrival?.at?.split('T')[0] || formatDateForAmadeus(params.departureDate),
-          },
-          duration: parseDuration(offer.itineraries[0]?.duration || 'PT3H30M'),
-          stops: (offer.itineraries[0]?.segments?.length || 1) - 1,
-          type: 'outbound',
-          validatingAirlineCodes: offer.validatingAirlineCodes,
-        });
-      }
-
-      // Process return flight if exists
-      if (params.returnDate && offer.itineraries[1]) {
-        const inbound = offer.itineraries[1]?.segments[0];
-        if (inbound) {
+      // Process outbound flight - check if it reaches the correct destination
+      const outboundItinerary = offer.itineraries[0];
+      if (outboundItinerary) {
+        const firstSegment = outboundItinerary.segments[0];
+        const lastSegment = outboundItinerary.segments[outboundItinerary.segments.length - 1];
+        
+        // Only include flights that actually go from origin to destination
+        if (firstSegment?.departure?.iataCode === params.origin && 
+            lastSegment?.arrival?.iataCode === params.destination) {
+          
           flights.push({
-            id: `amadeus-${offer.id}-return`,
-            airline: getAirlineDisplayName(inbound.carrierCode || 'Unknown'),
-            flightNumber: `${inbound.carrierCode}${inbound.number}`,
+            id: `amadeus-${offer.id}-outbound`,
+            airline: getAirlineDisplayName(firstSegment.carrierCode || 'Unknown'),
+            flightNumber: `${firstSegment.carrierCode}${firstSegment.number}`,
             price: parseFloat(offer.price?.total || '0'),
             currency: offer.price?.currency || 'USD',
             departure: {
-              airport: inbound.departure?.iataCode || params.destination,
-              time: inbound.departure?.at?.split('T')[1]?.substring(0, 5) || '08:00',
-              date: inbound.departure?.at?.split('T')[0] || formatDateForAmadeus(params.returnDate),
+              airport: firstSegment.departure?.iataCode || params.origin,
+              time: firstSegment.departure?.at?.split('T')[1]?.substring(0, 5) || '08:00',
+              date: firstSegment.departure?.at?.split('T')[0] || formatDateForAmadeus(params.departureDate),
             },
             arrival: {
-              airport: inbound.arrival?.iataCode || params.origin,
-              time: inbound.arrival?.at?.split('T')[1]?.substring(0, 5) || '11:30',
-              date: inbound.arrival?.at?.split('T')[0] || formatDateForAmadeus(params.returnDate),
+              airport: lastSegment.arrival?.iataCode || params.destination,
+              time: lastSegment.arrival?.at?.split('T')[1]?.substring(0, 5) || '11:30',
+              date: lastSegment.arrival?.at?.split('T')[0] || formatDateForAmadeus(params.departureDate),
             },
-            duration: parseDuration(offer.itineraries[1]?.duration || 'PT3H30M'),
-            stops: (offer.itineraries[1]?.segments?.length || 1) - 1,
+            duration: parseDuration(outboundItinerary.duration || 'PT3H30M'),
+            stops: (outboundItinerary.segments?.length || 1) - 1,
+            type: 'outbound',
+            validatingAirlineCodes: offer.validatingAirlineCodes,
+          });
+        }
+      }
+
+      // Process return flight if exists - check if it goes from destination back to origin
+      if (params.returnDate && offer.itineraries[1]) {
+        const returnItinerary = offer.itineraries[1];
+        const firstSegment = returnItinerary.segments[0];
+        const lastSegment = returnItinerary.segments[returnItinerary.segments.length - 1];
+        
+        // Only include return flights that actually go from destination to origin
+        if (firstSegment?.departure?.iataCode === params.destination && 
+            lastSegment?.arrival?.iataCode === params.origin) {
+          
+          flights.push({
+            id: `amadeus-${offer.id}-return`,
+            airline: getAirlineDisplayName(firstSegment.carrierCode || 'Unknown'),
+            flightNumber: `${firstSegment.carrierCode}${firstSegment.number}`,
+            price: parseFloat(offer.price?.total || '0'),
+            currency: offer.price?.currency || 'USD',
+            departure: {
+              airport: firstSegment.departure?.iataCode || params.destination,
+              time: firstSegment.departure?.at?.split('T')[1]?.substring(0, 5) || '08:00',
+              date: firstSegment.departure?.at?.split('T')[0] || formatDateForAmadeus(params.returnDate),
+            },
+            arrival: {
+              airport: lastSegment.arrival?.iataCode || params.origin,
+              time: lastSegment.arrival?.at?.split('T')[1]?.substring(0, 5) || '11:30',
+              date: lastSegment.arrival?.at?.split('T')[0] || formatDateForAmadeus(params.returnDate),
+            },
+            duration: parseDuration(returnItinerary.duration || 'PT3H30M'),
+            stops: (returnItinerary.segments?.length || 1) - 1,
             type: 'return',
             validatingAirlineCodes: offer.validatingAirlineCodes,
           });
         }
       }
     });
+    
+    console.log('Filtered flights that match requested route:', flights.length);
     
     return flights.length > 0 ? flights : generateVariedFlightData(params);
     
