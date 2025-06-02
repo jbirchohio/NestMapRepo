@@ -1,0 +1,149 @@
+APIS BY CATEGORY
+FREE REQUEST QUOTA
+WHAT YOU GET
+Flights
+Build and test apps for
+Free
+SEE DOCSFlight Offers Search
+post
+/v2/shopping/flight-offers
+2,000
+get
+/v2/shopping/flight-offers
+2,000
+SEE DOCSFlight Offers Price
+post
+/v1/shopping/flight-offers/pricing
+3,000
+SEE DOCSFlight Create Orders
+post
+/v1/booking/flight-orders
+10,000
+SEE DOCSFlight Order Management
+get
+/v1/booking/flight-orders/*
+5,000
+delete
+/v1/booking/flight-orders/*
+5,000
+SEE DOCSSeatMap Display
+get
+/v1/shopping/seatmaps
+1,000
+post
+/v1/shopping/seatmaps
+1,000
+SEE DOCSBranded Fares Upsell
+post
+/v1/shopping/flight-offers/upselling
+3,000
+SEE DOCSFlight Price Analysis
+get
+/v1/analytics/itinerary-price-metrics
+10,000
+SEE DOCSFlight Choice Prediction
+post
+/v2/shopping/flight-offers/prediction
+10,000
+SEE DOCSFlight Inspiration Search
+get
+/v1/shopping/flight-destinations
+3,000
+SEE DOCSFlight Cheapest Date Search
+get
+/v1/shopping/flight-dates
+3,000
+SEE DOCSFlight Availabilities Search
+post
+/v1/shopping/availability/flight-availabilities
+3,000
+SEE DOCSTravel Recommendations
+get
+/v1/reference-data/recommended-locations
+10,000
+SEE DOCSOn Demand Flight Status
+get
+/v2/schedule/flights
+2,000
+SEE DOCSFlight Delay Prediction
+get
+/v1/travel/predictions/flight-delay
+10,000
+SEE DOCSAirport On-Time Performance
+get
+/v1/airport/predictions/on-time
+10,000
+SEE DOCSAirport & City Search
+get
+/v1/reference-data/locations
+7,000
+get
+/v1/reference-data/locations/*
+3,000
+SEE DOCSAirport Nearest Relevant
+get
+/v1/reference-data/locations/airports
+10,000
+SEE DOCSAirport Routes
+get
+/v1/airport/direct-destinations
+3,000
+SEE DOCSFlight Check-in Links
+get
+/v2/reference-data/urls/checkin-links
+10,000
+SEE DOCSAirline Code Lookup
+get
+/v1/reference-data/airlines
+10,000
+SEE DOCSAirline Routes
+get
+/v1/airline/destinations
+3,000
+Destination experiences
+Market insights
+Cars and Transfers
+Hotels
+Build and test apps for
+Free
+SEE DOCSHotel List
+get
+/v1/reference-data/locations/hotels/by-hotels
+1,000
+get
+/v1/reference-data/locations/hotels/by-city
+2,000
+get
+/v1/reference-data/locations/hotels/by-geocode
+2,000
+SEE DOCSHotel Search
+get
+/v2/shopping/hotel-offers
+2,400
+get
+/v2/shopping/hotel-offers/by-hotel
+900
+get
+/v2/shopping/hotel-offers/*
+900
+get
+/v3/shopping/hotel-offers
+3,000
+get
+/v3/shopping/hotel-offers/*
+3,000
+SEE DOCSHotel Booking
+post
+/v1/booking/hotel-bookings
+3,000
+post
+/v2/booking/hotel-orders
+3,000
+SEE DOCSHotel Ratings
+get
+/v2/e-reputation/hotel-sentiments
+2,000
+SEE DOCSHotel Name Autocomplete
+get
+/v1/reference-data/locations/hotel
+10,000
