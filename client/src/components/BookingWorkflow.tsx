@@ -449,6 +449,163 @@ export default function BookingWorkflow() {
     }
   }, [user?.email, toast, clientForm]);
 
+  // Add useEffect to handle traveler changes in sequential booking
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSequential = urlParams.get('sequential') === 'true';
+    
+    if (isSequential && currentTravelerIndex > 0) {
+      // Get sequential booking data
+      const sequentialData = sessionStorage.getItem('sequentialBookingData');
+      if (sequentialData) {
+        try {
+          const data = JSON.parse(sequentialData);
+          const currentTraveler = data.travelers[currentTravelerIndex];
+          
+          if (currentTraveler) {
+            console.log(`Switching to traveler ${currentTravelerIndex}: ${currentTraveler.name} from ${currentTraveler.departureCity}`);
+            
+            // Create flight data for current traveler
+            const flightData = {
+              travelerName: currentTraveler.name,
+              travelerEmail: currentTraveler.email,
+              travelerPhone: currentTraveler.phone,
+              travelerDateOfBirth: currentTraveler.dateOfBirth,
+              departureCity: currentTraveler.departureCity,
+              arrivalCity: data.tripDestination,
+              departureDate: data.departureDate,
+              returnDate: data.returnDate,
+              travelClass: currentTraveler.travelClass,
+              dietaryRequirements: currentTraveler.dietaryRequirements,
+              emergencyContact: currentTraveler.emergencyContact
+            };
+
+            // Set client info for current traveler
+            setClientInfo({
+              origin: currentTraveler.departureCity || '',
+              destination: data.tripDestination || '',
+              departureDate: data.departureDate || '',
+              returnDate: data.returnDate || '',
+              tripType: data.returnDate ? 'round-trip' : 'one-way',
+              passengers: 1,
+              primaryTraveler: {
+                firstName: currentTraveler.name?.split(' ')[0] || '',
+                lastName: currentTraveler.name?.split(' ').slice(1).join(' ') || '',
+                email: currentTraveler.email || '',
+                phone: currentTraveler.phone || '',
+                dateOfBirth: currentTraveler.dateOfBirth || '',
+              },
+              emergencyContact: {
+                name: currentTraveler.emergencyContact?.name || '',
+                phone: currentTraveler.emergencyContact?.phone || '',
+                relationship: currentTraveler.emergencyContact?.relationship || '',
+              },
+              specialRequests: currentTraveler.dietaryRequirements || '',
+              tripPurpose: 'business',
+              companyName: '',
+              costCenter: '',
+            });
+
+            // Reset flight selections for new traveler
+            setSelectedDepartureFlight(null);
+            setSelectedReturnFlight(null);
+            
+            // Auto-search flights for current traveler
+            setIsSearching(true);
+            
+            setTimeout(async () => {
+              try {
+                // Convert city names to airport codes
+                const convertCityToAirportCode = async (cityName: string): Promise<string> => {
+                  try {
+                    const response = await apiRequest('POST', '/api/locations/airport-code', { cityName });
+                    if (response.ok) {
+                      const data = await response.json();
+                      return data.airportCode;
+                    }
+                  } catch (error) {
+                    console.error('Error converting city to airport code:', error);
+                  }
+                  return cityName;
+                };
+
+                const originCode = await convertCityToAirportCode(currentTraveler.departureCity);
+                const destinationCode = await convertCityToAirportCode(data.tripDestination);
+
+                const searchParams = {
+                  origin: originCode,
+                  destination: destinationCode,
+                  departureDate: data.departureDate,
+                  returnDate: data.returnDate || undefined,
+                  passengers: 1,
+                  cabin: 'economy',
+                  tripType: data.returnDate ? 'round-trip' : 'one-way',
+                };
+
+                console.log(`Searching flights for ${currentTraveler.name} from ${currentTraveler.departureCity} (${originCode}) to ${data.tripDestination} (${destinationCode})`);
+
+                const response = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
+                
+                if (response.ok) {
+                  const flightSearchData = await response.json();
+                  
+                  // Transform flight data
+                  const transformedFlights = (flightSearchData.flights || []).map((flight: any) => {
+                    const formatTime = (timeStr: string) => {
+                      if (!timeStr) return '00:00';
+                      if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+                      return timeStr.substring(0, 5);
+                    };
+
+                    return {
+                      id: flight.id,
+                      airline: flight.airline,
+                      flightNumber: flight.flightNumber,
+                      origin: flight.departure?.airport || originCode,
+                      destination: flight.arrival?.airport || destinationCode,
+                      departureTime: formatTime(flight.departure?.time || '00:00'),
+                      arrivalTime: formatTime(flight.arrival?.time || '00:00'),
+                      duration: flight.duration || '0h 0m',
+                      stops: flight.stops || 0,
+                      price: {
+                        amount: flight.price || 0,
+                        currency: flight.currency || 'USD'
+                      },
+                      cabin: 'economy',
+                      availability: 9,
+                      bookingUrl: '#',
+                      type: flight.type || 'outbound'
+                    };
+                  });
+                  
+                  setFlightResults(transformedFlights);
+                  
+                  toast({
+                    title: "Traveler Changed",
+                    description: `Found ${transformedFlights.length} flights for ${currentTraveler.name} from ${currentTraveler.departureCity}`,
+                  });
+                } else {
+                  throw new Error(`Flight search failed: ${response.status}`);
+                }
+              } catch (error) {
+                console.error('Error searching flights for new traveler:', error);
+                toast({
+                  title: "Search error",
+                  description: `Unable to search flights for ${currentTraveler.name}. Please try again.`,
+                  variant: "destructive",
+                });
+              } finally {
+                setIsSearching(false);
+              }
+            }, 1000);
+          }
+        } catch (error) {
+          console.error('Error parsing sequential booking data for traveler change:', error);
+        }
+      }
+    }
+  }, [currentTravelerIndex, toast]);
+
   // Step 1: Handle client information submission
   const handleClientInfoSubmit = async (data: ClientInfoValues) => {
     setClientInfo(data);
