@@ -51,11 +51,16 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
   const [newTraveler, setNewTraveler] = useState({
     name: '',
     email: '',
+    phone: '',
+    dateOfBirth: '',
     departure_city: '',
     departure_country: '',
     travel_class: 'economy',
     budget_allocation: '',
     dietary_requirements: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    emergencyContactRelationship: '',
     notes: ''
   });
   
@@ -76,11 +81,16 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       setNewTraveler({
         name: '',
         email: '',
+        phone: '',
+        dateOfBirth: '',
         departure_city: '',
         departure_country: '',
         travel_class: 'economy',
         budget_allocation: '',
         dietary_requirements: '',
+        emergencyContactName: '',
+        emergencyContactPhone: '',
+        emergencyContactRelationship: '',
         notes: ''
       });
       toast({
@@ -123,6 +133,33 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       toast({
         title: "Departure city required",
         description: "Please enter the traveler's departure city.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newTraveler.phone.trim()) {
+      toast({
+        title: "Phone number required",
+        description: "Phone number is required for flight booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newTraveler.dateOfBirth) {
+      toast({
+        title: "Date of birth required",
+        description: "Date of birth is required for flight booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newTraveler.emergencyContactName.trim()) {
+      toast({
+        title: "Emergency contact required",
+        description: "Emergency contact information is required.",
         variant: "destructive",
       });
       return;
@@ -212,14 +249,38 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                     />
                   </div>
                   
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newTraveler.email}
+                        onChange={(e) => setNewTraveler({ ...newTraveler, email: e.target.value })}
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={newTraveler.phone}
+                        onChange={(e) => setNewTraveler({ ...newTraveler, phone: e.target.value })}
+                        placeholder="(555) 123-4567"
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="dateOfBirth">Date of Birth *</Label>
                     <Input
-                      id="email"
-                      type="email"
-                      value={newTraveler.email}
-                      onChange={(e) => setNewTraveler({ ...newTraveler, email: e.target.value })}
-                      placeholder="Enter email address"
+                      id="dateOfBirth"
+                      type="date"
+                      value={newTraveler.dateOfBirth}
+                      onChange={(e) => setNewTraveler({ ...newTraveler, dateOfBirth: e.target.value })}
+                      required
                     />
                   </div>
 
@@ -292,6 +353,43 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                       onChange={(e) => setNewTraveler({ ...newTraveler, dietary_requirements: e.target.value })}
                       placeholder="e.g. Vegetarian, No nuts"
                     />
+                  </div>
+
+                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-2">Emergency Contact</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="emergencyContactName">Name *</Label>
+                        <Input
+                          id="emergencyContactName"
+                          value={newTraveler.emergencyContactName}
+                          onChange={(e) => setNewTraveler({ ...newTraveler, emergencyContactName: e.target.value })}
+                          placeholder="Contact name"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="emergencyContactPhone">Phone *</Label>
+                        <Input
+                          id="emergencyContactPhone"
+                          type="tel"
+                          value={newTraveler.emergencyContactPhone}
+                          onChange={(e) => setNewTraveler({ ...newTraveler, emergencyContactPhone: e.target.value })}
+                          placeholder="(555) 123-4567"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <Label htmlFor="emergencyContactRelationship">Relationship *</Label>
+                      <Input
+                        id="emergencyContactRelationship"
+                        value={newTraveler.emergencyContactRelationship}
+                        onChange={(e) => setNewTraveler({ ...newTraveler, emergencyContactRelationship: e.target.value })}
+                        placeholder="e.g. Spouse, Parent, Sibling"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div>
