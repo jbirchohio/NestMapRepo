@@ -432,7 +432,7 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 import { db } from './db';
-import { trips, activities, todos, notes, users, organizations, type Trip, type Activity, type Todo, type Note, type User } from '@shared/schema';
+import { organizations } from '@shared/schema';
 import { eq, and, desc } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {

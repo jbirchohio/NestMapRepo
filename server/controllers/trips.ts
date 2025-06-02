@@ -163,7 +163,26 @@ export async function createTrip(req: Request, res: Response) {
       return res.status(201).json(mockTrip);
     }
     
-    const tripData = insertTripSchema.parse(req.body);
+    // Handle both camelCase and snake_case field names from frontend
+    const normalizedBody = {
+      ...req.body,
+      start_date: req.body.start_date || req.body.startDate,
+      end_date: req.body.end_date || req.body.endDate,
+      user_id: req.body.user_id || req.body.userId,
+      organization_id: req.body.organization_id || req.body.organizationId,
+      sharing_enabled: req.body.sharing_enabled || req.body.sharingEnabled,
+      share_permission: req.body.share_permission || req.body.sharePermission,
+      city_latitude: req.body.city_latitude || req.body.cityLatitude,
+      city_longitude: req.body.city_longitude || req.body.cityLongitude,
+      hotel_latitude: req.body.hotel_latitude || req.body.hotelLatitude,
+      hotel_longitude: req.body.hotel_longitude || req.body.hotelLongitude,
+      trip_type: req.body.trip_type || req.body.tripType,
+      client_name: req.body.client_name || req.body.clientName,
+      project_type: req.body.project_type || req.body.projectType,
+      completed_at: req.body.completed_at || req.body.completedAt,
+    };
+
+    const tripData = insertTripSchema.parse(normalizedBody);
     
     // Ensure the location fields are properly included
     if (req.body.city) tripData.city = req.body.city;
