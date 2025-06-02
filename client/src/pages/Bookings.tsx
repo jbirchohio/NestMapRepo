@@ -25,6 +25,12 @@ export default function Bookings() {
     enabled: !!user,
   });
 
+  // Get trips for team management context - always call this hook
+  const { data: trips = [] } = useQuery({
+    queryKey: ['/api/trips/corporate'],
+    enabled: !!user,
+  });
+
   const hasBookingAccess = Array.isArray(userPermissions) && (
     userPermissions.includes('CREATE_TRIPS') || 
     userPermissions.includes('MANAGE_ORGANIZATION') ||
@@ -56,12 +62,6 @@ export default function Bookings() {
       </div>
     );
   }
-
-  // Get trips for team management context
-  const { data: trips = [] } = useQuery({
-    queryKey: ['/api/trips/corporate'],
-    enabled: !!user && hasBookingAccess,
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
