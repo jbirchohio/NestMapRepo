@@ -78,9 +78,22 @@ export default function SequentialBooking() {
     );
   }
 
-  const currentTraveler = bookingData.travelers[bookingData.currentTravelerIndex];
-  const totalSteps = bookingData.travelers.length + 1; // All travelers + hotels
+  const currentTraveler = bookingData.travelers?.[bookingData.currentTravelerIndex];
+  const totalSteps = bookingData.travelers?.length + 1 || 1; // All travelers + hotels
   const progress = ((bookingData.currentTravelerIndex + (bookingData.bookingStatus === 'hotels' ? 1 : 0)) / totalSteps) * 100;
+
+  // Handle case where no current traveler is available
+  if (!currentTraveler && bookingData.bookingStatus !== 'hotels') {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">No traveler found</h2>
+          <p className="text-gray-600 mb-4">Unable to find traveler information for booking.</p>
+          <Button onClick={() => setLocation('/')}>Return to Dashboard</Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleFlightBooking = () => {
     // Pre-populate flight booking form with trip destination as arrival
