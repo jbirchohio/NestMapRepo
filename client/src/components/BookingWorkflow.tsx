@@ -268,6 +268,9 @@ export default function BookingWorkflow() {
                 tripType: flightData.returnDate ? 'round-trip' : 'one-way',
               };
 
+              console.log('Sequential booking flight search params:', searchParams);
+              console.log('Original flight data:', flightData);
+
               const response = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
               
               if (response.ok) {
