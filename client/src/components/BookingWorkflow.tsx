@@ -94,6 +94,34 @@ export default function BookingWorkflow() {
   const [selectedHotel, setSelectedHotel] = useState<HotelResult | null>(null);
   const [additionalTravelers, setAdditionalTravelers] = useState<Array<{firstName: string; lastName: string; dateOfBirth: string}>>([]);
   
+  const clientForm = useForm<ClientInfoValues>({
+    resolver: zodResolver(clientInfoSchema),
+    defaultValues: {
+      origin: '',
+      destination: '',
+      departureDate: '',
+      returnDate: '',
+      tripType: 'round-trip',
+      passengers: 1,
+      primaryTraveler: {
+        firstName: '',
+        lastName: '',
+        email: user?.email || '',
+        phone: '',
+        dateOfBirth: '',
+      },
+      emergencyContact: {
+        name: '',
+        phone: '',
+        relationship: '',
+      },
+      specialRequests: '',
+      tripPurpose: 'business',
+      companyName: '',
+      costCenter: '',
+    },
+  });
+
   // Check for pre-filled data from URL parameters (team member booking)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -207,34 +235,6 @@ export default function BookingWorkflow() {
       }
     }
   }, [user?.email, toast, clientForm]);
-  
-  const clientForm = useForm<ClientInfoValues>({
-    resolver: zodResolver(clientInfoSchema),
-    defaultValues: {
-      origin: '',
-      destination: '',
-      departureDate: '',
-      returnDate: '',
-      tripType: 'round-trip',
-      passengers: 1,
-      primaryTraveler: {
-        firstName: '',
-        lastName: '',
-        email: user?.email || '',
-        phone: '',
-        dateOfBirth: '',
-      },
-      emergencyContact: {
-        name: '',
-        phone: '',
-        relationship: '',
-      },
-      specialRequests: '',
-      tripPurpose: 'business',
-      companyName: '',
-      costCenter: '',
-    },
-  });
 
   // Step 1: Handle client information submission
   const handleClientInfoSubmit = async (data: ClientInfoValues) => {
