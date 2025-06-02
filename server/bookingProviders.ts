@@ -316,9 +316,9 @@ async function getAmadeusToken(): Promise<string | null> {
       return null;
     }
 
-    console.log('Using Amadeus test environment for booking');
+    console.log('Using Amadeus production environment for booking');
 
-    const response = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+    const response = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -386,7 +386,7 @@ export async function searchFlights(params: {
     }
 
     const response = await fetch(
-      `https://test.api.amadeus.com/v2/shopping/flight-offers?${searchParams}`,
+      `https://api.amadeus.com/v2/shopping/flight-offers?${searchParams}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -849,7 +849,7 @@ export async function getHotelOffers(params: {
     });
 
     const response = await fetch(
-      `https://test.api.amadeus.com/v3/shopping/hotel-offers?${searchParams}`,
+      `https://api.amadeus.com/v3/shopping/hotel-offers?${searchParams}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -976,8 +976,8 @@ export async function bookHotel(params: {
       throw new Error('Authentication failed - booking service unavailable');
     }
 
-    // Make actual booking request to Amadeus test environment
-    const response = await fetch('https://test.api.amadeus.com/v1/booking/hotel-bookings', {
+    // Make actual booking request to Amadeus production environment
+    const response = await fetch('https://api.amadeus.com/v1/booking/hotel-bookings', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1063,7 +1063,7 @@ export async function bookFlight(params: {
       }
     };
 
-    const pricingResponse = await fetch('https://test.api.amadeus.com/v1/shopping/flight-offers/pricing', {
+    const pricingResponse = await fetch('https://api.amadeus.com/v1/shopping/flight-offers/pricing', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1122,7 +1122,7 @@ export async function bookFlight(params: {
       }
     };
 
-    const bookingResponse = await fetch('https://test.api.amadeus.com/v1/booking/flight-orders', {
+    const bookingResponse = await fetch('https://api.amadeus.com/v1/booking/flight-orders', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
