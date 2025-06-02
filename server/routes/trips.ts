@@ -113,6 +113,13 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
 
     console.log(`Authorization passed, fetching activities for trip ${tripId}`);
     const activities = await storage.getActivitiesByTripId(tripId);
+    
+    // Always return a successful response, even if no activities exist
+    if (activities.length === 0) {
+      console.log(`No activities found for trip ${tripId}, returning empty array`);
+      return res.json([]);
+    }
+    
     res.json(activities);
   } catch (error) {
     console.error("Error fetching activities for trip", req.params.id, ":", error);
