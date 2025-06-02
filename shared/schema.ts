@@ -231,98 +231,59 @@ export const insertTripSchema = z.object({
   completed_at: z.date().optional(),
 });
 
-// Flexible input schema that accepts both camelCase and snake_case
-export const flexibleTripInputSchema = z.object({
-  title: z.string(),
-  // Accept both naming conventions
-  startDate: z.string().or(z.date()).transform(val => 
-    val instanceof Date ? val : new Date(val)
-  ).optional(),
-  start_date: z.string().or(z.date()).transform(val => 
-    val instanceof Date ? val : new Date(val)
-  ).optional(),
-  endDate: z.string().or(z.date()).transform(val => 
-    val instanceof Date ? val : new Date(val)
-  ).optional(),
-  end_date: z.string().or(z.date()).transform(val => 
-    val instanceof Date ? val : new Date(val)
-  ).optional(),
-  userId: z.union([z.string(), z.number()]).transform(val =>
-    typeof val === "string" ? parseInt(val, 10) : val
-  ).optional(),
-  user_id: z.union([z.string(), z.number()]).transform(val =>
-    typeof val === "string" ? parseInt(val, 10) : val
-  ).optional(),
-  organizationId: z.union([z.string(), z.number()]).transform(val =>
-    typeof val === "string" ? parseInt(val, 10) : val
-  ).optional(),
-  organization_id: z.union([z.string(), z.number()]).transform(val =>
-    typeof val === "string" ? parseInt(val, 10) : val
-  ).optional(),
-  collaborators: z.array(z.any()).default([]),
-  isPublic: z.boolean().optional().default(false),
-  shareCode: z.string().optional(),
-  sharingEnabled: z.boolean().optional().default(false),
-  sharing_enabled: z.boolean().optional().default(false),
-  sharePermission: z.string().optional().default("read-only"),
-  share_permission: z.string().optional().default("read-only"),
-  city: z.string().optional(),
-  country: z.string().optional(),
-  location: z.string().optional(),
-  cityLatitude: z.string().optional(),
-  city_latitude: z.string().optional(),
-  cityLongitude: z.string().optional(),
-  city_longitude: z.string().optional(),
-  hotel: z.string().optional(),
-  hotelLatitude: z.string().optional(),
-  hotel_latitude: z.string().optional(),
-  hotelLongitude: z.string().optional(),
-  hotel_longitude: z.string().optional(),
-  tripType: z.string().optional().default("personal"),
-  trip_type: z.string().optional().default("personal"),
-  clientName: z.string().optional(),
-  client_name: z.string().optional(),
-  projectType: z.string().optional(),
-  project_type: z.string().optional(),
-  organization: z.string().optional(),
-  budget: z.union([z.string(), z.number()]).optional().transform(val => {
-    if (!val) return undefined;
-    if (typeof val === 'number') return Math.round(val * 100);
-    const parsed = parseFloat(val.replace(/[$,\s]/g, ''));
-    return isNaN(parsed) ? undefined : Math.round(parsed * 100);
-  }),
-  completed: z.boolean().optional().default(false),
-  completedAt: z.date().optional(),
-  completed_at: z.date().optional(),
-}).transform(data => {
-  // Transform to database format (snake_case)
+// Helper function to transform database trip to frontend format
+export function transformTripToFrontend(trip: Trip) {
   return {
-    title: data.title,
-    start_date: data.start_date || data.startDate,
-    end_date: data.end_date || data.endDate,
-    user_id: data.user_id || data.userId,
-    organization_id: data.organization_id || data.organizationId,
-    collaborators: data.collaborators,
-    isPublic: data.isPublic,
-    shareCode: data.shareCode,
-    sharing_enabled: data.sharing_enabled || data.sharingEnabled,
-    share_permission: data.share_permission || data.sharePermission,
-    city: data.city,
-    country: data.country,
-    location: data.location,
-    city_latitude: data.city_latitude || data.cityLatitude,
-    city_longitude: data.city_longitude || data.cityLongitude,
-    hotel: data.hotel,
-    hotel_latitude: data.hotel_latitude || data.hotelLatitude,
-    hotel_longitude: data.hotel_longitude || data.hotelLongitude,
-    trip_type: data.trip_type || data.tripType,
-    client_name: data.client_name || data.clientName,
-    project_type: data.project_type || data.projectType,
-    budget: data.budget,
-    completed: data.completed,
-    completed_at: data.completed_at || data.completedAt,
-  } as const;
-});
+    id: trip.id,
+    title: trip.title,
+    startDate: trip.start_date,
+    endDate: trip.end_date,
+    userId: trip.user_id,
+    organizationId: trip.organization_id,
+    collaborators: trip.collaborators,
+    isPublic: trip.isPublic,
+    shareCode: trip.shareCode,
+    sharingEnabled: trip.sharing_enabled,
+    sharePermission: trip.share_permission,
+    city: trip.city,
+    country: trip.country,
+    location: trip.location,
+    cityLatitude: trip.city_latitude,
+    cityLongitude: trip.city_longitude,
+    hotel: trip.hotel,
+    hotelLatitude: trip.hotel_latitude,
+    hotelLongitude: trip.hotel_longitude,
+    completed: trip.completed,
+    completedAt: trip.completed_at,
+    tripType: trip.trip_type,
+    clientName: trip.client_name,
+    projectType: trip.project_type,
+    budget: trip.budget,
+    createdAt: trip.created_at,
+    updatedAt: trip.updated_at,
+  };
+}
+
+// Helper function to transform database activity to frontend format
+export function transformActivityToFrontend(activity: Activity) {
+  return {
+    id: activity.id,
+    tripId: activity.tripId,
+    organizationId: activity.organizationId,
+    title: activity.title,
+    date: activity.date,
+    time: activity.time,
+    locationName: activity.locationName,
+    latitude: activity.latitude,
+    longitude: activity.longitude,
+    notes: activity.notes,
+    tag: activity.tag,
+    assignedTo: activity.assignedTo,
+    order: activity.order,
+    travelMode: activity.travelMode,
+    completed: activity.completed,
+  };
+}
 
 // Activity schema
 export const activities = pgTable("activities", {
