@@ -370,6 +370,7 @@ export async function searchFlights(params: {
       departureDate: formatDateForAmadeus(params.departureDate),
       adults: (params.passengers || 1).toString(),
       max: '10',
+      currencyCode: 'USD',
     });
 
     if (params.returnDate) {
@@ -393,32 +394,94 @@ export async function searchFlights(params: {
 
     const data = await response.json();
     
-    // Transform Amadeus response to our format
-    return data.data?.map((offer: any, index: number) => {
-      const outbound = offer.itineraries[0]?.segments[0];
-      const inbound = offer.itineraries[1]?.segments[0];
+    // Helper function to convert ISO duration to readable format
+    const parseDuration = (isoDuration: string): string => {
+      if (!isoDuration || !isoDuration.startsWith('PT')) return '0h 0m';
       
-      return {
-        id: `amadeus-${offer.id}`,
-        airline: outbound?.carrierCode || 'Unknown',
-        flightNumber: `${outbound?.carrierCode}${outbound?.number}`,
-        price: parseFloat(offer.price?.total || '0'),
-        currency: offer.price?.currency || 'USD',
-        departure: {
-          airport: outbound?.departure?.iataCode || params.origin,
-          time: outbound?.departure?.at?.split('T')[1]?.substring(0, 5) || '08:00',
-          date: outbound?.departure?.at?.split('T')[0] || params.departureDate,
-        },
-        arrival: {
-          airport: outbound?.arrival?.iataCode || params.destination,
-          time: outbound?.arrival?.at?.split('T')[1]?.substring(0, 5) || '11:30',
-          date: outbound?.arrival?.at?.split('T')[0] || params.departureDate,
-        },
-        duration: offer.itineraries[0]?.duration || '3h 30m',
-        stops: (offer.itineraries[0]?.segments?.length || 1) - 1,
-        validatingAirlineCodes: offer.validatingAirlineCodes,
+      const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+      if (!match) return '0h 0m';
+      
+      const hours = parseInt(match[1] || '0');
+      const minutes = parseInt(match[2] || '0');
+      return `${hours}h ${minutes}m`;
+    };
+
+    // Helper function to get airline name from code
+    const getAirlineDisplayName = (code: string): string => {
+      const airlineNames: Record<string, string> = {
+        'AA': 'American Airlines',
+        'DL': 'Delta Air Lines', 
+        'UA': 'United Airlines',
+        'SW': 'Southwest Airlines',
+        'B6': 'JetBlue Airways',
+        'AS': 'Alaska Airlines',
+        'F9': 'Frontier Airlines',
+        'NK': 'Spirit Airlines',
+        'WN': 'Southwest Airlines'
       };
-    }) || generateVariedFlightData(params);
+      return airlineNames[code] || `${code} Airlines`;
+    };
+    
+    // Transform Amadeus response to our format
+    const flights: any[] = [];
+    
+    data.data?.forEach((offer: any) => {
+      // Process outbound flight
+      const outbound = offer.itineraries[0]?.segments[0];
+      if (outbound) {
+        flights.push({
+          id: `amadeus-${offer.id}-outbound`,
+          airline: getAirlineDisplayName(outbound.carrierCode || 'Unknown'),
+          flightNumber: `${outbound.carrierCode}${outbound.number}`,
+          price: parseFloat(offer.price?.total || '0'),
+          currency: offer.price?.currency || 'USD',
+          departure: {
+            airport: outbound.departure?.iataCode || params.origin,
+            time: outbound.departure?.at?.split('T')[1]?.substring(0, 5) || '08:00',
+            date: outbound.departure?.at?.split('T')[0] || formatDateForAmadeus(params.departureDate),
+          },
+          arrival: {
+            airport: outbound.arrival?.iataCode || params.destination,
+            time: outbound.arrival?.at?.split('T')[1]?.substring(0, 5) || '11:30',
+            date: outbound.arrival?.at?.split('T')[0] || formatDateForAmadeus(params.departureDate),
+          },
+          duration: parseDuration(offer.itineraries[0]?.duration || 'PT3H30M'),
+          stops: (offer.itineraries[0]?.segments?.length || 1) - 1,
+          type: 'outbound',
+          validatingAirlineCodes: offer.validatingAirlineCodes,
+        });
+      }
+
+      // Process return flight if exists
+      if (params.returnDate && offer.itineraries[1]) {
+        const inbound = offer.itineraries[1]?.segments[0];
+        if (inbound) {
+          flights.push({
+            id: `amadeus-${offer.id}-return`,
+            airline: getAirlineDisplayName(inbound.carrierCode || 'Unknown'),
+            flightNumber: `${inbound.carrierCode}${inbound.number}`,
+            price: parseFloat(offer.price?.total || '0'),
+            currency: offer.price?.currency || 'USD',
+            departure: {
+              airport: inbound.departure?.iataCode || params.destination,
+              time: inbound.departure?.at?.split('T')[1]?.substring(0, 5) || '08:00',
+              date: inbound.departure?.at?.split('T')[0] || formatDateForAmadeus(params.returnDate),
+            },
+            arrival: {
+              airport: inbound.arrival?.iataCode || params.origin,
+              time: inbound.arrival?.at?.split('T')[1]?.substring(0, 5) || '11:30',
+              date: inbound.arrival?.at?.split('T')[0] || formatDateForAmadeus(params.returnDate),
+            },
+            duration: parseDuration(offer.itineraries[1]?.duration || 'PT3H30M'),
+            stops: (offer.itineraries[1]?.segments?.length || 1) - 1,
+            type: 'return',
+            validatingAirlineCodes: offer.validatingAirlineCodes,
+          });
+        }
+      }
+    });
+    
+    return flights.length > 0 ? flights : generateVariedFlightData(params);
     
   } catch (error) {
     console.error('Flight search error:', error);
