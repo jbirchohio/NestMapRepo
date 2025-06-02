@@ -585,9 +585,11 @@ export class DatabaseStorage implements IStorage {
   async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
     try {
       console.log(`Fetching activities for trip ID: ${tripId}`);
-      const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId)).orderBy(activities.order);
+      // Try the query without orderBy first to see if that's the issue
+      const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId));
       console.log(`Found ${activityList.length} activities for trip ${tripId}`);
-      return activityList;
+      // Sort in memory as a fallback
+      return activityList.sort((a, b) => (a.order || 0) - (b.order || 0));
     } catch (error) {
       console.error("Database error fetching activities by trip ID:", tripId);
       console.error("Error details:", error);
