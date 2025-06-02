@@ -91,8 +91,8 @@ export class MemStorage implements IStorage {
     this.notes = new Map();
     this.invitations = new Map();
 
-    this.user_idCounter = 1;
-    this.trip_idCounter = 1;
+    this.userIdCounter = 1;
+    this.tripIdCounter = 1;
     this.activityIdCounter = 1;
     this.todoIdCounter = 1;
     this.noteIdCounter = 1;
@@ -139,7 +139,7 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.user_idCounter++;
+    const id = this.userIdCounter++;
     const user: User = { 
       ...insertUser, 
       id,
@@ -187,18 +187,18 @@ export class MemStorage implements IStorage {
   }
 
   async createTrip(insertTrip: InsertTrip): Promise<Trip> {
-    const id = this.trip_idCounter++;
+    const id = this.tripIdCounter++;
     const trip: Trip = { 
       ...insertTrip, 
       id,
-      organization_id: insertTrip.organization_id || null,
+      organization_id: insertTrip.organizationId || null,
       share_permission: "read-only",
       created_at: new Date(),
       updated_at: new Date(),
       collaborators: insertTrip.collaborators || [],
       is_public: insertTrip.isPublic || false,
       sharing_enabled: insertTrip.sharingEnabled || false,
-      share_code: insertTrip.share_code || null,
+      share_code: insertTrip.shareCode || null,
       city: insertTrip.city || null,
       country: insertTrip.country || null,
       location: insertTrip.location || null,
