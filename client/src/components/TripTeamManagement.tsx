@@ -139,6 +139,22 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
 
   const canManageTeam = userRole === 'admin' || userRole === 'editor';
 
+  const handleIndividualFlightBooking = (traveler: TripTraveler) => {
+    // Navigate to individual flight booking with pre-filled departure city
+    // This would integrate with the main booking workflow
+    toast({
+      title: "Individual flight booking",
+      description: `Opening flight search from ${traveler.departure_city} for ${traveler.name}`,
+    });
+    
+    // In a real implementation, this would:
+    // 1. Open the booking workflow in a modal/new tab
+    // 2. Pre-fill origin as traveler.departure_city
+    // 3. Pre-fill destination as trip destination
+    // 4. Set traveler preferences (class, dietary, etc.)
+    // 5. Allow individual booking coordination
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -328,6 +344,25 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                       {traveler.status}
                     </Badge>
                   </div>
+                </div>
+
+                {/* Individual Flight Booking Section */}
+                <div className="pt-3 border-t">
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-sm font-medium text-muted-foreground">Individual Flight Booking</h5>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs"
+                      onClick={() => handleIndividualFlightBooking(traveler)}
+                    >
+                      <Plane className="h-3 w-3 mr-1" />
+                      Book Flight from {traveler.departure_city}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Coordinate individual flight from {getDepartureInfo(traveler)} to trip destination
+                  </p>
                 </div>
 
                 {(traveler.dietary_requirements || traveler.notes) && (
