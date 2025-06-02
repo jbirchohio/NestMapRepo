@@ -249,8 +249,8 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         email: traveler.email || '',
         phone: traveler.phone || '',
         dateOfBirth: traveler.date_of_birth || '',
-        departureCity: traveler.departure_city || '',
-        departureCountry: traveler.departure_country || '',
+        departureCity: traveler.departure_city || traveler.departureCity || '',
+        departureCountry: traveler.departure_country || traveler.departureCountry || '',
         travelClass: traveler.travel_class || 'economy',
         dietaryRequirements: traveler.dietary_requirements || '',
         emergencyContact: {
