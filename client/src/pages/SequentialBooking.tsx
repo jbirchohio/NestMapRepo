@@ -70,6 +70,8 @@ export default function SequentialBooking() {
   const [currentStep, setCurrentStep] = useState(0); // 0: traveler info, 1: flight selection, 2: booking confirmation
   const [flightOffers, setFlightOffers] = useState<FlightOffer[]>([]);
   const [selectedFlight, setSelectedFlight] = useState<FlightOffer | null>(null);
+  const [hotelResults, setHotelResults] = useState<any[]>([]);
+  const [selectedHotel, setSelectedHotel] = useState<any | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
 
@@ -354,8 +356,8 @@ export default function SequentialBooking() {
     }
   };
 
-  const handleHotelBooking = () => {
-    // Move to hotels step within sequential booking
+  const handleHotelBooking = async () => {
+    // Move to hotels step and search for hotels
     const updatedData = {
       ...bookingData,
       bookingStatus: 'hotels' as const
@@ -363,10 +365,53 @@ export default function SequentialBooking() {
     setBookingData(updatedData);
     sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
     
-    toast({
-      title: "Searching Hotels",
-      description: `Looking for accommodation in ${bookingData.tripDestination} for ${bookingData.travelers.length} travelers`,
-    });
+    setIsSearching(true);
+    
+    try {
+      const searchParams = {
+        destination: bookingData.tripDestination,
+        checkIn: bookingData.departureDate,
+        checkOut: bookingData.returnDate,
+        rooms: bookingData.roomsNeeded,
+        guests: bookingData.travelers.length,
+        roomConfiguration: bookingData.roomConfiguration
+      };
+
+      console.log('Hotel search params:', searchParams);
+
+      const response = await apiRequest('POST', '/api/bookings/hotels/search', searchParams);
+
+      if (response.ok) {
+        const hotelData = await response.json();
+        console.log('Hotel search response:', hotelData);
+        
+        if (hotelData.hotels && hotelData.hotels.length > 0) {
+          setHotelResults(hotelData.hotels);
+          
+          toast({
+            title: "Hotels Found",
+            description: `Found ${hotelData.hotels.length} hotels in ${bookingData.tripDestination}`,
+          });
+        } else {
+          toast({
+            title: "No Hotels Found",
+            description: "No hotels available for the selected dates and location.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        throw new Error('Hotel search failed');
+      }
+    } catch (error) {
+      console.error('Error searching hotels:', error);
+      toast({
+        title: "Hotel Search Error",
+        description: "Unable to search for hotels. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleComplete = () => {
@@ -720,6 +765,116 @@ export default function SequentialBooking() {
             <p className="text-sm text-muted-foreground mt-3">
               Final step: Accommodation for {bookingData.travelers.length} team members
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {bookingData.bookingStatus === 'hotels' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Hotel className="h-5 w-5" />
+              Hotel Selection
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isSearching ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p>Searching for hotels in {bookingData.tripDestination}...</p>
+              </div>
+            ) : hotelResults.length > 0 ? (
+              <div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold mb-2">Available Hotels</h3>
+                  <p className="text-muted-foreground">
+                    Found {hotelResults.length} hotels for {bookingData.travelers.length} travelers ({bookingData.roomConfiguration} rooms)
+                  </p>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  {hotelResults.map((hotel) => (
+                    <Card
+                      key={hotel.id}
+                      className={`cursor-pointer transition-colors ${
+                        selectedHotel?.id === hotel.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
+                      }`}
+                      onClick={() => setSelectedHotel(hotel)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4 mb-2">
+                              <div className="text-lg font-semibold">{hotel.name}</div>
+                              <Badge variant="outline">{hotel.rating} ⭐</Badge>
+                            </div>
+                            
+                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                {hotel.location}
+                              </div>
+                              <div>Rooms: {bookingData.roomsNeeded}</div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-primary">
+                              ${hotel.price}
+                            </div>
+                            <div className="text-sm text-muted-foreground">per night</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setBookingData(prev => prev ? {...prev, bookingStatus: 'room-preferences'} : null)}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Room Preferences
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {
+                      if (selectedHotel) {
+                        const updatedData = {
+                          ...bookingData,
+                          bookingStatus: 'complete' as const
+                        };
+                        setBookingData(updatedData);
+                        sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
+                        
+                        toast({
+                          title: "Hotel Selected",
+                          description: `Selected ${selectedHotel.name} for your team stay`,
+                        });
+                      }
+                    }}
+                    disabled={!selectedHotel}
+                    className="flex-1"
+                  >
+                    Confirm Hotel Selection
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">No hotels found for your search criteria.</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setBookingData(prev => prev ? {...prev, bookingStatus: 'room-preferences'} : null)}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Room Preferences
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
