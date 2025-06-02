@@ -46,7 +46,7 @@ export class SecureQueryBuilder {
       throw new Error('Organization context required for database operations');
     }
 
-    const orgCondition = eq(table.organizationId, this.organizationId);
+    const orgCondition = eq(table.organization_id, this.organizationId);
     
     if (additionalConditions) {
       return and(orgCondition, additionalConditions);

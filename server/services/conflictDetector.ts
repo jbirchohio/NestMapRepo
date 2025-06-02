@@ -60,7 +60,7 @@ export function detectTripConflicts(trips: any[]): { conflicts: TripConflict[], 
       conflicts.push({
         trips: [trip1.id, trip2.id],
         type: 'date_overlap',
-        users: [trip1.userId, trip2.userId],
+        users: [trip1.user_id, trip2.user_id],
         departments: [trip1.department, trip2.department],
         severity: 'high',
         description: `Overlapping travel dates for ${trip1.title} and ${trip2.title}`

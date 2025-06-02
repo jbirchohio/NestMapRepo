@@ -186,7 +186,7 @@ export function auditAdminOperation(operationType: string) {
           operation: operationType,
           userId: req.user?.id,
           userRole: req.user?.role,
-          organizationId: req.user?.organizationId,
+          organizationId: req.user?.organization_id,
           targetResource: req.params.id || 'N/A',
           method: req.method,
           ip: req.ip,
