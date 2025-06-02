@@ -215,7 +215,7 @@ export class MemStorage implements IStorage {
       budget: insertTrip.budget || null,
       start_date: insertTrip.startDate,
       end_date: insertTrip.endDate,
-      user_id: insertTrip.user_id
+      user_id: insertTrip.userId
     };
     this.trips.set(id, trip);
     return trip;
@@ -254,7 +254,7 @@ export class MemStorage implements IStorage {
     const activity: Activity = { 
       ...insertActivity, 
       id,
-      organization_id: insertActivity.organization_id || null,
+      organization_id: insertActivity.organizationId || null,
       latitude: insertActivity.latitude || null,
       longitude: insertActivity.longitude || null,
       notes: insertActivity.notes || null,
@@ -262,7 +262,7 @@ export class MemStorage implements IStorage {
       assigned_to: insertActivity.assignedTo || null,
       travel_mode: insertActivity.travelMode || null,
       completed: insertActivity.completed ?? false,
-      trip_id: insertActivity.trip_id,
+      trip_id: insertActivity.tripId,
       date: insertActivity.date,
       time: insertActivity.time,
       title: insertActivity.title,
@@ -301,10 +301,10 @@ export class MemStorage implements IStorage {
     const todo: Todo = { 
       ...insertTodo, 
       id,
-      organization_id: insertTodo.organization_id || null,
+      organization_id: insertTodo.organizationId || null,
       assigned_to: insertTodo.assignedTo || null,
       completed: insertTodo.completed ?? false,
-      trip_id: insertTodo.trip_id,
+      trip_id: insertTodo.tripId,
       task: insertTodo.task
     };
     this.todos.set(id, todo);
@@ -340,8 +340,8 @@ export class MemStorage implements IStorage {
     const note: Note = { 
       ...insertNote, 
       id,
-      organization_id: insertNote.organization_id || null,
-      trip_id: insertNote.trip_id,
+      organization_id: insertNote.organizationId || null,
+      trip_id: insertNote.tripId,
       content: insertNote.content
     };
     this.notes.set(id, note);
@@ -367,7 +367,7 @@ export class MemStorage implements IStorage {
     const newInvitation: Invitation = { 
       ...invitation, 
       id,
-      organizationId: invitation.organization_id ?? null,
+      organizationId: invitation.organizationId ?? null,
       status: 'pending',
       createdAt: new Date(),
       acceptedAt: null
@@ -394,7 +394,7 @@ export class MemStorage implements IStorage {
     // Update user's organization and role
     const user = this.users.get(userId);
     if (user) {
-      user.organization_id = invitation.organization_id;
+      user.organizationId = invitation.organizationId;
       user.role = invitation.role;
       this.users.set(userId, user);
     }
