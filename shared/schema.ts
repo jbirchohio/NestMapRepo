@@ -154,8 +154,8 @@ export const trips = pgTable("trips", {
   organization_id: integer("organization_id").references(() => organizations.id), // Multi-tenant isolation
   collaborators: jsonb("collaborators").default([]),
   // Sharing and collaboration settings
-  isPublic: boolean("is_public").default(false),
-  shareCode: text("share_code").unique(),
+  is_public: boolean("is_public").default(false),
+  share_code: text("share_code").unique(),
   sharing_enabled: boolean("sharing_enabled").default(false),
   share_permission: text("share_permission").default("read-only"), // "read-only" or "edit"
   // Location information

@@ -496,7 +496,7 @@ export class DatabaseStorage implements IStorage {
 
   async getTripByShareCode(shareCode: string): Promise<Trip | undefined> {
     try {
-      const [trip] = await db.select().from(trips).where(eq(trips.shareCode, shareCode));
+      const [trip] = await db.select().from(trips).where(eq(trips.share_code, shareCode));
       return trip || undefined;
     } catch (error) {
       console.error("Error fetching trip by share code:", error);
@@ -518,19 +518,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTrip(id: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
-    try {
-      console.log("Database updateTrip called with:", tripData);
-      const [updatedTrip] = await db
-        .update(trips)
-        .set(tripData)
-        .where(eq(trips.id, id))
-        .returning();
-      // Trip updated successfully
-      return updatedTrip || undefined;
-    } catch (error) {
-      console.error("Database update error:", error);
-      throw error;
-    }
+    // Transform camelCase frontend data to snake_case database format
+    const dbData = transformTripToDatabase(tripData);
+    
+    const [updatedTrip] = await db
+      .update(trips)
+      .set(dbData)
+      .where(eq(trips.id, id))
+      .returning();
+    
+    return updatedTrip || undefined;
   }
 
   async deleteTrip(id: number): Promise<boolean> {
