@@ -14,24 +14,47 @@ import { Users, UserPlus, MapPin, Plane, DollarSign, X } from 'lucide-react';
 
 interface TripTraveler {
   id: number;
-  tripId: number;
+  tripId?: number;
+  trip_id?: number;
   userId?: number;
+  user_id?: number;
   name: string;
   email?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  date_of_birth?: string;
+  emergencyContactName?: string;
+  emergency_contact_name?: string;
+  emergencyContactPhone?: string;
+  emergency_contact_phone?: string;
+  emergencyContactRelationship?: string;
+  emergency_contact_relationship?: string;
   departureCity?: string;
+  departure_city?: string;
   departureCountry?: string;
+  departure_country?: string;
   departureLatitude?: string;
+  departure_latitude?: string;
   departureLongitude?: string;
+  departure_longitude?: string;
   arrivalPreferences: Record<string, any>;
+  arrival_preferences?: Record<string, any>;
   accommodationPreferences: Record<string, any>;
+  accommodation_preferences?: Record<string, any>;
   dietaryRequirements?: string;
+  dietary_requirements?: string;
   budgetAllocation?: number;
+  budget_allocation?: number;
   travelClass: string;
+  travel_class?: string;
   isTripOrganizer: boolean;
+  is_trip_organizer?: boolean;
   status: string;
   notes?: string;
   createdAt: string;
+  created_at?: string;
   updatedAt: string;
+  updated_at?: string;
 }
 
 interface TripTeamManagementProps {
@@ -248,15 +271,15 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         name: traveler.name || '',
         email: traveler.email || '',
         phone: traveler.phone || '',
-        dateOfBirth: traveler.date_of_birth || '',
-        departureCity: traveler.departure_city || traveler.departureCity || '',
-        departureCountry: traveler.departure_country || traveler.departureCountry || '',
-        travelClass: traveler.travel_class || 'economy',
-        dietaryRequirements: traveler.dietary_requirements || '',
+        dateOfBirth: traveler.dateOfBirth || traveler.date_of_birth || '',
+        departureCity: traveler.departureCity || traveler.departure_city || '',
+        departureCountry: traveler.departureCountry || traveler.departure_country || '',
+        travelClass: traveler.travelClass || traveler.travel_class || 'economy',
+        dietaryRequirements: traveler.dietaryRequirements || traveler.dietary_requirements || '',
         emergencyContact: {
-          name: traveler.emergency_contact_name || '',
-          phone: traveler.emergency_contact_phone || '',
-          relationship: traveler.emergency_contact_relationship || ''
+          name: traveler.emergencyContactName || traveler.emergency_contact_name || '',
+          phone: traveler.emergencyContactPhone || traveler.emergency_contact_phone || '',
+          relationship: traveler.emergencyContactRelationship || traveler.emergency_contact_relationship || ''
         }
       })),
       roomsNeeded: travelers.length,
