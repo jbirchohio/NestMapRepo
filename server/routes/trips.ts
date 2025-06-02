@@ -89,11 +89,14 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
-    console.log(`Activities request for trip ${tripId}, user:`, { 
-      id: req.user?.id, 
-      orgId: req.user?.organization_id, 
-      role: req.user?.role 
-    });
+    console.log(`Activities request for trip ${tripId}`);
+    console.log(`Request user object:`, req.user);
+    console.log(`Request session:`, req.session?.userId);
+    
+    if (!req.user?.id) {
+      console.log(`Authentication failed - no user ID found`);
+      return res.status(401).json({ message: "Authentication required" });
+    }
 
     // Verify trip exists and user has access
     const trip = await storage.getTrip(tripId);
