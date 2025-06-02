@@ -258,9 +258,26 @@ export default function BookingWorkflow() {
           // Auto-search flights with the provided information
           setTimeout(async () => {
             try {
+              // Convert city names to airport codes before searching
+              const convertCityToAirportCode = async (cityName: string): Promise<string> => {
+                try {
+                  const response = await apiRequest('POST', '/api/locations/airport-code', { cityName });
+                  if (response.ok) {
+                    const data = await response.json();
+                    return data.airportCode;
+                  }
+                } catch (error) {
+                  console.error('Error converting city to airport code:', error);
+                }
+                return cityName; // Fallback to original if conversion fails
+              };
+
+              const originCode = await convertCityToAirportCode(flightData.departureCity);
+              const destinationCode = await convertCityToAirportCode(flightData.arrivalCity);
+
               const searchParams = {
-                origin: flightData.departureCity,
-                destination: flightData.arrivalCity,
+                origin: originCode,
+                destination: destinationCode,
                 departureDate: flightData.departureDate,
                 returnDate: flightData.returnDate || undefined,
                 passengers: 1,

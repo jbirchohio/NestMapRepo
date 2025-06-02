@@ -277,6 +277,102 @@ router.get('/organizations/members', async (req, res) => {
   }
 });
 
+// Airport code conversion endpoint
+router.post('/locations/airport-code', (req, res) => {
+  try {
+    const { cityName } = req.body;
+    
+    if (!cityName) {
+      return res.status(400).json({ error: 'City name is required' });
+    }
+
+    const airportCode = getAirportCode(cityName);
+    res.json({ airportCode });
+  } catch (error) {
+    console.error('Airport code conversion error:', error);
+    res.status(500).json({ error: 'Failed to convert city to airport code' });
+  }
+});
+
+// Helper function to convert city names to airport codes
+function getAirportCode(cityName: string): string {
+  const airportMap: { [key: string]: string } = {
+    'san francisco': 'SFO',
+    'san francisco, ca': 'SFO',
+    'san francisco, united states': 'SFO',
+    'sf': 'SFO',
+    'new york': 'JFK',
+    'new york city': 'JFK',
+    'new york, united states': 'JFK',
+    'nyc': 'JFK',
+    'ny': 'JFK',
+    'chicago': 'ORD',
+    'chicago, il': 'ORD',
+    'los angeles': 'LAX',
+    'la': 'LAX',
+    'seattle': 'SEA',
+    'seattle, wa': 'SEA',
+    'denver': 'DEN',
+    'denver, co': 'DEN',
+    'miami': 'MIA',
+    'miami, fl': 'MIA',
+    'austin': 'AUS',
+    'austin, tx': 'AUS',
+    'boston': 'BOS',
+    'boston, ma': 'BOS',
+    'atlanta': 'ATL',
+    'atlanta, ga': 'ATL',
+    'washington': 'DCA',
+    'washington dc': 'DCA',
+    'dc': 'DCA',
+    'philadelphia': 'PHL',
+    'phoenix': 'PHX',
+    'las vegas': 'LAS',
+    'vegas': 'LAS',
+    'orlando': 'MCO',
+    'dallas': 'DFW',
+    'houston': 'IAH',
+    'detroit': 'DTW',
+    'minneapolis': 'MSP',
+    'charlotte': 'CLT',
+    'portland': 'PDX',
+    'salt lake city': 'SLC',
+    'nashville': 'BNA',
+    'london': 'LHR',
+    'uk': 'LHR',
+    'england': 'LHR',
+    'paris': 'CDG',
+    'france': 'CDG',
+    'tokyo': 'NRT',
+    'japan': 'NRT',
+    'singapore': 'SIN',
+    'amsterdam': 'AMS',
+    'netherlands': 'AMS'
+  };
+  
+  const city = cityName?.toLowerCase().trim() || '';
+  
+  // Direct match
+  if (airportMap[city]) {
+    return airportMap[city];
+  }
+  
+  // Check if it's already a 3-letter code
+  if (city.length === 3 && /^[A-Za-z]{3}$/.test(city)) {
+    return city.toUpperCase();
+  }
+  
+  // Try partial matches for compound city names
+  for (const [key, code] of Object.entries(airportMap)) {
+    if (city.includes(key) || key.includes(city)) {
+      return code;
+    }
+  }
+  
+  // Default fallback to major airports
+  return 'JFK'; // Default to JFK if no match found
+}
+
 // Health check endpoint
 router.get('/health', (req, res) => {
   res.json({ 
