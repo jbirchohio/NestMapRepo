@@ -5,9 +5,11 @@ import {
   todos, type Todo, type InsertTodo,
   notes, type Note, type InsertNote,
   invitations, type Invitation, type InsertInvitation,
+  organizations,
   transformTripToFrontend, transformActivityToFrontend
 } from "@shared/schema";
 import { transformActivityToDatabase, transformTodoToDatabase, transformNoteToDatabase, transformTripToDatabase } from "@shared/fieldTransforms";
+import { eq, and, desc } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -446,8 +448,6 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 import { db } from './db';
-import { organizations } from '@shared/schema';
-import { eq, and, desc } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {

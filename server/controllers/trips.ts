@@ -67,7 +67,7 @@ export async function getTrips(req: Request, res: Response) {
     // Filter trips by organization context for multi-tenant security
     const filteredTrips = trips.filter(trip => {
       if (!req.organizationContext) return true; // Skip filtering for non-authenticated requests
-      return req.organizationContext.canAccessOrganization(trip.organizationId);
+      return req.organizationContext.canAccessOrganization(trip.organization_id);
     });
     
     console.log("Trips fetched successfully:", filteredTrips.length);
@@ -116,7 +116,7 @@ export async function getTripById(req: Request, res: Response) {
     
     // CRITICAL: Verify user can access this trip's organization
     const userOrgId = req.user.organizationId || null;
-    if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
+    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
     
@@ -207,7 +207,7 @@ export async function createTrip(req: Request, res: Response) {
         await storage.createActivity({
           tripId: trip.id,
           title: `Stay at ${hotel.name}`,
-          date: new Date(trip.startDate),
+          date: new Date(trip.start_date),
           time: '15:00', // Standard check-in time
           locationName: hotel.name,
           latitude: null, // Hotel coordinates would need to be included in hotel data
@@ -219,11 +219,11 @@ export async function createTrip(req: Request, res: Response) {
         });
         
         // Create check-out activity for multi-day trips
-        if (trip.endDate > trip.startDate) {
+        if (trip.end_date > trip.start_date) {
           await storage.createActivity({
             tripId: trip.id,
             title: `Check out from ${hotel.name}`,
-            date: new Date(trip.endDate),
+            date: new Date(trip.end_date),
             time: '11:00', // Standard check-out time
             locationName: hotel.name,
             latitude: null,
@@ -270,7 +270,7 @@ export async function updateTrip(req: Request, res: Response) {
     
     // CRITICAL: Verify user can access this trip's organization
     const userOrgId = req.user.organizationId || null;
-    if (req.user.role !== 'super_admin' && existingTrip.organizationId !== userOrgId) {
+    if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
     
@@ -336,7 +336,7 @@ export async function deleteTrip(req: Request, res: Response) {
     
     // CRITICAL: Verify user can access this trip's organization
     const userOrgId = req.user.organizationId || null;
-    if (req.user.role !== 'super_admin' && existingTrip.organizationId !== userOrgId) {
+    if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
     }
     
