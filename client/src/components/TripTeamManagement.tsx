@@ -222,16 +222,16 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         id: traveler.id,
         name: traveler.name,
         email: traveler.email || '',
-        phone: '', // Will be collected during booking
-        dateOfBirth: '', // Will be collected during booking
+        phone: traveler.phone || '',
+        dateOfBirth: traveler.dateOfBirth || '',
         departureCity: traveler.departureCity,
         departureCountry: traveler.departureCountry,
         travelClass: traveler.travelClass,
         dietaryRequirements: traveler.dietaryRequirements || '',
         emergencyContact: {
-          name: '', // Will be collected during booking
-          phone: '', // Will be collected during booking
-          relationship: '' // Will be collected during booking
+          name: traveler.emergencyContactName || '',
+          phone: traveler.emergencyContactPhone || '',
+          relationship: traveler.emergencyContactRelationship || ''
         }
       })),
       roomsNeeded: travelers.length,
