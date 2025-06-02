@@ -357,17 +357,23 @@ export async function searchFlights(params: {
       return generateVariedFlightData(params);
     }
     
+    // Format dates for Amadeus API (requires YYYY-MM-DD format)
+    const formatDateForAmadeus = (dateString: string): string => {
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    };
+
     // Build query parameters for Amadeus API
     const searchParams = new URLSearchParams({
       originLocationCode: params.origin,
       destinationLocationCode: params.destination,
-      departureDate: params.departureDate,
+      departureDate: formatDateForAmadeus(params.departureDate),
       adults: (params.passengers || 1).toString(),
       max: '10',
     });
 
     if (params.returnDate) {
-      searchParams.append('returnDate', params.returnDate);
+      searchParams.append('returnDate', formatDateForAmadeus(params.returnDate));
     }
 
     const response = await fetch(
