@@ -95,6 +95,11 @@ export default function BookingWorkflow() {
   const [selectedDepartureFlight, setSelectedDepartureFlight] = useState<FlightResult | null>(null);
   const [selectedReturnFlight, setSelectedReturnFlight] = useState<FlightResult | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<HotelResult | null>(null);
+  
+  // Filter states
+  const [flightSortBy, setFlightSortBy] = useState<'price' | 'duration' | 'stops'>('price');
+  const [maxStops, setMaxStops] = useState<number>(2);
+  const [maxPrice, setMaxPrice] = useState<number>(2000);
   const [additionalTravelers, setAdditionalTravelers] = useState<Array<{firstName: string; lastName: string; dateOfBirth: string}>>([]);
   
   const clientForm = useForm<ClientInfoValues>({
@@ -573,6 +578,50 @@ export default function BookingWorkflow() {
     return depHour >= 21 || arrHour <= 6;
   };
 
+  // Filter and sort flights
+  const filterAndSortFlights = (flights: FlightResult[], type: 'outbound' | 'return') => {
+    let filtered = flights.filter(flight => {
+      // Filter by type
+      if (flight.type !== type) return false;
+      
+      // Filter by max stops
+      if (flight.stops > maxStops) return false;
+      
+      // Filter by max price
+      if (flight.price.amount > maxPrice) return false;
+      
+      return true;
+    });
+
+    // Sort flights
+    filtered.sort((a, b) => {
+      switch (flightSortBy) {
+        case 'price':
+          return a.price.amount - b.price.amount;
+        case 'duration':
+          // Convert duration string to minutes for comparison
+          const aDuration = parseDurationToMinutes(a.duration);
+          const bDuration = parseDurationToMinutes(b.duration);
+          return aDuration - bDuration;
+        case 'stops':
+          return a.stops - b.stops;
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  };
+
+  // Helper function to parse duration string to minutes
+  const parseDurationToMinutes = (duration: string): number => {
+    const match = duration.match(/(\d+)h\s*(\d+)?m?/);
+    if (!match) return 0;
+    const hours = parseInt(match[1]) || 0;
+    const minutes = parseInt(match[2]) || 0;
+    return hours * 60 + minutes;
+  };
+
   const formatTripDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -922,8 +971,56 @@ export default function BookingWorkflow() {
                       {clientInfo.origin} → {clientInfo.destination}
                     </div>
                   </div>
+                  
+                  {/* Filter Controls */}
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                    <div className="flex flex-wrap gap-4 items-center">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium">Sort by:</label>
+                        <select 
+                          value={flightSortBy} 
+                          onChange={(e) => setFlightSortBy(e.target.value as 'price' | 'duration' | 'stops')}
+                          className="px-3 py-1 border rounded text-sm"
+                        >
+                          <option value="price">Cheapest first</option>
+                          <option value="duration">Shortest duration</option>
+                          <option value="stops">Fewest stops</option>
+                        </select>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium">Max stops:</label>
+                        <select 
+                          value={maxStops} 
+                          onChange={(e) => setMaxStops(parseInt(e.target.value))}
+                          className="px-3 py-1 border rounded text-sm"
+                        >
+                          <option value="0">Direct only</option>
+                          <option value="1">1 stop max</option>
+                          <option value="2">2 stops max</option>
+                          <option value="3">Any</option>
+                        </select>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium">Max price:</label>
+                        <select 
+                          value={maxPrice} 
+                          onChange={(e) => setMaxPrice(parseInt(e.target.value))}
+                          className="px-3 py-1 border rounded text-sm"
+                        >
+                          <option value="500">Under $500</option>
+                          <option value="800">Under $800</option>
+                          <option value="1200">Under $1,200</option>
+                          <option value="2000">Under $2,000</option>
+                          <option value="5000">Any price</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="space-y-3">
-                    {flightResults.filter(f => f.type === 'outbound' || !f.type).map((flight) => (
+                    {filterAndSortFlights(flightResults, 'outbound').map((flight) => (
                       <div 
                         key={flight.id} 
                         className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -974,8 +1071,56 @@ export default function BookingWorkflow() {
                         {clientInfo.destination} → {clientInfo.origin}
                       </div>
                     </div>
+                    
+                    {/* Filter Controls */}
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                      <div className="flex flex-wrap gap-4 items-center">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium">Sort by:</label>
+                          <select 
+                            value={flightSortBy} 
+                            onChange={(e) => setFlightSortBy(e.target.value as 'price' | 'duration' | 'stops')}
+                            className="px-3 py-1 border rounded text-sm"
+                          >
+                            <option value="price">Cheapest first</option>
+                            <option value="duration">Shortest duration</option>
+                            <option value="stops">Fewest stops</option>
+                          </select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium">Max stops:</label>
+                          <select 
+                            value={maxStops} 
+                            onChange={(e) => setMaxStops(parseInt(e.target.value))}
+                            className="px-3 py-1 border rounded text-sm"
+                          >
+                            <option value="0">Direct only</option>
+                            <option value="1">1 stop max</option>
+                            <option value="2">2 stops max</option>
+                            <option value="3">Any</option>
+                          </select>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium">Max price:</label>
+                          <select 
+                            value={maxPrice} 
+                            onChange={(e) => setMaxPrice(parseInt(e.target.value))}
+                            className="px-3 py-1 border rounded text-sm"
+                          >
+                            <option value="500">Under $500</option>
+                            <option value="800">Under $800</option>
+                            <option value="1200">Under $1,200</option>
+                            <option value="2000">Under $2,000</option>
+                            <option value="5000">Any price</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div className="space-y-3">
-                      {flightResults.filter(f => f.type === 'return').map((flight) => (
+                      {filterAndSortFlights(flightResults, 'return').map((flight) => (
                         <div 
                           key={flight.id} 
                           className={`border rounded-lg p-4 cursor-pointer transition-colors ${
