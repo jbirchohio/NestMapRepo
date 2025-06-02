@@ -150,8 +150,8 @@ export default function SequentialBooking() {
     // Store current flight booking data
     sessionStorage.setItem('currentFlightBooking', JSON.stringify(flightBookingData));
     
-    // Navigate to main bookings page with flight tab and pre-populated data
-    window.location.href = `/bookings?tab=bookings&sequential=true&traveler=${currentTraveler.id}`;
+    // Navigate to main bookings page with flight tab and pre-populated data using React router
+    setLocation(`/bookings?tab=bookings&sequential=true&traveler=${currentTraveler.id}`);
   };
 
   const handleNextTraveler = () => {
