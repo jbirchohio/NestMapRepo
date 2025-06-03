@@ -182,6 +182,14 @@ export default function MainNavigation() {
       show: hasBillingAccess
     },
     {
+      path: '/corporate-cards',
+      label: 'Corporate Cards',
+      icon: CreditCard,
+      active: location === '/corporate-cards',
+      show: roleType === 'corporate' && hasBillingAccess,
+      badge: 'New'
+    },
+    {
       path: '/settings',
       label: roleType === 'agency' ? 'Agency Settings' : 'Company Settings',
       icon: Settings,
