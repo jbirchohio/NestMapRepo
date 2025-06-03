@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -92,6 +93,7 @@ interface BackgroundJob {
 export default function Superadmin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { section } = useParams();
   const [actionDialog, setActionDialog] = useState<{
     open: boolean;
     type: string;
@@ -171,20 +173,421 @@ export default function Superadmin() {
     ).length
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SuperadminNavigation />
+  // Render content based on section
+  const renderSectionContent = () => {
+    switch (section) {
+      case 'organizations':
+        return renderOrganizationsSection();
+      case 'users':
+        return renderUsersSection();
+      case 'sessions':
+        return renderSessionsSection();
+      case 'jobs':
+        return renderJobsSection();
+      case 'activity':
+        return renderActivitySection();
+      case 'billing':
+        return renderBillingSection();
+      case 'flags':
+        return renderFlagsSection();
+      default:
+        return renderDashboardOverview();
+    }
+  };
+
+  const renderOrganizationsSection = () => (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Organizations</h1>
+        <p className="text-gray-600 dark:text-gray-400">Manage and monitor all organizations</p>
+      </div>
       
-      <div className="flex-1 overflow-auto">
-        <div className="p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              System Overview
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Comprehensive system administration and monitoring
-            </p>
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Organizations ({organizations.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Organization</TableHead>
+                <TableHead>Plan</TableHead>
+                <TableHead>Users</TableHead>
+                <TableHead>Trips</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {organizations.map((org) => (
+                <TableRow key={org.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{org.name}</div>
+                      {org.domain && <div className="text-sm text-gray-500">{org.domain}</div>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
+                      {org.plan || 'free'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{org.userCount || 0}</TableCell>
+                  <TableCell>{org.tripCount || 0}</TableCell>
+                  <TableCell>
+                    <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
+                      {org.subscription_status || 'inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderUsersSection = () => (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Users</h1>
+        <p className="text-gray-600 dark:text-gray-400">Manage and monitor all users</p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Users ({users.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Organization</TableHead>
+                <TableHead>Last Active</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{user.username}</div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={user.role === 'superadmin' ? 'destructive' : 'default'}>
+                      {user.role}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{user.organization_name || 'None'}</TableCell>
+                  <TableCell>
+                    {user.last_login ? formatDistanceToNow(new Date(user.last_login), { addSuffix: true }) : 'Never'}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setActionDialog({
+                        open: true,
+                        type: 'suspend_user',
+                        target: user
+                      })}
+                    >
+                      <Ban className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderSessionsSection = () => (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Active Sessions</h1>
+        <p className="text-gray-600 dark:text-gray-400">Monitor active user sessions</p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Monitor className="h-5 w-5" />
+            Active Sessions ({activeSessions.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>IP Address</TableHead>
+                <TableHead>Started</TableHead>
+                <TableHead>Last Activity</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeSessions.map((session) => (
+                <TableRow key={session.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{session.username}</div>
+                      <div className="text-sm text-gray-500">ID: {session.user_id}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{session.ip_address || 'Unknown'}</TableCell>
+                  <TableCell>{formatDistanceToNow(new Date(session.created_at), { addSuffix: true })}</TableCell>
+                  <TableCell>{formatDistanceToNow(new Date(session.last_activity), { addSuffix: true })}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setActionDialog({
+                        open: true,
+                        type: 'terminate_session',
+                        target: session
+                      })}
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderJobsSection = () => (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Background Jobs</h1>
+        <p className="text-gray-600 dark:text-gray-400">Monitor and manage background tasks</p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Background Jobs ({backgroundJobs.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Job Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Started</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {backgroundJobs.map((job: any) => (
+                <TableRow key={job.id}>
+                  <TableCell className="font-medium">{job.job_type}</TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      job.status === 'completed' ? 'default' :
+                      job.status === 'failed' ? 'destructive' :
+                      job.status === 'running' ? 'secondary' : 'outline'
+                    }>
+                      {job.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}</TableCell>
+                  <TableCell>
+                    {job.completed_at 
+                      ? `${Math.round((new Date(job.completed_at).getTime() - new Date(job.created_at).getTime()) / 1000)}s`
+                      : job.status === 'running' ? 'In progress' : '-'
+                    }
+                  </TableCell>
+                  <TableCell>
+                    {job.status === 'failed' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => retryJobMutation.mutate(job.id)}
+                      >
+                        <Play className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderActivitySection = () => (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Audit Activity</h1>
+        <p className="text-gray-600 dark:text-gray-400">Monitor system and user activity</p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Recent Activity ({auditLogs.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Action</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Target</TableHead>
+                <TableHead>IP Address</TableHead>
+                <TableHead>Time</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {auditLogs.map((log: any) => (
+                <TableRow key={log.id}>
+                  <TableCell className="font-medium">{log.action}</TableCell>
+                  <TableCell>{log.superadmin_id || 'System'}</TableCell>
+                  <TableCell>{log.target_type}/{log.target_id}</TableCell>
+                  <TableCell>{log.ip_address || 'Unknown'}</TableCell>
+                  <TableCell>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderBillingSection = () => (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Billing Events</h1>
+        <p className="text-gray-600 dark:text-gray-400">Monitor billing and subscription events</p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Billing Events ({billingEvents.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Organization</TableHead>
+                <TableHead>Event Type</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {billingEvents.map((event) => (
+                <TableRow key={`${event.organization_id}-${event.event_type}`}>
+                  <TableCell>{event.organization_name}</TableCell>
+                  <TableCell className="font-medium">{event.event_type}</TableCell>
+                  <TableCell>${event.amount}</TableCell>
+                  <TableCell>
+                    <Badge variant={event.status === 'completed' ? 'default' : 'secondary'}>
+                      {event.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{format(new Date(event.created_at), 'MMM dd, yyyy')}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderFlagsSection = () => (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Feature Flags</h1>
+        <p className="text-gray-600 dark:text-gray-400">Control system-wide feature availability</p>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Flag className="h-5 w-5" />
+            Feature Flags ({featureFlags.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Flag Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {featureFlags.map((flag) => (
+                <TableRow key={flag.id}>
+                  <TableCell className="font-medium">{flag.flag_name}</TableCell>
+                  <TableCell>{flag.description}</TableCell>
+                  <TableCell>
+                    <Badge variant={flag.is_enabled ? 'default' : 'secondary'}>
+                      {flag.is_enabled ? 'Enabled' : 'Disabled'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={flag.is_enabled}
+                      onCheckedChange={(enabled) => updateFlagMutation.mutate({ flagId: flag.id, enabled })}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderDashboardOverview = () => (
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          System Overview
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Comprehensive system administration and monitoring
+        </p>
+      </div>
 
           {/* Metrics Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

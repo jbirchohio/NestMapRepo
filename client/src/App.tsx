@@ -61,6 +61,7 @@ function Router() {
         <Route path="/white-label" component={WhiteLabelSettings} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/superadmin" component={Superadmin} />
+        <Route path="/superadmin/:section" component={Superadmin} />
         <Route path="/corporate-cards" component={CorporateCards} />
         <Route path="/onboarding" component={Onboarding} />
         <Route component={NotFound} />
