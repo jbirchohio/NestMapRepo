@@ -13,6 +13,7 @@ import approvalRoutes from './approvals';
 import expenseRoutes from './expenses';
 import reportingRoutes from './reporting';
 import { registerCorporateCardRoutes } from './corporateCard';
+import superadminRoutes from './superadmin';
 import { getUserById } from '../auth';
 
 const router = Router();

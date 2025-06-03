@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import { USER_ROLES } from '@/shared/schema';
+import { USER_ROLES } from '../../shared/schema';
 
 interface AuthenticatedRequest extends Request {
   user?: {
     id: number;
+    email: string;
     role: string;
     organization_id?: number;
+    displayName?: string;
   };
 }
 

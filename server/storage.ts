@@ -11,6 +11,13 @@ import {
   expenses,
   cardTransactions,
   expenseApprovals,
+  superadminAuditLogs,
+  activeSessions,
+  aiUsageLogs,
+  featureFlags,
+  organizationFeatureFlags,
+  backgroundJobs,
+  billingEvents,
   transformTripToFrontend, transformActivityToFrontend
 } from "@shared/schema";
 
@@ -101,6 +108,32 @@ export interface IStorage {
 
   // Analytics operations
   getSpendingAnalytics(filters: any): Promise<any>;
+
+  // Superadmin operations
+  getSuperadminOrganizations(): Promise<any[]>;
+  getSuperadminUsers(): Promise<any[]>;
+  deactivateUser(userId: number): Promise<void>;
+  disableOrganization(orgId: number): Promise<void>;
+  updateUserRole(userId: number, newRole: string): Promise<void>;
+  getSuperadminActivity(): Promise<any[]>;
+  getActiveSessions(): Promise<any[]>;
+  terminateSession(sessionId: string): Promise<void>;
+  getTripLogs(): Promise<any[]>;
+  getAiUsage(): Promise<any[]>;
+  createImpersonationSession(superadminId: number, userId: number): Promise<string>;
+  getBillingOverview(): Promise<any>;
+  setBillingOverride(orgId: number, planOverride: string, credits: number): Promise<void>;
+  getInvoices(): Promise<any[]>;
+  getFeatureFlags(): Promise<any[]>;
+  setOrganizationFeatureFlag(orgId: number, flagName: string, enabled: boolean): Promise<void>;
+  getWhiteLabelData(): Promise<any[]>;
+  setOrganizationTheme(orgId: number, theme: any): Promise<void>;
+  createExportJob(orgId: number, superadminId: number): Promise<number>;
+  deleteUserData(userId: number): Promise<void>;
+  getBackgroundJobs(): Promise<any[]>;
+  retryBackgroundJob(jobId: number): Promise<void>;
+  testWebhook(url: string, payload: any): Promise<any>;
+  createSuperadminAuditLog(log: any): Promise<any>;
 }
 
 // In-memory implementation
@@ -1257,6 +1290,306 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
       category_breakdown: categorySpending,
       user_breakdown: userSpending,
     };
+  }
+
+  // Superadmin operations implementation
+  async getSuperadminOrganizations() {
+    return await db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        domain: organizations.domain,
+        plan: organizations.plan,
+        subscription_status: organizations.subscription_status,
+        employee_count: organizations.employee_count,
+        created_at: organizations.created_at,
+        userCount: sql<number>`(SELECT COUNT(*) FROM ${users} WHERE organization_id = ${organizations.id})`,
+        tripCount: sql<number>`(SELECT COUNT(*) FROM ${trips} WHERE organization_id = ${organizations.id})`,
+        lastActivity: sql<string>`(SELECT MAX(created_at) FROM ${trips} WHERE organization_id = ${organizations.id})`
+      })
+      .from(organizations)
+      .orderBy(desc(organizations.created_at));
+  }
+
+  async getSuperadminUsers() {
+    return await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        role: users.role,
+        organization_id: users.organization_id,
+        created_at: users.created_at,
+        organization_name: organizations.name,
+        tripCount: sql<number>`(SELECT COUNT(*) FROM ${trips} WHERE user_id = ${users.id})`,
+        lastLogin: sql<string>`(SELECT MAX(last_activity) FROM ${activeSessions} WHERE user_id = ${users.id})`
+      })
+      .from(users)
+      .leftJoin(organizations, eq(users.organization_id, organizations.id))
+      .orderBy(desc(users.created_at));
+  }
+
+  async deactivateUser(userId: number) {
+    await db
+      .update(users)
+      .set({ role: 'deactivated' })
+      .where(eq(users.id, userId));
+  }
+
+  async disableOrganization(orgId: number) {
+    await db
+      .update(organizations)
+      .set({ subscription_status: 'disabled' })
+      .where(eq(organizations.id, orgId));
+  }
+
+  async updateUserRole(userId: number, newRole: string) {
+    await db
+      .update(users)
+      .set({ role: newRole })
+      .where(eq(users.id, userId));
+  }
+
+  async getSuperadminActivity() {
+    return await db
+      .select({
+        id: superadminAuditLogs.id,
+        action: superadminAuditLogs.action,
+        target_type: superadminAuditLogs.target_type,
+        target_id: superadminAuditLogs.target_id,
+        details: superadminAuditLogs.details,
+        created_at: superadminAuditLogs.created_at,
+        superadmin_username: users.username,
+        ip_address: superadminAuditLogs.ip_address
+      })
+      .from(superadminAuditLogs)
+      .leftJoin(users, eq(superadminAuditLogs.superadmin_user_id, users.id))
+      .orderBy(desc(superadminAuditLogs.created_at))
+      .limit(100);
+  }
+
+  async getActiveSessions() {
+    return await db
+      .select({
+        id: activeSessions.id,
+        user_id: activeSessions.user_id,
+        username: users.username,
+        organization_name: organizations.name,
+        ip_address: activeSessions.ip_address,
+        last_activity: activeSessions.last_activity,
+        expires_at: activeSessions.expires_at,
+        created_at: activeSessions.created_at
+      })
+      .from(activeSessions)
+      .leftJoin(users, eq(activeSessions.user_id, users.id))
+      .leftJoin(organizations, eq(activeSessions.organization_id, organizations.id))
+      .where(sql`${activeSessions.expires_at} > NOW()`)
+      .orderBy(desc(activeSessions.last_activity));
+  }
+
+  async terminateSession(sessionId: string) {
+    await db
+      .delete(activeSessions)
+      .where(eq(activeSessions.id, sessionId));
+  }
+
+  async getTripLogs() {
+    return await db
+      .select({
+        id: trips.id,
+        title: trips.title,
+        user_id: trips.user_id,
+        username: users.username,
+        organization_name: organizations.name,
+        created_at: trips.created_at,
+        budget: trips.budget,
+        trip_type: trips.trip_type,
+        completed: trips.completed
+      })
+      .from(trips)
+      .leftJoin(users, eq(trips.user_id, users.id))
+      .leftJoin(organizations, eq(trips.organization_id, organizations.id))
+      .orderBy(desc(trips.created_at))
+      .limit(200);
+  }
+
+  async getAiUsage() {
+    return await db
+      .select({
+        id: aiUsageLogs.id,
+        user_id: aiUsageLogs.user_id,
+        username: users.username,
+        organization_name: organizations.name,
+        feature: aiUsageLogs.feature,
+        tokens_used: aiUsageLogs.tokens_used,
+        cost_cents: aiUsageLogs.cost_cents,
+        model: aiUsageLogs.model,
+        success: aiUsageLogs.success,
+        created_at: aiUsageLogs.created_at
+      })
+      .from(aiUsageLogs)
+      .leftJoin(users, eq(aiUsageLogs.user_id, users.id))
+      .leftJoin(organizations, eq(aiUsageLogs.organization_id, organizations.id))
+      .orderBy(desc(aiUsageLogs.created_at))
+      .limit(500);
+  }
+
+  async createImpersonationSession(superadminId: number, userId: number): Promise<string> {
+    const token = `imp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // In a real implementation, you'd store this token securely
+    return token;
+  }
+
+  async getBillingOverview() {
+    return await db
+      .select({
+        organization_id: organizations.id,
+        organization_name: organizations.name,
+        plan: organizations.plan,
+        subscription_status: organizations.subscription_status,
+        current_period_end: organizations.current_period_end,
+        monthly_revenue: sql<number>`CASE 
+          WHEN ${organizations.plan} = 'enterprise' THEN 99900
+          WHEN ${organizations.plan} = 'team' THEN 2900
+          WHEN ${organizations.plan} = 'pro' THEN 900
+          ELSE 0
+        END`,
+        total_spending: sql<number>`(
+          SELECT COALESCE(SUM(amount), 0) 
+          FROM ${expenses} 
+          WHERE organization_id = ${organizations.id}
+        )`
+      })
+      .from(organizations)
+      .orderBy(desc(sql`CASE 
+        WHEN ${organizations.plan} = 'enterprise' THEN 99900
+        WHEN ${organizations.plan} = 'team' THEN 2900
+        WHEN ${organizations.plan} = 'pro' THEN 900
+        ELSE 0
+      END`));
+  }
+
+  async setBillingOverride(orgId: number, planOverride: string, credits: number) {
+    await db
+      .update(organizations)
+      .set({ plan: planOverride })
+      .where(eq(organizations.id, orgId));
+  }
+
+  async getInvoices() {
+    return await db
+      .select({
+        id: billingEvents.id,
+        organization_id: billingEvents.organization_id,
+        organization_name: organizations.name,
+        event_type: billingEvents.event_type,
+        amount_cents: billingEvents.amount_cents,
+        currency: billingEvents.currency,
+        created_at: billingEvents.created_at
+      })
+      .from(billingEvents)
+      .leftJoin(organizations, eq(billingEvents.organization_id, organizations.id))
+      .orderBy(desc(billingEvents.created_at))
+      .limit(100);
+  }
+
+  async getFeatureFlags() {
+    return await db
+      .select()
+      .from(featureFlags)
+      .orderBy(featureFlags.flag_name);
+  }
+
+  async setOrganizationFeatureFlag(orgId: number, flagName: string, enabled: boolean) {
+    await db
+      .insert(organizationFeatureFlags)
+      .values({
+        organization_id: orgId,
+        flag_name: flagName,
+        enabled
+      })
+      .onConflictDoUpdate({
+        target: [organizationFeatureFlags.organization_id, organizationFeatureFlags.flag_name],
+        set: { enabled }
+      });
+  }
+
+  async getWhiteLabelData() {
+    return await db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        white_label_enabled: organizations.white_label_enabled,
+        white_label_plan: organizations.white_label_plan,
+        primary_color: organizations.primary_color,
+        secondary_color: organizations.secondary_color,
+        logo_url: organizations.logo_url,
+        support_email: organizations.support_email
+      })
+      .from(organizations)
+      .where(eq(organizations.white_label_enabled, true))
+      .orderBy(organizations.name);
+  }
+
+  async setOrganizationTheme(orgId: number, theme: any) {
+    await db
+      .update(organizations)
+      .set({
+        primary_color: theme.primary_color,
+        secondary_color: theme.secondary_color,
+        accent_color: theme.accent_color,
+        logo_url: theme.logo_url
+      })
+      .where(eq(organizations.id, orgId));
+  }
+
+  async createExportJob(orgId: number, superadminId: number): Promise<number> {
+    const [job] = await db
+      .insert(backgroundJobs)
+      .values({
+        job_type: 'organization_export',
+        status: 'pending',
+        data: { organization_id: orgId, requested_by: superadminId }
+      })
+      .returning({ id: backgroundJobs.id });
+    return job.id;
+  }
+
+  async deleteUserData(userId: number) {
+    // In a real implementation, this would handle cascading deletes carefully
+    await db.delete(users).where(eq(users.id, userId));
+  }
+
+  async getBackgroundJobs() {
+    return await db
+      .select()
+      .from(backgroundJobs)
+      .orderBy(desc(backgroundJobs.created_at))
+      .limit(100);
+  }
+
+  async retryBackgroundJob(jobId: number) {
+    await db
+      .update(backgroundJobs)
+      .set({
+        status: 'pending',
+        attempts: sql`${backgroundJobs.attempts} + 1`,
+        error_message: null
+      })
+      .where(eq(backgroundJobs.id, jobId));
+  }
+
+  async testWebhook(url: string, payload: any) {
+    // In a real implementation, this would make an HTTP request
+    return { success: true, status: 200, response: 'OK' };
+  }
+
+  async createSuperadminAuditLog(log: any) {
+    const [result] = await db
+      .insert(superadminAuditLogs)
+      .values(log)
+      .returning();
+    return result;
   }
 }
 
