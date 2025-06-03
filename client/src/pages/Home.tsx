@@ -14,7 +14,10 @@ import TripTemplates from "@/components/TripTemplates";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import RoleBasedRedirect from "@/components/RoleBasedRedirect";
-import { UserRound, LogOut, BarChart3, CheckCircle, Clock, Plus, Users } from "lucide-react";
+import { PrimaryButton } from "@/components/ui/primary-button";
+import { AnimatedCard } from "@/components/ui/animated-card";
+import { motion } from "framer-motion";
+import { UserRound, LogOut, BarChart3, CheckCircle, Clock, Plus, Users, Plane, Brain, Sparkles } from "lucide-react";
 import { useEffect } from "react";
 
 export default function Home() {
@@ -49,53 +52,36 @@ export default function Home() {
   // Get user ID from authentication or use guest mode
   const effectiveUserId = userId ?? -1; // Use database userId or -1 for guest mode
   const isGuestMode = effectiveUserId === -1;
-  
-  // Guest trips storage in localStorage
-  const getGuestTrips = (): ClientTrip[] => {
-    if (typeof window === "undefined") return [];
-    const stored = localStorage.getItem("nestmap_guest_trips");
-    return stored ? JSON.parse(stored) : [];
-  };
 
-  const setGuestTrips = (trips: ClientTrip[]) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("nestmap_guest_trips", JSON.stringify(trips));
+  // Guest trip storage
+  const getGuestTrips = () => {
+    try {
+      const stored = localStorage.getItem('guestTrips');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
     }
   };
 
-  // Clear localStorage for testing
-  const clearGuestData = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("nestmap_guest_trips");
-      // Also clear any guest activities
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('guest_activities_')) {
-          localStorage.removeItem(key);
-        }
-      });
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS] });
-    }
-  };
-
-  // Auto-clear old guest data on page load to test the fix
-  React.useEffect(() => {
-    clearGuestData();
-  }, []);
-
-
-
-  const { data: trips = [], isLoading } = useQuery<ClientTrip[]>({
-    queryKey: [API_ENDPOINTS.TRIPS, { userId }],
+  // Fetch trips based on authentication status
+  const tripsQuery = useQuery<ClientTrip[]>({
+    queryKey: [API_ENDPOINTS.TRIPS, effectiveUserId],
     queryFn: async () => {
       if (isGuestMode) {
+        // Return guest trips for unauthenticated users
         return getGuestTrips();
       }
-      const res = await fetch(`${API_ENDPOINTS.TRIPS}?userId=${userId}`);
-      if (!res.ok) throw new Error("Failed to fetch trips");
-      return res.json();
+
+      const response = await fetch(`${API_ENDPOINTS.TRIPS}?userId=${effectiveUserId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch trips');
+      }
+      return response.json();
     },
     enabled: true, // Always enabled for both guest and authenticated users
   });
+  
+  const trips = tripsQuery.data;
   
   const handleCreateNewTrip = () => {
     // Guest mode limitations for monetization
@@ -148,7 +134,7 @@ export default function Home() {
   };
   
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
+    <div className="min-h-screen bg-gradient-to-br from-white via-electric-50/30 to-electric-100/50 dark:from-dark-900 dark:via-electric-900/10 dark:to-electric-800/20">
       <NewTripModal 
         isOpen={isNewTripModalOpen} 
         onClose={() => setIsNewTripModalOpen(false)} 
@@ -169,286 +155,268 @@ export default function Home() {
         }}
       />
 
-      <header className="bg-white dark:bg-[hsl(var(--card))] shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="h-10 w-10 bg-[hsl(var(--secondary))] rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[hsl(var(--foreground))]" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-electric-500/20 via-electric-600/10 to-electric-700/20 dark:from-electric-400/10 dark:via-electric-500/5 dark:to-electric-600/10"></div>
+        <div className="relative">
+          <div className="container mx-auto px-4 py-16 sm:py-24">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center"
+            >
+              <div className="flex justify-center mb-8">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="h-20 w-20 bg-gradient-to-br from-electric-400 to-electric-600 rounded-2xl flex items-center justify-center shadow-lg shadow-electric-500/25"
+                >
+                  <Plane className="h-10 w-10 text-white" />
+                </motion.div>
               </div>
-              <div className="ml-3">
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200">NestMap</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">[ Professional Travel Management ]</p>
-                <p className="text-xs text-slate-500 dark:text-slate-500">The all-in-one platform for planning, collaborating, and delivering itineraries at scale.</p>
-              </div>
-            </div>
-            
-            {/* Authentication UI */}
-            <div className="flex items-center space-x-2">
-              {user ? (
-                <div className="flex items-center">
-                  <div className="mr-3 text-right hidden sm:block">
-                    <p className="font-medium">{user.user_metadata?.display_name || user.email}</p>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Signed in</p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setLocation('/analytics')}
-                      title="Analytics Dashboard"
-                    >
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      Analytics
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setLocation('/team')}
-                      title="Team Management"
-                    >
-                      <UserRound className="h-4 w-4 mr-2" />
-                      Team
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setLocation('/billing')}
-                      title="Billing & Subscription"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Billing
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="rounded-full"
-                      onClick={handleSignOut}
-                      title="Sign Out"
-                    >
-                      <LogOut className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    onClick={handleSignInClick}
+              
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-electric-600 via-electric-500 to-electric-700 bg-clip-text text-transparent mb-6"
+              >
+                Travel Reimagined
+              </motion.h1>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="text-xl sm:text-2xl text-electric-700 dark:text-electric-300 mb-4 max-w-3xl mx-auto"
+              >
+                The AI-powered corporate travel platform that transforms how teams plan, book, and manage business travel
+              </motion.p>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="text-lg text-electric-600/80 dark:text-electric-400/80 mb-12 max-w-2xl mx-auto"
+              >
+                Seamlessly integrate corporate cards, expense management, and intelligent booking workflows
+              </motion.p>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+              >
+                {user ? (
+                  <PrimaryButton
+                    onClick={handleCreateNewTrip}
+                    className="text-lg px-8 py-4"
                   >
-                    Sign In
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    onClick={handleSignUpClick}
-                    className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))] text-[#000000]"
-                  >
-                    Sign Up
-                  </Button>
-                </div>
-              )}
-            </div>
+                    <Plus className="mr-2 h-5 w-5" />
+                    Start New Trip
+                  </PrimaryButton>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <PrimaryButton
+                      onClick={handleSignUpClick}
+                      className="text-lg px-8 py-4"
+                    >
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Get Started
+                    </PrimaryButton>
+                    <Button
+                      onClick={handleSignInClick}
+                      variant="outline"
+                      className="text-lg px-8 py-4 border-electric-300 text-electric-700 hover:bg-electric-50 dark:border-electric-600 dark:text-electric-300 dark:hover:bg-electric-900/20"
+                    >
+                      Sign In
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.7 }}
+                className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+              >
+                <AnimatedCard className="p-6 text-center bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50">
+                  <Brain className="h-12 w-12 text-electric-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">AI-Powered Planning</h3>
+                  <p className="text-electric-600 dark:text-electric-400">Intelligent recommendations and automated itinerary generation</p>
+                </AnimatedCard>
+                
+                <AnimatedCard className="p-6 text-center bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50">
+                  <Users className="h-12 w-12 text-electric-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">Team Collaboration</h3>
+                  <p className="text-electric-600 dark:text-electric-400">Real-time collaboration tools for seamless trip coordination</p>
+                </AnimatedCard>
+                
+                <AnimatedCard className="p-6 text-center bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50">
+                  <BarChart3 className="h-12 w-12 text-electric-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">Enterprise Analytics</h3>
+                  <p className="text-electric-600 dark:text-electric-400">Comprehensive reporting and travel spend optimization</p>
+                </AnimatedCard>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
-      </header>
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          <section className="mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-semibold">
-                  {isGuestMode ? "Try NestMap Free" : "Welcome to NestMap"}
-                </h2>
-                {isGuestMode && (
-                  <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
-                    Create up to 2 trips • Limited features • No account required
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <TripTemplates 
-                  userId={effectiveUserId} 
-                  onTripCreated={(tripId) => setLocation(`/trip/${tripId}`)}
-                />
-                <Button 
-                  onClick={handleCreateNewTrip} 
-                  className="bg-slate-700 hover:bg-slate-800 text-white font-semibold"
+      </div>
+
+      {/* Content Section */}
+      <div className="container mx-auto px-4 py-8">
+        {user && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-electric-900 dark:text-electric-100">Your Trips</h2>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={handleSignOut}
+                  variant="ghost"
+                  size="sm"
+                  className="text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {isGuestMode && trips.length >= 1 ? "Try One More" : "New Team Project"}
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setLocation('/analytics')}
+                  title="Analytics Dashboard"
+                  className="text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Analytics
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setLocation('/team')}
+                  title="Team Management"
+                  className="text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
+                >
+                  <UserRound className="h-4 w-4 mr-2" />
+                  Team
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setLocation('/billing')}
+                  title="Billing & Subscription"
+                  className="text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Billing
                 </Button>
               </div>
             </div>
-            
-            <Card className="border-slate-200 dark:border-slate-700">
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-2 text-slate-800 dark:text-slate-200">🗂️ Professional Travel Management</h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  Streamline corporate travel, client itineraries, and team events with enterprise-grade planning tools.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start">
-                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📍</div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-200">Plan for Teams or Clients</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Schedule events, meetings, and logistics for corporate or group travel</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📊</div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-200">Smart Route & Time Optimization</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Let AI minimize travel time and automate transitions between events</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">📈</div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-200">Share & Track Engagement</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Send branded itineraries and track completion status and updates</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="h-8 w-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center mr-3 mt-0.5 font-semibold">🤝</div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-200">Collaborate Across Departments</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Allow internal and external stakeholders to access or edit trips</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-          
-          {/* Guest Mode Upgrade Prompt */}
-          {isGuestMode && trips.length >= 1 && (
-            <section className="mb-8">
-              <Card className="border-[hsl(var(--primary))] bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--primary))] to-[hsl(var(--primary))] text-white">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Unlock Full Planning Power</h3>
-                      <p className="text-sm opacity-90 mb-3">
-                        You've used {trips.length} of 2 free trips. Sign up to create unlimited trips and unlock:
-                      </p>
-                      <ul className="text-sm space-y-1 opacity-90">
-                        <li>• Unlimited trips and collaborators</li>
-                        <li>• Advanced AI assistance with weather & budget tips</li>
-                        <li>• Trip sharing and real-time collaboration</li>
-                        <li>• Cloud sync across all your devices</li>
-                      </ul>
-                    </div>
-                    <div className="ml-6">
-                      <Button 
-                        variant="secondary"
-                        onClick={() => {
-                          setAuthView("signup");
-                          setIsAuthModalOpen(true);
-                        }}
-                        className="bg-white text-[hsl(var(--primary))] hover:bg-gray-100"
-                      >
-                        Sign Up Free
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-          )}
+          </div>
+        )}
 
-          <section>
-            <h2 className="text-xl font-semibold mb-4">
-              Your Trips {isGuestMode && `(${trips.length}/2 Free)`}
-            </h2>
-            
-            {trips.length > 0 && (
-              <Tabs defaultValue="active" className="mb-4">
-                <TabsList>
-                  <TabsTrigger value="active" className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Active ({trips.filter(trip => !trip.completed).length})
-                  </TabsTrigger>
-                  <TabsTrigger value="completed" className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    Completed ({trips.filter(trip => trip.completed).length})
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="active">
-                  {trips.filter(trip => !trip.completed).length === 0 ? (
-                    <Card>
-                      <CardContent className="py-8 text-center">
-                        <Clock className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))] mb-4" />
-                        <h3 className="text-lg font-medium mb-2">No active trips</h3>
-                        <p className="text-[hsl(var(--muted-foreground))]">All your trips are completed! Create a new one to start planning.</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-4">
-                      {trips.filter(trip => !trip.completed).map((trip) => (
-                        <SwipeableTrip
-                          key={trip.id}
-                          trip={trip}
-                          onNavigate={handleNavigateToTrip}
-                          onRename={handleOpenRenameDialog}
-                          isGuestMode={isGuestMode}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="completed">
-                  {trips.filter(trip => trip.completed).length === 0 ? (
-                    <Card>
-                      <CardContent className="py-8 text-center">
-                        <CheckCircle className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))] mb-4" />
-                        <h3 className="text-lg font-medium mb-2">No completed trips yet</h3>
-                        <p className="text-[hsl(var(--muted-foreground))]">Mark trips as complete when you finish them to see them here.</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-4">
-                      {trips.filter(trip => trip.completed).map((trip) => (
-                        <SwipeableTrip
-                          key={trip.id}
-                          trip={trip}
-                          onNavigate={handleNavigateToTrip}
-                          onRename={handleOpenRenameDialog}
-                          isGuestMode={isGuestMode}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            )}
-            
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin h-8 w-8 border-4 border-[hsl(var(--primary))] border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p>Loading your trips...</p>
+        {/* Trip Content Section */}
+        {tripsQuery.isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin w-8 h-8 border-4 border-electric-500 border-t-transparent rounded-full" />
+          </div>
+        ) : trips && trips.length > 0 ? (
+          <div className="space-y-8">
+            <Tabs defaultValue="active" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-6 bg-electric-50/50 dark:bg-electric-900/20">
+                <TabsTrigger value="active" className="data-[state=active]:bg-electric-500 data-[state=active]:text-white">
+                  Active ({trips.filter(trip => trip.status === "Active").length})
+                </TabsTrigger>
+                <TabsTrigger value="completed" className="data-[state=active]:bg-electric-500 data-[state=active]:text-white">
+                  Completed ({trips.filter(trip => trip.status === "Completed").length})
+                </TabsTrigger>
+                <TabsTrigger value="all" className="data-[state=active]:bg-electric-500 data-[state=active]:text-white">
+                  All ({trips.length})
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="active" className="space-y-4">
+                {trips
+                  .filter(trip => trip.status === "Active")
+                  .map((trip) => (
+                    <SwipeableTrip
+                      key={trip.id}
+                      trip={trip}
+                      onNavigate={handleNavigateToTrip}
+                      onRename={handleOpenRenameDialog}
+                    />
+                  ))}
+              </TabsContent>
+              
+              <TabsContent value="completed" className="space-y-4">
+                {trips
+                  .filter(trip => trip.status === "Completed")
+                  .map((trip) => (
+                    <SwipeableTrip
+                      key={trip.id}
+                      trip={trip}
+                      onNavigate={handleNavigateToTrip}
+                      onRename={handleOpenRenameDialog}
+                    />
+                  ))}
+              </TabsContent>
+              
+              <TabsContent value="all" className="space-y-4">
+                {trips.map((trip) => (
+                  <SwipeableTrip
+                    key={trip.id}
+                    trip={trip}
+                    onNavigate={handleNavigateToTrip}
+                    onRename={handleOpenRenameDialog}
+                  />
+                ))}
+              </TabsContent>
+            </Tabs>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="max-w-md mx-auto">
+              <div className="h-16 w-16 bg-electric-100 dark:bg-electric-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Plane className="h-8 w-8 text-electric-500" />
               </div>
-            ) : trips.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <div className="mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">No trips yet</h3>
-                  <p className="text-[hsl(var(--muted-foreground))] mb-4">Create your first trip to get started.</p>
-                  <Button onClick={handleCreateNewTrip}>Create New Trip</Button>
-                </CardContent>
-              </Card>
-            ) : null}
-          </section>
-        </div>
-      </main>
+              <h3 className="text-xl font-semibold text-electric-900 dark:text-electric-100 mb-2">
+                No trips yet
+              </h3>
+              <p className="text-electric-600 dark:text-electric-400 mb-6">
+                Start planning your first trip to see it here
+              </p>
+              <PrimaryButton onClick={handleCreateNewTrip}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Your First Trip
+              </PrimaryButton>
+            </div>
+          </div>
+        )}
+
+        {!user && (
+          <div className="mt-16 bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-8">
+            <TripTemplates onSelectTemplate={() => {
+              setAuthView("signup");
+              setIsAuthModalOpen(true);
+            }} />
+          </div>
+        )}
+      </div>
+
+      {tripToRename && (
+        <RenameTripDialog
+          isOpen={isRenameModalOpen}
+          onClose={handleCloseRenameDialog}
+          trip={tripToRename}
+          onRename={(tripId, newName) => {
+            // Handle rename logic here
+            handleCloseRenameDialog();
+          }}
+        />
+      )}
     </div>
   );
 }
