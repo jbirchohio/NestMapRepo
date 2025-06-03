@@ -395,23 +395,23 @@ export default function TeamManagement() {
               </div>
             </form>
           </CardContent>
-        </Card>
-      )}
+          </Card>
+        )}
 
-      {/* Member Details Modal */}
-      {showMemberDetails && selectedMember && (
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Member Details: {selectedMember.name}
-              </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setShowMemberDetails(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
+        {/* Member Details Modal */}
+        {showMemberDetails && selectedMember && (
+          <Card className="mb-6 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-navy-900 dark:text-white">
+                  <User className="h-5 w-5 text-electric-500" />
+                  Member Details: {selectedMember.name}
+                </CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setShowMemberDetails(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -542,7 +542,7 @@ export default function TeamManagement() {
                 <Button 
                   variant="outline" 
                   onClick={() => setShowEditPermissions(false)}
-                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="border-electric-300/30 text-navy-600 dark:text-navy-300 hover:bg-electric-50 dark:hover:bg-electric-900/20"
                 >
                   Cancel
                 </Button>
@@ -554,7 +554,7 @@ export default function TeamManagement() {
                     });
                     setShowEditPermissions(false);
                   }}
-                  className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+                  className="bg-electric-500 hover:bg-electric-600 text-white"
                 >
                   Save Changes
                 </Button>
@@ -562,35 +562,35 @@ export default function TeamManagement() {
             </div>
           </CardContent>
         </Card>
-      )}
+        )}
 
-      {/* Team Members List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Team Members</CardTitle>
-          <CardDescription>
-            Current members of your organization
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        {/* Team Members List */}
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20">
+          <CardHeader>
+            <CardTitle className="text-navy-900 dark:text-white">Team Members</CardTitle>
+            <CardDescription className="text-navy-600 dark:text-navy-300">
+              Current members of your organization
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
             {isLoadingMembers ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">Loading team members...</p>
+                <p className="text-navy-500 dark:text-navy-400">Loading team members...</p>
               </div>
             ) : teamMembers && teamMembers.length > 0 ? (
               teamMembers.map((member: any) => (
-                <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={member.id} className="flex items-center justify-between p-4 border border-electric-300/20 rounded-lg bg-white/50 dark:bg-navy-900/50 backdrop-blur-sm">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-medium">
+                    <div className="h-10 w-10 rounded-full bg-electric-100 dark:bg-electric-900/20 flex items-center justify-center">
+                      <span className="text-sm font-medium text-electric-700 dark:text-electric-300">
                         {member.name.split(' ').map((n: string) => n[0]).join('')}
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-medium">{member.name}</h4>
-                      <p className="text-sm text-muted-foreground">{member.email}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <h4 className="font-medium text-navy-900 dark:text-white">{member.name}</h4>
+                      <p className="text-sm text-navy-600 dark:text-navy-300">{member.email}</p>
+                      <p className="text-xs text-navy-500 dark:text-navy-400">
                         Joined {member.joinedAt} • Last active {member.lastActive}
                       </p>
                     </div>
@@ -608,7 +608,7 @@ export default function TeamManagement() {
                         size="sm"
                         onClick={() => handleViewMember(member)}
                         title="View member details"
-                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="border-electric-300/30 text-navy-600 dark:text-navy-300 hover:bg-electric-50 dark:hover:bg-electric-900/20"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -617,14 +617,14 @@ export default function TeamManagement() {
                         size="sm"
                         onClick={() => handleEditMember(member)}
                         title="Edit member permissions"
-                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="border-electric-300/30 text-navy-600 dark:text-navy-300 hover:bg-electric-50 dark:hover:bg-electric-900/20"
                       >
                         <Edit3 className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="bg-white dark:bg-gray-800 border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        className="border-red-300/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         onClick={() => handleRemoveMember(member)}
                         title="Remove member"
                       >
@@ -636,12 +636,12 @@ export default function TeamManagement() {
               ))
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No team members found. Invite your first member to get started.</p>
+                <p className="text-navy-500 dark:text-navy-400">No team members found. Invite your first member to get started.</p>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
