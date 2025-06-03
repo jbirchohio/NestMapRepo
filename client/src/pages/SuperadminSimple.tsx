@@ -65,106 +65,293 @@ export default function Superadmin() {
 
   // Render content based on section
   const renderContent = () => {
-    if (section === 'organizations') {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Organizations ({organizations.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Organization</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Users</TableHead>
-                  <TableHead>Trips</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {organizations.map((org: any) => (
-                  <TableRow key={org.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{org.name}</div>
-                        {org.domain && <div className="text-sm text-gray-500">{org.domain}</div>}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
-                        {org.plan || 'free'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{org.userCount || 0}</TableCell>
-                    <TableCell>{org.tripCount || 0}</TableCell>
-                    <TableCell>
-                      <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
-                        {org.subscription_status || 'inactive'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
+    switch (section) {
+      case 'organizations':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Organizations ({organizations.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Organization</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Users</TableHead>
+                    <TableHead>Trips</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      );
-    }
+                </TableHeader>
+                <TableBody>
+                  {organizations.map((org: any) => (
+                    <TableRow key={org.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{org.name}</div>
+                          {org.domain && <div className="text-sm text-gray-500">{org.domain}</div>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
+                          {org.plan || 'free'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{org.userCount || 0}</TableCell>
+                      <TableCell>{org.tripCount || 0}</TableCell>
+                      <TableCell>
+                        <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
+                          {org.subscription_status || 'inactive'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
 
-    if (section === 'users') {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Users ({users.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Organization</TableHead>
-                  <TableHead>Last Active</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user: any) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{user.username}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={user.role === 'superadmin' ? 'destructive' : 'default'}>
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{user.organization_name || 'None'}</TableCell>
-                    <TableCell>
-                      {user.last_login ? formatDistanceToNow(new Date(user.last_login), { addSuffix: true }) : 'Never'}
-                    </TableCell>
+      case 'users':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Users ({users.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Organization</TableHead>
+                    <TableHead>Last Active</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      );
-    }
+                </TableHeader>
+                <TableBody>
+                  {users.map((user: any) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{user.username}</div>
+                          <div className="text-sm text-gray-500">{user.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.role === 'superadmin' ? 'destructive' : 'default'}>
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{user.organization_name || 'None'}</TableCell>
+                      <TableCell>
+                        {user.last_login ? formatDistanceToNow(new Date(user.last_login), { addSuffix: true }) : 'Never'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
 
-    // Default dashboard overview
-    return (
+      case 'sessions':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Monitor className="h-5 w-5" />
+                Active Sessions ({activeSessions.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>IP Address</TableHead>
+                    <TableHead>User Agent</TableHead>
+                    <TableHead>Started</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeSessions.map((session: any) => (
+                    <TableRow key={session.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{session.username}</div>
+                          <div className="text-sm text-gray-500">{session.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{session.ip_address || 'Unknown'}</TableCell>
+                      <TableCell className="truncate max-w-xs">{session.user_agent || 'Unknown'}</TableCell>
+                      <TableCell>{formatDistanceToNow(new Date(session.created_at), { addSuffix: true })}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+
+      case 'jobs':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Background Jobs ({backgroundJobs.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Job Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Progress</TableHead>
+                    <TableHead>Started</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {backgroundJobs.map((job: any) => (
+                    <TableRow key={job.id}>
+                      <TableCell className="font-medium">{job.job_type}</TableCell>
+                      <TableCell>
+                        <Badge variant={job.status === 'completed' ? 'default' : job.status === 'failed' ? 'destructive' : 'secondary'}>
+                          {job.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{job.progress || 0}%</TableCell>
+                      <TableCell>{formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+
+      case 'activity':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                System Activity ({auditLogs.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Action</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Risk Level</TableHead>
+                    <TableHead>Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditLogs.map((log: any) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-medium">{log.action}</TableCell>
+                      <TableCell>{log.username || 'System'}</TableCell>
+                      <TableCell>
+                        <Badge variant={log.risk_level === 'critical' ? 'destructive' : log.risk_level === 'high' ? 'secondary' : 'default'}>
+                          {log.risk_level}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+
+      case 'billing':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Billing Events ({billingData.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Organization</TableHead>
+                    <TableHead>Event Type</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {billingData.map((event: any) => (
+                    <TableRow key={event.id}>
+                      <TableCell>{event.organization_name}</TableCell>
+                      <TableCell className="font-medium">{event.event_type}</TableCell>
+                      <TableCell>${event.amount?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>{format(new Date(event.event_date), 'MMM dd, yyyy')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+
+      case 'flags':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Flag className="h-5 w-5" />
+                Feature Flags ({featureFlags.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Flag Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Updated</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {featureFlags.map((flag: any) => (
+                    <TableRow key={flag.id}>
+                      <TableCell className="font-medium">{flag.flag_name}</TableCell>
+                      <TableCell>
+                        <Badge variant={flag.is_enabled ? 'default' : 'secondary'}>
+                          {flag.is_enabled ? 'Enabled' : 'Disabled'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{flag.description || 'No description'}</TableCell>
+                      <TableCell>{formatDistanceToNow(new Date(flag.updated_at), { addSuffix: true })}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        // Default dashboard overview
+        return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
@@ -251,7 +438,8 @@ export default function Superadmin() {
           </Card>
         </div>
       </div>
-    );
+        );
+    }
   };
 
   return (
