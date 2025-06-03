@@ -208,37 +208,40 @@ export default function TeamManagement() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Users className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Team Management</h1>
-            <p className="text-muted-foreground">Manage your organization's team members and permissions</p>
+    <div className="min-h-screen bg-soft-100 dark:bg-navy-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-electric-100 dark:bg-electric-900/20 rounded-2xl">
+              <Users className="h-8 w-8 text-electric-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-navy-900 dark:text-white">Team Management</h1>
+              <p className="text-navy-600 dark:text-navy-300">Manage your organization's team members and permissions</p>
+            </div>
           </div>
+          <Button 
+            onClick={() => setShowInviteForm(!showInviteForm)}
+            className="flex items-center gap-2 bg-electric-500 hover:bg-electric-600 text-white"
+          >
+            <UserPlus className="h-4 w-4" />
+            Invite Team Member
+          </Button>
         </div>
-        <Button 
-          onClick={() => setShowInviteForm(!showInviteForm)}
-          className="flex items-center gap-2"
-        >
-          <UserPlus className="h-4 w-4" />
-          Invite Team Member
-        </Button>
-      </div>
 
-      {/* Invite Form */}
-      {showInviteForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Invite New Team Member
-            </CardTitle>
-            <CardDescription>
-              Send an invitation to join your organization with customized permissions
-            </CardDescription>
-          </CardHeader>
+        {/* Invite Form */}
+        {showInviteForm && (
+          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-navy-900 dark:text-white">
+                <Mail className="h-5 w-5 text-electric-500" />
+                Invite New Team Member
+              </CardTitle>
+              <CardDescription className="text-navy-600 dark:text-navy-300">
+                Send an invitation to join your organization with customized permissions
+              </CardDescription>
+            </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(onInviteSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -277,8 +280,8 @@ export default function TeamManagement() {
                 <>
                   <Separator />
                   <div>
-                    <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
+                    <h4 className="text-sm font-medium mb-4 flex items-center gap-2 text-navy-900 dark:text-white">
+                      <Shield className="h-4 w-4 text-electric-500" />
                       Permissions ({selectedRole} defaults applied)
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -382,10 +385,11 @@ export default function TeamManagement() {
                   type="button" 
                   variant="outline" 
                   onClick={() => setShowInviteForm(false)}
+                  className="border-electric-300/30 text-navy-600 dark:text-navy-300 hover:bg-electric-50 dark:hover:bg-electric-900/20"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isInviting}>
+                <Button type="submit" disabled={isInviting} className="bg-electric-500 hover:bg-electric-600 text-white">
                   {isInviting ? "Sending..." : "Send Invitation"}
                 </Button>
               </div>
