@@ -185,16 +185,16 @@ export const trips = pgTable("trips", {
 // Create a custom schema that properly handles dates as strings from JSON
 export const insertTripSchema = z.object({
   title: z.string(),
-  startDate: z.string().or(z.date()).transform(val => 
+  start_date: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
   ),
-  endDate: z.string().or(z.date()).transform(val => 
+  end_date: z.string().or(z.date()).transform(val => 
     val instanceof Date ? val : new Date(val)
   ),
-  userId: z.union([z.string(), z.number()]).transform(val =>
+  user_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ),
-  organizationId: z.union([z.string(), z.number()]).transform(val =>
+  organization_id: z.union([z.string(), z.number()]).transform(val =>
     typeof val === "string" ? parseInt(val, 10) : val
   ).optional(), // Multi-tenant isolation
   collaborators: z.array(z.any()).default([]),

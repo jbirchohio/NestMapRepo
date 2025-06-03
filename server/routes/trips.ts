@@ -214,8 +214,8 @@ router.post("/", async (req: Request, res: Response) => {
   try {
     const tripData = insertTripSchema.parse({
       ...req.body,
-      userId: req.user?.id,
-      organizationId: req.user?.organization_id
+      user_id: req.user?.id,
+      organization_id: req.user?.organization_id
     });
 
     const trip = await storage.createTrip(tripData);
