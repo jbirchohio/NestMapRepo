@@ -21,7 +21,7 @@ import { z } from "zod";
 import Stripe from "stripe";
 
 const issueCardSchema = z.object({
-  user_id: z.number(),
+  user_email: z.string().email(),
   spend_limit: z.number().min(1000), // Minimum $10
   interval: z.enum(['daily', 'weekly', 'monthly', 'yearly']).default('monthly'),
   cardholder_name: z.string().min(1),
@@ -78,8 +78,21 @@ export function registerCorporateCardRoutes(app: Express): void {
           return res.status(400).json({ error: 'Organization ID required' });
         }
 
+        // Look up user by email
+        const targetUser = await storage.getUserByEmail(validatedData.user_email);
+        if (!targetUser) {
+          return res.status(404).json({ error: 'User not found with that email address' });
+        }
+
+        // Verify user belongs to same organization
+        if (targetUser.organization_id !== req.user.organization_id) {
+          return res.status(403).json({ error: 'User does not belong to your organization' });
+        }
+
+        const { user_email, ...cardData } = validatedData;
         const result = await stripeIssuingService.issueCard({
-          ...validatedData,
+          ...cardData,
+          user_id: targetUser.id,
           organization_id: req.user.organization_id,
         });
 

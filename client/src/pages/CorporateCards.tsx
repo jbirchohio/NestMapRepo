@@ -213,8 +213,8 @@ export default function CorporateCards() {
               handleIssueCard(new FormData(e.currentTarget));
             }} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="user_id">User ID</Label>
-                <Input id="user_id" name="user_id" type="number" required />
+                <Label htmlFor="user_email">User Email</Label>
+                <Input id="user_email" name="user_email" type="email" placeholder="employee@company.com" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cardholder_name">Cardholder Name</Label>

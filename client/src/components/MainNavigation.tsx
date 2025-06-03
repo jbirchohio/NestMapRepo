@@ -186,7 +186,7 @@ export default function MainNavigation() {
       label: 'Corporate Cards',
       icon: CreditCard,
       active: location === '/corporate-cards',
-      show: true, // Always show for now
+      show: hasBillingAccess,
       badge: 'New'
     },
     {
