@@ -111,23 +111,31 @@ export default function AnalyticsDashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-white via-electric-50/30 to-electric-100/50 dark:from-dark-900 dark:via-electric-900/10 dark:to-electric-800/20 p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-electric-600 via-electric-500 to-electric-700 bg-clip-text text-transparent">Analytics Dashboard</h1>
         </div>
-        <div className="text-center py-12">Loading analytics...</div>
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin w-8 h-8 border-4 border-electric-500 border-t-transparent rounded-full" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-white via-electric-50/30 to-electric-100/50 dark:from-dark-900 dark:via-electric-900/10 dark:to-electric-800/20 p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-electric-600 via-electric-500 to-electric-700 bg-clip-text text-transparent">Analytics Dashboard</h1>
         </div>
         <div className="text-center py-12">
-          <p className="text-red-600">Error loading analytics data</p>
+          <div className="max-w-md mx-auto">
+            <div className="h-16 w-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <TrendingUp className="h-8 w-8 text-red-500" />
+            </div>
+            <h3 className="text-xl font-semibold text-electric-900 dark:text-electric-100 mb-2">Error Loading Analytics</h3>
+            <p className="text-electric-600 dark:text-electric-400">Unable to load analytics data. Please try again later.</p>
+          </div>
         </div>
       </div>
     );
@@ -152,79 +160,93 @@ export default function AnalyticsDashboard() {
   }));
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-white via-electric-50/30 to-electric-100/50 dark:from-dark-900 dark:via-electric-900/10 dark:to-electric-800/20 p-6 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
-          <p className="text-muted-foreground">Platform insights and user engagement metrics</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 via-electric-500 to-electric-700 bg-clip-text text-transparent mb-2">Analytics Dashboard</h1>
+          <p className="text-electric-600 dark:text-electric-400 text-lg">Platform insights and user engagement metrics</p>
         </div>
-        <Button onClick={handleExportCSV} variant="outline">
+        <Button 
+          onClick={handleExportCSV} 
+          variant="outline" 
+          className="border-electric-300 text-electric-700 hover:bg-electric-50 dark:border-electric-600 dark:text-electric-300 dark:hover:bg-electric-900/20 transition-all duration-200"
+        >
           <Download className="h-4 w-4 mr-2" />
           Export CSV
         </Button>
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Trips</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Total Trips</CardTitle>
+            <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+              <MapPin className="h-4 w-4 text-electric-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.overview.totalTrips}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.overview.totalTrips}</div>
+            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">
               {analytics.recentActivity.newTripsLast7Days} new this week
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Total Users</CardTitle>
+            <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+              <Users className="h-4 w-4 text-electric-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.overview.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.overview.totalUsers}</div>
+            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">
               {analytics.recentActivity.newUsersLast7Days} new this week
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Activities</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Activities</CardTitle>
+            <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+              <Activity className="h-4 w-4 text-electric-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.overview.totalActivities}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.overview.totalActivities}</div>
+            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">
               Avg {analytics.overview.averageActivitiesPerTrip} per trip
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Trip Length</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Avg Trip Length</CardTitle>
+            <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+              <Calendar className="h-4 w-4 text-electric-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.overview.averageTripLength}</div>
-            <p className="text-xs text-muted-foreground">days</p>
+            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.overview.averageTripLength}</div>
+            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">days</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Trip Completion</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Trip Completion</CardTitle>
+            <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-electric-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.userEngagement.tripCompletionRate || 0}%</div>
-            <p className="text-xs text-muted-foreground">trips completed</p>
+            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.userEngagement.tripCompletionRate || 0}%</div>
+            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">trips completed</p>
           </CardContent>
         </Card>
       </div>

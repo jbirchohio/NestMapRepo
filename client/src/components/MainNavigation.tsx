@@ -27,7 +27,9 @@ import { AnimatedCard } from '@/components/ui/animated-card';
 import { motion } from 'framer-motion';
 import { 
   Home, 
-  BarChart3, 
+  BarChart3,
+  Menu,
+  X, 
   Plane, 
   Brain, 
   Settings, 
@@ -41,9 +43,7 @@ import {
   UserCircle,
   Edit3,
   Key,
-  HelpCircle,
-  Menu,
-  X
+  HelpCircle
 } from 'lucide-react';
 
 export default function MainNavigation() {
@@ -289,45 +289,20 @@ export default function MainNavigation() {
 
 
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
-            {navigationItems.filter(item => item.show).map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <motion.div
-                  key={item.path}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Link href={item.path}>
-                    <Button
-                      variant={item.active ? "default" : "ghost"}
-                      size="sm"
-                      className={`flex items-center gap-2 transition-all duration-200 ${
-                        item.active 
-                          ? 'bg-electric-500 hover:bg-electric-600 text-white shadow-lg shadow-electric-500/25' 
-                          : 'hover:bg-electric-50 dark:hover:bg-electric-900/20 text-gray-700 dark:text-gray-300 hover:text-electric-600 dark:hover:text-electric-400'
-                      }`}
-                    >
-                      <IconComponent className={`h-4 w-4 ${item.active ? 'text-white' : ''}`} />
-                      <span className="hidden lg:inline">{item.label}</span>
-                      {item.badge && (
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs ${
-                            item.active 
-                              ? 'bg-white/20 text-white border-white/30' 
-                              : 'bg-electric-100 text-electric-700 border-electric-200'
-                          }`}
-                        >
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </Button>
-                  </Link>
-                </motion.div>
-              );
-            })}
+          {/* Mobile Menu Button */}
+          <div className="flex md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
           </div>
 
           {/* User Section */}
@@ -438,6 +413,53 @@ export default function MainNavigation() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
+          className="md:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-dark-800/95 backdrop-blur-md border-b border-electric-200/50 dark:border-electric-700/50 shadow-lg z-50"
+        >
+          <div className="container mx-auto px-4 py-4">
+            <div className="space-y-2">
+              {navigationItems.filter(item => item.show).map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Link key={item.path} href={item.path}>
+                    <Button
+                      variant={item.active ? "default" : "ghost"}
+                      className={`w-full justify-start gap-3 py-3 transition-all duration-200 ${
+                        item.active 
+                          ? 'bg-electric-500 hover:bg-electric-600 text-white shadow-lg shadow-electric-500/25' 
+                          : 'hover:bg-electric-50 dark:hover:bg-electric-900/20 text-gray-700 dark:text-gray-300 hover:text-electric-600 dark:hover:text-electric-400'
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <IconComponent className={`h-5 w-5 ${item.active ? 'text-white' : ''}`} />
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <Badge 
+                          variant="secondary" 
+                          className={`ml-auto text-xs ${
+                            item.active 
+                              ? 'bg-white/20 text-white border-white/30' 
+                              : 'bg-electric-100 text-electric-700 border-electric-200'
+                          }`}
+                        >
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
+      )}
     </motion.nav>
   );
 }
