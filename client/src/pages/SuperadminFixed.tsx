@@ -107,7 +107,7 @@ export default function Superadmin() {
                         {org.subscription_status || 'inactive'}
                       </Badge>
                     </TableCell>
-                    <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>{org.created_at ? format(new Date(org.created_at), 'MMM dd, yyyy') : 'Unknown'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -152,7 +152,7 @@ export default function Superadmin() {
                     </TableCell>
                     <TableCell>{user.organization_name || 'None'}</TableCell>
                     <TableCell>
-                      {user.last_login ? formatDistanceToNow(new Date(user.last_login), { addSuffix: true }) : 'Never'}
+                      {user.last_login && !isNaN(new Date(user.last_login).getTime()) ? formatDistanceToNow(new Date(user.last_login), { addSuffix: true }) : 'Never'}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -193,7 +193,7 @@ export default function Superadmin() {
                     </TableCell>
                     <TableCell>{session.ip_address || 'Unknown'}</TableCell>
                     <TableCell className="truncate max-w-xs">{session.user_agent || 'Unknown'}</TableCell>
-                    <TableCell>{formatDistanceToNow(new Date(session.created_at), { addSuffix: true })}</TableCell>
+                    <TableCell>{session.created_at && !isNaN(new Date(session.created_at).getTime()) ? formatDistanceToNow(new Date(session.created_at), { addSuffix: true }) : 'Unknown'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -232,7 +232,7 @@ export default function Superadmin() {
                       </Badge>
                     </TableCell>
                     <TableCell>{job.progress || 0}%</TableCell>
-                    <TableCell>{formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}</TableCell>
+                    <TableCell>{job.created_at && !isNaN(new Date(job.created_at).getTime()) ? formatDistanceToNow(new Date(job.created_at), { addSuffix: true }) : 'Unknown'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -271,7 +271,7 @@ export default function Superadmin() {
                         {log.risk_level}
                       </Badge>
                     </TableCell>
-                    <TableCell>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}</TableCell>
+                    <TableCell>{log.created_at && !isNaN(new Date(log.created_at).getTime()) ? formatDistanceToNow(new Date(log.created_at), { addSuffix: true }) : 'Unknown'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -306,7 +306,7 @@ export default function Superadmin() {
                     <TableCell>{event.organization_name}</TableCell>
                     <TableCell className="font-medium">{event.event_type}</TableCell>
                     <TableCell>${event.amount?.toFixed(2) || '0.00'}</TableCell>
-                    <TableCell>{format(new Date(event.event_date), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>{event.event_date && !isNaN(new Date(event.event_date).getTime()) ? format(new Date(event.event_date), 'MMM dd, yyyy') : 'Unknown'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -345,7 +345,7 @@ export default function Superadmin() {
                       </Badge>
                     </TableCell>
                     <TableCell>{flag.description || 'No description'}</TableCell>
-                    <TableCell>{formatDistanceToNow(new Date(flag.updated_at), { addSuffix: true })}</TableCell>
+                    <TableCell>{flag.updated_at && !isNaN(new Date(flag.updated_at).getTime()) ? formatDistanceToNow(new Date(flag.updated_at), { addSuffix: true }) : 'Unknown'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
