@@ -1,13 +1,14 @@
 import Stripe from 'stripe';
 import { storage } from '../storage';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required environment variable: STRIPE_SECRET_KEY');
-}
+// Stripe will be initialized when API keys are provided
+let stripe: Stripe | null = null;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2023-10-16' as any,
+  });
+}
 
 export interface CardIssuanceRequest {
   user_id: number;
@@ -34,6 +35,10 @@ export class StripeIssuingService {
    * Issue a new virtual corporate card
    */
   async issueCard(request: CardIssuanceRequest) {
+    if (!stripe) {
+      throw new Error('Stripe not configured. Please provide STRIPE_SECRET_KEY environment variable.');
+    }
+    
     try {
       // Create cardholder in Stripe
       const cardholder = await stripe.issuing.cardholders.create({

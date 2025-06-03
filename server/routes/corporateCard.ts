@@ -1,8 +1,22 @@
 import type { Express } from "express";
 import { stripeIssuingService } from "../services/stripeIssuingService";
 import { storage } from "../storage";
-import { requireAuth } from "../middleware/auth";
-import { checkPermissions } from "../middleware/permissions";
+// Using unified auth from existing middleware
+const requireAuth = (req: any, res: any, next: any) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  next();
+};
+
+const checkPermissions = (permissions: string[]) => {
+  return (req: any, res: any, next: any) => {
+    if (!req.user?.permissions?.some((p: string) => permissions.includes(p))) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+    next();
+  };
+};
 import { z } from "zod";
 import Stripe from "stripe";
 

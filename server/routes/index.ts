@@ -12,6 +12,7 @@ import bookingRoutes from './bookings';
 import approvalRoutes from './approvals';
 import expenseRoutes from './expenses';
 import reportingRoutes from './reporting';
+import { registerCorporateCardRoutes } from './corporateCard';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -30,6 +31,9 @@ router.use('/bookings', bookingRoutes);
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
+
+// Register corporate card routes directly in the main router
+registerCorporateCardRoutes(router as any);
 
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {

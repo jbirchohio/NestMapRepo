@@ -28,6 +28,7 @@ import HelpCenter from "@/pages/HelpCenter";
 import CalendarSettings from "@/pages/CalendarSettings";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
+import CorporateCards from "@/pages/CorporateCards";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -57,6 +58,7 @@ function Router() {
         <Route path="/calendar" component={CalendarSettings} />
         <Route path="/white-label" component={WhiteLabelSettings} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/corporate-cards" component={CorporateCards} />
         <Route component={NotFound} />
       </Switch>
     </>
