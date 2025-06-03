@@ -127,10 +127,122 @@ export class DuffelProvider {
     rooms: number;
     guests: number;
   }) {
-    // Duffel doesn't have hotels API, so we'll return empty results
-    // In a real implementation, you'd integrate with a hotel provider
-    console.log('Duffel hotel search not available - Duffel focuses on flights');
-    return { hotels: [] };
+    if (!this.apiKey) {
+      throw new Error('Duffel API key not configured. Please provide API key.');
+    }
+
+    // First, we need to geocode the destination to get coordinates
+    // For now, using approximate coordinates for major cities
+    const cityCoordinates = this.getCityCoordinates(params.destination);
+    
+    const searchParams = {
+      data: {
+        check_in_date: params.checkin,
+        check_out_date: params.checkout,
+        location: {
+          radius: 10,
+          geographic_coordinates: cityCoordinates
+        },
+        rooms: params.rooms,
+        guests: Array(params.guests).fill(0).map(() => ({ type: 'adult' }))
+      }
+    };
+
+    console.log('Duffel hotel search for:', params.destination, 'from', params.checkin, 'to', params.checkout);
+
+    try {
+      const response = await fetch(`${this.baseUrl}/stays/search`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'Duffel-Version': 'v2'
+        },
+        body: JSON.stringify(searchParams)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Duffel Stays API error:', response.status, errorText);
+        throw new Error(`Duffel Stays API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Duffel hotel search response:', {
+        searchId: data.data?.id,
+        resultsCount: data.data?.search_results?.length || 0,
+        status: response.status
+      });
+
+      return this.transformHotelResults(data);
+    } catch (error) {
+      console.error('Error fetching hotels from Duffel:', error);
+      throw error;
+    }
+  }
+
+  private getCityCoordinates(destination: string): { latitude: number; longitude: number } {
+    // Basic city coordinate mapping - in production you'd use a geocoding service
+    const cityMap: Record<string, { latitude: number; longitude: number }> = {
+      'San Francisco': { latitude: 37.7749, longitude: -122.4194 },
+      'New York': { latitude: 40.7128, longitude: -74.0060 },
+      'Los Angeles': { latitude: 34.0522, longitude: -118.2437 },
+      'Chicago': { latitude: 41.8781, longitude: -87.6298 },
+      'London': { latitude: 51.5074, longitude: -0.1278 },
+      'Paris': { latitude: 48.8566, longitude: 2.3522 },
+      'Tokyo': { latitude: 35.6762, longitude: 139.6503 },
+      'Berlin': { latitude: 52.5200, longitude: 13.4050 },
+      'Madrid': { latitude: 40.4168, longitude: -3.7038 },
+      'Rome': { latitude: 41.9028, longitude: 12.4964 }
+    };
+
+    // Extract city name from destination string
+    const cityKey = Object.keys(cityMap).find(city => 
+      destination.toLowerCase().includes(city.toLowerCase())
+    );
+
+    return cityKey ? cityMap[cityKey] : { latitude: 37.7749, longitude: -122.4194 }; // Default to SF
+  }
+
+  private transformHotelResults(data: any) {
+    if (!data.data?.search_results || !Array.isArray(data.data.search_results)) {
+      return { hotels: [] };
+    }
+
+    const hotels = data.data.search_results.map((result: any, index: number) => {
+      const accommodation = result.accommodation;
+      const location = accommodation?.location;
+      
+      return {
+        id: `duffel-hotel-${result.id || index}`,
+        name: accommodation?.name || 'Hotel',
+        starRating: accommodation?.star_rating || 0,
+        rating: {
+          score: accommodation?.guest_rating || 0,
+          reviews: accommodation?.review_count || 0
+        },
+        price: {
+          amount: Math.round(parseFloat(result.cheapest_rate_total_amount) || 0),
+          currency: result.cheapest_rate_total_currency || 'USD',
+          per: 'stay'
+        },
+        address: location?.address || '',
+        location: {
+          latitude: location?.geographic_coordinates?.latitude || 0,
+          longitude: location?.geographic_coordinates?.longitude || 0
+        },
+        amenities: accommodation?.amenities?.map((a: any) => a.name) || [],
+        images: accommodation?.photos?.map((photo: any) => photo.url) || [],
+        description: accommodation?.description || '',
+        checkIn: data.data.check_in_date,
+        checkOut: data.data.check_out_date,
+        cancellation: 'Varies by rate',
+        searchResultId: result.id,
+        ratesAvailable: result.rates?.length || 0
+      };
+    });
+
+    return { hotels };
   }
 
   async searchCars(params: {
@@ -264,6 +376,96 @@ export class DuffelProvider {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Booking failed'
+      };
+    }
+  }
+
+  async bookHotel(params: {
+    searchResultId: string;
+    rateId: string;
+    guests: Array<{
+      given_name: string;
+      family_name: string;
+      born_on: string;
+    }>;
+    email: string;
+    phone_number: string;
+    special_requests?: string;
+  }) {
+    if (!this.apiKey) {
+      throw new Error('Duffel API key not configured. Please provide API key.');
+    }
+
+    try {
+      // First, create a quote for the selected rate
+      const quoteResponse = await fetch(`${this.baseUrl}/stays/quotes`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'Duffel-Version': 'v2'
+        },
+        body: JSON.stringify({
+          data: {
+            rate_id: params.rateId
+          }
+        })
+      });
+
+      if (!quoteResponse.ok) {
+        throw new Error(`Quote creation failed: ${quoteResponse.status} ${quoteResponse.statusText}`);
+      }
+
+      const quoteData = await quoteResponse.json();
+      const quoteId = quoteData.data.id;
+
+      // Then create the booking using the quote
+      const bookingData = {
+        data: {
+          quote_id: quoteId,
+          guests: params.guests,
+          email: params.email,
+          phone_number: params.phone_number,
+          ...(params.special_requests && { stay_special_requests: params.special_requests })
+        }
+      };
+
+      const bookingResponse = await fetch(`${this.baseUrl}/stays/bookings`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'Duffel-Version': 'v2'
+        },
+        body: JSON.stringify(bookingData)
+      });
+
+      if (!bookingResponse.ok) {
+        throw new Error(`Hotel booking failed: ${bookingResponse.status} ${bookingResponse.statusText}`);
+      }
+
+      const booking = await bookingResponse.json();
+      
+      return {
+        success: true,
+        bookingReference: booking.data.reference,
+        confirmationNumber: booking.data.reference,
+        status: 'confirmed',
+        bookingDetails: {
+          id: booking.data.id,
+          reference: booking.data.reference,
+          status: booking.data.status,
+          total_amount: booking.data.total_amount,
+          total_currency: booking.data.total_currency,
+          check_in_date: booking.data.check_in_date,
+          check_out_date: booking.data.check_out_date
+        }
+      };
+    } catch (error) {
+      console.error('Error booking hotel:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Hotel booking failed'
       };
     }
   }
