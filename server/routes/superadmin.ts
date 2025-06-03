@@ -1,20 +1,20 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { z } from 'zod';
-import { authenticateUser } from '../auth';
+import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
 
 const router = Router();
 
-// Strict superadmin authentication
+// Apply unified authentication first
+router.use(unifiedAuthMiddleware);
+
+// Strict superadmin role check
 router.use(async (req: any, res, next) => {
   try {
-    // First authenticate the user
-    const authResult = await authenticateUser(req, res);
-    if (!authResult || !authResult.id) {
+    // User is already authenticated by unifiedAuthMiddleware
+    if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
-
-    req.user = authResult;
 
     // Check if user has superadmin role
     if (req.user.role !== 'superadmin') {
