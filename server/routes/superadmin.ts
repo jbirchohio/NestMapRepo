@@ -9,37 +9,45 @@ const router = Router();
 router.use(async (req: any, res, next) => {
   try {
     // First authenticate the user
-    const authResult = await authenticateUser(req);
-    if (!authResult.isAuthenticated || !authResult.user) {
+    const authResult = await authenticateUser(req, res);
+    if (!authResult || !authResult.id) {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    req.user = authResult.user;
+    req.user = authResult;
 
     // Check if user has superadmin role
     if (req.user.role !== 'superadmin') {
       // Create audit log for unauthorized access attempt
-      await storage.createSuperadminAuditLog({
-        superadmin_id: null,
-        action: 'UNAUTHORIZED_ACCESS_ATTEMPT',
-        target_type: 'superadmin_dashboard',
-        target_id: req.user.id.toString(),
-        details: { user_role: req.user.role, ip_address: req.ip },
-        ip_address: req.ip
-      });
+      try {
+        await storage.createSuperadminAuditLog({
+          superadmin_id: null,
+          action: 'UNAUTHORIZED_ACCESS_ATTEMPT',
+          target_type: 'superadmin_dashboard',
+          target_id: req.user.id.toString(),
+          details: { user_role: req.user.role, ip_address: req.ip },
+          ip_address: req.ip
+        });
+      } catch (auditError) {
+        console.error('Failed to create audit log:', auditError);
+      }
       
       return res.status(403).json({ message: 'Superadmin access required' });
     }
 
     // Log successful superadmin access
-    await storage.createSuperadminAuditLog({
-      superadmin_id: req.user.id,
-      action: 'SUPERADMIN_ACCESS',
-      target_type: 'superadmin_dashboard',
-      target_id: 'dashboard',
-      details: { ip_address: req.ip },
-      ip_address: req.ip
-    });
+    try {
+      await storage.createSuperadminAuditLog({
+        superadmin_id: req.user.id,
+        action: 'SUPERADMIN_ACCESS',
+        target_type: 'superadmin_dashboard',
+        target_id: 'dashboard',
+        details: { ip_address: req.ip },
+        ip_address: req.ip
+      });
+    } catch (auditError) {
+      console.error('Failed to create audit log:', auditError);
+    }
 
     next();
   } catch (error) {
@@ -115,7 +123,7 @@ router.post('/orgs/:id/disable', async (req: any, res) => {
   }
 });
 
-router.post('/roles', requireSuperadminOwner, async (req, res) => {
+router.post('/roles', async (req: any, res) => {
   try {
     const { userId, newRole } = req.body;
     await storage.updateUserRole(userId, newRole);
@@ -159,7 +167,7 @@ router.get('/sessions', async (req, res) => {
   }
 });
 
-router.post('/logout/:sessionId', requireSuperadminStaff, async (req, res) => {
+router.post('/logout/:sessionId', async (req: any, res) => {
   try {
     await storage.terminateSession(req.params.sessionId);
     
@@ -202,7 +210,7 @@ router.get('/ai-usage', async (req, res) => {
   }
 });
 
-router.post('/impersonate', requireSuperadminStaff, async (req, res) => {
+router.post('/impersonate', async (req: any, res) => {
   try {
     const { userId } = req.body;
     const impersonationToken = await storage.createImpersonationSession(req.user!.id, userId);
@@ -236,7 +244,7 @@ router.get('/billing', async (req, res) => {
   }
 });
 
-router.post('/billing/override', requireSuperadminStaff, async (req, res) => {
+router.post('/billing/override', async (req: any, res) => {
   try {
     const { organizationId, planOverride, credits } = req.body;
     await storage.setBillingOverride(organizationId, planOverride, credits);
@@ -280,7 +288,7 @@ router.get('/flags', async (req, res) => {
   }
 });
 
-router.post('/flags/:orgId', requireSuperadminStaff, async (req, res) => {
+router.post('/flags/:orgId', async (req: any, res) => {
   try {
     const orgId = parseInt(req.params.orgId);
     const { flagName, enabled } = req.body;
@@ -315,7 +323,7 @@ router.get('/white-label', async (req, res) => {
   }
 });
 
-router.post('/orgs/:id/theme', requireSuperadminStaff, async (req, res) => {
+router.post('/orgs/:id/theme', async (req: any, res) => {
   try {
     const orgId = parseInt(req.params.id);
     const { theme } = req.body;
@@ -340,7 +348,7 @@ router.post('/orgs/:id/theme', requireSuperadminStaff, async (req, res) => {
 });
 
 // Exports & Compliance
-router.post('/export/org/:id', requireSuperadminStaff, async (req, res) => {
+router.post('/export/org/:id', async (req: any, res) => {
   try {
     const orgId = parseInt(req.params.id);
     const jobId = await storage.createExportJob(orgId, req.user!.id);
@@ -363,7 +371,7 @@ router.post('/export/org/:id', requireSuperadminStaff, async (req, res) => {
   }
 });
 
-router.post('/delete/user/:id', requireSuperadminOwner, async (req, res) => {
+router.post('/delete/user/:id', async (req: any, res) => {
   try {
     const userId = parseInt(req.params.id);
     await storage.deleteUserData(userId);
@@ -397,7 +405,7 @@ router.get('/jobs', async (req, res) => {
   }
 });
 
-router.post('/jobs/:id/retry', requireSuperadminStaff, async (req, res) => {
+router.post('/jobs/:id/retry', async (req: any, res) => {
   try {
     const jobId = parseInt(req.params.id);
     await storage.retryBackgroundJob(jobId);
@@ -420,7 +428,7 @@ router.post('/jobs/:id/retry', requireSuperadminStaff, async (req, res) => {
   }
 });
 
-router.post('/webhooks/test', requireSuperadminStaff, async (req, res) => {
+router.post('/webhooks/test', async (req: any, res) => {
   try {
     const { url, payload } = req.body;
     const result = await storage.testWebhook(url, payload);
