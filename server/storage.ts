@@ -1303,9 +1303,9 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
         subscription_status: organizations.subscription_status,
         employee_count: organizations.employee_count,
         created_at: organizations.created_at,
-        userCount: sql<number>`(SELECT COUNT(*)::int FROM ${users} WHERE organization_id = ${organizations.id})`,
-        tripCount: sql<number>`(SELECT COUNT(*)::int FROM ${trips} WHERE organization_id = ${organizations.id})`,
-        lastActivity: sql<string>`(SELECT MAX(created_at)::text FROM ${trips} WHERE organization_id = ${organizations.id})`
+        userCount: sql<number>`(SELECT COUNT(*)::int FROM ${users} WHERE organization_id = ${organizations.id}::int)`,
+        tripCount: sql<number>`(SELECT COUNT(*)::int FROM ${trips} WHERE organization_id = ${organizations.id}::int)`,
+        lastActivity: sql<string>`(SELECT MAX(created_at)::text FROM ${trips} WHERE organization_id = ${organizations.id}::int)`
       })
       .from(organizations)
       .orderBy(desc(organizations.created_at));
