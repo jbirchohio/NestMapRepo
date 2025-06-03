@@ -126,12 +126,18 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   // Company setup mutation
   const companyMutation = useMutation({
     mutationFn: async (data: typeof wizardData.company) => {
-      return await apiRequest('PUT', `/api/organizations/${userId}`, data);
+      // Create or update organization
+      return await apiRequest('POST', '/api/organizations', {
+        name: data.name,
+        industry: data.industry,
+        company_size: data.size,
+        description: data.description
+      });
     },
     onSuccess: () => {
       toast({
-        title: "Company profile updated",
-        description: "Your organization details have been saved.",
+        title: "Company profile created",
+        description: "Your organization has been set up successfully.",
       });
     }
   });
@@ -140,9 +146,9 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   const inviteMutation = useMutation({
     mutationFn: async (invites: typeof wizardData.teamInvites) => {
       const promises = invites.map(invite => 
-        apiRequest('POST', `/api/organizations/${userId}/invite`, {
+        apiRequest('POST', '/api/team/invite', {
           email: invite.email,
-          org_role: invite.role,
+          role: invite.role,
           name: invite.name
         })
       );
