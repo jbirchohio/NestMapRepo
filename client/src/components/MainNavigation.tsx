@@ -22,6 +22,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import NotificationCenter from '@/components/NotificationCenter';
+import { PrimaryButton } from '@/components/ui/primary-button';
+import { AnimatedCard } from '@/components/ui/animated-card';
+import { motion } from 'framer-motion';
 import { 
   Home, 
   BarChart3, 
@@ -200,21 +203,31 @@ export default function MainNavigation() {
   ];
 
   return (
-    <nav className="border-b bg-white dark:bg-slate-900 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <motion.nav 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="border-b border-electric-200/20 bg-white/80 dark:bg-dark-800/80 backdrop-blur-xl sticky top-0 z-50"
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-electric-500/5 via-transparent to-electric-400/5" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between min-h-[4rem] py-2">
           {/* Mobile hamburger menu */}
           <div className="flex items-center gap-4">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="md:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button variant="ghost" size="sm" className="md:hidden hover:bg-electric-50 dark:hover:bg-electric-900/20">
+                    <Menu className="h-5 w-5 text-electric-600 dark:text-electric-400" />
+                  </Button>
+                </motion.div>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+              <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-white dark:bg-dark-800 border-electric-200/30">
                 <SheetHeader>
-                  <SheetTitle className="text-left">Navigation</SheetTitle>
-                  <SheetDescription className="text-left">
+                  <SheetTitle className="text-left text-electric-900 dark:text-electric-100">Navigation</SheetTitle>
+                  <SheetDescription className="text-left text-electric-600 dark:text-electric-400">
                     {roleType === 'agency' ? 'Client Travel Management' : 'Company Travel Management'}
                   </SheetDescription>
                 </SheetHeader>
@@ -222,26 +235,31 @@ export default function MainNavigation() {
                   {navigationItems.filter(item => item.show).map((item) => {
                     const IconComponent = item.icon;
                     return (
-                      <Link 
-                        key={item.path} 
-                        href={item.path}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
-                          item.active 
-                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
-                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                        }`}
+                      <motion.div
+                        key={item.path}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex items-center gap-3">
-                          <IconComponent className="h-5 w-5" />
-                          <span className="font-medium">{item.label}</span>
-                        </div>
-                        {item.badge && (
-                          <Badge variant="secondary" className="text-xs">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
+                        <Link 
+                          href={item.path}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
+                            item.active 
+                              ? 'bg-electric-100 dark:bg-electric-900/30 text-electric-700 dark:text-electric-300 border border-electric-200 dark:border-electric-700' 
+                              : 'hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <IconComponent className={`h-5 w-5 ${item.active ? 'text-electric-600 dark:text-electric-400' : ''}`} />
+                            <span className="font-medium">{item.label}</span>
+                          </div>
+                          {item.badge && (
+                            <Badge variant="secondary" className="text-xs bg-electric-100 text-electric-700 border-electric-200">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Link>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -249,19 +267,24 @@ export default function MainNavigation() {
             </Sheet>
 
             {/* Logo/Brand Section */}
-            <Link href={getRoleBasedDashboardPath()} className="flex items-center gap-2 flex-shrink-0">
-              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">N</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-xl text-slate-900 dark:text-slate-100">
-                  NestMap
-                </span>
-                <span className="text-xs text-muted-foreground -mt-1 hidden sm:block">
-                  {roleType === 'agency' ? 'Client Travel Proposals' : 'Company Travel Management'}
-                </span>
-              </div>
-            </Link>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Link href={getRoleBasedDashboardPath()} className="flex items-center gap-2 flex-shrink-0">
+                <div className="h-8 w-8 bg-gradient-to-br from-electric-500 to-electric-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-sm">N</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-bold text-xl bg-gradient-to-r from-electric-600 to-electric-500 bg-clip-text text-transparent dark:from-electric-400 dark:to-electric-300">
+                    NestMap
+                  </span>
+                  <span className="text-xs text-electric-600/70 dark:text-electric-400/70 -mt-1 hidden sm:block">
+                    {roleType === 'agency' ? 'Client Travel Proposals' : 'Company Travel Management'}
+                  </span>
+                </div>
+              </Link>
+            </motion.div>
           </div>
 
 
@@ -369,6 +392,6 @@ export default function MainNavigation() {
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
