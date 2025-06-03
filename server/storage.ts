@@ -7,10 +7,14 @@ import {
   invitations, type Invitation, type InsertInvitation,
   tripTravelers, type TripTraveler, type InsertTripTraveler,
   organizations,
+  corporateCards,
+  expenses,
+  cardTransactions,
+  expenseApprovals,
   transformTripToFrontend, transformActivityToFrontend
 } from "@shared/schema";
 
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -1023,7 +1027,236 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
     const result = await db
       .delete(tripTravelers)
       .where(eq(tripTravelers.id, travelerId));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Corporate Card operations
+  async createCorporateCard(card: any) {
+    const [result] = await db.insert(corporateCards).values(card).returning();
+    return result;
+  }
+
+  async getCorporateCard(id: number) {
+    const [result] = await db
+      .select()
+      .from(corporateCards)
+      .where(eq(corporateCards.id, id));
+    return result;
+  }
+
+  async getCorporateCardByStripeId(stripeCardId: string) {
+    const [result] = await db
+      .select()
+      .from(corporateCards)
+      .where(eq(corporateCards.stripe_card_id, stripeCardId));
+    return result;
+  }
+
+  async getCorporateCardsByOrganization(organizationId: number) {
+    return await db
+      .select({
+        ...corporateCards,
+        user: {
+          id: users.id,
+          username: users.username,
+          email: users.email,
+        }
+      })
+      .from(corporateCards)
+      .leftJoin(users, eq(corporateCards.user_id, users.id))
+      .where(eq(corporateCards.organization_id, organizationId))
+      .orderBy(desc(corporateCards.created_at));
+  }
+
+  async getCorporateCardsByUser(userId: number) {
+    return await db
+      .select()
+      .from(corporateCards)
+      .where(eq(corporateCards.user_id, userId))
+      .orderBy(desc(corporateCards.created_at));
+  }
+
+  async updateCorporateCard(id: number, updates: any) {
+    const [result] = await db
+      .update(corporateCards)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(corporateCards.id, id))
+      .returning();
+    return result;
+  }
+
+  // Card Transaction operations
+  async createCardTransaction(transaction: any) {
+    const [result] = await db.insert(cardTransactions).values(transaction).returning();
+    return result;
+  }
+
+  async upsertCardTransaction(transaction: any) {
+    const existing = await db
+      .select()
+      .from(cardTransactions)
+      .where(eq(cardTransactions.transaction_id, transaction.transaction_id));
+
+    if (existing.length > 0) {
+      const [result] = await db
+        .update(cardTransactions)
+        .set({ ...transaction, updated_at: new Date() })
+        .where(eq(cardTransactions.transaction_id, transaction.transaction_id))
+        .returning();
+      return result;
+    } else {
+      const [result] = await db.insert(cardTransactions).values(transaction).returning();
+      return result;
+    }
+  }
+
+  async updateCardTransactionByStripeId(stripeTransactionId: string, updates: any) {
+    const [result] = await db
+      .update(cardTransactions)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(cardTransactions.transaction_id, stripeTransactionId))
+      .returning();
+    return result;
+  }
+
+  async getCardTransactions(cardId: number, limit: number = 50, offset: number = 0) {
+    return await db
+      .select({
+        ...cardTransactions,
+        card: {
+          card_number_masked: corporateCards.card_number_masked,
+          cardholder_name: corporateCards.cardholder_name,
+        }
+      })
+      .from(cardTransactions)
+      .leftJoin(corporateCards, eq(cardTransactions.card_id, corporateCards.id))
+      .where(eq(cardTransactions.card_id, cardId))
+      .orderBy(desc(cardTransactions.processed_at))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  // Expense operations
+  async createExpense(expense: any) {
+    const [result] = await db.insert(expenses).values(expense).returning();
+    return result;
+  }
+
+  async updateExpense(id: number, updates: any) {
+    const [result] = await db
+      .update(expenses)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(expenses.id, id))
+      .returning();
+    return result;
+  }
+
+  async getExpenses(filters: any) {
+    let query = db
+      .select({
+        ...expenses,
+        user: {
+          id: users.id,
+          username: users.username,
+          email: users.email,
+        },
+        card: {
+          id: corporateCards.id,
+          card_number_masked: corporateCards.card_number_masked,
+          cardholder_name: corporateCards.cardholder_name,
+        }
+      })
+      .from(expenses)
+      .leftJoin(users, eq(expenses.user_id, users.id))
+      .leftJoin(corporateCards, eq(expenses.card_id, corporateCards.id));
+
+    const conditions = [];
+    
+    if (filters.organization_id) {
+      conditions.push(eq(expenses.organization_id, filters.organization_id));
+    }
+    
+    if (filters.user_id) {
+      conditions.push(eq(expenses.user_id, filters.user_id));
+    }
+    
+    if (filters.status) {
+      conditions.push(eq(expenses.status, filters.status));
+    }
+    
+    if (filters.category) {
+      conditions.push(eq(expenses.expense_category, filters.category));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    return await query
+      .orderBy(desc(expenses.created_at))
+      .limit(filters.limit || 50)
+      .offset(filters.offset || 0);
+  }
+
+  // Expense Approval operations
+  async createExpenseApproval(approval: any) {
+    const [result] = await db.insert(expenseApprovals).values(approval).returning();
+    return result;
+  }
+
+  // Analytics operations
+  async getSpendingAnalytics(filters: any) {
+    const { organization_id, start_date, end_date } = filters;
+    
+    // Get total spending
+    const totalSpendingQuery = db
+      .select({
+        total: sql<number>`COALESCE(SUM(${expenses.amount}), 0)`,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(expenses)
+      .where(eq(expenses.organization_id, organization_id));
+
+    if (start_date) {
+      totalSpendingQuery.where(gte(expenses.transaction_date, start_date));
+    }
+    if (end_date) {
+      totalSpendingQuery.where(lte(expenses.transaction_date, end_date));
+    }
+
+    const [totalSpending] = await totalSpendingQuery;
+
+    // Get spending by category
+    const categorySpending = await db
+      .select({
+        category: expenses.expense_category,
+        total: sql<number>`COALESCE(SUM(${expenses.amount}), 0)`,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(expenses)
+      .where(eq(expenses.organization_id, organization_id))
+      .groupBy(expenses.expense_category)
+      .orderBy(desc(sql`SUM(${expenses.amount})`));
+
+    // Get spending by user
+    const userSpending = await db
+      .select({
+        user_id: expenses.user_id,
+        username: users.username,
+        total: sql<number>`COALESCE(SUM(${expenses.amount}), 0)`,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(expenses)
+      .leftJoin(users, eq(expenses.user_id, users.id))
+      .where(eq(expenses.organization_id, organization_id))
+      .groupBy(expenses.user_id, users.username)
+      .orderBy(desc(sql`SUM(${expenses.amount})`));
+
+    return {
+      total_spending: totalSpending,
+      category_breakdown: categorySpending,
+      user_breakdown: userSpending,
+    };
   }
 }
 

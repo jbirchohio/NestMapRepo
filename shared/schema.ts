@@ -876,12 +876,7 @@ export type InsertAdminAuditLog = typeof adminAuditLog.$inferInsert;
 
 
 
-export const insertExpenseSchema = createInsertSchema(expenses).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  organizationId: true,
-});
+// Using corporate card expenses schema defined above
 
 // Calendar Integration Schema
 export const calendarIntegrations = pgTable("calendar_integrations", {
