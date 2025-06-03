@@ -1130,13 +1130,14 @@ export const superadminAuditLogs = pgTable("superadmin_audit_logs", {
 
 // Active Sessions for monitoring
 export const activeSessions = pgTable("active_sessions", {
-  id: text("id").primaryKey(), // session ID
+  id: serial("id").primaryKey(),
   user_id: integer("user_id").references(() => users.id).notNull(),
   organization_id: integer("organization_id").references(() => organizations.id),
+  session_token: text("session_token"),
   ip_address: text("ip_address"),
   user_agent: text("user_agent"),
   last_activity: timestamp("last_activity").defaultNow().notNull(),
-  expires_at: timestamp("expires_at").notNull(),
+  expires_at: timestamp("expires_at"),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
