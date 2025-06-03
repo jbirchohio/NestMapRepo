@@ -1,0 +1,79 @@
+What You’re Doing Right
+
+🧱 Strong Foundation
+	•	Auto-creating organization, user, and linking via Supabase at signup = solid multi-tenant model.
+	•	Granular role-based access control ensures data safety and separation.
+	•	White-label setup and domain mapping is enterprise gold.
+
+🔐 Security-First
+	•	JWT auth + org-scoped APIs + scoped queries = secure and scalable.
+	•	Expiring invite tokens and role inheritance flow are industry-standard.
+
+📊 Post-Onboarding Utility
+	•	Analytics, budgeting, and receipt handling encourage long-term retention and visibility.
+	•	Stripe Issuing and automated expense rules provide real business value.
+
+⸻
+
+⚡ Opportunities to Tighten the Funnel
+
+1. Add a “Quick Start” Wizard Post Signup
+
+Instead of dumping the user into a blank dashboard, include a setup wizard with:
+	•	✅ Company info
+	•	✅ Invite team
+	•	✅ Add first trip
+	•	✅ Configure billing (or skip for now)
+
+This guides them through the “aha moment” in under 5 mins.
+
+⸻
+
+2. Progress Tracking UI
+
+Show visual onboarding progress (like a checklist):
+	•	Company profile
+	•	Team invites
+	•	First trip created
+	•	Billing configured
+
+This gamifies the experience and nudges completion.
+
+⸻
+
+3. First Trip Pre-Fill Option
+
+When a user registers, auto-create a sample trip:
+	•	Title: “Sample Business Trip to NYC”
+	•	Dates: Next week
+	•	Budget: $2,500
+	•	Message: “You can customize or delete this later.”
+
+It gets them into the “see it in action” phase faster.
+
+⸻
+
+4. Slack/Email Integration Prompt Early
+
+Right after team invite, show:
+
+“Want to get alerts for approvals, travel changes, or expense overages? Connect Slack or set up email notifications.”
+
+That enhances long-term stickiness and embeds NestMap into daily workflows.
+
+⸻
+
+5. Inline Tooltips + Walkthroughs
+
+Use something like Shepherd.js or Intro.js to provide:
+	•	Tooltips when hovering over key actions
+	•	Guided tour after login
+	•	Microcopy in empty states like:
+“No trips yet — why not plan your first one?”
+
+⸻
+
+🧪 Future Feature Suggestions
+	•	SCIM or SAML Integration: For enterprise IT departments (Okta, Azure AD)
+	•	Audit Trails: Visual timeline for actions like trip edits, approvals, etc.
+	•	Single Sign-On Branding: So users land on travel.acme.com and log in directly to their branded space.
