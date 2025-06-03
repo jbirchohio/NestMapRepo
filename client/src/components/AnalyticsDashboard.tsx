@@ -228,29 +228,29 @@ export default function AnalyticsDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Avg Trip Length</CardTitle>
+            <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Avg Trip Length</CardTitle>
             <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
               <Calendar className="h-4 w-4 text-electric-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.overview.averageTripLength}</div>
-            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">days</p>
+            <div className="text-2xl font-bold text-navy-900 dark:text-white">{analytics.overview.averageTripLength}</div>
+            <p className="text-xs text-navy-600 dark:text-navy-400 mt-1">days</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Trip Completion</CardTitle>
+            <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Trip Completion</CardTitle>
             <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
               <TrendingUp className="h-4 w-4 text-electric-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.userEngagement.tripCompletionRate || 0}%</div>
-            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">trips completed</p>
+            <div className="text-2xl font-bold text-navy-900 dark:text-white">{analytics.userEngagement.tripCompletionRate || 0}%</div>
+            <p className="text-xs text-navy-600 dark:text-navy-400 mt-1">trips completed</p>
           </CardContent>
         </Card>
       </div>
@@ -293,9 +293,9 @@ export default function AnalyticsDashboard() {
         </Card>
 
         {/* Trip Duration Distribution */}
-        <Card>
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader>
-            <CardTitle>Trip Duration Distribution</CardTitle>
+            <CardTitle className="text-navy-900 dark:text-white">Trip Duration Distribution</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -332,10 +332,10 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* Activity Tags Chart */}
-      <Card>
+      <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
         <CardHeader>
-          <CardTitle>Popular Activity Types</CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <CardTitle className="text-navy-900 dark:text-white">Popular Activity Types</CardTitle>
+          <p className="text-sm text-navy-600 dark:text-navy-400">
             Most common activity tags across all trips
           </p>
         </CardHeader>
@@ -353,10 +353,10 @@ export default function AnalyticsDashboard() {
       </Card>
 
       {/* Growth Trajectory Chart */}
-      <Card>
+      <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
         <CardHeader>
-          <CardTitle>Growth Trajectory</CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <CardTitle className="text-navy-900 dark:text-white">Growth Trajectory</CardTitle>
+          <p className="text-sm text-navy-600 dark:text-navy-400">
             Weekly trip creation trends over the last 8 weeks
           </p>
         </CardHeader>
@@ -390,10 +390,10 @@ export default function AnalyticsDashboard() {
       </Card>
 
       {/* User Funnel Analysis */}
-      <Card>
+      <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
         <CardHeader>
-          <CardTitle>User Conversion Funnel</CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <CardTitle className="text-navy-900 dark:text-white">User Conversion Funnel</CardTitle>
+          <p className="text-sm text-navy-600 dark:text-navy-400">
             Track user progression from signup to active engagement
           </p>
         </CardHeader>
