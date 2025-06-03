@@ -60,6 +60,7 @@ function Router() {
         <Route path="/white-label" component={WhiteLabelSettings} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/corporate-cards" component={CorporateCards} />
+        <Route path="/onboarding" component={Onboarding} />
         <Route component={NotFound} />
       </Switch>
     </>
