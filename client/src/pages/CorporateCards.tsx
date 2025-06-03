@@ -10,6 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { AnimatedCard } from "@/components/ui/animated-card";
+import { PrimaryButton } from "@/components/ui/primary-button";
+import { FullScreenModal } from "@/components/ui/full-screen-modal";
+import { motion } from "framer-motion";
 import { 
   CreditCard, 
   Plus, 
@@ -23,7 +27,9 @@ import {
   Receipt,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Sparkles,
+  ArrowUpRight
 } from "lucide-react";
 
 interface CorporateCard {
@@ -187,68 +193,257 @@ export default function CorporateCards() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Corporate Cards</h1>
-          <p className="text-muted-foreground">Manage company cards, expenses, and spending controls</p>
+    <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
+      {/* Hero Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30" />
+        
+        <div className="relative container mx-auto px-6 py-16">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex-1"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
+                  <CreditCard className="w-8 h-8" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-electric-200" />
+                  <span className="text-electric-100 text-sm font-medium">Corporate Finance</span>
+                </div>
+              </div>
+              
+              <h1 className="text-5xl font-bold mb-4 tracking-tight">
+                Corporate Cards
+              </h1>
+              <p className="text-xl text-electric-100 mb-6 max-w-2xl">
+                Streamline company spending with intelligent virtual cards, real-time controls, and automated expense management
+              </p>
+              
+              <div className="flex flex-wrap items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  <span className="text-electric-100">Real-time tracking</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                  <span className="text-electric-100">Instant approvals</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                  <span className="text-electric-100">Smart controls</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-4"
+            >
+              <PrimaryButton 
+                variant="primary" 
+                size="lg"
+                onClick={() => setIsIssueDialogOpen(true)}
+                className="electric-glow"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Issue New Card
+              </PrimaryButton>
+              
+              <PrimaryButton 
+                variant="secondary" 
+                size="lg"
+              >
+                <Settings className="w-5 h-5 mr-2" />
+                Manage Cards
+              </PrimaryButton>
+            </motion.div>
+          </div>
         </div>
-        <Dialog open={isIssueDialogOpen} onOpenChange={setIsIssueDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Issue New Card
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Issue New Corporate Card</DialogTitle>
-              <DialogDescription>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-8 space-y-8">
+        {/* Quick Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Cards</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{cards.length}</p>
+              </div>
+              <div className="p-3 bg-electric-100 dark:bg-electric-900/20 rounded-xl">
+                <CreditCard className="w-6 h-6 text-electric-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Active Spend</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">
+                  {formatCurrency(analytics?.totalSpend || 0)}
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Pending Expenses</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">
+                  {expenses.filter(e => e.status === 'pending').length}
+                </p>
+              </div>
+              <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-xl">
+                <Receipt className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Team Members</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">
+                  {analytics?.totalUsers || 0}
+                </p>
+              </div>
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+        </motion.div>
+
+        {/* Main Content Area */}
+        <FullScreenModal
+          isOpen={isIssueDialogOpen}
+          onClose={() => setIsIssueDialogOpen(false)}
+          title="Issue New Corporate Card"
+        >
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 bg-electric-100 rounded-2xl flex items-center justify-center mb-4">
+                <CreditCard className="w-8 h-8 text-electric-600" />
+              </div>
+              <p className="text-muted-foreground">
+                Create a virtual corporate card with spending limits and smart controls
+              </p>
+            </div>
                 Create a virtual corporate card with spending limits and controls.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={(e) => {
               e.preventDefault();
               handleIssueCard(new FormData(e.currentTarget));
-            }} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="user_email">User Email</Label>
-                <Input id="user_email" name="user_email" type="email" placeholder="employee@company.com" required />
+            }} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="user_email">User Email</Label>
+                  <Input 
+                    id="user_email" 
+                    name="user_email" 
+                    type="email" 
+                    placeholder="employee@company.com" 
+                    required 
+                    className="focus:ring-electric-500 focus:border-electric-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cardholder_name">Cardholder Name</Label>
+                  <Input 
+                    id="cardholder_name" 
+                    name="cardholder_name" 
+                    required 
+                    className="focus:ring-electric-500 focus:border-electric-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="spend_limit">Spending Limit ($)</Label>
+                  <Input 
+                    id="spend_limit" 
+                    name="spend_limit" 
+                    type="number" 
+                    min="10" 
+                    required 
+                    className="focus:ring-electric-500 focus:border-electric-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="interval">Limit Interval</Label>
+                  <Select name="interval">
+                    <SelectTrigger className="focus:ring-electric-500 focus:border-electric-500">
+                      <SelectValue placeholder="Select interval" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="purpose">Purpose</Label>
+                  <Input 
+                    id="purpose" 
+                    name="purpose" 
+                    placeholder="e.g., travel, office supplies" 
+                    className="focus:ring-electric-500 focus:border-electric-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department</Label>
+                  <Input 
+                    id="department" 
+                    name="department" 
+                    placeholder="e.g., sales, engineering" 
+                    className="focus:ring-electric-500 focus:border-electric-500"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cardholder_name">Cardholder Name</Label>
-                <Input id="cardholder_name" name="cardholder_name" required />
+              
+              <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                <PrimaryButton 
+                  type="submit" 
+                  variant="primary" 
+                  size="lg" 
+                  loading={issueCardMutation.isPending}
+                  className="flex-1"
+                >
+                  {issueCardMutation.isPending ? "Creating Card..." : "Issue Corporate Card"}
+                </PrimaryButton>
+                <PrimaryButton 
+                  type="button" 
+                  variant="ghost" 
+                  size="lg"
+                  onClick={() => setIsIssueDialogOpen(false)}
+                >
+                  Cancel
+                </PrimaryButton>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="spend_limit">Spending Limit ($)</Label>
-                <Input id="spend_limit" name="spend_limit" type="number" min="10" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="interval">Limit Interval</Label>
-                <Select name="interval">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select interval" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="purpose">Purpose</Label>
-                <Input id="purpose" name="purpose" placeholder="e.g., travel, office supplies" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input id="department" name="department" placeholder="e.g., sales, engineering" />
-              </div>
-              <Button type="submit" className="w-full" disabled={issueCardMutation.isPending}>
-                {issueCardMutation.isPending ? "Issuing..." : "Issue Card"}
-              </Button>
             </form>
           </DialogContent>
         </Dialog>
