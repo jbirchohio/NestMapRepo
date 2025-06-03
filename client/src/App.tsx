@@ -12,7 +12,7 @@ import TripPlanner from "@/pages/TripPlanner";
 import SimpleShare from "@/pages/SimpleShare";
 import Analytics from "@/pages/Analytics";
 import Bookings from "@/pages/Bookings";
-import SequentialBooking from "@/pages/SequentialBooking";
+import SequentialBookingFlights from "@/pages/SequentialBookingFlights";
 import TripOptimizer from "@/pages/TripOptimizer";
 import Settings from "@/pages/Settings";
 import TeamManagement from "@/components/TeamManagement";
@@ -41,7 +41,7 @@ function Router() {
         <Route path="/share/:shareCode" component={SimpleShare} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/bookings" component={Bookings} />
-        <Route path="/sequential-booking" component={SequentialBooking} />
+        <Route path="/sequential-booking" component={SequentialBookingFlights} />
         <Route path="/ai-generator" component={AITripGeneratorPage} />
         <Route path="/optimizer" component={TripOptimizer} />
         <Route path="/settings" component={Settings} />

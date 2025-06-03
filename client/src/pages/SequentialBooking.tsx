@@ -39,7 +39,7 @@ interface SequentialBookingData {
   }>;
   roomsNeeded: number;
   roomConfiguration: 'shared' | 'separate' | null;
-  bookingStatus: 'flights' | 'room-preferences' | 'hotels' | 'payment' | 'complete';
+  bookingStatus: 'flights' | 'payment' | 'complete';
   selectedHotel?: any;
   confirmationNumber?: string;
   bookingDate?: string;
@@ -148,13 +148,11 @@ export default function SequentialBooking() {
   }
 
   const currentTraveler = bookingData.travelers?.[bookingData.currentTravelerIndex];
-  const totalSteps = bookingData.travelers?.length + 2 || 1; // All travelers + room preferences + hotels
+  const totalSteps = bookingData.travelers?.length + 1 || 1; // All travelers + payment
   
   let completedSteps = bookingData.currentTravelerIndex;
-  if (bookingData.bookingStatus === 'room-preferences') {
+  if (bookingData.bookingStatus === 'payment') {
     completedSteps = bookingData.travelers?.length || 0;
-  } else if (bookingData.bookingStatus === 'hotels') {
-    completedSteps = (bookingData.travelers?.length || 0) + 1;
   } else if (bookingData.bookingStatus === 'complete') {
     completedSteps = totalSteps;
   }
@@ -162,7 +160,7 @@ export default function SequentialBooking() {
   const progress = (completedSteps / totalSteps) * 100;
 
   // Handle case where no current traveler is available
-  if (!currentTraveler && bookingData.bookingStatus !== 'hotels' && bookingData.bookingStatus !== 'room-preferences') {
+  if (!currentTraveler && bookingData.bookingStatus !== 'payment' && bookingData.bookingStatus !== 'complete') {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">
@@ -349,10 +347,10 @@ export default function SequentialBooking() {
       setBookingData(updatedData);
       sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
     } else {
-      // All travelers done, move to room preferences
+      // All travelers done, move to payment
       const updatedData = {
         ...bookingData,
-        bookingStatus: 'room-preferences' as const
+        bookingStatus: 'payment' as const
       };
       setBookingData(updatedData);
       sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
