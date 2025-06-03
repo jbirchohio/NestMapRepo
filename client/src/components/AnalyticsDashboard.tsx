@@ -160,64 +160,68 @@ export default function AnalyticsDashboard() {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-electric-50/30 to-electric-100/50 dark:from-dark-900 dark:via-electric-900/10 dark:to-electric-800/20 p-6 space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-navy-50 via-electric-50/30 to-electric-100/50 dark:from-navy-900 dark:via-navy-800 dark:to-electric-900/20 p-6 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 via-electric-500 to-electric-700 bg-clip-text text-transparent mb-2">Analytics Dashboard</h1>
-          <p className="text-electric-600 dark:text-electric-400 text-lg">Platform insights and user engagement metrics</p>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-electric-100 dark:bg-electric-900/20 rounded-2xl">
+            <BarChart3 className="h-8 w-8 text-electric-600" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-navy-900 dark:text-white">Analytics Dashboard</h1>
+            <p className="text-navy-600 dark:text-navy-300">Comprehensive insights into your travel data</p>
+          </div>
         </div>
         <Button 
           onClick={handleExportCSV} 
-          variant="outline" 
-          className="border-electric-300 text-electric-700 hover:bg-electric-50 dark:border-electric-600 dark:text-electric-300 dark:hover:bg-electric-900/20 transition-all duration-200"
+          className="flex items-center gap-2 bg-electric-500 hover:bg-electric-600 text-white"
         >
-          <Download className="h-4 w-4 mr-2" />
+          <Download className="h-4 w-4" />
           Export CSV
         </Button>
       </div>
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Total Trips</CardTitle>
+            <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Total Trips</CardTitle>
             <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
               <MapPin className="h-4 w-4 text-electric-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.overview.totalTrips}</div>
-            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">
+            <div className="text-2xl font-bold text-navy-900 dark:text-white">{analytics.overview.totalTrips}</div>
+            <p className="text-xs text-navy-600 dark:text-navy-400 mt-1">
               {analytics.recentActivity.newTripsLast7Days} new this week
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Total Users</CardTitle>
             <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
               <Users className="h-4 w-4 text-electric-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.overview.totalUsers}</div>
-            <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">
+            <div className="text-2xl font-bold text-navy-900 dark:text-white">{analytics.overview.totalUsers}</div>
+            <p className="text-xs text-navy-600 dark:text-navy-400 mt-1">
               {analytics.recentActivity.newUsersLast7Days} new this week
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-electric-700 dark:text-electric-300">Activities</CardTitle>
+            <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Activities</CardTitle>
             <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
               <Activity className="h-4 w-4 text-electric-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-electric-900 dark:text-electric-100">{analytics.overview.totalActivities}</div>
+            <div className="text-2xl font-bold text-navy-900 dark:text-white">{analytics.overview.totalActivities}</div>
             <p className="text-xs text-electric-600 dark:text-electric-400 mt-1">
               Avg {analytics.overview.averageActivitiesPerTrip} per trip
             </p>
@@ -254,10 +258,10 @@ export default function AnalyticsDashboard() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Popular Destinations */}
-        <Card>
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-navy-900 dark:text-white">
+              <Globe className="h-5 w-5 text-electric-600" />
               Top Destinations
             </CardTitle>
           </CardHeader>
