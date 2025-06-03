@@ -561,10 +561,10 @@ export class DatabaseStorage implements IStorage {
     // Transform camelCase frontend data to snake_case database format
     const dbData = {
       title: insertTrip.title,
-      start_date: insertTrip.startDate,
-      end_date: insertTrip.endDate,
-      user_id: insertTrip.userId,
-      organization_id: insertTrip.organizationId || null,
+      start_date: insertTrip.start_date,
+      end_date: insertTrip.end_date,
+      user_id: insertTrip.user_id,
+      organization_id: insertTrip.organization_id || null,
       is_public: insertTrip.isPublic || false,
       sharing_enabled: insertTrip.sharingEnabled || false,
       share_permission: insertTrip.sharePermission || 'read-only',
@@ -590,8 +590,8 @@ export class DatabaseStorage implements IStorage {
     // Transform camelCase frontend data to snake_case database format  
     const dbData: any = {};
     if (tripData.title !== undefined) dbData.title = tripData.title;
-    if (tripData.startDate !== undefined) dbData.start_date = tripData.startDate;
-    if (tripData.endDate !== undefined) dbData.end_date = tripData.endDate;
+    if (tripData.start_date !== undefined) dbData.start_date = tripData.start_date;
+    if (tripData.end_date !== undefined) dbData.end_date = tripData.end_date;
     if (tripData.isPublic !== undefined) dbData.is_public = tripData.isPublic;
     if (tripData.budget !== undefined) dbData.budget = tripData.budget;
     
@@ -956,16 +956,16 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
     }).then(user => {
       // Example of creating trips associated with the user and organization
       this.createTrip({
-        userId: user.id,
+        user_id: user.id,
         title: "Corporate Trip 1",
         city: "New York",
         country: "USA",
-        organizationId: user.organization_id || 1,
+        organization_id: user.organization_id || 1,
         client_name: "Acme Corp",
         project_type: "Consulting",
         budget: 10000,
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        start_date: new Date(),
+        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         collaborators: [],
         completed: false,
         trip_type: "business",
@@ -975,16 +975,16 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
       });
 
       this.createTrip({
-        userId: user.id,
+        user_id: user.id,
         title: "Corporate Trip 2",
         city: "London",
         country: "UK",
-        organizationId: user.organization_id || 1,
+        organization_id: user.organization_id || 1,
         client_name: "Beta Ltd",
         project_type: "Software Development",
         budget: 15000,
-        startDate: new Date(),
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        start_date: new Date(),
+        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         collaborators: [],
         completed: false,
         trip_type: "business",
