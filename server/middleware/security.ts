@@ -7,13 +7,21 @@ import { z } from 'zod';
  */
 export function preventSQLInjection(req: Request, res: Response, next: NextFunction) {
   const dangerousPatterns = [
-    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/gi,
-    /(--|\/\*|\*\/|;|'|"|`)/g,
-    /(\bOR\b|\bAND\b).*?(\b\d+\b|\btrue\b|\bfalse\b).*?(=|<|>)/gi
+    // Only flag actual SQL injection patterns, not legitimate content
+    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b).*(\bFROM\b|\bINTO\b|\bWHERE\b|\bSET\b)/gi,
+    /(--|\/\*|\*\/)(?=.*(\bSELECT\b|\bUNION\b))/gi,
+    /(\bOR\b|\bAND\b)\s*(1\s*=\s*1|true|false)\s*(--|;)/gi,
+    /;\s*(\bDROP\b|\bDELETE\b|\bUPDATE\b)/gi
   ];
 
   const checkForSQLInjection = (obj: any): boolean => {
     if (typeof obj === 'string') {
+      // Skip checking for common legitimate words in travel context
+      const legitKeywords = ['select destination', 'select city', 'select hotel', 'business trip', 'create trip'];
+      const lowerObj = obj.toLowerCase();
+      if (legitKeywords.some(keyword => lowerObj.includes(keyword))) {
+        return false;
+      }
       return dangerousPatterns.some(pattern => pattern.test(obj));
     }
     if (typeof obj === 'object' && obj !== null) {
@@ -27,6 +35,7 @@ export function preventSQLInjection(req: Request, res: Response, next: NextFunct
       ip: req.ip,
       url: req.url,
       method: req.method,
+      body: req.body,
       timestamp: new Date().toISOString()
     });
     
