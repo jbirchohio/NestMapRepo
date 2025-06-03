@@ -165,13 +165,17 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
   // Sample trip creation mutation
   const tripMutation = useMutation({
     mutationFn: async (tripData: typeof wizardData.sampleTrip) => {
+      // Ensure dates are valid, fallback to default dates if needed
+      const startDate = tripData.startDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const endDate = tripData.endDate || new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
       return await apiRequest('POST', '/api/trips', {
         title: tripData.title,
         city: tripData.destination,
-        startDate: new Date(tripData.startDate).toISOString(),
-        endDate: new Date(tripData.endDate).toISOString(),
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
         description: tripData.description || 'Sample trip created during onboarding',
-        budget: tripData.budget ? parseInt(tripData.budget) : undefined,
+        budget: tripData.budget ? parseInt(tripData.budget.toString()) : 2500,
         trip_type: 'business'
       });
     },
