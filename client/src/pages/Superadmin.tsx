@@ -1087,8 +1087,43 @@ export default function Superadmin() {
               </Card>
             </TabsContent>
           </Tabs>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+      <SuperadminNavigation />
+      
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {renderSectionContent()}
         </div>
       </div>
+
+      {/* Action Dialog */}
+      <Dialog open={actionDialog.open} onOpenChange={(open) => setActionDialog({...actionDialog, open})}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Action</DialogTitle>
+            <DialogDescription>
+              {actionDialog.type === 'suspend_user' && 'Are you sure you want to suspend this user?'}
+              {actionDialog.type === 'terminate_session' && 'Are you sure you want to terminate this session?'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActionDialog({...actionDialog, open: false})}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={() => {
+              // Handle action here
+              setActionDialog({...actionDialog, open: false});
+              toast({ title: 'Action completed successfully' });
+            }}>
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

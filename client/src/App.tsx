@@ -29,7 +29,7 @@ import CalendarSettings from "@/pages/CalendarSettings";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CorporateCards from "@/pages/CorporateCards";
-import Superadmin from "@/pages/Superadmin";
+import Superadmin from "@/pages/SuperadminSimple";
 import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/not-found";
 
