@@ -172,8 +172,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
       return await apiRequest('POST', '/api/trips', {
         title: tripData.title,
         city: tripData.destination,
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString(),
+        start_date: new Date(startDate).toISOString(),
+        end_date: new Date(endDate).toISOString(),
         description: tripData.description || 'Sample trip created during onboarding',
         budget: tripData.budget ? parseInt(tripData.budget.toString()) : 2500,
         trip_type: 'business'
