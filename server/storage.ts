@@ -1294,7 +1294,7 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
 
   // Superadmin operations implementation
   async getSuperadminOrganizations() {
-    return await db
+    const orgsWithCounts = await db
       .select({
         id: organizations.id,
         name: organizations.name,
@@ -1303,12 +1303,37 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
         subscription_status: organizations.subscription_status,
         employee_count: organizations.employee_count,
         created_at: organizations.created_at,
-        userCount: sql<number>`(SELECT COUNT(*)::int FROM ${users} WHERE organization_id = ${organizations.id}::int)`,
-        tripCount: sql<number>`(SELECT COUNT(*)::int FROM ${trips} WHERE organization_id = ${organizations.id}::int)`,
-        lastActivity: sql<string>`(SELECT MAX(created_at)::text FROM ${trips} WHERE organization_id = ${organizations.id}::int)`
       })
       .from(organizations)
       .orderBy(desc(organizations.created_at));
+
+    // Add user counts, trip counts, and last activity for each organization
+    const result = [];
+    for (const org of orgsWithCounts) {
+      const userCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(eq(users.organization_id, org.id));
+
+      const tripCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(trips)
+        .where(eq(trips.organization_id, org.id));
+
+      const lastActivityResult = await db
+        .select({ lastActivity: sql<string>`max(created_at)` })
+        .from(trips)
+        .where(eq(trips.organization_id, org.id));
+
+      result.push({
+        ...org,
+        userCount: userCount[0]?.count || 0,
+        tripCount: tripCount[0]?.count || 0,
+        lastActivity: lastActivityResult[0]?.lastActivity || null
+      });
+    }
+
+    return result;
   }
 
   async getSuperadminUsers() {
