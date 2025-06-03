@@ -643,5 +643,6 @@ export default function TeamManagement() {
           </CardContent>
         </Card>
       </div>
-    );
-  }
+    </div>
+  );
+}
