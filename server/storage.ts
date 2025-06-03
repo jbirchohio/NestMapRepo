@@ -72,6 +72,31 @@ export interface IStorage {
   updateOrganizationMember(orgId: number, userId: number, data: any): Promise<any>;
   removeOrganizationMember(orgId: number, userId: number): Promise<boolean>;
   getAllTrips(): Promise<Trip[]>;
+
+  // Corporate Card operations
+  createCorporateCard(card: any): Promise<any>;
+  getCorporateCard(id: number): Promise<any>;
+  getCorporateCardByStripeId(stripeCardId: string): Promise<any>;
+  getCorporateCardsByOrganization(organizationId: number): Promise<any[]>;
+  getCorporateCardsByUser(userId: number): Promise<any[]>;
+  updateCorporateCard(id: number, updates: any): Promise<any>;
+
+  // Card Transaction operations
+  createCardTransaction(transaction: any): Promise<any>;
+  upsertCardTransaction(transaction: any): Promise<any>;
+  updateCardTransactionByStripeId(stripeTransactionId: string, updates: any): Promise<any>;
+  getCardTransactions(cardId: number, limit: number, offset: number): Promise<any[]>;
+
+  // Expense operations
+  createExpense(expense: any): Promise<any>;
+  updateExpense(id: number, updates: any): Promise<any>;
+  getExpenses(filters: any): Promise<any[]>;
+
+  // Expense Approval operations
+  createExpenseApproval(approval: any): Promise<any>;
+
+  // Analytics operations
+  getSpendingAnalytics(filters: any): Promise<any>;
 }
 
 // In-memory implementation

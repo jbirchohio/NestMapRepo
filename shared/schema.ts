@@ -497,6 +497,237 @@ export type OrganizationPlan = typeof ORGANIZATION_PLANS[keyof typeof ORGANIZATI
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
 
+
+
+// Move Corporate Card Management System to end of file
+// Corporate Card Management System
+export const corporateCards = pgTable("corporate_cards", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").notNull(),
+  user_id: integer("user_id").notNull(),
+  card_number_masked: text("card_number_masked").notNull(), // Last 4 digits only
+  card_token: text("card_token").notNull(), // Encrypted token for API calls
+  card_provider: text("card_provider").notNull(), // stripe, marqeta, etc
+  card_type: text("card_type").default("virtual"), // virtual, physical
+  card_status: text("card_status").default("active"), // active, suspended, canceled
+  spending_limit: integer("spending_limit"), // Monthly limit in cents
+  remaining_limit: integer("remaining_limit"), // Remaining monthly limit
+  category_limits: jsonb("category_limits"), // Per-category spending limits
+  allowed_merchants: jsonb("allowed_merchants"), // Whitelist of merchant categories
+  blocked_merchants: jsonb("blocked_merchants"), // Blacklist of merchant categories
+  cardholder_name: text("cardholder_name").notNull(),
+  expiry_month: text("expiry_month").notNull(),
+  expiry_year: text("expiry_year").notNull(),
+  billing_address: jsonb("billing_address"),
+  shipping_address: jsonb("shipping_address"),
+  purpose: text("purpose"), // travel, office_supplies, marketing, etc
+  department: text("department"),
+  cost_center: text("cost_center"),
+  manager_id: integer("manager_id"), // Who approves expenses
+  auto_lock_triggers: jsonb("auto_lock_triggers"), // Automated controls
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const expenses = pgTable("expenses", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").notNull(),
+  user_id: integer("user_id").notNull(),
+  card_id: integer("card_id"), // If paid with corporate card
+  trip_id: integer("trip_id"), // If related to travel
+  transaction_id: text("transaction_id"), // External transaction ID
+  merchant_name: text("merchant_name").notNull(),
+  merchant_category: text("merchant_category"),
+  merchant_mcc: text("merchant_mcc"), // Merchant Category Code
+  amount: integer("amount").notNull(), // Amount in cents
+  currency: text("currency").default("USD"),
+  transaction_date: timestamp("transaction_date").notNull(),
+  expense_category: text("expense_category").notNull(), // travel, meals, office, etc
+  description: text("description"),
+  receipt_url: text("receipt_url"),
+  receipt_status: text("receipt_status").default("pending"), // pending, uploaded, verified
+  business_purpose: text("business_purpose"),
+  attendees: jsonb("attendees"), // For meal expenses
+  mileage: integer("mileage"), // For vehicle expenses
+  status: text("status").default("pending"), // pending, approved, rejected, reimbursed
+  approval_status: text("approval_status").default("pending"), // pending, approved, rejected
+  approved_by: integer("approved_by"),
+  approved_at: timestamp("approved_at"),
+  rejection_reason: text("rejection_reason"),
+  reimbursement_status: text("reimbursement_status").default("pending"),
+  reimbursed_at: timestamp("reimbursed_at"),
+  policy_violations: jsonb("policy_violations"), // Any policy violations detected
+  tax_deductible: boolean("tax_deductible").default(true),
+  billable_to_client: boolean("billable_to_client").default(false),
+  client_id: integer("client_id"), // If billable
+  project_code: text("project_code"),
+  gl_code: text("gl_code"), // General Ledger code
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const spendPolicies = pgTable("spend_policies", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  is_active: boolean("is_active").default(true),
+  applies_to: text("applies_to").default("all"), // all, departments, users, roles
+  target_departments: jsonb("target_departments"),
+  target_users: jsonb("target_users"),
+  target_roles: jsonb("target_roles"),
+  
+  // Spending limits
+  daily_limit: integer("daily_limit"),
+  weekly_limit: integer("weekly_limit"),
+  monthly_limit: integer("monthly_limit"),
+  annual_limit: integer("annual_limit"),
+  
+  // Category-specific limits
+  category_limits: jsonb("category_limits"), // { "travel": 5000, "meals": 100 }
+  merchant_restrictions: jsonb("merchant_restrictions"),
+  
+  // Approval workflows
+  requires_approval_over: integer("requires_approval_over"), // Amount requiring approval
+  auto_approve_under: integer("auto_approve_under"), // Auto-approve small amounts
+  approval_chain: jsonb("approval_chain"), // Multi-level approval process
+  
+  // Receipt requirements
+  receipt_required_over: integer("receipt_required_over"),
+  business_purpose_required: boolean("business_purpose_required").default(false),
+  
+  // Time restrictions
+  allowed_days: jsonb("allowed_days"), // Days of week allowed
+  allowed_hours: jsonb("allowed_hours"), // Time ranges allowed
+  
+  // Geographic restrictions
+  allowed_countries: jsonb("allowed_countries"),
+  blocked_countries: jsonb("blocked_countries"),
+  
+  created_by: integer("created_by").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const cardTransactions = pgTable("card_transactions", {
+  id: serial("id").primaryKey(),
+  card_id: integer("card_id").notNull(),
+  organization_id: integer("organization_id").notNull(),
+  user_id: integer("user_id").notNull(),
+  
+  // Transaction details
+  transaction_id: text("transaction_id").notNull().unique(),
+  authorization_code: text("authorization_code"),
+  amount: integer("amount").notNull(),
+  currency: text("currency").default("USD"),
+  transaction_type: text("transaction_type"), // purchase, refund, reversal
+  transaction_status: text("transaction_status"), // pending, completed, declined
+  
+  // Merchant information
+  merchant_name: text("merchant_name"),
+  merchant_category: text("merchant_category"),
+  merchant_mcc: text("merchant_mcc"),
+  merchant_city: text("merchant_city"),
+  merchant_state: text("merchant_state"),
+  merchant_country: text("merchant_country"),
+  
+  // Processing details
+  processed_at: timestamp("processed_at"),
+  settled_at: timestamp("settled_at"),
+  decline_reason: text("decline_reason"),
+  
+  // Risk and compliance
+  risk_score: integer("risk_score"), // 0-100 risk assessment
+  policy_checks: jsonb("policy_checks"), // Policy violations or approvals
+  fraud_indicators: jsonb("fraud_indicators"),
+  
+  // Expense linking
+  expense_id: integer("expense_id"), // Link to expense record
+  auto_categorized: boolean("auto_categorized").default(false),
+  
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const budgets = pgTable("budgets", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  budget_type: text("budget_type").notNull(), // department, project, employee, category
+  
+  // Budget scope
+  department: text("department"),
+  project_code: text("project_code"),
+  employee_id: integer("employee_id"),
+  expense_category: text("expense_category"),
+  
+  // Budget amounts
+  total_budget: integer("total_budget").notNull(), // Total budget in cents
+  spent_amount: integer("spent_amount").default(0),
+  committed_amount: integer("committed_amount").default(0), // Pending expenses
+  remaining_amount: integer("remaining_amount").notNull(),
+  
+  // Time period
+  start_date: timestamp("start_date").notNull(),
+  end_date: timestamp("end_date").notNull(),
+  budget_period: text("budget_period"), // monthly, quarterly, annual
+  
+  // Alerts and controls
+  alert_thresholds: jsonb("alert_thresholds"), // { "50": ["email"], "80": ["email", "slack"] }
+  auto_lock_at_limit: boolean("auto_lock_at_limit").default(false),
+  
+  // Ownership
+  owner_id: integer("owner_id").notNull(),
+  approvers: jsonb("approvers"), // Who can approve budget changes
+  
+  is_active: boolean("is_active").default(true),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+export const expenseApprovals = pgTable("expense_approvals", {
+  id: serial("id").primaryKey(),
+  expense_id: integer("expense_id").notNull(),
+  organization_id: integer("organization_id").notNull(),
+  approver_id: integer("approver_id").notNull(),
+  approval_level: integer("approval_level").default(1), // For multi-level approvals
+  status: text("status").default("pending"), // pending, approved, rejected
+  comments: text("comments"),
+  approved_amount: integer("approved_amount"), // Might be less than requested
+  policy_override: boolean("policy_override").default(false),
+  override_reason: text("override_reason"),
+  processed_at: timestamp("processed_at"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const reimbursements = pgTable("reimbursements", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").notNull(),
+  user_id: integer("user_id").notNull(),
+  batch_id: text("batch_id"), // Group reimbursements together
+  
+  // Reimbursement details
+  total_amount: integer("total_amount").notNull(),
+  currency: text("currency").default("USD"),
+  expense_ids: jsonb("expense_ids").notNull(), // Array of expense IDs
+  
+  // Payment details
+  payment_method: text("payment_method"), // direct_deposit, check, payroll
+  payment_status: text("payment_status").default("pending"), // pending, processing, paid, failed
+  payment_reference: text("payment_reference"), // Bank reference number
+  payment_date: timestamp("payment_date"),
+  
+  // Banking information
+  bank_account_id: text("bank_account_id"),
+  routing_number: text("routing_number"),
+  account_number_masked: text("account_number_masked"),
+  
+  processed_by: integer("processed_by"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // White Label Branding Settings
 export const whiteLabelSettings = pgTable("white_label_settings", {
   id: serial("id").primaryKey(),
@@ -641,24 +872,7 @@ export type WhiteLabelPlan = typeof WHITE_LABEL_PLANS[keyof typeof WHITE_LABEL_P
 export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
 export type InsertAdminAuditLog = typeof adminAuditLog.$inferInsert;
 
-// Expense Tracking Schema
-export const expenses = pgTable("expenses", {
-  id: serial("id").primaryKey(),
-  tripId: integer("trip_id").references(() => trips.id, { onDelete: "cascade" }).notNull(),
-  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  organizationId: integer("organization_id").references(() => organizations.id, { onDelete: "cascade" }).notNull(),
-  category: text("category").notNull(), // flight, hotel, meal, transport, misc
-  description: text("description").notNull(),
-  amount: integer("amount").notNull(), // in cents
-  currency: text("currency").default("USD").notNull(),
-  date: timestamp("date").notNull(),
-  receiptUrl: text("receipt_url"),
-  status: text("status").default("pending").notNull(), // pending, approved, rejected
-  approvedBy: integer("approved_by").references(() => users.id),
-  approvedAt: timestamp("approved_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+// Using corporate card expenses table from above instead of this duplicate
 
 
 
