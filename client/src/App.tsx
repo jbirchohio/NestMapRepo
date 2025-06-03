@@ -29,6 +29,7 @@ import CalendarSettings from "@/pages/CalendarSettings";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CorporateCards from "@/pages/CorporateCards";
+import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/not-found";
 
 function Router() {

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import MainNavigation from "@/components/MainNavigation";
 import NewTripModal from "@/components/NewTripModal";
+import OnboardingProgress from "@/components/OnboardingProgress";
 
 interface Trip {
   id: number;
@@ -38,6 +39,10 @@ export default function CorporateDashboard() {
   const { userId, user } = useAuth();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [, setLocation] = useLocation();
+
+  const handleOnboardingTaskClick = (taskId: string, url: string) => {
+    setLocation(url);
+  };
 
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
     queryKey: ['/api/trips/corporate'],
@@ -118,6 +123,15 @@ export default function CorporateDashboard() {
             </Button>
           </div>
         </div>
+
+        {/* Onboarding Progress - Only show for new users */}
+        {trips.length === 0 && (
+          <div className="mb-8">
+            <OnboardingProgress 
+              onTaskClick={handleOnboardingTaskClick}
+            />
+          </div>
+        )}
 
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
