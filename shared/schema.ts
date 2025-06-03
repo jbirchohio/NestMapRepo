@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   password_hash: text("password_hash"), // Secure password hash for authentication
   display_name: text("display_name"),
   avatar_url: text("avatar_url"),
-  role: text("role").default("user"), // System-wide role: admin, manager, user, guest
+  role: text("role").default("user"), // System-wide role: superadmin_owner, superadmin_staff, superadmin_auditor, admin, manager, user, guest
   role_type: text("role_type").default("corporate"), // Business mode: corporate, agency
   organization_id: integer("organization_id"), // For B2B multi-tenant support
   company: text("company"), // Company name
@@ -368,13 +368,7 @@ export const insertNoteSchema = z.object({
   content: z.string(),
 });
 
-// RBAC constants
-export const USER_ROLES = {
-  ADMIN: 'admin',
-  MANAGER: 'manager', 
-  USER: 'user',
-  GUEST: 'guest'
-} as const;
+// RBAC constants moved to end of file
 
 export const TRIP_ROLES = {
   ADMIN: 'admin',
@@ -489,10 +483,7 @@ export type InsertTodo = z.infer<typeof insertTodoSchema>;
 export type Note = typeof notes.$inferSelect;
 export type InsertNote = z.infer<typeof insertNoteSchema>;
 
-// RBAC utility types
-export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
-export type TripRole = typeof TRIP_ROLES[keyof typeof TRIP_ROLES];
-export type OrganizationPlan = typeof ORGANIZATION_PLANS[keyof typeof ORGANIZATION_PLANS];
+// RBAC utility types - definitions moved to end of file
 
 export type Invitation = typeof invitations.$inferSelect;
 export type InsertInvitation = z.infer<typeof insertInvitationSchema>;
@@ -1123,3 +1114,154 @@ export type ApprovalRequest = typeof approvalRequests.$inferSelect;
 export type InsertApprovalRequest = z.infer<typeof insertApprovalRequestSchema>;
 export type ApprovalRule = typeof approvalRules.$inferSelect;
 export type InsertApprovalRule = z.infer<typeof insertApprovalRuleSchema>;
+
+// Superadmin Audit Logs
+export const superadminAuditLogs = pgTable("superadmin_audit_logs", {
+  id: serial("id").primaryKey(),
+  superadmin_user_id: integer("superadmin_user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(), // user_deactivate, org_disable, role_change, etc.
+  target_type: text("target_type").notNull(), // user, organization, trip, etc.
+  target_id: text("target_id").notNull(),
+  details: jsonb("details").$type<Record<string, any>>(),
+  ip_address: text("ip_address"),
+  user_agent: text("user_agent"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Active Sessions for monitoring
+export const activeSessions = pgTable("active_sessions", {
+  id: text("id").primaryKey(), // session ID
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id),
+  ip_address: text("ip_address"),
+  user_agent: text("user_agent"),
+  last_activity: timestamp("last_activity").defaultNow().notNull(),
+  expires_at: timestamp("expires_at").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// AI Usage Tracking
+export const aiUsageLogs = pgTable("ai_usage_logs", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id),
+  feature: text("feature").notNull(), // trip_optimizer, ai_suggestions, etc.
+  tokens_used: integer("tokens_used").notNull(),
+  cost_cents: integer("cost_cents").notNull(),
+  model: text("model").notNull(),
+  success: boolean("success").default(true).notNull(),
+  error_message: text("error_message"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Feature Flags
+export const featureFlags = pgTable("feature_flags", {
+  id: serial("id").primaryKey(),
+  flag_name: text("flag_name").notNull().unique(),
+  description: text("description"),
+  default_value: boolean("default_value").default(false).notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Organization Feature Overrides
+export const organizationFeatureFlags = pgTable("organization_feature_flags", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  flag_name: text("flag_name").notNull(),
+  enabled: boolean("enabled").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Background Jobs
+export const backgroundJobs = pgTable("background_jobs", {
+  id: serial("id").primaryKey(),
+  job_type: text("job_type").notNull(), // export_data, send_email, etc.
+  status: text("status").default("pending").notNull(), // pending, running, completed, failed
+  data: jsonb("data").$type<Record<string, any>>(),
+  result: jsonb("result").$type<Record<string, any>>(),
+  error_message: text("error_message"),
+  attempts: integer("attempts").default(0).notNull(),
+  max_attempts: integer("max_attempts").default(3).notNull(),
+  scheduled_at: timestamp("scheduled_at").defaultNow().notNull(),
+  started_at: timestamp("started_at"),
+  completed_at: timestamp("completed_at"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Billing Events
+export const billingEvents = pgTable("billing_events", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").references(() => organizations.id).notNull(),
+  event_type: text("event_type").notNull(), // subscription_created, payment_succeeded, etc.
+  stripe_event_id: text("stripe_event_id"),
+  amount_cents: integer("amount_cents"),
+  currency: text("currency").default("usd"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Insert schemas for superadmin tables
+export const insertSuperadminAuditLogSchema = createInsertSchema(superadminAuditLogs).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertActiveSessionSchema = createInsertSchema(activeSessions).omit({
+  created_at: true,
+});
+
+export const insertAiUsageLogSchema = createInsertSchema(aiUsageLogs).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertOrganizationFeatureFlagSchema = createInsertSchema(organizationFeatureFlags).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertBackgroundJobSchema = createInsertSchema(backgroundJobs).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertBillingEventSchema = createInsertSchema(billingEvents).omit({
+  id: true,
+  created_at: true,
+});
+
+// Superadmin types
+export type SuperadminAuditLog = typeof superadminAuditLogs.$inferSelect;
+export type InsertSuperadminAuditLog = z.infer<typeof insertSuperadminAuditLogSchema>;
+export type ActiveSession = typeof activeSessions.$inferSelect;
+export type InsertActiveSession = z.infer<typeof insertActiveSessionSchema>;
+export type AiUsageLog = typeof aiUsageLogs.$inferSelect;
+export type InsertAiUsageLog = z.infer<typeof insertAiUsageLogSchema>;
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
+export type OrganizationFeatureFlag = typeof organizationFeatureFlags.$inferSelect;
+export type InsertOrganizationFeatureFlag = z.infer<typeof insertOrganizationFeatureFlagSchema>;
+export type BackgroundJob = typeof backgroundJobs.$inferSelect;
+export type InsertBackgroundJob = z.infer<typeof insertBackgroundJobSchema>;
+export type BillingEvent = typeof billingEvents.$inferSelect;
+export type InsertBillingEvent = z.infer<typeof insertBillingEventSchema>;
+
+// User roles constants
+export const USER_ROLES = {
+  SUPERADMIN_OWNER: 'superadmin_owner',
+  SUPERADMIN_STAFF: 'superadmin_staff', 
+  SUPERADMIN_AUDITOR: 'superadmin_auditor',
+  ADMIN: 'admin',
+  MANAGER: 'manager',
+  USER: 'user',
+  GUEST: 'guest'
+} as const;
+
+export type UserRoleType = typeof USER_ROLES[keyof typeof USER_ROLES];
+export type TripRole = typeof TRIP_ROLES[keyof typeof TRIP_ROLES];
+export type OrganizationPlan = typeof ORGANIZATION_PLANS[keyof typeof ORGANIZATION_PLANS];
