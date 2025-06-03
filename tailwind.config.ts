@@ -4,6 +4,10 @@ export default {
   darkMode: ["class"],
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      mono: ['SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'monospace'],
+    },
     extend: {
       borderRadius: {
         lg: "var(--radius)",
@@ -11,6 +15,40 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        // Navan-style electric violet theme
+        electric: {
+          50: '#F8F7FF',
+          100: '#F3F0FF',
+          200: '#E6E0FF',
+          300: '#D4C8FF',
+          400: '#B8A3FF',
+          500: '#6D5DFB', // Primary electric violet
+          600: '#5B4AD9',
+          700: '#4A3AB7',
+          800: '#392C95',
+          900: '#2B2073',
+        },
+        navy: {
+          50: '#F7F8FC',
+          100: '#EEF1F8',
+          200: '#DCE2F0',
+          300: '#C5D0E5',
+          400: '#A8B8D8',
+          500: '#6B7794',
+          600: '#4A5568',
+          700: '#2D3748',
+          800: '#1A202C',
+          900: '#121E36', // Deep navy primary
+        },
+        soft: {
+          50: '#FAFBFF',
+          100: '#F3F6FF', // Soft background
+          200: '#E8ECFF',
+          300: '#DCE2FF',
+          400: '#CBD5FF',
+          500: '#B4C2FF',
+        },
+        // Legacy shadcn colors for compatibility
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -62,6 +100,16 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      backdropBlur: {
+        xs: '2px',
+      },
+      boxShadow: {
+        'glow': '0 0 20px rgba(109, 93, 251, 0.3)',
+        'glow-lg': '0 0 40px rgba(109, 93, 251, 0.4)',
+        'soft': '0 4px 20px rgba(0, 0, 0, 0.05)',
+        'soft-lg': '0 8px 40px rgba(0, 0, 0, 0.08)',
+        'inner-glow': 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+      },
       keyframes: {
         "accordion-down": {
           from: {
@@ -79,10 +127,62 @@ export default {
             height: "0",
           },
         },
+        "slide-up": {
+          from: { 
+            transform: "translateY(100%)",
+            opacity: "0"
+          },
+          to: { 
+            transform: "translateY(0)",
+            opacity: "1"
+          },
+        },
+        "slide-down": {
+          from: { 
+            transform: "translateY(0)",
+            opacity: "1"
+          },
+          to: { 
+            transform: "translateY(100%)",
+            opacity: "0"
+          },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "scale-in": {
+          from: { 
+            transform: "scale(0.95)",
+            opacity: "0"
+          },
+          to: { 
+            transform: "scale(1)",
+            opacity: "1"
+          },
+        },
+        "glow-pulse": {
+          "0%, 100%": { 
+            boxShadow: "0 0 20px rgba(109, 93, 251, 0.3)"
+          },
+          "50%": { 
+            boxShadow: "0 0 40px rgba(109, 93, 251, 0.6)"
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "slide-up": "slide-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "slide-down": "slide-down 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "fade-in": "fade-in 0.2s ease-out",
+        "scale-in": "scale-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+      },
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+        '128': '32rem',
       },
     },
   },
