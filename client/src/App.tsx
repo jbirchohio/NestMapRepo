@@ -29,6 +29,7 @@ import CalendarSettings from "@/pages/CalendarSettings";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CorporateCards from "@/pages/CorporateCards";
+import Superadmin from "@/pages/Superadmin";
 import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/not-found";
 
@@ -59,6 +60,7 @@ function Router() {
         <Route path="/calendar" component={CalendarSettings} />
         <Route path="/white-label" component={WhiteLabelSettings} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/superadmin" component={Superadmin} />
         <Route path="/corporate-cards" component={CorporateCards} />
         <Route path="/onboarding" component={Onboarding} />
         <Route component={NotFound} />

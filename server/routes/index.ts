@@ -32,6 +32,7 @@ router.use('/bookings', bookingRoutes);
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
+router.use('/superadmin', superadminRoutes);
 
 // Register corporate card routes directly in the main router
 registerCorporateCardRoutes(router as any);
