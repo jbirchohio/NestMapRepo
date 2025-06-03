@@ -34,10 +34,10 @@ export default function Analytics() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
-        <Alert className="max-w-md">
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
+      <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800 flex items-center justify-center p-4">
+        <Alert className="max-w-md bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20">
+          <Shield className="h-4 w-4 text-electric-500" />
+          <AlertDescription className="text-navy-700 dark:text-navy-300">
             Please sign in to access analytics dashboard.
           </AlertDescription>
         </Alert>
@@ -47,10 +47,10 @@ export default function Analytics() {
 
   if (!hasAnalyticsAccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
-        <Alert className="max-w-md">
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
+      <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800 flex items-center justify-center p-4">
+        <Alert className="max-w-md bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20">
+          <Shield className="h-4 w-4 text-electric-500" />
+          <AlertDescription className="text-navy-700 dark:text-navy-300">
             You don't have permission to access analytics. Contact your administrator for access.
           </AlertDescription>
         </Alert>
@@ -59,7 +59,7 @@ export default function Analytics() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800 p-4">
       <div className="max-w-7xl mx-auto">
         <AnalyticsDashboard />
       </div>
