@@ -56,9 +56,9 @@ export function SuperadminNavigation() {
           
           return (
             <Link key={item.id} href={item.path}>
-              <a
+              <div
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer',
                   isActive
                     ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800 dark:hover:bg-slate-900'
@@ -66,7 +66,7 @@ export function SuperadminNavigation() {
               >
                 <item.icon className="w-5 h-5" />
                 {item.label}
-              </a>
+              </div>
             </Link>
           );
         })}
