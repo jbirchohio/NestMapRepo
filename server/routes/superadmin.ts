@@ -1,12 +1,52 @@
 import { Router } from 'express';
 import { storage } from '../storage';
-import { requireSuperadmin, requireSuperadminStaff, requireSuperadminOwner } from '../middleware/superadmin';
 import { z } from 'zod';
+import { authenticateUser } from '../auth';
 
 const router = Router();
 
-// Apply superadmin middleware to all routes
-router.use(requireSuperadmin);
+// Strict superadmin authentication
+router.use(async (req: any, res, next) => {
+  try {
+    // First authenticate the user
+    const authResult = await authenticateUser(req);
+    if (!authResult.isAuthenticated || !authResult.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    req.user = authResult.user;
+
+    // Check if user has superadmin role
+    if (req.user.role !== 'superadmin') {
+      // Create audit log for unauthorized access attempt
+      await storage.createSuperadminAuditLog({
+        superadmin_id: null,
+        action: 'UNAUTHORIZED_ACCESS_ATTEMPT',
+        target_type: 'superadmin_dashboard',
+        target_id: req.user.id.toString(),
+        details: { user_role: req.user.role, ip_address: req.ip },
+        ip_address: req.ip
+      });
+      
+      return res.status(403).json({ message: 'Superadmin access required' });
+    }
+
+    // Log successful superadmin access
+    await storage.createSuperadminAuditLog({
+      superadmin_id: req.user.id,
+      action: 'SUPERADMIN_ACCESS',
+      target_type: 'superadmin_dashboard',
+      target_id: 'dashboard',
+      details: { ip_address: req.ip },
+      ip_address: req.ip
+    });
+
+    next();
+  } catch (error) {
+    console.error('Superadmin auth error:', error);
+    res.status(500).json({ message: 'Authentication error' });
+  }
+});
 
 // Organizations & Users
 router.get('/organizations', async (req, res) => {
@@ -29,7 +69,7 @@ router.get('/users', async (req, res) => {
   }
 });
 
-router.post('/users/:id/deactivate', requireSuperadminStaff, async (req, res) => {
+router.post('/users/:id/deactivate', async (req: any, res) => {
   try {
     const userId = parseInt(req.params.id);
     await storage.deactivateUser(userId);
@@ -52,7 +92,7 @@ router.post('/users/:id/deactivate', requireSuperadminStaff, async (req, res) =>
   }
 });
 
-router.post('/orgs/:id/disable', requireSuperadminStaff, async (req, res) => {
+router.post('/orgs/:id/disable', async (req: any, res) => {
   try {
     const orgId = parseInt(req.params.id);
     await storage.disableOrganization(orgId);
