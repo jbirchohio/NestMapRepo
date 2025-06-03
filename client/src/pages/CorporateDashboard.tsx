@@ -92,79 +92,90 @@ export default function CorporateDashboard() {
   const uniqueTravelers = new Set(trips.map(trip => trip.userId)).size;
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
+    <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Company Travel Management Console
-          </h1>
-          <p className="text-muted-foreground">
+        {/* Header with electric violet gradient */}
+        <div className="mb-8 p-8 rounded-2xl bg-gradient-to-r from-electric-500 to-electric-600 text-white">
+          <div className="flex items-center gap-3 mb-4">
+            <Building2 className="h-8 w-8" />
+            <h1 className="text-3xl font-bold">
+              Company Travel Management Console
+            </h1>
+          </div>
+          <p className="text-electric-100 text-lg">
             Streamline your organization's travel planning and expense management
           </p>
-        </div>
-
-        {/* Primary Action */}
-        <div className="mb-8">
-          <Button 
-            onClick={() => setIsNewTripModalOpen(true)}
-            className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md px-8 h-16 gap-3 bg-primary hover:bg-primary/90 text-[#0f172a]"
-            size="lg"
-          >
-            <Plus className="h-5 w-5" />
-            Plan Team Trip
-          </Button>
+          
+          {/* Primary Action Button */}
+          <div className="mt-6">
+            <Button 
+              onClick={() => setIsNewTripModalOpen(true)}
+              className="bg-white hover:bg-white/90 text-electric-600 font-semibold px-8 py-3 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              size="lg"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Plan Team Trip
+            </Button>
+          </div>
         </div>
 
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Company Trips</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Total Company Trips</CardTitle>
+              <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+                <Building2 className="h-4 w-4 text-electric-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalTrips}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-navy-900 dark:text-white">{totalTrips}</div>
+              <p className="text-xs text-navy-600 dark:text-navy-400">
                 Active company trips
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Travel Budget Used</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Travel Budget Used</CardTitle>
+              <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+                <DollarSign className="h-4 w-4 text-electric-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalBudget.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-navy-900 dark:text-white">${totalBudget.toLocaleString()}</div>
+              <p className="text-xs text-navy-600 dark:text-navy-400">
                 Total travel spending
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Team Members</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Team Members</CardTitle>
+              <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+                <Users className="h-4 w-4 text-electric-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{uniqueTravelers}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-navy-900 dark:text-white">{uniqueTravelers}</div>
+              <p className="text-xs text-navy-600 dark:text-navy-400">
                 Unique travelers
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Trip Duration</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Avg Trip Duration</CardTitle>
+              <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
+                <Clock className="h-4 w-4 text-electric-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{avgTripDuration} days</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-navy-900 dark:text-white">{avgTripDuration} days</div>
+              <p className="text-xs text-navy-600 dark:text-navy-400">
                 Optimal for business travel
               </p>
             </CardContent>
@@ -174,7 +185,7 @@ export default function CorporateDashboard() {
         {/* Trip Management */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Recent Trips */}
-          <Card>
+          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
@@ -250,7 +261,7 @@ export default function CorporateDashboard() {
           </Card>
 
           {/* Upcoming Trips */}
-          <Card>
+          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
