@@ -12,14 +12,19 @@ interface HotelResult {
   price: { amount: number; currency: string; per: string };
   amenities: string[];
   images: string[];
-  rating: { score: number; reviews: number };
+  rating: number;
   cancellation: string;
   bookingUrl: string;
 }
 
 interface HotelResultsProps {
-  results: HotelResult[];
+  clientInfo: any;
+  hotelResults: HotelResult[];
+  selectedHotel: HotelResult | null;
   onSelectHotel: (hotel: HotelResult) => void;
+  travelerBookings: any[];
+  onBack: () => void;
+  onContinue: () => void;
   isLoading?: boolean;
 }
 
@@ -30,15 +35,15 @@ const amenityIcons: Record<string, any> = {
   'Fitness Center': Dumbbell,
 };
 
-export function HotelResults({ results, onSelectHotel, isLoading }: HotelResultsProps) {
+export function HotelResults({ clientInfo, hotelResults, selectedHotel, onSelectHotel, travelerBookings, onBack, onContinue, isLoading }: HotelResultsProps) {
   const [sortBy, setSortBy] = useState<'price' | 'rating' | 'stars'>('price');
 
-  const sortedResults = [...results].sort((a, b) => {
+  const sortedResults = [...hotelResults].sort((a, b) => {
     switch (sortBy) {
       case 'price':
         return a.price.amount - b.price.amount;
       case 'rating':
-        return b.rating.score - a.rating.score;
+        return b.rating - a.rating;
       case 'stars':
         return b.starRating - a.starRating;
       default:
@@ -147,10 +152,10 @@ export function HotelResults({ results, onSelectHotel, isLoading }: HotelResults
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-blue-500 text-blue-500" />
-                    <span className="font-semibold">{hotel.rating.score}</span>
+                    <span className="font-semibold">{hotel.rating}</span>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    ({hotel.rating.reviews} reviews)
+                    (Guest Rating)
                   </span>
                 </div>
 
@@ -173,8 +178,11 @@ export function HotelResults({ results, onSelectHotel, isLoading }: HotelResults
                 {/* Cancellation Policy */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-green-600">{hotel.cancellation}</span>
-                  <Button onClick={() => onSelectHotel(hotel)}>
-                    Select Hotel
+                  <Button 
+                    onClick={() => onSelectHotel(hotel)}
+                    variant={selectedHotel?.id === hotel.id ? "default" : "outline"}
+                  >
+                    {selectedHotel?.id === hotel.id ? "Selected" : "Select Hotel"}
                   </Button>
                 </div>
               </div>
@@ -182,6 +190,16 @@ export function HotelResults({ results, onSelectHotel, isLoading }: HotelResults
           </CardContent>
         </Card>
       ))}
+      
+      {/* Navigation Controls */}
+      <div className="flex justify-between items-center mt-6 pt-4 border-t">
+        <Button variant="outline" onClick={onBack}>
+          Back to Flights
+        </Button>
+        <Button onClick={onContinue} disabled={!selectedHotel}>
+          Continue to Confirmation
+        </Button>
+      </div>
     </div>
   );
 }

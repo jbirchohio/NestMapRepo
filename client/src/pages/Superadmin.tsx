@@ -208,53 +208,9 @@ export default function Superadmin() {
         <p className="text-gray-600 dark:text-gray-400">Manage and monitor all organizations</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            Organizations ({organizations.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Organization</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead>Trips</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {organizations.map((org) => (
-                <TableRow key={org.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{org.name}</div>
-                      {org.domain && <div className="text-sm text-gray-500">{org.domain}</div>}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
-                      {org.plan || 'free'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{org.userCount || 0}</TableCell>
-                  <TableCell>{org.tripCount || 0}</TableCell>
-                  <TableCell>
-                    <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
-                      {org.subscription_status || 'inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <OrganizationsList 
+        organizations={organizations}
+      />
     </div>
   );
 
