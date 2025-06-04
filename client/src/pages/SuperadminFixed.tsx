@@ -24,11 +24,17 @@ export default function Superadmin() {
   // Single consolidated dashboard query to eliminate rate limiting
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
     queryKey: ['/api/superadmin/dashboard'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/dashboard').then(res => res.json()),
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/superadmin/dashboard');
+      const data = await response.json();
+      console.log('React Query processing dashboard data:', data);
+      return data;
+    },
     retry: 1,
     refetchOnWindowFocus: false,
     staleTime: 60000,
-    retryDelay: 2000
+    retryDelay: 2000,
+    enabled: true
   });
 
   // Extract data from consolidated response
@@ -44,25 +50,22 @@ export default function Superadmin() {
   const [renderKey, setRenderKey] = useState(0);
   
   // Debug logging to understand data issues
-  console.log('Superadmin dashboard data:', {
-    dashboardData: dashboardData,
-    organizations: organizations,
+  console.log('Dashboard API Response Debug:', {
+    rawDashboardData: dashboardData,
+    hasData: !!dashboardData,
+    organizationsFromAPI: dashboardData?.organizations,
+    usersFromAPI: dashboardData?.users,
+    extractedOrgs: organizations,
+    extractedUsers: users,
     organizationsLength: organizations.length,
-    users: users,
     usersLength: users.length,
     activeSessions: activeSessions,
-    activeSessionsLength: activeSessions.length,
     backgroundJobs: backgroundJobs,
-    backgroundJobsLength: backgroundJobs.length,
     auditLogs: auditLogs,
-    auditLogsLength: auditLogs.length,
     billingData: billingData,
-    billingDataLength: billingData.length,
     featureFlags: featureFlags,
-    featureFlagsLength: featureFlags.length,
     dashboardError: dashboardError,
-    isLoading: dashboardLoading,
-    renderKey
+    isLoading: dashboardLoading
   });
 
   // Force re-render when data updates

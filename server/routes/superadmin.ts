@@ -883,7 +883,7 @@ router.get('/dashboard', requireSuperadmin, async (req, res) => {
       
       // Active sessions
       db.execute(`
-        SELECT id, user_id, email, role, expires_at, organization_id
+        SELECT id, user_id, session_token, ip_address, expires_at, organization_id
         FROM active_sessions
         WHERE expires_at > NOW()
         ORDER BY expires_at DESC
@@ -898,7 +898,7 @@ router.get('/dashboard', requireSuperadmin, async (req, res) => {
       
       // Activity logs
       db.execute(`
-        SELECT id, user_id as admin_user_id, action, entity_type, entity_id, details, created_at
+        SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type, target_id as entity_id, details, created_at
         FROM superadmin_audit_logs
         ORDER BY created_at DESC
         LIMIT 100
