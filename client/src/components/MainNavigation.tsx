@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { RoleGate, useRolePermissions } from '@/hooks/useRolePermissions';
 import NotificationCenter from '@/components/NotificationCenter';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { AnimatedCard } from '@/components/ui/animated-card';
@@ -240,36 +241,74 @@ export default function MainNavigation() {
                   </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-2">
-                  {navigationItems.filter(item => item.show).map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <motion.div
-                        key={item.path}
-                        whileHover={{ scale: 1.02, x: 4 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Link 
-                          href={item.path}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
-                            item.active 
-                              ? 'bg-electric-100 dark:bg-electric-900/30 text-electric-700 dark:text-electric-300 border border-electric-200 dark:border-electric-700' 
-                              : 'hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <IconComponent className={`h-5 w-5 ${item.active ? 'text-electric-600 dark:text-electric-400' : ''}`} />
-                            <span className="font-medium">{item.label}</span>
-                          </div>
-                          {item.badge && (
-                            <Badge variant="secondary" className="text-xs bg-electric-100 text-electric-700 border-electric-200">
-                              {item.badge}
-                            </Badge>
-                          )}
-                        </Link>
-                      </motion.div>
-                    );
-                  })}
+                  {/* Always show basic navigation */}
+                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                    <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                      <Home className="h-5 w-5" />
+                      <span className="font-medium">Dashboard</span>
+                    </Link>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                    <Link href="/trips" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                      <Plane className="h-5 w-5" />
+                      <span className="font-medium">Trips</span>
+                    </Link>
+                  </motion.div>
+
+                  {/* Role-based navigation items */}
+                  <RoleGate requiredPermissions={['canAccessAnalytics']}>
+                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                      <Link href="/analytics" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                        <BarChart3 className="h-5 w-5" />
+                        <span className="font-medium">Analytics</span>
+                      </Link>
+                    </motion.div>
+                  </RoleGate>
+
+                  <RoleGate requiredPermissions={['canIssueCards', 'canViewTransactions']}>
+                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                      <Link href="/corporate" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                        <CreditCard className="h-5 w-5" />
+                        <span className="font-medium">Corporate Cards</span>
+                      </Link>
+                    </motion.div>
+                  </RoleGate>
+
+                  <RoleGate requiredPermissions={['canManageTeam']}>
+                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                      <Link href="/team" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                        <div className="flex items-center gap-3">
+                          <Users className="h-5 w-5" />
+                          <span className="font-medium">Team</span>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  </RoleGate>
+
+                  <RoleGate requiredPermissions={['canManageOrganization']}>
+                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                      <Link href="/organization-settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                        <div className="flex items-center gap-3">
+                          <Building2 className="h-5 w-5" />
+                          <span className="font-medium">Organization</span>
+                        </div>
+                        <Badge variant="destructive" className="text-xs">Admin</Badge>
+                      </Link>
+                    </motion.div>
+                  </RoleGate>
+
+                  <RoleGate requiredPermissions={['canManageOrganization']}>
+                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                      <Link href="/superladmin" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                        <div className="flex items-center gap-3">
+                          <Shield className="h-5 w-5" />
+                          <span className="font-medium">Superadmin</span>
+                        </div>
+                        <Badge variant="destructive" className="text-xs">Global</Badge>
+                      </Link>
+                    </motion.div>
+                  </RoleGate>
                 </div>
               </SheetContent>
             </Sheet>
@@ -396,28 +435,100 @@ export default function MainNavigation() {
         {/* Main Navigation - Full Width Row - Hidden on mobile */}
         <div className="hidden md:block border-t border-slate-200 dark:border-slate-700 py-3">
           <div className="flex flex-wrap gap-2">
-            {navigationItems.filter(item => item.show).map((item) => (
-              <Link key={item.path} href={item.path}>
+            {/* Analytics - Admin/Manager access */}
+            <RoleGate requiredPermissions={['canAccessAnalytics']}>
+              <Link href="/analytics">
                 <Button
-                  variant={item.active ? 'default' : 'ghost'}
+                  variant={location === '/analytics' ? 'default' : 'ghost'}
                   size="sm"
                   className="flex items-center gap-2 whitespace-nowrap"
                 >
-                  <item.icon className="h-4 w-4" />
-                  <span className="text-sm font-medium">{item.label}</span>
-                  {item.badge && (
-                    <Badge 
-                      variant={item.badge === 'Admin' ? 'destructive' : item.active ? 'outline' : 'secondary'} 
-                      className={`ml-1 text-xs ${
-                        item.active ? 'border-white/20 text-white' : ''
-                      }`}
-                    >
-                      {item.badge}
-                    </Badge>
-                  )}
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="text-sm font-medium">Analytics</span>
                 </Button>
               </Link>
-            ))}
+            </RoleGate>
+
+            {/* Corporate Cards - Billing access */}
+            <RoleGate requiredPermissions={['canIssueCards', 'canViewTransactions']}>
+              <Link href="/corporate">
+                <Button
+                  variant={location === '/corporate' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span className="text-sm font-medium">Corporate Cards</span>
+                </Button>
+              </Link>
+            </RoleGate>
+
+            {/* Team Management - Admin/Manager access */}
+            <RoleGate requiredPermissions={['canManageTeam']}>
+              <Link href="/team">
+                <Button
+                  variant={location === '/team' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm font-medium">Team</span>
+                </Button>
+              </Link>
+            </RoleGate>
+
+            {/* Organization Management - Admin only */}
+            <RoleGate requiredPermissions={['canManageOrganization']}>
+              <Link href="/organization-settings">
+                <Button
+                  variant={location === '/organization-settings' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Building2 className="h-4 w-4" />
+                  <span className="text-sm font-medium">Organization</span>
+                  <Badge variant="destructive" className="ml-1 text-xs">Admin</Badge>
+                </Button>
+              </Link>
+            </RoleGate>
+
+            {/* Superadmin Access - Global admin only */}
+            <RoleGate requiredPermissions={['canManageOrganization']}>
+              <Link href="/superladmin">
+                <Button
+                  variant={location === '/superladmin' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Shield className="h-4 w-4" />
+                  <span className="text-sm font-medium">Superadmin</span>
+                  <Badge variant="destructive" className="ml-1 text-xs">Global</Badge>
+                </Button>
+              </Link>
+            </RoleGate>
+
+            {/* Always show basic navigation */}
+            <Link href="/">
+              <Button
+                variant={location === '/' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                <Home className="h-4 w-4" />
+                <span className="text-sm font-medium">Dashboard</span>
+              </Button>
+            </Link>
+
+            <Link href="/trips">
+              <Button
+                variant={location === '/trips' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                <Plane className="h-4 w-4" />
+                <span className="text-sm font-medium">Trips</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
