@@ -29,6 +29,7 @@ import { motion } from 'framer-motion';
 import { 
   Home, 
   BarChart3,
+  Building2,
   Menu,
   X, 
   Plane, 

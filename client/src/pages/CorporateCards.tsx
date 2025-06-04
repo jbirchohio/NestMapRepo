@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { FullScreenModal } from "@/components/ui/full-screen-modal";
+import { RoleGate, useRolePermissions } from "@/hooks/useRolePermissions";
 import { motion } from "framer-motion";
 import { 
   CreditCard, 
@@ -398,24 +399,28 @@ export default function CorporateCards() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex flex-col sm:flex-row gap-4"
             >
-              <PrimaryButton 
-                variant="primary" 
-                size="lg"
-                onClick={() => setIsIssueDialogOpen(true)}
-                className="electric-glow"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Issue New Card
-              </PrimaryButton>
+              <RoleGate requiredPermissions={['canIssueCards']}>
+                <PrimaryButton 
+                  variant="primary" 
+                  size="lg"
+                  onClick={() => setIsIssueDialogOpen(true)}
+                  className="electric-glow"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Issue New Card
+                </PrimaryButton>
+              </RoleGate>
 
-              <PrimaryButton 
-                variant="secondary" 
-                size="lg"
-                onClick={() => setIsManageDialogOpen(true)}
-              >
-                <Settings className="w-5 h-5 mr-2" />
-                Manage Cards
-              </PrimaryButton>
+              <RoleGate requiredPermissions={['canFreezeCards', 'canIssueCards']}>
+                <PrimaryButton 
+                  variant="secondary" 
+                  size="lg"
+                  onClick={() => setIsManageDialogOpen(true)}
+                >
+                  <Settings className="w-5 h-5 mr-2" />
+                  Manage Cards
+                </PrimaryButton>
+              </RoleGate>
             </motion.div>
           </div>
         </div>
