@@ -262,7 +262,6 @@ export default function SuperadminClean() {
   );
 
   const renderSectionContent = () => {
-    console.log('Active section:', activeSection, 'Location:', location);
     switch (activeSection) {
       case 'overview':
       case '':
