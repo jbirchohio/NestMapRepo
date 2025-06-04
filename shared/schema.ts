@@ -41,6 +41,12 @@ export const organizations = pgTable("organizations", {
   stripe_subscription_id: text("stripe_subscription_id"),
   subscription_status: text("subscription_status").default("inactive"), // active, inactive, past_due, canceled
   current_period_end: timestamp("current_period_end"),
+  // Stripe Connect for corporate cards
+  stripe_account_id: text("stripe_account_id"), // Connected Stripe account for this organization
+  stripe_issuing_enabled: boolean("stripe_issuing_enabled").default(false),
+  funding_source_id: text("funding_source_id"), // Primary funding source for cards
+  funding_source_type: text("funding_source_type"), // bank_account, credit_line, stripe_balance
+  funding_source_status: text("funding_source_status").default("pending"), // pending, active, inactive, failed
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
