@@ -166,7 +166,7 @@ export default function SuperadminClean() {
       case 'overview':
       case '':
         return renderDashboardOverview();
-        
+
       case 'organizations':
         return (
           <div>
@@ -213,17 +213,17 @@ export default function SuperadminClean() {
                     {organizations.map((org: Organization) => (
                       <TableRow 
                         key={org.id}
-                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                         onClick={() => window.location.href = `/superadmin/organizations/${org.id}`}
                       >
                         <TableCell className="font-medium">{org.name}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{org.type}</Badge>
+                          <Badge variant="outline">{org.plan || 'Basic'}</Badge>
                         </TableCell>
-                        <TableCell>{org.memberCount || 0}</TableCell>
+                        <TableCell>{org.user_count || 0}</TableCell>
                         <TableCell>
-                          <Badge variant={org.isActive ? 'default' : 'secondary'}>
-                            {org.isActive ? 'Active' : 'Inactive'}
+                          <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
+                            {org.subscription_status || 'Inactive'}
                           </Badge>
                         </TableCell>
                         <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
@@ -235,7 +235,7 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
+
       case 'users':
         return (
           <div>
@@ -300,7 +300,7 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
+
       case 'activity':
         return (
           <div>
@@ -346,7 +346,7 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
+
       case 'billing':
         return (
           <div>
@@ -388,7 +388,7 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
+
       case 'sessions':
         return (
           <div>
@@ -435,7 +435,7 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
+
       case 'flags':
         return (
           <div>
@@ -460,7 +460,7 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
+
       case 'jobs':
         return (
           <div>
@@ -506,7 +506,7 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
+
       case 'settings':
         return (
           <div>
@@ -531,7 +531,7 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
+
       default:
         return (
           <div>
@@ -562,7 +562,7 @@ export default function SuperadminClean() {
   return (
     <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
       <SuperadminNavigation />
-      
+
       {/* Main Content */}
       <div className="lg:ml-64 container mx-auto px-6 py-8 space-y-8">
         {renderSectionContent()}
