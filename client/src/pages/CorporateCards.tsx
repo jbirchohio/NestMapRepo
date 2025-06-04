@@ -172,6 +172,14 @@ export default function CorporateCards() {
   };
 
   const getStatusBadge = (status: string) => {
+    if (!status) {
+      return (
+        <Badge className="bg-gray-100 text-gray-800">
+          Unknown
+        </Badge>
+      );
+    }
+    
     const statusColors = {
       active: "bg-green-100 text-green-800",
       inactive: "bg-yellow-100 text-yellow-800",
@@ -354,7 +362,7 @@ export default function CorporateCards() {
             <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Corporate Cards</h2>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
-                {cards.filter((card: CorporateCard) => card.card_status === 'active').length} active
+                {cards.filter((card: CorporateCard) => card.status === 'active').length} active
               </span>
             </div>
           </div>
@@ -372,10 +380,10 @@ export default function CorporateCards() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-navy-900 dark:text-white">{card.cardholder_name}</h3>
-                        <p className="text-sm text-muted-foreground">{card.user.email}</p>
+                        <p className="text-sm text-muted-foreground">{card.card_number_masked}</p>
                       </div>
                     </div>
-                    {getStatusBadge(card.card_status)}
+                    {getStatusBadge(card.status)}
                   </div>
 
                   <div className="space-y-3">
@@ -400,7 +408,7 @@ export default function CorporateCards() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Remaining</span>
-                      <span className="font-medium text-green-600">{formatCurrency(card.remaining_limit || 0)}</span>
+                      <span className="font-medium text-green-600">{formatCurrency(card.available_balance || 0)}</span>
                     </div>
 
                     {card.purpose && (
