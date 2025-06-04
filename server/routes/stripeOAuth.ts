@@ -76,7 +76,12 @@ router.post('/oauth/authorize', async (req, res) => {
     // Log the client ID for debugging (first 10 characters only)
     console.log('✅ Using Stripe Connect Client ID:', process.env.STRIPE_CONNECT_CLIENT_ID?.substring(0, 10) + '...');
     
-    const redirectUri = `https://${process.env.REPLIT_DEV_DOMAIN}/api/stripe/oauth/callback`;
+    // Use the host from the request to ensure it matches what Stripe expects
+    const host = req.get('host');
+    const redirectUri = `https://${host}/api/stripe/oauth/callback`;
+    
+    console.log('🌐 Using host:', host);
+    console.log('🔗 Full redirect URI:', redirectUri);
     
     console.log('🔗 OAuth redirect URI:', redirectUri);
 
