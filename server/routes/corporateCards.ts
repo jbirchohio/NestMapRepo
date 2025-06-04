@@ -476,4 +476,52 @@ router.get("/cards/:cardId/balance", requireAuth, async (req, res) => {
   }
 });
 
+// Delete card
+router.delete("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    const card = await storage.getCorporateCard(parseInt(cardId));
+    
+    if (!card) {
+      return res.status(404).json({ error: "Card not found" });
+    }
+
+    if (card.organization_id !== req.user!.organization_id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Cancel card in Stripe first
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    await stripe.issuing.cards.update(card.stripe_card_id, {
+      status: 'canceled',
+    });
+
+    // Delete card from database
+    const deleted = await storage.deleteCorporateCard(card.id);
+    
+    if (!deleted) {
+      return res.status(500).json({ error: "Failed to delete card from database" });
+    }
+
+    await auditLogger.logAction({
+      action: "DELETE_CORPORATE_CARD",
+      userId: req.user!.id,
+      organizationId: req.user!.organization_id!,
+      entityType: "corporate_card",
+      entityId: card.id,
+      riskLevel: "high",
+      details: {
+        card_id: card.id,
+        stripe_card_id: card.stripe_card_id,
+        cardholder_name: card.cardholder_name,
+      },
+    });
+
+    res.json({ success: true, message: "Card deleted successfully" });
+  } catch (error: any) {
+    console.error("Delete card error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

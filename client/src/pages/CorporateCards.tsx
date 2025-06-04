@@ -138,7 +138,7 @@ export default function CorporateCards() {
   // Freeze/unfreeze card mutation
   const freezeCardMutation = useMutation({
     mutationFn: async ({ cardId, freeze }: { cardId: number; freeze: boolean }) => {
-      const response = await apiRequest("POST", `/api/corporate-card/${cardId}/freeze`, { freeze });
+      const response = await apiRequest("POST", `/api/corporate-cards/cards/${cardId}/freeze`, { freeze });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to update card status");
@@ -171,7 +171,7 @@ export default function CorporateCards() {
   // Delete card mutation
   const deleteCardMutation = useMutation({
     mutationFn: async (cardId: number) => {
-      const response = await apiRequest("DELETE", `/api/corporate-card/${cardId}`);
+      const response = await apiRequest("DELETE", `/api/corporate-cards/cards/${cardId}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to delete card");
