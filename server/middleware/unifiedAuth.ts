@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabaseAdmin } from '../supabaseAdmin';
+import { getUserById } from '../auth';
+import { db } from '../db';
+import { users } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 // Extend Express Request interface for unified authorization
 declare global {
@@ -60,6 +63,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
   }
 
   const token = authHeader.substring(7);
+  let userId: number | null = null;
 
   try {
     // Verify JWT token with Supabase
@@ -90,64 +94,18 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
-    // Look up user profile in Supabase database by auth ID
-    const { data: userProfiles, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('*')
-      .eq('auth_id', authId)
+    // Look up database user by Supabase auth ID directly from database
+    const [dbUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.auth_id, authId))
       .limit(1);
 
-    if (userError || !userProfiles || userProfiles.length === 0) {
-      return res.status(401).json({ message: "User profile not found" });
+    if (!dbUser) {
+      return res.status(401).json({ message: "User not found" });
     }
 
-    const dbUser = userProfiles[0];
-
-    // Convert database user (snake_case) to request user (camelCase for frontend compatibility)
-    req.user = {
-      id: dbUser.id,
-      email: dbUser.email,
-      role: dbUser.role,
-      organizationId: dbUser.organization_id || null,
-      displayName: dbUser.display_name || null,
-      authId: dbUser.auth_id,
-      username: dbUser.username,
-      avatarUrl: dbUser.avatar_url || null,
-      roleType: dbUser.role_type || null,
-      company: dbUser.company || null,
-      jobTitle: dbUser.job_title || null,
-      teamSize: dbUser.team_size || null,
-      useCase: dbUser.use_case || null,
-      lastLogin: dbUser.last_login || null,
-      createdAt: dbUser.created_at || null
-    };
-
-    // Set organization context for tenant isolation (keep snake_case for backend)
-    req.organizationId = dbUser.organization_id;
-    req.organization_id = dbUser.organization_id;
-
-    // Create organization context utilities
-    req.organizationContext = {
-      id: dbUser.organization_id,
-
-      canAccessOrganization: (targetOrgId: number | null): boolean => {
-        // Super admins can access any organization
-        if (dbUser.role === 'superadmin' || dbUser.role === 'superadmin_owner' || dbUser.role === 'superadmin_staff' || dbUser.role === 'super_admin') {
-          return true;
-        }
-
-        // Regular users can only access their own organization
-        return dbUser.organization_id === targetOrgId;
-      },
-
-      enforceOrganizationAccess: (targetOrgId: number | null): void => {
-        if (!req.organizationContext!.canAccessOrganization(targetOrgId)) {
-          throw new Error('Access denied: Cannot access resources from other organizations');
-        }
-      }
-    };
-
-    next();
+    userId = dbUser.id;
   } catch (error) {
     console.error('CRITICAL JWT AUTHENTICATION FAILURE:', error);
     // Log detailed error for security audit
@@ -160,6 +118,54 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     });
     return res.status(401).json({ message: "Authentication failed" });
   }
+
+  getUserById(userId!)
+    .then(user => {
+      if (!user) {
+        // Clear invalid session
+        delete (req.session as any).user_id;
+        return res.status(401).json({ message: "Invalid session" });
+      }
+
+      // Populate unified user context (getUserById returns organizationId in camelCase)
+      req.user = {
+        id: user.id,
+        email: user.email,
+        organization_id: user.organizationId ?? undefined,
+        role: user.role ?? undefined,
+        displayName: user.displayName ?? undefined
+      };
+
+      // Set organization context for tenant isolation  
+      (req as any).organization_id = user.organizationId ?? undefined;
+
+      // Create organization context utilities
+      req.organizationContext = {
+        id: user.organizationId,
+
+        canAccessOrganization: (targetOrgId: number | null): boolean => {
+          // Super admins can access any organization
+          if (user.role === 'super_admin') {
+            return true;
+          }
+
+          // Regular users can only access their own organization
+          return user.organizationId === targetOrgId;
+        },
+
+        enforceOrganizationAccess: (targetOrgId: number | null): void => {
+          if (!req.organizationContext!.canAccessOrganization(targetOrgId)) {
+            throw new Error('Access denied: Cannot access resources from other organizations');
+          }
+        }
+      };
+
+      next();
+    })
+    .catch(error => {
+      console.error('Authentication error:', error);
+      res.status(500).json({ message: "Authentication failed" });
+    });
 }
 
 /**

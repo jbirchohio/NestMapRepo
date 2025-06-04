@@ -20,7 +20,6 @@ import {
   insertSuperadminBackgroundJobSchema,
 } from '@shared/superadmin-schema';
 import { hashPassword } from '../auth';
-import { supabaseAdmin } from '../supabaseAdmin';
 
 const router = express.Router();
 
@@ -202,65 +201,23 @@ router.delete('/organizations/:id', requireSuperadmin, async (req, res) => {
 // Users endpoints
 router.get('/users', requireSuperadmin, async (req, res) => {
   try {
-    // Fetch all users from Supabase auth
-    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
-    
-    if (authError) {
-      console.error('Error fetching users from Supabase:', authError);
-      return res.status(500).json({ error: 'Failed to fetch users from authentication system' });
-    }
-
-    // Fetch user profiles from Supabase database
-    const { data: profiles, error: profilesError } = await supabaseAdmin
-      .from('users')
-      .select(`
-        id,
-        auth_id,
-        username,
-        email,
-        display_name,
-        role,
-        role_type,
-        organization_id,
-        company,
-        job_title,
-        created_at
-      `)
-      .order('created_at', { ascending: false });
-
-    // Fetch organizations separately to avoid join issues
-    const { data: organizations, error: orgsError } = await supabaseAdmin
-      .from('organizations')
-      .select('id, name');
-
-    if (profilesError) {
-      console.error('Error fetching user profiles from Supabase:', profilesError);
-      return res.status(500).json({ error: 'Failed to fetch user profiles' });
-    }
-
-    // Merge auth data with profile data
-    const usersData = profiles?.map(profile => {
-      const authUser = authUsers.users.find(u => u.id === profile.auth_id);
-      const organization = organizations?.find(org => org.id === profile.organization_id);
-      
-      return {
-        id: profile.id,
-        auth_id: profile.auth_id,
-        username: profile.username,
-        email: profile.email,
-        display_name: profile.display_name,
-        role: profile.role,
-        role_type: profile.role_type,
-        organization_id: profile.organization_id,
-        company: profile.company,
-        job_title: profile.job_title,
-        created_at: profile.created_at,
-        organization_name: organization?.name || null,
-        // Add auth-specific data
-        email_confirmed: authUser?.email_confirmed_at ? true : false,
-        last_sign_in: authUser?.last_sign_in_at,
-      };
-    }) || [];
+    const usersData = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        display_name: users.display_name,
+        role: users.role,
+        role_type: users.role_type,
+        organization_id: users.organization_id,
+        company: users.company,
+        job_title: users.job_title,
+        created_at: users.created_at,
+        organization_name: organizations.name,
+      })
+      .from(users)
+      .leftJoin(organizations, eq(users.organization_id, organizations.id))
+      .orderBy(desc(users.created_at));
 
     res.json(usersData);
   } catch (error) {
@@ -272,43 +229,31 @@ router.get('/users', requireSuperadmin, async (req, res) => {
 router.get('/users/:id', requireSuperadmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    
-    // Get user from Supabase database
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    const [user] = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        display_name: users.display_name,
+        role: users.role,
+        role_type: users.role_type,
+        organization_id: users.organization_id,
+        company: users.company,
+        job_title: users.job_title,
+        team_size: users.team_size,
+        use_case: users.use_case,
+        created_at: users.created_at,
+        organization_name: organizations.name,
+      })
+      .from(users)
+      .leftJoin(organizations, eq(users.organization_id, organizations.id))
+      .where(eq(users.id, userId));
 
-    if (userError || !user) {
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Get organization details if user has one
-    let organization = null;
-    if (user.organization_id) {
-      const { data: org, error: orgError } = await supabaseAdmin
-        .from('organizations')
-        .select('id, name')
-        .eq('id', user.organization_id)
-        .single();
-      
-      if (!orgError && org) {
-        organization = org;
-      }
-    }
-
-    // Get auth user details from Supabase auth
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(user.auth_id);
-
-    const userWithDetails = {
-      ...user,
-      organization_name: organization?.name || null,
-      email_confirmed: authUser?.user?.email_confirmed_at ? true : false,
-      last_sign_in: authUser?.user?.last_sign_in_at || null,
-    };
-
-    res.json(userWithDetails);
+    res.json(user);
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Failed to fetch user' });
@@ -320,41 +265,14 @@ router.put('/users/:id', requireSuperadmin, async (req, res) => {
     const userId = parseInt(req.params.id);
     const updates = req.body;
 
-    // Get current user data
-    const { data: currentUser, error: getUserError } = await supabaseAdmin
-      .from('users')
-      .select('auth_id, email')
-      .eq('id', userId)
-      .single();
+    const [updatedUser] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, userId))
+      .returning();
 
-    if (getUserError || !currentUser) {
+    if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Update user profile in Supabase database
-    const { data: updatedUser, error: updateError } = await supabaseAdmin
-      .from('users')
-      .update(updates)
-      .eq('id', userId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error('Error updating user profile:', updateError);
-      return res.status(500).json({ error: 'Failed to update user profile' });
-    }
-
-    // If email is being updated, also update it in Supabase Auth
-    if (updates.email && updates.email !== currentUser.email) {
-      const { error: emailUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
-        currentUser.auth_id,
-        { email: updates.email }
-      );
-
-      if (emailUpdateError) {
-        console.error('Error updating email in Supabase auth:', emailUpdateError);
-        // Continue even if auth email update fails - profile is already updated
-      }
     }
 
     await logSuperadminAction(
@@ -362,7 +280,7 @@ router.put('/users/:id', requireSuperadmin, async (req, res) => {
       'UPDATE_USER',
       'user',
       userId,
-      { ...updates, auth_id: currentUser.auth_id }
+      updates
     );
 
     res.json(updatedUser);
@@ -381,26 +299,17 @@ router.post('/users/:id/reset-password', requireSuperadmin, async (req, res) => 
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
 
-    // Get user from Supabase database
-    const { data: user, error: getUserError } = await supabaseAdmin
-      .from('users')
-      .select('auth_id, username, email')
-      .eq('id', userId)
-      .single();
+    // Use existing password hashing system
+    const passwordHash = hashPassword(newPassword);
 
-    if (getUserError || !user) {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ password_hash: passwordHash })
+      .where(eq(users.id, userId))
+      .returning({ id: users.id, username: users.username, email: users.email });
+
+    if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Update password in Supabase Auth
-    const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
-      user.auth_id,
-      { password: newPassword }
-    );
-
-    if (passwordError) {
-      console.error('Error updating password in Supabase auth:', passwordError);
-      return res.status(500).json({ error: 'Failed to update password in authentication system' });
     }
 
     await logSuperadminAction(
@@ -408,17 +317,10 @@ router.post('/users/:id/reset-password', requireSuperadmin, async (req, res) => 
       'RESET_PASSWORD',
       'user',
       userId,
-      { target_username: user.username, auth_id: user.auth_id }
+      { target_username: updatedUser.username }
     );
 
-    res.json({ 
-      success: true, 
-      user: { 
-        id: userId, 
-        username: user.username, 
-        email: user.email 
-      } 
-    });
+    res.json({ success: true, user: updatedUser });
   } catch (error) {
     console.error('Error resetting password:', error);
     res.status(500).json({ error: 'Failed to reset password' });
@@ -429,53 +331,32 @@ router.delete('/users/:id', requireSuperadmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
 
-    // Get user info from Supabase database before deletion
-    const { data: user, error: getUserError } = await supabaseAdmin
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    // Get user info before deletion
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
 
-    if (getUserError || !user) {
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Delete from Supabase Auth first (this will cascade to related data)
-    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(user.auth_id);
-    
-    if (authDeleteError) {
-      console.error('Error deleting user from Supabase auth:', authDeleteError);
-      return res.status(500).json({ error: 'Failed to delete user from authentication system' });
-    }
+    // Delete organization memberships first
+    await db
+      .delete(organizationMembers)
+      .where(eq(organizationMembers.user_id, userId));
 
-    // Delete organization memberships from Supabase database
-    const { error: memberDeleteError } = await supabaseAdmin
-      .from('organization_members')
-      .delete()
-      .eq('user_id', userId);
-
-    if (memberDeleteError) {
-      console.error('Error deleting organization memberships:', memberDeleteError);
-      // Continue with user deletion even if membership deletion fails
-    }
-
-    // Delete user profile from Supabase database
-    const { error: profileDeleteError } = await supabaseAdmin
-      .from('users')
-      .delete()
-      .eq('id', userId);
-
-    if (profileDeleteError) {
-      console.error('Error deleting user profile:', profileDeleteError);
-      return res.status(500).json({ error: 'Failed to delete user profile' });
-    }
+    // Delete the user
+    await db
+      .delete(users)
+      .where(eq(users.id, userId));
 
     await logSuperadminAction(
       req.user!.id,
       'DELETE_USER',
       'user',
       userId,
-      { username: user.username, email: user.email, auth_id: user.auth_id }
+      { username: user.username, email: user.email }
     );
 
     res.json({ success: true });
