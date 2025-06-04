@@ -635,9 +635,11 @@ export default function SuperadminClean() {
     <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
       <SuperadminNavigation />
 
-      {/* Main Content */}
-      <div className="lg:ml-64 container mx-auto px-6 py-8 space-y-8">
-        {renderSectionContent()}
+      {/* Main Content - Fixed responsive layout */}
+      <div className="lg:ml-64 w-full px-6 py-8 space-y-8 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          {renderSectionContent()}
+        </div>
       </div>
     </div>
   );
