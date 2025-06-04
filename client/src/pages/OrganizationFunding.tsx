@@ -97,16 +97,22 @@ export default function OrganizationFunding() {
 
   // Start Stripe Connect OAuth flow
   const createAccountMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       console.log('Attempting to connect to Stripe...');
-      return apiRequest('POST', '/api/stripe/oauth/authorize', { organizationId: 1 });
+      const response = await apiRequest('POST', '/api/stripe/oauth/authorize', { organizationId: 1 });
+      console.log('Raw API response:', response);
+      return response;
     },
     onSuccess: (data: any) => {
       console.log('OAuth response data:', data);
-      if (data.authUrl) {
+      console.log('Type of data:', typeof data);
+      console.log('Data keys:', Object.keys(data || {}));
+      
+      if (data && data.authUrl) {
         console.log('Redirecting to:', data.authUrl);
         window.location.href = data.authUrl;
       } else {
+        console.error('Missing authUrl in response:', data);
         toast({
           title: "Error",
           description: 'No auth URL received from server',
