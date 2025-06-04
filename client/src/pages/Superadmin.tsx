@@ -217,14 +217,14 @@ export default function Superadmin() {
   const renderUsersSection = () => (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Users</h1>
-        <p className="text-gray-600 dark:text-gray-400">Manage and monitor all users</p>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent">Users</h1>
+        <p className="text-navy-600 dark:text-navy-300">Manage and monitor all users</p>
       </div>
 
-      <Card>
+      <Card className="glass-card border-electric-200/30 dark:border-electric-700/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-navy-700 dark:text-navy-200">
+            <Users className="h-5 w-5 text-electric-600" />
             Users ({users.length})
           </CardTitle>
         </CardHeader>
@@ -607,24 +607,24 @@ export default function Superadmin() {
           </div>
 
           <Tabs defaultValue="organizations" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="organizations">Organizations</TabsTrigger>
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-              <TabsTrigger value="billing">Billing</TabsTrigger>
-              <TabsTrigger value="sessions">Sessions</TabsTrigger>
-              <TabsTrigger value="flags">Flags</TabsTrigger>
-              <TabsTrigger value="jobs">Jobs</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-7 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border-electric-200/30 dark:border-electric-700/30">
+              <TabsTrigger value="organizations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Organizations</TabsTrigger>
+              <TabsTrigger value="users" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Users</TabsTrigger>
+              <TabsTrigger value="activity" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Activity</TabsTrigger>
+              <TabsTrigger value="billing" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Billing</TabsTrigger>
+              <TabsTrigger value="sessions" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Sessions</TabsTrigger>
+              <TabsTrigger value="flags" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Flags</TabsTrigger>
+              <TabsTrigger value="jobs" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Jobs</TabsTrigger>
             </TabsList>
 
             <TabsContent value="organizations">
-              <Card>
+              <Card className="glass-card border-electric-200/30 dark:border-electric-700/30">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-navy-700 dark:text-navy-200">
+                    <Building2 className="h-5 w-5 text-electric-600" />
                     Organizations
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-navy-600 dark:text-navy-400">
                     Manage organizational accounts and settings
                   </CardDescription>
                 </CardHeader>
