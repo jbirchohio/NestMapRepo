@@ -550,13 +550,13 @@ router.put("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) => 
       return res.status(403).json({ error: "Access denied" });
     }
 
-    // Update card in database - ensure numbers are properly formatted
+    // Update card in database - keep dollars format for consistency
     const updatePayload = {
       ...validatedData,
-      // Ensure spending limit is stored in cents to match database schema
+      // Store spending limit in dollars to match frontend expectations
       ...(validatedData.spend_limit !== undefined && { 
-        spending_limit: Math.round(validatedData.spend_limit * 100), // Convert to cents
-        available_balance: Math.round(validatedData.spend_limit * 100) // Update available balance to match new limit
+        spending_limit: validatedData.spend_limit, // Keep in dollars
+        available_balance: validatedData.spend_limit // Update available balance to match new limit
       })
     };
     
