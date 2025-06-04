@@ -95,22 +95,18 @@ export default function OrganizationFunding() {
     staleTime: 30000
   });
 
-  // Create Stripe Connect account
+  // Start Stripe Connect OAuth flow
   const createAccountMutation = useMutation({
-    mutationFn: (data: typeof businessInfo) => 
-      apiRequest('POST', '/api/organization-funding/create-account', data),
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Stripe Connect account created successfully"
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/organization-funding/status'] });
-      setActiveTab('onboarding');
+    mutationFn: () => 
+      apiRequest('POST', '/api/stripe/oauth/authorize', { organizationId: 1 }),
+    onSuccess: (data: any) => {
+      // Redirect to Stripe OAuth
+      window.location.href = data.authUrl;
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create account",
+        description: error.message || "Failed to start OAuth flow",
         variant: "destructive"
       });
     }

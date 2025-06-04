@@ -16,6 +16,7 @@ import corporateCardRoutes from './corporateCards';
 import organizationFundingRoutes from './organizationFunding';
 import superadminRoutes from './superadmin';
 import webhookRoutes from './webhooks';
+import stripeOAuthRoutes from './stripeOAuth';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -38,6 +39,7 @@ router.use('/corporate-cards', corporateCardRoutes);
 router.use('/organization-funding', organizationFundingRoutes);
 router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
+router.use('/stripe', stripeOAuthRoutes);
 
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {
