@@ -168,6 +168,32 @@ export default function CorporateCards() {
     },
   });
 
+  // Update card mutation
+  const updateCardMutation = useMutation({
+    mutationFn: async ({ cardId, updateData }: { cardId: number; updateData: any }) => {
+      const response = await apiRequest("PUT", `/api/corporate-cards/cards/${cardId}`, updateData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update card");
+      }
+      return response.json();
+    },
+    onSuccess: async () => {
+      toast({
+        title: "Card Updated",
+        description: "Card details have been updated successfully.",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update card",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Delete card mutation
   const deleteCardMutation = useMutation({
     mutationFn: async (cardId: number) => {
@@ -766,13 +792,14 @@ export default function CorporateCards() {
                     className="w-full"
                     onClick={() => {
                       const spendingLimitInput = document.getElementById('spending_limit') as HTMLInputElement;
-                      const newLimit = parseFloat(spendingLimitInput.value) * 100; // Convert to cents
+                      const newLimit = parseFloat(spendingLimitInput.value); // Keep in dollars (don't multiply by 100)
                       
-                      // Here you would call an update mutation
-                      toast({
-                        title: "Limits Updated",
-                        description: "Spending limits have been updated successfully.",
-                      });
+                      if (selectedCard && newLimit > 0) {
+                        updateCardMutation.mutate({
+                          cardId: selectedCard.id,
+                          updateData: { spend_limit: newLimit }
+                        });
+                      }
                     }}
                   >
                     Update Limits
