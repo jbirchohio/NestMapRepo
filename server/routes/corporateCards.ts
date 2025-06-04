@@ -33,16 +33,75 @@ const createCardholderSchema = z.object({
 });
 
 const createCardSchema = z.object({
-  user_id: z.union([z.number(), z.string().transform(val => parseInt(val))]),
-  spend_limit: z.union([z.number(), z.string().transform(val => parseFloat(val))]).refine(val => val >= 0, "Spending limit must be non-negative"),
+  user_id: z.union([
+    z.number(),
+    z.string().transform((val, ctx) => {
+      const parsed = parseInt(val);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "User ID must be a valid number",
+        });
+        return z.NEVER;
+      }
+      return parsed;
+    })
+  ]),
+  spend_limit: z.union([
+    z.number(),
+    z.string().transform((val, ctx) => {
+      const parsed = parseFloat(val);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Spending limit must be a valid number",
+        });
+        return z.NEVER;
+      }
+      return parsed;
+    })
+  ]).refine(val => val >= 0, "Spending limit must be non-negative"),
   interval: z.string(),
   cardholder_name: z.string().min(1, "Cardholder name is required"),
   purpose: z.string().optional(),
   department: z.string().optional(),
 });
 
+const updateCardSchema = z.object({
+  spend_limit: z.union([
+    z.number(),
+    z.string().transform((val, ctx) => {
+      const parsed = parseFloat(val);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Spending limit must be a valid number",
+        });
+        return z.NEVER;
+      }
+      return parsed;
+    })
+  ]).refine(val => val >= 0, "Spending limit must be non-negative").optional(),
+  status: z.enum(['active', 'inactive', 'frozen', 'canceled']).optional(),
+  purpose: z.string().optional(),
+  department: z.string().optional(),
+});
+
 const addFundsSchema = z.object({
-  amount: z.union([z.number(), z.string().transform(val => parseFloat(val))]).refine(val => val > 0, "Amount must be greater than 0"),
+  amount: z.union([
+    z.number(),
+    z.string().transform((val, ctx) => {
+      const parsed = parseFloat(val);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Amount must be a valid number",
+        });
+        return z.NEVER;
+      }
+      return parsed;
+    })
+  ]).refine(val => val > 0, "Amount must be greater than 0"),
 });
 
 const createTransactionSchema = z.object({
@@ -473,6 +532,61 @@ router.get("/cards/:cardId/balance", requireAuth, async (req, res) => {
   } catch (error: any) {
     console.error("Get balance error:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Update card
+router.put("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) => {
+  try {
+    const { cardId } = req.params;
+    const validatedData = updateCardSchema.parse(req.body);
+
+    const card = await storage.getCorporateCard(parseInt(cardId));
+    if (!card) {
+      return res.status(404).json({ error: "Card not found" });
+    }
+
+    if (card.organization_id !== req.user!.organization_id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Update card in database
+    const updatedCard = await storage.updateCorporateCard(card.id, validatedData);
+
+    // If spending limit changed, update Stripe card
+    if (validatedData.spend_limit !== undefined) {
+      const Stripe = await import('stripe');
+      const stripe = new Stripe.default(process.env.STRIPE_SECRET_KEY!);
+      
+      await stripe.issuing.cards.update(card.stripe_card_id, {
+        spending_controls: {
+          spending_limits: [
+            {
+              amount: Math.round(validatedData.spend_limit * 100),
+              interval: 'monthly',
+            },
+          ],
+        },
+      });
+    }
+
+    await auditLogger.logAction({
+      action: "UPDATE_CORPORATE_CARD",
+      userId: req.user!.id,
+      organizationId: req.user!.organization_id!,
+      entityType: "corporate_card",
+      entityId: card.id,
+      riskLevel: "medium",
+      details: {
+        card_id: card.id,
+        updates: validatedData,
+      },
+    });
+
+    res.json({ card: updatedCard });
+  } catch (error: any) {
+    console.error("Update card error:", error);
+    res.status(400).json({ error: error.message });
   }
 });
 
