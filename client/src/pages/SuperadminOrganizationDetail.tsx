@@ -128,24 +128,46 @@ export default function SuperadminOrganizationDetail() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Link href="/superadmin/organizations">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </Link>
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <div className="w-64 bg-card border-r border-border p-6">
+        <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">{organization.name}</h1>
-            <p className="text-muted-foreground">Organization Details</p>
+            <h2 className="text-lg font-semibold mb-4">Superadmin</h2>
+            <nav className="space-y-2">
+              <Link href="/superadmin" className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-accent">
+                <Users className="w-4 h-4 mr-3" />
+                Dashboard
+              </Link>
+              <Link href="/superadmin" className="flex items-center px-3 py-2 text-sm rounded-md bg-accent text-accent-foreground">
+                <Building className="w-4 h-4 mr-3" />
+                Organizations
+              </Link>
+            </nav>
           </div>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link href="/superadmin">
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold">{organization.name}</h1>
+                <p className="text-muted-foreground">Organization Details</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Edit className="w-4 h-4 mr-2" />
@@ -420,6 +442,8 @@ export default function SuperadminOrganizationDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </div>
+      </div>
     </div>
   );
 }
