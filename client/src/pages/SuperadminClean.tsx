@@ -398,6 +398,178 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
+      case 'activity':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Recent Activity
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                System audit log and recent activities
+              </p>
+            </motion.div>
+
+            <AnimatedCard variant="glow" className="p-6">
+              {dashboardError ? (
+                <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
+                  <AlertTriangle className="h-4 w-4" />
+                  Failed to load activity data
+                </div>
+              ) : dashboardLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+                </div>
+              ) : auditLogs.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No activity found
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {auditLogs.slice(0, 10).map((log: AuditLog) => (
+                    <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+                      <div className="flex-shrink-0 mt-1">
+                        <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{log.action}</p>
+                        <p className="text-sm text-gray-500">{log.target_type} #{log.target_id}</p>
+                        <p className="text-xs text-gray-400">
+                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </AnimatedCard>
+          </div>
+        );
+      case 'billing':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Billing Overview
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                System-wide billing and subscription information
+              </p>
+            </motion.div>
+
+            <AnimatedCard variant="glow" className="p-6">
+              <div className="text-center py-8 text-gray-500">
+                Billing data will be available when connected to payment systems
+              </div>
+            </AnimatedCard>
+          </div>
+        );
+      case 'sessions':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Active Sessions
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                Currently active user sessions
+              </p>
+            </motion.div>
+
+            <AnimatedCard variant="glow" className="p-6">
+              <div className="text-center py-8 text-gray-500">
+                Session monitoring coming soon
+              </div>
+            </AnimatedCard>
+          </div>
+        );
+      case 'flags':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Feature Flags
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                System feature flags and configuration
+              </p>
+            </motion.div>
+
+            <AnimatedCard variant="glow" className="p-6">
+              <div className="text-center py-8 text-gray-500">
+                Feature flags management coming soon
+              </div>
+            </AnimatedCard>
+          </div>
+        );
+      case 'jobs':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Background Jobs
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                System background jobs and their status
+              </p>
+            </motion.div>
+
+            <AnimatedCard variant="glow" className="p-6">
+              <div className="text-center py-8 text-gray-500">
+                Background job monitoring coming soon
+              </div>
+            </AnimatedCard>
+          </div>
+        );
+      case 'settings':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                System Settings
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                Configure system-wide settings and preferences
+              </p>
+            </motion.div>
+
+            <AnimatedCard variant="glow" className="p-6">
+              <div className="text-center py-8 text-gray-500">
+                System settings coming soon
+              </div>
+            </AnimatedCard>
+          </div>
+        );
       default:
         return (
           <div>
