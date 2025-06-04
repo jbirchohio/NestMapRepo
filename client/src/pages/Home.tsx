@@ -35,9 +35,13 @@ export default function Home() {
   useEffect(() => {
     if (!authReady || !user) return;
     
-    // Admin users go to enterprise dashboard
-    if (user.role === 'admin') {
-      setLocation('/enterprise');
+    // Admin users with organizations go to corporate dashboard
+    if (user.role === 'admin' || user.role === 'superadmin') {
+      if (user.organizationId) {
+        setLocation('/dashboard/corporate');
+      } else {
+        setLocation('/enterprise');
+      }
       return;
     }
     
