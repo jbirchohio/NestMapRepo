@@ -76,10 +76,13 @@ router.post("/cardholders", requireAuth, requireAdminRole, async (req, res) => {
       created_by: req.user!.id,
     });
 
-    await auditLogger.log({
+    await auditLogger.logAction({
       action: "CREATE_CARDHOLDER",
       userId: req.user!.id,
       organizationId: req.user!.organization_id!,
+      entityType: "cardholder",
+      entityId: cardholder.id,
+      riskLevel: "medium",
       details: {
         cardholder_id: cardholder.id,
         stripe_cardholder_id: stripeCardholder.id,
@@ -161,10 +164,13 @@ router.post("/cards", requireAuth, requireAdminRole, async (req, res) => {
       created_by: req.user!.id,
     });
 
-    await auditLogger.log({
+    await auditLogger.logAction({
       action: "CREATE_CORPORATE_CARD",
       userId: req.user!.id,
       organizationId: req.user!.organization_id!,
+      entityType: "corporate_card",
+      entityId: card.id,
+      riskLevel: "medium",
       details: {
         card_id: card.id,
         stripe_card_id: stripeCard.id,
@@ -207,10 +213,13 @@ router.post("/cards/:cardId/add-funds", requireAuth, requireAdminRole, async (re
       spending_limit: card.spending_limit + validatedData.amount,
     });
 
-    await auditLogger.log({
+    await auditLogger.logAction({
       action: "ADD_CARD_FUNDS",
       userId: req.user!.id,
       organizationId: req.user!.organization_id!,
+      entityType: "corporate_card",
+      entityId: card.id,
+      riskLevel: "medium",
       details: {
         card_id: card.id,
         amount_added: validatedData.amount,
@@ -248,10 +257,13 @@ router.post("/cards/:cardId/freeze", requireAuth, requireAdminRole, async (req, 
       status: "frozen",
     });
 
-    await auditLogger.log({
+    await auditLogger.logAction({
       action: "FREEZE_CARD",
       userId: req.user!.id,
       organizationId: req.user!.organization_id!,
+      entityType: "corporate_card",
+      entityId: card.id,
+      riskLevel: "high",
       details: {
         card_id: card.id,
         stripe_card_id: card.stripe_card_id,
