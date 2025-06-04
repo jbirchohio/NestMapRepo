@@ -32,7 +32,7 @@ import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CorporateCards from "@/pages/CorporateCards";
 import OrganizationFunding from "@/pages/OrganizationFunding";
-import Superadmin from "@/pages/SuperadminFixed";
+import Superadmin from "@/pages/SuperadminClean";
 import SuperadminOrganizationDetail from "@/pages/SuperadminOrganizationDetail";
 import BillingDemo from "@/pages/BillingDemo";
 import Onboarding from "@/pages/Onboarding";
