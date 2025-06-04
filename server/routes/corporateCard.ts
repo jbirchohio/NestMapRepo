@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { stripeIssuingService } from "../services/stripeIssuingService";
 import { storage } from "../storage";
+import { fieldTransformMiddleware } from "../middleware/fieldTransform";
 // Using unified auth from existing middleware
 const requireAuth = (req: any, res: any, next: any) => {
   if (!req.user) {
@@ -113,6 +114,7 @@ export function registerCorporateCardRoutes(app: Express): void {
   // Get corporate cards for organization
   app.get("/api/corporate-card/cards", 
     requireAuth,
+    fieldTransformMiddleware,
     async (req, res) => {
       try {
         if (!req.user?.organization_id) {
@@ -138,6 +140,7 @@ export function registerCorporateCardRoutes(app: Express): void {
   // Get cards for specific user
   app.get("/api/corporate-card/user/:user_id", 
     requireAuth,
+    fieldTransformMiddleware,
     async (req, res) => {
       try {
         const userId = parseInt(req.params.user_id);
