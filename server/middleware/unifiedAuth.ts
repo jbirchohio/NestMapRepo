@@ -155,7 +155,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
 
         canAccessOrganization: (targetOrgId: number | null): boolean => {
           // Super admins can access any organization
-          if (user.role === 'super_admin') {
+          if (user.role === 'superadmin' || user.role === 'super_admin') {
             return true;
           }
 
