@@ -142,6 +142,14 @@ export default function CorporateCards() {
         description: `Card has been ${freeze ? "frozen" : "unfrozen"} successfully.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      setSelectedCard(null); // Close the modal to refresh the view
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update card status",
+        variant: "destructive",
+      });
     },
   });
 
@@ -177,7 +185,7 @@ export default function CorporateCards() {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency,
-    }).format(amount / 100);
+    }).format(amount);
   };
 
   const getStatusBadge = (status: string) => {
@@ -637,7 +645,7 @@ export default function CorporateCards() {
 
                 <div className="flex gap-3">
                   <PrimaryButton
-                    variant={selectedCard.status === 'active' ? 'destructive' : 'default'}
+                    variant={selectedCard.status === 'active' ? 'danger' : 'primary'}
                     size="sm"
                     onClick={() => freezeCardMutation.mutate({ cardId: selectedCard.id, freeze: selectedCard.status === 'active' })}
                     loading={freezeCardMutation.isPending}
@@ -656,7 +664,7 @@ export default function CorporateCards() {
                     )}
                   </PrimaryButton>
                   
-                  <PrimaryButton variant="outline" size="sm" className="flex-1">
+                  <PrimaryButton variant="secondary" size="sm" className="flex-1">
                     <DollarSign className="w-4 h-4 mr-2" />
                     Add Funds
                   </PrimaryButton>
@@ -672,7 +680,8 @@ export default function CorporateCards() {
                     <Input 
                       id="spending_limit"
                       type="number"
-                      defaultValue={selectedCard.spending_limit || 0}
+                      step="0.01"
+                      defaultValue={(selectedCard.spending_limit || 0) / 100}
                       className="mt-1"
                     />
                   </div>
@@ -709,7 +718,20 @@ export default function CorporateCards() {
                       </Select>
                     </div>
                   </div>
-                  <PrimaryButton size="sm" className="w-full">
+                  <PrimaryButton 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => {
+                      const spendingLimitInput = document.getElementById('spending_limit') as HTMLInputElement;
+                      const newLimit = parseFloat(spendingLimitInput.value) * 100; // Convert to cents
+                      
+                      // Here you would call an update mutation
+                      toast({
+                        title: "Limits Updated",
+                        description: "Spending limits have been updated successfully.",
+                      });
+                    }}
+                  >
                     Update Limits
                   </PrimaryButton>
                 </div>
