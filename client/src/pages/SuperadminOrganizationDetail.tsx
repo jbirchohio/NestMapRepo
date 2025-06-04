@@ -33,10 +33,13 @@ export default function SuperadminOrganizationDetail() {
   const [refundReason, setRefundReason] = useState('');
 
   // Fetch organization details
-  const { data: organization, isLoading } = useQuery({
+  const { data: organization, isLoading, error } = useQuery({
     queryKey: ['superadmin', 'organizations', id],
     queryFn: async () => {
       const res = await apiRequest('GET', `/api/superadmin/organizations/${id}`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch organization: ${res.status}`);
+      }
       return res.json();
     },
   });
