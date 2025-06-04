@@ -75,6 +75,7 @@ interface FeatureFlag {
   description?: string;
   default_value: boolean;
   created_at: string;
+  is_enabled: boolean;
 }
 
 interface BackgroundJob {
@@ -494,7 +495,7 @@ export default function Superadmin() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Billing Events ({billingEvents.length})
+            Billing Events ({billingData.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -509,7 +510,7 @@ export default function Superadmin() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {billingEvents.map((event) => (
+              {billingData.map((event) => (
                 <TableRow key={`${event.organization_id}-${event.event_type}`}>
                   <TableCell>{event.organization_name}</TableCell>
                   <TableCell className="font-medium">{event.event_type}</TableCell>
