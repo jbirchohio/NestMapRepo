@@ -566,8 +566,22 @@ export default function SuperadminOrganizationDetail() {
                           <SelectValue placeholder="Choose new plan" />
                         </SelectTrigger>
                         <SelectContent>
-                          {organization.plan === 'free' && <SelectItem value="team">Team ($199/month)</SelectItem>}
-                          {(organization.plan === 'free' || organization.plan === 'team') && <SelectItem value="enterprise">Enterprise ($499/month)</SelectItem>}
+                          {organization.plan === 'free' && (
+                            <>
+                              <SelectItem value="basic">Basic ($29/month)</SelectItem>
+                              <SelectItem value="team">Team ($199/month)</SelectItem>
+                              <SelectItem value="enterprise">Enterprise ($499/month)</SelectItem>
+                            </>
+                          )}
+                          {organization.plan === 'basic' && (
+                            <>
+                              <SelectItem value="team">Team ($199/month)</SelectItem>
+                              <SelectItem value="enterprise">Enterprise ($499/month)</SelectItem>
+                            </>
+                          )}
+                          {organization.plan === 'team' && (
+                            <SelectItem value="enterprise">Enterprise ($499/month)</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -599,8 +613,22 @@ export default function SuperadminOrganizationDetail() {
                           <SelectValue placeholder="Choose new plan" />
                         </SelectTrigger>
                         <SelectContent>
-                          {organization.plan === 'enterprise' && <SelectItem value="team">Team ($199/month)</SelectItem>}
-                          {(organization.plan === 'enterprise' || organization.plan === 'team') && <SelectItem value="free">Free ($0/month)</SelectItem>}
+                          {organization.plan === 'enterprise' && (
+                            <>
+                              <SelectItem value="team">Team ($199/month)</SelectItem>
+                              <SelectItem value="basic">Basic ($29/month)</SelectItem>
+                              <SelectItem value="free">Free ($0/month)</SelectItem>
+                            </>
+                          )}
+                          {organization.plan === 'team' && (
+                            <>
+                              <SelectItem value="basic">Basic ($29/month)</SelectItem>
+                              <SelectItem value="free">Free ($0/month)</SelectItem>
+                            </>
+                          )}
+                          {organization.plan === 'basic' && (
+                            <SelectItem value="free">Free ($0/month)</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
