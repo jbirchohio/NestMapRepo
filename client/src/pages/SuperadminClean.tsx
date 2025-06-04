@@ -353,7 +353,7 @@ export default function SuperadminClean() {
               className="mb-8"
             >
               <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
-                Billing Overview
+                Billing Events ({billingData.length})
               </h1>
               <p className="text-navy-600 dark:text-navy-300">
                 System-wide billing and subscription information
@@ -361,9 +361,26 @@ export default function SuperadminClean() {
             </motion.div>
 
             <AnimatedCard variant="glow" className="p-6">
-              <div className="text-center py-8 text-gray-500">
-                Billing data will be available when connected to payment systems
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Organization</TableHead>
+                    <TableHead>Event Type</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {billingData.map((event: any) => (
+                    <TableRow key={event.id}>
+                      <TableCell>{event.organization_name}</TableCell>
+                      <TableCell className="font-medium">{event.event_type}</TableCell>
+                      <TableCell>${event.amount?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>{format(new Date(event.event_date), 'MMM dd, yyyy')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </AnimatedCard>
           </div>
         );
@@ -378,7 +395,7 @@ export default function SuperadminClean() {
               className="mb-8"
             >
               <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
-                Active Sessions
+                Active Sessions ({activeSessions.length})
               </h1>
               <p className="text-navy-600 dark:text-navy-300">
                 Currently active user sessions
@@ -386,9 +403,31 @@ export default function SuperadminClean() {
             </motion.div>
 
             <AnimatedCard variant="glow" className="p-6">
-              <div className="text-center py-8 text-gray-500">
-                Session monitoring coming soon
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>IP Address</TableHead>
+                    <TableHead>User Agent</TableHead>
+                    <TableHead>Started</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeSessions.map((session: any) => (
+                    <TableRow key={session.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{session.username}</div>
+                          <div className="text-sm text-gray-500">{session.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{session.ip_address || 'Unknown'}</TableCell>
+                      <TableCell className="truncate max-w-xs">{session.user_agent || 'Unknown'}</TableCell>
+                      <TableCell>{session.created_at ? formatDistanceToNow(new Date(session.created_at), { addSuffix: true }) : 'Unknown'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </AnimatedCard>
           </div>
         );
@@ -428,7 +467,7 @@ export default function SuperadminClean() {
               className="mb-8"
             >
               <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
-                Background Jobs
+                Background Jobs ({backgroundJobs.length})
               </h1>
               <p className="text-navy-600 dark:text-navy-300">
                 System background jobs and their status
@@ -436,9 +475,30 @@ export default function SuperadminClean() {
             </motion.div>
 
             <AnimatedCard variant="glow" className="p-6">
-              <div className="text-center py-8 text-gray-500">
-                Background job monitoring coming soon
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Job Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Progress</TableHead>
+                    <TableHead>Started</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {backgroundJobs.map((job: any) => (
+                    <TableRow key={job.id}>
+                      <TableCell className="font-medium">{job.job_type}</TableCell>
+                      <TableCell>
+                        <Badge variant={job.status === 'completed' ? 'default' : job.status === 'failed' ? 'destructive' : 'secondary'}>
+                          {job.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{job.progress || 0}%</TableCell>
+                      <TableCell>{job.created_at ? formatDistanceToNow(new Date(job.created_at), { addSuffix: true }) : 'Unknown'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </AnimatedCard>
           </div>
         );
