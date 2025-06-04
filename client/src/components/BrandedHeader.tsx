@@ -63,7 +63,7 @@ export default function BrandedHeader() {
                 )}
               </div>
             </Link>
-          </div>
+          </motion.div>
 
           {/* Navigation */}
           <motion.nav 
@@ -181,9 +181,5 @@ export default function BrandedHeader() {
         </div>
       </div>
     </motion.header>
-  );
-}
-      </div>
-    </header>
   );
 }
