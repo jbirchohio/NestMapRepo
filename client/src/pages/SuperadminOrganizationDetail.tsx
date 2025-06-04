@@ -37,15 +37,9 @@ export default function SuperadminOrganizationDetail() {
     queryKey: ['superadmin', 'organizations', id],
     queryFn: async () => {
       console.log('Fetching organization with ID:', id);
-      try {
-        const res = await apiRequest('GET', `/api/superadmin/organizations/${id}`);
-        const data = await res.json();
-        console.log('Organization data received:', data);
-        return data;
-      } catch (error) {
-        console.error('Organization fetch error:', error);
-        throw error;
-      }
+      const data = await apiRequest('GET', `/api/superadmin/organizations/${id}`);
+      console.log('Organization data received:', data);
+      return data;
     },
   });
 
