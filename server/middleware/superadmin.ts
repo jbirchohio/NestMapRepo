@@ -20,6 +20,11 @@ export function requireSuperadmin(req: AuthenticatedRequest, res: Response, next
   }
 
   const superadminRoles = [
+    'superadmin',
+    'superadmin_owner',
+    'superadmin_staff', 
+    'superadmin_auditor',
+    'super_admin',
     USER_ROLES.SUPERADMIN_OWNER,
     USER_ROLES.SUPERADMIN_STAFF,
     USER_ROLES.SUPERADMIN_AUDITOR
