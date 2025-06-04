@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2, Key, Users, Building, CreditCard, Settings, DollarSign, RefreshCw, Ban, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Key, Users, Building, CreditCard, Settings, DollarSign, RefreshCw, Ban, CheckCircle, Shield, Save, RotateCcw } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 export default function SuperadminOrganizationDetail() {
   const { id } = useParams();
@@ -438,6 +439,91 @@ export default function SuperadminOrganizationDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Organization Roles & Permissions Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Organization Roles & Permissions
+          </CardTitle>
+          <CardDescription>Manage role-based access control for this organization's members</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Admin</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground mb-3">
+                  Full organization control and management
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div>• Manage all trips</div>
+                  <div>• Team management</div>
+                  <div>• Billing access</div>
+                  <div>• White label settings</div>
+                  <div>• API access</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Manager</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground mb-3">
+                  Team oversight and trip management
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div>• View all trips</div>
+                  <div>• Edit team trips</div>
+                  <div>• Analytics access</div>
+                  <div>• Invite members</div>
+                  <div>• Bulk operations</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Editor</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground mb-3">
+                  Create and edit trips with collaboration
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div>• Create trips</div>
+                  <div>• Edit own trips</div>
+                  <div>• Trip collaboration</div>
+                  <div>• Flight/hotel booking</div>
+                  <div>• Trip optimizer</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Member</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground mb-3">
+                  Create and manage own trips
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div>• Create own trips</div>
+                  <div>• Basic booking</div>
+                  <div>• View assigned trips</div>
+                  <div>• Export own data</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Billing Management Section */}
       <Card>
