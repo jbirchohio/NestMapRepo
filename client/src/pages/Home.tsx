@@ -35,8 +35,14 @@ export default function Home() {
   useEffect(() => {
     if (!authReady || !user) return;
     
+    // Superadmin users have special access - don't redirect them automatically
+    if (user.role === 'superadmin') {
+      // Let superadmin users stay on home page or navigate manually to /superadmin
+      return;
+    }
+    
     // Admin users with organizations go to corporate dashboard
-    if (user.role === 'admin' || user.role === 'superadmin') {
+    if (user.role === 'admin') {
       if (user.organizationId) {
         setLocation('/dashboard/corporate');
       } else {
