@@ -42,8 +42,18 @@ export const organizations = pgTable("organizations", {
   subscription_status: text("subscription_status").default("inactive"), // active, inactive, past_due, canceled
   current_period_end: timestamp("current_period_end"),
   // Stripe Connect for corporate cards
-  stripe_account_id: text("stripe_account_id"), // Connected Stripe account for this organization
+  stripe_connect_account_id: text("stripe_connect_account_id"), // Connected Stripe account for this organization
+  stripe_connect_onboarded: boolean("stripe_connect_onboarded").default(false),
   stripe_issuing_enabled: boolean("stripe_issuing_enabled").default(false),
+  stripe_payments_enabled: boolean("stripe_payments_enabled").default(false),
+  stripe_transfers_enabled: boolean("stripe_transfers_enabled").default(false),
+  stripe_external_account_id: text("stripe_external_account_id"), // Bank account for payouts
+  // Stripe verification requirements tracking
+  stripe_requirements_currently_due: jsonb("stripe_requirements_currently_due"),
+  stripe_requirements_eventually_due: jsonb("stripe_requirements_eventually_due"),
+  stripe_requirements_past_due: jsonb("stripe_requirements_past_due"),
+  stripe_requirements_disabled_reason: text("stripe_requirements_disabled_reason"),
+  stripe_requirements_current_deadline: timestamp("stripe_requirements_current_deadline"),
   funding_source_id: text("funding_source_id"), // Primary funding source for cards
   funding_source_type: text("funding_source_type"), // bank_account, credit_line, stripe_balance
   funding_source_status: text("funding_source_status").default("pending"), // pending, active, inactive, failed
