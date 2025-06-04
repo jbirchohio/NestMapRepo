@@ -7,6 +7,13 @@ import {
   organizationMembers,
 } from '@shared/schema';
 import { auditLogger } from '../auditLogger';
+import { 
+  stripe, 
+  SUBSCRIPTION_PLANS, 
+  createStripeCustomer, 
+  updateSubscription, 
+  createRefund 
+} from '../stripe';
 import {
   superadminAuditLogs,
   activeSessions,
@@ -457,13 +464,23 @@ router.get('/billing', requireSuperadmin, async (req, res) => {
 });
 
 // Billing management endpoints
+
+// Get subscription plans
+router.get('/billing/plans', requireSuperadmin, async (req, res) => {
+  try {
+    res.json({ plans: SUBSCRIPTION_PLANS });
+  } catch (error) {
+    console.error('Error fetching plans:', error);
+    res.status(500).json({ error: 'Failed to fetch plans' });
+  }
+});
 router.post('/billing/:orgId/upgrade', requireSuperadmin, async (req, res) => {
   try {
     const orgId = parseInt(req.params.orgId);
     const { newPlan, previousPlan } = req.body;
     
     // Validate plan upgrade path
-    const validUpgrades = {
+    const validUpgrades: Record<string, string[]> = {
       'free': ['team', 'enterprise'],
       'team': ['enterprise'],
       'enterprise': []
@@ -473,33 +490,69 @@ router.post('/billing/:orgId/upgrade', requireSuperadmin, async (req, res) => {
       return res.status(400).json({ error: 'Invalid plan upgrade path' });
     }
 
+    // Get organization data
+    const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId));
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Handle Stripe subscription creation/update
+    let stripeCustomerId = org.stripe_customer_id;
+    let stripeSubscriptionId = org.stripe_subscription_id;
+
+    if (newPlan !== 'free') {
+      const planConfig = SUBSCRIPTION_PLANS[newPlan as keyof typeof SUBSCRIPTION_PLANS];
+      
+      if (!stripeCustomerId) {
+        // Create Stripe customer
+        const customer = await createStripeCustomer(
+          'admin@' + org.name.toLowerCase().replace(/\s+/g, '') + '.com',
+          org.name
+        );
+        stripeCustomerId = customer.id;
+      }
+
+      if (stripeSubscriptionId && previousPlan !== 'free') {
+        // Update existing subscription
+        await updateSubscription(stripeSubscriptionId, planConfig.stripePriceId!);
+      } else {
+        // Create new subscription
+        const subscription = await stripe.subscriptions.create({
+          customer: stripeCustomerId,
+          items: [{ price: planConfig.stripePriceId! }],
+          payment_behavior: 'default_incomplete',
+          expand: ['latest_invoice.payment_intent'],
+        });
+        stripeSubscriptionId = subscription.id;
+      }
+    }
+
     // Update organization plan
     const [updatedOrg] = await db
       .update(organizations)
       .set({ 
         plan: newPlan,
         subscription_status: 'active',
+        stripe_customer_id: stripeCustomerId,
+        stripe_subscription_id: stripeSubscriptionId,
         updated_at: new Date()
       })
       .where(eq(organizations.id, orgId))
       .returning();
 
-    if (!updatedOrg) {
-      return res.status(404).json({ error: 'Organization not found' });
-    }
-
     // Log audit action
-    const adminUserId = req.user?.id || 5;
-    await auditLogger.logAdminAction(
-      adminUserId,
-      orgId,
-      'UPGRADE_PLAN',
-      { 
-        organization_name: updatedOrg.name,
-        new_plan: newPlan,
-        previous_plan: previousPlan 
-      }
-    );
+    if (req.user?.id) {
+      await auditLogger.logAdminAction(
+        req.user.id,
+        orgId,
+        'UPGRADE_PLAN',
+        { 
+          organization_name: updatedOrg.name,
+          new_plan: newPlan,
+          previous_plan: previousPlan 
+        }
+      );
+    }
 
     res.json({ success: true, organization: updatedOrg });
   } catch (error) {
@@ -514,7 +567,7 @@ router.post('/billing/:orgId/downgrade', requireSuperadmin, async (req, res) => 
     const { newPlan, previousPlan } = req.body;
     
     // Validate plan downgrade path
-    const validDowngrades = {
+    const validDowngrades: Record<string, string[]> = {
       'enterprise': ['team', 'free'],
       'team': ['free'],
       'free': []
@@ -524,33 +577,52 @@ router.post('/billing/:orgId/downgrade', requireSuperadmin, async (req, res) => 
       return res.status(400).json({ error: 'Invalid plan downgrade path' });
     }
 
+    // Get organization data
+    const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId));
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Handle Stripe subscription update
+    let stripeSubscriptionId = org.stripe_subscription_id;
+
+    if (org.stripe_subscription_id) {
+      if (newPlan === 'free') {
+        // Cancel subscription for free plan
+        await stripe.subscriptions.cancel(org.stripe_subscription_id);
+        stripeSubscriptionId = null;
+      } else {
+        // Update subscription to new plan
+        const planConfig = SUBSCRIPTION_PLANS[newPlan as keyof typeof SUBSCRIPTION_PLANS];
+        await updateSubscription(org.stripe_subscription_id, planConfig.stripePriceId!);
+      }
+    }
+
     // Update organization plan
     const [updatedOrg] = await db
       .update(organizations)
       .set({ 
         plan: newPlan,
         subscription_status: newPlan === 'free' ? 'inactive' : 'active',
+        stripe_subscription_id: stripeSubscriptionId,
         updated_at: new Date()
       })
       .where(eq(organizations.id, orgId))
       .returning();
 
-    if (!updatedOrg) {
-      return res.status(404).json({ error: 'Organization not found' });
-    }
-
     // Log audit action
-    const adminUserId = req.user?.id || 5;
-    await auditLogger.logAdminAction(
-      adminUserId,
-      orgId,
-      'DOWNGRADE_PLAN',
-      { 
-        organization_name: updatedOrg.name,
-        new_plan: newPlan,
-        previous_plan: previousPlan 
-      }
-    );
+    if (req.user?.id) {
+      await auditLogger.logAdminAction(
+        req.user.id,
+        orgId,
+        'DOWNGRADE_PLAN',
+        { 
+          organization_name: updatedOrg.name,
+          new_plan: newPlan,
+          previous_plan: previousPlan 
+        }
+      );
+    }
 
     res.json({ success: true, organization: updatedOrg });
   } catch (error) {
@@ -625,17 +697,18 @@ router.post('/billing/:orgId/suspend', requireSuperadmin, async (req, res) => {
       return res.status(404).json({ error: 'Organization not found' });
     }
 
-    // Log audit action
-    const adminUserId = req.user?.id || 5; // Default to known admin user
-    await auditLogger.logAdminAction(
-      adminUserId,
-      orgId,
-      'SUSPEND_BILLING',
-      { 
-        organization_name: updatedOrg.name,
-        reason 
-      }
-    );
+    // Log audit action with proper user context
+    if (req.user?.id) {
+      await auditLogger.logAdminAction(
+        req.user.id,
+        orgId,
+        'SUSPEND_BILLING',
+        { 
+          organization_name: updatedOrg.name,
+          reason 
+        }
+      );
+    }
 
     res.json({ success: true, organization: updatedOrg });
   } catch (error) {
