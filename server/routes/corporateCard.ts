@@ -23,7 +23,7 @@ import Stripe from "stripe";
 
 const issueCardSchema = z.object({
   user_email: z.string().email(),
-  spend_limit: z.number().min(1000), // Minimum $10
+  spend_limit: z.number().min(10), // Minimum $10 (stored in dollars)
   interval: z.enum(['daily', 'weekly', 'monthly', 'yearly']).default('monthly'),
   cardholder_name: z.string().min(1),
   purpose: z.string().optional(),
@@ -33,7 +33,7 @@ const issueCardSchema = z.object({
 });
 
 const updateCardSchema = z.object({
-  spend_limit: z.number().min(1000).optional(),
+  spend_limit: z.number().min(10).optional(), // Minimum $10 (stored in dollars)
   status: z.enum(['active', 'inactive', 'canceled']).optional(),
   allowed_categories: z.array(z.string()).optional(),
   blocked_categories: z.array(z.string()).optional(),
