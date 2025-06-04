@@ -51,7 +51,7 @@ export function SuperadminNavigation() {
         </Button>
       </div>
 
-      {/* Mobile Overlay */}
+      {/* Mobile Overlay - Only show on mobile screens */}
       {isOpen && (
         <div 
           className="lg:hidden fixed inset-0 bg-black/50 z-40"
@@ -61,10 +61,10 @@ export function SuperadminNavigation() {
 
       {/* Sidebar */}
       <div className={cn(
-        "h-screen w-64 glass-card bg-navy-800/80 dark:bg-navy-900/80 backdrop-blur-sm border-r border-electric-200/30 dark:border-electric-700/30 flex flex-col transition-transform duration-300 z-50",
-        "lg:translate-x-0", // Always visible on desktop
+        "h-screen w-64 glass-card bg-navy-800/80 dark:bg-navy-900/80 backdrop-blur-sm border-r border-electric-200/30 dark:border-electric-700/30 flex flex-col transition-transform duration-300",
+        "lg:translate-x-0 lg:relative lg:z-auto", // Always visible on desktop, normal z-index
         isOpen ? "translate-x-0" : "-translate-x-full", // Mobile: slide in/out
-        "lg:relative fixed" // Fixed on mobile, relative on desktop
+        "fixed z-50 lg:z-auto" // Fixed on mobile with high z-index, normal on desktop
       )}>
         {/* Header */}
         <div className="p-6 border-b border-electric-200/30 dark:border-electric-700/30">
