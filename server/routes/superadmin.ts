@@ -460,10 +460,17 @@ router.get('/billing', requireSuperadmin, async (req, res) => {
 router.post('/billing/:orgId/upgrade', requireSuperadmin, async (req, res) => {
   try {
     const orgId = parseInt(req.params.orgId);
-    const { newPlan } = req.body;
+    const { newPlan, previousPlan } = req.body;
     
-    if (!['team', 'enterprise'].includes(newPlan)) {
-      return res.status(400).json({ error: 'Invalid plan type' });
+    // Validate plan upgrade path
+    const validUpgrades = {
+      'free': ['team', 'enterprise'],
+      'team': ['enterprise'],
+      'enterprise': []
+    };
+
+    if (!validUpgrades[previousPlan]?.includes(newPlan)) {
+      return res.status(400).json({ error: 'Invalid plan upgrade path' });
     }
 
     // Update organization plan
@@ -482,14 +489,15 @@ router.post('/billing/:orgId/upgrade', requireSuperadmin, async (req, res) => {
     }
 
     // Log audit action
+    const adminUserId = req.user?.id || 5;
     await auditLogger.logAdminAction(
-      req.user?.id || 1,
+      adminUserId,
       orgId,
       'UPGRADE_PLAN',
       { 
         organization_name: updatedOrg.name,
         new_plan: newPlan,
-        previous_plan: req.body.previousPlan 
+        previous_plan: previousPlan 
       }
     );
 
@@ -525,8 +533,9 @@ router.post('/billing/:orgId/downgrade', requireSuperadmin, async (req, res) => 
     }
 
     // Log audit action
+    const adminUserId = req.user?.id || 5; // Default to known admin user
     await auditLogger.logAdminAction(
-      req.user?.id || 1,
+      adminUserId,
       orgId,
       'DOWNGRADE_PLAN',
       { 
@@ -570,8 +579,9 @@ router.post('/billing/:orgId/refund', requireSuperadmin, async (req, res) => {
     };
 
     // Log audit action
+    const adminUserId = req.user?.id || 5; // Default to known admin user
     await auditLogger.logAdminAction(
-      req.user?.id || 1,
+      adminUserId,
       orgId,
       'PROCESS_REFUND',
       { 
@@ -609,8 +619,9 @@ router.post('/billing/:orgId/suspend', requireSuperadmin, async (req, res) => {
     }
 
     // Log audit action
+    const adminUserId = req.user?.id || 5; // Default to known admin user
     await auditLogger.logAdminAction(
-      req.user?.id || 1,
+      adminUserId,
       orgId,
       'SUSPEND_BILLING',
       { 
@@ -645,8 +656,9 @@ router.post('/billing/:orgId/reactivate', requireSuperadmin, async (req, res) =>
     }
 
     // Log audit action
+    const adminUserId = req.user?.id || 5; // Default to known admin user
     await auditLogger.logAdminAction(
-      req.user?.id || 1,
+      adminUserId,
       orgId,
       'REACTIVATE_BILLING',
       { 
