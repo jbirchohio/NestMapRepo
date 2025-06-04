@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'wouter';
 import { format, formatDistanceToNow } from 'date-fns';
 import { AlertTriangle } from 'lucide-react';
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
@@ -36,25 +35,17 @@ interface AuditLog {
 }
 
 export default function SuperadminClean() {
-  const [location] = useLocation();
-  
-  // Determine current section from URL
-  const getCurrentSection = () => {
-    if (location === '/superadmin' || location === '/superadmin/') return 'overview';
-    const pathParts = location.split('/');
-    return pathParts[2] || 'overview';
-  };
-
-  const activeSection = getCurrentSection();
+  const { section } = useParams();
+  const activeSection = section || 'overview';
 
   const { data: dashboardData = {}, isLoading: dashboardLoading, error: dashboardError } = useQuery({
     queryKey: ['/api/superadmin/dashboard'],
     staleTime: 1000 * 60 * 5,
   });
 
-  const organizations = dashboardData.organizations || [];
-  const users = dashboardData.users || [];
-  const auditLogs = dashboardData.auditLogs || [];
+  const organizations = (dashboardData as any)?.organizations || [];
+  const users = (dashboardData as any)?.users || [];
+  const auditLogs = (dashboardData as any)?.auditLogs || [];
 
   const renderDashboardOverview = () => (
     <div className="space-y-8">
