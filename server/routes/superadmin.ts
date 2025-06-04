@@ -435,7 +435,7 @@ router.get('/activity', requireSuperadmin, async (req, res) => {
     // Use direct SQL to avoid schema mismatches
     const activities = await db.execute(`
       SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type, 
-             target_id as entity_id, details, created_at
+             target_id as entity_id, details, risk_level, created_at
       FROM superadmin_audit_logs 
       ORDER BY created_at DESC 
       LIMIT 100
@@ -920,7 +920,7 @@ router.get('/dashboard', requireSuperadmin, async (req, res) => {
       
       // Activity logs
       db.execute(`
-        SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type, target_id as entity_id, details, created_at
+        SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type, target_id as entity_id, details, risk_level, created_at
         FROM superadmin_audit_logs
         ORDER BY created_at DESC
         LIMIT 100

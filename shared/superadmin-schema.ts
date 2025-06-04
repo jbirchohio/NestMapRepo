@@ -4,19 +4,19 @@ import { z } from "zod";
 import { users, organizations } from "./schema";
 
 // Superadmin audit logs for tracking all administrative actions
-export const superadminAuditLogs = pgTable("superadmin_audit_logs", {
-  id: serial("id").primaryKey(),
-  admin_user_id: integer("admin_user_id").references(() => users.id).notNull(),
-  action: text("action").notNull(), // CREATE_ORG, UPDATE_USER, RESET_PASSWORD, etc.
-  entity_type: text("entity_type").notNull(), // organization, user, system
-  entity_id: integer("entity_id"),
-  target_user_id: integer("target_user_id").references(() => users.id),
-  target_organization_id: integer("target_organization_id").references(() => organizations.id),
-  details: jsonb("details").$type<Record<string, any>>(),
-  ip_address: text("ip_address"),
-  user_agent: text("user_agent"),
-  severity: text("severity").default("info").notNull(), // info, warning, critical
-  created_at: timestamp("created_at").defaultNow().notNull(),
+export const superadminAuditLogs = pgTable('superadmin_audit_logs', {
+  id: serial('id').primaryKey(),
+  admin_user_id: integer('admin_user_id').references(() => users.id).notNull(),
+  action: text('action').notNull(), // CREATE_ORG, UPDATE_USER, RESET_PASSWORD, etc.
+  entity_type: text('entity_type').notNull(), // organization, user, system
+  entity_id: integer('entity_id'),
+  target_user_id: integer('target_user_id').references(() => users.id),
+  target_organization_id: integer('target_organization_id').references(() => organizations.id),
+  details: jsonb('details').$type<Record<string, any>>(),
+  ip_address: text('ip_address'),
+  user_agent: text('user_agent'),
+  severity: text('severity').default('info').notNull(), // info, warning, critical
+  created_at: timestamp('created_at').defaultNow().notNull(),
 });
 
 // Active user sessions for security monitoring

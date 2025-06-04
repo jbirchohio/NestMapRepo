@@ -27,7 +27,8 @@ export class AuditLogger {
         target_id: event.entityId?.toString() || '',
         details: event.details,
         ip_address: event.ipAddress,
-        user_agent: event.userAgent
+        user_agent: event.userAgent,
+        risk_level: event.riskLevel
       });
     } catch (error) {
       console.error('Failed to log audit event:', error);
@@ -94,8 +95,19 @@ export class AuditLogger {
       entityType: 'administration',
       details,
       ipAddress,
-      riskLevel: 'high' // Admin actions are always high risk
+      riskLevel: this.calculateAdminActionRiskLevel(action)
     });
+  }
+
+  /**
+   * Calculate risk level for admin actions
+   */
+  private calculateAdminActionRiskLevel(action: string): 'low' | 'medium' | 'high' | 'critical' {
+    if (action.includes('DELETE') || action.includes('REMOVE')) return 'critical';
+    if (action.includes('CREATE') || action.includes('UPDATE') || action.includes('RESET')) return 'high';
+    if (action.includes('UPGRADE') || action.includes('DOWNGRADE') || action.includes('SUSPEND')) return 'medium';
+    if (action.includes('ACCESS') || action.includes('VIEW')) return 'low';
+    return 'medium'; // Default for unknown actions
   }
 
   /**

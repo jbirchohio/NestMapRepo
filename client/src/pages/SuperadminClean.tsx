@@ -332,13 +332,23 @@ export default function SuperadminClean() {
                   {auditLogs.map((log: any) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-medium">{log.action}</TableCell>
-                      <TableCell>{log.username || 'System'}</TableCell>
+                      <TableCell>{log.admin_user_id ? `Admin ${log.admin_user_id}` : 'System'}</TableCell>
                       <TableCell>
-                        <Badge variant={log.risk_level === 'critical' ? 'destructive' : log.risk_level === 'high' ? 'secondary' : 'default'}>
-                          {log.risk_level}
+                        <Badge variant={
+                          log.risk_level === 'critical' ? 'destructive' : 
+                          log.risk_level === 'high' ? 'secondary' : 
+                          log.risk_level === 'medium' ? 'outline' : 
+                          'default'
+                        }>
+                          {(log.risk_level || 'low').toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}</TableCell>
+                      <TableCell>
+                        {log.created_at && !isNaN(new Date(log.created_at).getTime()) 
+                          ? formatDistanceToNow(new Date(log.created_at), { addSuffix: true })
+                          : 'Unknown'
+                        }
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
