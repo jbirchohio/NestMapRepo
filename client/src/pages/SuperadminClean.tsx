@@ -192,243 +192,71 @@ export default function SuperadminClean() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
       >
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-navy-800/50 backdrop-blur-sm border border-electric-500/20">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-electric-600 data-[state=active]:text-white">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="organizations" className="data-[state=active]:bg-electric-600 data-[state=active]:text-white">
-              Organizations
-            </TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-electric-600 data-[state=active]:text-white">
-              Users
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="data-[state=active]:bg-electric-600 data-[state=active]:text-white">
-              Activity
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AnimatedCard variant="glow" className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Database className="w-6 h-6 text-electric-600" />
-                  <h3 className="text-lg font-semibold">System Status</h3>
-                </div>
-                {dashboardLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
-                  </div>
-                ) : dashboardError ? (
-                  <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
-                    <AlertTriangle className="h-4 w-4" />
-                    Error loading system data
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <span className="text-sm font-medium">Database</span>
-                      <Badge variant="default" className="bg-green-600 text-white">Online</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <span className="text-sm font-medium">API Services</span>
-                      <Badge variant="default" className="bg-green-600 text-white">Healthy</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <span className="text-sm font-medium">Authentication</span>
-                      <Badge variant="default" className="bg-green-600 text-white">Active</Badge>
-                    </div>
-                  </div>
-                )}
-              </AnimatedCard>
-
-              <AnimatedCard variant="glow" className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Activity className="w-6 h-6 text-electric-600" />
-                  <h3 className="text-lg font-semibold">Recent Activity</h3>
-                </div>
-                {dashboardLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
-                  </div>
-                ) : auditLogs.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    No recent activity
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {auditLogs.slice(0, 5).map((log: AuditLog) => (
-                      <div key={log.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 dark:hover:bg-navy-800 rounded-lg">
-                        <div className="flex-shrink-0 mt-1">
-                          <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{log.action}</p>
-                          <p className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </AnimatedCard>
+        <AnimatedCard variant="glow" className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Database className="w-6 h-6 text-electric-600" />
+            <h3 className="text-lg font-semibold">System Status</h3>
+          </div>
+          {dashboardLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="organizations" className="space-y-6">
-            <AnimatedCard variant="glow" className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Organizations</h3>
-                <PrimaryButton size="sm">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
-                </PrimaryButton>
+          ) : dashboardError ? (
+            <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
+              <AlertTriangle className="h-4 w-4" />
+              Error loading system data
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <span className="text-sm font-medium">Database</span>
+                <Badge variant="default" className="bg-green-600 text-white">Online</Badge>
               </div>
-              {dashboardLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
-                </div>
-              ) : organizations.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No organizations found
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Domain</TableHead>
-                        <TableHead>Plan</TableHead>
-                        <TableHead>Users</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {organizations.map((org: Organization) => (
-                        <TableRow key={org.id}>
-                          <TableCell className="font-medium">{org.name}</TableCell>
-                          <TableCell>{org.domain || 'N/A'}</TableCell>
-                          <TableCell>
-                            <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
-                              {org.plan || 'Basic'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{org.employee_count || 0}</TableCell>
-                          <TableCell>
-                            <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
-                              {org.subscription_status || 'Inactive'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </AnimatedCard>
-          </TabsContent>
-
-          <TabsContent value="users" className="space-y-6">
-            <AnimatedCard variant="glow" className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">User Management</h3>
-                <PrimaryButton size="sm">
-                  <UserCog className="w-4 h-4 mr-2" />
-                  Manage
-                </PrimaryButton>
+              <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <span className="text-sm font-medium">API Services</span>
+                <Badge variant="default" className="bg-green-600 text-white">Healthy</Badge>
               </div>
-              {dashboardLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
-                </div>
-              ) : users.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No users found
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Organization</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user: User) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.email}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{user.role}</Badge>
-                          </TableCell>
-                          <TableCell>{user.organizationName || 'N/A'}</TableCell>
-                          <TableCell>
-                            <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                              {user.isActive ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{format(new Date(user.created_at), 'MMM dd, yyyy')}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </AnimatedCard>
-          </TabsContent>
-
-          <TabsContent value="activity" className="space-y-6">
-            <AnimatedCard variant="glow" className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Audit Log</h3>
-                <div className="flex gap-2">
-                  <PrimaryButton size="sm" variant="outline">
-                    <Clock className="w-4 h-4 mr-2" />
-                    Filter
-                  </PrimaryButton>
-                  <PrimaryButton size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                  </PrimaryButton>
-                </div>
+              <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <span className="text-sm font-medium">Authentication</span>
+                <Badge variant="default" className="bg-green-600 text-white">Active</Badge>
               </div>
-              {dashboardLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+            </div>
+          )}
+        </AnimatedCard>
+
+        <AnimatedCard variant="glow" className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Activity className="w-6 h-6 text-electric-600" />
+            <h3 className="text-lg font-semibold">Recent Activity</h3>
+          </div>
+          {dashboardLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+            </div>
+          ) : auditLogs.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No recent activity
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {auditLogs.slice(0, 5).map((log: AuditLog) => (
+                <div key={log.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 dark:hover:bg-navy-800 rounded-lg">
+                  <div className="flex-shrink-0 mt-1">
+                    <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{log.action}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                    </p>
+                  </div>
                 </div>
-              ) : auditLogs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No audit logs found
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {auditLogs.slice(0, 10).map((log: AuditLog) => (
-                    <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
-                      <div className="flex-shrink-0 mt-1">
-                        <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{log.action}</p>
-                        <p className="text-sm text-gray-500">{log.target_type} #{log.target_id}</p>
-                        <p className="text-xs text-gray-400">
-                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AnimatedCard>
-          </TabsContent>
-        </Tabs>
+              ))}
+            </div>
+          )}
+        </AnimatedCard>
       </motion.div>
     </div>
   );
