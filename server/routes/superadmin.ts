@@ -5,6 +5,7 @@ import {
   users, 
   organizations, 
   organizationMembers,
+  featureFlags,
 } from '@shared/schema';
 import { auditLogger } from '../auditLogger';
 import { 
@@ -957,6 +958,40 @@ router.get('/dashboard', requireSuperadmin, async (req, res) => {
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
     res.status(500).json({ error: 'Failed to fetch dashboard data' });
+  }
+});
+
+// Update feature flag
+router.put('/flags/:id', requireSuperadmin, async (req, res) => {
+  try {
+    const flagId = parseInt(req.params.id);
+    const { default_value } = req.body;
+
+    const updateResult = await db.execute(`
+      UPDATE feature_flags 
+      SET default_value = ${default_value}, updated_at = NOW()
+      WHERE id = ${flagId}
+      RETURNING *
+    `);
+
+    if (updateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Feature flag not found' });
+    }
+
+    const updatedFlag = updateResult.rows[0];
+
+    await logSuperadminAction(
+      req.user!.id,
+      'UPDATE_FEATURE_FLAG',
+      'feature_flag',
+      flagId,
+      { flag_name: updatedFlag.flag_name, enabled: default_value }
+    );
+
+    res.json(updatedFlag);
+  } catch (error) {
+    console.error('Error updating feature flag:', error);
+    res.status(500).json({ error: 'Failed to update feature flag' });
   }
 });
 

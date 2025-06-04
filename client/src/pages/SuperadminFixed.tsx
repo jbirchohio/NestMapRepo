@@ -1,9 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   Building2, 
@@ -20,6 +22,8 @@ import { useEffect, useState } from 'react';
 
 export default function Superadmin() {
   const { section } = useParams();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Single consolidated dashboard query to eliminate rate limiting
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
@@ -34,6 +38,20 @@ export default function Superadmin() {
     staleTime: 60000,
     retryDelay: 2000,
     enabled: true
+  });
+
+  // Feature flag toggle mutation
+  const updateFlagMutation = useMutation({
+    mutationFn: ({ flagId, enabled }: { flagId: number; enabled: boolean }) =>
+      apiRequest('PUT', `/api/superadmin/flags/${flagId}`, { default_value: enabled }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/dashboard'] });
+      toast({ title: 'Feature flag updated successfully' });
+    },
+    onError: (error) => {
+      console.error('Failed to update feature flag:', error);
+      toast({ title: 'Failed to update feature flag', variant: 'destructive' });
+    }
   });
 
   // Extract data from consolidated response
@@ -344,28 +362,39 @@ export default function Superadmin() {
               <Flag className="h-5 w-5" />
               Feature Flags ({featureFlags.length})
             </CardTitle>
+            <CardDescription>
+              Control travel platform features and functionality
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Flag Name</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Feature</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead>Updated</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Toggle</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {featureFlags.map((flag: any) => (
                   <TableRow key={flag.id}>
                     <TableCell className="font-medium">{flag.flag_name}</TableCell>
+                    <TableCell>{flag.description || 'No description'}</TableCell>
                     <TableCell>
                       <Badge variant={flag.is_enabled ? 'default' : 'secondary'}>
                         {flag.is_enabled ? 'Enabled' : 'Disabled'}
                       </Badge>
                     </TableCell>
-                    <TableCell>{flag.description || 'No description'}</TableCell>
-                    <TableCell>{flag.updated_at && !isNaN(new Date(flag.updated_at).getTime()) ? formatDistanceToNow(new Date(flag.updated_at), { addSuffix: true }) : 'Unknown'}</TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={flag.is_enabled}
+                        onCheckedChange={(enabled) => 
+                          updateFlagMutation.mutate({ flagId: flag.id, enabled })
+                        }
+                        disabled={updateFlagMutation.isPending}
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
