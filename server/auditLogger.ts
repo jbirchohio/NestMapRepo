@@ -1,5 +1,5 @@
 import { db } from './db';
-import { adminAuditLog } from '@shared/schema';
+import { superadminAuditLogs } from '@shared/superadmin-schema';
 
 export interface AuditEvent {
   userId: number;
@@ -20,21 +20,39 @@ export class AuditLogger {
    */
   async logAction(event: AuditEvent): Promise<void> {
     try {
-      await db.insert(adminAuditLog).values({
-        userId: event.user_id,
-        organizationId: event.organization_id,
+      await db.insert(superadminAuditLogs).values({
+        admin_user_id: event.userId,
         action: event.action,
-        entityType: event.entityType,
-        entityId: event.entityId,
+        entity_type: event.entityType,
+        entity_id: event.entityId,
+        target_organization_id: event.organizationId,
         details: event.details,
-        ipAddress: event.ipAddress,
-        userAgent: event.userAgent,
-        riskLevel: event.riskLevel,
-        timestamp: new Date()
+        ip_address: event.ipAddress,
+        user_agent: event.userAgent,
+        severity: this.mapRiskToSeverity(event.riskLevel),
+        created_at: new Date()
       });
     } catch (error) {
       console.error('Failed to log audit event:', error);
       // Don't throw - audit logging failures shouldn't break the application
+    }
+  }
+
+  /**
+   * Map risk level to severity for superadmin audit logs
+   */
+  private mapRiskToSeverity(riskLevel: 'low' | 'medium' | 'high' | 'critical'): string {
+    switch (riskLevel) {
+      case 'low':
+        return 'info';
+      case 'medium':
+        return 'info';
+      case 'high':
+        return 'warning';
+      case 'critical':
+        return 'critical';
+      default:
+        return 'info';
     }
   }
 
