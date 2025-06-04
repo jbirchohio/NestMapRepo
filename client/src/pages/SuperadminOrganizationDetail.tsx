@@ -36,13 +36,20 @@ export default function SuperadminOrganizationDetail() {
   const { data: organization, isLoading, error } = useQuery({
     queryKey: ['superadmin', 'organizations', id],
     queryFn: async () => {
+      console.log('Fetching organization with ID:', id);
       const res = await apiRequest('GET', `/api/superadmin/organizations/${id}`);
       if (!res.ok) {
+        console.error('Organization fetch failed:', res.status, res.statusText);
         throw new Error(`Failed to fetch organization: ${res.status}`);
       }
-      return res.json();
+      const data = await res.json();
+      console.log('Organization data received:', data);
+      return data;
     },
   });
+
+  // Debug logging
+  console.log('Organization query state:', { organization, isLoading, error });
 
   // Update organization mutation
   const updateOrganization = useMutation({

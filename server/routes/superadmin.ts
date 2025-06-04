@@ -969,7 +969,7 @@ router.put('/flags/:id', requireSuperadmin, async (req, res) => {
 
     const updateResult = await db.execute(`
       UPDATE feature_flags 
-      SET default_value = ${default_value}, updated_at = NOW()
+      SET default_value = ${default_value}
       WHERE id = ${flagId}
       RETURNING *
     `);
