@@ -272,31 +272,43 @@ router.get('/users', requireSuperadmin, async (req, res) => {
 router.get('/users/:id', requireSuperadmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    const [user] = await db
-      .select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        display_name: users.display_name,
-        role: users.role,
-        role_type: users.role_type,
-        organization_id: users.organization_id,
-        company: users.company,
-        job_title: users.job_title,
-        team_size: users.team_size,
-        use_case: users.use_case,
-        created_at: users.created_at,
-        organization_name: organizations.name,
-      })
-      .from(users)
-      .leftJoin(organizations, eq(users.organization_id, organizations.id))
-      .where(eq(users.id, userId));
+    
+    // Get user from Supabase database
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-    if (!user) {
+    if (userError || !user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(user);
+    // Get organization details if user has one
+    let organization = null;
+    if (user.organization_id) {
+      const { data: org, error: orgError } = await supabaseAdmin
+        .from('organizations')
+        .select('id, name')
+        .eq('id', user.organization_id)
+        .single();
+      
+      if (!orgError && org) {
+        organization = org;
+      }
+    }
+
+    // Get auth user details from Supabase auth
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(user.auth_id);
+
+    const userWithDetails = {
+      ...user,
+      organization_name: organization?.name || null,
+      email_confirmed: authUser?.user?.email_confirmed_at ? true : false,
+      last_sign_in: authUser?.user?.last_sign_in_at || null,
+    };
+
+    res.json(userWithDetails);
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Failed to fetch user' });

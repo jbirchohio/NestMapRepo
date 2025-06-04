@@ -108,18 +108,18 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       id: dbUser.id,
       email: dbUser.email,
       role: dbUser.role,
-      organizationId: dbUser.organization_id, // Convert snake_case to camelCase
-      displayName: dbUser.display_name, // Convert snake_case to camelCase
+      organizationId: dbUser.organization_id || null,
+      displayName: dbUser.display_name || null,
       authId: dbUser.auth_id,
       username: dbUser.username,
-      avatarUrl: dbUser.avatar_url,
-      roleType: dbUser.role_type,
-      company: dbUser.company,
-      jobTitle: dbUser.job_title,
-      teamSize: dbUser.team_size,
-      useCase: dbUser.use_case,
-      lastLogin: dbUser.last_login,
-      createdAt: dbUser.created_at
+      avatarUrl: dbUser.avatar_url || null,
+      roleType: dbUser.role_type || null,
+      company: dbUser.company || null,
+      jobTitle: dbUser.job_title || null,
+      teamSize: dbUser.team_size || null,
+      useCase: dbUser.use_case || null,
+      lastLogin: dbUser.last_login || null,
+      createdAt: dbUser.created_at || null
     };
 
     // Set organization context for tenant isolation (keep snake_case for backend)
