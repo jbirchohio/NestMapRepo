@@ -11,6 +11,9 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
+import { AnimatedCard } from '@/components/ui/animated-card';
+import { PrimaryButton } from '@/components/ui/primary-button';
+import { motion } from 'framer-motion';
 
 // Import modular components
 import { SystemMetrics } from '@/components/superadmin/SystemMetrics';
@@ -542,181 +545,258 @@ export default function Superadmin() {
 
   const renderDashboardOverview = () => (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
-          System Overview
-        </h1>
-        <p className="text-navy-600 dark:text-navy-300">
-          Comprehensive system administration and monitoring
-        </p>
-      </div>
+      {/* Hero Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white rounded-2xl mb-8"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+        <div className="absolute inset-0 opacity-30" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }} />
 
-          {/* Metrics Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="glass-card electric-glow animated-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{metrics.totalUsers}</div>
-                <p className="text-xs text-muted-foreground">
-                  System-wide user accounts
-                </p>
-              </CardContent>
-            </Card>
+        <div className="relative container mx-auto px-6 py-16">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex-1"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
+                  <Monitor className="w-8 h-8" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Database className="w-5 h-5 text-electric-200" />
+                  <span className="text-electric-100 text-sm font-medium">System Administration</span>
+                </div>
+              </div>
 
-            <Card className="glass-card electric-glow animated-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Organizations</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{metrics.totalOrganizations}</div>
-                <p className="text-xs text-muted-foreground">
-                  Active organizations
-                </p>
-              </CardContent>
-            </Card>
+              <h1 className="text-5xl font-bold mb-4 tracking-tight">
+                System Overview
+              </h1>
+              <p className="text-xl text-electric-100 mb-6 max-w-2xl">
+                Comprehensive system administration and monitoring with real-time analytics and advanced controls
+              </p>
 
-            <Card className="glass-card electric-glow animated-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{metrics.activeJobs}</div>
-                <p className="text-xs text-muted-foreground">
-                  Running background tasks
-                </p>
-              </CardContent>
-            </Card>
+              <div className="flex flex-wrap items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  <span className="text-electric-100">Real-time monitoring</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                  <span className="text-electric-100">Advanced analytics</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                  <span className="text-electric-100">System controls</span>
+                </div>
+              </div>
+            </motion.div>
 
-            <Card className="glass-card electric-glow animated-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{metrics.recentAuditEvents}</div>
-                <p className="text-xs text-muted-foreground">
-                  Events in last 24h
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-4"
+            >
+              <PrimaryButton 
+                variant="primary" 
+                size="lg"
+                className="electric-glow"
+              >
+                <Download className="w-5 h-5 mr-2" />
+                Export Data
+              </PrimaryButton>
+
+              <PrimaryButton 
+                variant="secondary" 
+                size="lg"
+              >
+                <UserCog className="w-5 h-5 mr-2" />
+                System Settings
+              </PrimaryButton>
+            </motion.div>
           </div>
+        </div>
+      </motion.div>
 
-          <Tabs defaultValue="organizations" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border-electric-200/30 dark:border-electric-700/30">
-              <TabsTrigger value="organizations" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Organizations</TabsTrigger>
-              <TabsTrigger value="users" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Users</TabsTrigger>
-              <TabsTrigger value="activity" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Activity</TabsTrigger>
-              <TabsTrigger value="billing" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Billing</TabsTrigger>
-              <TabsTrigger value="sessions" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Sessions</TabsTrigger>
-              <TabsTrigger value="flags" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Flags</TabsTrigger>
-              <TabsTrigger value="jobs" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-electric-500 data-[state=active]:to-electric-600 data-[state=active]:text-white">Jobs</TabsTrigger>
-            </TabsList>
+      {/* Quick Stats */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+      >
+        <AnimatedCard variant="soft" className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Users</p>
+              <p className="text-3xl font-bold text-navy-900 dark:text-white">{metrics.totalUsers}</p>
+            </div>
+            <div className="p-3 bg-electric-100 dark:bg-electric-900/20 rounded-xl">
+              <Users className="w-6 h-6 text-electric-600" />
+            </div>
+          </div>
+        </AnimatedCard>
 
-            <TabsContent value="organizations">
-              <Card className="glass-card border-electric-200/30 dark:border-electric-700/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-navy-700 dark:text-navy-200">
-                    <Building2 className="h-5 w-5 text-electric-600" />
-                    Organizations
-                  </CardTitle>
-                  <CardDescription className="text-navy-600 dark:text-navy-400">
-                    Manage organizational accounts and settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {orgsError ? (
-                    <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
-                      <AlertTriangle className="h-4 w-4" />
-                      Failed to load organizations data
-                    </div>
-                  ) : orgsLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
-                    </div>
-                  ) : organizations.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      No organizations found
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Domain</TableHead>
-                          <TableHead>Plan</TableHead>
-                          <TableHead>Users</TableHead>
-                          <TableHead>Created</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {organizations.map((org: Organization) => (
-                          <TableRow key={org.id}>
-                            <TableCell className="font-medium">{org.name}</TableCell>
-                            <TableCell>{org.domain || 'N/A'}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{org.plan || 'Free'}</Badge>
-                            </TableCell>
-                            <TableCell>{org.userCount || 0}</TableCell>
-                            <TableCell>
-                              {formatDistanceToNow(new Date(org.created_at), { addSuffix: true })}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="outline">
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Ban className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+        <AnimatedCard variant="soft" className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Organizations</p>
+              <p className="text-3xl font-bold text-navy-900 dark:text-white">{metrics.totalOrganizations}</p>
+            </div>
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
+              <Building2 className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </AnimatedCard>
 
-            <TabsContent value="users">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Users
-                  </CardTitle>
-                  <CardDescription>
-                    Manage user accounts and permissions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {usersError ? (
-                    <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
-                      <AlertTriangle className="h-4 w-4" />
-                      Failed to load users data
-                    </div>
-                  ) : usersLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
-                    </div>
-                  ) : users.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      No users found
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Organization</TableHead>
+        <AnimatedCard variant="soft" className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Active Jobs</p>
+              <p className="text-3xl font-bold text-navy-900 dark:text-white">{metrics.activeJobs}</p>
+            </div>
+            <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
+              <Activity className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </AnimatedCard>
+
+        <AnimatedCard variant="soft" className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Recent Activity</p>
+              <p className="text-3xl font-bold text-navy-900 dark:text-white">{metrics.recentAuditEvents}</p>
+            </div>
+            <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-xl">
+              <TrendingUp className="w-6 h-6 text-orange-600" />
+            </div>
+          </div>
+        </AnimatedCard>
+      </motion.div>
+
+      {/* Tabbed Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.8 }}
+        className="space-y-6"
+      >
+        <Tabs defaultValue="organizations" className="w-full">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="organizations" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Organizations
+            </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              Activity
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4" />
+              Billing
+            </TabsTrigger>
+            <TabsTrigger value="sessions" className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Sessions
+            </TabsTrigger>
+            <TabsTrigger value="flags" className="flex items-center gap-2">
+              <Flag className="w-4 h-4" />
+              Flags
+            </TabsTrigger>
+            <TabsTrigger value="jobs" className="flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              Jobs
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="organizations" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Organizations</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {organizations.length} total
+                </span>
+              </div>
+            </div>
+
+            <AnimatedCard variant="glow" className="p-6">
+              {orgsError ? (
+                <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
+                  <AlertTriangle className="h-4 w-4" />
+                  Failed to load organizations data
+                </div>
+              ) : orgsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+                </div>
+              ) : organizations.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No organizations found
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Domain</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Users</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {organizations.map((org: Organization) => (
+                      <TableRow key={org.id}>
+                        <TableCell className="font-medium">{org.name}</TableCell>
+                        <TableCell>{org.domain || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
+                            {org.plan || 'Basic'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{org.employee_count || 0}</TableCell>
+                        <TableCell>
+                          <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
+                            {org.subscription_status || 'Inactive'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </AnimatedCard>
+          </TabsContent>
+        </Tabs>
+      </motion.div>
+    </div>
+  );
+
+  // Main return with Corporate Cards layout
+  return (
+    <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
+      <SuperadminNavigation />
+      
+      {/* Main Content */}
+      <div className="lg:ml-64 container mx-auto px-6 py-8 space-y-8">
+        {renderSectionContent()}
+      </div>
+    </div>
+  );
+}
                           <TableHead>Status</TableHead>
                           <TableHead>Last Login</TableHead>
                           <TableHead>Actions</TableHead>
