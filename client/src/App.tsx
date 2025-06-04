@@ -29,6 +29,7 @@ import CalendarSettings from "@/pages/CalendarSettings";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CorporateCards from "@/pages/CorporateCards";
+import OrganizationFunding from "@/pages/OrganizationFunding";
 import Superadmin from "@/pages/SuperadminFixed";
 import SuperadminOrganizationDetail from "@/pages/SuperadminOrganizationDetail";
 import BillingDemo from "@/pages/BillingDemo";
@@ -72,6 +73,7 @@ function Router() {
         <Route path="/superadmin/:section" component={Superadmin} />
         <Route path="/billing-demo" component={BillingDemo} />
         <Route path="/corporate-cards" component={CorporateCards} />
+        <Route path="/organization-funding" component={OrganizationFunding} />
         <Route path="/onboarding" component={Onboarding} />
         <Route component={NotFound} />
       </Switch>

@@ -193,6 +193,14 @@ export default function MainNavigation() {
       badge: 'New'
     },
     {
+      path: '/organization-funding',
+      label: 'Organization Funding',
+      icon: Shield,
+      active: location === '/organization-funding',
+      show: hasBillingAccess,
+      badge: 'Setup'
+    },
+    {
       path: '/settings',
       label: roleType === 'agency' ? 'Agency Settings' : 'Company Settings',
       icon: Settings,

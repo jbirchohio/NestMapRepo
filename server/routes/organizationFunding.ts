@@ -115,7 +115,7 @@ router.get("/account-status", unifiedAuthMiddleware, async (req, res) => {
 });
 
 // Setup funding source
-router.post("/setup-funding", requireAuth, requireAdminRole, async (req, res) => {
+router.post("/setup-funding", unifiedAuthMiddleware, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: "No organization found" });
@@ -140,7 +140,7 @@ router.post("/setup-funding", requireAuth, requireAdminRole, async (req, res) =>
 });
 
 // Add funds to organization account
-router.post("/add-funds", requireAuth, requireAdminRole, async (req, res) => {
+router.post("/add-funds", unifiedAuthMiddleware, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: "No organization found" });
