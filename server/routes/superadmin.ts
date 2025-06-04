@@ -392,13 +392,16 @@ router.delete('/users/:id', requireSuperadmin, async (req, res) => {
 // System activity and monitoring
 router.get('/activity', requireSuperadmin, async (req, res) => {
   try {
-    const activities = await db
-      .select()
-      .from(superadminAuditLogs)
-      .orderBy(desc(superadminAuditLogs.created_at))
-      .limit(100);
+    // Use direct SQL to avoid schema mismatches
+    const activities = await db.execute(`
+      SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type, 
+             target_id as entity_id, details, created_at
+      FROM superadmin_audit_logs 
+      ORDER BY created_at DESC 
+      LIMIT 100
+    `);
 
-    res.json(activities);
+    res.json(activities.rows);
   } catch (error) {
     console.error('Error fetching activity:', error);
     res.status(500).json({ error: 'Failed to fetch activity' });
