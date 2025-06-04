@@ -149,9 +149,7 @@ router.put('/organizations/:id', requireSuperadmin, async (req, res) => {
       'UPDATE_ORGANIZATION',
       'organization',
       orgId,
-      updates,
-      undefined,
-      orgId
+      updates
     );
 
     res.json(updatedOrg);
@@ -190,9 +188,7 @@ router.delete('/organizations/:id', requireSuperadmin, async (req, res) => {
       'DELETE_ORGANIZATION',
       'organization',
       orgId,
-      { name: org.name },
-      undefined,
-      orgId
+      { name: org.name }
     );
 
     res.json({ success: true });
@@ -321,8 +317,7 @@ router.post('/users/:id/reset-password', requireSuperadmin, async (req, res) => 
       'RESET_PASSWORD',
       'user',
       userId,
-      { target_username: updatedUser.username },
-      userId
+      { target_username: updatedUser.username }
     );
 
     res.json({ success: true, user: updatedUser });
@@ -361,8 +356,7 @@ router.delete('/users/:id', requireSuperadmin, async (req, res) => {
       'DELETE_USER',
       'user',
       userId,
-      { username: user.username, email: user.email },
-      userId
+      { username: user.username, email: user.email }
     );
 
     res.json({ success: true });
