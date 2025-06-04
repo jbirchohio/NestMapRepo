@@ -248,5 +248,38 @@ router.get('/members', async (req: Request, res: Response) => {
   }
 });
 
+// Add users endpoint for card issuance dropdown (matches frontend API call)
+router.get('/users', async (req: Request, res: Response) => {
+  try {
+    console.log('User organization endpoint called, user:', req.user);
+    const userOrgId = req.user?.organization_id;
+    console.log('User organization ID:', userOrgId);
+    
+    if (!userOrgId) {
+      console.log('No organization ID found for user');
+      return res.status(400).json({ message: "Invalid organization ID" });
+    }
+
+    const organizationUsers = await db
+      .select({
+        id: users.id,
+        display_name: users.display_name,
+        email: users.email,
+        role: users.role,
+        organization_id: users.organization_id,
+        username: users.username
+      })
+      .from(users)
+      .where(eq(users.organization_id, userOrgId))
+      .orderBy(users.display_name);
+
+    console.log('Found organization users:', organizationUsers.length);
+    res.json(organizationUsers);
+  } catch (error) {
+    console.error('Error fetching organization users:', error);
+    res.status(500).json({ message: "Failed to fetch organization users" });
+  }
+});
+
 // Export the router
 export default router;
