@@ -37,6 +37,7 @@ router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
 router.use('/corporate-cards', corporateCardRoutes);
 router.use('/organization-funding', organizationFundingRoutes);
+console.log('🔧 Mounting Stripe OAuth routes at /stripe');
 router.use('/stripe', stripeOAuthRoutes);
 router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);

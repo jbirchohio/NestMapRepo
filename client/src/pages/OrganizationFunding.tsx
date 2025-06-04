@@ -97,13 +97,25 @@ export default function OrganizationFunding() {
 
   // Start Stripe Connect OAuth flow
   const createAccountMutation = useMutation({
-    mutationFn: () => 
-      apiRequest('POST', '/api/stripe/oauth/authorize', { organizationId: 1 }),
+    mutationFn: () => {
+      console.log('Attempting to connect to Stripe...');
+      return apiRequest('POST', '/api/stripe/oauth/authorize', { organizationId: 1 });
+    },
     onSuccess: (data: any) => {
-      // Redirect to Stripe OAuth
-      window.location.href = data.authUrl;
+      console.log('OAuth response data:', data);
+      if (data.authUrl) {
+        console.log('Redirecting to:', data.authUrl);
+        window.location.href = data.authUrl;
+      } else {
+        toast({
+          title: "Error",
+          description: 'No auth URL received from server',
+          variant: "destructive"
+        });
+      }
     },
     onError: (error: any) => {
+      console.error('Error connecting to Stripe:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to start OAuth flow",
@@ -307,7 +319,7 @@ export default function OrganizationFunding() {
                               </AlertDescription>
                             </Alert>
                           )}
-                          
+
                           {/* Past due requirements */}
                           {fundingStatus.requirementsPastDue?.length > 0 && (
                             <Alert className="border-red-600 bg-red-100 dark:bg-red-900/30">
@@ -322,7 +334,7 @@ export default function OrganizationFunding() {
                               </AlertDescription>
                             </Alert>
                           )}
-                          
+
                           {/* Eventually due requirements */}
                           {fundingStatus.requirementsEventuallyDue?.length > 0 && (
                             <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
@@ -337,7 +349,7 @@ export default function OrganizationFunding() {
                               </AlertDescription>
                             </Alert>
                           )}
-                          
+
                           {/* Verification errors */}
                           {fundingStatus.errors?.length > 0 && (
                             <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
@@ -357,7 +369,7 @@ export default function OrganizationFunding() {
                               </AlertDescription>
                             </Alert>
                           )}
-                          
+
                           {/* Capability status */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -385,7 +397,7 @@ export default function OrganizationFunding() {
                               )}
                             </div>
                           </div>
-                          
+
                           {/* Account disabled reason */}
                           {fundingStatus.requirementsDisabledReason && (
                             <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">

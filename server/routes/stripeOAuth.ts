@@ -59,21 +59,26 @@ router.get('/oauth/callback', async (req, res) => {
  * Generate OAuth authorization URL
  */
 router.post('/oauth/authorize', async (req, res) => {
+  console.log('🔥 OAuth authorize endpoint hit');
+  console.log('Request body:', req.body);
+  console.log('Request headers:', req.headers);
+  
   try {
     const { organizationId } = req.body;
 
     if (!process.env.STRIPE_CONNECT_CLIENT_ID) {
+      console.log('❌ Missing Stripe Connect Client ID');
       return res.status(400).json({ 
         error: 'Stripe Connect Client ID is required. Please provide your Connect application Client ID from Stripe Dashboard.' 
       });
     }
 
     // Log the client ID for debugging (first 10 characters only)
-    console.log('Using Stripe Connect Client ID:', process.env.STRIPE_CONNECT_CLIENT_ID?.substring(0, 10) + '...');
+    console.log('✅ Using Stripe Connect Client ID:', process.env.STRIPE_CONNECT_CLIENT_ID?.substring(0, 10) + '...');
     
     const redirectUri = `https://${process.env.REPLIT_DEV_DOMAIN}/api/stripe/oauth/callback`;
     
-    console.log('OAuth redirect URI:', redirectUri);
+    console.log('🔗 OAuth redirect URI:', redirectUri);
 
     const authUrl = `https://connect.stripe.com/oauth/authorize?` +
       `response_type=code` +
@@ -82,10 +87,12 @@ router.post('/oauth/authorize', async (req, res) => {
       `&redirect_uri=${redirectUri}` +
       `&state=${organizationId}`;
 
-    console.log('Generated OAuth URL:', authUrl);
+    console.log('🚀 Generated OAuth URL:', authUrl);
+    console.log('📤 Sending response...');
+    
     res.json({ authUrl });
   } catch (error: any) {
-    console.error('OAuth authorize error:', error);
+    console.error('❌ OAuth authorize error:', error);
     res.status(500).json({ error: 'Failed to generate authorization URL' });
   }
 });
