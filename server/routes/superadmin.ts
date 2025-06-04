@@ -19,7 +19,7 @@ import {
   insertSuperadminFeatureFlagSchema,
   insertSuperadminBackgroundJobSchema,
 } from '@shared/superadmin-schema';
-import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const router = express.Router();
 
@@ -126,7 +126,7 @@ router.post('/organizations', requireSuperadmin, async (req, res) => {
       .returning();
 
     await logSuperadminAction(
-      req.user.id,
+      req.user!.id,
       'CREATE_ORGANIZATION',
       'organization',
       newOrg.id,
@@ -161,7 +161,7 @@ router.put('/organizations/:id', requireSuperadmin, async (req, res) => {
     }
 
     await logSuperadminAction(
-      req.user.id,
+      req.user!.id,
       'UPDATE_ORGANIZATION',
       'organization',
       orgId,
@@ -202,7 +202,7 @@ router.delete('/organizations/:id', requireSuperadmin, async (req, res) => {
       .where(eq(organizations.id, orgId));
 
     await logSuperadminAction(
-      req.user.id,
+      req.user!.id,
       'DELETE_ORGANIZATION',
       'organization',
       orgId,
@@ -296,7 +296,7 @@ router.put('/users/:id', requireSuperadmin, async (req, res) => {
     }
 
     await logSuperadminAction(
-      req.user.id,
+      req.user!.id,
       'UPDATE_USER',
       'user',
       userId,
@@ -320,11 +320,14 @@ router.post('/users/:id/reset-password', requireSuperadmin, async (req, res) => 
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
 
-    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    // Use Node.js crypto for password hashing
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hashedPassword = crypto.pbkdf2Sync(newPassword, salt, 1000, 64, 'sha512').toString('hex');
+    const passwordHash = `${salt}:${hashedPassword}`;
 
     const [updatedUser] = await db
       .update(users)
-      .set({ password_hash: hashedPassword })
+      .set({ password_hash: passwordHash })
       .where(eq(users.id, userId))
       .returning({ id: users.id, username: users.username, email: users.email });
 
@@ -333,7 +336,7 @@ router.post('/users/:id/reset-password', requireSuperadmin, async (req, res) => 
     }
 
     await logSuperadminAction(
-      req.user.id,
+      req.user!.id,
       'RESET_PASSWORD',
       'user',
       userId,
@@ -373,7 +376,7 @@ router.delete('/users/:id', requireSuperadmin, async (req, res) => {
       .where(eq(users.id, userId));
 
     await logSuperadminAction(
-      req.user.id,
+      req.user!.id,
       'DELETE_USER',
       'user',
       userId,
@@ -482,7 +485,7 @@ router.post('/flags', requireSuperadmin, async (req, res) => {
       .returning();
 
     await logSuperadminAction(
-      req.user.id,
+      req.user!.id,
       'CREATE_FEATURE_FLAG',
       'feature_flag',
       newFlag.id,
@@ -512,7 +515,7 @@ router.put('/flags/:id', requireSuperadmin, async (req, res) => {
     }
 
     await logSuperadminAction(
-      req.user.id,
+      req.user!.id,
       'UPDATE_FEATURE_FLAG',
       'feature_flag',
       flagId,
