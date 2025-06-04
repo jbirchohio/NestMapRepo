@@ -31,6 +31,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import CorporateCards from "@/pages/CorporateCards";
 import Superadmin from "@/pages/SuperadminFixed";
 import Onboarding from "@/pages/Onboarding";
+import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -42,6 +43,7 @@ function Router() {
       {!isSupeadminView && <MainNavigation />}
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/login" component={Login} />
         <Route path="/trip/:id" component={TripPlanner} />
         <Route path="/trip-planner/:id" component={TripPlanner} />
         <Route path="/share/:shareCode" component={SimpleShare} />
