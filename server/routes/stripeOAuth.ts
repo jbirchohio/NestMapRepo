@@ -70,14 +70,21 @@ router.post('/oauth/authorize', async (req, res) => {
 
     // Log the client ID for debugging (first 10 characters only)
     console.log('Using Stripe Connect Client ID:', process.env.STRIPE_CONNECT_CLIENT_ID?.substring(0, 10) + '...');
+    
+    const redirectUri = process.env.NODE_ENV === 'production' 
+      ? 'https://nest-map-wander-cobeunlimited.replit.app/api/stripe/oauth/callback'
+      : `${req.protocol}://${req.get('host')}/api/stripe/oauth/callback`;
+    
+    console.log('OAuth redirect URI:', redirectUri);
 
     const authUrl = `https://connect.stripe.com/oauth/authorize?` +
       `response_type=code` +
       `&client_id=${process.env.STRIPE_CONNECT_CLIENT_ID}` +
       `&scope=read_write` +
-      `&redirect_uri=https://nest-map-wander-cobeunlimited.replit.app/api/stripe/oauth/callback` +
+      `&redirect_uri=${redirectUri}` +
       `&state=${organizationId}`;
 
+    console.log('Generated OAuth URL:', authUrl.substring(0, 100) + '...');
     res.json({ authUrl });
   } catch (error: any) {
     console.error('OAuth authorize error:', error);
