@@ -38,14 +38,48 @@ export default function SuperadminClean() {
   const { section } = useParams();
   const activeSection = section || 'overview';
 
-  const { data: dashboardData = {}, isLoading: dashboardLoading, error: dashboardError } = useQuery({
-    queryKey: ['/api/superadmin/dashboard'],
-    staleTime: 1000 * 60 * 5,
+  // Individual API queries for each section (original working approach)
+  const { data: organizations = [], isLoading: orgsLoading } = useQuery({
+    queryKey: ['/api/superadmin/organizations'],
+    retry: false
   });
 
-  const organizations = (dashboardData as any)?.organizations || [];
-  const users = (dashboardData as any)?.users || [];
-  const auditLogs = (dashboardData as any)?.auditLogs || [];
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['/api/superadmin/users'],
+    retry: false
+  });
+
+  const { data: activeSessions = [] } = useQuery({
+    queryKey: ['/api/superadmin/sessions'],
+    retry: false
+  });
+
+  const { data: backgroundJobs = [] } = useQuery({
+    queryKey: ['/api/superadmin/jobs'],
+    retry: false
+  });
+
+  const { data: auditLogs = [] } = useQuery({
+    queryKey: ['/api/superadmin/activity'],
+    retry: false
+  });
+
+  const { data: billingData = [] } = useQuery({
+    queryKey: ['/api/superadmin/billing'],
+    retry: false
+  });
+
+  const { data: featureFlags = [] } = useQuery({
+    queryKey: ['/api/superadmin/flags'],
+    retry: false
+  });
+
+  // Use dashboard query only for overview metrics
+  const { data: dashboardData = {}, isLoading: dashboardLoading, error: dashboardError } = useQuery({
+    queryKey: ['/api/superadmin/dashboard'],
+    enabled: activeSection === 'overview',
+    staleTime: 1000 * 60 * 5,
+  });
 
   const renderDashboardOverview = () => (
     <div className="space-y-8">
@@ -273,7 +307,7 @@ export default function SuperadminClean() {
               className="mb-8"
             >
               <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
-                Recent Activity
+                System Activity ({auditLogs.length})
               </h1>
               <p className="text-navy-600 dark:text-navy-300">
                 System audit log and recent activities
@@ -281,37 +315,30 @@ export default function SuperadminClean() {
             </motion.div>
 
             <AnimatedCard variant="glow" className="p-6">
-              {dashboardError ? (
-                <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
-                  <AlertTriangle className="h-4 w-4" />
-                  Failed to load activity data
-                </div>
-              ) : dashboardLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
-                </div>
-              ) : auditLogs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No activity found
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {auditLogs.slice(0, 10).map((log: AuditLog) => (
-                    <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
-                      <div className="flex-shrink-0 mt-1">
-                        <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{log.action}</p>
-                        <p className="text-sm text-gray-500">{log.target_type} #{log.target_id}</p>
-                        <p className="text-xs text-gray-400">
-                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Action</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Risk Level</TableHead>
+                    <TableHead>Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditLogs.map((log: any) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-medium">{log.action}</TableCell>
+                      <TableCell>{log.username || 'System'}</TableCell>
+                      <TableCell>
+                        <Badge variant={log.risk_level === 'critical' ? 'destructive' : log.risk_level === 'high' ? 'secondary' : 'default'}>
+                          {log.risk_level}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}</TableCell>
+                    </TableRow>
                   ))}
-                </div>
-              )}
+                </TableBody>
+              </Table>
             </AnimatedCard>
           </div>
         );
