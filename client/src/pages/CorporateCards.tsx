@@ -38,16 +38,16 @@ interface CorporateCard {
   user_id: number;
   card_number_masked: string;
   cardholder_name: string;
-  card_status: string;
+  status: string;
   spending_limit: number;
-  remaining_limit: number;
-  purpose: string;
-  department: string;
+  available_balance: number;
+  currency: string;
+  card_type: string;
+  stripe_card_id: string;
+  purpose?: string;
+  department?: string;
   created_at: string;
-  user: {
-    username: string;
-    email: string;
-  };
+  updated_at: string;
 }
 
 interface CardTransaction {
@@ -86,10 +86,12 @@ export default function CorporateCards() {
   const queryClient = useQueryClient();
 
   // Fetch corporate cards
-  const { data: cards = [], isLoading: cardsLoading } = useQuery({
-    queryKey: ["/api/corporate-card/cards"],
-    queryFn: () => apiRequest("GET", "/api/corporate-card/cards").then(res => res.json()),
+  const { data: cardsResponse, isLoading: cardsLoading } = useQuery({
+    queryKey: ["/api/corporate-cards/cards"],
+    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards").then(res => res.json()),
   });
+
+  const cards = cardsResponse?.cards || [];
 
   // Fetch expenses
   const { data: expenses = [], isLoading: expensesLoading } = useQuery({
@@ -112,7 +114,7 @@ export default function CorporateCards() {
         title: "Card Issued Successfully",
         description: "New corporate card has been issued and activated.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/corporate-card/cards"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
       setIsIssueDialogOpen(false);
     },
     onError: (error: any) => {
@@ -133,7 +135,7 @@ export default function CorporateCards() {
         title: freeze ? "Card Frozen" : "Card Unfrozen",
         description: `Card has been ${freeze ? "frozen" : "unfrozen"} successfully.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/corporate-card/cards"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
     },
   });
 

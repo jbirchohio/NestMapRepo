@@ -125,7 +125,7 @@ const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
               animate="visible"
               exit="hidden"
               className={cn(
-                "relative w-full max-w-4xl mx-4 mb-0 sm:mb-4 max-h-[90vh] overflow-hidden",
+                "relative w-full max-w-4xl mx-4 mb-0 sm:mb-4 max-h-[90vh] flex flex-col",
                 "bg-white dark:bg-navy-900 rounded-t-3xl sm:rounded-3xl shadow-2xl",
                 "border border-gray-200/50 dark:border-navy-700/50",
                 className
