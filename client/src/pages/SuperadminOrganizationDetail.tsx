@@ -56,12 +56,60 @@ export default function SuperadminOrganizationDetail() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations'] });
       toast({ title: 'Organization deleted successfully' });
       window.location.href = '/superadmin/organizations';
     },
     onError: () => {
       toast({ title: 'Failed to delete organization', variant: 'destructive' });
+    },
+  });
+
+  // Update user mutation
+  const updateUser = useMutation({
+    mutationFn: async ({ userId, updates }: { userId: number; updates: any }) => {
+      const res = await apiRequest('PUT', `/api/superadmin/users/${userId}`, updates);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
+      toast({ title: 'User updated successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to update user', variant: 'destructive' });
+    },
+  });
+
+  // Delete user mutation
+  const deleteUser = useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await apiRequest('DELETE', `/api/superadmin/users/${userId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
+      toast({ title: 'User deleted successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to delete user', variant: 'destructive' });
+    },
+  });
+
+  // Create user mutation
+  const createUser = useMutation({
+    mutationFn: async (userData: any) => {
+      const res = await apiRequest('POST', '/api/superadmin/users', {
+        ...userData,
+        organization_id: parseInt(id as string)
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
+      toast({ title: 'User created successfully' });
+      setIsCreateUserDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: 'Failed to create user', variant: 'destructive' });
     },
   });
 
@@ -79,21 +127,6 @@ export default function SuperadminOrganizationDetail() {
     },
     onError: () => {
       toast({ title: 'Failed to reset password', variant: 'destructive' });
-    },
-  });
-
-  // Update user mutation
-  const updateUser = useMutation({
-    mutationFn: async ({ userId, updates }: { userId: number; updates: any }) => {
-      const res = await apiRequest('PUT', `/api/superadmin/users/${userId}`, updates);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
-      toast({ title: 'User updated successfully' });
-    },
-    onError: () => {
-      toast({ title: 'Failed to update user', variant: 'destructive' });
     },
   });
 
@@ -119,55 +152,55 @@ export default function SuperadminOrganizationDetail() {
     );
   }
 
-  const handlePlanChange = (userId: number, newPlan: string) => {
-    updateUser.mutate({ userId, updates: { plan: newPlan } });
-  };
-
   const handleRoleChange = (userId: number, newRole: string) => {
     updateUser.mutate({ userId, updates: { role: newRole } });
   };
 
+  const handleDeleteUser = (userId: number, username: string) => {
+    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+      deleteUser.mutate(userId);
+    }
+  };
+
+  const handleResetPassword = (userId: number) => {
+    if (newPassword.trim().length < 6) {
+      toast({ title: 'Password must be at least 6 characters', variant: 'destructive' });
+      return;
+    }
+    resetPassword.mutate({ userId, newPassword });
+  };
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const userData = {
+      username: formData.get('username'),
+      email: formData.get('email'),
+      password: formData.get('password'),
+      role: formData.get('role'),
+      display_name: formData.get('display_name'),
+    };
+    createUser.mutate(userData);
+  };
+
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <div className="w-64 bg-card border-r border-border p-6">
-        <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Link href="/superadmin">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
           <div>
-            <h2 className="text-lg font-semibold mb-4">Superadmin</h2>
-            <nav className="space-y-2">
-              <Link href="/superadmin" className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-accent">
-                <Users className="w-4 h-4 mr-3" />
-                Dashboard
-              </Link>
-              <Link href="/superadmin" className="flex items-center px-3 py-2 text-sm rounded-md bg-accent text-accent-foreground">
-                <Building className="w-4 h-4 mr-3" />
-                Organizations
-              </Link>
-            </nav>
+            <h1 className="text-3xl font-bold">{organization.name}</h1>
+            <p className="text-muted-foreground">Organization Details</p>
           </div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-8 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/superadmin">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold">{organization.name}</h1>
-                <p className="text-muted-foreground">Organization Details</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <div className="flex items-center space-x-2">
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Edit className="w-4 h-4 mr-2" />
@@ -181,22 +214,18 @@ export default function SuperadminOrganizationDetail() {
               </DialogHeader>
               <form onSubmit={(e) => {
                 e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                updateOrganization.mutate({
-                  name: formData.get('name'),
-                  domain: formData.get('domain'),
-                  plan: formData.get('plan'),
-                  employee_count: parseInt(formData.get('employee_count') as string) || 0,
-                });
+                const formData = new FormData(e.target as HTMLFormElement);
+                const updates = Object.fromEntries(formData.entries());
+                updateOrganization.mutate(updates);
               }}>
-                <div className="space-y-4">
+                <div className="grid gap-4 py-4">
                   <div>
-                    <Label htmlFor="name">Organization Name</Label>
-                    <Input id="name" name="name" defaultValue={organization.name} required />
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" name="name" defaultValue={organization.name} />
                   </div>
                   <div>
                     <Label htmlFor="domain">Domain</Label>
-                    <Input id="domain" name="domain" defaultValue={organization.domain || ''} />
+                    <Input id="domain" name="domain" defaultValue={organization.domain} />
                   </div>
                   <div>
                     <Label htmlFor="plan">Plan</Label>
@@ -287,14 +316,12 @@ export default function SuperadminOrganizationDetail() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Created</CardTitle>
+            <CardTitle className="text-sm font-medium">Status</CardTitle>
             <Settings className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-sm font-bold">
-              {new Date(organization.created_at).toLocaleDateString()}
-            </div>
-            <p className="text-xs text-muted-foreground">Registration date</p>
+            <div className="text-2xl font-bold">Active</div>
+            <p className="text-xs text-muted-foreground">Organization status</p>
           </CardContent>
         </Card>
       </div>
@@ -307,10 +334,61 @@ export default function SuperadminOrganizationDetail() {
               <CardTitle>Organization Members</CardTitle>
               <CardDescription>Manage users in this organization</CardDescription>
             </div>
-            <Button onClick={() => setIsCreateUserDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add User
-            </Button>
+            <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add User
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New User</DialogTitle>
+                  <DialogDescription>Add a new user to this organization</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleCreateUser}>
+                  <div className="grid gap-4 py-4">
+                    <div>
+                      <Label htmlFor="username">Username</Label>
+                      <Input id="username" name="username" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" name="email" type="email" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="display_name">Display Name</Label>
+                      <Input id="display_name" name="display_name" />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">Password</Label>
+                      <Input id="password" name="password" type="password" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="role">Role</Label>
+                      <Select name="role" defaultValue="user">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsCreateUserDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createUser.isPending}>
+                      Create User
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
@@ -320,7 +398,6 @@ export default function SuperadminOrganizationDetail() {
                 <TableRow>
                   <TableHead>User</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Org Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -351,15 +428,12 @@ export default function SuperadminOrganizationDetail() {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{member.org_role}</Badge>
-                    </TableCell>
-                    <TableCell>
                       <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>
-                        {member.status}
+                        {member.status || 'active'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {member.joined_at ? new Date(member.joined_at).toLocaleDateString() : 'N/A'}
+                      {member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">
@@ -376,11 +450,7 @@ export default function SuperadminOrganizationDetail() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            if (confirm('Are you sure you want to remove this user?')) {
-                              // Handle user removal
-                            }
-                          }}
+                          onClick={() => handleDeleteUser(member.id, member.username)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -405,22 +475,20 @@ export default function SuperadminOrganizationDetail() {
             <DialogTitle>Reset User Password</DialogTitle>
             <DialogDescription>Enter a new password for this user</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password (min 8 characters)"
-                minLength={8}
-              />
-            </div>
+          <div className="py-4">
+            <Label htmlFor="new-password">New Password</Label>
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Enter new password"
+            />
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
+            <Button 
+              type="button" 
+              variant="outline" 
               onClick={() => {
                 setIsResetPasswordDialogOpen(false);
                 setNewPassword('');
@@ -429,21 +497,15 @@ export default function SuperadminOrganizationDetail() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={() => {
-                if (selectedUserId && newPassword.length >= 8) {
-                  resetPassword.mutate({ userId: selectedUserId, newPassword });
-                }
-              }}
-              disabled={!selectedUserId || newPassword.length < 8 || resetPassword.isPending}
+            <Button 
+              onClick={() => selectedUserId && handleResetPassword(selectedUserId)}
+              disabled={resetPassword.isPending || !newPassword.trim()}
             >
               Reset Password
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-        </div>
-      </div>
     </div>
   );
 }
