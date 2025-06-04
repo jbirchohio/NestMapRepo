@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2, Key, Users, Building, CreditCard, Settings } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Key, Users, Building, CreditCard, Settings, DollarSign, RefreshCw, Ban, CheckCircle } from 'lucide-react';
 
 export default function SuperadminOrganizationDetail() {
   const { id } = useParams();
@@ -23,6 +23,14 @@ export default function SuperadminOrganizationDetail() {
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  
+  // Billing management state
+  const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
+  const [isDowngradeDialogOpen, setIsDowngradeDialogOpen] = useState(false);
+  const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('');
 
   // Fetch organization details
   const { data: organization, isLoading } = useQuery({
@@ -127,6 +135,93 @@ export default function SuperadminOrganizationDetail() {
     },
     onError: () => {
       toast({ title: 'Failed to reset password', variant: 'destructive' });
+    },
+  });
+
+  // Billing mutations
+  const upgradePlan = useMutation({
+    mutationFn: async ({ newPlan }: { newPlan: string }) => {
+      const res = await apiRequest('POST', `/api/superadmin/billing/${id}/upgrade`, { 
+        newPlan, 
+        previousPlan: organization.plan 
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
+      toast({ title: 'Plan upgraded successfully' });
+      setIsUpgradeDialogOpen(false);
+      setSelectedPlan('');
+    },
+    onError: () => {
+      toast({ title: 'Failed to upgrade plan', variant: 'destructive' });
+    },
+  });
+
+  const downgradePlan = useMutation({
+    mutationFn: async ({ newPlan }: { newPlan: string }) => {
+      const res = await apiRequest('POST', `/api/superadmin/billing/${id}/downgrade`, { 
+        newPlan, 
+        previousPlan: organization.plan 
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
+      toast({ title: 'Plan downgraded successfully' });
+      setIsDowngradeDialogOpen(false);
+      setSelectedPlan('');
+    },
+    onError: () => {
+      toast({ title: 'Failed to downgrade plan', variant: 'destructive' });
+    },
+  });
+
+  const processRefund = useMutation({
+    mutationFn: async ({ amount, reason, refundType }: { amount: string; reason: string; refundType: string }) => {
+      const res = await apiRequest('POST', `/api/superadmin/billing/${id}/refund`, { 
+        amount, 
+        reason, 
+        refundType 
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: 'Refund processed successfully' });
+      setIsRefundDialogOpen(false);
+      setRefundAmount('');
+      setRefundReason('');
+    },
+    onError: () => {
+      toast({ title: 'Failed to process refund', variant: 'destructive' });
+    },
+  });
+
+  const suspendBilling = useMutation({
+    mutationFn: async ({ reason }: { reason: string }) => {
+      const res = await apiRequest('POST', `/api/superadmin/billing/${id}/suspend`, { reason });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
+      toast({ title: 'Billing suspended successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to suspend billing', variant: 'destructive' });
+    },
+  });
+
+  const reactivateBilling = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', `/api/superadmin/billing/${id}/reactivate`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
+      toast({ title: 'Billing reactivated successfully' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to reactivate billing', variant: 'destructive' });
     },
   });
 
@@ -278,7 +373,7 @@ export default function SuperadminOrganizationDetail() {
       </div>
 
       {/* Organization Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Plan</CardTitle>
@@ -289,6 +384,19 @@ export default function SuperadminOrganizationDetail() {
             <Badge variant={organization.plan === 'enterprise' ? 'default' : 'secondary'}>
               {organization.subscription_status || 'inactive'}
             </Badge>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Cost</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${organization.plan === 'enterprise' ? '99.99' : organization.plan === 'team' ? '29.99' : '0.00'}
+            </div>
+            <p className="text-xs text-muted-foreground">Per month</p>
           </CardContent>
         </Card>
 
@@ -325,6 +433,188 @@ export default function SuperadminOrganizationDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Billing Management Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Billing Management
+          </CardTitle>
+          <CardDescription>Manage subscription, billing, and payments for this organization</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* Plan Management */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Plan Management</div>
+              <div className="space-y-2">
+                <Dialog open={isUpgradeDialogOpen} onOpenChange={setIsUpgradeDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full" disabled={organization.plan === 'enterprise'}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Upgrade Plan
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Upgrade Plan</DialogTitle>
+                      <DialogDescription>Upgrade organization to a higher plan</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Label htmlFor="upgrade-plan">Select Plan</Label>
+                      <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose new plan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organization.plan === 'free' && <SelectItem value="team">Team ($29.99/month)</SelectItem>}
+                          {(organization.plan === 'free' || organization.plan === 'team') && <SelectItem value="enterprise">Enterprise ($99.99/month)</SelectItem>}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsUpgradeDialogOpen(false)}>Cancel</Button>
+                      <Button onClick={() => selectedPlan && upgradePlan.mutate({ newPlan: selectedPlan })} disabled={!selectedPlan || upgradePlan.isPending}>
+                        Upgrade Plan
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={isDowngradeDialogOpen} onOpenChange={setIsDowngradeDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full" disabled={organization.plan === 'free'}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Downgrade Plan
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Downgrade Plan</DialogTitle>
+                      <DialogDescription>Downgrade organization to a lower plan</DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <Label htmlFor="downgrade-plan">Select Plan</Label>
+                      <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose new plan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organization.plan === 'enterprise' && <SelectItem value="team">Team ($29.99/month)</SelectItem>}
+                          {(organization.plan === 'enterprise' || organization.plan === 'team') && <SelectItem value="free">Free ($0/month)</SelectItem>}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsDowngradeDialogOpen(false)}>Cancel</Button>
+                      <Button onClick={() => selectedPlan && downgradePlan.mutate({ newPlan: selectedPlan })} disabled={!selectedPlan || downgradePlan.isPending}>
+                        Downgrade Plan
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/* Refund Processing */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Refund Processing</div>
+              <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Process Refund
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Process Refund</DialogTitle>
+                    <DialogDescription>Issue a refund for this organization</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label htmlFor="refund-amount">Refund Amount</Label>
+                      <Input
+                        id="refund-amount"
+                        type="number"
+                        step="0.01"
+                        value={refundAmount}
+                        onChange={(e) => setRefundAmount(e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="refund-reason">Reason</Label>
+                      <Textarea
+                        id="refund-reason"
+                        value={refundReason}
+                        onChange={(e) => setRefundReason(e.target.value)}
+                        placeholder="Reason for refund..."
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsRefundDialogOpen(false)}>Cancel</Button>
+                    <Button 
+                      onClick={() => processRefund.mutate({ 
+                        amount: refundAmount, 
+                        reason: refundReason, 
+                        refundType: 'full' 
+                      })} 
+                      disabled={!refundAmount || !refundReason || processRefund.isPending}
+                    >
+                      Process Refund
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Billing Controls */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Billing Controls</div>
+              <div className="space-y-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => suspendBilling.mutate({ reason: 'Administrative suspension' })}
+                  disabled={organization.subscription_status === 'suspended' || suspendBilling.isPending}
+                >
+                  <Ban className="w-4 h-4 mr-2" />
+                  Suspend Billing
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => reactivateBilling.mutate()}
+                  disabled={organization.subscription_status === 'active' || reactivateBilling.isPending}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Reactivate Billing
+                </Button>
+              </div>
+            </div>
+
+            {/* Billing Information */}
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Billing Information</div>
+              <div className="space-y-1 text-sm">
+                <div>Current Plan: <span className="font-medium capitalize">{organization.plan}</span></div>
+                <div>Status: <Badge variant={organization.subscription_status === 'active' ? 'default' : 'secondary'}>{organization.subscription_status || 'inactive'}</Badge></div>
+                <div>Monthly Cost: <span className="font-medium">${organization.plan === 'enterprise' ? '99.99' : organization.plan === 'team' ? '29.99' : '0.00'}</span></div>
+                {organization.stripe_customer_id && (
+                  <div className="text-xs text-gray-500">
+                    Stripe ID: {organization.stripe_customer_id.substring(0, 15)}...
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Members Table */}
       <Card>

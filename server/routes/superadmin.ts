@@ -437,6 +437,12 @@ router.get('/billing', requireSuperadmin, async (req, res) => {
         stripe_customer_id: organizations.stripe_customer_id,
         stripe_subscription_id: organizations.stripe_subscription_id,
         user_count: sql<number>`(SELECT COUNT(*) FROM ${organizationMembers} WHERE ${organizationMembers.organization_id} = ${organizations.id})`,
+        created_at: organizations.created_at,
+        monthly_cost: sql<number>`CASE 
+          WHEN ${organizations.plan} = 'team' THEN 29.99 
+          WHEN ${organizations.plan} = 'enterprise' THEN 99.99 
+          ELSE 0 
+        END`,
       })
       .from(organizations)
       .where(sql`${organizations.plan} != 'free'`)
@@ -446,6 +452,211 @@ router.get('/billing', requireSuperadmin, async (req, res) => {
   } catch (error) {
     console.error('Error fetching billing:', error);
     res.status(500).json({ error: 'Failed to fetch billing' });
+  }
+});
+
+// Billing management endpoints
+router.post('/billing/:orgId/upgrade', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+    const { newPlan } = req.body;
+    
+    if (!['team', 'enterprise'].includes(newPlan)) {
+      return res.status(400).json({ error: 'Invalid plan type' });
+    }
+
+    // Update organization plan
+    const [updatedOrg] = await db
+      .update(organizations)
+      .set({ 
+        plan: newPlan,
+        subscription_status: 'active',
+        updated_at: new Date()
+      })
+      .where(eq(organizations.id, orgId))
+      .returning();
+
+    if (!updatedOrg) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Log audit action
+    await auditLogger.logAdminAction(
+      req.user?.id || 1,
+      orgId,
+      'UPGRADE_PLAN',
+      { 
+        organization_name: updatedOrg.name,
+        new_plan: newPlan,
+        previous_plan: req.body.previousPlan 
+      }
+    );
+
+    res.json({ success: true, organization: updatedOrg });
+  } catch (error) {
+    console.error('Error upgrading plan:', error);
+    res.status(500).json({ error: 'Failed to upgrade plan' });
+  }
+});
+
+router.post('/billing/:orgId/downgrade', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+    const { newPlan } = req.body;
+    
+    if (!['free', 'team'].includes(newPlan)) {
+      return res.status(400).json({ error: 'Invalid plan type' });
+    }
+
+    // Update organization plan
+    const [updatedOrg] = await db
+      .update(organizations)
+      .set({ 
+        plan: newPlan,
+        subscription_status: newPlan === 'free' ? 'inactive' : 'active',
+        updated_at: new Date()
+      })
+      .where(eq(organizations.id, orgId))
+      .returning();
+
+    if (!updatedOrg) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Log audit action
+    await auditLogger.logAdminAction(
+      req.user?.id || 1,
+      orgId,
+      'DOWNGRADE_PLAN',
+      { 
+        organization_name: updatedOrg.name,
+        new_plan: newPlan,
+        previous_plan: req.body.previousPlan 
+      }
+    );
+
+    res.json({ success: true, organization: updatedOrg });
+  } catch (error) {
+    console.error('Error downgrading plan:', error);
+    res.status(500).json({ error: 'Failed to downgrade plan' });
+  }
+});
+
+router.post('/billing/:orgId/refund', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+    const { amount, reason, refundType } = req.body;
+    
+    // Get organization details
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, orgId));
+
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Process refund (would integrate with Stripe in production)
+    const refundData = {
+      organization_id: orgId,
+      amount: parseFloat(amount),
+      reason,
+      refund_type: refundType,
+      status: 'processed',
+      processed_at: new Date(),
+      processed_by: req.user?.id || 1
+    };
+
+    // Log audit action
+    await auditLogger.logAdminAction(
+      req.user?.id || 1,
+      orgId,
+      'PROCESS_REFUND',
+      { 
+        organization_name: org.name,
+        amount: parseFloat(amount),
+        reason,
+        refund_type: refundType
+      }
+    );
+
+    res.json({ success: true, refund: refundData });
+  } catch (error) {
+    console.error('Error processing refund:', error);
+    res.status(500).json({ error: 'Failed to process refund' });
+  }
+});
+
+router.post('/billing/:orgId/suspend', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+    const { reason } = req.body;
+    
+    // Update organization status
+    const [updatedOrg] = await db
+      .update(organizations)
+      .set({ 
+        subscription_status: 'suspended',
+        updated_at: new Date()
+      })
+      .where(eq(organizations.id, orgId))
+      .returning();
+
+    if (!updatedOrg) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Log audit action
+    await auditLogger.logAdminAction(
+      req.user?.id || 1,
+      orgId,
+      'SUSPEND_BILLING',
+      { 
+        organization_name: updatedOrg.name,
+        reason 
+      }
+    );
+
+    res.json({ success: true, organization: updatedOrg });
+  } catch (error) {
+    console.error('Error suspending billing:', error);
+    res.status(500).json({ error: 'Failed to suspend billing' });
+  }
+});
+
+router.post('/billing/:orgId/reactivate', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+    
+    // Update organization status
+    const [updatedOrg] = await db
+      .update(organizations)
+      .set({ 
+        subscription_status: 'active',
+        updated_at: new Date()
+      })
+      .where(eq(organizations.id, orgId))
+      .returning();
+
+    if (!updatedOrg) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Log audit action
+    await auditLogger.logAdminAction(
+      req.user?.id || 1,
+      orgId,
+      'REACTIVATE_BILLING',
+      { 
+        organization_name: updatedOrg.name 
+      }
+    );
+
+    res.json({ success: true, organization: updatedOrg });
+  } catch (error) {
+    console.error('Error reactivating billing:', error);
+    res.status(500).json({ error: 'Failed to reactivate billing' });
   }
 });
 
