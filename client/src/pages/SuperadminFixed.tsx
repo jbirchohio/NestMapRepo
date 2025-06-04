@@ -25,8 +25,7 @@ export default function Superadmin() {
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
     queryKey: ['/api/superadmin/dashboard'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/superadmin/dashboard');
-      const data = await response.json();
+      const data = await apiRequest('GET', '/api/superadmin/dashboard');
       console.log('React Query processing dashboard data:', data);
       return data;
     },
