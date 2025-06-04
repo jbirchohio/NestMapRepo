@@ -452,30 +452,7 @@ export default function SuperadminClean() {
           </div>
         );
 
-      case 'flags':
-        return (
-          <div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="mb-8"
-            >
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
-                Feature Flags
-              </h1>
-              <p className="text-navy-600 dark:text-navy-300">
-                System feature flags and configuration
-              </p>
-            </motion.div>
 
-            <AnimatedCard variant="glow" className="p-6">
-              <div className="text-center py-8 text-gray-500">
-                Feature flags management coming soon
-              </div>
-            </AnimatedCard>
-          </div>
-        );
 
       case 'jobs':
         return (
