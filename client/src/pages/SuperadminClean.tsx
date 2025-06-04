@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { 
   Monitor, 
   Database, 
@@ -83,7 +84,21 @@ interface BackgroundJob {
 }
 
 export default function SuperadminClean() {
-  const [activeSection, setActiveSection] = useState('overview');
+  const [location] = useLocation();
+  
+  // Determine current section from URL
+  const getCurrentSection = () => {
+    if (location === '/superadmin' || location === '/superadmin/') return 'overview';
+    const pathParts = location.split('/');
+    return pathParts[2] || 'overview';
+  };
+
+  const [activeSection, setActiveSection] = useState(getCurrentSection());
+
+  // Update active section when location changes
+  useEffect(() => {
+    setActiveSection(getCurrentSection());
+  }, [location]);
 
   // Fetch dashboard data
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
@@ -111,15 +126,6 @@ export default function SuperadminClean() {
     }).length
   };
 
-  const renderSectionContent = () => {
-    switch (activeSection) {
-      case 'overview':
-        return renderDashboardOverview();
-      default:
-        return renderDashboardOverview();
-    }
-  };
-
   const renderDashboardOverview = () => (
     <div>
       {/* Hero Header */}
@@ -127,185 +133,327 @@ export default function SuperadminClean() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white rounded-2xl mb-8"
+        className="relative mb-8 overflow-hidden rounded-xl glass-card bg-gradient-to-br from-electric-600/10 via-electric-500/5 to-electric-700/10 p-8 border border-electric-500/20"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }} />
-
-        <div className="relative container mx-auto px-6 py-16">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex-1"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
-                  <Monitor className="w-8 h-8" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Database className="w-5 h-5 text-electric-200" />
-                  <span className="text-electric-100 text-sm font-medium">System Administration</span>
-                </div>
-              </div>
-
-              <h1 className="text-5xl font-bold mb-4 tracking-tight">
+        <div className="absolute inset-0 bg-gradient-to-br from-electric-600/5 to-transparent" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-electric-500 to-electric-600 rounded-xl flex items-center justify-center electric-glow">
+              <Monitor className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent">
                 System Overview
               </h1>
-              <p className="text-xl text-electric-100 mb-6 max-w-2xl">
-                Comprehensive system administration and monitoring with real-time analytics and advanced controls
+              <p className="text-navy-600 dark:text-navy-300 text-lg">
+                Monitor and manage your enterprise infrastructure
               </p>
-
-              <div className="flex flex-wrap items-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full" />
-                  <span className="text-electric-100">Real-time monitoring</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                  <span className="text-electric-100">Advanced analytics</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
-                  <span className="text-electric-100">System controls</span>
-                </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+            <div className="glass-card bg-white/5 p-4 rounded-lg border border-electric-200/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Building2 className="w-5 h-5 text-electric-600" />
+                <span className="text-sm font-medium text-navy-600 dark:text-navy-300">Organizations</span>
               </div>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <PrimaryButton 
-                variant="primary" 
-                size="lg"
-                className="electric-glow"
-              >
-                <Download className="w-5 h-5 mr-2" />
-                Export Data
-              </PrimaryButton>
-
-              <PrimaryButton 
-                variant="secondary" 
-                size="lg"
-              >
-                <UserCog className="w-5 h-5 mr-2" />
-                System Settings
-              </PrimaryButton>
-            </motion.div>
+              <div className="text-2xl font-bold text-electric-600">{metrics.totalOrganizations}</div>
+            </div>
+            
+            <div className="glass-card bg-white/5 p-4 rounded-lg border border-electric-200/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-5 h-5 text-electric-600" />
+                <span className="text-sm font-medium text-navy-600 dark:text-navy-300">Total Users</span>
+              </div>
+              <div className="text-2xl font-bold text-electric-600">{metrics.totalUsers}</div>
+            </div>
+            
+            <div className="glass-card bg-white/5 p-4 rounded-lg border border-electric-200/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="w-5 h-5 text-electric-600" />
+                <span className="text-sm font-medium text-navy-600 dark:text-navy-300">Active Jobs</span>
+              </div>
+              <div className="text-2xl font-bold text-electric-600">{metrics.activeJobs}</div>
+            </div>
+            
+            <div className="glass-card bg-white/5 p-4 rounded-lg border border-electric-200/20">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-5 h-5 text-electric-600" />
+                <span className="text-sm font-medium text-navy-600 dark:text-navy-300">Recent Events</span>
+              </div>
+              <div className="text-2xl font-bold text-electric-600">{metrics.recentAuditEvents}</div>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Quick Stats */}
+      {/* Dashboard Content */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <AnimatedCard variant="soft" className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Users</p>
-              <p className="text-3xl font-bold text-navy-900 dark:text-white">{metrics.totalUsers}</p>
-            </div>
-            <div className="p-3 bg-electric-100 dark:bg-electric-900/20 rounded-xl">
-              <Users className="w-6 h-6 text-electric-600" />
-            </div>
-          </div>
-        </AnimatedCard>
-
-        <AnimatedCard variant="soft" className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Organizations</p>
-              <p className="text-3xl font-bold text-navy-900 dark:text-white">{metrics.totalOrganizations}</p>
-            </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
-              <Building2 className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </AnimatedCard>
-
-        <AnimatedCard variant="soft" className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Active Jobs</p>
-              <p className="text-3xl font-bold text-navy-900 dark:text-white">{metrics.activeJobs}</p>
-            </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
-              <Activity className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </AnimatedCard>
-
-        <AnimatedCard variant="soft" className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Recent Activity</p>
-              <p className="text-3xl font-bold text-navy-900 dark:text-white">{metrics.recentAuditEvents}</p>
-            </div>
-            <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-xl">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-        </AnimatedCard>
-      </motion.div>
-
-      {/* Tabbed Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-        className="space-y-6"
-      >
-        <Tabs defaultValue="organizations" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="organizations" className="flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 bg-navy-800/50 backdrop-blur-sm border border-electric-500/20">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-electric-600 data-[state=active]:text-white">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="organizations" className="data-[state=active]:bg-electric-600 data-[state=active]:text-white">
               Organizations
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
+            <TabsTrigger value="users" className="data-[state=active]:bg-electric-600 data-[state=active]:text-white">
               Users
             </TabsTrigger>
-            <TabsTrigger value="activity" className="flex items-center gap-2">
-              <Activity className="w-4 h-4" />
+            <TabsTrigger value="activity" className="data-[state=active]:bg-electric-600 data-[state=active]:text-white">
               Activity
-            </TabsTrigger>
-            <TabsTrigger value="billing" className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
-              Billing
-            </TabsTrigger>
-            <TabsTrigger value="sessions" className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Sessions
-            </TabsTrigger>
-            <TabsTrigger value="flags" className="flex items-center gap-2">
-              <Flag className="w-4 h-4" />
-              Flags
-            </TabsTrigger>
-            <TabsTrigger value="jobs" className="flex items-center gap-2">
-              <Database className="w-4 h-4" />
-              Jobs
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="organizations" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Organizations</h2>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {organizations.length} total
-                </span>
-              </div>
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AnimatedCard variant="glow" className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Database className="w-6 h-6 text-electric-600" />
+                  <h3 className="text-lg font-semibold">System Status</h3>
+                </div>
+                {dashboardLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+                  </div>
+                ) : dashboardError ? (
+                  <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
+                    <AlertTriangle className="h-4 w-4" />
+                    Error loading system data
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <span className="text-sm font-medium">Database</span>
+                      <Badge variant="default" className="bg-green-600 text-white">Online</Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <span className="text-sm font-medium">API Services</span>
+                      <Badge variant="default" className="bg-green-600 text-white">Healthy</Badge>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <span className="text-sm font-medium">Authentication</span>
+                      <Badge variant="default" className="bg-green-600 text-white">Active</Badge>
+                    </div>
+                  </div>
+                )}
+              </AnimatedCard>
+
+              <AnimatedCard variant="glow" className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Activity className="w-6 h-6 text-electric-600" />
+                  <h3 className="text-lg font-semibold">Recent Activity</h3>
+                </div>
+                {dashboardLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+                  </div>
+                ) : auditLogs.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No recent activity
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {auditLogs.slice(0, 5).map((log: AuditLog) => (
+                      <div key={log.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 dark:hover:bg-navy-800 rounded-lg">
+                        <div className="flex-shrink-0 mt-1">
+                          <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{log.action}</p>
+                          <p className="text-xs text-gray-500">
+                            {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </AnimatedCard>
             </div>
+          </TabsContent>
+
+          <TabsContent value="organizations" className="space-y-6">
+            <AnimatedCard variant="glow" className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Organizations</h3>
+                <PrimaryButton size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </PrimaryButton>
+              </div>
+              {dashboardLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+                </div>
+              ) : organizations.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No organizations found
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Domain</TableHead>
+                        <TableHead>Plan</TableHead>
+                        <TableHead>Users</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {organizations.map((org: Organization) => (
+                        <TableRow key={org.id}>
+                          <TableCell className="font-medium">{org.name}</TableCell>
+                          <TableCell>{org.domain || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
+                              {org.plan || 'Basic'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{org.employee_count || 0}</TableCell>
+                          <TableCell>
+                            <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
+                              {org.subscription_status || 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </AnimatedCard>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            <AnimatedCard variant="glow" className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">User Management</h3>
+                <PrimaryButton size="sm">
+                  <UserCog className="w-4 h-4 mr-2" />
+                  Manage
+                </PrimaryButton>
+              </div>
+              {dashboardLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+                </div>
+              ) : users.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No users found
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Organization</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user: User) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{user.role}</Badge>
+                          </TableCell>
+                          <TableCell>{user.organizationName || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.isActive ? 'default' : 'secondary'}>
+                              {user.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{format(new Date(user.created_at), 'MMM dd, yyyy')}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </AnimatedCard>
+          </TabsContent>
+
+          <TabsContent value="activity" className="space-y-6">
+            <AnimatedCard variant="glow" className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Audit Log</h3>
+                <div className="flex gap-2">
+                  <PrimaryButton size="sm" variant="outline">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Filter
+                  </PrimaryButton>
+                  <PrimaryButton size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </PrimaryButton>
+                </div>
+              </div>
+              {dashboardLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+                </div>
+              ) : auditLogs.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No audit logs found
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {auditLogs.slice(0, 10).map((log: AuditLog) => (
+                    <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+                      <div className="flex-shrink-0 mt-1">
+                        <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{log.action}</p>
+                        <p className="text-sm text-gray-500">{log.target_type} #{log.target_id}</p>
+                        <p className="text-xs text-gray-400">
+                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </AnimatedCard>
+          </TabsContent>
+        </Tabs>
+      </motion.div>
+    </div>
+  );
+
+  const renderSectionContent = () => {
+    switch (activeSection) {
+      case 'overview':
+      case '':
+        return renderDashboardOverview();
+      case 'organizations':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Organizations
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                Manage organizational accounts and settings
+              </p>
+            </motion.div>
 
             <AnimatedCard variant="glow" className="p-6">
               {dashboardError ? (
@@ -356,17 +504,24 @@ export default function SuperadminClean() {
                 </Table>
               )}
             </AnimatedCard>
-          </TabsContent>
-
-          <TabsContent value="users" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Users</h2>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {users.length} total
-                </span>
-              </div>
-            </div>
+          </div>
+        );
+      case 'users':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Users
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                Manage user accounts and permissions
+              </p>
+            </motion.div>
 
             <AnimatedCard variant="glow" className="p-6">
               {dashboardError ? (
@@ -413,104 +568,34 @@ export default function SuperadminClean() {
                 </Table>
               )}
             </AnimatedCard>
-          </TabsContent>
-
-          <TabsContent value="activity" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Recent Activity</h2>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {auditLogs.length} events
-                </span>
-              </div>
-            </div>
-
-            <AnimatedCard variant="glow" className="p-6">
-              {dashboardError ? (
-                <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
-                  <AlertTriangle className="h-4 w-4" />
-                  Failed to load activity data
-                </div>
-              ) : dashboardLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
-                </div>
-              ) : auditLogs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No activity found
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {auditLogs.slice(0, 10).map((log: AuditLog) => (
-                    <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
-                      <div className="flex-shrink-0 mt-1">
-                        <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{log.action}</p>
-                        <p className="text-sm text-gray-500">{log.target_type} #{log.target_id}</p>
-                        <p className="text-xs text-gray-400">
-                          {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AnimatedCard>
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Billing Overview</h2>
-            </div>
+          </div>
+        );
+      default:
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Coming Soon
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                This section is under development
+              </p>
+            </motion.div>
 
             <AnimatedCard variant="glow" className="p-6">
               <div className="text-center py-8 text-gray-500">
-                Billing data will be available when connected to payment systems
+                Feature coming soon
               </div>
             </AnimatedCard>
-          </TabsContent>
-
-          <TabsContent value="sessions" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Active Sessions</h2>
-            </div>
-
-            <AnimatedCard variant="glow" className="p-6">
-              <div className="text-center py-8 text-gray-500">
-                Session monitoring coming soon
-              </div>
-            </AnimatedCard>
-          </TabsContent>
-
-          <TabsContent value="flags" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Feature Flags</h2>
-            </div>
-
-            <AnimatedCard variant="glow" className="p-6">
-              <div className="text-center py-8 text-gray-500">
-                Feature flags management coming soon
-              </div>
-            </AnimatedCard>
-          </TabsContent>
-
-          <TabsContent value="jobs" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Background Jobs</h2>
-            </div>
-
-            <AnimatedCard variant="glow" className="p-6">
-              <div className="text-center py-8 text-gray-500">
-                Background job monitoring coming soon
-              </div>
-            </AnimatedCard>
-          </TabsContent>
-        </Tabs>
-      </motion.div>
-    </div>
-  );
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
