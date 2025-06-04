@@ -553,10 +553,10 @@ router.put("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) => 
     // Update card in database - ensure numbers are properly formatted
     const updatePayload = {
       ...validatedData,
-      // Ensure spending limit is stored as a number (not in cents)
+      // Ensure spending limit is stored in cents to match database schema
       ...(validatedData.spend_limit !== undefined && { 
-        spending_limit: validatedData.spend_limit,
-        available_balance: validatedData.spend_limit // Update available balance to match new limit
+        spending_limit: Math.round(validatedData.spend_limit * 100), // Convert to cents
+        available_balance: Math.round(validatedData.spend_limit * 100) // Update available balance to match new limit
       })
     };
     
