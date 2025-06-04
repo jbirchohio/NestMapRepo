@@ -211,7 +211,11 @@ export default function SuperadminClean() {
                   </TableHeader>
                   <TableBody>
                     {organizations.map((org: Organization) => (
-                      <TableRow key={org.id}>
+                      <TableRow 
+                        key={org.id}
+                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        onClick={() => window.location.href = `/superadmin/organizations/${org.id}`}
+                      >
                         <TableCell className="font-medium">{org.name}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{org.type}</Badge>
@@ -376,7 +380,7 @@ export default function SuperadminClean() {
                       <TableCell>{event.organization_name}</TableCell>
                       <TableCell className="font-medium">{event.event_type}</TableCell>
                       <TableCell>${event.amount?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell>{format(new Date(event.event_date), 'MMM dd, yyyy')}</TableCell>
+                      <TableCell>{event.event_date ? format(new Date(event.event_date), 'MMM dd, yyyy') : 'Unknown'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
