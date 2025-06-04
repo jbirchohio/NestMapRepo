@@ -1,8 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getUserById } from '../auth';
-import { db } from '../db';
-import { users } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { supabaseAdmin } from '../supabaseAdmin';
 
 // Extend Express Request interface for unified authorization
 declare global {
@@ -94,17 +91,17 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     }
 
     // Look up user profile in Supabase database by auth ID
-    const { data: dbUser, error: userError } = await fetch(`${supabaseUrl}/rest/v1/users?auth_id=eq.${authId}`, {
-      headers: {
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': supabaseAnonKey,
-        'Content-Type': 'application/json'
-      }
-    }).then(res => res.json()).then(data => ({ data: data[0], error: null })).catch(error => ({ data: null, error }));
+    const { data: userProfiles, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('auth_id', authId)
+      .limit(1);
 
-    if (userError || !dbUser) {
+    if (userError || !userProfiles || userProfiles.length === 0) {
       return res.status(401).json({ message: "User profile not found" });
     }
+
+    const dbUser = userProfiles[0];
 
     // Convert database user (snake_case) to request user (camelCase for frontend compatibility)
     req.user = {
