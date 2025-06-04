@@ -550,8 +550,17 @@ router.put("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) => 
       return res.status(403).json({ error: "Access denied" });
     }
 
-    // Update card in database
-    const updatedCard = await storage.updateCorporateCard(card.id, validatedData);
+    // Update card in database - ensure numbers are properly formatted
+    const updatePayload = {
+      ...validatedData,
+      // Ensure spending limit is stored as a number (not in cents)
+      ...(validatedData.spend_limit !== undefined && { 
+        spending_limit: validatedData.spend_limit,
+        available_balance: validatedData.spend_limit // Update available balance to match new limit
+      })
+    };
+    
+    const updatedCard = await storage.updateCorporateCard(card.id, updatePayload);
 
     // If spending limit changed, update Stripe card
     if (validatedData.spend_limit !== undefined) {
@@ -562,7 +571,7 @@ router.put("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) => 
         spending_controls: {
           spending_limits: [
             {
-              amount: Math.round(validatedData.spend_limit * 100),
+              amount: Math.round(validatedData.spend_limit * 100), // Convert to cents for Stripe
               interval: 'monthly',
             },
           ],

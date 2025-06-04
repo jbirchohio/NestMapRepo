@@ -238,7 +238,7 @@ export default function CorporateCards() {
   const handleIssueCard = (formData: FormData) => {
     const userId = parseInt(formData.get("user_id") as string);
     const selectedUser = organizationUsers.find((user: any) => user.id === userId);
-    
+
     const cardData = {
       user_id: userId,
       spend_limit: parseInt(formData.get("spend_limit") as string), // Already in dollars, don't multiply
@@ -265,7 +265,7 @@ export default function CorporateCards() {
         </Badge>
       );
     }
-    
+
     const statusColors = {
       active: "bg-green-100 text-green-800",
       inactive: "bg-yellow-100 text-yellow-800",
@@ -302,7 +302,7 @@ export default function CorporateCards() {
         <div className="absolute inset-0 opacity-30" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }} />
-        
+
         <div className="relative container mx-auto px-6 py-16">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
             <motion.div 
@@ -320,14 +320,14 @@ export default function CorporateCards() {
                   <span className="text-electric-100 text-sm font-medium">Corporate Finance</span>
                 </div>
               </div>
-              
+
               <h1 className="text-5xl font-bold mb-4 tracking-tight">
                 Corporate Cards
               </h1>
               <p className="text-xl text-electric-100 mb-6 max-w-2xl">
                 Streamline company spending with intelligent virtual cards, real-time controls, and automated expense management
               </p>
-              
+
               <div className="flex flex-wrap items-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full" />
@@ -359,7 +359,7 @@ export default function CorporateCards() {
                 <Plus className="w-5 h-5 mr-2" />
                 Issue New Card
               </PrimaryButton>
-              
+
               <PrimaryButton 
                 variant="secondary" 
                 size="lg"
@@ -457,7 +457,7 @@ export default function CorporateCards() {
             {cards.map((card: CorporateCard) => (
               <AnimatedCard key={card.id} variant="glow" className="p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-electric-400/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
-                
+
                 <div className="relative">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -472,38 +472,22 @@ export default function CorporateCards() {
                     {getStatusBadge(card.status)}
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Card Number</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm">{card.card_number_masked}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowCardDetails(!showCardDetails)}
-                        >
-                          {showCardDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </Button>
-                      </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Available Balance</span>
+                      <span className="font-medium text-green-600">
+                        ${typeof card.available_balance === 'number' ? (card.available_balance >= 100 ? (card.available_balance / 100).toFixed(2) : card.available_balance.toFixed(2)) : '0.00'}
+                      </span>
                     </div>
-
-                    <div className="flex items-center justify-between">
+                    <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Spending Limit</span>
-                      <span className="font-medium">{formatCurrency(card.spending_limit || 0)}</span>
+                      <span className="font-medium">
+                        ${typeof card.spending_limit === 'number' ? (card.spending_limit >= 100 ? (card.spending_limit / 100).toFixed(2) : card.spending_limit.toFixed(2)) : '0.00'}
+                      </span>
                     </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Remaining</span>
-                      <span className="font-medium text-green-600">{formatCurrency(card.available_balance || 0)}</span>
-                    </div>
-
-                    {card.purpose && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Purpose</span>
-                        <span className="text-sm">{card.purpose}</span>
-                      </div>
-                    )}
                   </div>
+                  
 
                   <div className="flex items-center gap-2 mt-4 pt-4 border-t border-electric-200 dark:border-electric-800">
                     <PrimaryButton 
@@ -653,7 +637,7 @@ export default function CorporateCards() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 pt-6">
               <PrimaryButton 
                 type="submit" 
@@ -732,7 +716,7 @@ export default function CorporateCards() {
                       </>
                     )}
                   </PrimaryButton>
-                  
+
                   <PrimaryButton variant="secondary" size="sm" className="flex-1">
                     <DollarSign className="w-4 h-4 mr-2" />
                     Add Funds
@@ -793,7 +777,7 @@ export default function CorporateCards() {
                     onClick={() => {
                       const spendingLimitInput = document.getElementById('spending_limit') as HTMLInputElement;
                       const newLimit = parseFloat(spendingLimitInput.value); // Keep in dollars (don't multiply by 100)
-                      
+
                       if (selectedCard && newLimit > 0) {
                         updateCardMutation.mutate({
                           cardId: selectedCard.id,
@@ -812,8 +796,7 @@ export default function CorporateCards() {
               <PrimaryButton 
                 variant="danger" 
                 onClick={() => {
-                  if (confirm("Are you sure you want to permanently delete this card? This action cannot be undone.")) {
-                    deleteCardMutation.mutate(selectedCard.id);
+                  if (confirm("Are you sure you want to permanently delete this card? This action cannot be undone.")) {                    deleteCardMutation.mutate(selectedCard.id);
                   }
                 }}
                 loading={deleteCardMutation.isPending}
@@ -896,18 +879,20 @@ export default function CorporateCards() {
                 <div className="bg-gray-50 dark:bg-navy-800 rounded-xl p-4">
                   <h4 className="font-semibold mb-3">Financial Information</h4>
                   <div className="space-y-3">
-                    <div className="flex justify-between">
+                    
+                  <div className="flex justify-between">
                       <span className="text-muted-foreground">Available Balance</span>
                       <span className="font-medium text-green-600">
-                        {formatCurrency(selectedCard.available_balance || 0)}
+                        ${typeof selectedCard.available_balance === 'number' ? (selectedCard.available_balance >= 100 ? (selectedCard.available_balance / 100).toFixed(2) : selectedCard.available_balance.toFixed(2)) : '0.00'}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Spending Limit</span>
                       <span className="font-medium">
-                        {formatCurrency(selectedCard.spending_limit || 0)}
+                        ${typeof selectedCard.spending_limit === 'number' ? (selectedCard.spending_limit >= 100 ? (selectedCard.spending_limit / 100).toFixed(2) : selectedCard.spending_limit.toFixed(2)) : '0.00'}
                       </span>
                     </div>
+                    
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Usage</span>
                       <span className="font-medium">
