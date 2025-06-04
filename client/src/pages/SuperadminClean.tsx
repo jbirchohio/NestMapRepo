@@ -6,7 +6,11 @@ import { AlertTriangle } from 'lucide-react';
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
 import { AnimatedCard } from '@/components/ui/animated-card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Organization {
   id: number;
@@ -37,6 +41,8 @@ interface AuditLog {
 export default function SuperadminClean() {
   const { section } = useParams();
   const activeSection = section || 'overview';
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Individual API queries for each section (original working approach)
   const { data: organizations = [], isLoading: orgsLoading } = useQuery({
@@ -546,6 +552,7 @@ export default function SuperadminClean() {
                       <TableHead>Flag Name</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Toggle</TableHead>
                       <TableHead>Updated</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -558,6 +565,30 @@ export default function SuperadminClean() {
                           <Badge variant={flag.is_enabled || flag.default_value ? 'default' : 'secondary'}>
                             {flag.is_enabled || flag.default_value ? 'Enabled' : 'Disabled'}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={flag.is_enabled || flag.default_value}
+                            onCheckedChange={async (enabled) => {
+                              try {
+                                await apiRequest('PUT', `/api/superadmin/flags/${flag.id}`, {
+                                  is_enabled: enabled,
+                                  default_value: enabled
+                                });
+                                queryClient.invalidateQueries({ queryKey: ['superadmin', 'flags'] });
+                                toast({
+                                  title: "Feature flag updated",
+                                  description: `${flag.flag_name} has been ${enabled ? 'enabled' : 'disabled'}`,
+                                });
+                              } catch (error) {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to update feature flag",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          />
                         </TableCell>
                         <TableCell>
                           {flag.updated_at ? formatDistanceToNow(new Date(flag.updated_at), { addSuffix: true }) : 'Never'}
