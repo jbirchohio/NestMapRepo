@@ -299,10 +299,13 @@ router.post("/cards/:cardId/unfreeze", requireAuth, requireAdminRole, async (req
       status: "active",
     });
 
-    await auditLogger.log({
+    await auditLogger.logAction({
       action: "UNFREEZE_CARD",
       userId: req.user!.id,
       organizationId: req.user!.organization_id!,
+      entityType: "corporate_card",
+      entityId: card.id,
+      riskLevel: "medium",
       details: {
         card_id: card.id,
         stripe_card_id: card.stripe_card_id,
@@ -367,10 +370,13 @@ router.post("/cards/:cardId/transactions", requireAuth, async (req, res) => {
       available_balance: card.available_balance - validatedData.amount,
     });
 
-    await auditLogger.log({
+    await auditLogger.logAction({
       action: "CREATE_CARD_TRANSACTION",
       userId: req.user!.id,
       organizationId: req.user!.organization_id!,
+      entityType: "card_transaction",
+      entityId: transaction.id,
+      riskLevel: "medium",
       details: {
         transaction_id: transaction.id,
         card_id: card.id,
