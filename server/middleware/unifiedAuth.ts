@@ -55,52 +55,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     return next();
   }
 
-  // Check for session-based authentication first
-  if ((req as any).session?.user_id) {
-    const userId = (req as any).session.user_id;
-    
-    getUserById(userId)
-      .then(user => {
-        if (!user) {
-          delete (req.session as any).user_id;
-          return res.status(401).json({ message: "Invalid session" });
-        }
-
-        // Set user context
-        req.user = {
-          id: user.id,
-          email: user.email,
-          organization_id: user.organizationId ?? undefined,
-          role: user.role ?? undefined,
-          displayName: user.displayName ?? undefined
-        };
-
-        // Set organization context
-        (req as any).organization_id = user.organizationId ?? undefined;
-
-        req.organizationContext = {
-          id: user.organizationId,
-          canAccessOrganization: (targetOrgId: number | null): boolean => {
-            if (user.role === 'super_admin') return true;
-            return user.organizationId === targetOrgId;
-          },
-          enforceOrganizationAccess: (targetOrgId: number | null): void => {
-            if (!req.organizationContext!.canAccessOrganization(targetOrgId)) {
-              throw new Error('Access denied: Cannot access resources from other organizations');
-            }
-          }
-        };
-
-        next();
-      })
-      .catch(error => {
-        console.error('Session authentication error:', error);
-        res.status(500).json({ message: "Authentication failed" });
-      });
-    return;
-  }
-
-  // Fallback to JWT authentication check (Supabase)
+  // JWT authentication check (Supabase)
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {
