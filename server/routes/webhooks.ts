@@ -86,6 +86,8 @@ async function handleAccountUpdated(account: Stripe.Account) {
     const updateData: any = {
       stripe_connect_onboarded: account.charges_enabled && account.payouts_enabled,
       stripe_issuing_enabled: account.capabilities?.card_issuing === 'active',
+      stripe_payments_enabled: account.charges_enabled || false,
+      stripe_transfers_enabled: account.payouts_enabled || false,
       updated_at: new Date()
     };
 

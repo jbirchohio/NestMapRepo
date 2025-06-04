@@ -212,11 +212,23 @@ export class OrganizationFundingService {
     }
 
     return {
-      hasStripeAccount: !!org[0].stripe_account_id,
-      issuingEnabled: org[0].stripe_issuing_enabled,
+      hasStripeAccount: !!org[0].stripe_connect_account_id,
+      stripeConnectOnboarded: org[0].stripe_connect_onboarded || false,
+      issuingEnabled: org[0].stripe_issuing_enabled || false,
+      paymentsEnabled: org[0].stripe_payments_enabled || false,
+      transfersEnabled: org[0].stripe_transfers_enabled || false,
       fundingSourceType: org[0].funding_source_type,
-      fundingSourceStatus: org[0].funding_source_status,
-      ready: org[0].stripe_issuing_enabled && org[0].funding_source_status === 'active'
+      fundingSourceStatus: org[0].funding_source_status || 'pending',
+      ready: org[0].stripe_connect_onboarded && org[0].stripe_issuing_enabled && org[0].funding_source_status === 'active',
+      // Enhanced verification tracking
+      requirementsCurrentlyDue: org[0].stripe_requirements_currently_due as string[] || [],
+      requirementsEventuallyDue: org[0].stripe_requirements_eventually_due as string[] || [],
+      requirementsPastDue: org[0].stripe_requirements_past_due as string[] || [],
+      requirementsDisabledReason: org[0].stripe_requirements_disabled_reason,
+      requirementsCurrentDeadline: org[0].stripe_requirements_current_deadline?.toISOString() || null,
+      chargesEnabled: org[0].stripe_payments_enabled || false,
+      payoutsEnabled: org[0].stripe_transfers_enabled || false,
+      errors: [] // Will be populated from webhook data if available
     };
   }
 
