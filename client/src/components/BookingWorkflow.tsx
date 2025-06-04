@@ -1225,59 +1225,200 @@ export default function BookingWorkflow() {
 
             {flightResults.length > 0 ? (
               <div className="space-y-4">
-                <Tabs defaultValue="departure" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="departure">
-                      <Plane className="h-4 w-4 mr-2" />
-                      Departure Flights
-                    </TabsTrigger>
-                    {clientInfo.tripType === 'round-trip' && (
-                      <TabsTrigger value="return">
-                        <Plane className="h-4 w-4 mr-2 transform rotate-180" />
-                        Return Flights
-                      </TabsTrigger>
-                    )}
-                  </TabsList>
+                <FlightResults
+                  flights={flightResults}
+                  tripType={clientInfo.tripType}
+                  origin={clientInfo.origin}
+                  destination={clientInfo.destination}
+                  selectedDepartureFlight={selectedDepartureFlight}
+                  selectedReturnFlight={selectedReturnFlight}
+                  onSelectDepartureFlight={setSelectedDepartureFlight}
+                  onSelectReturnFlight={setSelectedReturnFlight}
+                  isLoading={isSearching}
+                />
 
-                <TabsContent value="departure" className="space-y-4 mt-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium">Select Departure Flight</h3>
-                    <div className="text-sm text-gray-500">
-                      {clientInfo.origin} → {clientInfo.destination}
+                {/* Traveler Progress Indicator */}
+                {totalTravelers > 1 && (
+                  <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                    <h4 className="font-medium mb-2">Booking Progress</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {getAllTravelers().map((traveler, index) => (
+                        <div 
+                          key={index}
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            index < currentTravelerIndex 
+                              ? 'bg-green-100 text-green-800' 
+                              : index === currentTravelerIndex 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {traveler.firstName} {index < currentTravelerIndex ? '✓' : index === currentTravelerIndex ? '→' : ''}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  
-                  {/* Filter Controls */}
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-                    <div className="flex flex-wrap gap-4 items-center">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium">Sort by:</label>
-                        <select 
-                          value={flightSortBy} 
-                          onChange={(e) => setFlightSortBy(e.target.value as 'price' | 'duration' | 'stops')}
-                          className="px-3 py-1 border rounded text-sm"
-                        >
-                          <option value="price">Cheapest first</option>
-                          <option value="duration">Shortest duration</option>
-                          <option value="stops">Fewest stops</option>
-                        </select>
+                )}
+
+                {/* Flight Selection Summary */}
+                {(selectedDepartureFlight || selectedReturnFlight) && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Selected Flights for {currentTraveler?.firstName}</h4>
+                    {selectedDepartureFlight && (
+                      <div className="flex justify-between">
+                        <span>Departure: {selectedDepartureFlight.airline} {selectedDepartureFlight.flightNumber}</span>
+                        <span>${selectedDepartureFlight.price.amount}</span>
                       </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium">Max stops:</label>
-                        <select 
-                          value={maxStops} 
-                          onChange={(e) => setMaxStops(parseInt(e.target.value))}
-                          className="px-3 py-1 border rounded text-sm"
-                        >
-                          <option value="0">Direct only</option>
-                          <option value="1">1 stop max</option>
-                          <option value="2">2 stops max</option>
-                          <option value="3">Any</option>
-                        </select>
+                    )}
+                    {selectedReturnFlight && (
+                      <div className="flex justify-between">
+                        <span>Return: {selectedReturnFlight.airline} {selectedReturnFlight.flightNumber}</span>
+                        <span>${selectedReturnFlight.price.amount}</span>
                       </div>
-                      
-                      <div className="flex items-center gap-2">
+                    )}
+                    <div className="border-t pt-2 mt-2 flex justify-between font-bold">
+                      <span>Total Flight Cost:</span>
+                      <span>${(selectedDepartureFlight?.price.amount || 0) + (selectedReturnFlight?.price.amount || 0)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-between pt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setCurrentStep('client-info')}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    Back to Client Info
+                  </Button>
+                  <Button 
+                    onClick={handleFlightSelectionComplete}
+                    disabled={!selectedDepartureFlight && !selectedReturnFlight}
+                  >
+                    {currentTravelerIndex < totalTravelers - 1 
+                      ? `Continue to Next Traveler (${getAllTravelers()[currentTravelerIndex + 1]?.firstName || 'Next'})` 
+                      : 'Continue to Hotels'
+                    }
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No flights found for your search criteria.</p>
+                <Button 
+                  variant="outline"
+                  onClick={() => setCurrentStep('client-info')}
+                  className="mt-4"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Back to Client Info
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 3: Hotel Selection */}
+      {currentStep === 'hotels' && clientInfo && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Accommodation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4">
+              {/* Flight Summary for all travelers */}
+              <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                <h4 className="font-medium mb-2">Flight Summary for All Travelers</h4>
+                <div className="space-y-2">
+                  {travelerBookings.map((booking, index) => (
+                    <div key={index} className="flex justify-between text-sm">
+                      <span>{booking.traveler}: {booking.departure?.airline} {booking.departure?.flightNumber}</span>
+                      <span>${(booking.departure?.price || 0) + (booking.return?.price || 0)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t pt-2 mt-2 flex justify-between font-bold">
+                  <span>Total Flight Cost:</span>
+                  <span>${travelerBookings.reduce((total, booking) => total + (booking.departure?.price || 0) + (booking.return?.price || 0), 0)}</span>
+                </div>
+              </div>
+
+              <p className="text-gray-600 mb-4">
+                {clientInfo.destination} • {formatTripDate(clientInfo.departureDate)} - {formatTripDate(clientInfo.returnDate || clientInfo.departureDate)}
+              </p>
+
+              {hotelResults.length > 0 ? (
+                <div className="space-y-4">
+                  {hotelResults.map((hotel, index) => (
+                    <div 
+                      key={index} 
+                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                        selectedHotel?.id === hotel.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => setSelectedHotel(hotel)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{hotel.name}</h3>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="flex">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={`h-4 w-4 ${i < hotel.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                              ))}
+                            </div>
+                            <span className="text-sm text-gray-600">({hotel.rating}/5)</span>
+                          </div>
+                          <p className="text-gray-600 mb-2">{hotel.address}</p>
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {hotel.amenities?.slice(0, 3).map((amenity, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">{amenity}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-green-600 text-xl">${hotel.pricePerNight}</div>
+                          <div className="text-sm text-gray-500">per night</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Searching for hotels...</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between pt-4">
+              <Button 
+                variant="outline"
+                onClick={() => setCurrentStep('flights')}
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Back to Flights
+              </Button>
+              <Button 
+                onClick={() => setCurrentStep('confirmation')}
+                disabled={!selectedHotel}
+              >
+                Continue to Confirmation
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 4: Confirmation */}
+      {currentStep === 'confirmation' && clientInfo && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Booking Confirmation</CardTitle>
+          </CardHeader>
+          <CardContent>
                         <label className="text-sm font-medium">Max price:</label>
                         <select 
                           value={maxPrice} 
