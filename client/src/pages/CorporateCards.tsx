@@ -108,7 +108,7 @@ export default function CorporateCards() {
   // Issue new card mutation
   const issueCardMutation = useMutation({
     mutationFn: (cardData: any) => 
-      apiRequest("POST", "/api/corporate-card/issue", cardData).then(res => res.json()),
+      apiRequest("POST", "/api/corporate-cards/cards", cardData).then(res => res.json()),
     onSuccess: () => {
       toast({
         title: "Card Issued Successfully",

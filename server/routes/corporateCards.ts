@@ -33,12 +33,12 @@ const createCardholderSchema = z.object({
 });
 
 const createCardSchema = z.object({
-  cardholder_id: z.string(),
   user_id: z.number(),
-  card_type: z.enum(["virtual", "physical"]),
-  spending_limit: z.number().min(0),
-  allowed_categories: z.array(z.string()).optional(),
-  blocked_categories: z.array(z.string()).optional(),
+  spend_limit: z.number().min(0),
+  interval: z.string(),
+  cardholder_name: z.string(),
+  purpose: z.string().optional(),
+  department: z.string().optional(),
 });
 
 const addFundsSchema = z.object({
@@ -100,24 +100,46 @@ router.post("/cards", requireAuth, requireAdminRole, async (req, res) => {
   try {
     const validatedData = createCardSchema.parse(req.body);
     
+    // First create a cardholder if needed
+    const user = await storage.getUser(validatedData.user_id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Create cardholder in Stripe
+    const stripeCardholder = await createCardholder({
+      name: validatedData.cardholder_name,
+      email: user.email,
+      phone_number: user.phone_number || undefined,
+      billing: {
+        address: {
+          line1: "123 Main St", // Default address - in production, get from user
+          city: "San Francisco",
+          state: "CA",
+          postal_code: "94102",
+          country: "US",
+        },
+      },
+    });
+
     // Create card in Stripe
     const stripeCard = await createCorporateCard({
-      cardholder: validatedData.cardholder_id,
+      cardholder: stripeCardholder.id,
       currency: "usd",
-      type: validatedData.card_type,
+      type: "virtual",
       spending_controls: {
         spending_limits: [
           {
-            amount: validatedData.spending_limit * 100, // Convert to cents
-            interval: "all_time",
+            amount: validatedData.spend_limit, // Amount is already in cents from frontend
+            interval: validatedData.interval === "monthly" ? "monthly" : "all_time",
           },
         ],
-        allowed_categories: validatedData.allowed_categories,
-        blocked_categories: validatedData.blocked_categories,
       },
       metadata: {
         user_id: validatedData.user_id.toString(),
         organization_id: req.user!.organization_id!.toString(),
+        purpose: validatedData.purpose || "",
+        department: validatedData.department || "",
       },
     });
 
@@ -127,11 +149,15 @@ router.post("/cards", requireAuth, requireAdminRole, async (req, res) => {
       user_id: validatedData.user_id,
       organization_id: req.user!.organization_id!,
       card_number_masked: stripeCard.last4 ? `****-****-****-${stripeCard.last4}` : "****-****-****-****",
-      card_type: validatedData.card_type,
+      cardholder_name: validatedData.cardholder_name,
+      card_type: "virtual",
       status: "active",
-      spending_limit: validatedData.spending_limit,
-      available_balance: validatedData.spending_limit,
+      spending_limit: validatedData.spend_limit,
+      available_balance: validatedData.spend_limit,
       currency: "USD",
+      purpose: validatedData.purpose,
+      department: validatedData.department,
+      stripe_cardholder_id: stripeCardholder.id,
       created_by: req.user!.id,
     });
 
@@ -143,8 +169,8 @@ router.post("/cards", requireAuth, requireAdminRole, async (req, res) => {
         card_id: card.id,
         stripe_card_id: stripeCard.id,
         user_id: validatedData.user_id,
-        card_type: validatedData.card_type,
-        spending_limit: validatedData.spending_limit,
+        cardholder_name: validatedData.cardholder_name,
+        spending_limit: validatedData.spend_limit,
       },
     });
 
