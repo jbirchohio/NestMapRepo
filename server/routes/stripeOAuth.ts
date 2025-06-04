@@ -64,9 +64,12 @@ router.post('/oauth/authorize', async (req, res) => {
 
     if (!process.env.STRIPE_CONNECT_CLIENT_ID) {
       return res.status(400).json({ 
-        error: 'Stripe Connect not configured. Please set STRIPE_CONNECT_CLIENT_ID.' 
+        error: 'Stripe Connect Client ID is required. Please provide your Connect application Client ID from Stripe Dashboard.' 
       });
     }
+
+    // Log the client ID for debugging (first 10 characters only)
+    console.log('Using Stripe Connect Client ID:', process.env.STRIPE_CONNECT_CLIENT_ID?.substring(0, 10) + '...');
 
     const authUrl = `https://connect.stripe.com/oauth/authorize?` +
       `response_type=code` +
