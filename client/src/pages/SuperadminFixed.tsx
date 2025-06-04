@@ -24,43 +24,57 @@ export default function Superadmin() {
   const { data: organizations = [], isLoading: orgsLoading, error: orgsError } = useQuery({
     queryKey: ['/api/superadmin/organizations'],
     queryFn: () => apiRequest('GET', '/api/superadmin/organizations').then(res => res.json()),
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000
   });
 
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ['/api/superadmin/users'],
     queryFn: () => apiRequest('GET', '/api/superadmin/users').then(res => res.json()),
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000
   });
 
   const { data: activeSessions = [] } = useQuery({
     queryKey: ['/api/superadmin/sessions'],
     queryFn: () => apiRequest('GET', '/api/superadmin/sessions').then(res => res.json()),
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000
   });
 
   const { data: backgroundJobs = [] } = useQuery({
     queryKey: ['/api/superadmin/jobs'],
     queryFn: () => apiRequest('GET', '/api/superadmin/jobs').then(res => res.json()),
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000
   });
 
   const { data: auditLogs = [] } = useQuery({
     queryKey: ['/api/superadmin/activity'],
     queryFn: () => apiRequest('GET', '/api/superadmin/activity').then(res => res.json()),
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000
   });
 
   const { data: billingData = [] } = useQuery({
     queryKey: ['/api/superadmin/billing'],
     queryFn: () => apiRequest('GET', '/api/superadmin/billing').then(res => res.json()),
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000
   });
 
   const { data: featureFlags = [] } = useQuery({
     queryKey: ['/api/superadmin/flags'],
     queryFn: () => apiRequest('GET', '/api/superadmin/flags').then(res => res.json()),
-    retry: false
+    retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30000
   });
 
   // Debug logging to understand data issues
