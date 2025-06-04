@@ -299,17 +299,7 @@ export default function MainNavigation() {
                     </motion.div>
                   </RoleGate>
 
-                  <RoleGate requiredPermissions={['canManageOrganization']}>
-                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                      <Link href="/superadmin" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                        <div className="flex items-center gap-3">
-                          <Shield className="h-5 w-5" />
-                          <span className="font-medium">Superadmin</span>
-                        </div>
-                        <Badge variant="destructive" className="text-xs">Global</Badge>
-                      </Link>
-                    </motion.div>
-                  </RoleGate>
+
                 </div>
               </SheetContent>
             </Sheet>
@@ -493,20 +483,7 @@ export default function MainNavigation() {
               </Link>
             </RoleGate>
 
-            {/* Superadmin Access - Global admin only */}
-            <RoleGate requiredPermissions={['canManageOrganization']}>
-              <Link href="/superadmin">
-                <Button
-                  variant={location === '/superadmin' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex items-center gap-2 whitespace-nowrap"
-                >
-                  <Shield className="h-4 w-4" />
-                  <span className="text-sm font-medium">Superadmin</span>
-                  <Badge variant="destructive" className="ml-1 text-xs">Global</Badge>
-                </Button>
-              </Link>
-            </RoleGate>
+
 
             {/* Always show basic navigation */}
             <Link href="/">
