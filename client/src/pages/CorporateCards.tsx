@@ -105,6 +105,12 @@ export default function CorporateCards() {
     queryFn: () => apiRequest("GET", "/api/corporate-card/analytics").then(res => res.json()),
   });
 
+  // Fetch organization users for dropdown
+  const { data: organizationUsers = [] } = useQuery({
+    queryKey: ["/api/organizations/users"],
+    queryFn: () => apiRequest("GET", "/api/organizations/users").then(res => res.json()),
+  });
+
   // Issue new card mutation
   const issueCardMutation = useMutation({
     mutationFn: (cardData: any) => 
@@ -153,11 +159,14 @@ export default function CorporateCards() {
   });
 
   const handleIssueCard = (formData: FormData) => {
+    const userId = parseInt(formData.get("user_id") as string);
+    const selectedUser = organizationUsers.find((user: any) => user.id === userId);
+    
     const cardData = {
-      user_id: parseInt(formData.get("user_id") as string),
+      user_id: userId,
       spend_limit: parseInt(formData.get("spend_limit") as string) * 100, // Convert to cents
       interval: formData.get("interval") as string,
-      cardholder_name: formData.get("cardholder_name") as string,
+      cardholder_name: selectedUser?.username || "",
       purpose: formData.get("purpose") as string,
       department: formData.get("department") as string,
     };
@@ -457,25 +466,31 @@ export default function CorporateCards() {
             handleIssueCard(new FormData(e.currentTarget));
           }} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="user_email">User Email</Label>
-                <Input 
-                  id="user_email" 
-                  name="user_email" 
-                  type="email" 
-                  placeholder="employee@company.com" 
-                  required 
-                  className="focus:ring-electric-500 focus:border-electric-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cardholder_name">Cardholder Name</Label>
-                <Input 
-                  id="cardholder_name" 
-                  name="cardholder_name" 
-                  required 
-                  className="focus:ring-electric-500 focus:border-electric-500"
-                />
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="user_id">Select User</Label>
+                <Select name="user_id" required>
+                  <SelectTrigger className="focus:ring-electric-500 focus:border-electric-500">
+                    <SelectValue placeholder="Choose a team member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {organizationUsers.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-electric-100 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-medium text-electric-600">
+                              {user.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{user.username}</span>
+                            <span className="text-xs text-muted-foreground">{user.email}</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="cardholder_name" value="" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="spend_limit">Spending Limit ($)</Label>
