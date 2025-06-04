@@ -119,17 +119,21 @@ router.get('/organizations/:id', requireSuperadmin, async (req, res) => {
       return res.status(404).json({ error: 'Organization not found' });
     }
 
-    // Get organization members using direct SQL to avoid column name issues
-    const membersResult = await db.execute(`
-      SELECT u.id, u.username, u.email, u.role, u.last_login,
-             om.role as org_role, om.status, om.joined_at
-      FROM organization_members om
-      INNER JOIN users u ON om.user_id = u.id
-      WHERE om.organization_id = ${orgId}
-      ORDER BY om.joined_at DESC
-    `);
-    
-    const members = membersResult.rows;
+    // Get organization members directly from users table (consolidated approach)
+    const members = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        role: users.role,
+        display_name: users.display_name,
+        last_login: users.last_login,
+        created_at: users.created_at,
+        avatar_url: users.avatar_url,
+      })
+      .from(users)
+      .where(eq(users.organization_id, orgId))
+      .orderBy(users.created_at);
 
     res.json({ ...org, members });
   } catch (error) {
