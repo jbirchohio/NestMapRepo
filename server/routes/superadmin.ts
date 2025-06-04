@@ -511,10 +511,17 @@ router.post('/billing/:orgId/upgrade', requireSuperadmin, async (req, res) => {
 router.post('/billing/:orgId/downgrade', requireSuperadmin, async (req, res) => {
   try {
     const orgId = parseInt(req.params.orgId);
-    const { newPlan } = req.body;
+    const { newPlan, previousPlan } = req.body;
     
-    if (!['free', 'team'].includes(newPlan)) {
-      return res.status(400).json({ error: 'Invalid plan type' });
+    // Validate plan downgrade path
+    const validDowngrades = {
+      'enterprise': ['team', 'free'],
+      'team': ['free'],
+      'free': []
+    };
+
+    if (!validDowngrades[previousPlan]?.includes(newPlan)) {
+      return res.status(400).json({ error: 'Invalid plan downgrade path' });
     }
 
     // Update organization plan
@@ -533,7 +540,7 @@ router.post('/billing/:orgId/downgrade', requireSuperadmin, async (req, res) => 
     }
 
     // Log audit action
-    const adminUserId = req.user?.id || 5; // Default to known admin user
+    const adminUserId = req.user?.id || 5;
     await auditLogger.logAdminAction(
       adminUserId,
       orgId,
@@ -541,7 +548,7 @@ router.post('/billing/:orgId/downgrade', requireSuperadmin, async (req, res) => 
       { 
         organization_name: updatedOrg.name,
         new_plan: newPlan,
-        previous_plan: req.body.previousPlan 
+        previous_plan: previousPlan 
       }
     );
 
