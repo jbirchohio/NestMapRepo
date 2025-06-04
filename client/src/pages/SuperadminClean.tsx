@@ -517,6 +517,60 @@ export default function SuperadminClean() {
           </div>
         );
 
+      case 'flags':
+        return (
+          <div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8"
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
+                Feature Flags ({featureFlags.length})
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300">
+                Control system features and functionality
+              </p>
+            </motion.div>
+
+            <AnimatedCard variant="glow" className="p-6">
+              {featureFlags.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No feature flags configured
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Flag Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Updated</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {featureFlags.map((flag: any) => (
+                      <TableRow key={flag.id}>
+                        <TableCell className="font-medium">{flag.flag_name}</TableCell>
+                        <TableCell>{flag.description || 'No description'}</TableCell>
+                        <TableCell>
+                          <Badge variant={flag.is_enabled || flag.default_value ? 'default' : 'secondary'}>
+                            {flag.is_enabled || flag.default_value ? 'Enabled' : 'Disabled'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {flag.updated_at ? formatDistanceToNow(new Date(flag.updated_at), { addSuffix: true }) : 'Never'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </AnimatedCard>
+          </div>
+        );
+
       case 'settings':
         return (
           <div>
