@@ -120,7 +120,7 @@ router.get('/organizations/:id', requireSuperadmin, async (req, res) => {
 
     // Get organization members using direct SQL to avoid column name issues
     const membersResult = await db.execute(`
-      SELECT u.id, u.username, u.email, u.display_name, u.role, u.last_login,
+      SELECT u.id, u.username, u.email, u.role, u.last_login,
              om.role as org_role, om.status, om.joined_at
       FROM organization_members om
       INNER JOIN users u ON om.user_id = u.id
