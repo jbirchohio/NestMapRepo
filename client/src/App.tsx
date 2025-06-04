@@ -30,6 +30,7 @@ import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CorporateCards from "@/pages/CorporateCards";
 import Superadmin from "@/pages/SuperadminFixed";
+import SuperadminOrganizationDetail from "@/pages/SuperadminOrganizationDetail";
 import Onboarding from "@/pages/Onboarding";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
@@ -66,6 +67,7 @@ function Router() {
         <Route path="/white-label" component={WhiteLabelSettings} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/superadmin" component={Superadmin} />
+        <Route path="/superadmin/organizations/:id" component={SuperadminOrganizationDetail} />
         <Route path="/superadmin/:section" component={Superadmin} />
         <Route path="/corporate-cards" component={CorporateCards} />
         <Route path="/onboarding" component={Onboarding} />

@@ -19,7 +19,7 @@ import {
   insertSuperadminFeatureFlagSchema,
   insertSuperadminBackgroundJobSchema,
 } from '@shared/superadmin-schema';
-import crypto from 'crypto';
+import { hashPassword } from '../auth';
 
 const router = express.Router();
 
@@ -320,10 +320,8 @@ router.post('/users/:id/reset-password', requireSuperadmin, async (req, res) => 
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
 
-    // Use Node.js crypto for password hashing
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hashedPassword = crypto.pbkdf2Sync(newPassword, salt, 1000, 64, 'sha512').toString('hex');
-    const passwordHash = `${salt}:${hashedPassword}`;
+    // Use existing password hashing system
+    const passwordHash = hashPassword(newPassword);
 
     const [updatedUser] = await db
       .update(users)

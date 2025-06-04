@@ -88,7 +88,11 @@ export default function Superadmin() {
               </TableHeader>
               <TableBody>
                 {organizations.map((org: any) => (
-                  <TableRow key={org.id}>
+                  <TableRow 
+                    key={org.id} 
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" 
+                    onClick={() => window.location.href = `/superadmin/organizations/${org.id}`}
+                  >
                     <TableCell>
                       <div>
                         <div className="font-medium">{org.name}</div>
