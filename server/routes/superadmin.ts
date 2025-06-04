@@ -478,10 +478,10 @@ router.get('/billing/plans', requireSuperadmin, async (req, res) => {
 // Test Stripe integration
 router.get('/billing/test-stripe', requireSuperadmin, async (req, res) => {
   try {
-    const testResults = {
+    const testResults: any = {
       timestamp: new Date().toISOString(),
       stripe_configured: !!process.env.STRIPE_SECRET_KEY,
-      api_key_type: process.env.STRIPE_SECRET_KEY?.substring(0, 3) || 'none',
+      api_key_type: process.env.STRIPE_SECRET_KEY?.substring(0, 8) || 'none',
       price_ids: {
         team: process.env.STRIPE_PRICE_ID_TEAM || 'not_configured',
         enterprise: process.env.STRIPE_PRICE_ID_ENTERPRISE || 'not_configured'
@@ -508,7 +508,7 @@ router.get('/billing/test-stripe', requireSuperadmin, async (req, res) => {
           const teamPrice = await stripe.prices.retrieve(process.env.STRIPE_PRICE_ID_TEAM);
           testResults.team_price_valid = {
             id: teamPrice.id,
-            amount: teamPrice.unit_amount / 100,
+            amount: (teamPrice.unit_amount || 0) / 100,
             currency: teamPrice.currency,
             interval: teamPrice.recurring?.interval
           };
@@ -518,7 +518,7 @@ router.get('/billing/test-stripe', requireSuperadmin, async (req, res) => {
           const enterprisePrice = await stripe.prices.retrieve(process.env.STRIPE_PRICE_ID_ENTERPRISE);
           testResults.enterprise_price_valid = {
             id: enterprisePrice.id,
-            amount: enterprisePrice.unit_amount / 100,
+            amount: (enterprisePrice.unit_amount || 0) / 100,
             currency: enterprisePrice.currency,
             interval: enterprisePrice.recurring?.interval
           };
