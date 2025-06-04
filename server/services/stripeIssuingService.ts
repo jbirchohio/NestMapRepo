@@ -67,7 +67,7 @@ export class StripeIssuingService {
         spending_controls: {
           spending_limits: [
             {
-              amount: request.spend_limit,
+              amount: request.spend_limit * 100, // Convert dollars to cents for Stripe
               interval: request.interval,
             },
           ],

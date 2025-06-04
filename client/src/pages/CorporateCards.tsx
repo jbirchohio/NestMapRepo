@@ -134,8 +134,14 @@ export default function CorporateCards() {
 
   // Freeze/unfreeze card mutation
   const freezeCardMutation = useMutation({
-    mutationFn: ({ cardId, freeze }: { cardId: number; freeze: boolean }) =>
-      apiRequest("POST", `/api/corporate-card/${cardId}/freeze`, { freeze }).then(res => res.json()),
+    mutationFn: async ({ cardId, freeze }: { cardId: number; freeze: boolean }) => {
+      const response = await apiRequest("POST", `/api/corporate-card/${cardId}/freeze`, { freeze });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update card status");
+      }
+      return response.json();
+    },
     onSuccess: (_, { freeze }) => {
       toast({
         title: freeze ? "Card Frozen" : "Card Unfrozen",
@@ -155,8 +161,14 @@ export default function CorporateCards() {
 
   // Delete card mutation
   const deleteCardMutation = useMutation({
-    mutationFn: (cardId: number) =>
-      apiRequest("DELETE", `/api/corporate-card/${cardId}`).then(res => res.json()),
+    mutationFn: async (cardId: number) => {
+      const response = await apiRequest("DELETE", `/api/corporate-card/${cardId}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete card");
+      }
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: "Card Deleted",
@@ -702,7 +714,7 @@ export default function CorporateCards() {
                       id="spending_limit"
                       type="number"
                       step="0.01"
-                      defaultValue={(selectedCard.spending_limit || 0) / 100}
+                      defaultValue={selectedCard.spending_limit || 0}
                       className="mt-1"
                     />
                   </div>
