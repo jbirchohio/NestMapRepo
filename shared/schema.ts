@@ -497,19 +497,21 @@ export const corporateCards = pgTable("corporate_cards", {
   id: serial("id").primaryKey(),
   organization_id: integer("organization_id").notNull(),
   user_id: integer("user_id").notNull(),
+  stripe_card_id: text("stripe_card_id").notNull(), // Stripe card ID
   card_number_masked: text("card_number_masked").notNull(), // Last 4 digits only
   card_token: text("card_token").notNull(), // Encrypted token for API calls
   card_provider: text("card_provider").notNull(), // stripe, marqeta, etc
   card_type: text("card_type").default("virtual"), // virtual, physical
-  card_status: text("card_status").default("active"), // active, suspended, canceled
-  spending_limit: integer("spending_limit"), // Monthly limit in cents
-  remaining_limit: integer("remaining_limit"), // Remaining monthly limit
+  status: text("status").default("active"), // active, inactive, frozen, canceled
+  spending_limit: integer("spending_limit"), // Limit in cents
+  available_balance: integer("available_balance"), // Available balance in cents
+  currency: text("currency").default("USD"),
   category_limits: jsonb("category_limits"), // Per-category spending limits
   allowed_merchants: jsonb("allowed_merchants"), // Whitelist of merchant categories
   blocked_merchants: jsonb("blocked_merchants"), // Blacklist of merchant categories
   cardholder_name: text("cardholder_name").notNull(),
-  expiry_month: text("expiry_month").notNull(),
-  expiry_year: text("expiry_year").notNull(),
+  expiry_month: text("expiry_month"),
+  expiry_year: text("expiry_year"),
   billing_address: jsonb("billing_address"),
   shipping_address: jsonb("shipping_address"),
   purpose: text("purpose"), // travel, office_supplies, marketing, etc
@@ -517,9 +519,73 @@ export const corporateCards = pgTable("corporate_cards", {
   cost_center: text("cost_center"),
   manager_id: integer("manager_id"), // Who approves expenses
   auto_lock_triggers: jsonb("auto_lock_triggers"), // Automated controls
+  created_by: integer("created_by").notNull(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow(),
 });
+
+// Cardholders table for Stripe Issuing
+export const cardholders = pgTable("cardholders", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").notNull(),
+  stripe_cardholder_id: text("stripe_cardholder_id").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone_number: text("phone_number"),
+  billing_address: jsonb("billing_address").notNull(),
+  created_by: integer("created_by").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Card transactions table
+export const cardTransactions = pgTable("card_transactions", {
+  id: serial("id").primaryKey(),
+  card_id: integer("card_id").notNull(),
+  user_id: integer("user_id").notNull(),
+  stripe_transaction_id: text("stripe_transaction_id").notNull(),
+  amount: integer("amount").notNull(), // Amount in cents
+  currency: text("currency").default("USD"),
+  merchant_name: text("merchant_name").notNull(),
+  merchant_category: text("merchant_category"),
+  merchant_mcc: text("merchant_mcc"), // Merchant Category Code
+  status: text("status").default("pending"), // pending, completed, declined
+  transaction_type: text("transaction_type").default("purchase"), // purchase, refund, adjustment
+  authorization_code: text("authorization_code"),
+  network_transaction_id: text("network_transaction_id"),
+  settled_at: timestamp("settled_at"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for corporate cards
+export const insertCorporateCardSchema = createInsertSchema(corporateCards).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertCardholderSchema = createInsertSchema(cardholders).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertCardTransactionSchema = createInsertSchema(cardTransactions).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+// Types for corporate cards
+export type CorporateCard = typeof corporateCards.$inferSelect;
+export type InsertCorporateCard = z.infer<typeof insertCorporateCardSchema>;
+
+export type Cardholder = typeof cardholders.$inferSelect;
+export type InsertCardholder = z.infer<typeof insertCardholderSchema>;
+
+export type CardTransaction = typeof cardTransactions.$inferSelect;
+export type InsertCardTransaction = z.infer<typeof insertCardTransactionSchema>;
 
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
@@ -601,45 +667,7 @@ export const spendPolicies = pgTable("spend_policies", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
-export const cardTransactions = pgTable("card_transactions", {
-  id: serial("id").primaryKey(),
-  card_id: integer("card_id").notNull(),
-  organization_id: integer("organization_id").notNull(),
-  user_id: integer("user_id").notNull(),
-  
-  // Transaction details
-  transaction_id: text("transaction_id").notNull().unique(),
-  authorization_code: text("authorization_code"),
-  amount: integer("amount").notNull(),
-  currency: text("currency").default("USD"),
-  transaction_type: text("transaction_type"), // purchase, refund, reversal
-  transaction_status: text("transaction_status"), // pending, completed, declined
-  
-  // Merchant information
-  merchant_name: text("merchant_name"),
-  merchant_category: text("merchant_category"),
-  merchant_mcc: text("merchant_mcc"),
-  merchant_city: text("merchant_city"),
-  merchant_state: text("merchant_state"),
-  merchant_country: text("merchant_country"),
-  
-  // Processing details
-  processed_at: timestamp("processed_at"),
-  settled_at: timestamp("settled_at"),
-  decline_reason: text("decline_reason"),
-  
-  // Risk and compliance
-  risk_score: integer("risk_score"), // 0-100 risk assessment
-  policy_checks: jsonb("policy_checks"), // Policy violations or approvals
-  fraud_indicators: jsonb("fraud_indicators"),
-  
-  // Expense linking
-  expense_id: integer("expense_id"), // Link to expense record
-  auto_categorized: boolean("auto_categorized").default(false),
-  
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-});
+// Duplicate declaration removed - using the one defined above
 
 export const budgets = pgTable("budgets", {
   id: serial("id").primaryKey(),
