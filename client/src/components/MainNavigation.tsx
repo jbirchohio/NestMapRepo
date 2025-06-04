@@ -301,7 +301,7 @@ export default function MainNavigation() {
 
                   <RoleGate requiredPermissions={['canManageOrganization']}>
                     <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                      <Link href="/superladmin" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                      <Link href="/superadmin" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
                         <div className="flex items-center gap-3">
                           <Shield className="h-5 w-5" />
                           <span className="font-medium">Superadmin</span>
@@ -495,9 +495,9 @@ export default function MainNavigation() {
 
             {/* Superadmin Access - Global admin only */}
             <RoleGate requiredPermissions={['canManageOrganization']}>
-              <Link href="/superladmin">
+              <Link href="/superadmin">
                 <Button
-                  variant={location === '/superladmin' ? 'default' : 'ghost'}
+                  variant={location === '/superadmin' ? 'default' : 'ghost'}
                   size="sm"
                   className="flex items-center gap-2 whitespace-nowrap"
                 >
