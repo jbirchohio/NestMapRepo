@@ -1,20 +1,20 @@
 /**
  * Organization Members API Routes
- * Provides endpoints for managing organization members and their roles
+ * Consolidated approach using users.organization_id directly
  */
 
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { organizationMembers, users } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
-import { requireOrgPermission, loadOrganizationRole } from '../middleware/organizationRoleMiddleware';
-import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles';
-import { z } from 'zod';
+import { users } from '@shared/schema';
+import { eq, sql } from 'drizzle-orm';
+import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
+import { OrganizationRole, getRoleDescription } from '../rbac/organizationRoles';
+import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
 
 const router = Router();
 
-// Apply organization role loading middleware to all routes
-router.use(loadOrganizationRole);
+// Apply unified auth middleware
+router.use(unifiedAuthMiddleware);
 
 /**
  * Get organization members with their roles
@@ -26,22 +26,21 @@ router.get('/members', async (req: Request, res: Response) => {
 
     const members = await db
       .select({
-        id: organizationMembers.id,
-        userId: organizationMembers.user_id,
-        orgRole: organizationMembers.org_role,
-        permissions: organizationMembers.permissions,
-        status: organizationMembers.status,
-        joinedAt: organizationMembers.joined_at,
-        invitedAt: organizationMembers.invited_at,
-        invitedBy: organizationMembers.invited_by,
+        id: users.id,
+        userId: users.id,
+        orgRole: users.role,
+        permissions: sql<any>`NULL`, // No separate permissions in consolidated approach
+        status: sql<string>`'active'`, // Default active status
+        joinedAt: users.created_at,
+        invitedAt: users.created_at,
+        invitedBy: sql<number>`NULL`, // No separate invitation tracking
         // User details
         userName: users.display_name,
         userEmail: users.email,
         userAvatar: users.avatar_url,
       })
-      .from(organizationMembers)
-      .innerJoin(users, eq(organizationMembers.user_id, users.id))
-      .where(eq(organizationMembers.organization_id, organizationId));
+      .from(users)
+      .where(eq(users.organization_id, organizationId));
 
     // Add role descriptions
     const membersWithDescriptions = members.map(member => ({

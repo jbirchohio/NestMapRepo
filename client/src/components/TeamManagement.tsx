@@ -265,9 +265,11 @@ export default function TeamManagement() {
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Admin - Full access to everything</SelectItem>
-                      <SelectItem value="manager">Manager - Team oversight and trip management</SelectItem>
-                      <SelectItem value="user">User - Basic trip planning access</SelectItem>
+                      <SelectItem value="admin">Admin - Full organization control</SelectItem>
+                      <SelectItem value="manager">Manager - Team leadership with trip oversight</SelectItem>
+                      <SelectItem value="editor">Editor - Content creation and trip editing</SelectItem>
+                      <SelectItem value="member">Member - Basic trip creation and personal management</SelectItem>
+                      <SelectItem value="viewer">Viewer - Read-only access to assigned content</SelectItem>
                     </SelectContent>
                   </Select>
                   {form.formState.errors.role && (
