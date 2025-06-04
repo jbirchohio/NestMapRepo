@@ -127,7 +127,7 @@ export function registerCorporateCardRoutes(app: Express): void {
           card_token: undefined, // Remove sensitive token
         }));
 
-        res.json(maskedCards);
+        res.json({ cards: maskedCards });
       } catch (error) {
         console.error('Error fetching cards:', error);
         res.status(500).json({ error: 'Failed to fetch cards' });
