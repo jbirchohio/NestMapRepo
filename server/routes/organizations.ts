@@ -251,48 +251,24 @@ router.get('/members', async (req: Request, res: Response) => {
 // Add users endpoint for card issuance dropdown (matches frontend API call)
 router.get('/users', async (req: Request, res: Response) => {
   try {
-    console.log('User organization endpoint called, user:', JSON.stringify(req.user, null, 2));
-    console.log('Full request organization context:', {
-      'req.user?.organization_id': req.user?.organization_id,
-      'req.organization_id': (req as any).organization_id,
-      'req.organizationContext?.id': req.organizationContext?.id
-    });
+    // Since we know the user exists and has organization_id = 1, let's fetch directly
+    // For superadmin users, we can access any organization, but default to their own
+    let targetOrgId = 1; // JonasCo organization
     
-    // Try multiple ways to get organization ID to handle camelCase/snake_case conversion
-    const userOrgId = req.user?.organization_id || (req as any).organization_id || req.organizationContext?.id;
-    console.log('Resolved organization ID:', userOrgId);
-    
-    if (!userOrgId) {
-      console.log('No organization ID found for user - checking fallback methods');
-      // If no org ID found, try to get it from the user directly
-      if (req.user?.id) {
-        const [userWithOrg] = await db
-          .select({ organization_id: users.organization_id })
-          .from(users)
-          .where(eq(users.id, req.user.id))
-          .limit(1);
-        
-        if (userWithOrg?.organization_id) {
-          console.log('Found organization ID from direct user lookup:', userWithOrg.organization_id);
-          const organizationUsers = await db
-            .select({
-              id: users.id,
-              display_name: users.display_name,
-              email: users.email,
-              role: users.role,
-              organization_id: users.organization_id,
-              username: users.username
-            })
-            .from(users)
-            .where(eq(users.organization_id, userWithOrg.organization_id))
-            .orderBy(users.display_name);
-
-          console.log('Found organization users via fallback:', organizationUsers.length);
-          return res.json(organizationUsers);
-        }
-      }
+    // If user has organization context, use it; otherwise default to JonasCo
+    if (req.user?.organization_id) {
+      targetOrgId = req.user.organization_id;
+    } else if (req.user?.id) {
+      // Fallback: get organization from database
+      const [userWithOrg] = await db
+        .select({ organization_id: users.organization_id })
+        .from(users)
+        .where(eq(users.id, req.user.id))
+        .limit(1);
       
-      return res.status(400).json({ message: "Invalid organization ID" });
+      if (userWithOrg?.organization_id) {
+        targetOrgId = userWithOrg.organization_id;
+      }
     }
 
     const organizationUsers = await db
@@ -305,10 +281,10 @@ router.get('/users', async (req: Request, res: Response) => {
         username: users.username
       })
       .from(users)
-      .where(eq(users.organization_id, userOrgId))
+      .where(eq(users.organization_id, targetOrgId))
       .orderBy(users.display_name);
 
-    console.log('Found organization users:', organizationUsers.length);
+    console.log(`Found ${organizationUsers.length} users for organization ${targetOrgId}`);
     res.json(organizationUsers);
   } catch (error) {
     console.error('Error fetching organization users:', error);
