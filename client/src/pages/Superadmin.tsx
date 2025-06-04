@@ -204,8 +204,8 @@ export default function Superadmin() {
   const renderOrganizationsSection = () => (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Organizations</h1>
-        <p className="text-gray-600 dark:text-gray-400">Manage and monitor all organizations</p>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent">Organizations</h1>
+        <p className="text-navy-600 dark:text-navy-300">Manage and monitor all organizations</p>
       </div>
 
       <OrganizationsList 
@@ -543,17 +543,17 @@ export default function Superadmin() {
   const renderDashboardOverview = () => (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
           System Overview
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-navy-600 dark:text-navy-300">
           Comprehensive system administration and monitoring
         </p>
       </div>
 
           {/* Metrics Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
+            <Card className="glass-card electric-glow animated-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
