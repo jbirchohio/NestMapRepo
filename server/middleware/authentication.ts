@@ -24,7 +24,7 @@ class SessionStore {
 
   createSession(user_id: number, organizationId: number | null, role: string, req: Request): string {
     const sessionId = crypto.randomUUID();
-    
+
     const session: AuthSession = {
       user_id,
       organizationId,
@@ -37,7 +37,7 @@ class SessionStore {
     };
 
     this.sessions.set(sessionId, session);
-    
+
     // Track user sessions for multi-device management
     if (!this.userSessions.has(user_id)) {
       this.userSessions.set(user_id, new Set());
@@ -63,7 +63,7 @@ class SessionStore {
     if (!session) return false;
 
     this.sessions.delete(sessionId);
-    
+
     const userSessions = this.userSessions.get(session.user_id);
     if (userSessions) {
       userSessions.delete(sessionId);
@@ -85,7 +85,7 @@ class SessionStore {
         count++;
       }
     }
-    
+
     this.userSessions.delete(user_id);
     return count;
   }
@@ -129,7 +129,7 @@ setInterval(() => {
  */
 export function validateSession(req: Request, res: Response, next: NextFunction) {
   const sessionId = req.headers['x-session-id'] as string || req.session?.sessionId;
-  
+
   if (!sessionId) {
     return res.status(401).json({ message: 'No session found' });
   }
@@ -147,7 +147,7 @@ export function validateSession(req: Request, res: Response, next: NextFunction)
       currentIp: req.ip,
       user_id: session.user_id
     });
-    
+
     sessionStore.invalidateSession(sessionId);
     return res.status(401).json({ message: 'Session security violation' });
   }
@@ -159,7 +159,7 @@ export function validateSession(req: Request, res: Response, next: NextFunction)
   req.authSession = session;
   req.user = {
     id: session.user_id,
-    organization_id: session.organization_id,
+    organization_id: session.organizationId,
     role: session.role
   };
 
@@ -204,7 +204,7 @@ export function requireRole(allowedRoles: string[]) {
  * Organization access control middleware
  */
 export function requireOrganization(req: Request, res: Response, next: NextFunction) {
-  if (!req.authSession?.organization_id) {
+  if (!req.authSession?.organizationId) {
     return res.status(403).json({ 
       message: 'Organization membership required' 
     });
@@ -273,14 +273,14 @@ class AccountLockout {
   recordFailedAttempt(identifier: string): boolean {
     const key = identifier.toLowerCase();
     const current = this.attempts.get(key) || { count: 0 };
-    
+
     current.count++;
-    
+
     if (current.count >= this.maxAttempts) {
       current.lockedUntil = new Date(Date.now() + this.lockoutDuration);
       console.warn('Account locked due to failed attempts:', { identifier: key });
     }
-    
+
     this.attempts.set(key, current);
     return current.count >= this.maxAttempts;
   }
@@ -288,14 +288,14 @@ class AccountLockout {
   isLocked(identifier: string): boolean {
     const key = identifier.toLowerCase();
     const record = this.attempts.get(key);
-    
+
     if (!record?.lockedUntil) return false;
-    
+
     if (new Date() > record.lockedUntil) {
       this.attempts.delete(key);
       return false;
     }
-    
+
     return true;
   }
 
@@ -315,14 +315,14 @@ export const accountLockout = new AccountLockout();
  */
 export function protectBruteForce(req: Request, res: Response, next: NextFunction) {
   const identifier = req.body.email || req.body.username || req.ip;
-  
+
   if (accountLockout.isLocked(identifier)) {
     return res.status(429).json({
       message: 'Account temporarily locked due to too many failed attempts',
       locked: true
     });
   }
-  
+
   // Add identifier to request for use in auth failure handling
   req.authIdentifier = identifier;
   next();

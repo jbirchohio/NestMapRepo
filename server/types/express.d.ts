@@ -4,39 +4,20 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
-        id: number;
-        email: string;
-        organization_id?: number;
+        id: string;
+        email?: string;
         role?: string;
-        displayName?: string;
+        organizationId?: number;
+        organization_id?: number; // Keep for backward compatibility
+        userId?: string;
+        user_id?: string; // Keep for backward compatibility
+        permissions?: string[];
       };
-      organizationId?: number;
-      organizationContext?: {
-        id?: number;
-        name?: string;
-        isOwner: boolean;
-        canInvite: boolean;
-        canManage: boolean;
+      organization?: {
+        id: number;
+        name: string;
+        settings: any;
       };
-      dbMetrics?: {
-        queryCount: number;
-        totalQueryTime: number;
-        slowQueries: any[];
-        recordQuery: (queryName: string, duration: number) => void;
-        getMetrics: () => any;
-      };
-      unifiedMetrics?: {
-        startTime: bigint;
-        dbQueries: number;
-        dbTotalTime: number;
-        slowQueries: any[];
-        memoryBefore: number;
-      };
-      trackQuery?: (duration: number, query?: string) => void;
-    }
-
-    interface Session {
-      userId?: number;
     }
   }
 }

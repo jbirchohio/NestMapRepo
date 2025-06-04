@@ -10,6 +10,18 @@ export function transformRequestFields(req: Request, res: Response, next: NextFu
     // Transform camelCase request body to snake_case for database operations
     req.body = camelToSnake(req.body);
   }
+  
+  // Ensure user object in request has both camelCase and snake_case for compatibility
+  if (req.user && typeof req.user === 'object') {
+    // Keep camelCase for frontend compatibility, add snake_case for database operations
+    if (req.user.organizationId) {
+      req.user.organization_id = req.user.organizationId;
+    }
+    if (req.user.userId) {
+      req.user.user_id = req.user.userId;
+    }
+  }
+  
   next();
 }
 

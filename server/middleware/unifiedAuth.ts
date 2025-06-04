@@ -71,7 +71,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     // Proper JWT verification with Supabase
     const supabaseUrl = process.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase configuration');
       return res.status(500).json({ message: "Server configuration error" });

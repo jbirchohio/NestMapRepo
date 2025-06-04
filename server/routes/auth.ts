@@ -11,7 +11,7 @@ const router = Router();
 router.post("/register", async (req: Request, res: Response) => {
   try {
     const userData = registerUserSchema.parse(req.body);
-    
+
     // Check if user already exists
     const existingUser = await storage.getUserByEmail(userData.email);
     if (existingUser) {
@@ -20,7 +20,7 @@ router.post("/register", async (req: Request, res: Response) => {
 
     // Hash password before storing
     const hashedPassword = hashPassword(userData.password);
-    
+
     // Create user data for storage (transform to database schema)
     const { password, ...userDataForDb } = userData;
     const user = await storage.createUser({
@@ -44,7 +44,7 @@ router.post("/register", async (req: Request, res: Response) => {
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
@@ -61,7 +61,7 @@ router.post("/login", async (req: Request, res: Response) => {
         console.error("Session save error:", err);
         return res.status(500).json({ message: "Session error" });
       }
-      
+
       // Return user response without sensitive data
       const userResponse = {
         id: user.id,
@@ -94,7 +94,7 @@ router.post("/logout", (req: Request, res: Response) => {
 router.get("/session", async (req: Request, res: Response) => {
   try {
     const sessionUserId = (req.session as any)?.user_id;
-    
+
     if (!sessionUserId) {
       return res.status(401).json({ message: "No active session" });
     }
@@ -145,7 +145,7 @@ router.put("/profile", unifiedAuthMiddleware, async (req: Request, res: Response
     }
 
     const updateData = insertUserSchema.partial().parse(req.body);
-    
+
     // If password_hash is being updated, hash it
     if (updateData.password_hash) {
       updateData.password_hash = hashPassword(updateData.password_hash);
