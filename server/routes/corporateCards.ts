@@ -61,10 +61,10 @@ const createTransactionSchema = z.object({
 router.post("/cardholders", requireAuth, requireAdminRole, async (req, res) => {
   try {
     const validatedData = createCardholderSchema.parse(req.body);
-    
+
     // Create cardholder in Stripe
     const stripeCardholder = await createCardholder(validatedData);
-    
+
     // Store cardholder in database
     const cardholder = await storage.createCardholder({
       stripe_cardholder_id: stripeCardholder.id,
@@ -102,7 +102,7 @@ router.post("/cardholders", requireAuth, requireAdminRole, async (req, res) => {
 router.post("/cards", requireAuth, requireAdminRole, async (req, res) => {
   try {
     const validatedData = createCardSchema.parse(req.body);
-    
+
     // First create a cardholder if needed
     const user = await storage.getUser(validatedData.user_id);
     if (!user) {
@@ -133,7 +133,7 @@ router.post("/cards", requireAuth, requireAdminRole, async (req, res) => {
       spending_controls: {
         spending_limits: [
           {
-            amount: validatedData.spend_limit, // Amount is already in cents from frontend
+            amount: Math.round(validatedData.spend_limit * 100), // Convert to cents
             interval: validatedData.interval === "monthly" ? "monthly" : "all_time",
           },
         ],
@@ -192,7 +192,7 @@ router.post("/cards/:cardId/add-funds", requireAuth, requireAdminRole, async (re
   try {
     const { cardId } = req.params;
     const validatedData = addFundsSchema.parse(req.body);
-    
+
     // Get card from database
     const card = await storage.getCorporateCard(parseInt(cardId));
     if (!card) {
@@ -206,7 +206,7 @@ router.post("/cards/:cardId/add-funds", requireAuth, requireAdminRole, async (re
 
     // Add funds via Stripe
     const updatedStripeCard = await addFundsToCard(card.stripe_card_id, validatedData.amount * 100);
-    
+
     // Update card balance in database
     const updatedCard = await storage.updateCorporateCard(card.id, {
       available_balance: card.available_balance + validatedData.amount,
@@ -239,7 +239,7 @@ router.post("/cards/:cardId/add-funds", requireAuth, requireAdminRole, async (re
 router.post("/cards/:cardId/freeze", requireAuth, requireAdminRole, async (req, res) => {
   try {
     const { cardId } = req.params;
-    
+
     const card = await storage.getCorporateCard(parseInt(cardId));
     if (!card) {
       return res.status(404).json({ error: "Card not found" });
@@ -251,7 +251,7 @@ router.post("/cards/:cardId/freeze", requireAuth, requireAdminRole, async (req, 
 
     // Freeze card in Stripe
     const stripeCard = await freezeCard(card.stripe_card_id);
-    
+
     // Update card status in database
     const updatedCard = await storage.updateCorporateCard(card.id, {
       status: "frozen",
@@ -281,7 +281,7 @@ router.post("/cards/:cardId/freeze", requireAuth, requireAdminRole, async (req, 
 router.post("/cards/:cardId/unfreeze", requireAuth, requireAdminRole, async (req, res) => {
   try {
     const { cardId } = req.params;
-    
+
     const card = await storage.getCorporateCard(parseInt(cardId));
     if (!card) {
       return res.status(404).json({ error: "Card not found" });
@@ -293,7 +293,7 @@ router.post("/cards/:cardId/unfreeze", requireAuth, requireAdminRole, async (req
 
     // Unfreeze card in Stripe
     const stripeCard = await unfreezeCard(card.stripe_card_id);
-    
+
     // Update card status in database
     const updatedCard = await storage.updateCorporateCard(card.id, {
       status: "active",
@@ -324,7 +324,7 @@ router.post("/cards/:cardId/transactions", requireAuth, async (req, res) => {
   try {
     const { cardId } = req.params;
     const validatedData = createTransactionSchema.parse(req.body);
-    
+
     const card = await storage.getCorporateCard(parseInt(cardId));
     if (!card) {
       return res.status(404).json({ error: "Card not found" });
@@ -428,7 +428,7 @@ router.get("/cards/:cardId/transactions", requireAuth, async (req, res) => {
   try {
     const { cardId } = req.params;
     const card = await storage.getCorporateCard(parseInt(cardId));
-    
+
     if (!card) {
       return res.status(404).json({ error: "Card not found" });
     }
@@ -451,7 +451,7 @@ router.get("/cards/:cardId/balance", requireAuth, async (req, res) => {
   try {
     const { cardId } = req.params;
     const card = await storage.getCorporateCard(parseInt(cardId));
-    
+
     if (!card) {
       return res.status(404).json({ error: "Card not found" });
     }
@@ -462,7 +462,7 @@ router.get("/cards/:cardId/balance", requireAuth, async (req, res) => {
     }
 
     const stripeBalance = await getCardBalance(card.stripe_card_id);
-    
+
     res.json({
       card_id: card.id,
       available_balance: card.available_balance,
@@ -481,7 +481,7 @@ router.delete("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) 
   try {
     const { cardId } = req.params;
     const card = await storage.getCorporateCard(parseInt(cardId));
-    
+
     if (!card) {
       return res.status(404).json({ error: "Card not found" });
     }
@@ -499,7 +499,7 @@ router.delete("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) 
 
     // Delete card from database
     const deleted = await storage.deleteCorporateCard(card.id);
-    
+
     if (!deleted) {
       return res.status(500).json({ error: "Failed to delete card from database" });
     }
