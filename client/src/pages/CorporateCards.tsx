@@ -429,11 +429,27 @@ export default function CorporateCards() {
                   </div>
 
                   <div className="flex items-center gap-2 mt-4 pt-4 border-t border-electric-200 dark:border-electric-800">
-                    <PrimaryButton variant="ghost" size="sm" className="flex-1">
+                    <PrimaryButton 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedCard(card);
+                        setShowCardDetails(true);
+                      }}
+                    >
                       <ArrowUpRight className="w-4 h-4 mr-1" />
                       View Details
                     </PrimaryButton>
-                    <PrimaryButton variant="ghost" size="sm" className="flex-1">
+                    <PrimaryButton 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedCard(card);
+                        setIsManageDialogOpen(true);
+                      }}
+                    >
                       <Settings className="w-4 h-4 mr-1" />
                       Settings
                     </PrimaryButton>
@@ -667,6 +683,124 @@ export default function CorporateCards() {
             </PrimaryButton>
           </div>
         </div>
+      </FullScreenModal>
+
+      {/* Card Details Modal */}
+      <FullScreenModal
+        isOpen={showCardDetails}
+        onClose={() => setShowCardDetails(false)}
+        title="Card Details"
+      >
+        {selectedCard && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 bg-electric-100 rounded-2xl flex items-center justify-center mb-4">
+                <CreditCard className="w-8 h-8 text-electric-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-navy-900 dark:text-white">
+                {selectedCard.cardholder_name}
+              </h3>
+              <p className="text-muted-foreground">{selectedCard.card_number_masked}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="bg-gray-50 dark:bg-navy-800 rounded-xl p-4">
+                  <h4 className="font-semibold mb-3">Card Information</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status</span>
+                      <span className="font-medium">{selectedCard.status}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Card Type</span>
+                      <span className="font-medium">{selectedCard.card_type || 'Virtual'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Provider</span>
+                      <span className="font-medium">{selectedCard.card_provider || 'Stripe'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Currency</span>
+                      <span className="font-medium">{selectedCard.currency || 'USD'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-navy-800 rounded-xl p-4">
+                  <h4 className="font-semibold mb-3">Usage Details</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Purpose</span>
+                      <span className="font-medium">{selectedCard.purpose || 'General'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Department</span>
+                      <span className="font-medium">{selectedCard.department || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Cost Center</span>
+                      <span className="font-medium">{selectedCard.cost_center || 'Not specified'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-gray-50 dark:bg-navy-800 rounded-xl p-4">
+                  <h4 className="font-semibold mb-3">Financial Information</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Available Balance</span>
+                      <span className="font-medium text-green-600">
+                        {formatCurrency(selectedCard.available_balance || 0)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Spending Limit</span>
+                      <span className="font-medium">
+                        {formatCurrency(selectedCard.spending_limit || 0)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Usage</span>
+                      <span className="font-medium">
+                        {((selectedCard.spending_limit - selectedCard.available_balance) / selectedCard.spending_limit * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-navy-800 rounded-xl p-4">
+                  <h4 className="font-semibold mb-3">Security & Controls</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Auto-lock</span>
+                      <span className="font-medium">
+                        {selectedCard.auto_lock_triggers ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Created</span>
+                      <span className="font-medium">
+                        {new Date(selectedCard.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6">
+              <PrimaryButton 
+                variant="ghost" 
+                onClick={() => setShowCardDetails(false)}
+              >
+                Close
+              </PrimaryButton>
+            </div>
+          </div>
+        )}
       </FullScreenModal>
     </div>
   );
