@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, sql } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
 import { db } from '../db';
 import { expenses, trips, users } from '@shared/schema';
 import { z } from 'zod';

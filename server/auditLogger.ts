@@ -14,14 +14,14 @@ export interface AuditEvent {
 }
 
 export class AuditLogger {
-  
+
   /**
    * Log a user action for compliance and security monitoring
    */
   async logAction(event: AuditEvent): Promise<void> {
     try {
       await db.insert(superadminAuditLogs).values({
-        admin_user_id: event.userId,
+        superadmin_user_id: event.userId,
         action: event.action,
         entity_type: event.entityType,
         entity_id: event.entityId,
