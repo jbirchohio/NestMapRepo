@@ -62,9 +62,9 @@ export function SuperadminNavigation() {
       {/* Sidebar */}
       <div className={cn(
         "h-screen w-64 bg-navy-800 dark:bg-navy-900 border-r border-electric-200/30 dark:border-electric-700/30 flex flex-col transition-transform duration-300",
-        "lg:translate-x-0 lg:relative lg:z-auto", // Always visible on desktop, normal z-index
+        "lg:translate-x-0 lg:static lg:block", // Always visible and positioned on desktop
         isOpen ? "translate-x-0" : "-translate-x-full", // Mobile: slide in/out
-        "fixed z-50 lg:z-auto" // Fixed on mobile with high z-index, normal on desktop
+        "fixed z-50 lg:z-10" // Fixed on mobile with high z-index, lower z-index on desktop
       )}>
         {/* Header */}
         <div className="p-6 border-b border-electric-200/30 dark:border-electric-700/30">
