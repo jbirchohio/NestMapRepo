@@ -93,15 +93,17 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
-    // Look up database user by Supabase auth ID directly from database
-    const [dbUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.auth_id, authId))
-      .limit(1);
+    // Look up user profile in Supabase database by auth ID
+    const { data: dbUser, error: userError } = await fetch(`${supabaseUrl}/rest/v1/users?auth_id=eq.${authId}`, {
+      headers: {
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json'
+      }
+    }).then(res => res.json()).then(data => ({ data: data[0], error: null })).catch(error => ({ data: null, error }));
 
-    if (!dbUser) {
-      return res.status(401).json({ message: "User not found" });
+    if (userError || !dbUser) {
+      return res.status(401).json({ message: "User profile not found" });
     }
 
     // Convert database user (snake_case) to request user (camelCase for frontend compatibility)
