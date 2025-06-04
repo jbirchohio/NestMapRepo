@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   job_title: text("job_title"), // Job title
   team_size: text("team_size"), // Team size range
   use_case: text("use_case"), // Primary use case
+  last_login: timestamp("last_login"), // Track last login time
   created_at: timestamp("created_at").defaultNow(),
 });
 

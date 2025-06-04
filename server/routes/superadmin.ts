@@ -404,16 +404,17 @@ router.get('/activity', requireSuperadmin, async (req, res) => {
 
 router.get('/sessions', requireSuperadmin, async (req, res) => {
   try {
-    // Use direct SQL query to get active sessions from session table
+    // Extract user data from JSON sess column
     const sessions = await db.execute(`
-      SELECT sess #>> '{user,id}' as user_id,
+      SELECT sid,
+             sess #>> '{user,id}' as user_id,
              sess #>> '{user,email}' as email,
              sess #>> '{user,role}' as role,
-             created_at,
-             expire
+             expire,
+             sess #>> '{user,organizationId}' as organization_id
       FROM session 
       WHERE expire > NOW()
-      ORDER BY created_at DESC 
+      ORDER BY expire DESC 
       LIMIT 50
     `);
 
@@ -467,12 +468,13 @@ router.get('/billing', requireSuperadmin, async (req, res) => {
 
 router.get('/flags', requireSuperadmin, async (req, res) => {
   try {
-    const flags = await db
-      .select()
-      .from(superadminFeatureFlags)
-      .orderBy(superadminFeatureFlags.flag_name);
+    const flags = await db.execute(`
+      SELECT id, flag_name, is_enabled, description, created_at, updated_at
+      FROM superadmin_feature_flags
+      ORDER BY flag_name
+    `);
 
-    res.json(flags);
+    res.json(flags.rows);
   } catch (error) {
     console.error('Error fetching flags:', error);
     res.status(500).json({ error: 'Failed to fetch flags' });

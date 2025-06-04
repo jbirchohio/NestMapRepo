@@ -174,14 +174,17 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Store user ID in session
+    // Store user ID in session and update last_login
     (req.session as any).user_id = user.id;
+    
+    // Update last_login timestamp
+    await db.update(users).set({ last_login: new Date() }).where(eq(users.id, user.id));
     
     console.log('Login successful for user:', {
       id: user.id,
       email: user.email,
       role: user.role,
-      organizationId: user.organization_id
+      organizationId: user.organizationId
     });
 
     res.json({
@@ -190,7 +193,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         role: user.role,
-        organizationId: user.organization_id,
+        organizationId: user.organizationId,
         displayName: user.displayName
       }
     });
