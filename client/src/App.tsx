@@ -44,7 +44,7 @@ function Router() {
   const isSupeadminView = location.startsWith('/superadmin');
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-soft-100 dark:bg-navy-900">
       {!isSupeadminView && <BrandedHeader />}
       {!isSupeadminView && <MainNavigation />}
       <main className="flex-1">

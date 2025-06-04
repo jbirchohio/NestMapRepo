@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Navan-style Electric Violet Theme */
+/* Premium Electric Violet Theme - Global */
 :root {
   --background: 0 0% 100%;
   --foreground: 224 71% 14%; /* Deep navy text */
@@ -27,6 +27,38 @@
   --ring: 252 60% 68%; /* Electric violet ring */
   --radius: 1rem;
   
+  /* Electric Violet Extended Palette */
+  --electric-50: 252 100% 98%;
+  --electric-100: 252 100% 95%;
+  --electric-200: 252 96% 88%;
+  --electric-300: 252 95% 80%;
+  --electric-400: 252 85% 70%;
+  --electric-500: 252 75% 65%;
+  --electric-600: 252 60% 68%; /* Primary */
+  --electric-700: 252 55% 55%;
+  --electric-800: 252 50% 45%;
+  --electric-900: 252 45% 35%;
+  
+  /* Navy Extended Palette */
+  --navy-50: 240 60% 97%;
+  --navy-100: 240 50% 94%;
+  --navy-200: 240 45% 88%;
+  --navy-300: 240 40% 80%;
+  --navy-400: 240 35% 70%;
+  --navy-500: 224 35% 45%;
+  --navy-600: 224 45% 35%;
+  --navy-700: 224 55% 25%;
+  --navy-800: 224 65% 18%;
+  --navy-900: 224 71% 14%;
+  
+  /* Soft Extended Palette */
+  --soft-50: 240 100% 99%;
+  --soft-100: 240 100% 98%;
+  --soft-200: 240 90% 95%;
+  --soft-300: 240 80% 90%;
+  --soft-400: 240 70% 85%;
+  --soft-500: 240 60% 80%;
+  
   /* Success and warning colors */
   --success: 142 76% 36%;
   --success-foreground: 210 40% 98%;
@@ -43,9 +75,119 @@
 
 /* Remove custom button overrides - use shadcn/ui Button component instead */
 
+/* Premium Glass-morphism Effects */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+}
+
+.electric-glow {
+  box-shadow: 0 0 20px rgba(109, 93, 251, 0.3);
+  transition: all 0.3s ease;
+}
+
+.electric-glow:hover {
+  box-shadow: 0 0 30px rgba(109, 93, 251, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Premium Card Animations */
+.animated-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animated-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+/* Morphing Button Effects */
+.morphing-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.morphing-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.morphing-button:hover::before {
+  left: 100%;
+}
+
+/* Electric Gradient Backgrounds */
+.electric-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--electric-500)) 0%, 
+    hsl(var(--electric-600)) 50%, 
+    hsl(var(--electric-700)) 100%);
+}
+
+.electric-gradient-soft {
+  background: linear-gradient(135deg, 
+    hsl(var(--electric-100)) 0%, 
+    hsl(var(--electric-200)) 100%);
+}
+
+/* Premium Animation Keyframes */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(109, 93, 251, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(109, 93, 251, 0.6); }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
 /* Ensure button text visibility across all themes */
 button {
-  @apply transition-all duration-200;
+  @apply transition-all duration-300;
+}
+
+/* Global Card Styling */
+.card {
+  @apply glass-card rounded-2xl;
 }
 
 
