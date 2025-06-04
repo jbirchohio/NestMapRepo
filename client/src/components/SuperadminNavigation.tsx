@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { Shield, Users, Building2, Activity, CreditCard, Settings, LogOut, BarChart3, Flag, Briefcase, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 
@@ -20,13 +20,14 @@ const superadminNavItems = [
 
 export function SuperadminNavigation() {
   const [location] = useLocation();
+  const { signOut } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
-      await apiRequest('POST', '/api/auth/logout');
-      window.location.href = '/';
+      await signOut();
+      // The signOut function already handles redirect to home page
     } catch (error) {
       toast({
         title: 'Logout Failed',
