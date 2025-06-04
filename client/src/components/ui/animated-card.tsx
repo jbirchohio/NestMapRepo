@@ -64,8 +64,8 @@ const AnimatedCard = forwardRef<HTMLDivElement, AnimatedCardProps>(
         )}
         {...props}
       >
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-electric-500/5 dark:to-transparent rounded-2xl pointer-events-none" />
+        {/* Subtle gradient overlay - reduced opacity to fix desktop hazy effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/2 to-transparent dark:from-electric-500/2 dark:to-transparent rounded-2xl pointer-events-none" />
         
         {/* Content */}
         <div className="relative z-10">
