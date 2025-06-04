@@ -1260,7 +1260,25 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
   async getExpenses(filters: any) {
     let query = db
       .select({
-        ...expenses,
+        id: expenses.id,
+        organization_id: expenses.organization_id,
+        user_id: expenses.user_id,
+        card_id: expenses.card_id,
+        transaction_id: expenses.transaction_id,
+        amount: expenses.amount,
+        currency: expenses.currency,
+        merchant_name: expenses.merchant_name,
+        merchant_category: expenses.merchant_category,
+        expense_category: expenses.expense_category,
+        description: expenses.description,
+        receipt_url: expenses.receipt_url,
+        status: expenses.status,
+        approval_status: expenses.approval_status,
+        approved_by: expenses.approved_by,
+        approved_at: expenses.approved_at,
+        transaction_date: expenses.transaction_date,
+        created_at: expenses.created_at,
+        updated_at: expenses.updated_at,
         user: {
           id: users.id,
           username: users.username,
