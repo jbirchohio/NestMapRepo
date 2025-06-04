@@ -490,8 +490,9 @@ router.delete("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) 
       return res.status(403).json({ error: "Access denied" });
     }
 
-    // Cancel card in Stripe first
-    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    // Cancel card in Stripe first  
+    const Stripe = await import('stripe');
+    const stripe = new Stripe.default(process.env.STRIPE_SECRET_KEY!);
     await stripe.issuing.cards.update(card.stripe_card_id, {
       status: 'canceled',
     });
