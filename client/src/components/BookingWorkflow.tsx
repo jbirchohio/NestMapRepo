@@ -16,6 +16,11 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Import modular components
+import { FlightSearchForm } from './booking/FlightSearchForm';
+import { FlightResults } from './booking/FlightResults';
+import { HotelResults } from './booking/HotelResults';
+
 // Comprehensive client information schema
 const clientInfoSchema = z.object({
   // Travel Details

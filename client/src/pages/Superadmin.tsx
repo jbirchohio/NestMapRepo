@@ -11,6 +11,11 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
+
+// Import modular components
+import { DashboardMetrics } from '@/components/superadmin/DashboardMetrics';
+import { OrganizationsList } from '@/components/superadmin/OrganizationsList';
+import { useSuperadminDashboard } from '@/hooks/useOptimizedQuery';
 import { 
   Users, 
   Building2, 

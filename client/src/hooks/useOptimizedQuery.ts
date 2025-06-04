@@ -3,7 +3,7 @@ import { apiRequest } from '@/lib/queryClient';
 
 interface OptimizedQueryOptions<T> extends Omit<UseQueryOptions<T>, 'queryKey' | 'queryFn'> {
   endpoint: string;
-  cacheTime?: number;
+  gcTime?: number; // Updated from cacheTime
   staleTime?: number;
   refetchOnWindowFocus?: boolean;
   refetchOnMount?: boolean;
@@ -18,7 +18,7 @@ export function useOptimizedQuery<T = any>(
 ): UseQueryResult<T> {
   const {
     endpoint,
-    cacheTime = 5 * 60 * 1000, // 5 minutes
+    gcTime = 5 * 60 * 1000, // 5 minutes (garbage collection time)
     staleTime = 2 * 60 * 1000,  // 2 minutes
     refetchOnWindowFocus = false,
     refetchOnMount = false,
@@ -34,7 +34,7 @@ export function useOptimizedQuery<T = any>(
       }
       return response.json();
     },
-    cacheTime,
+    gcTime,
     staleTime,
     refetchOnWindowFocus,
     refetchOnMount,
@@ -50,7 +50,7 @@ export function useOptimizedQuery<T = any>(
 export function useSuperadminDashboard() {
   return useOptimizedQuery({
     endpoint: '/api/superadmin/dashboard',
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     staleTime: 5 * 60 * 1000,   // 5 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -63,7 +63,7 @@ export function useSuperadminDashboard() {
 export function useUserPermissions() {
   return useOptimizedQuery({
     endpoint: '/api/user/permissions',
-    cacheTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
     staleTime: 10 * 60 * 1000,  // 10 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -76,7 +76,7 @@ export function useUserPermissions() {
 export function useNotifications() {
   return useOptimizedQuery({
     endpoint: '/api/notifications',
-    cacheTime: 2 * 60 * 1000,  // 2 minutes
+    gcTime: 2 * 60 * 1000,  // 2 minutes
     staleTime: 1 * 60 * 1000,   // 1 minute
     refetchOnWindowFocus: true,
     refetchOnMount: true,
