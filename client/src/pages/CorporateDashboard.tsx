@@ -420,7 +420,236 @@ export default function CorporateDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Corporate Cards Section */}
+        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Corporate Cards
+              <Badge className="ml-auto bg-electric-100 text-electric-700 dark:bg-electric-900/30 dark:text-electric-300">
+                Stripe Issuing
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {cardsLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-24 bg-muted animate-pulse rounded" />
+                ))}
+              </div>
+            ) : corporateCards?.cards?.length > 0 ? (
+              <div className="space-y-4">
+                {corporateCards.cards.slice(0, 3).map((card: CorporateCard) => (
+                  <div 
+                    key={card.id} 
+                    className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:shadow-md hover:bg-muted/50 transition-all"
+                    onClick={() => setSelectedCard(card)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
+                        <CreditCard className="h-3 w-3 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{card.cardholder_name}</p>
+                        <p className="text-sm text-muted-foreground">{card.card_number_masked}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={card.status === 'active' ? 'default' : 'secondary'}>
+                          {card.status}
+                        </Badge>
+                        {card.status === 'active' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              freezeCardMutation.mutate(card.id);
+                            }}
+                            disabled={freezeCardMutation.isPending}
+                          >
+                            <Lock className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              unfreezeCardMutation.mutate(card.id);
+                            }}
+                            disabled={unfreezeCardMutation.isPending}
+                          >
+                            <Unlock className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-green-600">
+                        ${(card.available_balance / 100).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {corporateCards.cards.length > 3 && (
+                  <div className="text-center pt-2">
+                    <Button variant="outline" size="sm">
+                      View All Cards ({corporateCards.cards.length})
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No corporate cards</h3>
+                <p className="text-muted-foreground mb-4">Create cards for team members to manage expenses</p>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Card
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Card Details Modal */}
+      {selectedCard && (
+        <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <CreditCard className="w-5 h-5" />
+                <span>Card Management - {selectedCard.cardholder_name}</span>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Card Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <DollarSign className="w-6 h-6 mx-auto text-green-600 mb-2" />
+                    <p className="text-sm text-gray-600">Available</p>
+                    <p className="text-lg font-bold text-green-600">
+                      ${(selectedCard.available_balance / 100).toFixed(2)}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <CreditCard className="w-6 h-6 mx-auto text-blue-600 mb-2" />
+                    <p className="text-sm text-gray-600">Limit</p>
+                    <p className="text-lg font-bold">
+                      ${(selectedCard.spending_limit / 100).toFixed(2)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <Badge className={selectedCard.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                      {selectedCard.status.toUpperCase()}
+                    </Badge>
+                    <p className="text-sm text-gray-600 mt-2">Status</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Actions */}
+              <div className="flex space-x-3">
+                <Button
+                  onClick={() => setShowAddFunds(true)}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  Add Funds
+                </Button>
+
+                {selectedCard.status === "active" ? (
+                  <Button
+                    onClick={() => freezeCardMutation.mutate(selectedCard.id)}
+                    disabled={freezeCardMutation.isPending}
+                    variant="destructive"
+                  >
+                    <Lock className="w-4 h-4 mr-2" />
+                    Freeze Card
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => unfreezeCardMutation.mutate(selectedCard.id)}
+                    disabled={unfreezeCardMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Unlock className="w-4 h-4 mr-2" />
+                    Activate Card
+                  </Button>
+                )}
+
+                <Button variant="outline">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Transactions
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Add Funds Modal */}
+      <Dialog open={showAddFunds} onOpenChange={setShowAddFunds}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Funds to Card</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="amount">Amount ($)</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                value={addFundsAmount}
+                onChange={(e) => setAddFundsAmount(e.target.value)}
+                placeholder="Enter amount to add"
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => {
+                  if (!selectedCard || !addFundsAmount) return;
+                  const amount = parseFloat(addFundsAmount);
+                  if (isNaN(amount) || amount <= 0) {
+                    toast({
+                      title: "Invalid Amount",
+                      description: "Please enter a valid amount greater than 0",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  addFundsMutation.mutate({ cardId: selectedCard.id, amount });
+                }}
+                disabled={addFundsMutation.isPending || !addFundsAmount}
+                className="flex-1"
+              >
+                {addFundsMutation.isPending ? "Adding..." : "Add Funds"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAddFunds(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <NewTripModal 
         isOpen={isNewTripModalOpen} 
