@@ -55,6 +55,21 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     return next();
   }
 
+  // Check for session-based authentication first (for superadmin dashboard)
+  if ((req.session as any)?.user_id) {
+    try {
+      const user = await getUserById((req.session as any).user_id);
+      if (user) {
+        req.user = user;
+        req.organizationId = user.organization_id;
+        req.organization_id = user.organization_id;
+        return next();
+      }
+    } catch (error) {
+      console.error('Session user lookup error:', error);
+    }
+  }
+
   // JWT authentication check (Supabase)
   const authHeader = req.headers.authorization;
 
