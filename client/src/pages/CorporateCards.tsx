@@ -178,12 +178,20 @@ export default function CorporateCards() {
       }
       return response.json();
     },
-    onSuccess: async () => {
+    onSuccess: async (data, variables) => {
       toast({
         title: "Card Updated",
         description: "Card details have been updated successfully.",
       });
       await queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      
+      // Update the selected card state immediately to reflect changes
+      if (selectedCard && variables.cardId === selectedCard.id && variables.updateData.spend_limit) {
+        setSelectedCard({
+          ...selectedCard,
+          spending_limit: variables.updateData.spend_limit
+        });
+      }
     },
     onError: (error: any) => {
       toast({
