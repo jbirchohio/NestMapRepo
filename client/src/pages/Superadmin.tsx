@@ -566,7 +566,7 @@ export default function Superadmin() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card electric-glow animated-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Organizations</CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -579,7 +579,7 @@ export default function Superadmin() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card electric-glow animated-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
@@ -592,7 +592,7 @@ export default function Superadmin() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="glass-card electric-glow animated-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -1053,7 +1053,7 @@ export default function Superadmin() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-soft-100 dark:bg-navy-900">
       <SuperadminNavigation />
 
       <div className="flex-1 overflow-auto">
