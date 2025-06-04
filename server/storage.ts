@@ -1118,6 +1118,56 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
     return result;
   }
 
+  // Cardholder management
+  async createCardholder(data: any) {
+    const [result] = await db
+      .insert(cardholders)
+      .values(data)
+      .returning();
+    return result;
+  }
+
+  async getCardholder(id: number) {
+    const [result] = await db
+      .select()
+      .from(cardholders)
+      .where(eq(cardholders.id, id));
+    return result;
+  }
+
+  // Corporate card transaction management
+  async createCardTransaction(data: any) {
+    const [result] = await db
+      .insert(cardTransactions)
+      .values(data)
+      .returning();
+    return result;
+  }
+
+  async getCardTransactions(cardId: number) {
+    return await db
+      .select()
+      .from(cardTransactions)
+      .where(eq(cardTransactions.card_id, cardId))
+      .orderBy(desc(cardTransactions.created_at));
+  }
+
+  async getOrganizationCorporateCards(organizationId: number) {
+    return await db
+      .select()
+      .from(corporateCards)
+      .where(eq(corporateCards.organization_id, organizationId))
+      .orderBy(desc(corporateCards.created_at));
+  }
+
+  async getUserCorporateCards(userId: number) {
+    return await db
+      .select()
+      .from(corporateCards)
+      .where(eq(corporateCards.user_id, userId))
+      .orderBy(desc(corporateCards.created_at));
+  }
+
   // Card Transaction operations
   async createCardTransaction(transaction: any) {
     const [result] = await db.insert(cardTransactions).values(transaction).returning();

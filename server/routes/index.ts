@@ -12,7 +12,7 @@ import bookingRoutes from './bookings';
 import approvalRoutes from './approvals';
 import expenseRoutes from './expenses';
 import reportingRoutes from './reporting';
-import { registerCorporateCardRoutes } from './corporateCard';
+import corporateCardRoutes from './corporateCards';
 import superadminRoutes from './superadmin';
 import { getUserById } from '../auth';
 
@@ -32,10 +32,8 @@ router.use('/bookings', bookingRoutes);
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
+router.use('/corporate-cards', corporateCardRoutes);
 router.use('/superadmin', superadminRoutes);
-
-// Register corporate card routes directly in the main router
-registerCorporateCardRoutes(router as any);
 
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {

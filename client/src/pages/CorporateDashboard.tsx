@@ -4,7 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Building2, 
   Users, 
@@ -17,7 +22,11 @@ import {
   Plus,
   BarChart3,
   Settings,
-  Sparkles
+  Sparkles,
+  CreditCard,
+  Lock,
+  Unlock,
+  Eye
 } from "lucide-react";
 import MainNavigation from "@/components/MainNavigation";
 import NewTripModal from "@/components/NewTripModal";
@@ -35,10 +44,33 @@ interface Trip {
   completed?: boolean;
 }
 
+interface CorporateCard {
+  id: number;
+  stripe_card_id: string;
+  card_number_masked: string;
+  card_type: string;
+  status: string;
+  spending_limit: number;
+  available_balance: number;
+  currency: string;
+  cardholder_name: string;
+  created_at: string;
+  user?: {
+    id: number;
+    username: string;
+    email: string;
+  };
+}
+
 export default function CorporateDashboard() {
   const { userId, user } = useAuth();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<CorporateCard | null>(null);
+  const [showAddFunds, setShowAddFunds] = useState(false);
+  const [addFundsAmount, setAddFundsAmount] = useState("");
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleOnboardingTaskClick = (taskId: string, url: string) => {
     setLocation(url);
@@ -47,6 +79,75 @@ export default function CorporateDashboard() {
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
     queryKey: ['/api/trips/corporate'],
     enabled: !!user,
+  });
+
+  // Fetch corporate cards
+  const { data: corporateCards = [], isLoading: cardsLoading } = useQuery({
+    queryKey: ["/api/corporate-cards/cards"],
+    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards").then(res => res.json()),
+    enabled: !!user,
+  });
+
+  // Add funds mutation
+  const addFundsMutation = useMutation({
+    mutationFn: ({ cardId, amount }: { cardId: number; amount: number }) =>
+      apiRequest("POST", `/api/corporate-cards/cards/${cardId}/add-funds`, { amount }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      toast({
+        title: "Funds Added",
+        description: "Funds have been successfully added to the card.",
+      });
+      setShowAddFunds(false);
+      setAddFundsAmount("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add funds",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Freeze card mutation
+  const freezeCardMutation = useMutation({
+    mutationFn: (cardId: number) =>
+      apiRequest("POST", `/api/corporate-cards/cards/${cardId}/freeze`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      toast({
+        title: "Card Frozen",
+        description: "Card has been successfully frozen.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to freeze card",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unfreeze card mutation
+  const unfreezeCardMutation = useMutation({
+    mutationFn: (cardId: number) =>
+      apiRequest("POST", `/api/corporate-cards/cards/${cardId}/unfreeze`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      toast({
+        title: "Card Activated",
+        description: "Card has been successfully activated.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to activate card",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: analytics } = useQuery({
