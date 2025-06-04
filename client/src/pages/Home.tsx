@@ -31,13 +31,7 @@ export default function Home() {
   const { user, userId, roleType, authReady, signOut } = useAuth();
   const queryClient = useQueryClient();
   
-  // Redirect authenticated users based on their role
-  useEffect(() => {
-    if (!authReady || !user) return;
-    
-    // Use RoleBasedRedirect component for routing logic
-    // This component handles superadmin detection and proper routing
-  }, [authReady, user]);
+  // Routing is now handled by RoleBasedRedirect component
   
   // Get user ID from authentication or use guest mode
   const effectiveUserId = userId ?? -1; // Use database userId or -1 for guest mode
@@ -125,6 +119,8 @@ export default function Home() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-electric-50/30 to-electric-100/50 dark:from-dark-900 dark:via-electric-900/10 dark:to-electric-800/20">
+      {/* Handle automatic routing for authenticated users */}
+      {user && authReady && <RoleBasedRedirect />}
       <NewTripModal 
         isOpen={isNewTripModalOpen} 
         onClose={() => setIsNewTripModalOpen(false)} 

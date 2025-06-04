@@ -54,28 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setUserId(dbUser.id);
               setRoleType(dbUser.roleType || null);
               
-              // Check for superadmin permissions and redirect if needed
-              try {
-                const permissionsResponse = await fetch('/api/user/permissions');
-                if (permissionsResponse.ok) {
-                  const permData = await permissionsResponse.json();
-                  const permissions = permData.permissions || [];
-                  
-                  // If user has superadmin permissions, redirect to superadmin dashboard
-                  if (permissions.includes('manage_organizations') || 
-                      permissions.includes('manage_users') || 
-                      permissions.includes('MANAGE_ORGANIZATION') ||
-                      permissions.includes('ADMIN_ACCESS')) {
-                    // Use setTimeout to ensure this runs after the current render cycle
-                    setTimeout(() => {
-                      window.location.href = '/superadmin';
-                    }, 100);
-                    return;
-                  }
-                }
-              } catch (permError) {
-                console.log('Could not check permissions during auth');
-              }
+              // Note: Routing is handled by RoleBasedRedirect component, not here
               
               // Establish backend session for authenticated user with JWT verification
               try {

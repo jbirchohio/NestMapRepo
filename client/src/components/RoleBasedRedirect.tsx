@@ -11,7 +11,7 @@ export default function RoleBasedRedirect() {
     // Only redirect if authentication is ready and user is logged in
     if (!authReady || !user || permissionsChecked) return;
 
-    // Check for superadmin permissions first
+    // Check for superadmin and admin permissions
     const checkPermissions = async () => {
       try {
         const permissionsResponse = await fetch('/api/user/permissions');
@@ -28,12 +28,21 @@ export default function RoleBasedRedirect() {
             setPermissionsChecked(true);
             return;
           }
+          
+          // Check for admin-level permissions (but not superadmin)
+          if (permissions.includes('ACCESS_ANALYTICS') &&
+              permissions.includes('BILLING_ACCESS') &&
+              permissions.includes('MANAGE_TEAM_ROLES')) {
+            setLocation('/admin');
+            setPermissionsChecked(true);
+            return;
+          }
         }
       } catch (err) {
         console.log('Could not check permissions, proceeding with role-based redirect');
       }
 
-      // Map role types to dashboard routes
+      // Map role types to dashboard routes for regular users
       if (roleType === 'agency') {
         setLocation('/dashboard/agency');
       } else if (roleType === 'corporate') {
