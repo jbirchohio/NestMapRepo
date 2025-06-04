@@ -311,6 +311,16 @@ router.put('/users/:id', requireSuperadmin, async (req, res) => {
     const userId = parseInt(req.params.id);
     const updates = req.body;
 
+    // Validate role if it's being updated
+    if (updates.role) {
+      const validRoles = ['admin', 'manager', 'editor', 'member', 'viewer'];
+      if (!validRoles.includes(updates.role)) {
+        return res.status(400).json({ error: 'Invalid role. Must be one of: admin, manager, editor, member, viewer' });
+      }
+    }
+
+    console.log('Updating user:', userId, 'with data:', updates);
+
     const [updatedUser] = await db
       .update(users)
       .set(updates)
@@ -321,18 +331,25 @@ router.put('/users/:id', requireSuperadmin, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    await logSuperadminAction(
-      req.user!.id,
-      'UPDATE_USER',
-      'user',
-      userId,
-      updates
-    );
+    console.log('User updated successfully:', updatedUser);
+
+    try {
+      await logSuperadminAction(
+        req.user!.id,
+        'UPDATE_USER',
+        'user',
+        userId,
+        updates
+      );
+    } catch (auditError) {
+      console.warn('Audit logging failed:', auditError);
+      // Continue with response even if audit fails
+    }
 
     res.json(updatedUser);
   } catch (error) {
     console.error('Error updating user:', error);
-    res.status(500).json({ error: 'Failed to update user' });
+    res.status(500).json({ error: 'Failed to update user', details: error.message });
   }
 });
 
