@@ -83,14 +83,16 @@ export default function OrganizationFunding() {
   // Fetch funding status
   const { data: fundingStatus, isLoading: statusLoading } = useQuery<FundingStatus>({
     queryKey: ['/api/organization-funding/status'],
-    refetchInterval: 5000 // Check status every 5 seconds
+    refetchInterval: false, // Only fetch manually
+    staleTime: 30000 // Consider data fresh for 30 seconds
   });
 
   // Fetch account status
   const { data: accountStatus, isLoading: accountLoading } = useQuery<AccountStatus>({
     queryKey: ['/api/organization-funding/account-status'],
     enabled: fundingStatus?.hasStripeAccount,
-    refetchInterval: 10000
+    refetchInterval: false, // Only fetch manually
+    staleTime: 30000
   });
 
   // Create Stripe Connect account
