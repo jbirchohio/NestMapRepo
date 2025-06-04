@@ -1,5 +1,5 @@
 import { db } from './db';
-import { superadminAuditLogs } from '@shared/superadmin-schema';
+import { superadminAuditLogs } from '@shared/schema';
 
 export interface AuditEvent {
   userId: number;
@@ -23,14 +23,11 @@ export class AuditLogger {
       await db.insert(superadminAuditLogs).values({
         superadmin_user_id: event.userId,
         action: event.action,
-        entity_type: event.entityType,
-        entity_id: event.entityId,
-        target_organization_id: event.organizationId,
+        target_type: event.entityType,
+        target_id: event.entityId?.toString() || '',
         details: event.details,
         ip_address: event.ipAddress,
-        user_agent: event.userAgent,
-        severity: this.mapRiskToSeverity(event.riskLevel),
-        created_at: new Date()
+        user_agent: event.userAgent
       });
     } catch (error) {
       console.error('Failed to log audit event:', error);
