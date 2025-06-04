@@ -16,6 +16,7 @@ import { FullScreenModal } from "@/components/ui/full-screen-modal";
 import { RoleGate, useRolePermissions } from "@/hooks/useRolePermissions";
 import { motion } from "framer-motion";
 import { CardsList } from "@/components/cards/CardsList";
+import CarbonExpenseTracker from "@/components/CarbonExpenseTracker";
 import { 
   CreditCard, 
   Plus, 
@@ -31,7 +32,8 @@ import {
   CheckCircle,
   XCircle,
   Sparkles,
-  ArrowUpRight
+  ArrowUpRight,
+  Leaf
 } from "lucide-react";
 
 interface CorporateCard {
@@ -491,23 +493,40 @@ export default function CorporateCards() {
           </AnimatedCard>
         </motion.div>
 
-        {/* Cards Grid */}
+        {/* Tabbed Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
           className="space-y-6"
         >
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Corporate Cards</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {cards.filter((card: CorporateCard) => card.status === 'active').length} active
-              </span>
-            </div>
-          </div>
+          <Tabs defaultValue="cards" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="cards" className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Corporate Cards
+              </TabsTrigger>
+              <TabsTrigger value="expenses" className="flex items-center gap-2">
+                <Receipt className="w-4 h-4" />
+                Expenses
+              </TabsTrigger>
+              <TabsTrigger value="sustainability" className="flex items-center gap-2">
+                <Leaf className="w-4 h-4" />
+                Sustainability
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <TabsContent value="cards" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Corporate Cards</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {cards.filter((card: CorporateCard) => card.status === 'active').length} active
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {cards.map((card: CorporateCard) => (
               <AnimatedCard key={card.id} variant="glow" className="p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-electric-400/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
@@ -572,7 +591,56 @@ export default function CorporateCards() {
                 </div>
               </AnimatedCard>
             ))}
-          </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="expenses" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Expense Management</h2>
+              </div>
+              
+              {/* Expense List */}
+              <div className="space-y-4">
+                {expenses.map((expense: Expense) => (
+                  <AnimatedCard key={expense.id} variant="soft" className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+                          <Receipt className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{expense.description}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {formatCurrency(expense.amount)} • {expense.category}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant={expense.status === 'approved' ? 'default' : 'secondary'}>
+                        {expense.status}
+                      </Badge>
+                    </div>
+                  </AnimatedCard>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="sustainability" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-navy-900 dark:text-white">Sustainability Tracking</h2>
+                <div className="flex items-center gap-2">
+                  <Leaf className="w-5 h-5 text-green-600" />
+                  <span className="text-sm text-muted-foreground">ESG Compliance</span>
+                </div>
+              </div>
+
+              {/* Carbon Expense Tracker */}
+              <CarbonExpenseTracker 
+                tripId={1} 
+                activities={[]} 
+                budget={analytics?.totalSpend || 0}
+              />
+            </TabsContent>
+          </Tabs>
         </motion.div>
       </div>
 
