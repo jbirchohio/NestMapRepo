@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'wouter';
-import { Shield, Users, Building2, Activity, CreditCard, Settings, LogOut, BarChart3, Flag, Briefcase } from 'lucide-react';
+import { Shield, Users, Building2, Activity, CreditCard, Settings, LogOut, BarChart3, Flag, Briefcase, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 const superadminNavItems = [
   { id: 'overview', label: 'Overview', icon: BarChart3, path: '/superadmin' },
@@ -20,11 +21,12 @@ const superadminNavItems = [
 export function SuperadminNavigation() {
   const [location] = useLocation();
   const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
       await apiRequest('POST', '/api/auth/logout');
-      window.location.href = '/login';
+      window.location.href = '/';
     } catch (error) {
       toast({
         title: 'Logout Failed',
@@ -35,19 +37,46 @@ export function SuperadminNavigation() {
   };
 
   return (
-    <div className="h-screen w-64 bg-slate-900 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Shield className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-white">Superadmin</h1>
-            <p className="text-sm text-slate-400">System Control</p>
+    <>
+      {/* Mobile Hamburger Button */}
+      <div className="lg:hidden fixed top-4 left-4 z-50">
+        <Button
+          onClick={() => setIsOpen(!isOpen)}
+          variant="outline"
+          size="sm"
+          className="bg-slate-900 border-slate-700 text-white hover:bg-slate-800"
+        >
+          {isOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+        </Button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={cn(
+        "h-screen w-64 bg-slate-900 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-transform duration-300 z-50",
+        "lg:translate-x-0", // Always visible on desktop
+        isOpen ? "translate-x-0" : "-translate-x-full", // Mobile: slide in/out
+        "lg:relative fixed" // Fixed on mobile, relative on desktop
+      )}>
+        {/* Header */}
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-white">Superadmin</h1>
+              <p className="text-sm text-slate-400">System Control</p>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">

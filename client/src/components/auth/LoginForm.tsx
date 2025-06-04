@@ -43,6 +43,23 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
       
       await signIn(values.email, values.password);
       
+      // Check if user has superadmin permissions and redirect accordingly
+      try {
+        const permissionsResponse = await fetch('/api/user/permissions');
+        if (permissionsResponse.ok) {
+          const data = await permissionsResponse.json();
+          const permissions = data.permissions || [];
+          
+          // If user has superadmin permissions, redirect to superadmin dashboard
+          if (permissions.includes('manage_organizations') || permissions.includes('manage_users')) {
+            window.location.href = '/superadmin';
+            return;
+          }
+        }
+      } catch (err) {
+        console.log('Could not check permissions, proceeding with normal flow');
+      }
+      
       if (onSuccess) {
         onSuccess();
       }

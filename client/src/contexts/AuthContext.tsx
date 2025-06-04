@@ -315,8 +315,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthReady(false);
       setLoading(false);
       
-      // Force reload to clear any cached state - do this without showing toast
-      window.location.reload();
+      // Redirect to home page after logout
+      window.location.href = '/';
       
     } catch (err: any) {
       console.error('Error signing out:', err);
