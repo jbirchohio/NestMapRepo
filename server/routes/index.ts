@@ -37,6 +37,7 @@ router.use('/reporting', reportingRoutes);
 router.use('/corporate-cards', corporateCardRoutes);
 router.use('/organization-funding', organizationFundingRoutes);
 router.use('/superadmin', superadminRoutes);
+router.use('/webhooks', webhookRoutes);
 
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {

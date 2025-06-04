@@ -15,16 +15,41 @@ import { motion } from 'framer-motion';
 
 interface FundingStatus {
   hasStripeAccount: boolean;
+  stripeConnectOnboarded: boolean;
   issuingEnabled: boolean;
+  paymentsEnabled: boolean;
+  transfersEnabled: boolean;
   fundingSourceType: string | null;
   fundingSourceStatus: string;
   ready: boolean;
+  // Enhanced verification tracking
+  requirementsCurrentlyDue: string[];
+  requirementsEventuallyDue: string[];
+  requirementsPastDue: string[];
+  requirementsDisabledReason: string | null;
+  requirementsCurrentDeadline: string | null;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  errors: VerificationError[];
+}
+
+interface VerificationError {
+  requirement: string;
+  code: string;
+  reason: string;
 }
 
 interface AccountStatus {
   ready: boolean;
   status?: string;
-  requirements?: any;
+  requirements?: {
+    currently_due: string[];
+    eventually_due: string[];
+    past_due: string[];
+    disabled_reason: string | null;
+    current_deadline: number | null;
+    errors: VerificationError[];
+  };
   account?: any;
   reason?: string;
 }
@@ -262,13 +287,118 @@ export default function OrganizationFunding() {
                           {getStatusBadge(accountStatus.status)}
                         </div>
                       )}
-                      {accountStatus.requirements && accountStatus.requirements.currently_due?.length > 0 && (
-                        <Alert className="border-orange-200 bg-orange-50">
-                          <AlertCircle className="h-4 w-4 text-orange-600" />
-                          <AlertDescription>
-                            Outstanding requirements: {accountStatus.requirements.currently_due.join(', ')}
-                          </AlertDescription>
-                        </Alert>
+                      {/* Enhanced verification requirements display */}
+                      {fundingStatus && (
+                        <div className="space-y-3">
+                          {/* Currently due requirements */}
+                          {fundingStatus.requirementsCurrentlyDue?.length > 0 && (
+                            <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
+                              <AlertCircle className="h-4 w-4 text-red-600" />
+                              <AlertDescription className="text-red-800 dark:text-red-200">
+                                <div className="font-semibold mb-2">Action Required:</div>
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {fundingStatus.requirementsCurrentlyDue.map((req, index) => (
+                                    <li key={index} className="text-sm">{req}</li>
+                                  ))}
+                                </ul>
+                                {fundingStatus.requirementsCurrentDeadline && (
+                                  <div className="mt-2 text-sm">
+                                    Deadline: {new Date(fundingStatus.requirementsCurrentDeadline).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          
+                          {/* Past due requirements */}
+                          {fundingStatus.requirementsPastDue?.length > 0 && (
+                            <Alert className="border-red-600 bg-red-100 dark:bg-red-900/30">
+                              <AlertCircle className="h-4 w-4 text-red-700" />
+                              <AlertDescription className="text-red-900 dark:text-red-100">
+                                <div className="font-semibold mb-2">Past Due - Immediate Action Required:</div>
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {fundingStatus.requirementsPastDue.map((req, index) => (
+                                    <li key={index} className="text-sm">{req}</li>
+                                  ))}
+                                </ul>
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          
+                          {/* Eventually due requirements */}
+                          {fundingStatus.requirementsEventuallyDue?.length > 0 && (
+                            <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+                              <AlertCircle className="h-4 w-4 text-yellow-600" />
+                              <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+                                <div className="font-semibold mb-2">Eventually Required:</div>
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {fundingStatus.requirementsEventuallyDue.map((req, index) => (
+                                    <li key={index} className="text-sm">{req}</li>
+                                  ))}
+                                </ul>
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          
+                          {/* Verification errors */}
+                          {fundingStatus.errors?.length > 0 && (
+                            <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
+                              <AlertCircle className="h-4 w-4 text-red-600" />
+                              <AlertDescription className="text-red-800 dark:text-red-200">
+                                <div className="font-semibold mb-2">Verification Errors:</div>
+                                <div className="space-y-2">
+                                  {fundingStatus.errors.map((error, index) => (
+                                    <div key={index} className="bg-white dark:bg-slate-800 p-3 rounded border">
+                                      <div className="font-medium text-sm">{error.requirement}</div>
+                                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                        {error.code}: {error.reason}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          
+                          {/* Capability status */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                              <span className="text-sm font-medium">Payments</span>
+                              {fundingStatus.paymentsEnabled ? (
+                                <Badge className="bg-green-500 hover:bg-green-600">Enabled</Badge>
+                              ) : (
+                                <Badge variant="outline">Disabled</Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                              <span className="text-sm font-medium">Payouts</span>
+                              {fundingStatus.chargesEnabled ? (
+                                <Badge className="bg-green-500 hover:bg-green-600">Enabled</Badge>
+                              ) : (
+                                <Badge variant="outline">Disabled</Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                              <span className="text-sm font-medium">Transfers</span>
+                              {fundingStatus.transfersEnabled ? (
+                                <Badge className="bg-green-500 hover:bg-green-600">Enabled</Badge>
+                              ) : (
+                                <Badge variant="outline">Disabled</Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Account disabled reason */}
+                          {fundingStatus.requirementsDisabledReason && (
+                            <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
+                              <AlertCircle className="h-4 w-4 text-red-600" />
+                              <AlertDescription className="text-red-800 dark:text-red-200">
+                                <div className="font-semibold mb-1">Account Disabled:</div>
+                                <div className="text-sm">{fundingStatus.requirementsDisabledReason}</div>
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                        </div>
                       )}
                     </div>
                   ) : fundingStatus?.hasStripeAccount ? (
