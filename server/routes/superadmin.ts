@@ -85,23 +85,17 @@ router.get('/organizations/:id', requireSuperadmin, async (req, res) => {
       return res.status(404).json({ error: 'Organization not found' });
     }
 
-    // Get organization members
-    const members = await db
-      .select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        display_name: users.display_name,
-        role: users.role,
-        org_role: organizationMembers.org_role,
-        status: organizationMembers.status,
-        joined_at: organizationMembers.joined_at,
-        created_at: users.created_at,
-      })
-      .from(organizationMembers)
-      .innerJoin(users, eq(organizationMembers.user_id, users.id))
-      .where(eq(organizationMembers.organization_id, orgId))
-      .orderBy(desc(organizationMembers.joined_at));
+    // Get organization members using direct SQL to avoid column name issues
+    const membersResult = await db.execute(`
+      SELECT u.id, u.username, u.email, u.display_name, u.role, u.last_login,
+             om.role as org_role, om.status, om.joined_at
+      FROM organization_members om
+      INNER JOIN users u ON om.user_id = u.id
+      WHERE om.organization_id = $1
+      ORDER BY om.joined_at DESC
+    `, [orgId]);
+    
+    const members = membersResult.rows;
 
     res.json({ ...org, members });
   } catch (error) {
@@ -410,13 +404,20 @@ router.get('/activity', requireSuperadmin, async (req, res) => {
 
 router.get('/sessions', requireSuperadmin, async (req, res) => {
   try {
-    const sessions = await db
-      .select()
-      .from(activeSessions)
-      .orderBy(desc(activeSessions.last_activity))
-      .limit(50);
+    // Use direct SQL query to get active sessions from session table
+    const sessions = await db.execute(`
+      SELECT sess #>> '{user,id}' as user_id,
+             sess #>> '{user,email}' as email,
+             sess #>> '{user,role}' as role,
+             created_at,
+             expire
+      FROM session 
+      WHERE expire > NOW()
+      ORDER BY created_at DESC 
+      LIMIT 50
+    `);
 
-    res.json(sessions);
+    res.json(sessions.rows);
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
@@ -425,13 +426,15 @@ router.get('/sessions', requireSuperadmin, async (req, res) => {
 
 router.get('/jobs', requireSuperadmin, async (req, res) => {
   try {
-    const jobs = await db
-      .select()
-      .from(superadminBackgroundJobs)
-      .orderBy(desc(superadminBackgroundJobs.created_at))
-      .limit(50);
+    const jobs = await db.execute(`
+      SELECT id, job_type, status, payload, result, error_message, 
+             created_at, started_at, completed_at
+      FROM superadmin_background_jobs 
+      ORDER BY created_at DESC 
+      LIMIT 50
+    `);
 
-    res.json(jobs);
+    res.json(jobs.rows);
   } catch (error) {
     console.error('Error fetching jobs:', error);
     res.status(500).json({ error: 'Failed to fetch jobs' });
