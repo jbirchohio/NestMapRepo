@@ -82,7 +82,7 @@ router.post('/oauth/authorize', async (req, res) => {
       `&redirect_uri=${redirectUri}` +
       `&state=${organizationId}`;
 
-    console.log('Generated OAuth URL:', authUrl.substring(0, 100) + '...');
+    console.log('Generated OAuth URL:', authUrl);
     res.json({ authUrl });
   } catch (error: any) {
     console.error('OAuth authorize error:', error);
