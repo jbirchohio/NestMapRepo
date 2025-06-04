@@ -43,9 +43,12 @@ interface CorporateCard {
   available_balance: number;
   currency: string;
   card_type: string;
+  card_provider?: string;
   stripe_card_id: string;
   purpose?: string;
   department?: string;
+  cost_center?: string;
+  auto_lock_triggers?: string;
   created_at: string;
   updated_at: string;
 }
