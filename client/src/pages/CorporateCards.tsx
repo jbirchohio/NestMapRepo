@@ -519,21 +519,45 @@ export default function CorporateCards() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="purpose">Purpose</Label>
-                <Input 
-                  id="purpose" 
-                  name="purpose" 
-                  placeholder="e.g., travel, office supplies" 
-                  className="focus:ring-electric-500 focus:border-electric-500"
-                />
+                <Select name="purpose" required>
+                  <SelectTrigger className="focus:ring-electric-500 focus:border-electric-500">
+                    <SelectValue placeholder="Select card purpose" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="travel">Travel & Transportation</SelectItem>
+                    <SelectItem value="office_supplies">Office Supplies</SelectItem>
+                    <SelectItem value="marketing">Marketing & Advertising</SelectItem>
+                    <SelectItem value="software">Software & Subscriptions</SelectItem>
+                    <SelectItem value="meals">Meals & Entertainment</SelectItem>
+                    <SelectItem value="equipment">Equipment & Hardware</SelectItem>
+                    <SelectItem value="training">Training & Development</SelectItem>
+                    <SelectItem value="consulting">Consulting & Services</SelectItem>
+                    <SelectItem value="utilities">Utilities & Operations</SelectItem>
+                    <SelectItem value="other">Other Business Expenses</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="department">Department</Label>
-                <Input 
-                  id="department" 
-                  name="department" 
-                  placeholder="e.g., sales, engineering" 
-                  className="focus:ring-electric-500 focus:border-electric-500"
-                />
+                <Select name="department" required>
+                  <SelectTrigger className="focus:ring-electric-500 focus:border-electric-500">
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="engineering">Engineering</SelectItem>
+                    <SelectItem value="sales">Sales</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="operations">Operations</SelectItem>
+                    <SelectItem value="finance">Finance</SelectItem>
+                    <SelectItem value="hr">Human Resources</SelectItem>
+                    <SelectItem value="design">Design</SelectItem>
+                    <SelectItem value="product">Product</SelectItem>
+                    <SelectItem value="customer_success">Customer Success</SelectItem>
+                    <SelectItem value="legal">Legal</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
+                    <SelectItem value="it">IT Support</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
