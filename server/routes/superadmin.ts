@@ -474,6 +474,71 @@ router.get('/billing/plans', requireSuperadmin, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch plans' });
   }
 });
+
+// Test Stripe integration
+router.get('/billing/test-stripe', requireSuperadmin, async (req, res) => {
+  try {
+    const testResults = {
+      timestamp: new Date().toISOString(),
+      stripe_configured: !!process.env.STRIPE_SECRET_KEY,
+      api_key_type: process.env.STRIPE_SECRET_KEY?.substring(0, 3) || 'none',
+      price_ids: {
+        team: process.env.STRIPE_PRICE_ID_TEAM || 'not_configured',
+        enterprise: process.env.STRIPE_PRICE_ID_ENTERPRISE || 'not_configured'
+      },
+      subscription_plans: SUBSCRIPTION_PLANS,
+      billing_endpoints: [
+        'POST /api/superadmin/billing/:orgId/upgrade',
+        'POST /api/superadmin/billing/:orgId/downgrade', 
+        'POST /api/superadmin/billing/:orgId/suspend',
+        'POST /api/superadmin/billing/:orgId/reactivate',
+        'POST /api/superadmin/billing/:orgId/refund'
+      ]
+    };
+
+    if (process.env.STRIPE_SECRET_KEY?.startsWith('sk_')) {
+      try {
+        // Test Stripe connection
+        const balance = await stripe.balance.retrieve();
+        testResults.stripe_connection = 'success';
+        testResults.account_balance = balance.available;
+        
+        // Test price validation
+        if (process.env.STRIPE_PRICE_ID_TEAM) {
+          const teamPrice = await stripe.prices.retrieve(process.env.STRIPE_PRICE_ID_TEAM);
+          testResults.team_price_valid = {
+            id: teamPrice.id,
+            amount: teamPrice.unit_amount / 100,
+            currency: teamPrice.currency,
+            interval: teamPrice.recurring?.interval
+          };
+        }
+        
+        if (process.env.STRIPE_PRICE_ID_ENTERPRISE) {
+          const enterprisePrice = await stripe.prices.retrieve(process.env.STRIPE_PRICE_ID_ENTERPRISE);
+          testResults.enterprise_price_valid = {
+            id: enterprisePrice.id,
+            amount: enterprisePrice.unit_amount / 100,
+            currency: enterprisePrice.currency,
+            interval: enterprisePrice.recurring?.interval
+          };
+        }
+        
+      } catch (stripeError: any) {
+        testResults.stripe_connection = 'failed';
+        testResults.stripe_error = stripeError.message;
+      }
+    } else {
+      testResults.stripe_connection = 'invalid_api_key';
+      testResults.error = 'Secret key required (starts with sk_)';
+    }
+
+    res.json(testResults);
+  } catch (error) {
+    console.error('Error testing Stripe:', error);
+    res.status(500).json({ error: 'Failed to test Stripe integration' });
+  }
+});
 router.post('/billing/:orgId/upgrade', requireSuperadmin, async (req, res) => {
   try {
     const orgId = parseInt(req.params.orgId);
