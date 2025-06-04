@@ -87,8 +87,8 @@ export default function CorporateCards() {
 
   // Fetch corporate cards
   const { data: cardsResponse, isLoading: cardsLoading } = useQuery({
-    queryKey: ["/api/corporate-card/cards"],
-    queryFn: () => apiRequest("GET", "/api/corporate-card/cards").then(res => res.json()),
+    queryKey: ["/api/corporate-cards/cards"],
+    queryFn: () => apiRequest("GET", "/api/corporate-cards/cards").then(res => res.json()),
   });
 
   const cards = cardsResponse?.cards || [];
@@ -147,7 +147,7 @@ export default function CorporateCards() {
         title: freeze ? "Card Frozen" : "Card Unfrozen",
         description: `Card has been ${freeze ? "frozen" : "unfrozen"} successfully.`,
       });
-      await queryClient.invalidateQueries({ queryKey: ["/api/corporate-card/cards"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
       // Update the selected card state to reflect the new status
       if (selectedCard) {
         setSelectedCard({
@@ -180,7 +180,7 @@ export default function CorporateCards() {
         title: "Card Deleted",
         description: "Corporate card has been permanently deleted.",
       });
-      await queryClient.invalidateQueries({ queryKey: ["/api/corporate-card/cards"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
       setSelectedCard(null);
       setIsManageDialogOpen(false);
     },
