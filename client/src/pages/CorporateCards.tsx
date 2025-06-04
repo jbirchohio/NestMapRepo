@@ -15,6 +15,7 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { FullScreenModal } from "@/components/ui/full-screen-modal";
 import { RoleGate, useRolePermissions } from "@/hooks/useRolePermissions";
 import { motion } from "framer-motion";
+import { CardsList } from "@/components/cards/CardsList";
 import { 
   CreditCard, 
   Plus, 

@@ -13,7 +13,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
 
 // Import modular components
-import { DashboardMetrics } from '@/components/superadmin/DashboardMetrics';
+import { SystemMetrics } from '@/components/superadmin/SystemMetrics';
 import { OrganizationsList } from '@/components/superadmin/OrganizationsList';
 import { useSuperadminDashboard } from '@/hooks/useOptimizedQuery';
 import { 
