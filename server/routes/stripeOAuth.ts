@@ -72,7 +72,7 @@ router.post('/oauth/authorize', async (req, res) => {
       `response_type=code` +
       `&client_id=${process.env.STRIPE_CONNECT_CLIENT_ID}` +
       `&scope=read_write` +
-      `&redirect_uri=${process.env.STRIPE_REDIRECT_URI || `${req.protocol}://${req.get('host')}/api/stripe/oauth/callback`}` +
+      `&redirect_uri=https://nest-map-wander-cobeunlimited.replit.app/api/stripe/oauth/callback` +
       `&state=${organizationId}`;
 
     res.json({ authUrl });

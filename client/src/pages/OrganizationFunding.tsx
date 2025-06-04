@@ -480,19 +480,19 @@ export default function OrganizationFunding() {
                         </div>
                       </div>
                       <Button 
-                        onClick={() => createAccountMutation.mutate(businessInfo)}
-                        disabled={createAccountMutation.isPending || !businessInfo.businessName || !businessInfo.email}
+                        onClick={() => createAccountMutation.mutate()}
+                        disabled={createAccountMutation.isPending}
                         className="w-full bg-violet-600 hover:bg-violet-700"
                       >
                         {createAccountMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Creating Account...
+                            Connecting to Stripe...
                           </>
                         ) : (
                           <>
                             <Plus className="mr-2 h-4 w-4" />
-                            Create Stripe Connect Account
+                            Connect with Stripe
                           </>
                         )}
                       </Button>
