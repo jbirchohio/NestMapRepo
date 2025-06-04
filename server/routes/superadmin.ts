@@ -6,6 +6,7 @@ import {
   organizations, 
   organizationMembers,
 } from '@shared/schema';
+import { auditLogger } from '../auditLogger';
 import {
   superadminAuditLogs,
   activeSessions,
