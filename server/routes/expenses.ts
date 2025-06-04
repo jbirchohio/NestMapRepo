@@ -5,6 +5,31 @@ import { expenses, trips, users } from '@shared/schema';
 import { z } from 'zod';
 import { approvalEngine } from '../approvalEngine';
 
+// Validation schemas
+const insertExpenseSchema = z.object({
+  amount: z.union([
+    z.number(),
+    z.string().transform((val, ctx) => {
+      const parsed = parseFloat(val);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Amount must be a valid number",
+        });
+        return z.NEVER;
+      }
+      return parsed;
+    })
+  ]).refine(val => val > 0, "Amount must be greater than 0"),
+  currency: z.string().default('USD'),
+  category: z.string().min(1, "Category is required"),
+  description: z.string().min(1, "Description is required"),
+  date: z.string().transform(val => new Date(val)),
+  receiptUrl: z.string().optional(),
+  isReimbursable: z.boolean().default(true),
+  trip_id: z.number().optional(),
+});
+
 const router = Router();
 
 // Get expenses for organization
@@ -18,75 +43,70 @@ router.get('/', async (req, res) => {
     const { tripId, status, category, startDate, endDate, page = 1, limit = 50 } = req.query;
     
     let query = db
-      .select({
-        id: expenses.id,
-        amount: expenses.amount,
-        currency: expenses.currency,
-        category: expenses.category,
-        description: expenses.description,
-        date: expenses.date,
-        status: expenses.status,
-        receiptUrl: expenses.receiptUrl,
-        isReimbursable: expenses.isReimbursable,
-        tripId: expenses.trip_id,
-        createdAt: expenses.createdAt,
-        trip: {
-          id: trips.id,
-          title: trips.title,
-          destination: trips.destination
-        },
-        user: {
-          id: users.id,
-          displayName: users.display_name,
-          email: users.email
-        }
-      })
+      .select()
       .from(expenses)
       .leftJoin(trips, eq(expenses.trip_id, trips.id))
       .leftJoin(users, eq(expenses.user_id, users.id))
       .where(eq(expenses.organization_id, organizationId));
 
-    // Apply filters
+    // Build filter conditions
+    let conditions = [eq(expenses.organization_id, organizationId)];
+
     if (tripId) {
-      query = query.where(and(
-        eq(expenses.organization_id, organizationId),
-        eq(expenses.trip_id, parseInt(tripId as string))
-      ));
+      conditions.push(eq(expenses.trip_id, parseInt(tripId as string)));
     }
 
     if (status) {
-      query = query.where(and(
-        eq(expenses.organization_id, organizationId),
-        eq(expenses.status, status as string)
-      ));
+      conditions.push(eq(expenses.status, status as string));
     }
 
     if (category) {
-      query = query.where(and(
-        eq(expenses.organization_id, organizationId),
-        eq(expenses.category, category as string)
-      ));
+      conditions.push(eq(expenses.category, category as string));
     }
 
     if (startDate) {
-      query = query.where(and(
-        eq(expenses.organization_id, organizationId),
-        gte(expenses.date, new Date(startDate as string))
-      ));
+      conditions.push(gte(expenses.date, new Date(startDate as string)));
     }
 
     if (endDate) {
-      query = query.where(and(
-        eq(expenses.organization_id, organizationId),
-        lte(expenses.date, new Date(endDate as string))
-      ));
+      conditions.push(lte(expenses.date, new Date(endDate as string)));
+    }
+
+    // Apply all conditions at once
+    if (conditions.length > 1) {
+      query = query.where(and(...conditions));
     }
 
     const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
-    const expenseList = await query
+    const result = await query
       .orderBy(desc(expenses.createdAt))
       .limit(parseInt(limit as string))
       .offset(offset);
+
+    // Format the response properly
+    const expenseList = result.map(row => ({
+      id: row.expenses?.id,
+      amount: row.expenses?.amount,
+      currency: row.expenses?.currency,
+      category: row.expenses?.category,
+      description: row.expenses?.description,
+      date: row.expenses?.date,
+      status: row.expenses?.status,
+      receiptUrl: row.expenses?.receiptUrl,
+      isReimbursable: row.expenses?.isReimbursable,
+      tripId: row.expenses?.trip_id,
+      createdAt: row.expenses?.createdAt,
+      trip: row.trips ? {
+        id: row.trips.id,
+        title: row.trips.title,
+        destination: row.trips.destination
+      } : null,
+      user: row.users ? {
+        id: row.users.id,
+        displayName: row.users.display_name,
+        email: row.users.email
+      } : null
+    }));
 
     res.json(expenseList);
   } catch (error) {
@@ -203,8 +223,8 @@ router.post('/', async (req, res) => {
       .insert(expenses)
       .values({
         ...validatedData,
-        organizationId,
-        userId,
+        organization_id: organizationId,
+        user_id: userId,
         status: expenseStatus
       })
       .returning();
