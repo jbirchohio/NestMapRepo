@@ -14,9 +14,9 @@ import expenseRoutes from './expenses';
 import reportingRoutes from './reporting';
 import corporateCardRoutes from './corporateCards';
 import organizationFundingRoutes from './organizationFunding';
+import stripeOAuthRoutes from './stripeOAuth';
 import superadminRoutes from './superadmin';
 import webhookRoutes from './webhooks';
-import stripeOAuthRoutes from './stripeOAuth';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -37,9 +37,9 @@ router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
 router.use('/corporate-cards', corporateCardRoutes);
 router.use('/organization-funding', organizationFundingRoutes);
+router.use('/stripe', stripeOAuthRoutes);
 router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
-router.use('/stripe', stripeOAuthRoutes);
 
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {
@@ -47,10 +47,10 @@ router.get('/user/permissions', async (req, res) => {
     // Return full owner permissions for JonasCo organization
     const role = 'owner';
     const organizationId = 1;
-    
+
     // Define permissions based on role
     const permissions = [];
-    
+
     if (role === 'owner' || role === 'admin') {
       permissions.push(
         'ACCESS_ANALYTICS',
@@ -291,7 +291,7 @@ router.get('/organizations/members', async (req, res) => {
 router.post('/locations/airport-code', (req, res) => {
   try {
     const { cityName } = req.body;
-    
+
     if (!cityName) {
       return res.status(400).json({ error: 'City name is required' });
     }
@@ -362,23 +362,23 @@ function getAirportCode(cityName: string): string {
     'amsterdam': 'AMS',
     'netherlands': 'AMS'
   };
-  
+
   const city = cityName?.toLowerCase().trim() || '';
-  
+
   console.log(`Converting city "${cityName}" (normalized: "${city}") to airport code`);
-  
+
   // Direct match
   if (airportMap[city]) {
     console.log(`Direct match found: ${airportMap[city]}`);
     return airportMap[city];
   }
-  
+
   // Check if it's already a 3-letter code
   if (city.length === 3 && /^[A-Za-z]{3}$/.test(city)) {
     console.log(`Already airport code: ${city.toUpperCase()}`);
     return city.toUpperCase();
   }
-  
+
   // Try partial matches for compound city names - check if city starts with any key
   for (const [key, code] of Object.entries(airportMap)) {
     if (city.startsWith(key) || key.startsWith(city)) {
@@ -386,7 +386,7 @@ function getAirportCode(cityName: string): string {
       return code;
     }
   }
-  
+
   // Try contains matches
   for (const [key, code] of Object.entries(airportMap)) {
     if (city.includes(key) || key.includes(city)) {
@@ -394,7 +394,7 @@ function getAirportCode(cityName: string): string {
       return code;
     }
   }
-  
+
   console.log(`No match found for "${city}", defaulting to JFK`);
   // Default fallback to major airports
   return 'JFK'; // Default to JFK if no match found
