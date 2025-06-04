@@ -604,85 +604,128 @@ export default function CorporateCards() {
       <FullScreenModal
         isOpen={isManageDialogOpen}
         onClose={() => setIsManageDialogOpen(false)}
-        title="Manage Corporate Cards"
+        title="Card Settings"
       >
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-electric-100 rounded-2xl flex items-center justify-center mb-4">
-              <Settings className="w-8 h-8 text-electric-600" />
+        {selectedCard && (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 bg-electric-100 rounded-2xl flex items-center justify-center mb-4">
+                <Settings className="w-8 h-8 text-electric-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-navy-900 dark:text-white">
+                {selectedCard.cardholder_name}
+              </h3>
+              <p className="text-muted-foreground">{selectedCard.card_number_masked}</p>
             </div>
-            <p className="text-muted-foreground">
-              Manage card limits, freeze/unfreeze cards, and add funds
-            </p>
-          </div>
 
-          <div className="grid gap-4">
-            {cards.map((card: any) => (
-              <div key={card.id} className="border border-gray-200 dark:border-navy-700 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-4">
+            <div className="space-y-6">
+              {/* Card Status and Actions */}
+              <div className="bg-gray-50 dark:bg-navy-800 rounded-xl p-6">
+                <h4 className="font-semibold mb-4">Card Controls</h4>
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div>
-                    <h3 className="font-semibold">{card.cardholder_name}</h3>
-                    <p className="text-sm text-muted-foreground">{card.card_number_masked}</p>
-                  </div>
-                  <Badge variant={card.status === 'active' ? 'default' : 'secondary'}>
-                    {card.status}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Available Balance</Label>
-                    <p className="font-medium">${(card.available_balance || 0).toLocaleString()}</p>
+                    <Label className="text-sm text-muted-foreground">Current Status</Label>
+                    <p className="font-medium text-lg">{selectedCard.status}</p>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Spending Limit</Label>
-                    <p className="font-medium">${(card.spending_limit || 0).toLocaleString()}</p>
+                    <Label className="text-sm text-muted-foreground">Available Balance</Label>
+                    <p className="font-medium text-lg text-green-600">
+                      {formatCurrency(selectedCard.available_balance || 0)}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <PrimaryButton
-                    variant="ghost"
+                    variant={selectedCard.status === 'active' ? 'destructive' : 'default'}
                     size="sm"
-                    onClick={() => freezeCardMutation.mutate({ cardId: card.id, freeze: card.status === 'active' })}
+                    onClick={() => freezeCardMutation.mutate({ cardId: selectedCard.id, freeze: selectedCard.status === 'active' })}
                     loading={freezeCardMutation.isPending}
+                    className="flex-1"
                   >
-                    {card.status === 'active' ? (
+                    {selectedCard.status === 'active' ? (
                       <>
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Freeze
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Freeze Card
                       </>
                     ) : (
                       <>
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Unfreeze
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Unfreeze Card
                       </>
                     )}
                   </PrimaryButton>
                   
-                  <PrimaryButton variant="ghost" size="sm">
-                    <DollarSign className="w-4 h-4 mr-1" />
+                  <PrimaryButton variant="outline" size="sm" className="flex-1">
+                    <DollarSign className="w-4 h-4 mr-2" />
                     Add Funds
-                  </PrimaryButton>
-                  
-                  <PrimaryButton variant="ghost" size="sm">
-                    <Settings className="w-4 h-4 mr-1" />
-                    Settings
                   </PrimaryButton>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="flex justify-end pt-6">
-            <PrimaryButton 
-              variant="ghost" 
-              onClick={() => setIsManageDialogOpen(false)}
-            >
-              Close
-            </PrimaryButton>
+              {/* Spending Limits */}
+              <div className="bg-gray-50 dark:bg-navy-800 rounded-xl p-6">
+                <h4 className="font-semibold mb-4">Spending Limits</h4>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="spending_limit">Spending Limit</Label>
+                    <Input 
+                      id="spending_limit"
+                      type="number"
+                      defaultValue={selectedCard.spending_limit || 0}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="interval">Limit Interval</Label>
+                      <Select defaultValue="monthly">
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="yearly">Yearly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="purpose">Purpose</Label>
+                      <Select defaultValue={selectedCard.purpose || 'general'}>
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="travel">Travel & Transportation</SelectItem>
+                          <SelectItem value="office_supplies">Office Supplies</SelectItem>
+                          <SelectItem value="marketing">Marketing & Advertising</SelectItem>
+                          <SelectItem value="software">Software & Subscriptions</SelectItem>
+                          <SelectItem value="meals">Meals & Entertainment</SelectItem>
+                          <SelectItem value="equipment">Equipment & Hardware</SelectItem>
+                          <SelectItem value="general">General Business</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <PrimaryButton size="sm" className="w-full">
+                    Update Limits
+                  </PrimaryButton>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6 gap-3">
+              <PrimaryButton 
+                variant="ghost" 
+                onClick={() => setIsManageDialogOpen(false)}
+              >
+                Close
+              </PrimaryButton>
+            </div>
           </div>
-        </div>
+        )}
       </FullScreenModal>
 
       {/* Card Details Modal */}
