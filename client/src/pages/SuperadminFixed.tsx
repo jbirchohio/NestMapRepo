@@ -21,13 +21,13 @@ export default function Superadmin() {
   const { section } = useParams();
 
   // Data queries
-  const { data: organizations = [], isLoading: orgsLoading } = useQuery({
+  const { data: organizations = [], isLoading: orgsLoading, error: orgsError } = useQuery({
     queryKey: ['/api/superadmin/organizations'],
     queryFn: () => apiRequest('GET', '/api/superadmin/organizations').then(res => res.json()),
     retry: false
   });
 
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ['/api/superadmin/users'],
     queryFn: () => apiRequest('GET', '/api/superadmin/users').then(res => res.json()),
     retry: false
@@ -61,6 +61,19 @@ export default function Superadmin() {
     queryKey: ['/api/superadmin/flags'],
     queryFn: () => apiRequest('GET', '/api/superadmin/flags').then(res => res.json()),
     retry: false
+  });
+
+  // Debug logging to understand data issues
+  console.log('Superadmin dashboard data:', {
+    organizations: organizations,
+    users: users,
+    activeSessions: activeSessions,
+    backgroundJobs: backgroundJobs,
+    auditLogs: auditLogs,
+    billingData: billingData,
+    featureFlags: featureFlags,
+    orgsError: orgsError,
+    usersError: usersError
   });
 
   // Render content based on section
