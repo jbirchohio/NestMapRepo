@@ -142,13 +142,19 @@ export default function CorporateCards() {
       }
       return response.json();
     },
-    onSuccess: (_, { freeze }) => {
+    onSuccess: async (_, { freeze }) => {
       toast({
         title: freeze ? "Card Frozen" : "Card Unfrozen",
         description: `Card has been ${freeze ? "frozen" : "unfrozen"} successfully.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
-      setSelectedCard(null); // Close the modal to refresh the view
+      await queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      // Update the selected card state to reflect the new status
+      if (selectedCard) {
+        setSelectedCard({
+          ...selectedCard,
+          status: freeze ? 'inactive' : 'active'
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -169,13 +175,14 @@ export default function CorporateCards() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Card Deleted",
         description: "Corporate card has been permanently deleted.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
       setSelectedCard(null);
+      setIsManageDialogOpen(false);
     },
     onError: (error: any) => {
       toast({
