@@ -91,6 +91,7 @@ export interface IStorage {
   getCorporateCardsByOrganization(organizationId: number): Promise<any[]>;
   getCorporateCardsByUser(userId: number): Promise<any[]>;
   updateCorporateCard(id: number, updates: any): Promise<any>;
+  deleteCorporateCard(id: number): Promise<boolean>;
 
   // Card Transaction operations
   createCardTransaction(transaction: any): Promise<any>;
@@ -1116,6 +1117,14 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
       .where(eq(corporateCards.id, id))
       .returning();
     return result;
+  }
+
+  async deleteCorporateCard(id: number): Promise<boolean> {
+    const result = await db
+      .delete(corporateCards)
+      .where(eq(corporateCards.id, id))
+      .returning({ id: corporateCards.id });
+    return result.length > 0;
   }
 
   // Cardholder management
