@@ -28,9 +28,12 @@ import HelpCenter from "@/pages/HelpCenter";
 import CalendarSettings from "@/pages/CalendarSettings";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
-import CorporateCards from "@/pages/CorporateCards";
-import OrganizationFunding from "@/pages/OrganizationFunding";
-import Superadmin from "@/pages/SuperadminFixed";
+// Lazy load large components for better performance
+import { 
+  CorporateCardsLazy, 
+  OrganizationFundingLazy, 
+  SuperadminLazy 
+} from "@/components/LazyComponentLoader";
 import SuperadminOrganizationDetail from "@/pages/SuperadminOrganizationDetail";
 import BillingDemo from "@/pages/BillingDemo";
 import Onboarding from "@/pages/Onboarding";
@@ -68,12 +71,12 @@ function Router() {
         <Route path="/calendar" component={CalendarSettings} />
         <Route path="/white-label" component={WhiteLabelSettings} />
         <Route path="/admin" component={AdminDashboard} />
-        <Route path="/superadmin" component={Superadmin} />
+        <Route path="/superadmin" component={SuperadminLazy} />
         <Route path="/superadmin/organizations/:id" component={SuperadminOrganizationDetail} />
-        <Route path="/superadmin/:section" component={Superadmin} />
+        <Route path="/superadmin/:section" component={SuperadminLazy} />
         <Route path="/billing-demo" component={BillingDemo} />
-        <Route path="/corporate-cards" component={CorporateCards} />
-        <Route path="/organization-funding" component={OrganizationFunding} />
+        <Route path="/corporate-cards" component={CorporateCardsLazy} />
+        <Route path="/organization-funding" component={OrganizationFundingLazy} />
         <Route path="/onboarding" component={Onboarding} />
         <Route component={NotFound} />
       </Switch>
