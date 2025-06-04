@@ -1154,7 +1154,21 @@ export class ExtendedDatabaseStorage extends DatabaseStorage {
 
   async getOrganizationCorporateCards(organizationId: number) {
     return await db
-      .select()
+      .select({
+        id: corporateCards.id,
+        stripe_card_id: corporateCards.stripe_card_id,
+        organization_id: corporateCards.organization_id,
+        user_id: corporateCards.user_id,
+        cardholder_name: corporateCards.cardholder_name,
+        card_number_masked: corporateCards.card_number_masked,
+        card_type: corporateCards.card_type,
+        status: corporateCards.status,
+        spending_limit: corporateCards.spending_limit,
+        available_balance: corporateCards.available_balance,
+        currency: corporateCards.currency,
+        created_at: corporateCards.created_at,
+        updated_at: corporateCards.updated_at
+      })
       .from(corporateCards)
       .where(eq(corporateCards.organization_id, organizationId))
       .orderBy(desc(corporateCards.created_at));
