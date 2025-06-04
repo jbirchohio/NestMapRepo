@@ -81,6 +81,7 @@ export default function CorporateCards() {
   const [selectedCard, setSelectedCard] = useState<CorporateCard | null>(null);
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [isIssueDialogOpen, setIsIssueDialogOpen] = useState(false);
+  const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -266,6 +267,7 @@ export default function CorporateCards() {
               <PrimaryButton 
                 variant="secondary" 
                 size="lg"
+                onClick={() => setIsManageDialogOpen(true)}
               >
                 <Settings className="w-5 h-5 mr-2" />
                 Manage Cards
@@ -530,6 +532,91 @@ export default function CorporateCards() {
               </PrimaryButton>
             </div>
           </form>
+        </div>
+      </FullScreenModal>
+
+      {/* Card Management Modal */}
+      <FullScreenModal
+        isOpen={isManageDialogOpen}
+        onClose={() => setIsManageDialogOpen(false)}
+        title="Manage Corporate Cards"
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="mx-auto w-16 h-16 bg-electric-100 rounded-2xl flex items-center justify-center mb-4">
+              <Settings className="w-8 h-8 text-electric-600" />
+            </div>
+            <p className="text-muted-foreground">
+              Manage card limits, freeze/unfreeze cards, and add funds
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            {cards.map((card: any) => (
+              <div key={card.id} className="border border-gray-200 dark:border-navy-700 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold">{card.cardholder_name}</h3>
+                    <p className="text-sm text-muted-foreground">{card.card_number_masked}</p>
+                  </div>
+                  <Badge variant={card.status === 'active' ? 'default' : 'secondary'}>
+                    {card.status}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Available Balance</Label>
+                    <p className="font-medium">${(card.available_balance || 0).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Spending Limit</Label>
+                    <p className="font-medium">${(card.spending_limit || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <PrimaryButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => freezeCardMutation.mutate({ cardId: card.id, freeze: card.status === 'active' })}
+                    loading={freezeCardMutation.isPending}
+                  >
+                    {card.status === 'active' ? (
+                      <>
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Freeze
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Unfreeze
+                      </>
+                    )}
+                  </PrimaryButton>
+                  
+                  <PrimaryButton variant="ghost" size="sm">
+                    <DollarSign className="w-4 h-4 mr-1" />
+                    Add Funds
+                  </PrimaryButton>
+                  
+                  <PrimaryButton variant="ghost" size="sm">
+                    <Settings className="w-4 h-4 mr-1" />
+                    Settings
+                  </PrimaryButton>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end pt-6">
+            <PrimaryButton 
+              variant="ghost" 
+              onClick={() => setIsManageDialogOpen(false)}
+            >
+              Close
+            </PrimaryButton>
+          </div>
         </div>
       </FullScreenModal>
     </div>
