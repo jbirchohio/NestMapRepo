@@ -71,9 +71,7 @@ router.post('/oauth/authorize', async (req, res) => {
     // Log the client ID for debugging (first 10 characters only)
     console.log('Using Stripe Connect Client ID:', process.env.STRIPE_CONNECT_CLIENT_ID?.substring(0, 10) + '...');
     
-    const redirectUri = process.env.NODE_ENV === 'production' 
-      ? 'https://nest-map-wander-cobeunlimited.replit.app/api/stripe/oauth/callback'
-      : `${req.protocol}://${req.get('host')}/api/stripe/oauth/callback`;
+    const redirectUri = 'https://nest-map-wander-cobeunlimited.replit.app/api/stripe/oauth/callback';
     
     console.log('OAuth redirect URI:', redirectUri);
 
