@@ -25,9 +25,42 @@ interface FlightResult {
 }
 
 interface FlightResultsProps {
-  results: FlightResult[];
-  onSelectFlight: (flight: FlightResult) => void;
-  isLoading?: boolean;
+  clientInfo: {
+    origin: string;
+    destination: string;
+    departureDate: string;
+    tripType: "one-way" | "round-trip";
+    returnDate?: string;
+    passengers: number;
+    cabin: string;
+    primaryTraveler: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      dateOfBirth: string;
+    };
+    additionalTravelers: Array<{
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string;
+    }>;
+  };
+  flightResults: FlightResult[];
+  selectedDepartureFlight: FlightResult | null;
+  selectedReturnFlight: FlightResult | null;
+  onSelectDepartureFlight: (flight: FlightResult | null) => void;
+  onSelectReturnFlight: (flight: FlightResult | null) => void;
+  isLoading: boolean;
+  onBack: () => void;
+  onContinue: () => void;
+  currentTravelerIndex: number;
+  totalTravelers: number;
+  travelerBookings: Array<{
+    traveler: string;
+    departureFlight?: FlightResult | null;
+    returnFlight?: FlightResult | null;
+  }>;
 }
 
 export function FlightResults({ results, onSelectFlight, isLoading }: FlightResultsProps) {
