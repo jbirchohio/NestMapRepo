@@ -930,8 +930,8 @@ router.get('/dashboard', requireSuperadmin, async (req, res) => {
       
       // Feature flags
       db.execute(`
-        SELECT id, flag_name, is_enabled, description, created_at, updated_at
-        FROM superadmin_feature_flags
+        SELECT id, flag_name, default_value as is_enabled, description, created_at
+        FROM feature_flags
         ORDER BY flag_name
       `)
     ]);
