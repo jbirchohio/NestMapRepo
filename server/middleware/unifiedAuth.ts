@@ -63,7 +63,6 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
   }
 
   const token = authHeader.substring(7);
-  let dbUser: any = null;
 
   try {
     // Verify JWT token with Supabase
@@ -95,17 +94,61 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     }
 
     // Look up database user by Supabase auth ID directly from database
-    const [foundUser] = await db
+    const [dbUser] = await db
       .select()
       .from(users)
       .where(eq(users.auth_id, authId))
       .limit(1);
 
-    if (!foundUser) {
+    if (!dbUser) {
       return res.status(401).json({ message: "User not found" });
     }
 
-    dbUser = foundUser;
+    // Convert database user (snake_case) to request user (camelCase for frontend compatibility)
+    req.user = {
+      id: dbUser.id,
+      email: dbUser.email,
+      role: dbUser.role,
+      organizationId: dbUser.organization_id, // Convert snake_case to camelCase
+      displayName: dbUser.display_name, // Convert snake_case to camelCase
+      authId: dbUser.auth_id,
+      username: dbUser.username,
+      avatarUrl: dbUser.avatar_url,
+      roleType: dbUser.role_type,
+      company: dbUser.company,
+      jobTitle: dbUser.job_title,
+      teamSize: dbUser.team_size,
+      useCase: dbUser.use_case,
+      lastLogin: dbUser.last_login,
+      createdAt: dbUser.created_at
+    };
+
+    // Set organization context for tenant isolation (keep snake_case for backend)
+    req.organizationId = dbUser.organization_id;
+    req.organization_id = dbUser.organization_id;
+
+    // Create organization context utilities
+    req.organizationContext = {
+      id: dbUser.organization_id,
+
+      canAccessOrganization: (targetOrgId: number | null): boolean => {
+        // Super admins can access any organization
+        if (dbUser.role === 'superadmin' || dbUser.role === 'superadmin_owner' || dbUser.role === 'superadmin_staff' || dbUser.role === 'super_admin') {
+          return true;
+        }
+
+        // Regular users can only access their own organization
+        return dbUser.organization_id === targetOrgId;
+      },
+
+      enforceOrganizationAccess: (targetOrgId: number | null): void => {
+        if (!req.organizationContext!.canAccessOrganization(targetOrgId)) {
+          throw new Error('Access denied: Cannot access resources from other organizations');
+        }
+      }
+    };
+
+    next();
   } catch (error) {
     console.error('CRITICAL JWT AUTHENTICATION FAILURE:', error);
     // Log detailed error for security audit
@@ -118,52 +161,6 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     });
     return res.status(401).json({ message: "Authentication failed" });
   }
-
-  // Convert database user (snake_case) to request user (camelCase for frontend compatibility)
-  req.user = {
-    id: dbUser.id,
-    email: dbUser.email,
-    role: dbUser.role,
-    organizationId: dbUser.organization_id, // Convert snake_case to camelCase
-    displayName: dbUser.display_name, // Convert snake_case to camelCase
-    authId: dbUser.auth_id,
-    username: dbUser.username,
-    avatarUrl: dbUser.avatar_url,
-    roleType: dbUser.role_type,
-    company: dbUser.company,
-    jobTitle: dbUser.job_title,
-    teamSize: dbUser.team_size,
-    useCase: dbUser.use_case,
-    lastLogin: dbUser.last_login,
-    createdAt: dbUser.created_at
-  };
-
-  // Set organization context for tenant isolation (keep snake_case for backend)
-  req.organizationId = dbUser.organization_id;
-  req.organization_id = dbUser.organization_id;
-
-  // Create organization context utilities
-  req.organizationContext = {
-    id: dbUser.organization_id,
-
-    canAccessOrganization: (targetOrgId: number | null): boolean => {
-      // Super admins can access any organization
-      if (dbUser.role === 'superadmin' || dbUser.role === 'superadmin_owner' || dbUser.role === 'superadmin_staff' || dbUser.role === 'super_admin') {
-        return true;
-      }
-
-      // Regular users can only access their own organization
-      return dbUser.organization_id === targetOrgId;
-    },
-
-    enforceOrganizationAccess: (targetOrgId: number | null): void => {
-      if (!req.organizationContext!.canAccessOrganization(targetOrgId)) {
-        throw new Error('Access denied: Cannot access resources from other organizations');
-      }
-    }
-  };
-
-  next();
 }
 
 /**
