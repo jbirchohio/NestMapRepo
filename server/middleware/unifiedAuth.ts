@@ -47,7 +47,9 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     '/.well-known/',
     '/api/amadeus',
     '/api/user/permissions',
-    '/api/dashboard-stats'
+    '/api/dashboard-stats',
+    '/api/stripe/oauth/callback', // Stripe Connect OAuth callback
+    '/api/webhooks' // Stripe webhooks
   ];
 
   // Skip authentication for public paths and non-API routes
