@@ -22,10 +22,10 @@ import { z } from "zod";
 import Stripe from "stripe";
 
 const issueCardSchema = z.object({
-  user_email: z.string().email(),
-  spend_limit: z.number().min(10), // Minimum $10 (stored in dollars)
-  interval: z.enum(['daily', 'weekly', 'monthly', 'yearly']).default('monthly'),
-  cardholder_name: z.string().min(1),
+  user_email: z.string().email("Valid email is required"),
+  spend_limit: z.union([z.number(), z.string().transform(val => parseFloat(val))]).refine(val => val > 0, "Spending limit must be greater than 0"),
+  interval: z.enum(['daily', 'weekly', 'monthly', 'yearly']),
+  cardholder_name: z.string().min(1, "Cardholder name is required"),
   purpose: z.string().optional(),
   department: z.string().optional(),
   allowed_categories: z.array(z.string()).optional(),
@@ -33,7 +33,7 @@ const issueCardSchema = z.object({
 });
 
 const updateCardSchema = z.object({
-  spend_limit: z.number().min(10).optional(), // Minimum $10 (stored in dollars)
+  spend_limit: z.union([z.number(), z.string().transform(val => parseFloat(val))]).refine(val => val >= 0, "Spending limit must be non-negative").optional(),
   status: z.enum(['active', 'inactive', 'canceled']).optional(),
   allowed_categories: z.array(z.string()).optional(),
   blocked_categories: z.array(z.string()).optional(),
@@ -74,7 +74,7 @@ export function registerCorporateCardRoutes(app: Express): void {
     async (req, res) => {
       try {
         const validatedData = issueCardSchema.parse(req.body);
-        
+
         if (!req.user?.organization_id) {
           return res.status(400).json({ error: 'Organization ID required' });
         }
@@ -122,7 +122,7 @@ export function registerCorporateCardRoutes(app: Express): void {
         }
 
         const cards = await storage.getCorporateCardsByOrganization(req.user.organization_id);
-        
+
         // Mask sensitive information
         const maskedCards = cards.map(card => ({
           ...card,
@@ -145,11 +145,11 @@ export function registerCorporateCardRoutes(app: Express): void {
       try {
         const userId = parseInt(req.params.user_id);
         const cards = await storage.getCorporateCardsByUser(userId);
-        
+
         // Check if user can access these cards
         const canAccess = req.user?.id === userId || 
                          req.user?.permissions?.includes('MANAGE_ORGANIZATION');
-        
+
         if (!canAccess) {
           return res.status(403).json({ error: 'Access denied' });
         }
@@ -225,7 +225,7 @@ export function registerCorporateCardRoutes(app: Express): void {
     async (req, res) => {
       try {
         const cardId = parseInt(req.params.card_id);
-        
+
         if (!req.user?.organization_id) {
           return res.status(400).json({ error: 'Organization ID required' });
         }
@@ -269,7 +269,7 @@ export function registerCorporateCardRoutes(app: Express): void {
     async (req, res) => {
       try {
         const validatedData = createExpenseSchema.parse(req.body);
-        
+
         if (!req.user?.organization_id) {
           return res.status(400).json({ error: 'Organization ID required' });
         }
@@ -336,7 +336,7 @@ export function registerCorporateCardRoutes(app: Express): void {
     async (req, res) => {
       try {
         const validatedData = approveExpenseSchema.parse(req.body);
-        
+
         if (!req.user?.organization_id) {
           return res.status(400).json({ error: 'Organization ID required' });
         }
@@ -416,7 +416,7 @@ export function registerCorporateCardRoutes(app: Express): void {
       if (!sig) {
         throw new Error('Missing stripe-signature header');
       }
-      
+
       event = Stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
       console.error('Webhook signature verification failed:', err);

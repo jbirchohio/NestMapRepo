@@ -33,24 +33,24 @@ const createCardholderSchema = z.object({
 });
 
 const createCardSchema = z.object({
-  user_id: z.number(),
-  spend_limit: z.number().min(0),
+  user_id: z.union([z.number(), z.string().transform(val => parseInt(val))]),
+  spend_limit: z.union([z.number(), z.string().transform(val => parseFloat(val))]).refine(val => val >= 0, "Spending limit must be non-negative"),
   interval: z.string(),
-  cardholder_name: z.string(),
+  cardholder_name: z.string().min(1, "Cardholder name is required"),
   purpose: z.string().optional(),
   department: z.string().optional(),
 });
 
 const addFundsSchema = z.object({
-  amount: z.number().min(1),
+  amount: z.union([z.number(), z.string().transform(val => parseFloat(val))]).refine(val => val > 0, "Amount must be greater than 0"),
 });
 
 const createTransactionSchema = z.object({
-  amount: z.number().min(1),
+  amount: z.union([z.number(), z.string().transform(val => parseFloat(val))]).refine(val => val > 0, "Amount must be greater than 0"),
   currency: z.string().default("usd"),
   merchant_data: z.object({
-    category: z.string(),
-    name: z.string(),
+    category: z.string().min(1, "Category is required"),
+    name: z.string().min(1, "Merchant name is required"),
     city: z.string().optional(),
     state: z.string().optional(),
     country: z.string().optional(),
