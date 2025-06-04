@@ -1,29 +1,52 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { useLocation } from 'wouter';
+import { 
+  Monitor, 
+  Database, 
+  Users, 
+  Building2, 
+  Activity, 
+  TrendingUp,
+  Download,
+  UserCog,
+  DollarSign,
+  Clock,
+  Flag,
+  AlertTriangle
+} from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { AlertTriangle } from 'lucide-react';
+
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
 import { AnimatedCard } from '@/components/ui/animated-card';
+import { PrimaryButton } from '@/components/ui/primary-button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Organization {
   id: number;
   name: string;
-  type: string;
-  memberCount: number;
-  isActive: boolean;
+  domain?: string;
+  plan?: string;
+  subscription_status?: string;
+  employee_count?: number;
   created_at: string;
+  userCount?: number;
+  tripCount?: number;
+  lastActivity?: string;
 }
 
 interface User {
   id: number;
   email: string;
+  username?: string;
   role: string;
+  organizationId?: number;
   organizationName?: string;
   isActive: boolean;
+  lastLogin?: string;
   created_at: string;
 }
 
@@ -31,8 +54,33 @@ interface AuditLog {
   id: number;
   action: string;
   target_type: string;
-  target_id: number;
+  target_id: string;
+  details: any;
+  ip_address?: string;
   created_at: string;
+  superadmin_id?: number;
+}
+
+interface FeatureFlag {
+  id: number;
+  flag_name: string;
+  description?: string;
+  default_value: boolean;
+  created_at: string;
+  is_enabled: boolean;
+}
+
+interface BackgroundJob {
+  id: number;
+  job_type: string;
+  status: string;
+  data?: any;
+  result?: any;
+  error_message?: string;
+  attempts: number;
+  max_attempts: number;
+  created_at: string;
+  completed_at?: string;
 }
 
 export default function SuperadminClean() {
@@ -45,85 +93,162 @@ export default function SuperadminClean() {
     return pathParts[2] || 'overview';
   };
 
-  const activeSection = getCurrentSection();
+  const [activeSection, setActiveSection] = useState(getCurrentSection());
 
-  const { data: dashboardData = {}, isLoading: dashboardLoading, error: dashboardError } = useQuery({
+  // Update active section when location changes
+  useEffect(() => {
+    setActiveSection(getCurrentSection());
+  }, [location]);
+
+  // Fetch dashboard data
+  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
     queryKey: ['/api/superadmin/dashboard'],
-    staleTime: 1000 * 60 * 5,
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  const organizations = dashboardData.organizations || [];
-  const users = dashboardData.users || [];
-  const auditLogs = dashboardData.auditLogs || [];
+  const organizations = dashboardData?.organizations || [];
+  const users = dashboardData?.users || [];
+  const auditLogs = dashboardData?.auditLogs || [];
+  const featureFlags = dashboardData?.featureFlags || [];
+  const backgroundJobs = dashboardData?.backgroundJobs || [];
+  const activeSessions = dashboardData?.activeSessions || [];
+  const billingData = dashboardData?.billingData || [];
+
+  const metrics = {
+    totalUsers: users.length,
+    totalOrganizations: organizations.length,
+    activeJobs: backgroundJobs.filter((job: any) => job.status === 'running').length,
+    recentAuditEvents: auditLogs.filter((log: any) => {
+      const logDate = new Date(log.created_at);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      return logDate > yesterday;
+    }).length
+  };
 
   const renderDashboardOverview = () => (
-    <div className="space-y-8">
+    <div>
       {/* Hero Header */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-electric-500/10 via-electric-600/20 to-electric-700/30 p-8 border border-electric-200/30 backdrop-blur-xl"
+        className="relative mb-8 overflow-hidden rounded-xl glass-card bg-gradient-to-br from-electric-600/10 via-electric-500/5 to-electric-700/10 p-8 border border-electric-500/20"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-        <div className="relative">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent mb-2">
-            System Overview
-          </h1>
-          <p className="text-navy-600 dark:text-navy-300 text-lg">
-            Comprehensive platform administration and monitoring
-          </p>
+        <div className="absolute inset-0 bg-gradient-to-br from-electric-600/5 to-transparent" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-electric-500 to-electric-600 rounded-xl flex items-center justify-center electric-glow">
+              <Monitor className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent">
+                System Overview
+              </h1>
+              <p className="text-navy-600 dark:text-navy-300 text-lg">
+                Monitor and manage your enterprise infrastructure
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+            <div className="glass-card bg-white/5 p-4 rounded-lg border border-electric-200/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Building2 className="w-5 h-5 text-electric-600" />
+                <span className="text-sm font-medium text-navy-600 dark:text-navy-300">Organizations</span>
+              </div>
+              <div className="text-2xl font-bold text-electric-600">{metrics.totalOrganizations}</div>
+            </div>
+            
+            <div className="glass-card bg-white/5 p-4 rounded-lg border border-electric-200/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-5 h-5 text-electric-600" />
+                <span className="text-sm font-medium text-navy-600 dark:text-navy-300">Total Users</span>
+              </div>
+              <div className="text-2xl font-bold text-electric-600">{metrics.totalUsers}</div>
+            </div>
+            
+            <div className="glass-card bg-white/5 p-4 rounded-lg border border-electric-200/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="w-5 h-5 text-electric-600" />
+                <span className="text-sm font-medium text-navy-600 dark:text-navy-300">Active Jobs</span>
+              </div>
+              <div className="text-2xl font-bold text-electric-600">{metrics.activeJobs}</div>
+            </div>
+            
+            <div className="glass-card bg-white/5 p-4 rounded-lg border border-electric-200/20">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-5 h-5 text-electric-600" />
+                <span className="text-sm font-medium text-navy-600 dark:text-navy-300">Recent Events</span>
+              </div>
+              <div className="text-2xl font-bold text-electric-600">{metrics.recentAuditEvents}</div>
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Organizations', value: organizations.length, color: 'from-blue-500 to-blue-600' },
-          { label: 'Total Users', value: users.length, color: 'from-green-500 to-green-600' },
-          { label: 'Active Sessions', value: '23', color: 'from-purple-500 to-purple-600' },
-          { label: 'System Health', value: '99.9%', color: 'from-orange-500 to-orange-600' }
-        ].map((metric, index) => (
-          <motion.div
-            key={metric.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
-          >
-            <AnimatedCard variant="glow" className="p-6 text-center">
-              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r ${metric.color} text-white text-xl font-bold mb-3`}>
-                {typeof metric.value === 'string' ? metric.value.charAt(0) : metric.value.toString().charAt(0)}
-              </div>
-              <h3 className="text-2xl font-bold text-navy-900 dark:text-white mb-1">{metric.value}</h3>
-              <p className="text-navy-600 dark:text-navy-300">{metric.label}</p>
-            </AnimatedCard>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Recent Activity */}
+      {/* Dashboard Content */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
       >
-        <h2 className="text-2xl font-bold text-navy-900 dark:text-white mb-6">Recent Activity</h2>
         <AnimatedCard variant="glow" className="p-6">
-          {auditLogs.length === 0 ? (
+          <div className="flex items-center gap-3 mb-4">
+            <Database className="w-6 h-6 text-electric-600" />
+            <h3 className="text-lg font-semibold">System Status</h3>
+          </div>
+          {dashboardLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+            </div>
+          ) : dashboardError ? (
+            <div className="flex items-center gap-2 text-red-600 p-4 bg-red-50 rounded-lg">
+              <AlertTriangle className="h-4 w-4" />
+              Error loading system data
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <span className="text-sm font-medium">Database</span>
+                <Badge variant="default" className="bg-green-600 text-white">Online</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <span className="text-sm font-medium">API Services</span>
+                <Badge variant="default" className="bg-green-600 text-white">Healthy</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <span className="text-sm font-medium">Authentication</span>
+                <Badge variant="default" className="bg-green-600 text-white">Active</Badge>
+              </div>
+            </div>
+          )}
+        </AnimatedCard>
+
+        <AnimatedCard variant="glow" className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Activity className="w-6 h-6 text-electric-600" />
+            <h3 className="text-lg font-semibold">Recent Activity</h3>
+          </div>
+          {dashboardLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+            </div>
+          ) : auditLogs.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No recent activity
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {auditLogs.slice(0, 5).map((log: AuditLog) => (
-                <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+                <div key={log.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 dark:hover:bg-navy-800 rounded-lg">
                   <div className="flex-shrink-0 mt-1">
                     <div className="w-2 h-2 bg-electric-600 rounded-full"></div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{log.action}</p>
-                    <p className="text-sm text-gray-500">{log.target_type} #{log.target_id}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{log.action}</p>
+                    <p className="text-xs text-gray-500">
                       {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
                     </p>
                   </div>
@@ -141,7 +266,6 @@ export default function SuperadminClean() {
       case 'overview':
       case '':
         return renderDashboardOverview();
-        
       case 'organizations':
         return (
           <div>
@@ -155,7 +279,7 @@ export default function SuperadminClean() {
                 Organizations
               </h1>
               <p className="text-navy-600 dark:text-navy-300">
-                Manage organization accounts and settings
+                Manage organizational accounts and settings
               </p>
             </motion.div>
 
@@ -178,8 +302,9 @@ export default function SuperadminClean() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Members</TableHead>
+                      <TableHead>Domain</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Users</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Created</TableHead>
                     </TableRow>
@@ -188,13 +313,16 @@ export default function SuperadminClean() {
                     {organizations.map((org: Organization) => (
                       <TableRow key={org.id}>
                         <TableCell className="font-medium">{org.name}</TableCell>
+                        <TableCell>{org.domain || 'N/A'}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{org.type}</Badge>
+                          <Badge variant={org.plan === 'enterprise' ? 'default' : 'secondary'}>
+                            {org.plan || 'Basic'}
+                          </Badge>
                         </TableCell>
-                        <TableCell>{org.memberCount || 0}</TableCell>
+                        <TableCell>{org.employee_count || 0}</TableCell>
                         <TableCell>
-                          <Badge variant={org.isActive ? 'default' : 'secondary'}>
-                            {org.isActive ? 'Active' : 'Inactive'}
+                          <Badge variant={org.subscription_status === 'active' ? 'default' : 'secondary'}>
+                            {org.subscription_status || 'Inactive'}
                           </Badge>
                         </TableCell>
                         <TableCell>{format(new Date(org.created_at), 'MMM dd, yyyy')}</TableCell>
@@ -206,7 +334,6 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
       case 'users':
         return (
           <div>
@@ -271,7 +398,6 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
       case 'activity':
         return (
           <div>
@@ -324,7 +450,6 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
       case 'billing':
         return (
           <div>
@@ -349,7 +474,6 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
       case 'sessions':
         return (
           <div>
@@ -374,7 +498,6 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
       case 'flags':
         return (
           <div>
@@ -399,7 +522,6 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
       case 'jobs':
         return (
           <div>
@@ -424,7 +546,6 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
       case 'settings':
         return (
           <div>
@@ -449,7 +570,6 @@ export default function SuperadminClean() {
             </AnimatedCard>
           </div>
         );
-        
       default:
         return (
           <div>
