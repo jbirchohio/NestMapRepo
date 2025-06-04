@@ -81,15 +81,22 @@ export default function SuperadminOrganizationDetail() {
   // Update user mutation
   const updateUser = useMutation({
     mutationFn: async ({ userId, updates }: { userId: number; updates: any }) => {
-      const res = await apiRequest('PUT', `/api/superadmin/users/${userId}`, updates);
-      return res.json();
+      return await apiRequest('PUT', `/api/superadmin/users/${userId}`, updates);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['superadmin', 'organizations', id] });
-      toast({ title: 'User updated successfully' });
+      toast({ 
+        title: 'User role updated successfully',
+        description: `Role changed to ${data.role}` 
+      });
     },
-    onError: () => {
-      toast({ title: 'Failed to update user', variant: 'destructive' });
+    onError: (error: any) => {
+      console.error('User update error:', error);
+      toast({ 
+        title: 'Failed to update user', 
+        description: error.message || 'An unexpected error occurred',
+        variant: 'destructive' 
+      });
     },
   });
 
