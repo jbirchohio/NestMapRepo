@@ -1,453 +1,528 @@
-import { Router } from 'express';
-import { storage } from '../storage';
-import { z } from 'zod';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import express from 'express';
+import { eq, desc, count, sql, and, gte, lte } from 'drizzle-orm';
+import { db } from '../db';
+import { 
+  users, 
+  organizations, 
+  organizationMembers,
+} from '@shared/schema';
+import {
+  superadminAuditLogs,
+  activeSessions,
+  aiUsageLogs,
+  superadminFeatureFlags,
+  organizationFeatureFlags,
+  superadminBackgroundJobs,
+  billingEvents,
+  systemActivitySummary,
+  insertSuperadminAuditLogSchema,
+  insertSuperadminFeatureFlagSchema,
+  insertSuperadminBackgroundJobSchema,
+} from '@shared/superadmin-schema';
+import bcrypt from 'bcryptjs';
 
-const router = Router();
+const router = express.Router();
 
-// Apply unified authentication first
-router.use(unifiedAuthMiddleware);
-
-// Strict superadmin role check
-router.use(async (req: any, res, next) => {
-  try {
-    // User is already authenticated by unifiedAuthMiddleware
-    if (!req.user) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
-
-    // Check if user has superadmin role
-    if (req.user.role !== 'superadmin') {
-      // Create audit log for unauthorized access attempt
-      try {
-        await storage.createSuperadminAuditLog({
-          superadmin_id: null,
-          action: 'UNAUTHORIZED_ACCESS_ATTEMPT',
-          target_type: 'superadmin_dashboard',
-          target_id: req.user.id.toString(),
-          details: { user_role: req.user.role, ip_address: req.ip },
-          ip_address: req.ip
-        });
-      } catch (auditError) {
-        console.error('Failed to create audit log:', auditError);
-      }
-      
-      return res.status(403).json({ message: 'Superadmin access required' });
-    }
-
-    // Log successful superadmin access
-    try {
-      await storage.createSuperadminAuditLog({
-        superadmin_id: req.user.id,
-        action: 'SUPERADMIN_ACCESS',
-        target_type: 'superadmin_dashboard',
-        target_id: 'dashboard',
-        details: { ip_address: req.ip },
-        ip_address: req.ip
-      });
-    } catch (auditError) {
-      console.error('Failed to create audit log:', auditError);
-    }
-
-    next();
-  } catch (error) {
-    console.error('Superadmin auth error:', error);
-    res.status(500).json({ message: 'Authentication error' });
+// Middleware to check superadmin permissions
+const requireSuperadmin = (req: any, res: any, next: any) => {
+  if (!req.user || !['superadmin_owner', 'superadmin_staff', 'superadmin_auditor'].includes(req.user.role)) {
+    return res.status(403).json({ error: 'Superadmin access required' });
   }
-});
+  next();
+};
 
-// Organizations & Users
-router.get('/organizations', async (req, res) => {
+// Audit logging helper
+const logSuperadminAction = async (adminUserId: number, action: string, entityType: string, entityId?: number, details?: any, targetUserId?: number, targetOrganizationId?: number) => {
+  await db.insert(superadminAuditLogs).values({
+    admin_user_id: adminUserId,
+    action,
+    entity_type: entityType,
+    entity_id: entityId,
+    target_user_id: targetUserId,
+    target_organization_id: targetOrganizationId,
+    details,
+    severity: 'info',
+  });
+};
+
+// Organizations endpoints
+router.get('/organizations', requireSuperadmin, async (req, res) => {
   try {
-    const organizations = await storage.getSuperadminOrganizations();
-    res.json(organizations);
+    const orgs = await db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        domain: organizations.domain,
+        plan: organizations.plan,
+        white_label_enabled: organizations.white_label_enabled,
+        white_label_plan: organizations.white_label_plan,
+        employee_count: organizations.employee_count,
+        subscription_status: organizations.subscription_status,
+        current_period_end: organizations.current_period_end,
+        created_at: organizations.created_at,
+        updated_at: organizations.updated_at,
+        user_count: sql<number>`(SELECT COUNT(*) FROM ${organizationMembers} WHERE ${organizationMembers.organization_id} = ${organizations.id})`,
+      })
+      .from(organizations)
+      .orderBy(desc(organizations.created_at));
+
+    res.json(orgs);
   } catch (error) {
     console.error('Error fetching organizations:', error);
-    res.status(500).json({ message: 'Failed to fetch organizations' });
+    res.status(500).json({ error: 'Failed to fetch organizations' });
   }
 });
 
-router.get('/users', async (req, res) => {
-  try {
-    const users = await storage.getSuperadminUsers();
-    res.json(users);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ message: 'Failed to fetch users' });
-  }
-});
-
-router.post('/users/:id/deactivate', async (req: any, res) => {
-  try {
-    const userId = parseInt(req.params.id);
-    await storage.deactivateUser(userId);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'user_deactivate',
-      target_type: 'user',
-      target_id: req.params.id,
-      details: { reason: req.body.reason },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error deactivating user:', error);
-    res.status(500).json({ message: 'Failed to deactivate user' });
-  }
-});
-
-router.post('/orgs/:id/disable', async (req: any, res) => {
+router.get('/organizations/:id', requireSuperadmin, async (req, res) => {
   try {
     const orgId = parseInt(req.params.id);
-    await storage.disableOrganization(orgId);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'org_disable',
-      target_type: 'organization',
-      target_id: req.params.id,
-      details: { reason: req.body.reason },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, orgId));
 
-    res.json({ success: true });
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Get organization members
+    const members = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        display_name: users.display_name,
+        role: users.role,
+        org_role: organizationMembers.org_role,
+        status: organizationMembers.status,
+        joined_at: organizationMembers.joined_at,
+        created_at: users.created_at,
+      })
+      .from(organizationMembers)
+      .innerJoin(users, eq(organizationMembers.user_id, users.id))
+      .where(eq(organizationMembers.organization_id, orgId))
+      .orderBy(desc(organizationMembers.joined_at));
+
+    res.json({ ...org, members });
   } catch (error) {
-    console.error('Error disabling organization:', error);
-    res.status(500).json({ message: 'Failed to disable organization' });
+    console.error('Error fetching organization:', error);
+    res.status(500).json({ error: 'Failed to fetch organization' });
   }
 });
 
-router.post('/roles', async (req: any, res) => {
+router.post('/organizations', requireSuperadmin, async (req, res) => {
   try {
-    const { userId, newRole } = req.body;
-    await storage.updateUserRole(userId, newRole);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'role_change',
-      target_type: 'user',
-      target_id: userId.toString(),
-      details: { newRole, previousRole: req.body.previousRole },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
+    const { name, domain, plan, employee_count } = req.body;
 
-    res.json({ success: true });
+    const [newOrg] = await db
+      .insert(organizations)
+      .values({
+        name,
+        domain,
+        plan: plan || 'free',
+        employee_count: employee_count || 1,
+        subscription_status: 'inactive',
+      })
+      .returning();
+
+    await logSuperadminAction(
+      req.user.id,
+      'CREATE_ORGANIZATION',
+      'organization',
+      newOrg.id,
+      { name, domain, plan },
+      undefined,
+      newOrg.id
+    );
+
+    res.status(201).json(newOrg);
   } catch (error) {
-    console.error('Error updating user role:', error);
-    res.status(500).json({ message: 'Failed to update user role' });
+    console.error('Error creating organization:', error);
+    res.status(500).json({ error: 'Failed to create organization' });
   }
 });
 
-// Audit & Security
-router.get('/activity', async (req, res) => {
+router.put('/organizations/:id', requireSuperadmin, async (req, res) => {
   try {
-    const activity = await storage.getSuperadminActivity();
-    res.json(activity);
+    const orgId = parseInt(req.params.id);
+    const updates = req.body;
+
+    const [updatedOrg] = await db
+      .update(organizations)
+      .set({
+        ...updates,
+        updated_at: new Date(),
+      })
+      .where(eq(organizations.id, orgId))
+      .returning();
+
+    if (!updatedOrg) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    await logSuperadminAction(
+      req.user.id,
+      'UPDATE_ORGANIZATION',
+      'organization',
+      orgId,
+      updates,
+      undefined,
+      orgId
+    );
+
+    res.json(updatedOrg);
+  } catch (error) {
+    console.error('Error updating organization:', error);
+    res.status(500).json({ error: 'Failed to update organization' });
+  }
+});
+
+router.delete('/organizations/:id', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.id);
+
+    // First check if organization exists
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, orgId));
+
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    // Delete organization members first
+    await db
+      .delete(organizationMembers)
+      .where(eq(organizationMembers.organization_id, orgId));
+
+    // Delete the organization
+    await db
+      .delete(organizations)
+      .where(eq(organizations.id, orgId));
+
+    await logSuperadminAction(
+      req.user.id,
+      'DELETE_ORGANIZATION',
+      'organization',
+      orgId,
+      { name: org.name },
+      undefined,
+      orgId
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting organization:', error);
+    res.status(500).json({ error: 'Failed to delete organization' });
+  }
+});
+
+// Users endpoints
+router.get('/users', requireSuperadmin, async (req, res) => {
+  try {
+    const usersData = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        display_name: users.display_name,
+        role: users.role,
+        role_type: users.role_type,
+        organization_id: users.organization_id,
+        company: users.company,
+        job_title: users.job_title,
+        created_at: users.created_at,
+        organization_name: organizations.name,
+      })
+      .from(users)
+      .leftJoin(organizations, eq(users.organization_id, organizations.id))
+      .orderBy(desc(users.created_at));
+
+    res.json(usersData);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+router.get('/users/:id', requireSuperadmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const [user] = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        display_name: users.display_name,
+        role: users.role,
+        role_type: users.role_type,
+        organization_id: users.organization_id,
+        company: users.company,
+        job_title: users.job_title,
+        team_size: users.team_size,
+        use_case: users.use_case,
+        created_at: users.created_at,
+        organization_name: organizations.name,
+      })
+      .from(users)
+      .leftJoin(organizations, eq(users.organization_id, organizations.id))
+      .where(eq(users.id, userId));
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+router.put('/users/:id', requireSuperadmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const updates = req.body;
+
+    const [updatedUser] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await logSuperadminAction(
+      req.user.id,
+      'UPDATE_USER',
+      'user',
+      userId,
+      updates,
+      userId
+    );
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+router.post('/users/:id/reset-password', requireSuperadmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({ password_hash: hashedPassword })
+      .where(eq(users.id, userId))
+      .returning({ id: users.id, username: users.username, email: users.email });
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await logSuperadminAction(
+      req.user.id,
+      'RESET_PASSWORD',
+      'user',
+      userId,
+      { target_username: updatedUser.username },
+      userId
+    );
+
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
+router.delete('/users/:id', requireSuperadmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+
+    // Get user info before deletion
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Delete organization memberships first
+    await db
+      .delete(organizationMembers)
+      .where(eq(organizationMembers.user_id, userId));
+
+    // Delete the user
+    await db
+      .delete(users)
+      .where(eq(users.id, userId));
+
+    await logSuperadminAction(
+      req.user.id,
+      'DELETE_USER',
+      'user',
+      userId,
+      { username: user.username, email: user.email },
+      userId
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// System activity and monitoring
+router.get('/activity', requireSuperadmin, async (req, res) => {
+  try {
+    const activities = await db
+      .select()
+      .from(superadminAuditLogs)
+      .orderBy(desc(superadminAuditLogs.created_at))
+      .limit(100);
+
+    res.json(activities);
   } catch (error) {
     console.error('Error fetching activity:', error);
-    res.status(500).json({ message: 'Failed to fetch activity' });
+    res.status(500).json({ error: 'Failed to fetch activity' });
   }
 });
 
-router.get('/sessions', async (req, res) => {
+router.get('/sessions', requireSuperadmin, async (req, res) => {
   try {
-    const sessions = await storage.getActiveSessions();
+    const sessions = await db
+      .select()
+      .from(activeSessions)
+      .orderBy(desc(activeSessions.last_activity))
+      .limit(50);
+
     res.json(sessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
-    res.status(500).json({ message: 'Failed to fetch sessions' });
+    res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
 
-router.post('/logout/:sessionId', async (req: any, res) => {
+router.get('/jobs', requireSuperadmin, async (req, res) => {
   try {
-    await storage.terminateSession(req.params.sessionId);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'session_terminate',
-      target_type: 'session',
-      target_id: req.params.sessionId,
-      details: {},
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
+    const jobs = await db
+      .select()
+      .from(superadminBackgroundJobs)
+      .orderBy(desc(superadminBackgroundJobs.created_at))
+      .limit(50);
 
-    res.json({ success: true });
+    res.json(jobs);
   } catch (error) {
-    console.error('Error terminating session:', error);
-    res.status(500).json({ message: 'Failed to terminate session' });
+    console.error('Error fetching jobs:', error);
+    res.status(500).json({ error: 'Failed to fetch jobs' });
   }
 });
 
-// Trip/AI Logs
-router.get('/trip-logs', async (req, res) => {
+router.get('/billing', requireSuperadmin, async (req, res) => {
   try {
-    const logs = await storage.getTripLogs();
-    res.json(logs);
-  } catch (error) {
-    console.error('Error fetching trip logs:', error);
-    res.status(500).json({ message: 'Failed to fetch trip logs' });
-  }
-});
+    const billing = await db
+      .select({
+        organization_id: organizations.id,
+        organization_name: organizations.name,
+        plan: organizations.plan,
+        subscription_status: organizations.subscription_status,
+        current_period_end: organizations.current_period_end,
+        stripe_customer_id: organizations.stripe_customer_id,
+        stripe_subscription_id: organizations.stripe_subscription_id,
+        user_count: sql<number>`(SELECT COUNT(*) FROM ${organizationMembers} WHERE ${organizationMembers.organization_id} = ${organizations.id})`,
+      })
+      .from(organizations)
+      .where(sql`${organizations.plan} != 'free'`)
+      .orderBy(desc(organizations.created_at));
 
-router.get('/ai-usage', async (req, res) => {
-  try {
-    const usage = await storage.getAiUsage();
-    res.json(usage);
-  } catch (error) {
-    console.error('Error fetching AI usage:', error);
-    res.status(500).json({ message: 'Failed to fetch AI usage' });
-  }
-});
-
-router.post('/impersonate', async (req: any, res) => {
-  try {
-    const { userId } = req.body;
-    const impersonationToken = await storage.createImpersonationSession(req.user!.id, userId);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'user_impersonate',
-      target_type: 'user',
-      target_id: userId.toString(),
-      details: {},
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
-
-    res.json({ impersonationToken });
-  } catch (error) {
-    console.error('Error creating impersonation session:', error);
-    res.status(500).json({ message: 'Failed to create impersonation session' });
-  }
-});
-
-// Billing & Plans
-router.get('/billing', async (req, res) => {
-  try {
-    const billing = await storage.getBillingOverview();
     res.json(billing);
   } catch (error) {
     console.error('Error fetching billing:', error);
-    res.status(500).json({ message: 'Failed to fetch billing data' });
+    res.status(500).json({ error: 'Failed to fetch billing' });
   }
 });
 
-router.post('/billing/override', async (req: any, res) => {
+router.get('/flags', requireSuperadmin, async (req, res) => {
   try {
-    const { organizationId, planOverride, credits } = req.body;
-    await storage.setBillingOverride(organizationId, planOverride, credits);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'billing_override',
-      target_type: 'organization',
-      target_id: organizationId.toString(),
-      details: { planOverride, credits },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
+    const flags = await db
+      .select()
+      .from(superadminFeatureFlags)
+      .orderBy(superadminFeatureFlags.flag_name);
 
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error setting billing override:', error);
-    res.status(500).json({ message: 'Failed to set billing override' });
-  }
-});
-
-router.get('/invoices', async (req, res) => {
-  try {
-    const invoices = await storage.getInvoices();
-    res.json(invoices);
-  } catch (error) {
-    console.error('Error fetching invoices:', error);
-    res.status(500).json({ message: 'Failed to fetch invoices' });
-  }
-});
-
-// Feature Flags
-router.get('/flags', async (req, res) => {
-  try {
-    const flags = await storage.getFeatureFlags();
     res.json(flags);
   } catch (error) {
-    console.error('Error fetching feature flags:', error);
-    res.status(500).json({ message: 'Failed to fetch feature flags' });
+    console.error('Error fetching flags:', error);
+    res.status(500).json({ error: 'Failed to fetch flags' });
   }
 });
 
-router.post('/flags/:orgId', async (req: any, res) => {
+router.post('/flags', requireSuperadmin, async (req, res) => {
   try {
-    const orgId = parseInt(req.params.orgId);
-    const { flagName, enabled } = req.body;
-    await storage.setOrganizationFeatureFlag(orgId, flagName, enabled);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'feature_flag_change',
-      target_type: 'organization',
-      target_id: req.params.orgId,
-      details: { flagName, enabled },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
+    const flagData = insertSuperadminFeatureFlagSchema.parse(req.body);
 
-    res.json({ success: true });
+    const [newFlag] = await db
+      .insert(superadminFeatureFlags)
+      .values(flagData)
+      .returning();
+
+    await logSuperadminAction(
+      req.user.id,
+      'CREATE_FEATURE_FLAG',
+      'feature_flag',
+      newFlag.id,
+      flagData
+    );
+
+    res.status(201).json(newFlag);
   } catch (error) {
-    console.error('Error setting feature flag:', error);
-    res.status(500).json({ message: 'Failed to set feature flag' });
+    console.error('Error creating flag:', error);
+    res.status(500).json({ error: 'Failed to create flag' });
   }
 });
 
-// White Label Tools
-router.get('/white-label', async (req, res) => {
+router.put('/flags/:id', requireSuperadmin, async (req, res) => {
   try {
-    const whiteLabelData = await storage.getWhiteLabelData();
-    res.json(whiteLabelData);
+    const flagId = parseInt(req.params.id);
+    const updates = req.body;
+
+    const [updatedFlag] = await db
+      .update(superadminFeatureFlags)
+      .set(updates)
+      .where(eq(superadminFeatureFlags.id, flagId))
+      .returning();
+
+    if (!updatedFlag) {
+      return res.status(404).json({ error: 'Flag not found' });
+    }
+
+    await logSuperadminAction(
+      req.user.id,
+      'UPDATE_FEATURE_FLAG',
+      'feature_flag',
+      flagId,
+      updates
+    );
+
+    res.json(updatedFlag);
   } catch (error) {
-    console.error('Error fetching white label data:', error);
-    res.status(500).json({ message: 'Failed to fetch white label data' });
-  }
-});
-
-router.post('/orgs/:id/theme', async (req: any, res) => {
-  try {
-    const orgId = parseInt(req.params.id);
-    const { theme } = req.body;
-    await storage.setOrganizationTheme(orgId, theme);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'theme_change',
-      target_type: 'organization',
-      target_id: req.params.id,
-      details: { theme },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error setting organization theme:', error);
-    res.status(500).json({ message: 'Failed to set organization theme' });
-  }
-});
-
-// Exports & Compliance
-router.post('/export/org/:id', async (req: any, res) => {
-  try {
-    const orgId = parseInt(req.params.id);
-    const jobId = await storage.createExportJob(orgId, req.user!.id);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'data_export',
-      target_type: 'organization',
-      target_id: req.params.id,
-      details: { jobId },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
-
-    res.json({ jobId });
-  } catch (error) {
-    console.error('Error creating export job:', error);
-    res.status(500).json({ message: 'Failed to create export job' });
-  }
-});
-
-router.post('/delete/user/:id', async (req: any, res) => {
-  try {
-    const userId = parseInt(req.params.id);
-    await storage.deleteUserData(userId);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'user_delete',
-      target_type: 'user',
-      target_id: req.params.id,
-      details: { reason: req.body.reason },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting user data:', error);
-    res.status(500).json({ message: 'Failed to delete user data' });
-  }
-});
-
-// Job/Webhook Utilities
-router.get('/jobs', async (req, res) => {
-  try {
-    const jobs = await storage.getBackgroundJobs();
-    res.json(jobs);
-  } catch (error) {
-    console.error('Error fetching background jobs:', error);
-    res.status(500).json({ message: 'Failed to fetch background jobs' });
-  }
-});
-
-router.post('/jobs/:id/retry', async (req: any, res) => {
-  try {
-    const jobId = parseInt(req.params.id);
-    await storage.retryBackgroundJob(jobId);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'job_retry',
-      target_type: 'job',
-      target_id: req.params.id,
-      details: {},
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error retrying background job:', error);
-    res.status(500).json({ message: 'Failed to retry background job' });
-  }
-});
-
-router.post('/webhooks/test', async (req: any, res) => {
-  try {
-    const { url, payload } = req.body;
-    const result = await storage.testWebhook(url, payload);
-    
-    // Log audit action
-    await storage.createSuperadminAuditLog({
-      superadmin_user_id: req.user!.id,
-      action: 'webhook_test',
-      target_type: 'webhook',
-      target_id: url,
-      details: { payload, result },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent')
-    });
-
-    res.json({ result });
-  } catch (error) {
-    console.error('Error testing webhook:', error);
-    res.status(500).json({ message: 'Failed to test webhook' });
+    console.error('Error updating flag:', error);
+    res.status(500).json({ error: 'Failed to update flag' });
   }
 });
 
