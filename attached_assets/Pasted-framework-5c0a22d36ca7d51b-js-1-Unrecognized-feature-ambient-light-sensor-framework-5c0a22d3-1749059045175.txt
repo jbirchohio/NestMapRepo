@@ -1,0 +1,96 @@
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'battery'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+framework-5c0a22d36ca7d51b.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-5c0a22d36ca7d51b.js:1Understand this warning
+3stallwart.build.js:1 stallwart: failed ping 1
+2_app-dcd133c27590921e.js:38 Invalid href 'https://0a8d76d3-48e3-4e6c-b1c8-07a9ed7c696d-00-3qge87l0tdb70.janeway.replit.dev//superadmin' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-dcd133c27590921e.js:38Understand this error
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'battery'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
+6Refused to load the font '<URL>' because it violates the following Content Security Policy directive: "font-src 'self' <URL> <URL>".
+Understand this error
+superadmin:50 Refused to load the stylesheet 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' because it violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback.
+Understand this error
+superadmin:1 Refused to load the script 'https://replit.com/public/js/replit-dev-banner.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+Understand this error
+workspace_iframe.html?initialPath=%2Fsuperadmin&id=%3Arfm5%3A:142 Refused to load the script 'https://replit.com/public/js/beacon.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+
+onIframeLoad @ workspace_iframe.html?initialPath=%2Fsuperadmin&id=%3Arfm5%3A:142Understand this error
+Console.js:61 Superadmin dashboard data: Object
+Console.js:61 Making GET request to /api/superadmin/organizations undefined
+Console.js:61 Making GET request to /api/superadmin/users undefined
+Console.js:61 Making GET request to /api/superadmin/sessions undefined
+Console.js:61 Making GET request to /api/superadmin/jobs undefined
+Console.js:61 Making GET request to /api/superadmin/activity undefined
+Console.js:61 Making GET request to /api/superadmin/billing undefined
+Console.js:61 Making GET request to /api/superadmin/flags undefined
+Console.js:61 Response status: 200
+Console.js:61 Response headers: Headers
+Console.js:61 JSON response: Array(3)
+Console.js:61 Superadmin dashboard data: Object
+Console.js:61 Response status: 200
+Console.js:61 Response headers: Headers
+Console.js:61 JSON response: Array(3)
+Console.js:61 Response status: 200
+Console.js:61 Response headers: Headers
+Console.js:61 JSON response: Array(100)
+Console.js:61 Response status: 200
+Console.js:61 Response headers: Headers
+Console.js:61 JSON response: Array(1)
+Console.js:61 Response status: 200
+Console.js:61 Response headers: Headers
+Console.js:61 JSON response: Array(3)
+Console.js:61 Response status: 200
+Console.js:61 Response headers: Headers
+Console.js:61 JSON response: Array(14)
+Console.js:61 Superadmin dashboard data: Object
+Console.js:61 Network error fetching database user (non-critical): SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+Mt.forEach.n.<computed> @ Console.js:61Understand this warning
+Console.js:61 Response status: 200
+Console.js:61 Response headers: Headers
+Console.js:61 JSON response: Array(3)
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
+superadmin:1 Refused to load the stylesheet 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' because it violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback.

@@ -66,12 +66,19 @@ export default function Superadmin() {
   // Debug logging to understand data issues
   console.log('Superadmin dashboard data:', {
     organizations: organizations,
+    organizationsLength: organizations.length,
     users: users,
+    usersLength: users.length,
     activeSessions: activeSessions,
+    activeSessionsLength: activeSessions.length,
     backgroundJobs: backgroundJobs,
+    backgroundJobsLength: backgroundJobs.length,
     auditLogs: auditLogs,
+    auditLogsLength: auditLogs.length,
     billingData: billingData,
+    billingDataLength: billingData.length,
     featureFlags: featureFlags,
+    featureFlagsLength: featureFlags.length,
     orgsError: orgsError,
     usersError: usersError
   });
