@@ -21,81 +21,31 @@ import { useEffect, useState } from 'react';
 export default function Superadmin() {
   const { section } = useParams();
 
-  // Sequential data loading to avoid rate limits
-  const { data: organizations = [], isLoading: orgsLoading, error: orgsError } = useQuery({
-    queryKey: ['/api/superadmin/organizations'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/organizations').then(res => res.json()),
+  // Single consolidated dashboard query to eliminate rate limiting
+  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useQuery({
+    queryKey: ['/api/superadmin/dashboard'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/dashboard').then(res => res.json()),
     retry: 1,
     refetchOnWindowFocus: false,
     staleTime: 60000,
     retryDelay: 2000
   });
 
-  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
-    queryKey: ['/api/superadmin/users'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/users').then(res => res.json()),
-    retry: 1,
-    refetchOnWindowFocus: false,
-    staleTime: 60000,
-    retryDelay: 2000,
-    enabled: !orgsLoading // Wait for organizations to load first
-  });
-
-  const { data: activeSessions = [] } = useQuery({
-    queryKey: ['/api/superadmin/sessions'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/sessions').then(res => res.json()),
-    retry: 1,
-    refetchOnWindowFocus: false,
-    staleTime: 60000,
-    retryDelay: 2000,
-    enabled: !usersLoading // Sequential loading
-  });
-
-  const { data: backgroundJobs = [] } = useQuery({
-    queryKey: ['/api/superadmin/jobs'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/jobs').then(res => res.json()),
-    retry: 1,
-    refetchOnWindowFocus: false,
-    staleTime: 60000,
-    retryDelay: 2000,
-    enabled: activeSessions.length >= 0 // Wait for sessions
-  });
-
-  const { data: auditLogs = [] } = useQuery({
-    queryKey: ['/api/superadmin/activity'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/activity').then(res => res.json()),
-    retry: 1,
-    refetchOnWindowFocus: false,
-    staleTime: 60000,
-    retryDelay: 2000,
-    enabled: backgroundJobs.length >= 0 // Wait for jobs
-  });
-
-  const { data: billingData = [] } = useQuery({
-    queryKey: ['/api/superadmin/billing'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/billing').then(res => res.json()),
-    retry: 1,
-    refetchOnWindowFocus: false,
-    staleTime: 60000,
-    retryDelay: 2000,
-    enabled: auditLogs.length >= 0 // Wait for audit logs
-  });
-
-  const { data: featureFlags = [] } = useQuery({
-    queryKey: ['/api/superadmin/flags'],
-    queryFn: () => apiRequest('GET', '/api/superadmin/flags').then(res => res.json()),
-    retry: 1,
-    refetchOnWindowFocus: false,
-    staleTime: 60000,
-    retryDelay: 2000,
-    enabled: billingData.length >= 0 // Wait for billing data
-  });
+  // Extract data from consolidated response
+  const organizations = dashboardData?.organizations || [];
+  const users = dashboardData?.users || [];
+  const activeSessions = dashboardData?.sessions || [];
+  const backgroundJobs = dashboardData?.jobs || [];
+  const auditLogs = dashboardData?.activity || [];
+  const billingData = dashboardData?.billing || [];
+  const featureFlags = dashboardData?.flags || [];
 
   // Add force re-render mechanism
   const [renderKey, setRenderKey] = useState(0);
   
   // Debug logging to understand data issues
   console.log('Superadmin dashboard data:', {
+    dashboardData: dashboardData,
     organizations: organizations,
     organizationsLength: organizations.length,
     users: users,
@@ -110,9 +60,8 @@ export default function Superadmin() {
     billingDataLength: billingData.length,
     featureFlags: featureFlags,
     featureFlagsLength: featureFlags.length,
-    orgsError: orgsError,
-    usersError: usersError,
-    isLoading: orgsLoading || usersLoading,
+    dashboardError: dashboardError,
+    isLoading: dashboardLoading,
     renderKey
   });
 
