@@ -16,67 +16,84 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
+import { useEffect, useState } from 'react';
 
 export default function Superadmin() {
   const { section } = useParams();
 
-  // Data queries
+  // Sequential data loading to avoid rate limits
   const { data: organizations = [], isLoading: orgsLoading, error: orgsError } = useQuery({
     queryKey: ['/api/superadmin/organizations'],
     queryFn: () => apiRequest('GET', '/api/superadmin/organizations').then(res => res.json()),
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: false,
-    staleTime: 30000
+    staleTime: 60000,
+    retryDelay: 2000
   });
 
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ['/api/superadmin/users'],
     queryFn: () => apiRequest('GET', '/api/superadmin/users').then(res => res.json()),
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: false,
-    staleTime: 30000
+    staleTime: 60000,
+    retryDelay: 2000,
+    enabled: !orgsLoading // Wait for organizations to load first
   });
 
   const { data: activeSessions = [] } = useQuery({
     queryKey: ['/api/superadmin/sessions'],
     queryFn: () => apiRequest('GET', '/api/superadmin/sessions').then(res => res.json()),
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: false,
-    staleTime: 30000
+    staleTime: 60000,
+    retryDelay: 2000,
+    enabled: !usersLoading // Sequential loading
   });
 
   const { data: backgroundJobs = [] } = useQuery({
     queryKey: ['/api/superadmin/jobs'],
     queryFn: () => apiRequest('GET', '/api/superadmin/jobs').then(res => res.json()),
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: false,
-    staleTime: 30000
+    staleTime: 60000,
+    retryDelay: 2000,
+    enabled: activeSessions.length >= 0 // Wait for sessions
   });
 
   const { data: auditLogs = [] } = useQuery({
     queryKey: ['/api/superadmin/activity'],
     queryFn: () => apiRequest('GET', '/api/superadmin/activity').then(res => res.json()),
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: false,
-    staleTime: 30000
+    staleTime: 60000,
+    retryDelay: 2000,
+    enabled: backgroundJobs.length >= 0 // Wait for jobs
   });
 
   const { data: billingData = [] } = useQuery({
     queryKey: ['/api/superadmin/billing'],
     queryFn: () => apiRequest('GET', '/api/superadmin/billing').then(res => res.json()),
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: false,
-    staleTime: 30000
+    staleTime: 60000,
+    retryDelay: 2000,
+    enabled: auditLogs.length >= 0 // Wait for audit logs
   });
 
   const { data: featureFlags = [] } = useQuery({
     queryKey: ['/api/superadmin/flags'],
     queryFn: () => apiRequest('GET', '/api/superadmin/flags').then(res => res.json()),
-    retry: false,
+    retry: 1,
     refetchOnWindowFocus: false,
-    staleTime: 30000
+    staleTime: 60000,
+    retryDelay: 2000,
+    enabled: billingData.length >= 0 // Wait for billing data
   });
 
+  // Add force re-render mechanism
+  const [renderKey, setRenderKey] = useState(0);
+  
   // Debug logging to understand data issues
   console.log('Superadmin dashboard data:', {
     organizations: organizations,
@@ -94,8 +111,22 @@ export default function Superadmin() {
     featureFlags: featureFlags,
     featureFlagsLength: featureFlags.length,
     orgsError: orgsError,
-    usersError: usersError
+    usersError: usersError,
+    isLoading: orgsLoading || usersLoading,
+    renderKey
   });
+
+  // Force re-render when data updates
+  useEffect(() => {
+    if (organizations.length > 0 || users.length > 0 || auditLogs.length > 0) {
+      console.log('Data received, forcing re-render:', {
+        orgs: organizations.length,
+        users: users.length,
+        logs: auditLogs.length
+      });
+      setRenderKey(prev => prev + 1);
+    }
+  }, [organizations.length, users.length, auditLogs.length, backgroundJobs.length, activeSessions.length, featureFlags.length]);
 
   // Render content based on section
   const renderContent = () => {

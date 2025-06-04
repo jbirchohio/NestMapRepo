@@ -851,6 +851,115 @@ router.post('/billing/:orgId/reactivate', requireSuperadmin, async (req, res) =>
   }
 });
 
+// Consolidated dashboard endpoint to prevent rate limiting
+router.get('/dashboard', requireSuperadmin, async (req, res) => {
+  try {
+    // Execute all queries in parallel but return as single response
+    const [
+      organizationsResult,
+      usersResult,
+      sessionsResult,
+      jobsResult,
+      activityResult,
+      billingResult,
+      flagsResult
+    ] = await Promise.all([
+      // Organizations
+      db.execute(`
+        SELECT o.*, COUNT(u.id) as user_count
+        FROM organizations o
+        LEFT JOIN users u ON o.id = u.organization_id
+        GROUP BY o.id
+        ORDER BY o.created_at DESC
+      `),
+      
+      // Users
+      db.execute(`
+        SELECT u.*, o.name as organization_name
+        FROM users u
+        LEFT JOIN organizations o ON u.organization_id = o.id
+        ORDER BY u.created_at DESC
+      `),
+      
+      // Active sessions
+      db.execute(`
+        SELECT sid, user_id, email, role, expire, organization_id
+        FROM active_sessions
+        WHERE expire > NOW()
+        ORDER BY expire DESC
+      `),
+      
+      // Background jobs
+      db.execute(`
+        SELECT id, job_type, status, payload, result, error_message, created_at, started_at, completed_at
+        FROM superadmin_background_jobs
+        ORDER BY created_at DESC
+      `),
+      
+      // Activity logs
+      db.execute(`
+        SELECT id, admin_user_id, action, entity_type, entity_id, details, created_at
+        FROM superadmin_audit_logs
+        ORDER BY created_at DESC
+        LIMIT 100
+      `),
+      
+      // Billing data
+      db.execute(`
+        SELECT 
+          o.id as organization_id,
+          o.name as organization_name,
+          o.plan,
+          o.subscription_status,
+          o.current_period_end,
+          o.stripe_customer_id,
+          o.stripe_subscription_id,
+          COUNT(u.id) as user_count,
+          o.created_at,
+          CASE 
+            WHEN o.plan = 'enterprise' THEN '99.99'
+            WHEN o.plan = 'business' THEN '29.99'
+            WHEN o.plan = 'basic' THEN '9.99'
+            ELSE '0'
+          END as monthly_cost
+        FROM organizations o
+        LEFT JOIN users u ON o.id = u.organization_id
+        GROUP BY o.id
+        ORDER BY o.created_at DESC
+      `),
+      
+      // Feature flags
+      db.execute(`
+        SELECT id, flag_name, is_enabled, description, created_at, updated_at
+        FROM superadmin_feature_flags
+        ORDER BY flag_name
+      `)
+    ]);
+
+    // Log the dashboard access
+    await logSuperadminAction(
+      req.user!.id,
+      'SUPERADMIN_ACCESS',
+      'superadmin_dashboard',
+      'dashboard',
+      { ip_address: req.ip }
+    );
+
+    res.json({
+      organizations: organizationsResult.rows,
+      users: usersResult.rows,
+      sessions: sessionsResult.rows,
+      jobs: jobsResult.rows,
+      activity: activityResult.rows,
+      billing: billingResult.rows,
+      flags: flagsResult.rows
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    res.status(500).json({ error: 'Failed to fetch dashboard data' });
+  }
+});
+
 router.get('/flags', requireSuperadmin, async (req, res) => {
   try {
     const flags = await db.execute(`
