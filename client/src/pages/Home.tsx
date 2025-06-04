@@ -35,29 +35,9 @@ export default function Home() {
   useEffect(() => {
     if (!authReady || !user) return;
     
-    // Superadmin users have special access - don't redirect them automatically
-    if (user.role === 'superadmin') {
-      // Let superadmin users stay on home page or navigate manually to /superadmin
-      return;
-    }
-    
-    // Admin users with organizations go to corporate dashboard
-    if (user.role === 'admin') {
-      if (user.organizationId) {
-        setLocation('/dashboard/corporate');
-      } else {
-        setLocation('/enterprise');
-      }
-      return;
-    }
-    
-    // Regular users go to role-based dashboard
-    if (roleType === 'agency') {
-      setLocation('/dashboard/agency');
-    } else {
-      setLocation('/dashboard/corporate');
-    }
-  }, [authReady, user, roleType, setLocation]);
+    // Use RoleBasedRedirect component for routing logic
+    // This component handles superadmin detection and proper routing
+  }, [authReady, user]);
   
   // Get user ID from authentication or use guest mode
   const effectiveUserId = userId ?? -1; // Use database userId or -1 for guest mode

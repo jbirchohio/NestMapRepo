@@ -20,7 +20,10 @@ export default function RoleBasedRedirect() {
           const permissions = data.permissions || [];
           
           // If user has superadmin permissions, redirect to superadmin dashboard
-          if (permissions.includes('manage_organizations') || permissions.includes('manage_users')) {
+          if (permissions.includes('manage_organizations') || 
+              permissions.includes('manage_users') || 
+              permissions.includes('MANAGE_ORGANIZATION') ||
+              permissions.includes('ADMIN_ACCESS')) {
             setLocation('/superadmin');
             setPermissionsChecked(true);
             return;
