@@ -85,6 +85,8 @@ export default function CorporateCards() {
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [isIssueDialogOpen, setIsIssueDialogOpen] = useState(false);
   const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
+  const [isAddFundsDialogOpen, setIsAddFundsDialogOpen] = useState(false);
+  const [addFundsAmount, setAddFundsAmount] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -197,6 +199,44 @@ export default function CorporateCards() {
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update card",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add funds mutation
+  const addFundsMutation = useMutation({
+    mutationFn: async ({ cardId, amount }: { cardId: number; amount: number }) => {
+      const response = await apiRequest("POST", `/api/corporate-cards/cards/${cardId}/add-funds`, { amount });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add funds");
+      }
+      return response.json();
+    },
+    onSuccess: async (data, variables) => {
+      toast({
+        title: "Funds Added",
+        description: `$${variables.amount} has been added to the card successfully.`,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      
+      // Update the selected card state immediately to reflect new balance
+      if (selectedCard && variables.cardId === selectedCard.id) {
+        setSelectedCard({
+          ...selectedCard,
+          available_balance: selectedCard.available_balance + variables.amount,
+          spending_limit: selectedCard.spending_limit + variables.amount
+        });
+      }
+      
+      setIsAddFundsDialogOpen(false);
+      setAddFundsAmount("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Add Funds Failed",
+        description: error.message || "Failed to add funds to card",
         variant: "destructive",
       });
     },
@@ -725,7 +765,12 @@ export default function CorporateCards() {
                     )}
                   </PrimaryButton>
 
-                  <PrimaryButton variant="secondary" size="sm" className="flex-1">
+                  <PrimaryButton 
+                    variant="secondary" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => setIsAddFundsDialogOpen(true)}
+                  >
                     <DollarSign className="w-4 h-4 mr-2" />
                     Add Funds
                   </PrimaryButton>
@@ -941,6 +986,81 @@ export default function CorporateCards() {
           </div>
         )}
       </FullScreenModal>
+
+      {/* Add Funds Dialog */}
+      <Dialog open={isAddFundsDialogOpen} onOpenChange={setIsAddFundsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-electric-600" />
+              Add Funds to Card
+            </DialogTitle>
+            <DialogDescription>
+              Add funds to {selectedCard?.cardholder_name}'s corporate card
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="amount">Amount ($)</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="Enter amount"
+                value={addFundsAmount}
+                onChange={(e) => setAddFundsAmount(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+
+            {selectedCard && (
+              <div className="bg-gray-50 dark:bg-navy-800 rounded-lg p-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Current Balance</span>
+                    <p className="font-medium">{formatCurrency(selectedCard.available_balance || 0)}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">New Balance</span>
+                    <p className="font-medium text-green-600">
+                      {formatCurrency((selectedCard.available_balance || 0) + (parseFloat(addFundsAmount) || 0))}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsAddFundsDialogOpen(false);
+                setAddFundsAmount("");
+              }}
+            >
+              Cancel
+            </Button>
+            <PrimaryButton
+              onClick={() => {
+                if (selectedCard && addFundsAmount) {
+                  addFundsMutation.mutate({ 
+                    cardId: selectedCard.id, 
+                    amount: parseFloat(addFundsAmount) 
+                  });
+                }
+              }}
+              loading={addFundsMutation.isPending}
+              disabled={!addFundsAmount || parseFloat(addFundsAmount) <= 0}
+            >
+              <DollarSign className="w-4 h-4 mr-2" />
+              Add ${addFundsAmount || '0.00'}
+            </PrimaryButton>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
