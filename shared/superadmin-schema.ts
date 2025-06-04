@@ -55,7 +55,9 @@ export const superadminFeatureFlags = pgTable("superadmin_feature_flags", {
   flag_name: text("flag_name").notNull().unique(),
   description: text("description"),
   default_value: boolean("default_value").default(false).notNull(),
+  is_enabled: boolean("is_enabled").default(false).notNull(), // For backwards compatibility
   created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Organization-specific feature overrides
@@ -65,6 +67,7 @@ export const organizationFeatureFlags = pgTable("organization_feature_flags", {
   flag_name: text("flag_name").notNull(),
   enabled: boolean("enabled").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Background jobs tracking

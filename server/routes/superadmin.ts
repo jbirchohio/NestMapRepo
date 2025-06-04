@@ -897,7 +897,10 @@ router.put('/flags/:id', requireSuperadmin, async (req, res) => {
 
     const [updatedFlag] = await db
       .update(superadminFeatureFlags)
-      .set(updates)
+      .set({
+        ...updates,
+        updated_at: new Date()
+      })
       .where(eq(superadminFeatureFlags.id, flagId))
       .returning();
 
@@ -917,6 +920,261 @@ router.put('/flags/:id', requireSuperadmin, async (req, res) => {
   } catch (error) {
     console.error('Error updating flag:', error);
     res.status(500).json({ error: 'Failed to update flag' });
+  }
+});
+
+// Organization-specific feature flag overrides
+router.get('/organizations/:orgId/flags', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+
+    // Get all global flags and organization-specific overrides
+    const globalFlags = await db
+      .select()
+      .from(superadminFeatureFlags)
+      .orderBy(superadminFeatureFlags.flag_name);
+
+    const orgOverrides = await db
+      .select()
+      .from(organizationFeatureFlags)
+      .where(eq(organizationFeatureFlags.organization_id, orgId));
+
+    // Merge global flags with organization overrides
+    const overrideMap = new Map(orgOverrides.map(override => [override.flag_name, override.enabled]));
+    
+    const flagsWithOverrides = globalFlags.map(flag => ({
+      ...flag,
+      organization_override: overrideMap.has(flag.flag_name),
+      organization_enabled: overrideMap.get(flag.flag_name) ?? flag.default_value,
+      effective_value: overrideMap.get(flag.flag_name) ?? flag.default_value
+    }));
+
+    res.json(flagsWithOverrides);
+  } catch (error) {
+    console.error('Error fetching organization flags:', error);
+    res.status(500).json({ error: 'Failed to fetch organization flags' });
+  }
+});
+
+router.post('/organizations/:orgId/flags/:flagName', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+    const flagName = req.params.flagName;
+    const { enabled } = req.body;
+
+    // Check if override already exists
+    const [existingOverride] = await db
+      .select()
+      .from(organizationFeatureFlags)
+      .where(
+        and(
+          eq(organizationFeatureFlags.organization_id, orgId),
+          eq(organizationFeatureFlags.flag_name, flagName)
+        )
+      );
+
+    let result;
+    if (existingOverride) {
+      // Update existing override
+      [result] = await db
+        .update(organizationFeatureFlags)
+        .set({ enabled })
+        .where(eq(organizationFeatureFlags.id, existingOverride.id))
+        .returning();
+    } else {
+      // Create new override
+      [result] = await db
+        .insert(organizationFeatureFlags)
+        .values({
+          organization_id: orgId,
+          flag_name: flagName,
+          enabled
+        })
+        .returning();
+    }
+
+    // Get organization name for audit log
+    const [org] = await db
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, orgId));
+
+    await logSuperadminAction(
+      req.user!.id,
+      'SET_ORG_FEATURE_FLAG',
+      'organization',
+      orgId,
+      {
+        flag_name: flagName,
+        enabled,
+        organization_name: org?.name,
+        action: existingOverride ? 'updated' : 'created'
+      }
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error setting organization flag:', error);
+    res.status(500).json({ error: 'Failed to set organization flag' });
+  }
+});
+
+router.delete('/organizations/:orgId/flags/:flagName', requireSuperadmin, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+    const flagName = req.params.flagName;
+
+    // Delete the override (reverts to global default)
+    const deleted = await db
+      .delete(organizationFeatureFlags)
+      .where(
+        and(
+          eq(organizationFeatureFlags.organization_id, orgId),
+          eq(organizationFeatureFlags.flag_name, flagName)
+        )
+      )
+      .returning();
+
+    if (deleted.length === 0) {
+      return res.status(404).json({ error: 'Organization flag override not found' });
+    }
+
+    // Get organization name for audit log
+    const [org] = await db
+      .select({ name: organizations.name })
+      .from(organizations)
+      .where(eq(organizations.id, orgId));
+
+    await logSuperadminAction(
+      req.user!.id,
+      'REMOVE_ORG_FEATURE_FLAG',
+      'organization',
+      orgId,
+      {
+        flag_name: flagName,
+        organization_name: org?.name
+      }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error removing organization flag:', error);
+    res.status(500).json({ error: 'Failed to remove organization flag' });
+  }
+});
+
+// Bulk feature flag operations
+router.post('/flags/bulk-update', requireSuperadmin, async (req, res) => {
+  try {
+    const { updates } = req.body; // Array of { flagId, enabled }
+
+    const results = [];
+    for (const update of updates) {
+      const [updatedFlag] = await db
+        .update(superadminFeatureFlags)
+        .set({ 
+          default_value: update.enabled,
+          updated_at: new Date()
+        })
+        .where(eq(superadminFeatureFlags.id, update.flagId))
+        .returning();
+      
+      if (updatedFlag) {
+        results.push(updatedFlag);
+      }
+    }
+
+    await logSuperadminAction(
+      req.user!.id,
+      'BULK_UPDATE_FEATURE_FLAGS',
+      'feature_flag',
+      0,
+      { updated_count: results.length, updates }
+    );
+
+    res.json({ success: true, updated: results });
+  } catch (error) {
+    console.error('Error bulk updating flags:', error);
+    res.status(500).json({ error: 'Failed to bulk update flags' });
+  }
+});
+
+// Create new feature flag
+router.post('/flags', requireSuperadmin, async (req, res) => {
+  try {
+    const { flag_name, description, default_value } = req.body;
+
+    // Check if flag already exists
+    const [existingFlag] = await db
+      .select()
+      .from(superadminFeatureFlags)
+      .where(eq(superadminFeatureFlags.flag_name, flag_name));
+
+    if (existingFlag) {
+      return res.status(400).json({ error: 'Feature flag with this name already exists' });
+    }
+
+    const [newFlag] = await db
+      .insert(superadminFeatureFlags)
+      .values({
+        flag_name,
+        description,
+        default_value: default_value || false
+      })
+      .returning();
+
+    await logSuperadminAction(
+      req.user!.id,
+      'CREATE_FEATURE_FLAG',
+      'feature_flag',
+      newFlag.id,
+      { flag_name, description, default_value }
+    );
+
+    res.status(201).json(newFlag);
+  } catch (error) {
+    console.error('Error creating flag:', error);
+    res.status(500).json({ error: 'Failed to create flag' });
+  }
+});
+
+// Delete feature flag
+router.delete('/flags/:id', requireSuperadmin, async (req, res) => {
+  try {
+    const flagId = parseInt(req.params.id);
+
+    // Get flag info before deletion
+    const [flag] = await db
+      .select()
+      .from(superadminFeatureFlags)
+      .where(eq(superadminFeatureFlags.id, flagId));
+
+    if (!flag) {
+      return res.status(404).json({ error: 'Feature flag not found' });
+    }
+
+    // Delete organization overrides first
+    await db
+      .delete(organizationFeatureFlags)
+      .where(eq(organizationFeatureFlags.flag_name, flag.flag_name));
+
+    // Delete the flag
+    await db
+      .delete(superadminFeatureFlags)
+      .where(eq(superadminFeatureFlags.id, flagId));
+
+    await logSuperadminAction(
+      req.user!.id,
+      'DELETE_FEATURE_FLAG',
+      'feature_flag',
+      flagId,
+      { flag_name: flag.flag_name }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting flag:', error);
+    res.status(500).json({ error: 'Failed to delete flag' });
   }
 });
 

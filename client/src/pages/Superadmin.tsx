@@ -201,7 +201,7 @@ export default function Superadmin() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Organizations</h1>
         <p className="text-gray-600 dark:text-gray-400">Manage and monitor all organizations</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -258,7 +258,7 @@ export default function Superadmin() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Users</h1>
         <p className="text-gray-600 dark:text-gray-400">Manage and monitor all users</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -323,7 +323,7 @@ export default function Superadmin() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Active Sessions</h1>
         <p className="text-gray-600 dark:text-gray-400">Monitor active user sessions</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -382,7 +382,7 @@ export default function Superadmin() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Background Jobs</h1>
         <p className="text-gray-600 dark:text-gray-400">Monitor and manage background tasks</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -447,7 +447,7 @@ export default function Superadmin() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Audit Activity</h1>
         <p className="text-gray-600 dark:text-gray-400">Monitor system and user activity</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -489,7 +489,7 @@ export default function Superadmin() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Billing Events</h1>
         <p className="text-gray-600 dark:text-gray-400">Monitor billing and subscription events</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -535,7 +535,7 @@ export default function Superadmin() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Feature Flags</h1>
         <p className="text-gray-600 dark:text-gray-400">Control system-wide feature availability</p>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -1093,7 +1093,7 @@ export default function Superadmin() {
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <SuperadminNavigation />
-      
+
       <div className="flex-1 overflow-auto">
         <div className="p-8">
           {renderSectionContent()}
