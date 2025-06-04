@@ -25,7 +25,7 @@ const router = express.Router();
 
 // Middleware to check superadmin permissions
 const requireSuperadmin = (req: any, res: any, next: any) => {
-  if (!req.user || !['superadmin_owner', 'superadmin_staff', 'superadmin_auditor'].includes(req.user.role)) {
+  if (!req.user || !['superadmin', 'superadmin_owner', 'superadmin_staff', 'superadmin_auditor', 'super_admin'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Superadmin access required' });
   }
   next();
