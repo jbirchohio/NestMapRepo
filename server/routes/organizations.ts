@@ -14,6 +14,50 @@ const router = Router();
 // Apply authentication to all organization routes
 router.use(unifiedAuthMiddleware);
 
+// Add users endpoint for card issuance dropdown (matches frontend API call) - MUST be before /:id route
+router.get('/users', async (req: Request, res: Response) => {
+  try {
+    // Since we know the user exists and has organization_id = 1, let's fetch directly
+    // For superadmin users, we can access any organization, but default to their own
+    let targetOrgId = 1; // JonasCo organization
+    
+    // If user has organization context, use it; otherwise default to JonasCo
+    if (req.user?.organization_id) {
+      targetOrgId = req.user.organization_id;
+    } else if (req.user?.id) {
+      // Fallback: get organization from database
+      const [userWithOrg] = await db
+        .select({ organization_id: users.organization_id })
+        .from(users)
+        .where(eq(users.id, req.user.id))
+        .limit(1);
+      
+      if (userWithOrg?.organization_id) {
+        targetOrgId = userWithOrg.organization_id;
+      }
+    }
+
+    const organizationUsers = await db
+      .select({
+        id: users.id,
+        display_name: users.display_name,
+        email: users.email,
+        role: users.role,
+        organization_id: users.organization_id,
+        username: users.username
+      })
+      .from(users)
+      .where(eq(users.organization_id, targetOrgId))
+      .orderBy(users.display_name);
+
+    console.log(`Found ${organizationUsers.length} users for organization ${targetOrgId}`);
+    res.json(organizationUsers);
+  } catch (error) {
+    console.error('Error fetching organization users:', error);
+    res.status(500).json({ message: "Failed to fetch organization users" });
+  }
+});
+
 // Get organization details
 router.get("/:id", async (req: Request, res: Response) => {
   try {
@@ -245,50 +289,6 @@ router.get('/members', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching organization members:', error);
     res.status(500).json({ message: "Failed to fetch organization members" });
-  }
-});
-
-// Add users endpoint for card issuance dropdown (matches frontend API call)
-router.get('/users', async (req: Request, res: Response) => {
-  try {
-    // Since we know the user exists and has organization_id = 1, let's fetch directly
-    // For superadmin users, we can access any organization, but default to their own
-    let targetOrgId = 1; // JonasCo organization
-    
-    // If user has organization context, use it; otherwise default to JonasCo
-    if (req.user?.organization_id) {
-      targetOrgId = req.user.organization_id;
-    } else if (req.user?.id) {
-      // Fallback: get organization from database
-      const [userWithOrg] = await db
-        .select({ organization_id: users.organization_id })
-        .from(users)
-        .where(eq(users.id, req.user.id))
-        .limit(1);
-      
-      if (userWithOrg?.organization_id) {
-        targetOrgId = userWithOrg.organization_id;
-      }
-    }
-
-    const organizationUsers = await db
-      .select({
-        id: users.id,
-        display_name: users.display_name,
-        email: users.email,
-        role: users.role,
-        organization_id: users.organization_id,
-        username: users.username
-      })
-      .from(users)
-      .where(eq(users.organization_id, targetOrgId))
-      .orderBy(users.display_name);
-
-    console.log(`Found ${organizationUsers.length} users for organization ${targetOrgId}`);
-    res.json(organizationUsers);
-  } catch (error) {
-    console.error('Error fetching organization users:', error);
-    res.status(500).json({ message: "Failed to fetch organization users" });
   }
 });
 

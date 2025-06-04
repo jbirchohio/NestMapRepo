@@ -66,16 +66,43 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
   let userId: number | null = null;
 
   try {
-    // Simple JWT payload decode (without verification for now to get this working)
-    // Since other endpoints work fine, we'll match their authentication pattern
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    const authId = payload.sub;
+    // Proper JWT verification with Supabase
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase configuration');
+      return res.status(500).json({ message: "Server configuration error" });
+    }
+
+    // Verify the JWT token with Supabase auth service
+    const verifyResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': supabaseAnonKey,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!verifyResponse.ok) {
+      const errorText = await verifyResponse.text();
+      console.error('Supabase JWT verification failed:', {
+        status: verifyResponse.status,
+        statusText: verifyResponse.statusText,
+        error: errorText
+      });
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
+
+    const userData = await verifyResponse.json();
+    const authId = userData.id;
 
     if (!authId) {
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
-    // Look up database user by Supabase auth ID directly from database
+    // Look up database user by Supabase auth ID
     const [dbUser] = await db
       .select()
       .from(users)
@@ -83,7 +110,7 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       .limit(1);
 
     if (!dbUser) {
-      return res.status(401).json({ message: "User not found" });
+      return res.status(401).json({ message: "User not found in database" });
     }
 
     userId = dbUser.id;
