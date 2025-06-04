@@ -215,6 +215,33 @@ export function registerCorporateCardRoutes(app: Express): void {
     }
   );
 
+  // Delete card
+  app.delete("/api/corporate-card/:card_id", 
+    requireAuth,
+    checkPermissions(['MANAGE_ORGANIZATION', 'ADMIN_ACCESS']),
+    async (req, res) => {
+      try {
+        const cardId = parseInt(req.params.card_id);
+        
+        if (!req.user?.organization_id) {
+          return res.status(400).json({ error: 'Organization ID required' });
+        }
+
+        const result = await stripeIssuingService.deleteCard(cardId, req.user.organization_id);
+
+        res.json({
+          success: true,
+          message: 'Card deleted successfully',
+        });
+      } catch (error) {
+        console.error('Error deleting card:', error);
+        res.status(500).json({ 
+          error: error instanceof Error ? error.message : 'Failed to delete card' 
+        });
+      }
+    }
+  );
+
   // Get card transactions
   app.get("/api/corporate-card/:card_id/transactions", 
     requireAuth,

@@ -153,6 +153,27 @@ export default function CorporateCards() {
     },
   });
 
+  // Delete card mutation
+  const deleteCardMutation = useMutation({
+    mutationFn: (cardId: number) =>
+      apiRequest("DELETE", `/api/corporate-card/${cardId}`).then(res => res.json()),
+    onSuccess: () => {
+      toast({
+        title: "Card Deleted",
+        description: "Corporate card has been permanently deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+      setSelectedCard(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete card",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Approve expense mutation
   const approveExpenseMutation = useMutation({
     mutationFn: (approvalData: any) =>
@@ -172,7 +193,7 @@ export default function CorporateCards() {
     
     const cardData = {
       user_id: userId,
-      spend_limit: parseInt(formData.get("spend_limit") as string) * 100, // Convert to cents
+      spend_limit: parseInt(formData.get("spend_limit") as string), // Already in dollars, don't multiply
       interval: formData.get("interval") as string,
       cardholder_name: selectedUser?.username || "",
       purpose: formData.get("purpose") as string,
@@ -738,7 +759,18 @@ export default function CorporateCards() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-6 gap-3">
+            <div className="flex justify-between pt-6">
+              <PrimaryButton 
+                variant="danger" 
+                onClick={() => {
+                  if (confirm("Are you sure you want to permanently delete this card? This action cannot be undone.")) {
+                    deleteCardMutation.mutate(selectedCard.id);
+                  }
+                }}
+                loading={deleteCardMutation.isPending}
+              >
+                Delete Card
+              </PrimaryButton>
               <PrimaryButton 
                 variant="ghost" 
                 onClick={() => setIsManageDialogOpen(false)}

@@ -219,6 +219,39 @@ export class StripeIssuingService {
   }
 
   /**
+   * Delete a card permanently
+   */
+  async deleteCard(card_id: number, organization_id: number) {
+    try {
+      const cardRecord = await storage.getCorporateCard(card_id);
+      if (!cardRecord) {
+        throw new Error('Card not found');
+      }
+
+      // Verify the card belongs to the organization
+      if (cardRecord.organization_id !== organization_id) {
+        throw new Error('Access denied: Card does not belong to your organization');
+      }
+
+      // Cancel the card in Stripe first
+      await stripe.issuing.cards.update(cardRecord.stripe_card_id, {
+        status: 'canceled',
+      });
+
+      // Delete the card record from database
+      await storage.deleteCorporateCard(card_id);
+
+      return {
+        success: true,
+        message: 'Card deleted successfully',
+      };
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      throw new Error(`Failed to delete card: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Process Stripe Issuing webhook events
    */
   async processWebhookEvent(event: Stripe.Event) {
