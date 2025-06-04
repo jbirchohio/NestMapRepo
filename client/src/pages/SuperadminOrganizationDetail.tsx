@@ -468,8 +468,8 @@ export default function SuperadminOrganizationDetail() {
                           <SelectValue placeholder="Choose new plan" />
                         </SelectTrigger>
                         <SelectContent>
-                          {organization.plan === 'free' && <SelectItem value="team">Team ($29.99/month)</SelectItem>}
-                          {(organization.plan === 'free' || organization.plan === 'team') && <SelectItem value="enterprise">Enterprise ($99.99/month)</SelectItem>}
+                          {organization.plan === 'free' && <SelectItem value="team">Team ($199/month)</SelectItem>}
+                          {(organization.plan === 'free' || organization.plan === 'team') && <SelectItem value="enterprise">Enterprise ($499/month)</SelectItem>}
                         </SelectContent>
                       </Select>
                     </div>
@@ -501,7 +501,7 @@ export default function SuperadminOrganizationDetail() {
                           <SelectValue placeholder="Choose new plan" />
                         </SelectTrigger>
                         <SelectContent>
-                          {organization.plan === 'enterprise' && <SelectItem value="team">Team ($29.99/month)</SelectItem>}
+                          {organization.plan === 'enterprise' && <SelectItem value="team">Team ($199/month)</SelectItem>}
                           {(organization.plan === 'enterprise' || organization.plan === 'team') && <SelectItem value="free">Free ($0/month)</SelectItem>}
                         </SelectContent>
                       </Select>

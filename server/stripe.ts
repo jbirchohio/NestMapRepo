@@ -21,7 +21,7 @@ export const SUBSCRIPTION_PLANS = {
   team: {
     id: 'team',
     name: 'Team',
-    price: 29.99,
+    price: 199,
     interval: 'month',
     features: ['Unlimited trips', 'Team collaboration', 'Priority support'],
     stripePriceId: process.env.STRIPE_PRICE_ID_TEAM,
@@ -29,7 +29,7 @@ export const SUBSCRIPTION_PLANS = {
   enterprise: {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 99.99,
+    price: 499,
     interval: 'month',
     features: ['Everything in Team', 'Custom branding', 'API access', 'Dedicated support'],
     stripePriceId: process.env.STRIPE_PRICE_ID_ENTERPRISE,
