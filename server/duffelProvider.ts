@@ -20,7 +20,7 @@ export class DuffelProvider {
   private apiKey: string;
 
   constructor() {
-    this.apiKey = process.env.KIWI_API_KEY || ''; // Using the Duffel key from KIWI_API_KEY env var
+    this.apiKey = process.env.DUFFEL_API_KEY || '';
     if (!this.apiKey) {
       console.warn('Duffel API key not configured - travel search will not work');
     }

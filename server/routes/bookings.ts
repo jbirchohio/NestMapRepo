@@ -2,100 +2,75 @@ import { Router } from 'express';
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../db';
 import { bookings, bookingPayments, trips, insertBookingSchema } from '@shared/schema';
+import { requireAuth } from '../middleware/auth';
+import { searchFlights, searchHotels } from '../bookingProviders';
 import { z } from 'zod';
 
 const router = Router();
 
-// Flight search endpoint
+// Flight search endpoint with JWT authentication
 router.post('/flights/search', async (req, res) => {
   try {
-    console.log('Flight search request body:', req.body);
+    console.log('Authenticated flight search request:', req.body);
 
-    // Handle both camelCase and snake_case parameters due to middleware
+    // Standardize camelCase to snake_case for API consistency
     const origin = req.body.origin;
     const destination = req.body.destination;
-    const departureDate = req.body.departure_date || req.body.departureDate;
-    const returnDate = req.body.return_date || req.body.returnDate;
+    const departureDate = req.body.departureDate || req.body.departure_date;
+    const returnDate = req.body.returnDate || req.body.return_date;
     const passengers = req.body.passengers || 1;
-    const cabin = req.body.cabin || req.body.class || 'economy';
 
     // Convert date objects to strings if needed
     const formatDate = (date: any): string => {
       if (!date) return '';
       if (typeof date === 'string' && date.length > 0) return date;
       if (date instanceof Date && !isNaN(date.getTime())) return date.toISOString().split('T')[0];
-      if (typeof date === 'object' && date.$d && date.$d instanceof Date) return date.$d.toISOString().split('T')[0]; // Day.js object
-      if (typeof date === 'object' && Object.keys(date).length === 0) return ''; // Empty object
+      if (typeof date === 'object' && date.$d && date.$d instanceof Date) return date.$d.toISOString().split('T')[0];
+      if (typeof date === 'object' && Object.keys(date).length === 0) return '';
       return '';
     };
 
     const departureDateStr = formatDate(departureDate);
-    const returnDateStr = returnDate ? formatDate(returnDate) : '';
+    const returnDateStr = returnDate ? formatDate(returnDate) : undefined;
 
     // Validation
     if (!origin || !destination || !departureDateStr) {
       return res.status(400).json({ 
-        message: "Missing required search parameters. Need: origin, destination, departure_date",
-        received: { 
-          origin, 
-          destination, 
-          departure_date: departureDateStr, 
-          passengers,
-          original_departure: departureDate,
-          original_return: returnDate
-        }
+        message: "Missing required search parameters: origin, destination, departureDate",
+        received: { origin, destination, departureDate: departureDateStr, passengers }
       });
     }
 
-    const searchParams = {
+    console.log('Searching flights via Duffel API:', { origin, destination, departureDateStr, returnDateStr, passengers });
+
+    // Use authentic Duffel API through booking provider
+    const flights = await searchFlights({
       origin,
       destination,
-      departure_date: departureDateStr,
-      return_date: returnDateStr,
-      passengers,
-      cabin
-    };
+      departureDate: departureDateStr,
+      returnDate: returnDateStr,
+      passengers
+    });
 
-    console.log('Processed search params:', searchParams);
+    console.log(`Duffel API returned ${flights.length} flight options`);
 
-    // Mock flight data for development
-    const mockFlights = [
-      {
-        id: "flight_1",
-        airline: "American Airlines",
-        flight_number: "AA123",
-        origin: origin,
-        destination: destination,
-        departure_date: departureDateStr,
-        departure_time: "08:00",
-        arrival_time: "11:30",
-        duration: "3h 30m",
-        price: 299,
-        currency: "USD",
-        stops: 0,
-        aircraft: "Boeing 737"
-      },
-      {
-        id: "flight_2", 
-        airline: "Delta Airlines",
-        flight_number: "DL456",
-        origin: origin,
-        destination: destination,
-        departure_date: departureDateStr,
-        departure_time: "14:15",
-        arrival_time: "17:45",
-        duration: "3h 30m",
-        price: 349,
-        currency: "USD",
-        stops: 0,
-        aircraft: "Airbus A320"
-      }
-    ];
+    // Return flights with proper structure (Duffel already provides normalized data)
+    const normalizedFlights = flights.map(flight => ({
+      id: flight.id,
+      airline: flight.airline,
+      origin: flight.origin,
+      destination: flight.destination,
+      departureDate: flight.departureDate,
+      price: flight.price
+    }));
 
-    res.json({ flights: mockFlights });
+    res.json({ flights: normalizedFlights });
   } catch (error) {
-    console.error('Flight search error:', error);
-    res.status(500).json({ message: "Flight search failed" });
+    console.error('Duffel flight search error:', error);
+    res.status(500).json({ 
+      message: "Flight search failed", 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
