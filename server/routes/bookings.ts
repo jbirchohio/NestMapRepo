@@ -286,7 +286,21 @@ export function registerBookingRoutes(app: Express) {
         });
       }
 
-      const searchParams = req.body;
+      const requestBody = req.body;
+      console.log('Flight search request body:', requestBody);
+      
+      // Map frontend parameters to DuffelProvider expected format
+      const searchParams = {
+        departure: requestBody.departure || requestBody.origin,
+        destination: requestBody.destination,
+        departureDate: requestBody.departureDate || requestBody.departure_date,
+        returnDate: requestBody.returnDate || requestBody.return_date,
+        passengers: requestBody.passengers || 1,
+        class: requestBody.class || 'economy'
+      };
+      
+      console.log(`Duffel flight search for: ${searchParams.departure} → ${searchParams.destination}`);
+      console.log('Mapped search params:', searchParams);
       
       try {
         const results = await duffelProvider.searchFlights(searchParams);
