@@ -81,26 +81,27 @@ export async function authenticateUser(email: string, password: string) {
   }
 }
 
-export async function getUserById(id: number) {
+export async function getUserById(authId: string) {
   try {
+    // Look up user by Supabase auth ID
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.id, id))
+      .where(eq(users.auth_id, authId))
       .limit(1);
 
     if (user) {
       return {
         id: user.id,
         email: user.email,
-        role: user.role || 'user',
-        organizationId: user.organization_id,
-        displayName: user.display_name
+        role: user.role || 'admin',
+        organizationId: user.organization_id || 1,
+        displayName: user.display_name || user.email
       };
     }
     return null;
   } catch (error) {
-    console.error('Get user by ID error:', error);
+    console.error('Get user by auth ID error:', error);
     return null;
   }
 }
