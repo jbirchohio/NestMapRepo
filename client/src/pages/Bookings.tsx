@@ -31,10 +31,12 @@ export default function Bookings() {
     enabled: !!user,
   });
 
-  const hasBookingAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('CREATE_TRIPS') || 
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations')
+  const hasBookingAccess = userPermissions && (
+    userPermissions.canCreateTrips || 
+    userPermissions.canViewTrips ||
+    userPermissions.canManageOrganization ||
+    userPermissions.canAccessAdmin ||
+    user?.role === 'admin'
   );
 
   if (!user) {
