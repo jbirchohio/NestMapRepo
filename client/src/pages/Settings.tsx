@@ -93,7 +93,7 @@ export default function Settings() {
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest('POST', '/api/white-label/configure', data);
-      return response.json();
+      return response;
     },
     onSuccess: () => {
       toast({
