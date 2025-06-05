@@ -28,10 +28,33 @@ export async function getUserPermissions(req: Request, res: Response) {
       return res.json({ permissions, role: "admin" });
     }
     
-    const numericUserId = Number(requestedUserId);
-    if (isNaN(numericUserId)) {
+    // Use authenticated user's ID if no specific user requested
+    const targetUserId = requestedUserId ? Number(requestedUserId) : req.user.id;
+    
+    if (isNaN(targetUserId)) {
       return res.status(400).json({ error: "Invalid user ID" });
     }
+
+    // Get user permissions based on role
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, targetUserId))
+      .limit(1);
+
+    if (!user.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const userRole = user[0].role || 'user';
+    const permissions = ROLE_PERMISSIONS[userRole] || [];
+
+    return res.json({ 
+      permissions, 
+      role: userRole,
+      userId: targetUserId,
+      organizationId: user[0].organization_id 
+    });
 
     // CRITICAL SECURITY: Enforce organization-based access control
     // Users can only view permissions for:

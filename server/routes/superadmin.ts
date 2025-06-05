@@ -34,28 +34,10 @@ interface AuthenticatedUser {
   displayName?: string;
 }
 
-interface AuthenticatedRequest extends Request {
-  user?: AuthenticatedUser;
-}
+import { unifiedAuthMiddleware, requireSuperadminRole, AuthenticatedRequest } from '../middleware/unifiedAuth';
 
-// Middleware to check superadmin permissions
-const requireSuperadmin = (req: any, res: any, next: any) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  
-  const validSuperadminRoles = [
-    USER_ROLES.SUPERADMIN_OWNER,
-    USER_ROLES.SUPERADMIN_STAFF,
-    USER_ROLES.SUPERADMIN_AUDITOR
-  ];
-  
-  if (!req.user.role || !validSuperadminRoles.includes(req.user.role as any)) {
-    return res.status(403).json({ error: 'Superadmin access required' });
-  }
-  
-  next();
-};
+// Apply unified auth to all superadmin routes
+router.use(unifiedAuthMiddleware);
 
 // Middleware for owner-level permissions
 const requireSuperadminOwner = (req: any, res: any, next: any) => {
@@ -944,7 +926,7 @@ router.post('/billing/:orgId/reactivate', requireSuperadmin, async (req, res) =>
 });
 
 // Consolidated dashboard endpoint to prevent rate limiting
-router.get('/dashboard', requireSuperadmin, async (req, res) => {
+router.get('/dashboard', requireSuperadminRole, async (req, res) => {
   try {
     // Execute all queries in parallel but return as single response
     const [

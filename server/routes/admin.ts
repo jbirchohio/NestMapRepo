@@ -6,18 +6,10 @@ import { z } from 'zod';
 
 const router = Router();
 
-// Security middleware - super admin only
-const requireSuperAdmin = (req: Request, res: Response, next: Function) => {
-  if (!req.user) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  
-  if (req.user.role !== 'super_admin') {
-    return res.status(403).json({ error: "Super admin access required" });
-  }
-  
-  next();
-};
+import { unifiedAuthMiddleware, requireSuperadminRole, AuthenticatedRequest } from '../middleware/unifiedAuth';
+
+// Apply unified auth to all admin routes
+router.use(unifiedAuthMiddleware);
 
 // Audit logging function
 const logAdminAction = async (

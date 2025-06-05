@@ -49,14 +49,14 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
-  
+
   // Enhanced Content Security Policy
   let csp;
   if (process.env.NODE_ENV === 'production') {
     // Generate nonce for production inline scripts
     const nonce = Buffer.from(Math.random().toString()).toString('base64');
     res.locals.nonce = nonce;
-    
+
     // Production CSP - strict security with nonce-based scripts
     csp = [
       "default-src 'self'",
@@ -87,7 +87,7 @@ app.use((req, res, next) => {
       "form-action 'self'"
     ].join('; ');
   }
-  
+
   res.setHeader('Content-Security-Policy', csp);
   next();
 });
@@ -196,10 +196,10 @@ app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
     // Use existing database connection to query session statistics
     const sessionCountResult = await db.execute(`SELECT COUNT(*) as session_count FROM session`);
     const expiredSessionResult = await db.execute(`SELECT COUNT(*) as expired_count FROM session WHERE expire < NOW()`);
-    
+
     const totalSessions = parseInt(sessionCountResult.rows[0].session_count as string);
     const expiredSessions = parseInt(expiredSessionResult.rows[0].expired_count as string);
-    
+
     res.json({
       totalSessions,
       expiredSessions,
@@ -232,11 +232,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     method: req.method,
     timestamp: new Date().toISOString()
   });
-  
+
   if (res.headersSent) {
     return next(err);
   }
-  
+
   res.status(500).json({
     message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
     ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
@@ -273,7 +273,7 @@ app.use((req, res, next) => {
 
 (async () => {
   console.log('🚀 Starting server initialization...');
-  
+
   // Run database migrations on startup
   if (process.env.NODE_ENV === 'production') {
     console.log('🔄 Running database migrations...');
@@ -290,17 +290,17 @@ app.use((req, res, next) => {
   try {
     // Mount API routes
     app.use('/api', apiRoutes);
-    
+
     // Register booking routes with full Express app instance
     const { registerBookingRoutes } = await import('./routes/bookings');
     registerBookingRoutes(app);
-    
+
     console.log('✅ API routes mounted successfully');
   } catch (error) {
     console.error('❌ Failed to mount API routes:', error);
     throw error;
   }
-  
+
   // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -314,9 +314,9 @@ app.use((req, res, next) => {
     const server = app.listen(PORT, HOST, () => {
       log(`serving on http://${HOST}:${PORT}`);
     });
-    
+
     await setupVite(app, server);
-    
+
     // Handle server cleanup on process termination
     process.on('SIGTERM', () => server.close());
     process.on('SIGINT', () => server.close());
@@ -334,12 +334,12 @@ app.use((req, res, next) => {
       console.error("❌ Static directory not found:", staticPath);
       serveStatic(app);
     }
-    
+
     // Start server for production
     const server = app.listen(PORT, HOST, () => {
       log(`serving on http://${HOST}:${PORT}`);
     });
-    
+
     // Handle server cleanup on process termination
     process.on('SIGTERM', () => server.close());
     process.on('SIGINT', () => server.close());
