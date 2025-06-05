@@ -1072,13 +1072,12 @@ router.put('/flags/:id', requireSuperadmin, async (req, res) => {
 
 router.get('/flags', requireSuperadmin, async (req, res) => {
   try {
-    const flags = await db.execute(`
-      SELECT id, flag_name, is_enabled, description, created_at, updated_at
-      FROM superadmin_feature_flags
-      ORDER BY flag_name
-    `);
+    const flags = await db
+      .select()
+      .from(featureFlags)
+      .orderBy(featureFlags.flag_name);
 
-    res.json(flags.rows);
+    res.json(flags);
   } catch (error) {
     console.error('Error fetching flags:', error);
     res.status(500).json({ error: 'Failed to fetch flags' });
@@ -1115,12 +1114,12 @@ router.put('/flags/:id', requireSuperadmin, async (req, res) => {
     const updates = req.body;
 
     const [updatedFlag] = await db
-      .update(superadminFeatureFlags)
+      .update(featureFlags)
       .set({
         ...updates,
         updated_at: new Date()
       })
-      .where(eq(superadminFeatureFlags.id, flagId))
+      .where(eq(featureFlags.id, flagId))
       .returning();
 
     if (!updatedFlag) {
