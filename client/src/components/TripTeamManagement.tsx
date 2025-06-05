@@ -283,8 +283,8 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     const sequentialBookingData = {
       tripId: tripId.toString(),
       tripDestination: `${city}, ${country}`,
-      departureDate: formatDateForBooking(tripData.start_date || tripData.startDate),
-      returnDate: formatDateForBooking(tripData.end_date || tripData.endDate),
+      departureDate: formatDateForBooking(tripData.startDate || tripData.start_date),
+      returnDate: formatDateForBooking(tripData.endDate || tripData.end_date),
       currentTravelerIndex: 0,
       travelers: travelers.map(traveler => ({
         id: traveler.id,

@@ -302,12 +302,11 @@ export default function SequentialBooking() {
     // Search for flights using authentic Duffel API with same format as BookingWorkflow
     try {
       const searchParams = {
-        origin: originCode,
+        departure: originCode,
         destination: destinationCode,
         departureDate: departureDateStr,
         returnDate: returnDateStr || undefined,
         passengers: 1,
-        class: currentTraveler.travelClass || 'economy',
       };
 
       console.log('Flight search params:', searchParams);
