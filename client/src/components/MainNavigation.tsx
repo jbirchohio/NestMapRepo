@@ -181,61 +181,61 @@ export default function MainNavigation() {
     retry: 3
   });
 
-  // Debug: Log current permissions status
-  console.log('Current user permissions:', userPermissions);
-
+  // Extract permissions array from the response object
+  const permissions = userPermissions?.permissions || [];
+  
   // Check permissions for different sections
-  const hasAnalyticsAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('ACCESS_ANALYTICS') || 
-    userPermissions.includes('view_analytics') || 
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations')
+  const hasAnalyticsAccess = Array.isArray(permissions) && (
+    permissions.includes('ACCESS_ANALYTICS') || 
+    permissions.includes('view_analytics') || 
+    permissions.includes('MANAGE_ORGANIZATION') ||
+    permissions.includes('manage_organizations')
   );
 
-  const hasBookingAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('CREATE_TRIPS') || 
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations')
+  const hasBookingAccess = Array.isArray(permissions) && (
+    permissions.includes('CREATE_TRIPS') || 
+    permissions.includes('MANAGE_ORGANIZATION') ||
+    permissions.includes('manage_organizations')
   );
 
-  const hasOptimizerAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('ACCESS_ANALYTICS') || 
-    userPermissions.includes('view_analytics') ||
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations')
+  const hasOptimizerAccess = Array.isArray(permissions) && (
+    permissions.includes('ACCESS_ANALYTICS') || 
+    permissions.includes('view_analytics') ||
+    permissions.includes('MANAGE_ORGANIZATION') ||
+    permissions.includes('manage_organizations')
   );
 
-  const hasAIGeneratorAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('CREATE_TRIPS') || 
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations') ||
-    userPermissions.includes('ACCESS_ANALYTICS') ||
-    userPermissions.includes('view_analytics')
+  const hasAIGeneratorAccess = Array.isArray(permissions) && (
+    permissions.includes('CREATE_TRIPS') || 
+    permissions.includes('MANAGE_ORGANIZATION') ||
+    permissions.includes('manage_organizations') ||
+    permissions.includes('ACCESS_ANALYTICS') ||
+    permissions.includes('view_analytics')
   );
 
-  const hasSettingsAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('MANAGE_ORGANIZATION') || 
-    userPermissions.includes('manage_organizations') ||
-    userPermissions.includes('ADMIN_ACCESS')
+  const hasSettingsAccess = Array.isArray(permissions) && (
+    permissions.includes('MANAGE_ORGANIZATION') || 
+    permissions.includes('manage_organizations') ||
+    permissions.includes('ADMIN_ACCESS')
   );
 
-  const hasTeamAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('INVITE_MEMBERS') || 
-    userPermissions.includes('manage_users') ||
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations')
+  const hasTeamAccess = Array.isArray(permissions) && (
+    permissions.includes('INVITE_MEMBERS') || 
+    permissions.includes('manage_users') ||
+    permissions.includes('MANAGE_ORGANIZATION') ||
+    permissions.includes('manage_organizations')
   );
 
-  const hasBillingAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('BILLING_ACCESS') || 
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations')
+  const hasBillingAccess = Array.isArray(permissions) && (
+    permissions.includes('BILLING_ACCESS') || 
+    permissions.includes('MANAGE_ORGANIZATION') ||
+    permissions.includes('manage_organizations')
   );
 
-  const hasOrganizationAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('MANAGE_ORGANIZATION') || 
-    userPermissions.includes('manage_organizations') ||
-    userPermissions.includes('ADMIN_ACCESS')
+  const hasOrganizationAccess = Array.isArray(permissions) && (
+    permissions.includes('MANAGE_ORGANIZATION') || 
+    permissions.includes('manage_organizations') ||
+    permissions.includes('ADMIN_ACCESS')
   );
 
   if (!user) {
