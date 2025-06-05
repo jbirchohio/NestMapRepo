@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './JWTAuthContext';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 
 export interface WhiteLabelConfig {
   // Branding
@@ -62,11 +63,26 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
   const [location] = useLocation();
   const [isWhiteLabelActive, setIsWhiteLabelActive] = useState(false);
   
-  const [config, setConfig] = useState<WhiteLabelConfig>(() => {
-    // Load from localStorage if available, but don't apply automatically
-    const saved = localStorage.getItem('whiteLabelConfig');
-    return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
+  // Load branding configuration from database
+  const { data: brandingData } = useQuery({
+    queryKey: ['/api/white-label/config'],
+    enabled: !!user // Only fetch when user is authenticated
   });
+
+  const [config, setConfig] = useState<WhiteLabelConfig>(defaultConfig);
+
+  // Update config when branding data loads from database
+  useEffect(() => {
+    if (brandingData) {
+      setIsWhiteLabelActive(brandingData.isWhiteLabelActive);
+      if (brandingData.config) {
+        setConfig({
+          ...defaultConfig,
+          ...brandingData.config
+        });
+      }
+    }
+  }, [brandingData]);
 
   // Determine if we should be in white label mode
   const shouldUseWhiteLabel = () => {
@@ -82,7 +98,7 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
   const updateConfig = (newConfig: Partial<WhiteLabelConfig>) => {
     setConfig(prev => {
       const updated = { ...prev, ...newConfig };
-      localStorage.setItem('whiteLabelConfig', JSON.stringify(updated));
+      // Remove localStorage dependency - now saved to database via API
       return updated;
     });
   };
