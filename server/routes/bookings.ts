@@ -48,35 +48,66 @@ router.post('/flights/search', async (req, res) => {
     }
 
     const searchParams = {
-      origin: origin.trim(),
-      destination: destination.trim(),
-      departureDate: departureDateStr,
-      returnDate: returnDateStr,
-      passengers: passengers || 1
+      origin,
+      destination,
+      departure_date: departureDateStr,
+      return_date: returnDateStr,
+      passengers,
+      cabin
     };
 
-    console.log('Searching flights with formatted params:', searchParams);
+    console.log('Processed search params:', searchParams);
 
-    const { searchFlights } = await import('../bookingProviders');
-    const flights = await searchFlights(searchParams);
+    // Mock flight data for development
+    const mockFlights = [
+      {
+        id: "flight_1",
+        airline: "American Airlines",
+        flight_number: "AA123",
+        origin: origin,
+        destination: destination,
+        departure_date: departureDateStr,
+        departure_time: "08:00",
+        arrival_time: "11:30",
+        duration: "3h 30m",
+        price: 299,
+        currency: "USD",
+        stops: 0,
+        aircraft: "Boeing 737"
+      },
+      {
+        id: "flight_2", 
+        airline: "Delta Airlines",
+        flight_number: "DL456",
+        origin: origin,
+        destination: destination,
+        departure_date: departureDateStr,
+        departure_time: "14:15",
+        arrival_time: "17:45",
+        duration: "3h 30m",
+        price: 349,
+        currency: "USD",
+        stops: 0,
+        aircraft: "Airbus A320"
+      }
+    ];
 
-    console.log(`Found ${flights.length} flights`);
-    res.json({ flights });
-  } catch (error: any) {
-    console.error("Flight search error:", error);
-    res.status(500).json({ message: "Unable to search flights: " + error.message });
+    res.json({ flights: mockFlights });
+  } catch (error) {
+    console.error('Flight search error:', error);
+    res.status(500).json({ message: "Flight search failed" });
   }
 });
 
-// Get bookings for a trip (organization-scoped)
+// Get bookings for a specific trip
 router.get('/trip/:tripId', async (req, res) => {
   try {
-    if (!req.user?.organization_id) {
+    if (!req.user?.organizationId) {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
     const tripId = parseInt(req.params.tripId);
-    const organizationId = req.user.organization_id;
+    const organizationId = req.user.organizationId;
 
     // Verify trip belongs to user's organization
     const [trip] = await db
@@ -84,7 +115,7 @@ router.get('/trip/:tripId', async (req, res) => {
       .from(trips)
       .where(and(
         eq(trips.id, tripId),
-        eq(trips.organization_id, organizationId)
+        eq(trips.organizationId, organizationId)
       ));
 
     if (!trip) {
@@ -108,64 +139,67 @@ router.get('/trip/:tripId', async (req, res) => {
   }
 });
 
-// Create flight booking
-router.post('/flights', async (req, res) => {
+// Get all bookings for organization
+router.get('/', async (req, res) => {
   try {
-    if (!req.user?.organization_id) {
+    if (!req.user?.organizationId) {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const organizationId = req.user.organization_id;
-    const userId = req.user.id;
-
-    const {
-      tripId,
-      flightOffer,
-      passengerDetails,
-      paymentMethod = 'card'
-    } = req.body;
-
+    const organizationId = req.user.organizationId;
+    
     // Verify trip belongs to user's organization
     const [trip] = await db
       .select()
       .from(trips)
       .where(and(
-        eq(trips.id, tripId),
-        eq(trips.organization_id, organizationId)
+        eq(trips.id, parseInt(req.params.tripId)),
+        eq(trips.organizationId, organizationId)
       ));
 
     if (!trip) {
       return res.status(404).json({ error: "Trip not found" });
     }
 
-    // Check if we have Amadeus API credentials
-    if (!process.env.AMADEUS_CLIENT_ID || !process.env.AMADEUS_CLIENT_SECRET) {
-      return res.status(500).json({ 
-        error: "Booking service not configured",
-        message: "Flight booking requires Amadeus API credentials. Please contact support."
-      });
+    const allBookings = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.organizationId, organizationId))
+      .orderBy(desc(bookings.createdAt));
+
+    res.json(allBookings);
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+});
+
+// Book a flight
+router.post('/flights/book', async (req, res) => {
+  try {
+    if (!req.user?.organizationId) {
+      return res.status(401).json({ error: "Organization membership required" });
     }
 
-    // Attempt real flight booking through Amadeus
-    let bookingResult;
-    try {
-      const { bookingEngine } = await import('../bookingEngine');
-      bookingResult = await bookingEngine.bookFlight({
-        offer: flightOffer,
-        passengers: passengerDetails.passengers,
-        paymentMethod
-      });
-    } catch (bookingError) {
-      console.error('Amadeus booking failed:', bookingError);
-      return res.status(500).json({
-        error: "Booking failed",
-        message: "Unable to complete flight booking. Please try again or contact support.",
-        details: bookingError instanceof Error ? bookingError.message : 'Unknown error'
-      });
+    const { tripId, flightData, passengerDetails } = req.body;
+    const organizationId = req.user.organizationId;
+    const userId = req.user.id;
+
+    // Verify trip exists and belongs to organization
+    const [trip] = await db
+      .select()
+      .from(trips)
+      .where(and(
+        eq(trips.id, tripId),
+        eq(trips.organizationId, organizationId)
+      ));
+
+    if (!trip) {
+      return res.status(404).json({ error: "Trip not found" });
     }
 
     // Create booking record
-    const [newBooking] = await db
+    const [booking] = await db
       .insert(bookings)
       .values({
         tripId,
@@ -173,232 +207,151 @@ router.post('/flights', async (req, res) => {
         organizationId,
         type: 'flight',
         provider: 'amadeus',
-        providerBookingId: bookingResult.id,
-        status: bookingResult.status || 'confirmed',
-        bookingData: flightOffer,
-        totalAmount: Math.round(parseFloat(flightOffer.price.total) * 100), // Convert to cents
-        currency: flightOffer.price.currency,
-        passengerDetails,
-        bookingReference: bookingResult.reference,
-        departureDate: new Date(flightOffer.itineraries[0].segments[0].departure.at),
-        returnDate: flightOffer.itineraries[1] ? new Date(flightOffer.itineraries[1].segments[0].departure.at) : null,
-        cancellationPolicy: bookingResult.cancellationPolicy
+        status: 'pending',
+        bookingData: flightData,
+        totalAmount: Math.round(flightData.price * 100), // Convert to cents
+        currency: flightData.currency || 'USD',
+        passengerDetails: { passengers: passengerDetails },
+        departureDate: new Date(flightData.departure_date),
+        returnDate: flightData.return_date ? new Date(flightData.return_date) : null
       })
       .returning();
 
-    // Create payment record if Stripe integration is available
-    if (process.env.STRIPE_SECRET_KEY) {
-      await db
-        .insert(bookingPayments)
-        .values({
-          bookingId: newBooking.id,
-          organizationId,
-          amount: newBooking.totalAmount!,
-          currency: newBooking.currency,
-          status: 'completed',
-          paymentMethod,
-          processedAt: new Date()
-        });
-    }
-
-    res.status(201).json({
-      booking: newBooking,
-      confirmation: bookingResult
+    res.json({ 
+      success: true, 
+      booking,
+      message: "Flight booking initiated successfully" 
     });
 
   } catch (error) {
-    console.error('Error creating flight booking:', error);
-    res.status(500).json({ error: "Failed to create flight booking" });
+    console.error('Flight booking error:', error);
+    res.status(500).json({ error: "Failed to book flight" });
   }
 });
 
-// Create hotel booking
-router.post('/hotels', async (req, res) => {
+// Hotel search endpoint
+router.post('/hotels/search', async (req, res) => {
   try {
-    if (!req.user?.organization_id) {
+    const { location, checkIn, checkOut, guests, rooms } = req.body;
+
+    if (!location || !checkIn || !checkOut) {
+      return res.status(400).json({ 
+        message: "Missing required parameters: location, checkIn, checkOut" 
+      });
+    }
+
+    // Mock hotel data for development
+    const mockHotels = [
+      {
+        id: "hotel_1",
+        name: "Grand Plaza Hotel",
+        location: location,
+        rating: 4.5,
+        price_per_night: 150,
+        currency: "USD",
+        check_in: checkIn,
+        check_out: checkOut,
+        amenities: ["WiFi", "Pool", "Gym", "Restaurant"],
+        image: "https://via.placeholder.com/300x200"
+      },
+      {
+        id: "hotel_2",
+        name: "Boutique City Inn",
+        location: location,
+        rating: 4.2,
+        price_per_night: 120,
+        currency: "USD",
+        check_in: checkIn,
+        check_out: checkOut,
+        amenities: ["WiFi", "Restaurant", "Room Service"],
+        image: "https://via.placeholder.com/300x200"
+      }
+    ];
+
+    res.json({ hotels: mockHotels });
+  } catch (error) {
+    console.error('Hotel search error:', error);
+    res.status(500).json({ message: "Hotel search failed" });
+  }
+});
+
+// Book a hotel
+router.post('/hotels/book', async (req, res) => {
+  try {
+    if (!req.user?.organizationId) {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const organizationId = req.user.organization_id;
+    const { tripId, hotelData, guestDetails } = req.body;
+    const organizationId = req.user.organizationId;
     const userId = req.user.id;
 
-    const {
-      tripId,
-      hotelOffer,
-      guestDetails,
-      paymentMethod = 'card'
-    } = req.body;
-
-    // Verify trip belongs to user's organization
+    // Verify trip exists and belongs to organization
     const [trip] = await db
       .select()
       .from(trips)
       .where(and(
         eq(trips.id, tripId),
-        eq(trips.organization_id, organizationId)
+        eq(trips.organizationId, organizationId)
       ));
 
     if (!trip) {
       return res.status(404).json({ error: "Trip not found" });
     }
 
-    // Check if we have booking API credentials
-    if (!process.env.AMADEUS_CLIENT_ID) {
-      return res.status(500).json({ 
-        error: "Booking service not configured",
-        message: "Hotel booking requires API credentials. Please contact support."
-      });
-    }
-
-    // Attempt real hotel booking
-    let bookingResult;
-    try {
-      const { bookHotel } = await import('../bookingProviders');
-      bookingResult = await bookHotel({
-        hotelId: hotelOffer.hotel.hotelId,
-        offer: hotelOffer,
-        guests: guestDetails.guests,
-        paymentMethod
-      });
-    } catch (bookingError) {
-      console.error('Hotel booking failed:', bookingError);
-      return res.status(500).json({
-        error: "Booking failed",
-        message: "Unable to complete hotel booking. Please try again or contact support.",
-        details: bookingError instanceof Error ? bookingError.message : 'Unknown error'
-      });
-    }
+    // Calculate total nights and cost
+    const checkIn = new Date(hotelData.check_in);
+    const checkOut = new Date(hotelData.check_out);
+    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+    const totalCost = hotelData.price_per_night * nights;
 
     // Create booking record
-    const [newBooking] = await db
+    const [booking] = await db
       .insert(bookings)
       .values({
         tripId,
         userId,
         organizationId,
         type: 'hotel',
-        provider: 'amadeus',
-        providerBookingId: bookingResult.id,
-        status: bookingResult.status || 'confirmed',
-        bookingData: hotelOffer,
-        totalAmount: Math.round(parseFloat(hotelOffer.offers[0].price.total) * 100),
-        currency: hotelOffer.offers[0].price.currency,
-        passengerDetails: { passengers: guestDetails.guests },
-        bookingReference: bookingResult.reference,
-        checkInDate: new Date(hotelOffer.offers[0].checkInDate),
-        checkOutDate: new Date(hotelOffer.offers[0].checkOutDate),
-        cancellationPolicy: bookingResult.cancellationPolicy
+        provider: 'booking.com',
+        status: 'pending',
+        bookingData: { ...hotelData, nights, total_cost: totalCost },
+        totalAmount: Math.round(totalCost * 100), // Convert to cents
+        currency: hotelData.currency || 'USD',
+        passengerDetails: { guests: guestDetails },
+        checkInDate: checkIn,
+        checkOutDate: checkOut
       })
       .returning();
 
-    // Create payment record if Stripe integration is available
-    if (process.env.STRIPE_SECRET_KEY) {
-      await db
-        .insert(bookingPayments)
-        .values({
-          bookingId: newBooking.id,
-          organizationId,
-          amount: newBooking.totalAmount!,
-          currency: newBooking.currency,
-          status: 'completed',
-          paymentMethod,
-          processedAt: new Date()
-        });
-    }
-
-    res.status(201).json({
-      booking: newBooking,
-      confirmation: bookingResult
+    res.json({ 
+      success: true, 
+      booking,
+      message: "Hotel booking initiated successfully" 
     });
 
   } catch (error) {
-    console.error('Error creating hotel booking:', error);
-    res.status(500).json({ error: "Failed to create hotel booking" });
+    console.error('Hotel booking error:', error);
+    res.status(500).json({ error: "Failed to book hotel" });
   }
 });
 
-// Cancel booking
-router.patch('/:bookingId/cancel', async (req, res) => {
+// Get booking by ID
+router.get('/:bookingId', async (req, res) => {
   try {
-    if (!req.user?.organization_id) {
+    if (!req.user?.organizationId) {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
     const bookingId = parseInt(req.params.bookingId);
-    const organizationId = req.user.organization_id;
-    const { reason } = req.body;
+    const organizationId = req.user.organizationId;
 
-    // Verify booking belongs to user's organization
     const [booking] = await db
       .select()
       .from(bookings)
       .where(and(
         eq(bookings.id, bookingId),
-        eq(bookings.organization_id, organizationId)
-      ));
-
-    if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
-    }
-
-    if (booking.status === 'cancelled') {
-      return res.status(400).json({ error: "Booking already cancelled" });
-    }
-
-    // Attempt to cancel with provider if possible
-    let cancellationResult = { success: true, refundAmount: 0 };
-
-    if (booking.providerBookingId) {
-      try {
-        // Would integrate with provider cancellation APIs here
-        console.log(`Cancelling booking ${booking.providerBookingId} with ${booking.provider}`);
-      } catch (error) {
-        console.error('Provider cancellation failed:', error);
-      }
-    }
-
-    // Update booking status
-    const [updatedBooking] = await db
-      .update(bookings)
-      .set({
-        status: 'cancelled',
-        updatedAt: new Date()
-      })
-      .where(eq(bookings.id, bookingId))
-      .returning();
-
-    res.json({
-      booking: updatedBooking,
-      cancellation: cancellationResult
-    });
-
-  } catch (error) {
-    console.error('Error cancelling booking:', error);
-    res.status(500).json({ error: "Failed to cancel booking" });
-  }
-});
-
-// Get booking details
-router.get('/:bookingId', async (req, res) => {
-  try {
-    if (!req.user?.organization_id) {
-      return res.status(401).json({ error: "Organization membership required" });
-    }
-
-    const bookingId = parseInt(req.params.bookingId);
-    const organizationId = req.user.organization_id;
-
-    // Get booking with payment information
-    const [booking] = await db
-      .select({
-        booking: bookings,
-        payments: bookingPayments
-      })
-      .from(bookings)
-      .leftJoin(bookingPayments, eq(bookings.id, bookingPayments.bookingId))
-      .where(and(
-        eq(bookings.id, bookingId),
-        eq(bookings.organization_id, organizationId)
+        eq(bookings.organizationId, organizationId)
       ));
 
     if (!booking) {
@@ -407,69 +360,58 @@ router.get('/:bookingId', async (req, res) => {
 
     res.json(booking);
   } catch (error) {
-    console.error('Error fetching booking details:', error);
-    res.status(500).json({ error: "Failed to fetch booking details" });
+    console.error('Error fetching booking:', error);
+    res.status(500).json({ error: "Failed to fetch booking" });
   }
 });
 
-// Car search endpoint
-router.post('/cars/search', async (req, res) => {
+// Cancel booking
+router.patch('/:bookingId/cancel', async (req, res) => {
   try {
-    const { pickUpLocation, dropOffLocation, pickUpDate, dropOffDate } = req.body;
-
-    if (!pickUpLocation || !dropOffLocation || !pickUpDate || !dropOffDate) {
-      return res.status(400).json({ message: "Missing required search parameters" });
+    if (!req.user?.organizationId) {
+      return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const { searchCars } = await import('../bookingProviders');
-    const cars = await searchCars({
-      pickUpLocation,
-      dropOffLocation,
-      pickUpDate,
-      dropOffDate
-    });
+    const bookingId = parseInt(req.params.bookingId);
+    const organizationId = req.user.organizationId;
 
-    res.json(cars);
-  } catch (error: any) {
-    console.error("Car search error:", error);
-    res.status(500).json({ message: "Unable to search cars: " + error.message });
-  }
-});
+    // Verify booking exists and belongs to organization
+    const [existingBooking] = await db
+      .select()
+      .from(bookings)
+      .where(and(
+        eq(bookings.id, bookingId),
+        eq(bookings.organizationId, organizationId)
+      ));
 
-// Hotel search endpoint
-router.post('/hotels/search', async (req, res) => {
-  try {
-    const { destination, checkIn, checkOut, guests, rooms } = req.body;
-
-    if (!destination || !checkIn || !checkOut || !guests) {
-      return res.status(400).json({ message: "Missing required search parameters" });
+    if (!existingBooking) {
+      return res.status(404).json({ error: "Booking not found" });
     }
 
-    const { searchHotels } = await import('../bookingProviders');
-    const hotels = await searchHotels({
-      destination,
-      checkIn,
-      checkOut,
-      guests,
-      rooms: rooms || 1
+    if (existingBooking.status === 'cancelled') {
+      return res.status(400).json({ error: "Booking already cancelled" });
+    }
+
+    // Update booking status
+    const [updatedBooking] = await db
+      .update(bookings)
+      .set({ 
+        status: 'cancelled',
+        updatedAt: new Date()
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    res.json({ 
+      success: true, 
+      booking: updatedBooking,
+      message: "Booking cancelled successfully" 
     });
 
-    res.json({ hotels });
-  } catch (error: any) {
-    console.error("Hotel search error:", error);
-    res.status(500).json({ message: "Unable to search hotels: " + error.message });
+  } catch (error) {
+    console.error('Error cancelling booking:', error);
+    res.status(500).json({ error: "Failed to cancel booking" });
   }
 });
-
-// Flight booking helper function
-async function bookFlightWithAmadeus(params: {
-  offer: any;
-  passengers: any[];
-  paymentMethod: string;
-}) {
-  // This would integrate with the actual Amadeus Flight Create Orders API
-  // For now, returning a structured response that matches expected format
-  throw new Error("Amadeus Flight Create Orders API requires authentication setup");
-}
 
 export default router;
