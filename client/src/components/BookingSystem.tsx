@@ -1,11 +1,17 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/JWTAuthContext';
 import { FlightSearchForm } from '@/components/booking/FlightSearchForm';
 import { FlightResults } from '@/components/booking/FlightResults';
 import { HotelResults } from '@/components/booking/HotelResults';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 type DateRange = {
   from: Date | undefined;

@@ -7,7 +7,7 @@ import { Plane, Hotel, Calendar, Users, DollarSign, Clock, Star, ChevronLeft, Ch
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/JWTAuthContext';
 
 // Import modular components
 import { FlightSearchForm } from './booking/FlightSearchForm';
