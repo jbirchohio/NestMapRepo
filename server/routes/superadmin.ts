@@ -934,7 +934,7 @@ router.post('/billing/:orgId/reactivate', requireSuperadminRole, async (req, res
 });
 
 // Consolidated dashboard endpoint to prevent rate limiting
-router.get('/dashboard', requireSuperadminRoleRole, async (req, res) => {
+router.get('/dashboard', requireSuperadminRole, async (req, res) => {
   try {
     // Execute all queries in parallel but return as single response
     const [
