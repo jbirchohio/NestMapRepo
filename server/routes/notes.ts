@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { eq, and } from "drizzle-orm";
-import { db } from "../db";
-import { notes, trips } from "@shared/schema";
 import { unifiedAuthMiddleware } from "../middleware/unifiedAuth";
 import { z } from "zod";
+import { db } from "../db";
+import { notes } from "../../shared/schema";
+import { eq, and } from "drizzle-orm";
 
 const router = Router();
 router.use(unifiedAuthMiddleware);
@@ -11,201 +11,100 @@ router.use(unifiedAuthMiddleware);
 // Validation schemas
 const createNoteSchema = z.object({
   trip_id: z.number(),
-  title: z.string().min(1).max(200),
-  content: z.string().min(1).max(5000),
-  category: z.enum(['general', 'important', 'reminder', 'idea']).default('general'),
-  is_private: z.boolean().default(false)
+  content: z.string().min(1),
+  note_type: z.enum(['general', 'planning', 'reminder', 'important']).optional().default('general')
 });
 
 const updateNoteSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  content: z.string().min(1).max(5000).optional(),
-  category: z.enum(['general', 'important', 'reminder', 'idea']).optional(),
-  is_private: z.boolean().optional()
+  content: z.string().min(1).optional(),
+  note_type: z.enum(['general', 'planning', 'reminder', 'important']).optional()
 });
 
-// POST /api/notes - Create new note
+// POST /api/notes - Create a new note
 router.post("/", async (req, res) => {
   try {
     const validatedData = createNoteSchema.parse(req.body);
     
-    // Verify trip belongs to user's organization
-    const trip = await db.query.trips.findFirst({
-      where: and(
-        eq(trips.id, validatedData.trip_id),
-        eq(trips.organizationId, req.user.organization_id)
-      )
-    });
-
-    if (!trip) {
-      return res.status(404).json({ 
-        success: false, 
-        error: "Trip not found or access denied" 
-      });
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const [newNote] = await db.insert(notes).values({
-      tripId: validatedData.trip_id,
-      title: validatedData.title,
-      content: validatedData.content,
-      category: validatedData.category,
-      isPrivate: validatedData.is_private,
-      organizationId: req.user.organization_id,
-      createdBy: req.user.id
-    }).returning();
+    const newNote = await db
+      .insert(notes)
+      .values({
+        ...validatedData,
+        organization_id: req.user.organization_id
+      })
+      .returning();
 
-    res.status(201).json({
-      success: true,
-      data: newNote
-    });
+    res.status(201).json(newNote[0]);
   } catch (error) {
     console.error("Error creating note:", error);
-    res.status(400).json({ 
-      success: false, 
-      error: "Failed to create note" 
-    });
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Invalid request data", details: error.errors });
+    }
+    res.status(500).json({ error: "Failed to create note" });
   }
 });
 
-// PUT /api/notes/:id - Update note
+// PUT /api/notes/:id - Update a note
 router.put("/:id", async (req, res) => {
   try {
     const noteId = parseInt(req.params.id);
     const validatedData = updateNoteSchema.parse(req.body);
+    
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
-    // Verify note exists and belongs to user's organization
-    const existingNote = await db.query.notes.findFirst({
-      where: and(
+    const updatedNote = await db
+      .update(notes)
+      .set(validatedData)
+      .where(and(
         eq(notes.id, noteId),
-        eq(notes.organizationId, req.user.organization_id)
-      )
-    });
-
-    if (!existingNote) {
-      return res.status(404).json({ 
-        success: false, 
-        error: "Note not found" 
-      });
-    }
-
-    // Check if user can edit this note (creator or admin)
-    if (existingNote.createdBy !== req.user.id && !req.user.permissions?.includes('MANAGE_ALL_TRIPS')) {
-      return res.status(403).json({ 
-        success: false, 
-        error: "Permission denied" 
-      });
-    }
-
-    const [updatedNote] = await db.update(notes)
-      .set({
-        ...validatedData,
-        updatedAt: new Date()
-      })
-      .where(eq(notes.id, noteId))
+        eq(notes.organization_id, req.user.organization_id)
+      ))
       .returning();
 
-    res.json({
-      success: true,
-      data: updatedNote
-    });
+    if (updatedNote.length === 0) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.json(updatedNote[0]);
   } catch (error) {
     console.error("Error updating note:", error);
-    res.status(400).json({ 
-      success: false, 
-      error: "Failed to update note" 
-    });
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Invalid request data", details: error.errors });
+    }
+    res.status(500).json({ error: "Failed to update note" });
   }
 });
 
-// DELETE /api/notes/:id - Delete note
+// DELETE /api/notes/:id - Delete a note
 router.delete("/:id", async (req, res) => {
   try {
     const noteId = parseInt(req.params.id);
-
-    // Verify note exists and belongs to user's organization
-    const existingNote = await db.query.notes.findFirst({
-      where: and(
-        eq(notes.id, noteId),
-        eq(notes.organizationId, req.user.organization_id)
-      )
-    });
-
-    if (!existingNote) {
-      return res.status(404).json({ 
-        success: false, 
-        error: "Note not found" 
-      });
+    
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // Check if user can delete this note (creator or admin)
-    if (existingNote.createdBy !== req.user.id && !req.user.permissions?.includes('MANAGE_ALL_TRIPS')) {
-      return res.status(403).json({ 
-        success: false, 
-        error: "Permission denied" 
-      });
+    const deletedNote = await db
+      .delete(tripNotes)
+      .where(and(
+        eq(tripNotes.id, noteId),
+        eq(tripNotes.organization_id, req.user.organization_id)
+      ))
+      .returning();
+
+    if (deletedNote.length === 0) {
+      return res.status(404).json({ error: "Note not found" });
     }
 
-    await db.delete(notes).where(eq(notes.id, noteId));
-
-    res.json({
-      success: true,
-      message: "Note deleted successfully"
-    });
+    res.json({ message: "Note deleted successfully" });
   } catch (error) {
     console.error("Error deleting note:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to delete note" 
-    });
-  }
-});
-
-// GET /api/notes/:id - Get specific note
-router.get("/:id", async (req, res) => {
-  try {
-    const noteId = parseInt(req.params.id);
-
-    const note = await db.query.notes.findFirst({
-      where: and(
-        eq(notes.id, noteId),
-        eq(notes.organizationId, req.user.organization_id)
-      ),
-      with: {
-        creator: {
-          columns: {
-            id: true,
-            username: true,
-            email: true
-          }
-        }
-      }
-    });
-
-    if (!note) {
-      return res.status(404).json({ 
-        success: false, 
-        error: "Note not found" 
-      });
-    }
-
-    // Check privacy settings
-    if (note.isPrivate && note.createdBy !== req.user.id && !req.user.permissions?.includes('MANAGE_ALL_TRIPS')) {
-      return res.status(403).json({ 
-        success: false, 
-        error: "Access denied to private note" 
-      });
-    }
-
-    res.json({
-      success: true,
-      data: note
-    });
-  } catch (error) {
-    console.error("Error fetching note:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to fetch note" 
-    });
+    res.status(500).json({ error: "Failed to delete note" });
   }
 });
 

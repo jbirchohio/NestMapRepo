@@ -176,4 +176,54 @@ router.get("/status", (req: Request, res: Response) => {
   });
 });
 
+// Alias routes for documented API endpoints
+// POST /api/users (alias for /api/auth/register)
+router.post("/users", async (req: Request, res: Response) => {
+  try {
+    const userData = insertUserSchema.parse(req.body);
+    
+    // Check if user already exists
+    const existingUser = await storage.getUserByEmail(userData.email);
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists with this email" });
+    }
+
+    // Hash password if provided
+    if (userData.password_hash) {
+      userData.password_hash = hashPassword(userData.password_hash);
+    }
+
+    const user = await storage.createUser(userData);
+    
+    // Remove password hash from response
+    const { password_hash, ...userResponse } = user;
+    res.status(201).json(userResponse);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Invalid user data", errors: error.errors });
+    }
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Could not create user" });
+  }
+});
+
+// GET /api/users/auth/:authId (documented endpoint)
+router.get("/users/auth/:authId", async (req: Request, res: Response) => {
+  try {
+    const authId = req.params.authId;
+    const user = await storage.getUserByAuthId(authId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Remove password hash from response
+    const { password_hash, ...userResponse } = user;
+    res.json(userResponse);
+  } catch (error) {
+    console.error("Error fetching user by auth ID:", error);
+    res.status(500).json({ message: "Could not fetch user" });
+  }
+});
+
 export default router;

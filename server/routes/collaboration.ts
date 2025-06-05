@@ -267,9 +267,9 @@ export async function logTripActivity(
         organizationId,
         action: activityData.action,
         entityType: activityData.entityType,
-        entityId: activityData.entityId,
-        changes: activityData.changes,
-        metadata: activityData.metadata
+        entityId: activityData.entityId || null,
+        changes: activityData.changes || null,
+        metadata: activityData.metadata || null
       });
   } catch (error) {
     console.error('Error logging trip activity:', error);
