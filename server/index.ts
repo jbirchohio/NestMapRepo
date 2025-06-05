@@ -152,7 +152,9 @@ app.use(jwtAuthMiddleware);
 
 
 
-// Apply unified authentication and organization context (already applied above)
+// Apply clean JWT authentication
+import { cleanJwtAuthMiddleware } from './middleware/cleanJwtAuth';
+app.use(cleanJwtAuthMiddleware);
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
