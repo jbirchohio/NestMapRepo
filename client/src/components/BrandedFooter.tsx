@@ -3,7 +3,20 @@ import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { Separator } from '@/components/ui/separator';
 
 export default function BrandedFooter() {
-  const { config } = useWhiteLabel();
+  const { config, isWhiteLabelActive } = useWhiteLabel();
+  
+  // Use default branding if white label is not active
+  const activeConfig = isWhiteLabelActive ? config : {
+    companyName: "NestMap",
+    tagline: "AI-Powered Corporate Travel Management",
+    footerText: "© 2025 NestMap. All rights reserved.",
+    enableMobileApp: true,
+    supportEmail: undefined,
+    helpUrl: undefined,
+    companyWebsite: undefined,
+    privacyPolicyUrl: undefined,
+    termsOfServiceUrl: undefined
+  };
 
   return (
     <footer className="border-t border-electric-200/30 dark:border-electric-700/30 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm mt-auto">
@@ -15,15 +28,15 @@ export default function BrandedFooter() {
               <div 
                 className="h-6 w-6 rounded flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br from-electric-500 to-electric-600 shadow-sm"
               >
-                {config.companyName.charAt(0)}
+                {activeConfig.companyName.charAt(0)}
               </div>
               <span className="font-semibold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent">
-                {config.companyName}
+                {activeConfig.companyName}
               </span>
             </div>
-            {config.tagline && (
+            {activeConfig.tagline && (
               <p className="text-sm text-navy-600 dark:text-navy-400">
-                {config.tagline}
+                {activeConfig.tagline}
               </p>
             )}
           </div>
@@ -38,7 +51,7 @@ export default function BrandedFooter() {
               <a href="/analytics" className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200">
                 Analytics
               </a>
-              {config.enableMobileApp && (
+              {activeConfig.enableMobileApp && (
                 <a href="#" className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200">
                   Mobile App
                 </a>
@@ -50,9 +63,9 @@ export default function BrandedFooter() {
           <div className="space-y-3">
             <h4 className="font-semibold text-navy-700 dark:text-navy-200">Support</h4>
             <div className="space-y-2">
-              {config.helpUrl && (
+              {activeConfig.helpUrl && (
                 <a 
-                  href={config.helpUrl} 
+                  href={activeConfig.helpUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
@@ -60,9 +73,9 @@ export default function BrandedFooter() {
                   Help Center
                 </a>
               )}
-              {config.supportEmail && (
+              {activeConfig.supportEmail && (
                 <a 
-                  href={`mailto:${config.supportEmail}`}
+                  href={`mailto:${activeConfig.supportEmail}`}
                   className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
                 >
                   Contact Support
@@ -75,9 +88,9 @@ export default function BrandedFooter() {
           <div className="space-y-3">
             <h4 className="font-semibold text-navy-700 dark:text-navy-200">Company</h4>
             <div className="space-y-2">
-              {config.companyWebsite && (
+              {activeConfig.companyWebsite && (
                 <a 
-                  href={config.companyWebsite} 
+                  href={activeConfig.companyWebsite} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
@@ -85,9 +98,9 @@ export default function BrandedFooter() {
                   About Us
                 </a>
               )}
-              {config.privacyPolicyUrl && (
+              {activeConfig.privacyPolicyUrl && (
                 <a 
-                  href={config.privacyPolicyUrl} 
+                  href={activeConfig.privacyPolicyUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
@@ -95,9 +108,9 @@ export default function BrandedFooter() {
                   Privacy Policy
                 </a>
               )}
-              {config.termsOfServiceUrl && (
+              {activeConfig.termsOfServiceUrl && (
                 <a 
-                  href={config.termsOfServiceUrl} 
+                  href={activeConfig.termsOfServiceUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="block text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
@@ -114,7 +127,7 @@ export default function BrandedFooter() {
         {/* Copyright */}
         <div className="text-center">
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            {config.footerText}
+            {activeConfig.footerText}
           </p>
         </div>
       </div>
