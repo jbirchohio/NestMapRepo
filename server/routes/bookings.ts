@@ -251,8 +251,34 @@ export function registerBookingRoutes(app: Express) {
     }
   });
 
-  // Search flights
+  // Search flights (both endpoints for compatibility)
   app.post("/api/flights/search", requireAuth, async (req, res) => {
+    try {
+      if (!process.env.DUFFEL_API_KEY) {
+        return res.status(400).json({ 
+          error: "Flight search requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
+        });
+      }
+
+      const searchParams = req.body;
+      
+      try {
+        const results = await duffelProvider.searchFlights(searchParams);
+        res.json(results);
+      } catch (apiError) {
+        console.error("Duffel flight search error:", apiError);
+        return res.status(400).json({ 
+          error: "Flight search failed. Please verify your Duffel API credentials." 
+        });
+      }
+    } catch (error) {
+      console.error("Error searching flights:", error);
+      res.status(500).json({ error: "Failed to search flights" });
+    }
+  });
+
+  // Alternative flight search endpoint for compatibility
+  app.post("/api/bookings/flights/search", requireAuth, async (req, res) => {
     try {
       if (!process.env.DUFFEL_API_KEY) {
         return res.status(400).json({ 

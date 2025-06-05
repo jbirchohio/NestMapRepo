@@ -12,7 +12,7 @@ import { registerBookingRoutes } from './bookings';
 import approvalRoutes from './approvals';
 import expenseRoutes from './expenses';
 import reportingRoutes from './reporting';
-import corporateCardRoutes from './corporateCards';
+import { registerCorporateCardRoutes } from './corporateCards';
 import organizationFundingRoutes from './organizationFunding';
 import stripeOAuthRoutes from './stripeOAuth';
 import superadminRoutes from './superadmin';
@@ -39,7 +39,7 @@ router.use('/collaboration', collaborationRoutes);
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
-router.use('/corporate-cards', corporateCardRoutes);
+// Corporate cards routes registered directly to app in main server file
 router.use('/organization-funding', organizationFundingRoutes);
 console.log('🔧 Mounting Stripe OAuth routes at /stripe');
 router.use('/stripe', stripeOAuthRoutes);

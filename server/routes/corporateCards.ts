@@ -1,651 +1,328 @@
-import { Router } from "express";
-import { z } from "zod";
-import { storage } from "../storage";
-import { auditLogger } from "../auditLogger";
-import { 
-  createCardholder, 
-  createCorporateCard, 
-  authorizeTransaction, 
-  createTransaction,
-  getCardBalance,
-  addFundsToCard,
-  freezeCard,
-  unfreezeCard
-} from "../stripe";
-import { requireAuth, requireAdminRole } from "../middleware/auth";
+import type { Express } from "express";
+import { db } from "../db";
+import { corporateCards, cardTransactions, users } from "@shared/schema";
+import { eq, and, desc } from "drizzle-orm";
+import { requireAuth } from "../middleware/auth";
 
-const router = Router();
+export function registerCorporateCardRoutes(app: Express) {
+  
+  // Get all corporate cards for organization
+  app.get("/api/corporate-cards/cards", requireAuth, async (req, res) => {
+    try {
+      const organizationId = req.user!.organization_id;
 
-// Validation schemas
-const createCardholderSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  phone_number: z.string().optional(),
-  billing: z.object({
-    address: z.object({
-      line1: z.string().min(1),
-      city: z.string().min(1),
-      state: z.string().min(1),
-      postal_code: z.string().min(1),
-      country: z.string().min(1),
-    }),
-  }),
-});
+      const cards = await db
+        .select({
+          id: corporateCards.id,
+          stripe_card_id: corporateCards.stripe_card_id,
+          organization_id: corporateCards.organization_id,
+          user_id: corporateCards.user_id,
+          cardholder_name: corporateCards.cardholder_name,
+          card_number_masked: corporateCards.card_number_masked,
+          card_type: corporateCards.card_type,
+          status: corporateCards.status,
+          spending_limit: corporateCards.spending_limit,
+          available_balance: corporateCards.available_balance,
+          currency: corporateCards.currency,
+          purpose: corporateCards.purpose,
+          department: corporateCards.department,
+          created_at: corporateCards.created_at,
+          updated_at: corporateCards.updated_at
+        })
+        .from(corporateCards)
+        .leftJoin(users, eq(corporateCards.user_id, users.id))
+        .where(eq(corporateCards.organization_id, organizationId))
+        .orderBy(desc(corporateCards.created_at));
 
-const createCardSchema = z.object({
-  user_id: z.union([
-    z.number(),
-    z.string().transform((val, ctx) => {
-      const parsed = parseInt(val);
-      if (isNaN(parsed)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "User ID must be a valid number",
-        });
-        return z.NEVER;
+      res.json({ cards });
+    } catch (error) {
+      console.error("Error fetching corporate cards:", error);
+      res.status(500).json({ error: "Failed to fetch corporate cards" });
+    }
+  });
+
+  // Create new corporate card
+  app.post("/api/corporate-cards/cards", requireAuth, async (req, res) => {
+    try {
+      const organizationId = req.user!.organization_id;
+      const { user_id, spend_limit, interval, cardholder_name, purpose, department } = req.body;
+
+      // Generate mock card data for demo
+      const cardNumber = "1234" + Math.random().toString().slice(2, 8);
+      const stripeCardId = "ic_" + Math.random().toString(36).substring(2, 15);
+
+      const [newCard] = await db
+        .insert(corporateCards)
+        .values({
+          organization_id: organizationId,
+          user_id,
+          stripe_card_id: stripeCardId,
+          card_number_masked: `**** **** **** ${cardNumber.slice(-4)}`,
+          card_token: "encrypted_token_" + Math.random().toString(36),
+          card_provider: "stripe",
+          card_type: "virtual",
+          status: "active",
+          spending_limit: spend_limit * 100, // Convert to cents
+          available_balance: spend_limit * 100,
+          currency: "USD",
+          cardholder_name,
+          purpose,
+          department,
+          created_at: new Date(),
+          updated_at: new Date()
+        })
+        .returning();
+
+      res.json(newCard);
+    } catch (error) {
+      console.error("Error creating corporate card:", error);
+      res.status(500).json({ error: "Failed to create corporate card" });
+    }
+  });
+
+  // Freeze/unfreeze card
+  app.post("/api/corporate-cards/cards/:cardId/freeze", requireAuth, async (req, res) => {
+    try {
+      const cardId = parseInt(req.params.cardId);
+      const organizationId = req.user!.organization_id;
+      const { freeze } = req.body;
+
+      // Verify card belongs to organization
+      const [card] = await db
+        .select()
+        .from(corporateCards)
+        .where(and(
+          eq(corporateCards.id, cardId),
+          eq(corporateCards.organization_id, organizationId)
+        ));
+
+      if (!card) {
+        return res.status(404).json({ error: "Card not found" });
       }
-      return parsed;
-    })
-  ]),
-  spend_limit: z.union([
-    z.number(),
-    z.string().transform((val, ctx) => {
-      const parsed = parseFloat(val);
-      if (isNaN(parsed)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Spending limit must be a valid number",
-        });
-        return z.NEVER;
+
+      const [updatedCard] = await db
+        .update(corporateCards)
+        .set({
+          status: freeze ? 'inactive' : 'active',
+          updated_at: new Date()
+        })
+        .where(eq(corporateCards.id, cardId))
+        .returning();
+
+      res.json(updatedCard);
+    } catch (error) {
+      console.error("Error updating card status:", error);
+      res.status(500).json({ error: "Failed to update card status" });
+    }
+  });
+
+  // Update card
+  app.put("/api/corporate-cards/cards/:cardId", requireAuth, async (req, res) => {
+    try {
+      const cardId = parseInt(req.params.cardId);
+      const organizationId = req.user!.organization_id;
+      const updates = req.body;
+
+      // Verify card belongs to organization
+      const [card] = await db
+        .select()
+        .from(corporateCards)
+        .where(and(
+          eq(corporateCards.id, cardId),
+          eq(corporateCards.organization_id, organizationId)
+        ));
+
+      if (!card) {
+        return res.status(404).json({ error: "Card not found" });
       }
-      return parsed;
-    })
-  ]).refine(val => val >= 0, "Spending limit must be non-negative"),
-  interval: z.string(),
-  cardholder_name: z.string().min(1, "Cardholder name is required"),
-  purpose: z.string().optional(),
-  department: z.string().optional(),
-});
 
-const updateCardSchema = z.object({
-  spend_limit: z.union([
-    z.number(),
-    z.string().transform((val, ctx) => {
-      const parsed = parseFloat(val);
-      if (isNaN(parsed)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Spending limit must be a valid number",
-        });
-        return z.NEVER;
+      // Convert spend_limit to cents if provided
+      if (updates.spend_limit) {
+        updates.spending_limit = updates.spend_limit * 100;
+        delete updates.spend_limit;
       }
-      return parsed;
-    })
-  ]).refine(val => val >= 0, "Spending limit must be non-negative").optional(),
-  status: z.enum(['active', 'inactive', 'frozen', 'canceled']).optional(),
-  purpose: z.string().optional(),
-  department: z.string().optional(),
-});
 
-const addFundsSchema = z.object({
-  amount: z.union([
-    z.number(),
-    z.string().transform((val, ctx) => {
-      const parsed = parseFloat(val);
-      if (isNaN(parsed)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Amount must be a valid number",
-        });
-        return z.NEVER;
+      const [updatedCard] = await db
+        .update(corporateCards)
+        .set({
+          ...updates,
+          updated_at: new Date()
+        })
+        .where(eq(corporateCards.id, cardId))
+        .returning();
+
+      res.json(updatedCard);
+    } catch (error) {
+      console.error("Error updating card:", error);
+      res.status(500).json({ error: "Failed to update card" });
+    }
+  });
+
+  // Add funds to card
+  app.post("/api/corporate-cards/cards/:cardId/add-funds", requireAuth, async (req, res) => {
+    try {
+      const cardId = parseInt(req.params.cardId);
+      const organizationId = req.user!.organization_id;
+      const { amount } = req.body;
+
+      // Verify card belongs to organization
+      const [card] = await db
+        .select()
+        .from(corporateCards)
+        .where(and(
+          eq(corporateCards.id, cardId),
+          eq(corporateCards.organization_id, organizationId)
+        ));
+
+      if (!card) {
+        return res.status(404).json({ error: "Card not found" });
       }
-      return parsed;
-    })
-  ]).refine(val => val > 0, "Amount must be greater than 0"),
-});
 
-const createTransactionSchema = z.object({
-  amount: z.union([z.number(), z.string().transform(val => parseFloat(val))]).refine(val => val > 0, "Amount must be greater than 0"),
-  currency: z.string().default("usd"),
-  merchant_data: z.object({
-    category: z.string().min(1, "Category is required"),
-    name: z.string().min(1, "Merchant name is required"),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    country: z.string().optional(),
-  }),
-});
+      const amountInCents = amount * 100;
+      const [updatedCard] = await db
+        .update(corporateCards)
+        .set({
+          available_balance: card.available_balance + amountInCents,
+          spending_limit: card.spending_limit + amountInCents,
+          updated_at: new Date()
+        })
+        .where(eq(corporateCards.id, cardId))
+        .returning();
 
-// Create cardholder
-router.post("/cardholders", requireAuth, requireAdminRole, async (req, res) => {
-  try {
-    const validatedData = createCardholderSchema.parse(req.body);
-
-    // Create cardholder in Stripe
-    const stripeCardholder = await createCardholder(validatedData);
-
-    // Store cardholder in database
-    const cardholder = await storage.createCardholder({
-      stripe_cardholder_id: stripeCardholder.id,
-      name: validatedData.name,
-      email: validatedData.email,
-      phone_number: validatedData.phone_number,
-      billing_address: JSON.stringify(validatedData.billing.address),
-      organization_id: req.user!.organization_id!,
-      created_by: req.user!.id,
-    });
-
-    await auditLogger.logAction({
-      action: "CREATE_CARDHOLDER",
-      userId: req.user!.id,
-      organizationId: req.user!.organization_id!,
-      entityType: "cardholder",
-      entityId: cardholder.id,
-      riskLevel: "medium",
-      details: {
-        cardholder_id: cardholder.id,
-        stripe_cardholder_id: stripeCardholder.id,
-        name: validatedData.name,
-        email: validatedData.email,
-      },
-    });
-
-    res.json({ cardholder, stripe_cardholder: stripeCardholder });
-  } catch (error: any) {
-    console.error("Create cardholder error:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Create corporate card
-router.post("/cards", requireAuth, requireAdminRole, async (req, res) => {
-  try {
-    const validatedData = createCardSchema.parse(req.body);
-
-    // First create a cardholder if needed
-    const user = await storage.getUser(validatedData.user_id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      res.json(updatedCard);
+    } catch (error) {
+      console.error("Error adding funds to card:", error);
+      res.status(500).json({ error: "Failed to add funds to card" });
     }
+  });
 
-    // Create cardholder in Stripe
-    const stripeCardholder = await createCardholder({
-      name: validatedData.cardholder_name,
-      email: user.email,
-      phone_number: user.phone_number || undefined,
-      billing: {
-        address: {
-          line1: "123 Main St", // Default address - in production, get from user
-          city: "San Francisco",
-          state: "CA",
-          postal_code: "94102",
-          country: "US",
-        },
-      },
-    });
+  // Delete card
+  app.delete("/api/corporate-cards/cards/:cardId", requireAuth, async (req, res) => {
+    try {
+      const cardId = parseInt(req.params.cardId);
+      const organizationId = req.user!.organization_id;
 
-    // Create card in Stripe
-    const stripeCard = await createCorporateCard({
-      cardholder: stripeCardholder.id,
-      currency: "usd",
-      type: "virtual",
-      spending_controls: {
-        spending_limits: [
-          {
-            amount: Math.round(validatedData.spend_limit * 100), // Convert to cents
-            interval: validatedData.interval === "monthly" ? "monthly" : "all_time",
-          },
-        ],
-      },
-      metadata: {
-        user_id: validatedData.user_id.toString(),
-        organization_id: req.user!.organization_id!.toString(),
-        purpose: validatedData.purpose || "",
-        department: validatedData.department || "",
-      },
-    });
+      // Verify card belongs to organization
+      const [card] = await db
+        .select()
+        .from(corporateCards)
+        .where(and(
+          eq(corporateCards.id, cardId),
+          eq(corporateCards.organization_id, organizationId)
+        ));
 
-    // Store card in database
-    const card = await storage.createCorporateCard({
-      stripe_card_id: stripeCard.id,
-      user_id: validatedData.user_id,
-      organization_id: req.user!.organization_id!,
-      card_number_masked: stripeCard.last4 ? `****-****-****-${stripeCard.last4}` : "****-****-****-****",
-      cardholder_name: validatedData.cardholder_name,
-      card_type: "virtual",
-      status: "active",
-      spending_limit: validatedData.spend_limit,
-      available_balance: validatedData.spend_limit,
-      currency: "USD",
-      purpose: validatedData.purpose,
-      department: validatedData.department,
-      stripe_cardholder_id: stripeCardholder.id,
-      created_by: req.user!.id,
-    });
+      if (!card) {
+        return res.status(404).json({ error: "Card not found" });
+      }
 
-    await auditLogger.logAction({
-      action: "CREATE_CORPORATE_CARD",
-      userId: req.user!.id,
-      organizationId: req.user!.organization_id!,
-      entityType: "corporate_card",
-      entityId: card.id,
-      riskLevel: "medium",
-      details: {
-        card_id: card.id,
-        stripe_card_id: stripeCard.id,
-        user_id: validatedData.user_id,
-        cardholder_name: validatedData.cardholder_name,
-        spending_limit: validatedData.spend_limit,
-      },
-    });
+      await db
+        .delete(corporateCards)
+        .where(eq(corporateCards.id, cardId));
 
-    res.json({ card, stripe_card: stripeCard });
-  } catch (error: any) {
-    console.error("Create card error:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Add funds to card (admin only)
-router.post("/cards/:cardId/add-funds", requireAuth, requireAdminRole, async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const validatedData = addFundsSchema.parse(req.body);
-
-    // Get card from database
-    const card = await storage.getCorporateCard(parseInt(cardId));
-    if (!card) {
-      return res.status(404).json({ error: "Card not found" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting card:", error);
+      res.status(500).json({ error: "Failed to delete card" });
     }
+  });
 
-    // Verify card belongs to admin's organization
-    if (card.organization_id !== req.user!.organization_id) {
-      return res.status(403).json({ error: "Access denied" });
+  // Get card transactions
+  app.get("/api/corporate-cards/cards/:cardId/transactions", requireAuth, async (req, res) => {
+    try {
+      const cardId = parseInt(req.params.cardId);
+      const organizationId = req.user!.organization_id;
+
+      // Verify card belongs to organization
+      const [card] = await db
+        .select()
+        .from(corporateCards)
+        .where(and(
+          eq(corporateCards.id, cardId),
+          eq(corporateCards.organization_id, organizationId)
+        ));
+
+      if (!card) {
+        return res.status(404).json({ error: "Card not found" });
+      }
+
+      const transactions = await db
+        .select()
+        .from(cardTransactions)
+        .where(eq(cardTransactions.card_id, cardId))
+        .orderBy(desc(cardTransactions.created_at));
+
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching card transactions:", error);
+      res.status(500).json({ error: "Failed to fetch card transactions" });
     }
+  });
 
-    // Add funds via Stripe
-    const updatedStripeCard = await addFundsToCard(card.stripe_card_id, validatedData.amount * 100);
+  // Get corporate card analytics
+  app.get("/api/corporate-card/analytics", requireAuth, async (req, res) => {
+    try {
+      const organizationId = req.user!.organization_id;
 
-    // Update card balance in database
-    const updatedCard = await storage.updateCorporateCard(card.id, {
-      available_balance: card.available_balance + validatedData.amount,
-      spending_limit: card.spending_limit + validatedData.amount,
-    });
+      // Get basic analytics for demo
+      const cards = await db
+        .select()
+        .from(corporateCards)
+        .where(eq(corporateCards.organization_id, organizationId));
 
-    await auditLogger.logAction({
-      action: "ADD_CARD_FUNDS",
-      userId: req.user!.id,
-      organizationId: req.user!.organization_id!,
-      entityType: "corporate_card",
-      entityId: card.id,
-      riskLevel: "medium",
-      details: {
-        card_id: card.id,
-        amount_added: validatedData.amount,
-        new_balance: updatedCard.available_balance,
-        stripe_card_id: card.stripe_card_id,
-      },
-    });
+      const analytics = {
+        totalCards: cards.length,
+        activeCards: cards.filter(c => c.status === 'active').length,
+        totalSpending: cards.reduce((sum, card) => sum + (card.spending_limit || 0), 0) / 100,
+        availableBalance: cards.reduce((sum, card) => sum + (card.available_balance || 0), 0) / 100
+      };
 
-    res.json({ card: updatedCard, stripe_card: updatedStripeCard });
-  } catch (error: any) {
-    console.error("Add funds error:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Freeze card
-router.post("/cards/:cardId/freeze", requireAuth, requireAdminRole, async (req, res) => {
-  try {
-    const { cardId } = req.params;
-
-    const card = await storage.getCorporateCard(parseInt(cardId));
-    if (!card) {
-      return res.status(404).json({ error: "Card not found" });
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching corporate card analytics:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
     }
+  });
 
-    if (card.organization_id !== req.user!.organization_id) {
-      return res.status(403).json({ error: "Access denied" });
+  // Get expenses (placeholder for corporate card expenses)
+  app.get("/api/expenses", requireAuth, async (req, res) => {
+    try {
+      // Return empty array for now - this would integrate with expense tracking
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+      res.status(500).json({ error: "Failed to fetch expenses" });
     }
+  });
 
-    // Freeze card in Stripe
-    const stripeCard = await freezeCard(card.stripe_card_id);
-
-    // Update card status in database
-    const updatedCard = await storage.updateCorporateCard(card.id, {
-      status: "frozen",
-    });
-
-    await auditLogger.logAction({
-      action: "FREEZE_CARD",
-      userId: req.user!.id,
-      organizationId: req.user!.organization_id!,
-      entityType: "corporate_card",
-      entityId: card.id,
-      riskLevel: "high",
-      details: {
-        card_id: card.id,
-        stripe_card_id: card.stripe_card_id,
-      },
-    });
-
-    res.json({ card: updatedCard, stripe_card: stripeCard });
-  } catch (error: any) {
-    console.error("Freeze card error:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Unfreeze card
-router.post("/cards/:cardId/unfreeze", requireAuth, requireAdminRole, async (req, res) => {
-  try {
-    const { cardId } = req.params;
-
-    const card = await storage.getCorporateCard(parseInt(cardId));
-    if (!card) {
-      return res.status(404).json({ error: "Card not found" });
+  // Approve expense
+  app.post("/api/expenses/approve", requireAuth, async (req, res) => {
+    try {
+      // Placeholder for expense approval
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error approving expense:", error);
+      res.status(500).json({ error: "Failed to approve expense" });
     }
+  });
 
-    if (card.organization_id !== req.user!.organization_id) {
-      return res.status(403).json({ error: "Access denied" });
+  // Get organization users for dropdown
+  app.get("/api/organizations/users", requireAuth, async (req, res) => {
+    try {
+      const organizationId = req.user!.organization_id;
+
+      const organizationUsers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          email: users.email
+        })
+        .from(users)
+        .where(eq(users.organization_id, organizationId));
+
+      res.json(organizationUsers);
+    } catch (error) {
+      console.error("Error fetching organization users:", error);
+      res.status(500).json({ error: "Failed to fetch organization users" });
     }
-
-    // Unfreeze card in Stripe
-    const stripeCard = await unfreezeCard(card.stripe_card_id);
-
-    // Update card status in database
-    const updatedCard = await storage.updateCorporateCard(card.id, {
-      status: "active",
-    });
-
-    await auditLogger.logAction({
-      action: "UNFREEZE_CARD",
-      userId: req.user!.id,
-      organizationId: req.user!.organization_id!,
-      entityType: "corporate_card",
-      entityId: card.id,
-      riskLevel: "medium",
-      details: {
-        card_id: card.id,
-        stripe_card_id: card.stripe_card_id,
-      },
-    });
-
-    res.json({ card: updatedCard, stripe_card: stripeCard });
-  } catch (error: any) {
-    console.error("Unfreeze card error:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Create transaction
-router.post("/cards/:cardId/transactions", requireAuth, async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const validatedData = createTransactionSchema.parse(req.body);
-
-    const card = await storage.getCorporateCard(parseInt(cardId));
-    if (!card) {
-      return res.status(404).json({ error: "Card not found" });
-    }
-
-    // Check if user owns the card or is admin
-    if (card.user_id !== req.user!.id && !req.user!.role?.includes('admin')) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    // Check available balance
-    if (validatedData.amount > card.available_balance) {
-      return res.status(400).json({ error: "Insufficient funds" });
-    }
-
-    // Create transaction in Stripe
-    const stripeTransaction = await createTransaction({
-      amount: validatedData.amount * 100, // Convert to cents
-      currency: validatedData.currency,
-      card: card.stripe_card_id,
-      merchant_data: validatedData.merchant_data,
-      metadata: {
-        card_id: cardId,
-        user_id: req.user!.id.toString(),
-      },
-    });
-
-    // Store transaction in database
-    const transaction = await storage.createCardTransaction({
-      card_id: card.id,
-      user_id: req.user!.id,
-      stripe_transaction_id: stripeTransaction.id,
-      amount: validatedData.amount,
-      currency: validatedData.currency,
-      merchant_name: validatedData.merchant_data.name,
-      merchant_category: validatedData.merchant_data.category,
-      status: "completed",
-      transaction_type: "purchase",
-    });
-
-    // Update card balance
-    await storage.updateCorporateCard(card.id, {
-      available_balance: card.available_balance - validatedData.amount,
-    });
-
-    await auditLogger.logAction({
-      action: "CREATE_CARD_TRANSACTION",
-      userId: req.user!.id,
-      organizationId: req.user!.organization_id!,
-      entityType: "card_transaction",
-      entityId: transaction.id,
-      riskLevel: "medium",
-      details: {
-        transaction_id: transaction.id,
-        card_id: card.id,
-        amount: validatedData.amount,
-        merchant: validatedData.merchant_data.name,
-        stripe_transaction_id: stripeTransaction.id,
-      },
-    });
-
-    res.json({ transaction, stripe_transaction: stripeTransaction });
-  } catch (error: any) {
-    console.error("Create transaction error:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Get organization cards (admin only)
-router.get("/cards", requireAuth, requireAdminRole, async (req, res) => {
-  try {
-    const cards = await storage.getOrganizationCorporateCards(req.user!.organization_id!);
-    res.json({ cards });
-  } catch (error: any) {
-    console.error("Get cards error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get user cards
-router.get("/cards/user/:userId", requireAuth, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const targetUserId = parseInt(userId);
-
-    // Check if user is requesting their own cards or is admin
-    if (targetUserId !== req.user!.id && !req.user!.role?.includes('admin')) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const cards = await storage.getUserCorporateCards(targetUserId);
-    res.json({ cards });
-  } catch (error: any) {
-    console.error("Get user cards error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get card transactions
-router.get("/cards/:cardId/transactions", requireAuth, async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const card = await storage.getCorporateCard(parseInt(cardId));
-
-    if (!card) {
-      return res.status(404).json({ error: "Card not found" });
-    }
-
-    // Check if user owns the card or is admin
-    if (card.user_id !== req.user!.id && !req.user!.role?.includes('admin')) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const transactions = await storage.getCardTransactions(card.id);
-    res.json({ transactions });
-  } catch (error: any) {
-    console.error("Get transactions error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get card balance
-router.get("/cards/:cardId/balance", requireAuth, async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const card = await storage.getCorporateCard(parseInt(cardId));
-
-    if (!card) {
-      return res.status(404).json({ error: "Card not found" });
-    }
-
-    // Check if user owns the card or is admin
-    if (card.user_id !== req.user!.id && !req.user!.role?.includes('admin')) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const stripeBalance = await getCardBalance(card.stripe_card_id);
-
-    res.json({
-      card_id: card.id,
-      available_balance: card.available_balance,
-      spending_limit: card.spending_limit,
-      currency: card.currency,
-      stripe_balance: stripeBalance,
-    });
-  } catch (error: any) {
-    console.error("Get balance error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update card
-router.put("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const validatedData = updateCardSchema.parse(req.body);
-
-    const card = await storage.getCorporateCard(parseInt(cardId));
-    if (!card) {
-      return res.status(404).json({ error: "Card not found" });
-    }
-
-    if (card.organization_id !== req.user!.organization_id) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    // Update card in database - keep dollars format for consistency
-    const updatePayload = {
-      ...validatedData,
-      // Store spending limit in dollars to match frontend expectations
-      ...(validatedData.spend_limit !== undefined && { 
-        spending_limit: validatedData.spend_limit, // Keep in dollars
-        available_balance: validatedData.spend_limit // Update available balance to match new limit
-      })
-    };
-    
-    const updatedCard = await storage.updateCorporateCard(card.id, updatePayload);
-
-    // If spending limit changed, update Stripe card
-    if (validatedData.spend_limit !== undefined) {
-      const Stripe = await import('stripe');
-      const stripe = new Stripe.default(process.env.STRIPE_SECRET_KEY!);
-      
-      await stripe.issuing.cards.update(card.stripe_card_id, {
-        spending_controls: {
-          spending_limits: [
-            {
-              amount: Math.round(validatedData.spend_limit * 100), // Convert to cents for Stripe
-              interval: 'monthly',
-            },
-          ],
-        },
-      });
-    }
-
-    await auditLogger.logAction({
-      action: "UPDATE_CORPORATE_CARD",
-      userId: req.user!.id,
-      organizationId: req.user!.organization_id!,
-      entityType: "corporate_card",
-      entityId: card.id,
-      riskLevel: "medium",
-      details: {
-        card_id: card.id,
-        updates: validatedData,
-      },
-    });
-
-    res.json({ card: updatedCard });
-  } catch (error: any) {
-    console.error("Update card error:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Delete card
-router.delete("/cards/:cardId", requireAuth, requireAdminRole, async (req, res) => {
-  try {
-    const { cardId } = req.params;
-    const card = await storage.getCorporateCard(parseInt(cardId));
-
-    if (!card) {
-      return res.status(404).json({ error: "Card not found" });
-    }
-
-    if (card.organization_id !== req.user!.organization_id) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    // Cancel card in Stripe first  
-    const Stripe = await import('stripe');
-    const stripe = new Stripe.default(process.env.STRIPE_SECRET_KEY!);
-    await stripe.issuing.cards.update(card.stripe_card_id, {
-      status: 'canceled',
-    });
-
-    // Delete card from database
-    const deleted = await storage.deleteCorporateCard(card.id);
-
-    if (!deleted) {
-      return res.status(500).json({ error: "Failed to delete card from database" });
-    }
-
-    await auditLogger.logAction({
-      action: "DELETE_CORPORATE_CARD",
-      userId: req.user!.id,
-      organizationId: req.user!.organization_id!,
-      entityType: "corporate_card",
-      entityId: card.id,
-      riskLevel: "high",
-      details: {
-        card_id: card.id,
-        stripe_card_id: card.stripe_card_id,
-        cardholder_name: card.cardholder_name,
-      },
-    });
-
-    res.json({ success: true, message: "Card deleted successfully" });
-  } catch (error: any) {
-    console.error("Delete card error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-export default router;
+  });
+}
