@@ -89,7 +89,7 @@ function TravelConsoleMenu({ location }: { location: string }) {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-2 z-50 min-w-48"
+          className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-2 z-[100] min-w-48"
         >
           <div className="space-y-1">
             <Link href="/trip-planner">
@@ -361,7 +361,7 @@ export default function MainNavigation() {
     <motion.nav 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="border-b border-electric-200/20 bg-white/80 dark:bg-dark-800/80 backdrop-blur-xl sticky top-0 z-50"
+      className="border-b border-electric-200/20 bg-white/80 dark:bg-dark-800/80 backdrop-blur-xl sticky top-0 z-40"
     >
       <div className="absolute inset-0 bg-gradient-to-r from-electric-500/5 via-transparent to-electric-400/5" />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -456,7 +456,7 @@ export default function MainNavigation() {
                     </Button>
                   </motion.div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-dark-800 border-electric-200/30">
+                <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-dark-800 border-electric-200/30 z-[60]">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none text-electric-900 dark:text-electric-100">{user.email}</p>
@@ -615,7 +615,7 @@ export default function MainNavigation() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.2 }}
-          className="md:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-dark-800/95 backdrop-blur-md border-b border-electric-200/50 dark:border-electric-700/50 shadow-lg z-50"
+          className="md:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-dark-800/95 backdrop-blur-md border-b border-electric-200/50 dark:border-electric-700/50 shadow-lg z-[70]"
         >
           <div className="container mx-auto px-4 py-4">
             <div className="space-y-2">
