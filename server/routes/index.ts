@@ -45,6 +45,10 @@ console.log('🔧 Mounting Stripe OAuth routes at /stripe');
 router.use('/stripe', stripeOAuthRoutes);
 router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
+
+// Import and register simplified white label routes
+import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
+// Note: This will be handled in the main server file since it needs the app instance
 // router.use('/todos', todosRoutes);
 // router.use('/notes', notesRoutes);
 router.use('/ai', aiRoutes);

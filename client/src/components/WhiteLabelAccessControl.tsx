@@ -78,27 +78,27 @@ export default function WhiteLabelAccessControl({ children }: { children: React.
             )}
 
             <div className="space-y-4">
-              <h3 className="font-semibold">White Label Features Include:</h3>
+              <h3 className="font-semibold">Upgrade to Professional Plan ($99/month):</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  Custom company logo and branding
+                  <div className="h-2 w-2 rounded-full bg-electric-500" />
+                  Full white label branding (auto-enabled)
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  Color scheme customization
+                  <div className="h-2 w-2 rounded-full bg-electric-500" />
+                  Custom colors, logo, and domain
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  Custom domain setup (Premium+)
+                  <div className="h-2 w-2 rounded-full bg-electric-500" />
+                  Remove "Powered by NestMap"
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  Remove "Powered by NestMap" branding
+                  <div className="h-2 w-2 rounded-full bg-electric-500" />
+                  Professional client proposals
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  Professional client-facing interface
+                  <div className="h-2 w-2 rounded-full bg-electric-500" />
+                  Up to 50 team members
                 </li>
               </ul>
             </div>
