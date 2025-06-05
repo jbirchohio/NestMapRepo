@@ -41,12 +41,14 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   const [location] = useLocation();
-  const isSupeadminView = location.startsWith('/superadmin');
+  const { user } = useAuth();
+  const isSuperadminView = location.startsWith('/superadmin');
+  const isLoginPage = location === '/login';
   
   return (
     <div className="min-h-screen flex flex-col bg-soft-100 dark:bg-navy-900">
-      {!isSupeadminView && <BrandedHeader />}
-      {!isSupeadminView && <MainNavigation />}
+      {!isSuperadminView && !isLoginPage && user && <MainNavigation />}
+      {!isSuperadminView && !isLoginPage && !user && <BrandedHeader />}
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
@@ -82,7 +84,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
-      {!isSupeadminView && <BrandedFooter />}
+      {!isSuperadminView && <BrandedFooter />}
     </div>
   );
 }
