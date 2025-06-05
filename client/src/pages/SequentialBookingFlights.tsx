@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plane, CheckCircle, ArrowRight, ArrowLeft, User, Clock, MapPin, CreditCard } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -65,6 +67,55 @@ export default function SequentialBookingFlights() {
   const [selectedFlight, setSelectedFlight] = useState<FlightOffer | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
+  const [sortBy, setSortBy] = useState<'price' | 'duration' | 'departure'>('price');
+  const [activeTab, setActiveTab] = useState<'outbound' | 'return'>('outbound');
+  const [outboundFlights, setOutboundFlights] = useState<FlightOffer[]>([]);
+  const [returnFlights, setReturnFlights] = useState<FlightOffer[]>([]);
+  const [selectedOutbound, setSelectedOutbound] = useState<FlightOffer | null>(null);
+  const [selectedReturn, setSelectedReturn] = useState<FlightOffer | null>(null);
+
+  const formatTime = (timeString: string): string => {
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } catch {
+      return timeString;
+    }
+  };
+
+  const formatDuration = (duration: string): string => {
+    const match = duration.match(/PT(\d+H)?(\d+M)?/);
+    const hours = match?.[1] ? match[1] : '';
+    const minutes = match?.[2] ? match[2] : '';
+    return `${hours} ${minutes}`.trim() || duration;
+  };
+
+  const sortFlights = (flights: FlightOffer[], sortBy: string): FlightOffer[] => {
+    return [...flights].sort((a, b) => {
+      switch (sortBy) {
+        case 'price':
+          const priceA = typeof a.price === 'object' ? a.price.amount : a.price;
+          const priceB = typeof b.price === 'object' ? b.price.amount : b.price;
+          return priceA - priceB;
+        case 'duration':
+          const getDurationMinutes = (duration: string) => {
+            const match = duration.match(/PT(\d+H)?(\d+M)?/);
+            const hours = match?.[1] ? parseInt(match[1]) : 0;
+            const minutes = match?.[2] ? parseInt(match[2]) : 0;
+            return hours * 60 + minutes;
+          };
+          return getDurationMinutes(a.duration) - getDurationMinutes(b.duration);
+        case 'departure':
+          return new Date(a.departure.time).getTime() - new Date(b.departure.time).getTime();
+        default:
+          return 0;
+      }
+    });
+  };
 
   useEffect(() => {
     try {
@@ -114,12 +165,36 @@ export default function SequentialBookingFlights() {
       const result = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
       console.log('Flight search response:', result);
       
-      setFlightOffers(result.flights || []);
+      // Separate outbound and return flights from the Duffel response
+      const allFlights = result.flights || [];
       
-      if (result.flights && result.flights.length > 0) {
+      // For round trips, Duffel returns combined flight options
+      // We need to handle both outbound and return separately
+      setOutboundFlights(allFlights);
+      setFlightOffers(allFlights);
+      
+      if (bookingData.returnDate) {
+        // Search for return flights separately
+        const returnSearchParams = {
+          origin: destinationCode,
+          destination: originCode,
+          departureDate: formatDate(bookingData.returnDate),
+          passengers: 1,
+          class: currentTraveler.travelClass || 'economy'
+        };
+        
+        try {
+          const returnResult = await apiRequest('POST', '/api/bookings/flights/search', returnSearchParams);
+          setReturnFlights(returnResult.flights || []);
+        } catch (error) {
+          console.error('Error searching return flights:', error);
+        }
+      }
+      
+      if (allFlights.length > 0) {
         toast({
           title: "Flights Found",
-          description: `Found ${result.flights.length} flight options`,
+          description: `Found ${allFlights.length} outbound flight options`,
         });
       } else {
         toast({
@@ -352,6 +427,34 @@ export default function SequentialBookingFlights() {
               </p>
             </div>
 
+            {/* Flight Tabs for Outbound/Return */}
+            <div className="mb-6">
+              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'outbound' | 'return')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="outbound">
+                    Outbound ({outboundFlights.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="return">
+                    Return ({returnFlights.length})
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Sort Options */}
+            <div className="mb-4 flex gap-2">
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'price' | 'duration' | 'departure')}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="price">Price</SelectItem>
+                  <SelectItem value="duration">Duration</SelectItem>
+                  <SelectItem value="departure">Departure</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {isSearching ? (
               <div className="text-center py-8">
                 <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -359,7 +462,7 @@ export default function SequentialBookingFlights() {
               </div>
             ) : (
               <div className="space-y-3">
-                {flightOffers.map((flight) => (
+                {sortFlights(activeTab === 'outbound' ? outboundFlights : returnFlights, sortBy).map((flight) => (
                   <div
                     key={flight.id}
                     className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -380,11 +483,11 @@ export default function SequentialBookingFlights() {
                         </div>
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
-                            <p className="font-medium">{flight.departure.time}</p>
+                            <p className="font-medium">{formatTime(flight.departure.time)}</p>
                             <p className="text-muted-foreground">{flight.departure.airport?.code || flight.departure.airport}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-muted-foreground">{flight.duration}</p>
+                            <p className="text-muted-foreground">{formatDuration(flight.duration)}</p>
                             <div className="flex items-center justify-center">
                               <div className="w-8 h-px bg-border"></div>
                               <Plane className="h-3 w-3 mx-1 text-muted-foreground" />
@@ -392,7 +495,7 @@ export default function SequentialBookingFlights() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium">{flight.arrival.time}</p>
+                            <p className="font-medium">{formatTime(flight.arrival.time)}</p>
                             <p className="text-muted-foreground">{flight.arrival.airport?.code || flight.arrival.airport}</p>
                           </div>
                         </div>
