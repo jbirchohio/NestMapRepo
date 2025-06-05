@@ -456,7 +456,7 @@ export default function CorporateDashboard() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </AnimatedCard>
         </div>
 
         {/* Corporate Cards Section */}
@@ -551,7 +551,7 @@ export default function CorporateDashboard() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </AnimatedCard>
       </div>
 
       {/* Card Details Modal */}
