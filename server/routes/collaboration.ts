@@ -13,7 +13,7 @@ router.get('/trips/:tripId/comments', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.trip_id);
+    const tripId = parseInt(req.params.tripId);
     const organizationId = req.user.organization_id;
     
     // Verify trip belongs to user's organization
@@ -68,7 +68,7 @@ router.post('/trips/:tripId/comments', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.trip_id);
+    const tripId = parseInt(req.params.tripId);
     const organizationId = req.user.organization_id;
     const userId = req.user.id;
     
@@ -198,7 +198,7 @@ router.get('/trips/:tripId/activity', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.trip_id);
+    const tripId = parseInt(req.params.tripId);
     const organizationId = req.user.organization_id;
     const limit = parseInt(req.query.limit as string) || 50;
     
