@@ -32,10 +32,21 @@ function snakeToCamel(obj: any): any {
     return obj.map(snakeToCamel);
   }
 
+  // Handle Date objects - convert to ISO string
+  if (obj instanceof Date) {
+    return obj.toISOString().split('T')[0];
+  }
+
   const converted: any = {};
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-    converted[camelKey] = snakeToCamel(value);
+    
+    // Special handling for date fields - convert Date objects to ISO date strings
+    if (value instanceof Date) {
+      converted[camelKey] = value.toISOString().split('T')[0];
+    } else {
+      converted[camelKey] = snakeToCamel(value);
+    }
   }
   return converted;
 }
@@ -71,6 +82,10 @@ export function convertRequestToSnakeCase(req: Request, res: Response, next: Nex
  * for frontend consumption while preserving database structure
  */
 export function convertResponseToCamelCase(req: Request, res: Response, next: NextFunction): void {
+  // Skip conversion if route requests it
+  if ((req as any).skipCaseConversion) {
+    return next();
+  }
   const originalJson = res.json;
   
   res.json = function(body: any) {

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { insertTripSchema } from '@shared/schema';
 import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
@@ -183,15 +183,22 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
   }
 });
 
-// Get specific trip by ID with organization access control
-router.get("/:id", async (req: Request, res: Response) => {
+// Get specific trip by ID with organization access control - bypassing case conversion for dates
+router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
+  // Skip case conversion middleware for this route
+  req.skipCaseConversion = true;
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
       return res.status(400).json({ message: "Invalid trip ID" });
     }
 
-    const trip = await storage.getTrip(tripId);
+    // Direct database query to avoid case conversion middleware corrupting dates
+    const [trip] = await db
+      .select()
+      .from(tripsTable)
+      .where(eq(tripsTable.id, tripId));
+
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }
@@ -202,7 +209,38 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
-    res.json(trip);
+    // Manual transformation to ensure dates are properly formatted as ISO date strings
+    const transformedTrip = {
+      id: trip.id,
+      title: trip.title,
+      startDate: trip.start_date ? new Date(trip.start_date).toISOString().split('T')[0] : null,
+      endDate: trip.end_date ? new Date(trip.end_date).toISOString().split('T')[0] : null,
+      userId: trip.user_id,
+      organizationId: trip.organization_id,
+      collaborators: trip.collaborators || [],
+      isPublic: trip.is_public,
+      shareCode: trip.share_code,
+      sharingEnabled: trip.sharing_enabled,
+      sharePermission: trip.share_permission,
+      city: trip.city,
+      country: trip.country,
+      location: trip.location,
+      cityLatitude: trip.city_latitude,
+      cityLongitude: trip.city_longitude,
+      hotel: trip.hotel,
+      hotelLatitude: trip.hotel_latitude,
+      hotelLongitude: trip.hotel_longitude,
+      completed: trip.completed,
+      completedAt: trip.completed_at,
+      tripType: trip.trip_type,
+      clientName: trip.client_name,
+      projectType: trip.project_type,
+      budget: trip.budget,
+      createdAt: trip.created_at ? new Date(trip.created_at).toISOString() : null,
+      updatedAt: trip.updated_at ? new Date(trip.updated_at).toISOString() : null,
+    };
+
+    res.json(transformedTrip);
   } catch (error) {
     console.error("Error fetching trip:", error);
     res.status(500).json({ message: "Could not fetch trip" });
