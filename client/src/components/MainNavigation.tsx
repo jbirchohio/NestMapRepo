@@ -164,6 +164,7 @@ export default function MainNavigation() {
   const [location] = useLocation();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { config, isWhiteLabelActive } = useWhiteLabel();
 
   // Get user permissions - since you're the JonasCo owner, return all permissions
   const { data: userPermissions } = useQuery({
@@ -372,14 +373,16 @@ export default function MainNavigation() {
             >
               <Link href={getRoleBasedDashboardPath()} className="flex items-center gap-2 flex-shrink-0">
                 <div className="h-8 w-8 bg-gradient-to-br from-electric-500 to-electric-600 rounded-lg flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-sm">N</span>
+                  <span className="text-white font-bold text-sm">
+                    {isWhiteLabelActive && config?.companyName ? config.companyName.charAt(0).toUpperCase() : 'N'}
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold text-xl bg-gradient-to-r from-electric-600 to-electric-500 bg-clip-text text-transparent dark:from-electric-400 dark:to-electric-300">
-                    NestMap
+                    {isWhiteLabelActive && config?.companyName ? config.companyName : 'NestMap'}
                   </span>
                   <span className="text-xs text-electric-600/70 dark:text-electric-400/70 -mt-1 hidden sm:block">
-                    {roleType === 'agency' ? 'Client Travel Proposals' : 'Company Travel Management'}
+                    {isWhiteLabelActive && config?.tagline ? config.tagline : (roleType === 'agency' ? 'Client Travel Proposals' : 'Company Travel Management')}
                   </span>
                 </div>
               </Link>
