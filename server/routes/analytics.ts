@@ -17,7 +17,7 @@ router.get("/", async (req: Request, res: Response) => {
     }
 
     // Get authentic analytics data from database
-    const organizationId = req.user.organization_id;
+    const organizationId = req.user.organization_id || undefined;
     
     const analyticsData = await getSimpleAnalytics(organizationId);
     res.json(analyticsData);
@@ -33,7 +33,7 @@ router.get("/personal", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    const organizationId = req.user.organization_id;
+    const organizationId = req.user.organization_id || undefined;
     const analyticsData = await getSimpleAnalytics(organizationId);
     res.json(analyticsData);
   } catch (error) {

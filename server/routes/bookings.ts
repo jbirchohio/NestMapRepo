@@ -22,10 +22,11 @@ router.post('/flights/search', async (req, res) => {
     // Convert date objects to strings if needed
     const formatDate = (date: any): string => {
       if (!date) return '';
-      if (typeof date === 'string') return date;
-      if (date instanceof Date) return date.toISOString().split('T')[0];
-      if (typeof date === 'object' && date.$d) return date.$d.toISOString().split('T')[0]; // Day.js object
-      return String(date);
+      if (typeof date === 'string' && date.length > 0) return date;
+      if (date instanceof Date && !isNaN(date.getTime())) return date.toISOString().split('T')[0];
+      if (typeof date === 'object' && date.$d && date.$d instanceof Date) return date.$d.toISOString().split('T')[0]; // Day.js object
+      if (typeof date === 'object' && Object.keys(date).length === 0) return ''; // Empty object
+      return '';
     };
 
     const departureDateStr = formatDate(departureDate);
@@ -74,7 +75,7 @@ router.get('/trip/:tripId', async (req, res) => {
       return res.status(401).json({ error: "Organization membership required" });
     }
 
-    const tripId = parseInt(req.params.trip_id);
+    const tripId = parseInt(req.params.tripId);
     const organizationId = req.user.organization_id;
 
     // Verify trip belongs to user's organization
@@ -95,8 +96,8 @@ router.get('/trip/:tripId', async (req, res) => {
       .select()
       .from(bookings)
       .where(and(
-        eq(bookings.trip_id, tripId),
-        eq(bookings.organization_id, organizationId)
+        eq(bookings.tripId, tripId),
+        eq(bookings.organizationId, organizationId)
       ))
       .orderBy(desc(bookings.createdAt));
 
