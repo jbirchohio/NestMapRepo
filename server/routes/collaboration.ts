@@ -109,7 +109,7 @@ router.post('/trips/:tripId/comments', async (req, res) => {
       entityId: newComment.id,
       metadata: {
         content: validatedData.content.substring(0, 100) + (validatedData.content.length > 100 ? '...' : ''),
-        activityId: validatedData.activityId
+        activity_id: validatedData.activity_id
       }
     });
     
@@ -225,15 +225,15 @@ router.get('/trips/:tripId/activity', async (req, res) => {
         timestamp: activityLog.timestamp,
         user: {
           id: users.id,
-          displayName: users.displayName,
+          displayName: users.display_name,
           email: users.email
         }
       })
       .from(activityLog)
-      .leftJoin(users, eq(activityLog.user_id, users.id))
+      .leftJoin(users, eq(activityLog.userId, users.id))
       .where(and(
-        eq(activityLog.trip_id, tripId),
-        eq(activityLog.organization_id, organizationId)
+        eq(activityLog.tripId, tripId),
+        eq(activityLog.organizationId, organizationId)
       ))
       .orderBy(desc(activityLog.timestamp))
       .limit(limit);
@@ -250,11 +250,13 @@ export async function logTripActivity(
   tripId: number,
   userId: number,
   organizationId: number,
-  action: string,
-  entityType: string,
-  entityId?: number,
-  changes?: Record<string, any>,
-  metadata?: Record<string, any>
+  activityData: {
+    action: string;
+    entityType: string;
+    entityId?: number;
+    changes?: Record<string, any>;
+    metadata?: Record<string, any>;
+  }
 ) {
   try {
     await db
@@ -263,11 +265,11 @@ export async function logTripActivity(
         tripId,
         userId,
         organizationId,
-        action,
-        entityType,
-        entityId,
-        changes,
-        metadata
+        action: activityData.action,
+        entityType: activityData.entityType,
+        entityId: activityData.entityId,
+        changes: activityData.changes,
+        metadata: activityData.metadata
       });
   } catch (error) {
     console.error('Error logging trip activity:', error);
