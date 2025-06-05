@@ -340,10 +340,10 @@ export default function MainNavigation() {
       badge: 'Setup'
     },
     {
-      path: '/organization-settings',
+      path: '/admin',
       label: 'Organization',
       icon: Building2,
-      active: location === '/organization-settings',
+      active: location === '/admin',
       show: hasOrganizationAccess,
       badge: 'Admin'
     },
@@ -379,7 +379,7 @@ export default function MainNavigation() {
                   </Button>
                 </motion.div>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-white dark:bg-dark-800 border-electric-200/30">
+              <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-white dark:bg-dark-800 border-electric-200/30 z-[100]">
                 <SheetHeader>
                   <SheetTitle className="text-left text-electric-900 dark:text-electric-100">Navigation</SheetTitle>
                   <SheetDescription className="text-left text-electric-600 dark:text-electric-400">

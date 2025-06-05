@@ -53,6 +53,8 @@ function Router() {
           <Route path="/login" component={Login} />
           <Route path="/trip/:id" component={TripPlanner} />
           <Route path="/trip-planner/:id" component={TripPlanner} />
+          <Route path="/trip-planner" component={TripPlanner} />
+          <Route path="/flights" component={Bookings} />
           <Route path="/share/:shareCode" component={SimpleShare} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/bookings" component={Bookings} />
