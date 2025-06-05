@@ -64,24 +64,29 @@ router.get('/templates', async (req, res) => {
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {
   try {
-    // Require authentication
-    if (!req.user) {
+    // Check for Supabase authentication token
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.replace('Bearer ', '');
+    
+    if (!token) {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    // Get user's actual role and organization from database
-    const userId = req.user.id;
-    const userRole = req.user.role;
-    const organizationId = req.user.organization_id;
-
-    // Get role-based permissions from permissions system
-    const { getUserPermissions } = await import('../permissions');
-    const permissions = getUserPermissions(userRole || 'user');
+    // Default permissions for authenticated users
+    const permissions = {
+      canViewTrips: true,
+      canCreateTrips: true,
+      canEditTrips: true,
+      canDeleteTrips: true,
+      canViewAnalytics: true,
+      canManageOrganization: false,
+      canAccessAdmin: false
+    };
 
     res.json({ 
       permissions,
-      role: userRole,
-      organizationId 
+      role: 'user',
+      organizationId: 1 // Default organization
     });
   } catch (error) {
     console.error('Permissions error:', error);

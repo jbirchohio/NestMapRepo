@@ -46,7 +46,6 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
     '/api/share/',
     '/.well-known/',
     '/api/amadeus',
-    '/api/user/permissions',
     '/api/dashboard-stats',
     '/api/stripe/oauth/callback', // Stripe Connect OAuth callback
     '/api/webhooks' // Stripe webhooks
