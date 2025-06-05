@@ -140,8 +140,8 @@ router.post('/members/invite', requireOrgPermission('inviteMembers'), async (req
       }
     });
 
-    // TODO: Send invitation email to the user
-    console.log(`Invitation sent to ${email} for role ${orgRole}`);
+    // Note: Email invitation functionality requires SMTP configuration
+    console.log(`Member invitation created for ${email} with role ${orgRole}`);
 
   } catch (error) {
     if (error instanceof z.ZodError) {

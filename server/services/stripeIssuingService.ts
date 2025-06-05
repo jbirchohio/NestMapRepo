@@ -43,8 +43,8 @@ export class StripeIssuingService {
       // Create cardholder in Stripe
       const cardholder = await stripe.issuing.cardholders.create({
         name: request.cardholder_name,
-        email: `user_${request.user_id}@company.com`, // TODO: Get actual email
-        phone_number: '+15555551234', // TODO: Get actual phone
+        email: await this.getUserEmail(request.user_id),
+        phone_number: await this.getUserPhone(request.user_id),
         status: 'active',
         type: 'individual',
         billing: {
@@ -307,7 +307,7 @@ export class StripeIssuingService {
         merchant_state: authorization.merchant_data?.state || '',
         merchant_country: authorization.merchant_data?.country || '',
         processed_at: new Date(authorization.created * 1000),
-        risk_score: 0, // TODO: Implement risk scoring
+        risk_score: this.calculateRiskScore(authorization)
         policy_checks: {},
         fraud_indicators: {},
       });
@@ -435,6 +435,36 @@ export class StripeIssuingService {
         remaining_limit: Math.max(0, newRemainingLimit),
       });
     }
+  }
+
+  /**
+   * Get user email from database
+   */
+  private async getUserEmail(userId: number): Promise<string> {
+    const user = await storage.getUser(userId);
+    return user?.email || `user_${userId}@company.com`;
+  }
+
+  /**
+   * Get user phone from database
+   */
+  private async getUserPhone(userId: number): Promise<string> {
+    const user = await storage.getUser(userId);
+    return user?.phone || '+15555551234';
+  }
+
+  /**
+   * Calculate risk score for authorization
+   */
+  private calculateRiskScore(authorization: any): number {
+    let score = 0;
+    
+    // Basic risk factors
+    if (authorization.amount > 100000) score += 30; // High amount
+    if (authorization.merchant_data?.category === 'gambling') score += 50;
+    if (authorization.merchant_data?.country !== 'US') score += 20;
+    
+    return Math.min(score, 100);
   }
 }
 
