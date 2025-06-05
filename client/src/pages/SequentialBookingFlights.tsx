@@ -153,9 +153,15 @@ export default function SequentialBookingFlights() {
     setIsSearching(true);
     
     try {
+      // Use AI to get airport codes for current traveler's specific departure city
+      const departureCode = await getAirportCodeFromCity(currentTraveler.departureCity);
+      const destinationCode = await getAirportCodeFromCity(data.tripDestination.split(',')[0]);
+
+      console.log(`Flight search for ${currentTraveler.name}: ${currentTraveler.departureCity} (${departureCode}) → ${data.tripDestination.split(',')[0]} (${destinationCode})`);
+
       const searchParams = {
-        origin: getCityCode(currentTraveler.departureCity),
-        destination: getCityCode(data.tripDestination),
+        origin: departureCode,
+        destination: destinationCode,
         departureDate: data.departureDate,
         returnDate: data.returnDate,
         passengers: 1,
@@ -176,8 +182,8 @@ export default function SequentialBookingFlights() {
       // Search for return flights if it's a round trip
       if (data.returnDate && data.returnDate !== data.departureDate) {
         const returnSearchParams = {
-          origin: getCityCode(data.tripDestination),
-          destination: getCityCode(currentTraveler.departureCity),
+          origin: destinationCode,
+          destination: departureCode,
           departureDate: data.returnDate,
           passengers: 1,
           class: currentTraveler.travelClass || 'economy'
@@ -341,66 +347,86 @@ export default function SequentialBookingFlights() {
     }
   };
 
-  const getCityCode = (cityName: string): string => {
-    const cityCodeMap: Record<string, string> = {
-      'san francisco': 'SFO',
-      'san francisco, ca': 'SFO',
-      'san francisco, united states': 'SFO',
-      'sf': 'SFO',
-      'sfo': 'SFO',
-      'new york': 'JFK',
-      'new york city': 'JFK',
-      'new york, united states': 'JFK',
-      'new york, ny': 'JFK',
-      'nyc': 'JFK',
-      'ny': 'JFK',
-      'chicago': 'ORD',
-      'chicago, il': 'ORD',
-      'los angeles': 'LAX',
-      'la': 'LAX',
-      'seattle': 'SEA',
-      'seattle, wa': 'SEA',
-      'seattle, washington': 'SEA',
-      'denver': 'DEN',
-      'denver, co': 'DEN',
-      'miami': 'MIA',
-      'miami, fl': 'MIA',
-      'austin': 'AUS',
-      'austin, tx': 'AUS',
-      'boston': 'BOS',
-      'boston, ma': 'BOS',
-      'atlanta': 'ATL',
-      'atlanta, ga': 'ATL',
-      'washington': 'DCA',
-      'washington dc': 'DCA',
-      'dc': 'DCA',
-      'philadelphia': 'PHL',
-      'phoenix': 'PHX',
-      'las vegas': 'LAS',
-      'vegas': 'LAS',
-      'orlando': 'MCO',
-      'dallas': 'DFW',
-      'houston': 'IAH',
-      'detroit': 'DTW',
-      'minneapolis': 'MSP',
-      'charlotte': 'CLT',
-      'portland': 'PDX',
-      'salt lake city': 'SLC',
-      'nashville': 'BNA',
-      'london': 'LHR',
-      'uk': 'LHR',
-      'england': 'LHR',
-      'paris': 'CDG',
-      'france': 'CDG',
-      'tokyo': 'NRT',
-      'japan': 'NRT',
-      'singapore': 'SIN',
-      'amsterdam': 'AMS',
-      'netherlands': 'AMS'
-    };
-    
-    const city = cityName?.toLowerCase().trim() || '';
-    return cityCodeMap[city] || cityName;
+  const getAirportCodeFromCity = async (cityName: string): Promise<string> => {
+    try {
+      console.log(`Getting airport code for city: ${cityName}`);
+      
+      // Check if it's already an airport code
+      if (cityName.length === 3 && /^[A-Z]{3}$/.test(cityName.toUpperCase())) {
+        return cityName.toUpperCase();
+      }
+
+      // Use AI to find the airport code for this city
+      const response = await fetch('/api/locations/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          searchQuery: `${cityName} airport`,
+          cityContext: cityName
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get airport code');
+      }
+
+      const aiData = await response.json();
+      console.log('AI airport search result:', aiData);
+
+      // Extract airport code from AI response
+      if (aiData.locations && Array.isArray(aiData.locations) && aiData.locations.length > 0) {
+        const location = aiData.locations[0];
+        // Look for airport code in the location data
+        const airportMatch = location.description?.match(/\b([A-Z]{3})\b/) || 
+                           location.name?.match(/\b([A-Z]{3})\b/);
+        
+        if (airportMatch) {
+          console.log(`Found airport code: ${airportMatch[1]}`);
+          return airportMatch[1];
+        }
+      }
+
+      // Fallback to hardcoded mapping for common cities
+      const fallbackMap: Record<string, string> = {
+        'san francisco': 'SFO',
+        'new york': 'JFK',
+        'new york city': 'JFK',
+        'seattle': 'SEA',
+        'los angeles': 'LAX',
+        'chicago': 'ORD',
+        'miami': 'MIA',
+        'denver': 'DEN',
+        'atlanta': 'ATL',
+        'boston': 'BOS',
+        'washington': 'DCA',
+        'dallas': 'DFW',
+        'houston': 'IAH'
+      };
+      
+      const normalizedCity = cityName.toLowerCase().trim();
+      const airportCode = fallbackMap[normalizedCity];
+      
+      if (airportCode) {
+        console.log(`Using fallback mapping: ${cityName} -> ${airportCode}`);
+        return airportCode;
+      }
+
+      // Last resort - return original if no mapping found
+      console.log(`No airport code found for ${cityName}, using as-is`);
+      return cityName.toUpperCase();
+      
+    } catch (error) {
+      console.error('Error getting airport code:', error);
+      // Fallback to basic mapping
+      const basicMap: Record<string, string> = {
+        'new york': 'JFK',
+        'seattle': 'SEA',
+        'san francisco': 'SFO'
+      };
+      return basicMap[cityName.toLowerCase()] || 'JFK';
+    }
   };
 
   if (!bookingData) {
@@ -508,24 +534,62 @@ export default function SequentialBookingFlights() {
                             <Badge variant="secondary">Direct</Badge>
                           )}
                         </div>
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="font-medium">{formatTime(flight.departure.time)}</p>
-                            <p className="text-muted-foreground">{flight.departure.airport?.code || flight.departure.airport}</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-muted-foreground">{formatDuration(flight.duration)}</p>
-                            <div className="flex items-center justify-center">
-                              <div className="w-8 h-px bg-border"></div>
-                              <Plane className="h-3 w-3 mx-1 text-muted-foreground" />
-                              <div className="w-8 h-px bg-border"></div>
+                        {/* Flight routing display with connections */}
+                        {flight.segments && flight.segments.length > 1 ? (
+                          // Multi-segment flight with connections
+                          <div className="space-y-2 text-sm">
+                            {flight.segments.map((segment: any, segmentIndex: number) => (
+                              <div key={segmentIndex} className="flex items-center gap-2">
+                                <div className="flex-1 grid grid-cols-3 gap-4">
+                                  <div>
+                                    <p className="font-medium">{formatTime(segment.departure.time)}</p>
+                                    <p className="text-muted-foreground">{segment.departure.airport?.code}</p>
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-muted-foreground">{formatDuration(segment.duration)}</p>
+                                    <div className="flex items-center justify-center">
+                                      <div className="w-8 h-px bg-border"></div>
+                                      <Plane className="h-3 w-3 mx-1 text-muted-foreground" />
+                                      <div className="w-8 h-px bg-border"></div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-medium">{formatTime(segment.arrival.time)}</p>
+                                    <p className="text-muted-foreground">{segment.arrival.airport?.code}</p>
+                                  </div>
+                                </div>
+                                {segmentIndex < flight.segments.length - 1 && (
+                                  <div className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
+                                    Connection
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            <div className="text-xs text-muted-foreground mt-2">
+                              Total journey: {formatDuration(flight.duration)} • {flight.stops} stop{flight.stops !== 1 ? 's' : ''}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-medium">{formatTime(flight.arrival.time)}</p>
-                            <p className="text-muted-foreground">{flight.arrival.airport?.code || flight.arrival.airport}</p>
+                        ) : (
+                          // Direct flight
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <p className="font-medium">{formatTime(flight.departure.time)}</p>
+                              <p className="text-muted-foreground">{flight.departure.airport?.code || flight.departure.airport}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-muted-foreground">{formatDuration(flight.duration)}</p>
+                              <div className="flex items-center justify-center">
+                                <div className="w-8 h-px bg-border"></div>
+                                <Plane className="h-3 w-3 mx-1 text-muted-foreground" />
+                                <div className="w-8 h-px bg-border"></div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium">{formatTime(flight.arrival.time)}</p>
+                              <p className="text-muted-foreground">{flight.arrival.airport?.code || flight.arrival.airport}</p>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                       <div className="text-right ml-4">
                         <p className="text-lg font-bold">${flight.price?.amount || flight.price}</p>
