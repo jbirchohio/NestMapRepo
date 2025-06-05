@@ -9,21 +9,44 @@ const router = Router();
 // Flight search endpoint
 router.post('/flights/search', async (req, res) => {
   try {
-    const { origin, destination, departureDate, returnDate, passengers, cabin, directFlights } = req.body;
-    
-    if (!origin || !destination || !departureDate || !passengers) {
-      return res.status(400).json({ message: "Missing required search parameters" });
+    console.log('Flight search request body:', req.body);
+
+    const { 
+      origin, 
+      destination, 
+      departureDate, 
+      returnDate, 
+      passengers, 
+      cabin, 
+      directFlights,
+      class: travelClass,
+      tripType
+    } = req.body;
+
+    // More flexible validation - passengers defaults to 1 if not provided
+    if (!origin || !destination || !departureDate) {
+      return res.status(400).json({ 
+        message: "Missing required search parameters. Need: origin, destination, departureDate",
+        received: { origin, destination, departureDate, passengers, cabin, class: travelClass }
+      });
     }
 
-    const { searchFlights } = await import('../bookingProviders');
-    const flights = await searchFlights({
-      origin,
-      destination,
+    const searchParams = {
+      origin: typeof origin === 'string' ? origin.trim() : origin,
+      destination: typeof destination === 'string' ? destination.trim() : destination,
       departureDate,
       returnDate,
-      passengers
-    });
-    
+      passengers: passengers || 1,
+      cabin: cabin || travelClass || 'economy',
+      tripType: tripType || (returnDate ? 'round-trip' : 'one-way')
+    };
+
+    console.log('Searching flights with params:', searchParams);
+
+    const { searchFlights } = await import('../bookingProviders');
+    const flights = await searchFlights(searchParams);
+
+    console.log(`Found ${flights.length} flights`);
     res.json({ flights });
   } catch (error: any) {
     console.error("Flight search error:", error);
@@ -40,7 +63,7 @@ router.get('/trip/:tripId', async (req, res) => {
 
     const tripId = parseInt(req.params.trip_id);
     const organizationId = req.user.organization_id;
-    
+
     // Verify trip belongs to user's organization
     const [trip] = await db
       .select()
@@ -49,11 +72,11 @@ router.get('/trip/:tripId', async (req, res) => {
         eq(trips.id, tripId),
         eq(trips.organization_id, organizationId)
       ));
-    
+
     if (!trip) {
       return res.status(404).json({ error: "Trip not found" });
     }
-    
+
     // Get bookings for this trip
     const tripBookings = await db
       .select()
@@ -63,7 +86,7 @@ router.get('/trip/:tripId', async (req, res) => {
         eq(bookings.organization_id, organizationId)
       ))
       .orderBy(desc(bookings.createdAt));
-    
+
     res.json(tripBookings);
   } catch (error) {
     console.error('Error fetching trip bookings:', error);
@@ -80,14 +103,14 @@ router.post('/flights', async (req, res) => {
 
     const organizationId = req.user.organization_id;
     const userId = req.user.id;
-    
+
     const {
       tripId,
       flightOffer,
       passengerDetails,
       paymentMethod = 'card'
     } = req.body;
-    
+
     // Verify trip belongs to user's organization
     const [trip] = await db
       .select()
@@ -96,7 +119,7 @@ router.post('/flights', async (req, res) => {
         eq(trips.id, tripId),
         eq(trips.organization_id, organizationId)
       ));
-    
+
     if (!trip) {
       return res.status(404).json({ error: "Trip not found" });
     }
@@ -126,7 +149,7 @@ router.post('/flights', async (req, res) => {
         details: bookingError instanceof Error ? bookingError.message : 'Unknown error'
       });
     }
-    
+
     // Create booking record
     const [newBooking] = await db
       .insert(bookings)
@@ -148,7 +171,7 @@ router.post('/flights', async (req, res) => {
         cancellationPolicy: bookingResult.cancellationPolicy
       })
       .returning();
-    
+
     // Create payment record if Stripe integration is available
     if (process.env.STRIPE_SECRET_KEY) {
       await db
@@ -163,12 +186,12 @@ router.post('/flights', async (req, res) => {
           processedAt: new Date()
         });
     }
-    
+
     res.status(201).json({
       booking: newBooking,
       confirmation: bookingResult
     });
-    
+
   } catch (error) {
     console.error('Error creating flight booking:', error);
     res.status(500).json({ error: "Failed to create flight booking" });
@@ -184,14 +207,14 @@ router.post('/hotels', async (req, res) => {
 
     const organizationId = req.user.organization_id;
     const userId = req.user.id;
-    
+
     const {
       tripId,
       hotelOffer,
       guestDetails,
       paymentMethod = 'card'
     } = req.body;
-    
+
     // Verify trip belongs to user's organization
     const [trip] = await db
       .select()
@@ -200,7 +223,7 @@ router.post('/hotels', async (req, res) => {
         eq(trips.id, tripId),
         eq(trips.organization_id, organizationId)
       ));
-    
+
     if (!trip) {
       return res.status(404).json({ error: "Trip not found" });
     }
@@ -231,7 +254,7 @@ router.post('/hotels', async (req, res) => {
         details: bookingError instanceof Error ? bookingError.message : 'Unknown error'
       });
     }
-    
+
     // Create booking record
     const [newBooking] = await db
       .insert(bookings)
@@ -253,7 +276,7 @@ router.post('/hotels', async (req, res) => {
         cancellationPolicy: bookingResult.cancellationPolicy
       })
       .returning();
-    
+
     // Create payment record if Stripe integration is available
     if (process.env.STRIPE_SECRET_KEY) {
       await db
@@ -268,12 +291,12 @@ router.post('/hotels', async (req, res) => {
           processedAt: new Date()
         });
     }
-    
+
     res.status(201).json({
       booking: newBooking,
       confirmation: bookingResult
     });
-    
+
   } catch (error) {
     console.error('Error creating hotel booking:', error);
     res.status(500).json({ error: "Failed to create hotel booking" });
@@ -290,7 +313,7 @@ router.patch('/:bookingId/cancel', async (req, res) => {
     const bookingId = parseInt(req.params.bookingId);
     const organizationId = req.user.organization_id;
     const { reason } = req.body;
-    
+
     // Verify booking belongs to user's organization
     const [booking] = await db
       .select()
@@ -299,18 +322,18 @@ router.patch('/:bookingId/cancel', async (req, res) => {
         eq(bookings.id, bookingId),
         eq(bookings.organization_id, organizationId)
       ));
-    
+
     if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
     }
-    
+
     if (booking.status === 'cancelled') {
       return res.status(400).json({ error: "Booking already cancelled" });
     }
-    
+
     // Attempt to cancel with provider if possible
     let cancellationResult = { success: true, refundAmount: 0 };
-    
+
     if (booking.providerBookingId) {
       try {
         // Would integrate with provider cancellation APIs here
@@ -319,7 +342,7 @@ router.patch('/:bookingId/cancel', async (req, res) => {
         console.error('Provider cancellation failed:', error);
       }
     }
-    
+
     // Update booking status
     const [updatedBooking] = await db
       .update(bookings)
@@ -329,12 +352,12 @@ router.patch('/:bookingId/cancel', async (req, res) => {
       })
       .where(eq(bookings.id, bookingId))
       .returning();
-    
+
     res.json({
       booking: updatedBooking,
       cancellation: cancellationResult
     });
-    
+
   } catch (error) {
     console.error('Error cancelling booking:', error);
     res.status(500).json({ error: "Failed to cancel booking" });
@@ -350,7 +373,7 @@ router.get('/:bookingId', async (req, res) => {
 
     const bookingId = parseInt(req.params.bookingId);
     const organizationId = req.user.organization_id;
-    
+
     // Get booking with payment information
     const [booking] = await db
       .select({
@@ -363,11 +386,11 @@ router.get('/:bookingId', async (req, res) => {
         eq(bookings.id, bookingId),
         eq(bookings.organization_id, organizationId)
       ));
-    
+
     if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
     }
-    
+
     res.json(booking);
   } catch (error) {
     console.error('Error fetching booking details:', error);
@@ -379,7 +402,7 @@ router.get('/:bookingId', async (req, res) => {
 router.post('/cars/search', async (req, res) => {
   try {
     const { pickUpLocation, dropOffLocation, pickUpDate, dropOffDate } = req.body;
-    
+
     if (!pickUpLocation || !dropOffLocation || !pickUpDate || !dropOffDate) {
       return res.status(400).json({ message: "Missing required search parameters" });
     }
@@ -391,7 +414,7 @@ router.post('/cars/search', async (req, res) => {
       pickUpDate,
       dropOffDate
     });
-    
+
     res.json(cars);
   } catch (error: any) {
     console.error("Car search error:", error);
@@ -403,7 +426,7 @@ router.post('/cars/search', async (req, res) => {
 router.post('/hotels/search', async (req, res) => {
   try {
     const { destination, checkIn, checkOut, guests, rooms } = req.body;
-    
+
     if (!destination || !checkIn || !checkOut || !guests) {
       return res.status(400).json({ message: "Missing required search parameters" });
     }
@@ -416,7 +439,7 @@ router.post('/hotels/search', async (req, res) => {
       guests,
       rooms: rooms || 1
     });
-    
+
     res.json({ hotels });
   } catch (error: any) {
     console.error("Hotel search error:", error);
