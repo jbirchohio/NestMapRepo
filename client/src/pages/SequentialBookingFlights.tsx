@@ -398,8 +398,8 @@ export default function SequentialBookingFlights() {
                         </div>
                       </div>
                       <div className="text-right ml-4">
-                        <p className="text-lg font-bold">${flight.price}</p>
-                        <p className="text-sm text-muted-foreground">{flight.currency}</p>
+                        <p className="text-lg font-bold">${flight.price?.amount || flight.price}</p>
+                        <p className="text-sm text-muted-foreground">{flight.price?.currency || flight.currency || 'USD'}</p>
                       </div>
                     </div>
                   </div>
