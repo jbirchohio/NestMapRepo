@@ -64,7 +64,10 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
   const [isWhiteLabelActive, setIsWhiteLabelActive] = useState(false);
   
   // Load branding configuration from database
-  const { data: brandingData } = useQuery({
+  const { data: brandingData } = useQuery<{
+    isWhiteLabelActive: boolean;
+    config: Partial<WhiteLabelConfig>;
+  }>({
     queryKey: ['/api/white-label/config'],
     enabled: !!user // Only fetch when user is authenticated
   });
@@ -73,9 +76,9 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
 
   // Update config when branding data loads from database
   useEffect(() => {
-    if (brandingData) {
-      setIsWhiteLabelActive(brandingData.isWhiteLabelActive);
-      if (brandingData.config) {
+    if (brandingData && typeof brandingData === 'object') {
+      setIsWhiteLabelActive(brandingData.isWhiteLabelActive || false);
+      if (brandingData.config && typeof brandingData.config === 'object') {
         setConfig({
           ...defaultConfig,
           ...brandingData.config
