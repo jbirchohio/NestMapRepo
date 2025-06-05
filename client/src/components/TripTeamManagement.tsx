@@ -260,11 +260,19 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     }
 
     // Create sequential booking workflow data using existing tripData
+    const formatDateForBooking = (date: any): string => {
+      if (!date) return '';
+      if (typeof date === 'string') return date;
+      if (date instanceof Date) return date.toISOString().split('T')[0];
+      if (typeof date === 'object' && date.getTime) return date.toISOString().split('T')[0];
+      return '';
+    };
+
     const sequentialBookingData = {
       tripId: tripId.toString(),
       tripDestination: `${city}, ${country}`,
-      departureDate: tripData.start_date || tripData.startDate,
-      returnDate: tripData.end_date || tripData.endDate,
+      departureDate: formatDateForBooking(tripData.start_date || tripData.startDate),
+      returnDate: formatDateForBooking(tripData.end_date || tripData.endDate),
       currentTravelerIndex: 0,
       travelers: travelers.map(traveler => ({
         id: traveler.id,
