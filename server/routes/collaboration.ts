@@ -118,15 +118,15 @@ router.post('/trips/:tripId/comments', async (req, res) => {
       .select({
         id: tripComments.id,
         tripId: tripComments.trip_id,
-        activityId: tripComments.activityId,
+        activityId: tripComments.activity_id,
         content: tripComments.content,
-        parentId: tripComments.parentId,
+        parentId: tripComments.parent_id,
         resolved: tripComments.resolved,
-        createdAt: tripComments.createdAt,
-        updatedAt: tripComments.updatedAt,
+        createdAt: tripComments.created_at,
+        updatedAt: tripComments.updated_at,
         user: {
           id: users.id,
-          displayName: users.displayName,
+          displayName: users.display_name,
           email: users.email
         }
       })
@@ -177,7 +177,7 @@ router.patch('/comments/:commentId/resolve', async (req, res) => {
       .update(tripComments)
       .set({
         resolved: resolved,
-        updatedAt: new Date()
+        updated_at: new Date()
       })
       .where(eq(tripComments.id, commentId))
       .returning();
