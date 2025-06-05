@@ -131,8 +131,10 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
   getUserById(userId!)
     .then(user => {
       if (!user) {
-        // Clear invalid session
-        delete (req.session as any).user_id;
+        // Clear invalid session if it exists
+        if (req.session) {
+          delete (req.session as any).user_id;
+        }
         return res.status(401).json({ message: "Invalid session" });
       }
 
