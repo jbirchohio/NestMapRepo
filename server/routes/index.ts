@@ -34,8 +34,8 @@ router.use('/performance', performanceRoutes);
 router.use('/admin', adminRoutes);
 router.use('/calendar', calendarRoutes);
 router.use('/collaboration', collaborationRoutes);
-// Booking routes are registered via function call
-registerBookingRoutes(router);
+// Register booking routes directly to app instance (not router)
+// Note: This will be handled in the main routes file
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
@@ -48,6 +48,18 @@ router.use('/webhooks', webhookRoutes);
 // router.use('/todos', todosRoutes);
 // router.use('/notes', notesRoutes);
 router.use('/ai', aiRoutes);
+
+// Templates endpoint
+router.get('/templates', async (req, res) => {
+  try {
+    const { getAllTemplates } = await import('../tripTemplates');
+    const templates = getAllTemplates();
+    res.json(templates);
+  } catch (error) {
+    console.error('Templates error:', error);
+    res.status(500).json({ message: 'Failed to get templates' });
+  }
+});
 
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {

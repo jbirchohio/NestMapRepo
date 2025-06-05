@@ -290,6 +290,11 @@ app.use((req, res, next) => {
   try {
     // Mount API routes
     app.use('/api', apiRoutes);
+    
+    // Register booking routes with full Express app instance
+    const { registerBookingRoutes } = await import('./routes/bookings');
+    registerBookingRoutes(app);
+    
     console.log('✅ API routes mounted successfully');
   } catch (error) {
     console.error('❌ Failed to mount API routes:', error);
