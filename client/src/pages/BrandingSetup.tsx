@@ -158,53 +158,51 @@ export default function BrandingSetup() {
             </p>
           </motion.div>
 
-          {/* Current Plan Status */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="border-electric-200/30">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Building2 className="h-6 w-6 text-electric-600" />
-                    <div>
-                      <CardTitle>Current Plan</CardTitle>
-                      <CardDescription>Organization: {orgPlan?.name}</CardDescription>
+          {/* Pro Plan Status */}
+          {canUseBranding ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="border-electric-200 bg-gradient-to-r from-electric-50 to-electric-100 dark:from-electric-900/20 dark:to-electric-800/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="h-6 w-6 text-electric-600" />
+                      <div>
+                        <CardTitle className="text-electric-700 dark:text-electric-300">White Label Branding Enabled</CardTitle>
+                        <CardDescription>Your {orgPlan?.name} organization has Pro plan access</CardDescription>
+                      </div>
                     </div>
+                    <Badge variant="default" className="gap-1">
+                      <Crown className="h-3 w-3" />
+                      Pro Plan Active
+                    </Badge>
                   </div>
-                  <Badge 
-                    variant={canUseBranding ? "default" : "secondary"} 
-                    className="gap-1 capitalize"
-                  >
-                    {canUseBranding ? (
-                      <>
-                        <CheckCircle className="h-3 w-3" />
-                        {orgPlan?.plan} Plan
-                      </>
-                    ) : (
-                      <>
-                        <Crown className="h-3 w-3" />
-                        {orgPlan?.plan || 'starter'} Plan
-                      </>
-                    )}
-                  </Badge>
-                </div>
-              </CardHeader>
-              {!canUseBranding && (
-                <CardContent>
+                </CardHeader>
+              </Card>
+            </motion.div>
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/20">
+                <CardHeader>
                   <Alert>
                     <Crown className="h-4 w-4" />
+                    <AlertTitle>Upgrade Required</AlertTitle>
                     <AlertDescription>
                       White label branding requires Pro plan ($99/month) or higher. 
                       <strong> Upgrade to unlock instant branding capabilities.</strong>
                     </AlertDescription>
                   </Alert>
-                </CardContent>
-              )}
-            </Card>
-          </motion.div>
+                </CardHeader>
+              </Card>
+            </motion.div>
+          )}
 
           {/* Feature Comparison */}
           <motion.div 
