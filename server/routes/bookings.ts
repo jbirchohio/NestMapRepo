@@ -204,7 +204,7 @@ router.post('/flights/book', async (req, res) => {
   }
 });
 
-// Hotel search endpoint
+// Hotel search endpoint with authentic API integration
 router.post('/hotels/search', async (req, res) => {
   try {
     const { location, checkIn, checkOut, guests, rooms } = req.body;
@@ -215,38 +215,26 @@ router.post('/hotels/search', async (req, res) => {
       });
     }
 
-    // Mock hotel data for development
-    const mockHotels = [
-      {
-        id: "hotel_1",
-        name: "Grand Plaza Hotel",
-        location: location,
-        rating: 4.5,
-        price_per_night: 150,
-        currency: "USD",
-        check_in: checkIn,
-        check_out: checkOut,
-        amenities: ["WiFi", "Pool", "Gym", "Restaurant"],
-        image: "https://via.placeholder.com/300x200"
-      },
-      {
-        id: "hotel_2",
-        name: "Boutique City Inn",
-        location: location,
-        rating: 4.2,
-        price_per_night: 120,
-        currency: "USD",
-        check_in: checkIn,
-        check_out: checkOut,
-        amenities: ["WiFi", "Restaurant", "Room Service"],
-        image: "https://via.placeholder.com/300x200"
-      }
-    ];
+    console.log('Searching hotels via Duffel API:', { location, checkIn, checkOut, guests, rooms });
 
-    res.json({ hotels: mockHotels });
+    // Use authentic Duffel API through booking provider
+    const hotels = await searchHotels({
+      destination: location,
+      checkIn,
+      checkOut,
+      guests: guests || 1,
+      rooms: rooms || 1
+    });
+
+    console.log(`Duffel API returned ${hotels.length} hotel options`);
+
+    res.json({ hotels });
   } catch (error) {
-    console.error('Hotel search error:', error);
-    res.status(500).json({ message: "Hotel search failed" });
+    console.error('Duffel hotel search error:', error);
+    res.status(500).json({ 
+      message: "Hotel search failed", 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 

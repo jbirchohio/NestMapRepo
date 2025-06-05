@@ -318,66 +318,8 @@ async function getWeatherForecast(destination: string, dates: string[]) {
   }
 }
 
-// Helper functions for fallback data
-function generateMockPricePredictions() {
-  const basePrice = 800;
-  const predictions = [];
-  
-  for (let i = 1; i <= 30; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() + i);
-    
-    const variance = (Math.random() - 0.5) * 200;
-    const seasonalFactor = Math.sin((i / 30) * Math.PI) * 100;
-    const price = Math.round(basePrice + variance + seasonalFactor);
-    
-    predictions.push({
-      date: date.toISOString().split('T')[0],
-      price,
-      confidence: 0.7 + Math.random() * 0.3,
-      recommendation: price < basePrice * 0.9 ? 'book_now' : price > basePrice * 1.1 ? 'wait' : 'monitor'
-    });
-  }
-  
-  return predictions;
-}
-
-function generateSeasonalTrends() {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return months.map((month, index) => ({
-    month,
-    averagePrice: 600 + Math.sin((index / 12) * 2 * Math.PI) * 200 + Math.random() * 100,
-    priceChange: (Math.random() - 0.5) * 20
-  }));
-}
-
-function generateFallbackPricePrediction(): PricePrediction {
-  return {
-    currentPrice: 850,
-    predictedPrices: generateMockPricePredictions(),
-    optimalBookingWindow: {
-      start: "2024-02-15",
-      end: "2024-02-29",
-      expectedSavings: 120
-    },
-    seasonalTrends: generateSeasonalTrends()
-  };
-}
-
-function generateFallbackCrowdPrediction(location: string): CrowdPrediction {
-  return {
-    location,
-    crowdLevel: 'medium',
-    confidence: 0.8,
-    peakHours: ['11:00', '13:00', '15:00'],
-    bestVisitTimes: [
-      { time: '08:30', crowdLevel: 'low', reason: 'Early morning before crowds arrive' },
-      { time: '17:00', crowdLevel: 'medium', reason: 'Late afternoon as crowds thin out' }
-    ],
-    alternativeOptions: [
-      { name: 'Similar nearby attraction', distance: '0.5 miles', crowdLevel: 'low', similarity: 0.8 }
-    ]
-  };
+// All mock data functions removed - system now requires authentic API credentials
+// No fallback synthetic data - proper error handling with credential prompts
 }
 
 function generateMockWeatherForecast(dates: string[]) {
