@@ -34,10 +34,20 @@ interface AuthenticatedUser {
   displayName?: string;
 }
 
-import { unifiedAuthMiddleware, requireSuperadminRole, AuthenticatedRequest } from '../middleware/unifiedAuth';
+import { jwtAuthMiddleware, requireSuperadminRole } from '../middleware/jwtAuth';
 
-// Apply unified auth to all superadmin routes
-router.use(unifiedAuthMiddleware);
+// Apply JWT auth to all superadmin routes with proper middleware
+const createSuperadminRoutes = () => {
+  const router = express.Router();
+  
+  // Apply JWT auth to all routes
+  router.use(jwtAuthMiddleware);
+  router.use(requireSuperadminRole);
+  
+  return router;
+};
+
+const router = createSuperadminRoutes();
 
 // Middleware for owner-level permissions
 const requireSuperadminOwner = (req: any, res: any, next: any) => {
@@ -74,8 +84,6 @@ const logSuperadminAction = async (
     console.error('Failed to log superadmin action:', error);
   }
 };
-
-const router = express.Router();
 
 // Organizations endpoints
 router.get('/organizations', requireSuperadmin, async (req: any, res: any) => {

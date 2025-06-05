@@ -167,7 +167,7 @@ router.get('/white-label-requests', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/admin/white-label-requests/:id - Review white label request
-router.patch('/white-label-requests/:id', , async (req: Request, res: Response) => {
+router.patch('/white-label-requests/:id', async (req: Request, res: Response) => {
   try {
     const requestId = parseInt(req.params.id);
     if (isNaN(requestId)) {
@@ -243,7 +243,7 @@ router.patch('/white-label-requests/:id', , async (req: Request, res: Response) 
 });
 
 // GET /api/admin/custom-domains - Get all custom domains
-router.get('/custom-domains', , async (req: Request, res: Response) => {
+router.get('/custom-domains', async (req: Request, res: Response) => {
   try {
     const domains = await db.select({
       id: customDomains.id,
@@ -276,7 +276,7 @@ router.get('/custom-domains', , async (req: Request, res: Response) => {
 });
 
 // POST /api/admin/domains/:id/verify - Manually trigger domain verification
-router.post('/domains/:id/verify', , async (req: Request, res: Response) => {
+router.post('/domains/:id/verify', async (req: Request, res: Response) => {
   try {
     const domainId = parseInt(req.params.id);
     if (isNaN(domainId)) {
@@ -367,7 +367,7 @@ router.post('/domains/:id/verify', , async (req: Request, res: Response) => {
 });
 
 // GET /api/admin/audit-log - Get admin action audit log
-router.get('/audit-log', , async (req: Request, res: Response) => {
+router.get('/audit-log', async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
