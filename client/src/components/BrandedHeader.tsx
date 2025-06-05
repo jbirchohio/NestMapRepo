@@ -156,8 +156,8 @@ export default function BrandedHeader() {
               <div className="flex items-center gap-2">
                 {config.enablePublicSignup && (
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button variant="outline" size="sm" className="border-electric-300 text-electric-600 hover:bg-electric-50">
-                      Sign Up
+                    <Button variant="outline" size="sm" className="border-electric-300 text-electric-600 hover:bg-electric-50" asChild>
+                      <Link href="/login">Sign Up</Link>
                     </Button>
                   </motion.div>
                 )}
@@ -165,8 +165,9 @@ export default function BrandedHeader() {
                   <Button 
                     size="sm"
                     className="electric-gradient morphing-button text-white"
+                    asChild
                   >
-                    Sign In
+                    <Link href="/login">Sign In</Link>
                   </Button>
                 </motion.div>
               </div>

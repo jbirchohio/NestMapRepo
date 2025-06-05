@@ -34,18 +34,12 @@ const router = express.Router();
 
 // Middleware to check superadmin permissions
 const requireSuperadmin = (req: any, res: any, next: any) => {
-  // For development/demo purposes, create a mock superadmin user if none exists
+  // Check if user is authenticated first
   if (!req.user) {
-    req.user = {
-      id: 5, // Known superadmin user ID
-      email: 'demo@nestmap.com',
-      role: 'superadmin',
-      organization_id: null,
-      displayName: 'Demo Superadmin'
-    };
+    return res.status(401).json({ error: 'Authentication required' });
   }
   
-  // Allow access if user exists with proper role
+  // Allow access ONLY if user has proper superadmin role
   if (req.user && ['superadmin', 'superadmin_owner', 'superadmin_staff', 'superadmin_auditor', 'super_admin'].includes(req.user.role)) {
     next();
     return;
