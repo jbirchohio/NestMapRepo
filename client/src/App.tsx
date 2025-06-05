@@ -28,6 +28,7 @@ import ProfileSettings from "@/pages/ProfileSettings";
 import HelpCenter from "@/pages/HelpCenter";
 import CalendarSettings from "@/pages/CalendarSettings";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
+import BrandingSetup from "@/pages/BrandingSetup";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CorporateCards from "@/pages/CorporateCards";
 import OrganizationFunding from "@/pages/OrganizationFunding";
@@ -74,6 +75,7 @@ function Router() {
           <Route path="/help" component={HelpCenter} />
           <Route path="/calendar" component={CalendarSettings} />
           <Route path="/white-label" component={WhiteLabelSettings} />
+          <Route path="/branding" component={BrandingSetup} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/superadmin" component={Superadmin} />
