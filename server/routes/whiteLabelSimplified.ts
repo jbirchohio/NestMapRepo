@@ -231,7 +231,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
           .insert(whiteLabelSettings)
           .values({
             organization_id: organizationId,
-            company_name: companyName,
+            company_name: companyName || 'My Company',
             tagline: tagline || null,
             primary_color: primaryColor,
             secondary_color: secondaryColor,

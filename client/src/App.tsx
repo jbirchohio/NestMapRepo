@@ -74,8 +74,8 @@ function Router() {
           <Route path="/profile" component={ProfileSettings} />
           <Route path="/help" component={HelpCenter} />
           <Route path="/calendar" component={CalendarSettings} />
-          <Route path="/white-label" component={WhiteLabelSettings} />
-          <Route path="/branding" component={BrandingSetup} />
+          <Route path="/white-label" component={Settings} />
+          <Route path="/branding" component={Settings} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/superadmin" component={Superadmin} />
