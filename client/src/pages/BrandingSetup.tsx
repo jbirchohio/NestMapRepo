@@ -197,7 +197,7 @@ export default function BrandingSetup() {
                   <Alert>
                     <Crown className="h-4 w-4" />
                     <AlertDescription>
-                      White label branding requires Professional plan or higher. 
+                      White label branding requires Pro plan ($99/month) or higher. 
                       <strong> Upgrade to unlock instant branding capabilities.</strong>
                     </AlertDescription>
                   </Alert>

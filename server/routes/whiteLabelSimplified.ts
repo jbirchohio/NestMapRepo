@@ -32,8 +32,8 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
     }
 
     try {
-      // Auto-enable white label for Professional+ plans
-      const shouldEnableWhiteLabel = ['professional', 'enterprise'].includes(plan.toLowerCase());
+      // Auto-enable white label for Pro+ plans (tier inheritance)
+      const shouldEnableWhiteLabel = ['pro', 'business', 'enterprise'].includes(plan.toLowerCase());
       
       if (shouldEnableWhiteLabel) {
         await db
@@ -66,7 +66,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         res.json({
           success: true,
           white_label_enabled: false,
-          message: "Plan updated. Upgrade to Professional for white label branding."
+          message: "Plan updated. Upgrade to Pro ($99/month) for white label branding."
         });
       }
     } catch (error) {
@@ -101,8 +101,8 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      const plan = organization.plan || 'starter';
-      const canAccessWhiteLabel = ['professional', 'enterprise'].includes(plan);
+      const plan = organization.plan || 'basic';
+      const canAccessWhiteLabel = ['pro', 'business', 'enterprise'].includes(plan);
       const upgradeRequired = !canAccessWhiteLabel;
 
       res.json({
@@ -111,7 +111,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         white_label_enabled: organization.white_label_enabled,
         upgradeRequired,
         limitations: upgradeRequired ? [
-          "Custom branding requires Professional plan ($99/month)",
+          "Custom branding requires Pro plan ($99/month)",
           "Auto-enabled with plan upgrade - no manual approval needed"
         ] : []
       });
@@ -184,13 +184,13 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      const plan = organization.plan || 'starter';
-      const hasAccess = ['professional', 'enterprise'].includes(plan);
+      const plan = organization.plan || 'basic';
+      const hasAccess = ['pro', 'business', 'enterprise'].includes(plan);
 
       if (!hasAccess) {
         return res.status(403).json({ 
           error: "Upgrade required",
-          message: "White label branding requires Professional plan or higher"
+          message: "White label branding requires Pro plan ($99/month) or higher"
         });
       }
 
