@@ -259,6 +259,18 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       return;
     }
 
+    // Debug: Log complete trip data to identify date field names
+    console.log('DEBUG: Complete tripData object:', tripData);
+    console.log('DEBUG: Available date fields:', {
+      start_date: tripData.start_date,
+      startDate: tripData.startDate,
+      end_date: tripData.end_date,
+      endDate: tripData.endDate,
+      departure_date: tripData.departure_date,
+      return_date: tripData.return_date,
+      dates: tripData.dates
+    });
+
     // Create sequential booking workflow data using existing tripData
     const formatDateForBooking = (date: any): string => {
       if (!date) return '';
