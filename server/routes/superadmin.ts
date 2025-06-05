@@ -23,6 +23,7 @@ import {
 } from '@shared/superadmin-schema';
 import { auditLogger } from '../auditLogger';
 import { hashPassword } from '../auth';
+import { stripe, SUBSCRIPTION_PLANS, createStripeCustomer, updateSubscription, createRefund } from '../stripe';
 
 // Define authenticated request interface
 interface AuthenticatedUser {
@@ -38,7 +39,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 // Middleware to check superadmin permissions
-const requireSuperadmin = (req: AuthenticatedRequest, res: Response, next: any) => {
+const requireSuperadmin = (req: any, res: any, next: any) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -57,7 +58,7 @@ const requireSuperadmin = (req: AuthenticatedRequest, res: Response, next: any) 
 };
 
 // Middleware for owner-level permissions
-const requireSuperadminOwner = (req: AuthenticatedRequest, res: Response, next: any) => {
+const requireSuperadminOwner = (req: any, res: any, next: any) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -122,7 +123,7 @@ router.get('/organizations', requireSuperadmin, async (req: any, res: any) => {
   }
 });
 
-router.get('/organizations/:id', requireSuperadmin, async (req, res) => {
+router.get('/organizations/:id', requireSuperadmin, async (req: any, res: any) => {
   try {
     const orgId = parseInt(req.params.id);
     const [org] = await db
@@ -362,9 +363,9 @@ router.put('/users/:id', requireSuperadmin, async (req, res) => {
     }
 
     res.json(updatedUser);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating user:', error);
-    res.status(500).json({ error: 'Failed to update user', details: error.message });
+    res.status(500).json({ error: 'Failed to update user', details: error?.message || 'Unknown error' });
   }
 });
 
@@ -507,24 +508,24 @@ router.get('/sessions', requireSuperadmin, async (req, res) => {
       // Calculate created_at from login time or estimate
       let createdAt;
       try {
-        if (session.login_time && session.login_time !== 'null') {
-          createdAt = new Date(session.login_time);
+        if ((session as any).login_time && (session as any).login_time !== 'null') {
+          createdAt = new Date((session as any).login_time);
         } else {
           // Estimate login time as 12 hours before expiry
-          createdAt = new Date(new Date(session.expires_at).getTime() - (12 * 60 * 60 * 1000));
+          createdAt = new Date(new Date((session as any).expires_at || Date.now()).getTime() - (12 * 60 * 60 * 1000));
         }
       } catch (e) {
-        createdAt = new Date(new Date(session.expires_at).getTime() - (12 * 60 * 60 * 1000));
+        createdAt = new Date(new Date((session as any).expires_at || Date.now()).getTime() - (12 * 60 * 60 * 1000));
       }
 
       return {
         id: session.sid,
-        user_id: session.user_id || sessionData.user_id || sessionData.userId || 'N/A',
-        username: session.username || sessionData.username || sessionData.displayName || sessionData.email || 'Anonymous User',
-        email: session.email || sessionData.email || sessionData.username || 'No Email',
-        role: session.role || sessionData.role || 'User',
-        display_name: session.display_name || sessionData.display_name || sessionData.displayName,
-        organization_name: session.organization_name || sessionData.organizationName || 'No Organization',
+        user_id: session.user_id || (sessionData as any)?.user_id || (sessionData as any)?.userId || 'N/A',
+        username: session.username || (sessionData as any)?.username || (sessionData as any)?.displayName || (sessionData as any)?.email || 'Anonymous User',
+        email: session.email || (sessionData as any)?.email || (sessionData as any)?.username || 'No Email',
+        role: session.role || (sessionData as any)?.role || 'User',
+        display_name: session.display_name || (sessionData as any)?.display_name || (sessionData as any)?.displayName,
+        organization_name: session.organization_name || (sessionData as any)?.organizationName || 'No Organization',
         ip_address: session.ip_address === '::1' ? (sessionData.email || sessionData.username || 'Local Development') : session.ip_address || 'Unknown IP',
         user_agent: session.user_agent || 'Unknown Browser',
         expires_at: session.expires_at,
