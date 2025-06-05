@@ -758,26 +758,26 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
 
     // User engagement metrics
     const usersWithTripsResult = await db.select({
-      count: sql`COUNT(DISTINCT ${users.id})`.as('count')
+      count: sql`COUNT(DISTINCT ${users.id})`
     })
     .from(users)
     .innerJoin(trips, eq(trips.user_id, users.id))
     .where(orgUsersFilter);
 
-    const multiTripUsersSubquery = db.select({
-      userId: trips.user_id,
-      tripCount: count(trips.id)
-    })
-    .from(trips)
-    .where(orgTripsFilter)
-    .groupBy(trips.user_id)
-    .having(sql`COUNT(${trips.id}) > 1`)
-    .as('multi_trip_users');
-
     const usersWithMultipleTripsResult = await db.select({
       count: count()
     })
-    .from(multiTripUsersSubquery);
+    .from(
+      db.select({
+        userId: trips.user_id,
+        tripCount: count(trips.id)
+      })
+      .from(trips)
+      .where(orgTripsFilter)
+      .groupBy(trips.user_id)
+      .having(sql`COUNT(${trips.id}) > 1`)
+      .as('multi_trip_users')
+    );
 
     const [completedTripsResult] = await db.select({
       count: count()
@@ -797,8 +797,8 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     const mostActiveUsersResult = await db.select({
       userId: users.id,
       username: users.username,
-      tripCount: count(trips.id).as('trip_count'),
-      totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`.as('total_budget')
+      tripCount: count(trips.id),
+      totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`
     })
     .from(users)
     .innerJoin(trips, eq(trips.user_id, users.id))
@@ -830,7 +830,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       count: count()
     }).from(activities)
     .innerJoin(trips, eq(activities.trip_id, trips.id))
-    .where(and(orgTripsFilter, sql`${activities.createdAt} >= ${sevenDaysAgo}`));
+    .where(orgTripsFilter);
 
     const [budgetSpentLast7DaysResult] = await db.select({
       totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`
