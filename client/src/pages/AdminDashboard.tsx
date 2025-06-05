@@ -1,7 +1,3 @@
-` tags.
-
-```text
-<replit_final_file>
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
