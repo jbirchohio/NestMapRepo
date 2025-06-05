@@ -165,76 +165,7 @@ app.use(session({
   proxy: process.env.NODE_ENV === 'production' // Trust proxy in production
 }));
 
-// Authentication routes
-app.post('/api/auth/login', async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-
-    const user = await authenticateUser(email, password);
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    // Store user ID in session and update last_login
-    (req.session as any).user_id = user.id;
-    
-    // Update last_login timestamp
-    await db.update(users).set({ last_login: new Date() }).where(eq(users.id, user.id));
-    
-    console.log('Login successful for user:', {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      organizationId: user.organizationId
-    });
-
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        organizationId: user.organizationId,
-        displayName: user.displayName
-      }
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.post('/api/auth/logout', (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Logout error:', err);
-      return res.status(500).json({ error: 'Could not log out' });
-    }
-    res.clearCookie('nestmap.sid');
-    res.json({ success: true, message: 'Logged out successfully' });
-  });
-});
-
-app.get('/api/auth/me', async (req: Request, res: Response) => {
-  if (req.user) {
-    res.json({
-      user: {
-        id: req.user.id,
-        email: req.user.email || 'Unknown',
-        role: req.user.role,
-        organizationId: req.user.organization_id,
-        displayName: req.user.displayName || 'Unknown'
-      }
-    });
-  } else {
-    res.status(401).json({ error: 'Not authenticated' });
-  }
-});
+// Note: Authentication routes are handled in /api/auth/* via the routes module
 
 // Session statistics endpoint for testing PostgreSQL store
 app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
