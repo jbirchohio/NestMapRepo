@@ -47,7 +47,6 @@ function Router() {
   return (
     <div className="min-h-screen flex flex-col bg-soft-100 dark:bg-navy-900">
       {!isSuperadminView && !isLoginPage && user && <MainNavigation />}
-      {!isSuperadminView && !isLoginPage && !user && <BrandedHeader />}
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />

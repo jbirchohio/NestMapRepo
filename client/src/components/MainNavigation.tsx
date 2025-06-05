@@ -435,21 +435,7 @@ export default function MainNavigation() {
 
 
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </Button>
-          </div>
+
 
           {/* User Section */}
           <div className="flex items-center gap-3 flex-shrink-0">
