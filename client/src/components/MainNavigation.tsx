@@ -213,101 +213,101 @@ export default function MainNavigation() {
       show: true
     },
     {
-      path: '/dashboard/analytics',
+      path: '/analytics',
       label: roleType === 'agency' ? 'Client Analytics' : 'Travel Analytics',
       icon: BarChart3,
-      active: location === '/dashboard/analytics',
+      active: location === '/analytics',
       show: hasAnalyticsAccess,
       badge: 'Pro'
     },
     {
-      path: '/dashboard/bookings',
+      path: '/bookings',
       label: roleType === 'agency' ? 'Client Bookings' : 'Team Bookings',
       icon: Plane,
-      active: location === '/dashboard/bookings',
+      active: location === '/bookings',
       show: hasBookingAccess,
       badge: 'New'
     },
     {
-      path: '/dashboard/ai-generator',
+      path: '/ai-generator',
       label: roleType === 'agency' ? 'AI Proposal Generator' : 'AI Trip Generator',
       icon: Sparkles,
-      active: location === '/dashboard/ai-generator',
+      active: location === '/ai-generator',
       show: hasAIGeneratorAccess,
       badge: 'AI'
     },
     {
-      path: '/dashboard/optimizer',
+      path: '/optimizer',
       label: 'Trip Optimizer',
       icon: Brain,
-      active: location === '/dashboard/optimizer',
+      active: location === '/optimizer',
       show: hasOptimizerAccess,
       badge: 'Pro'
     },
     {
-      path: '/dashboard/trip-planner',
+      path: '/trip-planner',
       label: 'Plan Trip',
       icon: MapPin,
-      active: location === '/dashboard/trip-planner',
+      active: location === '/trip-planner',
       show: true
     },
     {
-      path: '/dashboard/flights',
+      path: '/flights',
       label: 'Book Flights',
       icon: Plane,
-      active: location === '/dashboard/flights',
+      active: location === '/flights',
       show: true
     },
     {
-      path: '/dashboard/sequential-booking',
+      path: '/sequential-booking',
       label: 'Sequential Flights',
       icon: Plane,
-      active: location === '/dashboard/sequential-booking',
+      active: location === '/sequential-booking',
       show: true
     },
     {
-      path: '/dashboard/team',
+      path: '/team',
       label: roleType === 'agency' ? 'Team & Clients' : 'Team Management',
       icon: Users,
-      active: location === '/dashboard/team',
+      active: location === '/team',
       show: hasTeamAccess
     },
     {
-      path: '/dashboard/billing',
+      path: '/billing',
       label: roleType === 'agency' ? 'Commission & Billing' : 'Company Billing',
       icon: CreditCard,
-      active: location === '/dashboard/billing',
+      active: location === '/billing',
       show: hasBillingAccess
     },
     {
-      path: '/dashboard/corporate-cards',
+      path: '/corporate-cards',
       label: 'Corporate Cards',
       icon: CreditCard,
-      active: location === '/dashboard/corporate-cards',
+      active: location === '/corporate-cards',
       show: hasBillingAccess,
       badge: 'New'
     },
     {
-      path: '/dashboard/organization-funding',
+      path: '/organization-funding',
       label: 'Organization Funding',
       icon: Shield,
-      active: location === '/dashboard/organization-funding',
+      active: location === '/organization-funding',
       show: hasBillingAccess,
       badge: 'Setup'
     },
     {
-      path: '/dashboard/admin',
+      path: '/admin',
       label: 'Organization',
       icon: Building2,
-      active: location === '/dashboard/admin',
+      active: location === '/admin',
       show: hasOrganizationAccess,
       badge: 'Admin'
     },
     {
-      path: '/dashboard/settings',
+      path: '/settings',
       label: roleType === 'agency' ? 'Agency Settings' : 'Company Settings',
       icon: Settings,
-      active: location === '/dashboard/settings',
+      active: location === '/settings',
       show: hasSettingsAccess,
       badge: (user.role === 'admin' || user.role === 'owner') ? 'Admin' : undefined
     }
