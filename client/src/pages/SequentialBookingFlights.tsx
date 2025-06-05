@@ -372,8 +372,8 @@ export default function SequentialBookingFlights() {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <span className="font-medium">{flight.airline}</span>
-                          <Badge variant="outline">{flight.flightNumber}</Badge>
+                          <span className="font-medium">{flight.airline?.name || flight.airline}</span>
+                          <Badge variant="outline">{flight.segments?.[0]?.flightNumber || flight.flightNumber}</Badge>
                           {flight.stops === 0 && (
                             <Badge variant="secondary">Direct</Badge>
                           )}
@@ -381,7 +381,7 @@ export default function SequentialBookingFlights() {
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <p className="font-medium">{flight.departure.time}</p>
-                            <p className="text-muted-foreground">{flight.departure.airport}</p>
+                            <p className="text-muted-foreground">{flight.departure.airport?.code || flight.departure.airport}</p>
                           </div>
                           <div className="text-center">
                             <p className="text-muted-foreground">{flight.duration}</p>
@@ -393,7 +393,7 @@ export default function SequentialBookingFlights() {
                           </div>
                           <div className="text-right">
                             <p className="font-medium">{flight.arrival.time}</p>
-                            <p className="text-muted-foreground">{flight.arrival.airport}</p>
+                            <p className="text-muted-foreground">{flight.arrival.airport?.code || flight.arrival.airport}</p>
                           </div>
                         </div>
                       </div>
