@@ -413,7 +413,7 @@ export default function CorporateDashboard() {
                 </div>
               )}
             </CardContent>
-          </Card>
+          </AnimatedCard>
 
           {/* Upcoming Trips */}
           <AnimatedCard variant="glow" className="p-6">
