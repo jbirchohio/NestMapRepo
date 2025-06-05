@@ -507,6 +507,44 @@ export default function MainNavigation() {
                 <span className="text-sm font-medium">Trips</span>
               </Button>
             </Link>
+
+            {/* Trip Planning - Available to all users for small companies */}
+            <Link href="/trip-planner">
+              <Button
+                variant={location === '/trip-planner' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                <MapPin className="h-4 w-4" />
+                <span className="text-sm font-medium">Plan Trip</span>
+              </Button>
+            </Link>
+
+            {/* Flight Booking - Available to all users */}
+            <Link href="/flights">
+              <Button
+                variant={location === '/flights' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                <Plane className="h-4 w-4" />
+                <span className="text-sm font-medium">Flights</span>
+              </Button>
+            </Link>
+
+            {/* Trip Optimizer - Available to users with permission */}
+            <RoleGate requiredPermissions={['canOptimizeTrips']}>
+              <Link href="/optimizer">
+                <Button
+                  variant={location === '/optimizer' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Route className="h-4 w-4" />
+                  <span className="text-sm font-medium">Optimizer</span>
+                </Button>
+              </Link>
+            </RoleGate>
           </div>
         </div>
       </div>
