@@ -3,13 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnimatedCard } from "@/components/ui/animated-card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CreditCard, DollarSign, Lock, Unlock, Eye, EyeOff } from "lucide-react";
+import { Plus, CreditCard, DollarSign, Lock, Unlock, Eye, EyeOff, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface CorporateCard {
@@ -166,29 +167,62 @@ export default function CorporateCardsManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <motion.div
+    <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">
+      <div className="container mx-auto px-4 py-8">
+        {/* Hero Header */}
+        <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between"
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white mb-8 rounded-xl"
         >
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-              Corporate Cards
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
-              Manage corporate cards with Stripe Issuing integration
-            </p>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+          <div className="absolute inset-0 opacity-30" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }} />
+
+          <div className="relative container mx-auto px-6 py-16">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="flex-1"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
+                    <CreditCard className="w-8 h-8" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-electric-200" />
+                    <span className="text-electric-100 text-sm font-medium">Corporate Finance</span>
+                  </div>
+                </div>
+
+                <h1 className="text-5xl font-bold mb-4 tracking-tight">
+                  Corporate Cards Management
+                </h1>
+                <p className="text-xl text-electric-100 mb-6 max-w-2xl">
+                  Manage corporate cards with Stripe Issuing integration - full control over company spending
+                </p>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <Button
+                  onClick={() => setShowCreateCard(true)}
+                  className="bg-white hover:bg-white/90 text-electric-600 font-semibold px-8 py-3 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 electric-glow"
+                  size="lg"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Create Card
+                </Button>
+              </motion.div>
+            </div>
           </div>
-          <Button
-            onClick={() => setShowCreateCard(true)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Card
-          </Button>
         </motion.div>
 
         {/* Cards Grid */}
@@ -202,22 +236,26 @@ export default function CorporateCardsManagement() {
               className="cursor-pointer"
               onClick={() => setSelectedCard(card)}
             >
-              <Card className="h-full border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 hover:shadow-xl transition-all duration-300">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg font-semibold">
-                      {card.cardholder_name}
-                    </CardTitle>
+              <AnimatedCard variant="glow" className="p-6 h-full relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-electric-400/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
+                
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-electric-100 dark:bg-electric-900/20 rounded-lg">
+                        <CreditCard className="w-5 h-5 text-electric-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-navy-900 dark:text-white">
+                          {card.cardholder_name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">{card.card_number_masked}</p>
+                      </div>
+                    </div>
                     <Badge className={getStatusColor(card.status)}>
                       {card.status.toUpperCase()}
                     </Badge>
                   </div>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                    <CreditCard className="w-4 h-4" />
-                    <span>{card.card_number_masked}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wide">Available Balance</p>
@@ -240,8 +278,8 @@ export default function CorporateCardsManagement() {
                       {card.user?.username || "Unassigned"}
                     </span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </AnimatedCard>
             </motion.div>
           ))}
         </div>

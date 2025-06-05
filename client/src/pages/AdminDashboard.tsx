@@ -1,545 +1,249 @@
+` tags.
+
+```text
+<replit_final_file>
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { Shield, Building, Globe, CreditCard, Check, X, Clock, AlertTriangle } from "lucide-react";
-
-interface Organization {
-  id: number;
-  name: string;
-  plan: string;
-  white_label_enabled: boolean;
-  white_label_plan: string;
-  subscription_status: string;
-  created_at: string;
-}
-
-interface WhiteLabelRequest {
-  id: number;
-  organization_id: number;
-  organization_name: string;
-  requested_by: number;
-  requester_name: string;
-  request_type: string;
-  request_data: any;
-  status: string;
-  created_at: string;
-}
-
-interface CustomDomain {
-  id: number;
-  organization_id: number;
-  organization_name: string;
-  domain: string;
-  subdomain: string;
-  dns_verified: boolean;
-  ssl_verified: boolean;
-  status: string;
-  created_at: string;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  Shield, 
+  Users, 
+  Building2, 
+  Settings, 
+  BarChart3,
+  CreditCard,
+  Bell,
+  Sparkles,
+  Plus,
+  TrendingUp,
+  Activity
+} from "lucide-react";
 
 export default function AdminDashboard() {
-  const { toast } = useToast();
-  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
-  const [reviewDialog, setReviewDialog] = useState<WhiteLabelRequest | null>(null);
+  const { user } = useAuth();
 
-  // Fetch organizations
-  const { data: organizations = [], isLoading: orgsLoading } = useQuery<Organization[]>({
-    queryKey: ['/api/admin/organizations'],
-  });
-
-  // Fetch white label requests
-  const { data: requests = [], isLoading: requestsLoading } = useQuery<WhiteLabelRequest[]>({
-    queryKey: ['/api/admin/white-label-requests'],
-  });
-
-  // Fetch custom domains
-  const { data: domains = [], isLoading: domainsLoading } = useQuery<CustomDomain[]>({
-    queryKey: ['/api/admin/custom-domains'],
-  });
-
-  // Update organization white label settings
-  const updateOrgMutation = useMutation({
-    mutationFn: async (data: { orgId: number; updates: any }) => {
-      return apiRequest("PATCH", `/api/admin/organizations/${data.orgId}`, data.updates);
+  const { data: analytics } = useQuery({
+    queryKey: ['/api/analytics/admin'],
+    queryFn: async () => {
+      const res = await fetch('/api/analytics', {
+        credentials: 'include'
+      });
+      if (!res.ok) return { totalUsers: 0, totalOrganizations: 0, totalTrips: 0, activeUsers: 0 };
+      const data = await res.json();
+      return {
+        totalUsers: data.overview?.totalUsers || 0,
+        totalOrganizations: data.overview?.totalOrganizations || 0,
+        totalTrips: data.overview?.totalTrips || 0,
+        activeUsers: data.overview?.activeUsers || 0
+      };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/organizations'] });
-      toast({ title: "Organization updated successfully" });
-    },
+    enabled: !!user,
   });
-
-  // Review white label request
-  const reviewRequestMutation = useMutation({
-    mutationFn: async (data: { requestId: number; status: string; notes?: string }) => {
-      return apiRequest("PATCH", `/api/admin/white-label-requests/${data.requestId}`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/white-label-requests'] });
-      setReviewDialog(null);
-      toast({ title: "Request reviewed successfully" });
-    },
-  });
-
-  // Verify domain
-  const verifyDomainMutation = useMutation({
-    mutationFn: async (domainId: number) => {
-      return apiRequest("POST", `/api/admin/domains/${domainId}/verify`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/custom-domains'] });
-      toast({ title: "Domain verification initiated" });
-    },
-  });
-
-  const handleEnableWhiteLabel = (org: Organization) => {
-    updateOrgMutation.mutate({
-      orgId: org.id,
-      updates: {
-        white_label_enabled: true,
-        white_label_plan: 'basic'
-      }
-    });
-  };
-
-  const handleDisableWhiteLabel = (org: Organization) => {
-    updateOrgMutation.mutate({
-      orgId: org.id,
-      updates: {
-        white_label_enabled: false,
-        white_label_plan: 'none'
-      }
-    });
-  };
-
-  const handleUpgradePlan = (org: Organization, plan: string) => {
-    updateOrgMutation.mutate({
-      orgId: org.id,
-      updates: { white_label_plan: plan }
-    });
-  };
-
-  const handleReviewRequest = (request: WhiteLabelRequest, status: 'approved' | 'rejected', notes?: string) => {
-    reviewRequestMutation.mutate({
-      requestId: request.id,
-      status,
-      notes
-    });
-  };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            Admin Dashboard
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            Manage white label access and organization settings
-          </p>
-        </div>
-        <Badge variant="secondary" className="flex items-center gap-2">
-          <Shield className="h-4 w-4" />
-          Platform Admin
-        </Badge>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">
+      <div className="container mx-auto px-4 py-8">
+        {/* Hero Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white mb-8 rounded-xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+          <div className="absolute inset-0 opacity-30" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }} />
 
-      <Tabs defaultValue="organizations" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="organizations" className="flex items-center gap-2">
-            <Building className="h-4 w-4" />
-            Organizations
-          </TabsTrigger>
-          <TabsTrigger value="requests" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Pending Requests
-          </TabsTrigger>
-          <TabsTrigger value="domains" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Custom Domains
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            Billing
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Organizations Tab */}
-        <TabsContent value="organizations">
-          <Card>
-            <CardHeader>
-              <CardTitle>Organization Management</CardTitle>
-              <CardDescription>
-                Manage white label access and settings for organizations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {orgsLoading ? (
-                <div className="text-center py-8">Loading organizations...</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Organization</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>White Label</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {organizations.map((org: Organization) => (
-                      <TableRow key={org.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{org.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              ID: {org.id}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{org.plan}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={org.white_label_enabled ? "default" : "secondary"}>
-                            {org.white_label_plan}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={org.subscription_status === 'active' ? "default" : "destructive"}>
-                            {org.subscription_status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {!org.white_label_enabled ? (
-                              <Button
-                                size="sm"
-                                onClick={() => handleEnableWhiteLabel(org)}
-                                disabled={updateOrgMutation.isPending}
-                              >
-                                Enable White Label
-                              </Button>
-                            ) : (
-                              <>
-                                <Select
-                                  value={org.white_label_plan}
-                                  onValueChange={(plan) => handleUpgradePlan(org, plan)}
-                                >
-                                  <SelectTrigger className="w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="basic">Basic</SelectItem>
-                                    <SelectItem value="premium">Premium</SelectItem>
-                                    <SelectItem value="enterprise">Enterprise</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDisableWhiteLabel(org)}
-                                  disabled={updateOrgMutation.isPending}
-                                >
-                                  Disable
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Requests Tab */}
-        <TabsContent value="requests">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending White Label Requests</CardTitle>
-              <CardDescription>
-                Review and approve white label configuration requests
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {requestsLoading ? (
-                <div className="text-center py-8">Loading requests...</div>
-              ) : requests.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No pending requests
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Organization</TableHead>
-                      <TableHead>Request Type</TableHead>
-                      <TableHead>Requested By</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {requests.map((request: WhiteLabelRequest) => (
-                      <TableRow key={request.id}>
-                        <TableCell className="font-medium">
-                          {request.organization_name}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {request.request_type.replace('_', ' ')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{request.requester_name}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            request.status === 'pending' ? 'secondary' :
-                            request.status === 'approved' ? 'default' : 'destructive'
-                          }>
-                            {request.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(request.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {request.status === 'pending' && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button size="sm" onClick={() => setReviewDialog(request)}>
-                                  Review
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Review Request</DialogTitle>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label>Organization</Label>
-                                    <div className="font-medium">{request.organization_name}</div>
-                                  </div>
-                                  <div>
-                                    <Label>Request Type</Label>
-                                    <div>{request.request_type}</div>
-                                  </div>
-                                  <div>
-                                    <Label>Request Data</Label>
-                                    <pre className="text-sm bg-slate-100 dark:bg-slate-800 p-2 rounded">
-                                      {JSON.stringify(request.request_data, null, 2)}
-                                    </pre>
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="review-notes">Review Notes</Label>
-                                    <Textarea id="review-notes" placeholder="Optional notes..." />
-                                  </div>
-                                </div>
-                                <DialogFooter>
-                                  <Button
-                                    variant="destructive"
-                                    onClick={() => handleReviewRequest(request, 'rejected')}
-                                    disabled={reviewRequestMutation.isPending}
-                                  >
-                                    <X className="h-4 w-4 mr-2" />
-                                    Reject
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleReviewRequest(request, 'approved')}
-                                    disabled={reviewRequestMutation.isPending}
-                                  >
-                                    <Check className="h-4 w-4 mr-2" />
-                                    Approve
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Domains Tab */}
-        <TabsContent value="domains">
-          <Card>
-            <CardHeader>
-              <CardTitle>Custom Domain Management</CardTitle>
-              <CardDescription>
-                Manage and verify custom domains for organizations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {domainsLoading ? (
-                <div className="text-center py-8">Loading domains...</div>
-              ) : domains.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No custom domains configured
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Organization</TableHead>
-                      <TableHead>Domain</TableHead>
-                      <TableHead>DNS Status</TableHead>
-                      <TableHead>SSL Status</TableHead>
-                      <TableHead>Overall Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {domains.map((domain: CustomDomain) => (
-                      <TableRow key={domain.id}>
-                        <TableCell className="font-medium">
-                          {domain.organization_name}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{domain.domain}</div>
-                            {domain.subdomain && (
-                              <div className="text-sm text-muted-foreground">
-                                Subdomain: {domain.subdomain}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={domain.dns_verified ? "default" : "destructive"}>
-                            {domain.dns_verified ? "Verified" : "Pending"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={domain.ssl_verified ? "default" : "destructive"}>
-                            {domain.ssl_verified ? "Verified" : "Pending"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            domain.status === 'active' ? 'default' :
-                            domain.status === 'pending' ? 'secondary' : 'destructive'
-                          }>
-                            {domain.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => verifyDomainMutation.mutate(domain.id)}
-                            disabled={verifyDomainMutation.isPending}
-                          >
-                            Verify
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Billing Tab */}
-        <TabsContent value="billing">
-          <Card>
-            <CardHeader>
-              <CardTitle>White Label Billing</CardTitle>
-              <CardDescription>
-                Manage billing and subscription settings for white label features
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Basic Plan</CardTitle>
-                      <CardDescription>$29/month</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>• Custom logo</li>
-                        <li>• Basic color customization</li>
-                        <li>• Up to 10 users</li>
-                        <li>• Email support</li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Premium Plan</CardTitle>
-                      <CardDescription>$99/month</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>• Full color customization</li>
-                        <li>• Subdomain hosting</li>
-                        <li>• Up to 50 users</li>
-                        <li>• Priority support</li>
-                        <li>• Remove "Powered by" branding</li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Enterprise Plan</CardTitle>
-                      <CardDescription>$299/month</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2 text-sm">
-                        <li>• Custom domain</li>
-                        <li>• SSL certificates</li>
-                        <li>• Unlimited users</li>
-                        <li>• Dedicated support</li>
-                        <li>• API access</li>
-                        <li>• Custom email templates</li>
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-amber-800 dark:text-amber-200">
-                        Billing Integration Required
-                      </h4>
-                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                        To enable white label billing, you need to configure Stripe API keys. 
-                        This will allow automatic subscription management and payment processing.
-                      </p>
-                    </div>
+          <div className="relative container mx-auto px-6 py-16">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="flex-1"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
+                    <Shield className="w-8 h-8" />
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-electric-200" />
+                    <span className="text-electric-100 text-sm font-medium">Admin Control Center</span>
+                  </div>
+                </div>
+
+                <h1 className="text-5xl font-bold mb-4 tracking-tight">
+                  Admin Dashboard
+                </h1>
+                <p className="text-xl text-electric-100 mb-6 max-w-2xl">
+                  Comprehensive system administration and platform oversight
+                </p>
+
+                <div className="flex flex-wrap items-center gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                    <span className="text-electric-100">User management</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                    <span className="text-electric-100">System monitoring</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                    <span className="text-electric-100">Platform analytics</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="flex flex-col sm:flex-row gap-4"
+              >
+                <Button 
+                  className="bg-white hover:bg-white/90 text-electric-600 font-semibold px-8 py-3 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 electric-glow"
+                  size="lg"
+                >
+                  <Settings className="h-5 w-5 mr-2" />
+                  System Settings
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Quick Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        >
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Users</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.totalUsers || 0}</p>
+              </div>
+              <div className="p-3 bg-electric-100 dark:bg-electric-900/20 rounded-xl">
+                <Users className="w-6 h-6 text-electric-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Organizations</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.totalOrganizations || 0}</p>
+              </div>
+              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
+                <Building2 className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Trips</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.totalTrips || 0}</p>
+              </div>
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Active Users</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.activeUsers || 0}</p>
+              </div>
+              <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-xl">
+                <Activity className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+        </motion.div>
+
+        {/* Management Sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* User Management */}
+          <AnimatedCard variant="glow" className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <Users className="h-6 w-6 text-electric-600" />
+              <h3 className="text-xl font-semibold text-navy-900 dark:text-white">User Management</h3>
+            </div>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">User Registration</p>
+                    <p className="text-sm text-muted-foreground">Manage new user approvals</p>
+                  </div>
+                  <Badge variant="secondary">Active</Badge>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Role Management</p>
+                    <p className="text-sm text-muted-foreground">Configure user permissions</p>
+                  </div>
+                  <Button variant="outline" size="sm">Configure</Button>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Account Security</p>
+                    <p className="text-sm text-muted-foreground">Monitor security events</p>
+                  </div>
+                  <Button variant="outline" size="sm">Monitor</Button>
                 </div>
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </AnimatedCard>
+
+          {/* System Monitoring */}
+          <AnimatedCard variant="glow" className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <BarChart3 className="h-6 w-6 text-electric-600" />
+              <h3 className="text-xl font-semibold text-navy-900 dark:text-white">System Monitoring</h3>
+            </div>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Performance Metrics</p>
+                    <p className="text-sm text-muted-foreground">View system performance</p>
+                  </div>
+                  <Badge className="bg-green-100 text-green-700">Healthy</Badge>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Error Monitoring</p>
+                    <p className="text-sm text-muted-foreground">Track system errors</p>
+                  </div>
+                  <Button variant="outline" size="sm">View Logs</Button>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">API Health</p>
+                    <p className="text-sm text-muted-foreground">Monitor API endpoints</p>
+                  </div>
+                  <Badge className="bg-green-100 text-green-700">Online</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </AnimatedCard>
+        </div>
+      </div>
     </div>
   );
 }
