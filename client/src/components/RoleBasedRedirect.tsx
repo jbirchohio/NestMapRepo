@@ -11,31 +11,38 @@ export default function RoleBasedRedirect() {
     // Only redirect if authentication is ready and user is logged in
     if (!authReady || !user || permissionsChecked) return;
 
-    // Check for superadmin and admin permissions
+    // Check user's actual role from database, not organization permissions
     const checkPermissions = async () => {
       try {
-        const permissionsResponse = await fetch('/api/user/permissions');
-        if (permissionsResponse.ok) {
-          const data = await permissionsResponse.json();
-          const permissions = data.permissions || [];
+        // Get the user's actual role from the database
+        const userResponse = await fetch(`/api/users/auth/${user.id}`);
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
           
-          // If user has superadmin permissions, redirect to superadmin dashboard
-          if (permissions.includes('manage_organizations') || 
-              permissions.includes('manage_users') || 
-              permissions.includes('MANAGE_ORGANIZATION') ||
-              permissions.includes('ADMIN_ACCESS')) {
+          // Only redirect to superadmin if user has actual superadmin role
+          if (userData.role === 'superadmin' || 
+              userData.role === 'superadmin_owner' || 
+              userData.role === 'superadmin_staff' || 
+              userData.role === 'superadmin_auditor' || 
+              userData.role === 'super_admin') {
             setLocation('/superadmin');
             setPermissionsChecked(true);
             return;
           }
           
-          // Check for admin-level permissions (but not superadmin)
-          if (permissions.includes('ACCESS_ANALYTICS') &&
-              permissions.includes('BILLING_ACCESS') &&
-              permissions.includes('MANAGE_TEAM_ROLES')) {
-            setLocation('/admin');
-            setPermissionsChecked(true);
-            return;
+          // Check for organization-level admin permissions (but not system superadmin)
+          const permissionsResponse = await fetch('/api/user/permissions');
+          if (permissionsResponse.ok) {
+            const data = await permissionsResponse.json();
+            const permissions = data.permissions || [];
+            
+            if (permissions.includes('ACCESS_ANALYTICS') &&
+                permissions.includes('BILLING_ACCESS') &&
+                permissions.includes('MANAGE_TEAM_ROLES')) {
+              setLocation('/admin');
+              setPermissionsChecked(true);
+              return;
+            }
           }
         }
       } catch (err) {
