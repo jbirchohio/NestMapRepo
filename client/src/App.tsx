@@ -7,7 +7,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { WhiteLabelProvider } from "@/contexts/WhiteLabelContext";
 import MainNavigation from "@/components/MainNavigation";
-import BrandedHeader from "@/components/BrandedHeader";
 import BrandedFooter from "@/components/BrandedFooter";
 import Home from "@/pages/Home";
 import TripPlanner from "@/pages/TripPlanner";
