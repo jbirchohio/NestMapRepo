@@ -307,7 +307,7 @@ export class StripeIssuingService {
         merchant_state: authorization.merchant_data?.state || '',
         merchant_country: authorization.merchant_data?.country || '',
         processed_at: new Date(authorization.created * 1000),
-        risk_score: this.calculateRiskScore(authorization)
+        risk_score: this.calculateRiskScore(authorization),
         policy_checks: {},
         fraud_indicators: {},
       });
