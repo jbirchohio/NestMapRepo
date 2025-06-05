@@ -72,7 +72,7 @@ export default function BrandingOnboarding({ onComplete, onSkip, organizationPla
     try {
       if (data.enableBranding) {
         // Save branding configuration to backend
-        const response = await apiRequest('POST', '/api/white-label/configure', {
+        await apiRequest('POST', '/api/white-label/configure', {
           companyName: data.companyName,
           primaryColor: data.primaryColor,
           secondaryColor: data.primaryColor,
@@ -81,25 +81,21 @@ export default function BrandingOnboarding({ onComplete, onSkip, organizationPla
           logoUrl: null
         });
 
-        if (response.ok) {
-          // Update local context
-          updateConfig({
-            companyName: data.companyName,
-            primaryColor: data.primaryColor,
-            tagline: data.tagline,
-            footerText: `© 2025 ${data.companyName}. All rights reserved.`,
-          });
+        // Update local context
+        updateConfig({
+          companyName: data.companyName,
+          primaryColor: data.primaryColor,
+          tagline: data.tagline,
+          footerText: `© 2025 ${data.companyName}. All rights reserved.`,
+        });
 
-          // Enable white label mode
-          enableWhiteLabel();
+        // Enable white label mode
+        enableWhiteLabel();
 
-          toast({
-            title: "Branding Applied",
-            description: `Your ${data.companyName} branding is now active across the platform.`,
-          });
-        } else {
-          throw new Error('Failed to save branding configuration');
-        }
+        toast({
+          title: "Branding Applied",
+          description: `Your ${data.companyName} branding is now active across the platform.`,
+        });
       }
 
       onComplete();
