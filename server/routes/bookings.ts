@@ -11,37 +11,50 @@ router.post('/flights/search', async (req, res) => {
   try {
     console.log('Flight search request body:', req.body);
 
-    const { 
-      origin, 
-      destination, 
-      departureDate, 
-      returnDate, 
-      passengers, 
-      cabin, 
-      directFlights,
-      class: travelClass,
-      tripType
-    } = req.body;
+    // Handle both camelCase and snake_case parameters due to middleware
+    const origin = req.body.origin;
+    const destination = req.body.destination;
+    const departureDate = req.body.departure_date || req.body.departureDate;
+    const returnDate = req.body.return_date || req.body.returnDate;
+    const passengers = req.body.passengers || 1;
+    const cabin = req.body.cabin || req.body.class || 'economy';
 
-    // More flexible validation - passengers defaults to 1 if not provided
-    if (!origin || !destination || !departureDate) {
+    // Convert date objects to strings if needed
+    const formatDate = (date: any): string => {
+      if (!date) return '';
+      if (typeof date === 'string') return date;
+      if (date instanceof Date) return date.toISOString().split('T')[0];
+      if (typeof date === 'object' && date.$d) return date.$d.toISOString().split('T')[0]; // Day.js object
+      return String(date);
+    };
+
+    const departureDateStr = formatDate(departureDate);
+    const returnDateStr = returnDate ? formatDate(returnDate) : '';
+
+    // Validation
+    if (!origin || !destination || !departureDateStr) {
       return res.status(400).json({ 
-        message: "Missing required search parameters. Need: origin, destination, departureDate",
-        received: { origin, destination, departureDate, passengers, cabin, class: travelClass }
+        message: "Missing required search parameters. Need: origin, destination, departure_date",
+        received: { 
+          origin, 
+          destination, 
+          departure_date: departureDateStr, 
+          passengers,
+          original_departure: departureDate,
+          original_return: returnDate
+        }
       });
     }
 
     const searchParams = {
-      origin: typeof origin === 'string' ? origin.trim() : origin,
-      destination: typeof destination === 'string' ? destination.trim() : destination,
-      departureDate,
-      returnDate,
-      passengers: passengers || 1,
-      cabin: cabin || travelClass || 'economy',
-      tripType: tripType || (returnDate ? 'round-trip' : 'one-way')
+      origin: origin.trim(),
+      destination: destination.trim(),
+      departureDate: departureDateStr,
+      returnDate: returnDateStr,
+      passengers: passengers || 1
     };
 
-    console.log('Searching flights with params:', searchParams);
+    console.log('Searching flights with formatted params:', searchParams);
 
     const { searchFlights } = await import('../bookingProviders');
     const flights = await searchFlights(searchParams);

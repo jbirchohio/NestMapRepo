@@ -144,7 +144,7 @@ app.use('/api', authenticateApiKey);
 app.use(resolveDomainOrganization);
 app.use(injectOrganizationContext);
 
-// Apply JWT authentication and case conversion middleware
+// Apply case conversion middleware first, then JWT authentication
 app.use(caseConversionMiddleware);
 app.use(unifiedAuthMiddleware);
 
