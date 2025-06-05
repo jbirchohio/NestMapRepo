@@ -25,11 +25,11 @@ export default function Analytics() {
   console.log('User permissions for analytics:', userPermissions);
   console.log('User object:', user);
 
-  const hasAnalyticsAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('ACCESS_ANALYTICS') || 
-    userPermissions.includes('view_analytics') ||
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations')
+  const hasAnalyticsAccess = userPermissions && (
+    userPermissions.canViewAnalytics || 
+    userPermissions.canAccessAdmin ||
+    userPermissions.canManageOrganization ||
+    user?.role === 'admin'
   );
 
   if (!user) {
