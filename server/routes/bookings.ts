@@ -1,380 +1,377 @@
-import { Router } from 'express';
-import { eq, and, desc } from 'drizzle-orm';
-import { db } from '../db';
-import { bookings, bookingPayments, trips, insertBookingSchema } from '@shared/schema';
-import { requireAuth } from '../middleware/auth';
-import { searchFlights, searchHotels } from '../bookingProviders';
-import { z } from 'zod';
+import type { Express } from "express";
+import { db } from "../db";
+import { trips, bookings, activities } from "@shared/schema";
+import { eq, and, desc } from "drizzle-orm";
+import { requireAuth } from "../middleware/auth";
+import { duffelProvider } from "../duffelProvider";
 
-const router = Router();
+export function registerBookingRoutes(app: Express) {
+  
+  // Get all bookings for a trip
+  app.get("/api/trips/:tripId/bookings", requireAuth, async (req, res) => {
+    try {
+      const tripId = parseInt(req.params.tripId);
+      const organizationId = req.user!.organizationId;
 
-// Flight search endpoint with JWT authentication
-router.post('/flights/search', async (req, res) => {
-  try {
-    console.log('Authenticated flight search request:', req.body);
+      // Verify trip belongs to user's organization
+      const [trip] = await db
+        .select()
+        .from(trips)
+        .where(and(
+          eq(trips.id, tripId),
+          eq(trips.organization_id, organizationId)
+        ));
 
-    // Standardize camelCase to snake_case for API consistency
-    const origin = req.body.origin;
-    const destination = req.body.destination;
-    const departureDate = req.body.departureDate || req.body.departure_date;
-    const returnDate = req.body.returnDate || req.body.return_date;
-    const passengers = req.body.passengers || 1;
+      if (!trip) {
+        return res.status(404).json({ error: "Trip not found" });
+      }
 
-    // Convert date objects to strings if needed
-    const formatDate = (date: any): string => {
-      if (!date) return '';
-      if (typeof date === 'string' && date.length > 0) return date;
-      if (date instanceof Date && !isNaN(date.getTime())) return date.toISOString().split('T')[0];
-      if (typeof date === 'object' && date.$d && date.$d instanceof Date) return date.$d.toISOString().split('T')[0];
-      if (typeof date === 'object' && Object.keys(date).length === 0) return '';
-      return '';
-    };
+      // Get bookings for this trip
+      const tripBookings = await db
+        .select()
+        .from(bookings)
+        .where(and(
+          eq(bookings.tripId, tripId),
+          eq(bookings.organizationId, organizationId)
+        ))
+        .orderBy(desc(bookings.createdAt));
 
-    const departureDateStr = formatDate(departureDate);
-    const returnDateStr = returnDate ? formatDate(returnDate) : undefined;
-
-    // Validation
-    if (!origin || !destination || !departureDateStr) {
-      return res.status(400).json({ 
-        message: "Missing required search parameters: origin, destination, departureDate",
-        received: { origin, destination, departureDate: departureDateStr, passengers }
-      });
+      res.json(tripBookings);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
     }
+  });
 
-    console.log('Searching flights via Duffel API:', { origin, destination, departureDateStr, returnDateStr, passengers });
+  // Create new booking for a trip
+  app.post("/api/trips/:tripId/bookings", requireAuth, async (req, res) => {
+    try {
+      const tripId = parseInt(req.params.tripId);
+      const organizationId = req.user!.organizationId;
+      const { type, passengers, ...bookingData } = req.body;
 
-    // Use authentic Duffel API through booking provider
-    const flights = await searchFlights({
-      origin,
-      destination,
-      departureDate: departureDateStr,
-      returnDate: returnDateStr,
-      passengers
-    });
+      // Verify trip belongs to user's organization
+      const [trip] = await db
+        .select()
+        .from(trips)
+        .where(and(
+          eq(trips.id, tripId),
+          eq(trips.organization_id, organizationId)
+        ));
 
-    console.log(`Duffel API returned ${flights.length} flight options`);
+      if (!trip) {
+        return res.status(404).json({ error: "Trip not found" });
+      }
 
-    // Return flights with proper structure (Duffel already provides normalized data)
-    const normalizedFlights = flights.map(flight => ({
-      id: flight.id,
-      airline: flight.airline,
-      origin: flight.origin,
-      destination: flight.destination,
-      departureDate: flight.departureDate,
-      price: flight.price
-    }));
+      let bookingResult;
 
-    res.json({ flights: normalizedFlights });
-  } catch (error) {
-    console.error('Duffel flight search error:', error);
-    res.status(500).json({ 
-      message: "Flight search failed", 
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
+      if (type === 'flight') {
+        if (!process.env.DUFFEL_API_KEY) {
+          return res.status(400).json({ 
+            error: "Flight booking requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
+          });
+        }
 
-// Get bookings for a specific trip
-router.get('/trip/:tripId', async (req, res) => {
-  try {
-    if (!req.user?.organizationId) {
-      return res.status(401).json({ error: "Organization membership required" });
+        try {
+          bookingResult = await duffelProvider.createBooking({
+            type,
+            passengers,
+            ...bookingData
+          });
+        } catch (apiError) {
+          console.error("Duffel API error:", apiError);
+          return res.status(400).json({ 
+            error: "Flight booking failed. Please verify your Duffel API credentials." 
+          });
+        }
+      } else if (type === 'hotel') {
+        if (!process.env.DUFFEL_API_KEY) {
+          return res.status(400).json({ 
+            error: "Hotel booking requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
+          });
+        }
+
+        try {
+          bookingResult = await duffelProvider.createHotelBooking({
+            type,
+            passengers,
+            ...bookingData
+          });
+        } catch (apiError) {
+          console.error("Duffel API error:", apiError);
+          return res.status(400).json({ 
+            error: "Hotel booking failed. Please verify your Duffel API credentials." 
+          });
+        }
+      } else {
+        return res.status(400).json({ error: "Invalid booking type" });
+      }
+
+      // Store booking in database
+      const [booking] = await db
+        .insert(bookings)
+        .values({
+          type,
+          tripId: tripId,
+          userId: req.user!.id,
+          organizationId: organizationId,
+          provider: 'duffel',
+          providerBookingId: bookingResult.id,
+          status: bookingResult.status || 'confirmed',
+          bookingData: bookingResult,
+          totalAmount: bookingResult.total_amount ? Math.round(bookingResult.total_amount * 100) : 0,
+          currency: bookingResult.total_currency || 'USD',
+          passengerDetails: { passengers },
+          bookingReference: bookingResult.id,
+          cancellationPolicy: bookingResult.cancellation_policy,
+          departureDate: bookingData.departureDate ? new Date(bookingData.departureDate) : null,
+          returnDate: bookingData.returnDate ? new Date(bookingData.returnDate) : null,
+          checkInDate: bookingData.checkInDate ? new Date(bookingData.checkInDate) : null,
+          checkOutDate: bookingData.checkOutDate ? new Date(bookingData.checkOutDate) : null,
+        })
+        .returning();
+
+      res.json(booking);
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      res.status(500).json({ error: "Failed to create booking" });
     }
+  });
 
-    const tripId = parseInt(req.params.tripId);
-    const organizationId = req.user.organizationId;
+  // Get booking by ID
+  app.get("/api/bookings/:bookingId", requireAuth, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.bookingId);
+      const organizationId = req.user!.organizationId;
 
-    // Verify trip belongs to user's organization
-    const [trip] = await db
-      .select()
-      .from(trips)
-      .where(and(
-        eq(trips.id, tripId),
-        eq(trips.organizationId, organizationId)
-      ));
+      const [booking] = await db
+        .select()
+        .from(bookings)
+        .where(and(
+          eq(bookings.id, bookingId),
+          eq(bookings.organizationId, organizationId)
+        ));
 
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      res.json(booking);
+    } catch (error) {
+      console.error("Error fetching booking:", error);
+      res.status(500).json({ error: "Failed to fetch booking" });
     }
+  });
 
-    // Get bookings for this trip
-    const tripBookings = await db
-      .select()
-      .from(bookings)
-      .where(and(
-        eq(bookings.tripId, tripId),
-        eq(bookings.organizationId, organizationId)
-      ))
-      .orderBy(desc(bookings.createdAt));
+  // Update booking
+  app.patch("/api/bookings/:bookingId", requireAuth, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.bookingId);
+      const organizationId = req.user!.organizationId;
+      const updates = req.body;
 
-    res.json(tripBookings);
-  } catch (error) {
-    console.error('Error fetching trip bookings:', error);
-    res.status(500).json({ error: "Failed to fetch bookings" });
-  }
-});
+      // Verify booking exists and belongs to organization
+      const [existingBooking] = await db
+        .select()
+        .from(bookings)
+        .where(and(
+          eq(bookings.id, bookingId),
+          eq(bookings.organizationId, organizationId)
+        ));
 
-// Get all bookings for organization
-router.get('/', async (req, res) => {
-  try {
-    if (!req.user?.organizationId) {
-      return res.status(401).json({ error: "Organization membership required" });
+      if (!existingBooking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      const [updatedBooking] = await db
+        .update(bookings)
+        .set({
+          ...updates,
+          updatedAt: new Date()
+        })
+        .where(eq(bookings.id, bookingId))
+        .returning();
+
+      res.json(updatedBooking);
+    } catch (error) {
+      console.error("Error updating booking:", error);
+      res.status(500).json({ error: "Failed to update booking" });
     }
+  });
 
-    const organizationId = req.user.organizationId;
-    
-    // Verify trip belongs to user's organization
-    const [trip] = await db
-      .select()
-      .from(trips)
-      .where(and(
-        eq(trips.id, parseInt(req.params.tripId)),
-        eq(trips.organizationId, organizationId)
-      ));
+  // Cancel booking
+  app.delete("/api/bookings/:bookingId", requireAuth, async (req, res) => {
+    try {
+      const bookingId = parseInt(req.params.bookingId);
+      const organizationId = req.user!.organizationId;
 
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
+      // Verify booking exists and belongs to organization
+      const [booking] = await db
+        .select()
+        .from(bookings)
+        .where(and(
+          eq(bookings.id, bookingId),
+          eq(bookings.organizationId, organizationId)
+        ));
+
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      // Cancel with provider if needed
+      if (booking.provider === 'duffel' && booking.providerBookingId) {
+        if (!process.env.DUFFEL_API_KEY) {
+          return res.status(400).json({ 
+            error: "Cancellation requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
+          });
+        }
+
+        try {
+          await duffelProvider.cancelBooking(booking.providerBookingId);
+        } catch (apiError) {
+          console.error("Provider cancellation error:", apiError);
+          // Continue with local cancellation even if provider fails
+        }
+      }
+
+      // Update booking status to cancelled
+      const [cancelledBooking] = await db
+        .update(bookings)
+        .set({
+          status: 'cancelled',
+          updatedAt: new Date()
+        })
+        .where(eq(bookings.id, bookingId))
+        .returning();
+
+      res.json(cancelledBooking);
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      res.status(500).json({ error: "Failed to cancel booking" });
     }
+  });
 
-    const allBookings = await db
-      .select()
-      .from(bookings)
-      .where(eq(bookings.organizationId, organizationId))
-      .orderBy(desc(bookings.createdAt));
+  // Search flights
+  app.post("/api/flights/search", requireAuth, async (req, res) => {
+    try {
+      if (!process.env.DUFFEL_API_KEY) {
+        return res.status(400).json({ 
+          error: "Flight search requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
+        });
+      }
 
-    res.json(allBookings);
-  } catch (error) {
-    console.error('Error fetching bookings:', error);
-    res.status(500).json({ error: "Failed to fetch bookings" });
-  }
-});
-
-// Book a flight
-router.post('/flights/book', async (req, res) => {
-  try {
-    if (!req.user?.organizationId) {
-      return res.status(401).json({ error: "Organization membership required" });
+      const searchParams = req.body;
+      
+      try {
+        const results = await duffelProvider.searchFlights(searchParams);
+        res.json(results);
+      } catch (apiError) {
+        console.error("Duffel flight search error:", apiError);
+        return res.status(400).json({ 
+          error: "Flight search failed. Please verify your Duffel API credentials." 
+        });
+      }
+    } catch (error) {
+      console.error("Error searching flights:", error);
+      res.status(500).json({ error: "Failed to search flights" });
     }
+  });
 
-    const { tripId, flightData, passengerDetails } = req.body;
-    const organizationId = req.user.organizationId;
-    const userId = req.user.id;
+  // Search hotels
+  app.post("/api/hotels/search", requireAuth, async (req, res) => {
+    try {
+      if (!process.env.DUFFEL_API_KEY) {
+        return res.status(400).json({ 
+          error: "Hotel search requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
+        });
+      }
 
-    // Verify trip exists and belongs to organization
-    const [trip] = await db
-      .select()
-      .from(trips)
-      .where(and(
-        eq(trips.id, tripId),
-        eq(trips.organizationId, organizationId)
-      ));
-
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
+      const searchParams = req.body;
+      
+      try {
+        const results = await duffelProvider.searchHotels(searchParams);
+        res.json(results);
+      } catch (apiError) {
+        console.error("Duffel hotel search error:", apiError);
+        return res.status(400).json({ 
+          error: "Hotel search failed. Please verify your Duffel API credentials." 
+        });
+      }
+    } catch (error) {
+      console.error("Error searching hotels:", error);
+      res.status(500).json({ error: "Failed to search hotels" });
     }
+  });
 
-    // Create booking record
-    const [booking] = await db
-      .insert(bookings)
-      .values({
-        tripId,
-        userId,
-        organizationId,
-        type: 'flight',
-        provider: 'amadeus',
-        status: 'pending',
-        bookingData: flightData,
-        totalAmount: Math.round(flightData.price * 100), // Convert to cents
-        currency: flightData.currency || 'USD',
-        passengerDetails: { passengers: passengerDetails },
-        departureDate: new Date(flightData.departure_date),
-        returnDate: flightData.return_date ? new Date(flightData.return_date) : null
-      })
-      .returning();
+  // Get trip activities
+  app.get("/api/trips/:tripId/activities", requireAuth, async (req, res) => {
+    try {
+      const tripId = parseInt(req.params.tripId);
+      const organizationId = req.user!.organizationId;
 
-    res.json({ 
-      success: true, 
-      booking,
-      message: "Flight booking initiated successfully" 
-    });
+      // Verify trip belongs to user's organization
+      const [trip] = await db
+        .select()
+        .from(trips)
+        .where(and(
+          eq(trips.id, tripId),
+          eq(trips.organization_id, organizationId)
+        ));
 
-  } catch (error) {
-    console.error('Flight booking error:', error);
-    res.status(500).json({ error: "Failed to book flight" });
-  }
-});
+      if (!trip) {
+        return res.status(404).json({ error: "Trip not found" });
+      }
 
-// Hotel search endpoint with authentic API integration
-router.post('/hotels/search', async (req, res) => {
-  try {
-    const { location, checkIn, checkOut, guests, rooms } = req.body;
+      const tripActivities = await db
+        .select()
+        .from(activities)
+        .where(and(
+          eq(activities.trip_id, tripId),
+          eq(activities.organization_id, organizationId)
+        ))
+        .orderBy(activities.date);
 
-    if (!location || !checkIn || !checkOut) {
-      return res.status(400).json({ 
-        message: "Missing required parameters: location, checkIn, checkOut" 
-      });
+      res.json(tripActivities);
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      res.status(500).json({ error: "Failed to fetch activities" });
     }
+  });
 
-    console.log('Searching hotels via Duffel API:', { location, checkIn, checkOut, guests, rooms });
+  // Add activity to trip
+  app.post("/api/trips/:tripId/activities", requireAuth, async (req, res) => {
+    try {
+      const tripId = parseInt(req.params.tripId);
+      const organizationId = req.user!.organizationId;
+      const activityData = req.body;
 
-    // Use authentic Duffel API through booking provider
-    const hotels = await searchHotels({
-      destination: location,
-      checkIn,
-      checkOut,
-      guests: guests || 1,
-      rooms: rooms || 1
-    });
+      // Verify trip belongs to user's organization
+      const [trip] = await db
+        .select()
+        .from(trips)
+        .where(and(
+          eq(trips.id, tripId),
+          eq(trips.organization_id, organizationId)
+        ));
 
-    console.log(`Duffel API returned ${hotels.length} hotel options`);
+      if (!trip) {
+        return res.status(404).json({ error: "Trip not found" });
+      }
 
-    res.json({ hotels });
-  } catch (error) {
-    console.error('Duffel hotel search error:', error);
-    res.status(500).json({ 
-      message: "Hotel search failed", 
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
+      const [activity] = await db
+        .insert(activities)
+        .values({
+          ...activityData,
+          trip_id: tripId,
+          organization_id: organizationId,
+          user_id: req.user!.id
+        })
+        .returning();
 
-// Book a hotel
-router.post('/hotels/book', async (req, res) => {
-  try {
-    if (!req.user?.organizationId) {
-      return res.status(401).json({ error: "Organization membership required" });
+      res.json(activity);
+    } catch (error) {
+      console.error("Error creating activity:", error);
+      res.status(500).json({ error: "Failed to create activity" });
     }
-
-    const { tripId, hotelData, guestDetails } = req.body;
-    const organizationId = req.user.organizationId;
-    const userId = req.user.id;
-
-    // Verify trip exists and belongs to organization
-    const [trip] = await db
-      .select()
-      .from(trips)
-      .where(and(
-        eq(trips.id, tripId),
-        eq(trips.organizationId, organizationId)
-      ));
-
-    if (!trip) {
-      return res.status(404).json({ error: "Trip not found" });
-    }
-
-    // Calculate total nights and cost
-    const checkIn = new Date(hotelData.check_in);
-    const checkOut = new Date(hotelData.check_out);
-    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-    const totalCost = hotelData.price_per_night * nights;
-
-    // Create booking record
-    const [booking] = await db
-      .insert(bookings)
-      .values({
-        tripId,
-        userId,
-        organizationId,
-        type: 'hotel',
-        provider: 'booking.com',
-        status: 'pending',
-        bookingData: { ...hotelData, nights, total_cost: totalCost },
-        totalAmount: Math.round(totalCost * 100), // Convert to cents
-        currency: hotelData.currency || 'USD',
-        passengerDetails: { guests: guestDetails },
-        checkInDate: checkIn,
-        checkOutDate: checkOut
-      })
-      .returning();
-
-    res.json({ 
-      success: true, 
-      booking,
-      message: "Hotel booking initiated successfully" 
-    });
-
-  } catch (error) {
-    console.error('Hotel booking error:', error);
-    res.status(500).json({ error: "Failed to book hotel" });
-  }
-});
-
-// Get booking by ID
-router.get('/:bookingId', async (req, res) => {
-  try {
-    if (!req.user?.organizationId) {
-      return res.status(401).json({ error: "Organization membership required" });
-    }
-
-    const bookingId = parseInt(req.params.bookingId);
-    const organizationId = req.user.organizationId;
-
-    const [booking] = await db
-      .select()
-      .from(bookings)
-      .where(and(
-        eq(bookings.id, bookingId),
-        eq(bookings.organizationId, organizationId)
-      ));
-
-    if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
-    }
-
-    res.json(booking);
-  } catch (error) {
-    console.error('Error fetching booking:', error);
-    res.status(500).json({ error: "Failed to fetch booking" });
-  }
-});
-
-// Cancel booking
-router.patch('/:bookingId/cancel', async (req, res) => {
-  try {
-    if (!req.user?.organizationId) {
-      return res.status(401).json({ error: "Organization membership required" });
-    }
-
-    const bookingId = parseInt(req.params.bookingId);
-    const organizationId = req.user.organizationId;
-
-    // Verify booking exists and belongs to organization
-    const [existingBooking] = await db
-      .select()
-      .from(bookings)
-      .where(and(
-        eq(bookings.id, bookingId),
-        eq(bookings.organizationId, organizationId)
-      ));
-
-    if (!existingBooking) {
-      return res.status(404).json({ error: "Booking not found" });
-    }
-
-    if (existingBooking.status === 'cancelled') {
-      return res.status(400).json({ error: "Booking already cancelled" });
-    }
-
-    // Update booking status
-    const [updatedBooking] = await db
-      .update(bookings)
-      .set({ 
-        status: 'cancelled',
-        updatedAt: new Date()
-      })
-      .where(eq(bookings.id, bookingId))
-      .returning();
-
-    res.json({ 
-      success: true, 
-      booking: updatedBooking,
-      message: "Booking cancelled successfully" 
-    });
-
-  } catch (error) {
-    console.error('Error cancelling booking:', error);
-    res.status(500).json({ error: "Failed to cancel booking" });
-  }
-});
-
-export default router;
+  });
+}

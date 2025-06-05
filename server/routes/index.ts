@@ -8,7 +8,7 @@ import performanceRoutes from './performance';
 import adminRoutes from './admin';
 import calendarRoutes from './calendar';
 import collaborationRoutes from './collaboration';
-import bookingRoutes from './bookings';
+import { registerBookingRoutes } from './bookings';
 import approvalRoutes from './approvals';
 import expenseRoutes from './expenses';
 import reportingRoutes from './reporting';
@@ -34,7 +34,8 @@ router.use('/performance', performanceRoutes);
 router.use('/admin', adminRoutes);
 router.use('/calendar', calendarRoutes);
 router.use('/collaboration', collaborationRoutes);
-router.use('/bookings', bookingRoutes);
+// Booking routes are registered via function call
+registerBookingRoutes(router);
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
