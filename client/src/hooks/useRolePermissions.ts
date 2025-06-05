@@ -35,8 +35,8 @@ export function useRolePermissions() {
     canEditTrips: true,
     canDeleteTrips: true,
     canViewAnalytics: true,
-    canManageOrganization: false,
-    canAccessAdmin: false
+    canManageOrganization: true,
+    canAccessAdmin: true
   };
   
   const rolePermissions: RolePermissions = {
