@@ -211,70 +211,139 @@ export default function BrandingSetup() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="grid md:grid-cols-2 gap-6"
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            {/* Current Plan */}
-            <Card className="border-gray-200 dark:border-gray-700">
+            {/* Basic Plan */}
+            <Card className={`border-gray-200 dark:border-gray-700 ${orgPlan?.plan === 'basic' ? 'bg-gray-50 dark:bg-gray-800/50' : ''}`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-gray-400" />
-                  Current ({orgPlan?.plan || 'starter'})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="h-2 w-2 rounded-full bg-gray-400" />
-                  Standard NestMap branding
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="h-2 w-2 rounded-full bg-gray-400" />
-                  "Powered by NestMap" footer
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="h-2 w-2 rounded-full bg-gray-400" />
-                  Default color scheme
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="h-2 w-2 rounded-full bg-gray-400" />
-                  Up to 5 team members
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Professional Plan */}
-            <Card className="border-electric-200 bg-gradient-to-br from-electric-50 to-electric-100 dark:from-electric-900/20 dark:to-electric-800/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-electric-500" />
-                  Professional ($99/month)
-                  {canUseBranding && (
-                    <Badge variant="default" className="ml-auto">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Active
+                  Basic ($29/month)
+                  {orgPlan?.plan === 'basic' && (
+                    <Badge variant="secondary" className="ml-auto">
+                      Current
                     </Badge>
                   )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-2 w-2 rounded-full bg-gray-400" />
+                  Trip planning & management
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-2 w-2 rounded-full bg-gray-400" />
+                  Team dashboard
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-2 w-2 rounded-full bg-gray-400" />
+                  1 admin user
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="h-2 w-2 rounded-full bg-gray-400" />
+                  Standard branding
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pro Plan */}
+            <Card className={`border-electric-200 ${orgPlan?.plan === 'pro' ? 'bg-gradient-to-br from-electric-50 to-electric-100 dark:from-electric-900/20 dark:to-electric-800/20' : ''}`}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-electric-500" />
+                  Pro ($99/month)
+                  {orgPlan?.plan === 'pro' && (
+                    <Badge variant="default" className="ml-auto">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Current
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-electric-600">
                   <div className="h-2 w-2 rounded-full bg-electric-500" />
-                  <strong>Full white label branding (auto-enabled)</strong>
+                  Everything in Basic +
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="h-2 w-2 rounded-full bg-electric-500" />
-                  Custom colors, logo, and domain
+                  <strong>White label branding</strong>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="h-2 w-2 rounded-full bg-electric-500" />
-                  Remove "Powered by NestMap"
+                  Client proposals
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="h-2 w-2 rounded-full bg-electric-500" />
-                  Professional client proposals
+                  Up to 5 users
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Business Plan */}
+            <Card className={`border-emerald-200 ${orgPlan?.plan === 'business' ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20' : ''}`}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-emerald-500" />
+                  Business ($199/month)
+                  {orgPlan?.plan === 'business' && (
+                    <Badge variant="default" className="ml-auto">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Current
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Everything in Pro +
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="h-2 w-2 rounded-full bg-electric-500" />
-                  Up to 50 team members
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Custom domain
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Advanced analytics
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  Up to 10+ users
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Enterprise Plan */}
+            <Card className={`border-orange-200 ${orgPlan?.plan === 'enterprise' ? 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20' : ''}`}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-orange-500" />
+                  Enterprise ($499+/month)
+                  {orgPlan?.plan === 'enterprise' && (
+                    <Badge variant="default" className="ml-auto">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Current
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-orange-600">
+                  <div className="h-2 w-2 rounded-full bg-orange-500" />
+                  Everything in Business +
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-2 w-2 rounded-full bg-orange-500" />
+                  SSO integration
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-2 w-2 rounded-full bg-orange-500" />
+                  Full API access
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="h-2 w-2 rounded-full bg-orange-500" />
+                  Concierge onboarding & SLA
                 </div>
               </CardContent>
             </Card>
