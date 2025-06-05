@@ -48,30 +48,10 @@ interface WeatherAdaptation {
     condition: string;
     temperature: number;
     precipitation: number;
-    recommendation: string;
+    recommendations: string[];
   }[];
   indoorAlternatives: any[];
   postponeRecommendations: any[];
-}
-
-interface SmartOptimization {
-  budgetOptimization: {
-    originalCost: number;
-    optimizedCost: number;
-    savings: number;
-    recommendations: string[];
-  };
-  timeOptimization: {
-    originalDuration: number;
-    optimizedDuration: number;
-    timeSaved: number;
-    efficiencyGains: string[];
-  };
-  experienceOptimization: {
-    satisfactionScore: number;
-    improvements: string[];
-    personalizedSuggestions: string[];
-  };
 }
 
 export async function predictFlightPrices(
@@ -81,23 +61,25 @@ export async function predictFlightPrices(
   returnDate?: string
 ): Promise<PricePrediction> {
   try {
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key required for price prediction. Please provide OPENAI_API_KEY.');
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: `You are a travel pricing expert with access to historical flight data and market trends. 
-          Analyze flight pricing patterns and provide predictions in JSON format.`
+          content: `You are an expert travel pricing analyst with access to real-time market data.
+          Analyze flight pricing patterns and provide accurate predictions based on historical data and market trends.`
         },
         {
           role: "user",
-          content: `Predict flight prices for ${origin} to ${destination}, departing ${departureDate}${returnDate ? ` returning ${returnDate}` : ''}. 
-          Include current market analysis, seasonal trends, and optimal booking recommendations.
+          content: `Analyze flight pricing for ${origin} to ${destination} departing ${departureDate}${returnDate ? ` returning ${returnDate}` : ''}.
           
-          Provide response in JSON format with:
-          - currentPrice (estimated current price)
-          - predictedPrices (array of future price predictions with dates and confidence)
+          Provide JSON response with:
+          - currentPrice (estimated current market price)
+          - predictedPrices (30-day forecast with dates, prices, confidence, recommendations)
           - optimalBookingWindow (best time to book with expected savings)
           - seasonalTrends (monthly price patterns)`
         }
@@ -108,48 +90,50 @@ export async function predictFlightPrices(
     const prediction = JSON.parse(response.choices[0].message.content || '{}');
     
     return {
-      currentPrice: prediction.currentPrice || 800,
-      predictedPrices: prediction.predictedPrices || generateMockPricePredictions(),
+      currentPrice: prediction.currentPrice || 0,
+      predictedPrices: prediction.predictedPrices || [],
       optimalBookingWindow: prediction.optimalBookingWindow || {
-        start: "2024-02-15",
-        end: "2024-02-29",
-        expectedSavings: 150
+        start: departureDate,
+        end: departureDate,
+        expectedSavings: 0
       },
-      seasonalTrends: prediction.seasonalTrends || generateSeasonalTrends()
+      seasonalTrends: prediction.seasonalTrends || []
     };
 
   } catch (error) {
     console.error('Error predicting flight prices:', error);
-    // Return fallback data
-    return generateFallbackPricePrediction();
+    throw new Error('Price prediction requires valid API credentials. Please provide necessary API keys.');
   }
 }
 
 export async function predictCrowdLevels(
   location: string,
   date: string,
-  time: string
+  time?: string
 ): Promise<CrowdPrediction> {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key required for crowd prediction. Please provide OPENAI_API_KEY.');
+    }
+
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o", 
       messages: [
         {
           role: "system",
-          content: `You are a tourism analytics expert specializing in crowd prediction and visitor flow optimization.
-          Analyze historical visitor patterns, seasonal trends, and real-time factors.`
+          content: `You are an expert in tourist crowd analysis and location optimization.
+          Provide accurate crowd predictions based on location data, seasonality, and timing patterns.`
         },
         {
           role: "user",
-          content: `Predict crowd levels for ${location} on ${date} at ${time}.
-          Consider factors like: weekday/weekend, season, local events, school holidays, weather impact.
+          content: `Predict crowd levels for ${location} on ${date}${time ? ` at ${time}` : ''}.
           
           Provide JSON response with:
           - crowdLevel (low/medium/high/extreme)
           - confidence (0-1)
-          - peakHours (array of busiest times)
-          - bestVisitTimes (optimal times with reasoning)
-          - alternativeOptions (similar but less crowded places)`
+          - peakHours (array of busy times)
+          - bestVisitTimes (optimal times with reasons)
+          - alternativeOptions (less crowded similar locations)`
         }
       ],
       response_format: { type: "json_object" }
@@ -161,17 +145,14 @@ export async function predictCrowdLevels(
       location,
       crowdLevel: prediction.crowdLevel || 'medium',
       confidence: prediction.confidence || 0.8,
-      peakHours: prediction.peakHours || ['11:00', '14:00', '16:00'],
-      bestVisitTimes: prediction.bestVisitTimes || [
-        { time: '09:00', crowdLevel: 'low', reason: 'Early morning before tour groups arrive' },
-        { time: '17:30', crowdLevel: 'medium', reason: 'Evening when day visitors leave' }
-      ],
+      peakHours: prediction.peakHours || [],
+      bestVisitTimes: prediction.bestVisitTimes || [],
       alternativeOptions: prediction.alternativeOptions || []
     };
 
   } catch (error) {
     console.error('Error predicting crowd levels:', error);
-    return generateFallbackCrowdPrediction(location);
+    throw new Error('Crowd prediction requires valid API credentials. Please provide necessary API keys.');
   }
 }
 
@@ -181,7 +162,10 @@ export async function generateWeatherAdaptiveItinerary(
   dates: string[]
 ): Promise<WeatherAdaptation> {
   try {
-    // Get weather forecast first
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key required for weather adaptation. Please provide OPENAI_API_KEY.');
+    }
+
     const weatherForecast = await getWeatherForecast(destination, dates);
     
     const response = await openai.chat.completions.create({
@@ -202,8 +186,7 @@ export async function generateWeatherAdaptiveItinerary(
           Provide JSON response with:
           - adaptedPlan (modified activities considering weather)
           - indoorAlternatives (backup options for bad weather)
-          - postponeRecommendations (activities to reschedule)
-          - weatherForecast (with specific recommendations per day)`
+          - postponeRecommendations (activities to reschedule)`
         }
       ],
       response_format: { type: "json_object" }
@@ -221,30 +204,36 @@ export async function generateWeatherAdaptiveItinerary(
 
   } catch (error) {
     console.error('Error generating weather-adaptive itinerary:', error);
-    return generateFallbackWeatherAdaptation(activities);
+    throw new Error('Weather adaptation requires valid API credentials. Please provide necessary API keys.');
   }
 }
 
-export async function optimizeItineraryIntelligently(
+export async function optimizeItinerary(
   activities: any[],
-  preferences: any,
-  constraints: any
-): Promise<SmartOptimization> {
+  constraints: {
+    budget?: number;
+    timeLimit?: number;
+    preferences?: string[];
+  }
+) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key required for itinerary optimization. Please provide OPENAI_API_KEY.');
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
-          role: "system",
-          content: `You are an AI travel optimization engine that maximizes trip value while respecting budget, time, and personal preferences.
-          Focus on budget efficiency, time optimization, and experience enhancement.`
+          role: "system", 
+          content: `You are an expert travel optimization specialist.
+          Optimize itineraries for budget, time efficiency, and user satisfaction.`
         },
         {
           role: "user",
           content: `Optimize this itinerary:
           
           Activities: ${JSON.stringify(activities)}
-          Preferences: ${JSON.stringify(preferences)}
           Constraints: ${JSON.stringify(constraints)}
           
           Provide JSON response with:
@@ -259,37 +248,22 @@ export async function optimizeItineraryIntelligently(
     const optimization = JSON.parse(response.choices[0].message.content || '{}');
     
     return {
-      budgetOptimization: optimization.budgetOptimization || {
-        originalCost: 2500,
-        optimizedCost: 2100,
-        savings: 400,
-        recommendations: ['Book attractions in advance for discounts', 'Use public transport instead of taxis']
-      },
-      timeOptimization: optimization.timeOptimization || {
-        originalDuration: 8,
-        optimizedDuration: 6.5,
-        timeSaved: 1.5,
-        efficiencyGains: ['Group nearby activities', 'Skip overcrowded locations during peak hours']
-      },
-      experienceOptimization: optimization.experienceOptimization || {
-        satisfactionScore: 9.2,
-        improvements: ['Added local food experiences', 'Included hidden gems'],
-        personalizedSuggestions: ['Based on your interest in photography, added sunset viewpoints']
-      }
+      budgetOptimization: optimization.budgetOptimization || {},
+      timeOptimization: optimization.timeOptimization || {},
+      experienceOptimization: optimization.experienceOptimization || {}
     };
 
   } catch (error) {
     console.error('Error optimizing itinerary:', error);
-    return generateFallbackOptimization();
+    throw new Error('Itinerary optimization requires valid API credentials. Please provide necessary API keys.');
   }
 }
 
 // Weather API integration
 async function getWeatherForecast(destination: string, dates: string[]) {
   try {
-    // Using OpenWeatherMap API if available
     if (!process.env.OPENWEATHERMAP_API_KEY) {
-      return generateMockWeatherForecast(dates);
+      throw new Error('OpenWeatherMap API key required for weather data. Please provide OPENWEATHERMAP_API_KEY.');
     }
 
     const forecasts = [];
@@ -298,108 +272,25 @@ async function getWeatherForecast(destination: string, dates: string[]) {
         `https://api.openweathermap.org/data/2.5/forecast?q=${destination}&appid=${process.env.OPENWEATHERMAP_API_KEY}&units=metric`
       );
       
-      if (response.ok) {
-        const data = await response.json();
-        forecasts.push({
-          date,
-          condition: data.list[0]?.weather[0]?.main || 'Clear',
-          temperature: Math.round(data.list[0]?.main?.temp || 20),
-          precipitation: data.list[0]?.rain?.['3h'] || 0,
-          recommendation: generateWeatherRecommendation(data.list[0])
-        });
-      } else {
-        forecasts.push(generateMockWeatherDay(date));
+      if (!response.ok) {
+        throw new Error(`Weather API error: ${response.status}`);
       }
+      
+      const data = await response.json();
+      forecasts.push({
+        date,
+        condition: data.list[0]?.weather[0]?.main || 'Unknown',
+        temperature: data.list[0]?.main?.temp || 0,
+        precipitation: data.list[0]?.rain?.['3h'] || 0,
+        recommendations: []
+      });
     }
     
     return forecasts;
   } catch (error) {
-    return generateMockWeatherForecast(dates);
+    console.error('Error fetching weather forecast:', error);
+    throw new Error('Weather data requires valid API credentials. Please provide OPENWEATHERMAP_API_KEY.');
   }
 }
 
-// All mock data functions removed - system now requires authentic API credentials
-// No fallback synthetic data - proper error handling with credential prompts
-}
-
-function generateMockWeatherForecast(dates: string[]) {
-  return dates.map(date => generateMockWeatherDay(date));
-}
-
-function generateMockWeatherDay(date: string) {
-  const conditions = ['Clear', 'Cloudy', 'Rain', 'Partly Cloudy'];
-  const condition = conditions[Math.floor(Math.random() * conditions.length)];
-  
-  return {
-    date,
-    condition,
-    temperature: Math.round(15 + Math.random() * 15),
-    precipitation: condition === 'Rain' ? Math.random() * 10 : 0,
-    recommendation: generateWeatherRecommendation({ weather: [{ main: condition }] })
-  };
-}
-
-function generateWeatherRecommendation(weatherData: any): string {
-  const condition = weatherData?.weather?.[0]?.main;
-  
-  switch (condition) {
-    case 'Rain':
-      return 'Consider indoor activities or bring waterproof gear';
-    case 'Clear':
-      return 'Perfect weather for outdoor activities and sightseeing';
-    case 'Cloudy':
-      return 'Good conditions for walking tours and outdoor activities';
-    default:
-      return 'Check weather closer to your visit date';
-  }
-}
-
-function generateFallbackWeatherAdaptation(activities: any[]): WeatherAdaptation {
-  return {
-    originalPlan: activities,
-    adaptedPlan: activities,
-    weatherForecast: generateMockWeatherForecast(['2024-03-15', '2024-03-16', '2024-03-17']),
-    indoorAlternatives: [
-      { title: 'Museum Visit', reason: 'Indoor alternative for rainy weather' },
-      { title: 'Shopping Center', reason: 'Climate-controlled environment' }
-    ],
-    postponeRecommendations: []
-  };
-}
-
-function generateFallbackOptimization(): SmartOptimization {
-  return {
-    budgetOptimization: {
-      originalCost: 2500,
-      optimizedCost: 2150,
-      savings: 350,
-      recommendations: [
-        'Book group tickets for 15% discount',
-        'Visit during off-peak hours for lower prices',
-        'Use city transport passes instead of individual tickets'
-      ]
-    },
-    timeOptimization: {
-      originalDuration: 8,
-      optimizedDuration: 6.5,
-      timeSaved: 1.5,
-      efficiencyGains: [
-        'Grouped nearby attractions to reduce travel time',
-        'Optimized route to avoid traffic congestion',
-        'Pre-booked tickets to skip waiting lines'
-      ]
-    },
-    experienceOptimization: {
-      satisfactionScore: 9.1,
-      improvements: [
-        'Added highly-rated local experiences',
-        'Included personalized recommendations',
-        'Optimized timing for best photo opportunities'
-      ],
-      personalizedSuggestions: [
-        'Based on your preferences, added cultural activities',
-        'Included food experiences matching your dietary requirements'
-      ]
-    }
-  };
-}
+// All mock data functions have been eliminated - system now requires authentic API credentials

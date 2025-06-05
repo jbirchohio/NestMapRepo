@@ -13,45 +13,13 @@ import {
   setOrganizationId
 } from "../organizationContext";
 
-// Demo data for testing role-based features
-const getDemoTrips = (roleType: string) => {
-  const baseTrips = [
-    {
-      id: 'demo-1',
-      title: roleType === 'corporate' ? 'Q2 Team Offsite - Austin' : 'Johnson Family Vacation',
-      description: roleType === 'corporate' ? 'Quarterly team meeting and strategy session' : 'Custom family vacation package',
-      startDate: '2025-06-15',
-      endDate: '2025-06-18',
-      destination: 'Austin, TX',
-      status: 'planning',
-      created_at: new Date().toISOString(),
-      user_id: roleType === 'corporate' ? 'demo-corp-1' : 'demo-agency-1'
-    },
-    {
-      id: 'demo-2', 
-      title: roleType === 'corporate' ? 'Client Meeting - San Francisco' : 'Miller Wedding Proposal',
-      description: roleType === 'corporate' ? 'Important client presentation meeting' : 'Romantic honeymoon package proposal',
-      startDate: '2025-07-01',
-      endDate: '2025-07-03',
-      destination: 'San Francisco, CA',
-      status: 'approved',
-      created_at: new Date().toISOString(),
-      user_id: roleType === 'corporate' ? 'demo-corp-1' : 'demo-agency-1'
-    }
-  ];
-  return baseTrips;
-};
+// All demo data removed - system uses authentic database queries only
 
 export async function getTrips(req: Request, res: Response) {
   try {
     const userId = req.query.user_id as string;
     
-    // Handle demo users
-    if (userId && (userId.startsWith('demo-corp-') || userId.startsWith('demo-agency-'))) {
-      const roleType = userId.startsWith('demo-corp-') ? 'corporate' : 'agency';
-      const demoTrips = getDemoTrips(roleType);
-      return res.json(demoTrips);
-    }
+    // All demo data removed - system uses authentic database queries only
     
     const numericUserId = Number(userId);
     if (isNaN(numericUserId)) {
@@ -82,22 +50,7 @@ export async function getTripById(req: Request, res: Response) {
   try {
     const tripIdParam = req.params.id;
     
-    // Handle demo trips
-    if (tripIdParam.startsWith('demo-trip-')) {
-      const mockTrip = {
-        id: tripIdParam,
-        title: 'Demo Trip',
-        description: 'Demo trip for testing',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        city: 'Demo City',
-        country: 'Demo Country',
-        userId: 'demo-user',
-        status: 'confirmed',
-        created_at: new Date().toISOString()
-      };
-      return res.json(mockTrip);
-    }
+    // All demo data removed - system uses authentic database queries only
     
     const tripId = Number(tripIdParam);
     if (isNaN(tripId)) {
