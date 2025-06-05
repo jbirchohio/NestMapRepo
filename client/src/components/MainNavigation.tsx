@@ -173,7 +173,7 @@ export default function MainNavigation() {
       });
       if (!response.ok) throw new Error('Failed to fetch permissions');
       const data = await response.json();
-      console.log('Permissions loaded:', data.permissions);
+
       return data.permissions || [];
     },
     enabled: !!user,
@@ -216,7 +216,9 @@ export default function MainNavigation() {
   const hasSettingsAccess = Array.isArray(permissions) && (
     permissions.includes('MANAGE_ORGANIZATION') || 
     permissions.includes('manage_organizations') ||
-    permissions.includes('ADMIN_ACCESS')
+    permissions.includes('ADMIN_ACCESS') ||
+    permissions.includes('WHITE_LABEL_SETTINGS') ||
+    true // Settings should be accessible to all authenticated users
   );
 
   const hasTeamAccess = Array.isArray(permissions) && (
@@ -388,9 +390,6 @@ export default function MainNavigation() {
                   </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-2">
-                  {/* Debug: Log navigation items */}
-                  {console.log('All navigation items:', navigationItems)}
-                  {console.log('Filtered navigation items:', navigationItems.filter(item => item.show))}
                   {navigationItems.filter(item => item.show).map((item) => {
                     const IconComponent = item.icon;
                     return (
