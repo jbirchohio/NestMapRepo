@@ -2,10 +2,22 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { BookingProgress } from '@/components/booking/BookingProgress';
-import { TravelerInfoForm } from '@/components/booking/TravelerInfoForm';
-import { FlightResults } from '@/components/booking/FlightResults';
-import { PaymentConfirmation } from '@/components/booking/PaymentConfirmation';
+import { jwtAuth } from "@/lib/jwtAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Plane, 
+  Hotel, 
+  CheckCircle, 
+  User, 
+  ArrowRight, 
+  ArrowLeft, 
+  Clock, 
+  MapPin,
+  CreditCard
+} from "lucide-react";
 
 interface SequentialBookingData {
   tripId: string;
@@ -31,7 +43,7 @@ interface SequentialBookingData {
   }>;
   roomsNeeded: number;
   roomConfiguration: 'shared' | 'separate' | null;
-  bookingStatus: 'flights' | 'payment' | 'complete';
+  bookingStatus: 'flights' | 'hotels' | 'room-preferences' | 'payment' | 'complete';
   selectedHotel?: any;
   confirmationNumber?: string;
   bookingDate?: string;
@@ -302,38 +314,35 @@ export default function SequentialBooking() {
     // Search for flights using authentic Duffel API with same format as BookingWorkflow
     try {
       const searchParams = {
-        departure: originCode,
+        origin: originCode,  // Use 'origin' to match case conversion middleware expectations
         destination: destinationCode,
         departureDate: departureDateStr,
         returnDate: returnDateStr || undefined,
         passengers: 1,
+        class: 'economy'
       };
 
       console.log('Flight search params:', searchParams);
 
       const response = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
 
-      if (response.ok) {
-        const flightData = await response.json();
-        console.log('Flight search response:', flightData);
+      const flightData = await response.json();
+      console.log('Flight search response:', flightData);
+      
+      if (flightData.flights && flightData.flights.length > 0) {
+        setFlightOffers(flightData.flights);
+        setCurrentStep(1);
         
-        if (flightData.flights && flightData.flights.length > 0) {
-          setFlightOffers(flightData.flights);
-          setCurrentStep(1);
-          
-          toast({
-            title: "Flights Found",
-            description: `Found ${flightData.flights.length} flights for ${currentTraveler.name} from ${currentTraveler.departureCity} to ${bookingData.tripDestination}`,
-          });
-        } else {
-          toast({
-            title: "No Flights Found",
-            description: `No flights available for the selected route and dates.`,
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Flights Found",
+          description: `Found ${flightData.flights.length} flights for ${currentTraveler.name} from ${currentTraveler.departureCity} to ${bookingData.tripDestination}`,
+        });
       } else {
-        throw new Error('Flight search failed');
+        toast({
+          title: "No Flights Found",
+          description: `No flights available for the selected route and dates.`,
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error searching flights:', error);
