@@ -34,12 +34,12 @@ router.get('/trips/:tripId/comments', async (req, res) => {
       .select({
         id: tripComments.id,
         tripId: tripComments.trip_id,
-        activityId: tripComments.activityId,
+        activityId: tripComments.activity_id,
         content: tripComments.content,
-        parentId: tripComments.parentId,
+        parentId: tripComments.parent_id,
         resolved: tripComments.resolved,
-        createdAt: tripComments.createdAt,
-        updatedAt: tripComments.updatedAt,
+        createdAt: tripComments.created_at,
+        updatedAt: tripComments.updated_at,
         user: {
           id: users.id,
           displayName: users.display_name,
@@ -52,7 +52,7 @@ router.get('/trips/:tripId/comments', async (req, res) => {
         eq(tripComments.trip_id, tripId),
         eq(tripComments.organization_id, organizationId)
       ))
-      .orderBy(desc(tripComments.createdAt));
+      .orderBy(desc(tripComments.created_at));
     
     res.json(comments);
   } catch (error) {
@@ -92,28 +92,26 @@ router.post('/trips/:tripId/comments', async (req, res) => {
     const [newComment] = await db
       .insert(tripComments)
       .values({
-        ...validatedData,
-        tripId,
-        userId,
-        organizationId
+        user_id: userId,
+        trip_id: tripId,
+        organization_id: organizationId,
+        content: validatedData.content,
+        activity_id: validatedData.activity_id || null,
+        parent_id: validatedData.parent_id || null,
+        resolved: validatedData.resolved || false
       })
       .returning();
     
-    // Log the comment activity
-    await db
-      .insert(activityLog)
-      .values({
-        tripId,
-        userId,
-        organizationId,
-        action: 'commented',
-        entityType: 'comment',
-        entityId: newComment.id,
-        metadata: {
-          content: validatedData.content.substring(0, 100) + (validatedData.content.length > 100 ? '...' : ''),
-          activityId: validatedData.activityId
-        }
-      });
+    // Log the comment activity  
+    await logTripActivity(tripId, userId, organizationId, {
+      action: 'commented',
+      entityType: 'comment',
+      entityId: newComment.id,
+      metadata: {
+        content: validatedData.content.substring(0, 100) + (validatedData.content.length > 100 ? '...' : ''),
+        activityId: validatedData.activityId
+      }
+    });
     
     // Get comment with user info for response
     const [commentWithUser] = await db
