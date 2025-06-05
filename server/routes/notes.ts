@@ -90,10 +90,10 @@ router.delete("/:id", async (req, res) => {
     }
 
     const deletedNote = await db
-      .delete(tripNotes)
+      .delete(notes)
       .where(and(
-        eq(tripNotes.id, noteId),
-        eq(tripNotes.organization_id, req.user.organization_id)
+        eq(notes.id, noteId),
+        eq(notes.organization_id, req.user.organization_id)
       ))
       .returning();
 

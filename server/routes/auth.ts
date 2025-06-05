@@ -67,7 +67,7 @@ router.post("/login", async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         role: user.role,
-        organizationId: user.organization_id,
+        organizationId: user.organizationId,
         displayName: user.displayName
       };
       res.json({ user: userResponse });
@@ -111,7 +111,7 @@ router.get("/session", async (req: Request, res: Response) => {
       id: user.id,
       email: user.email,
       role: user.role,
-      organizationId: user.organization_id,
+      organizationId: user.organizationId,
       displayName: user.displayName
     };
     res.json({ user: userResponse });
