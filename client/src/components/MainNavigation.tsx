@@ -18,7 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/JWTAuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { RoleGate, useRolePermissions } from '@/hooks/useRolePermissions';
