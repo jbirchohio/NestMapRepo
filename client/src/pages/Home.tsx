@@ -11,7 +11,7 @@ import NewTripModal from "@/components/NewTripModal";
 import SwipeableTrip from "@/components/SwipeableTrip";
 import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/JWTAuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import RoleBasedRedirect from "@/components/RoleBasedRedirect";
 import { PrimaryButton } from "@/components/ui/primary-button";

@@ -1,5 +1,5 @@
 import CorporateTripOptimizer from "@/components/CorporateTripOptimizer";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/JWTAuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";

@@ -1,6 +1,6 @@
 import BookingWorkflow from "@/components/BookingWorkflow";
 import { TripTeamManagement } from "@/components/TripTeamManagement";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/JWTAuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
