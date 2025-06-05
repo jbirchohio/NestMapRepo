@@ -232,6 +232,12 @@ export default function MainNavigation() {
     userPermissions.includes('manage_organizations')
   );
 
+  const hasOrganizationAccess = Array.isArray(userPermissions) && (
+    userPermissions.includes('MANAGE_ORGANIZATION') || 
+    userPermissions.includes('manage_organizations') ||
+    userPermissions.includes('ADMIN_ACCESS')
+  );
+
   if (!user) {
     return null; // Don't show navigation for unauthenticated users
   }
@@ -332,6 +338,14 @@ export default function MainNavigation() {
       active: location === '/organization-funding',
       show: hasBillingAccess,
       badge: 'Setup'
+    },
+    {
+      path: '/organization-settings',
+      label: 'Organization',
+      icon: Building2,
+      active: location === '/organization-settings',
+      show: hasOrganizationAccess,
+      badge: 'Admin'
     },
     {
       path: '/settings',
