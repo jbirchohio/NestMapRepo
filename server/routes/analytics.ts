@@ -16,75 +16,17 @@ router.get("/", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    // Return comprehensive analytics data for JonasCo
-    const analyticsData = {
-      overview: {
-        totalTrips: 247,
-        totalUsers: 89,
-        totalActivities: 1245,
-        averageTripLength: 5.2,
-        averageActivitiesPerTrip: 8.1
-      },
-      destinations: [
-        { city: "San Francisco", country: "USA", tripCount: 45, percentage: 18.2 },
-        { city: "New York", country: "USA", tripCount: 38, percentage: 15.4 },
-        { city: "London", country: "UK", tripCount: 32, percentage: 13.0 },
-        { city: "Tokyo", country: "Japan", tripCount: 28, percentage: 11.3 },
-        { city: "Singapore", country: "Singapore", tripCount: 24, percentage: 9.7 },
-        { city: "Chicago", country: "USA", tripCount: 18, percentage: 7.3 },
-        { city: "Frankfurt", country: "Germany", tripCount: 16, percentage: 6.5 },
-        { city: "Toronto", country: "Canada", tripCount: 12, percentage: 4.9 },
-        { city: "Amsterdam", country: "Netherlands", tripCount: 11, percentage: 4.5 },
-        { city: "Sydney", country: "Australia", tripCount: 9, percentage: 3.6 }
-      ],
-      tripDurations: [
-        { duration: "1-3 days", count: 98, percentage: 39.7 },
-        { duration: "4-7 days", count: 89, percentage: 36.0 },
-        { duration: "8-14 days", count: 45, percentage: 18.2 },
-        { duration: "15+ days", count: 15, percentage: 6.1 }
-      ],
-      activityTags: [
-        { tag: "Business Meeting", count: 445, percentage: 35.7 },
-        { tag: "Conference", count: 287, percentage: 23.1 },
-        { tag: "Client Visit", count: 198, percentage: 15.9 },
-        { tag: "Training", count: 156, percentage: 12.5 },
-        { tag: "Team Building", count: 89, percentage: 7.1 },
-        { tag: "Networking", count: 70, percentage: 5.6 }
-      ],
-      userEngagement: {
-        usersWithTrips: 89,
-        usersWithMultipleTrips: 67,
-        averageTripsPerUser: 2.8,
-        tripCompletionRate: 94.3,
-        activityCompletionRate: 89.7
-      },
-      recentActivity: {
-        newTripsLast7Days: 12,
-        newUsersLast7Days: 3,
-        activitiesAddedLast7Days: 84
-      },
-      growthMetrics: [
-        { date: "2024-01", trips: 15, users: 25, activities: 89 },
-        { date: "2024-02", trips: 23, users: 34, activities: 134 },
-        { date: "2024-03", trips: 31, users: 45, activities: 198 },
-        { date: "2024-04", trips: 42, users: 56, activities: 267 },
-        { date: "2024-05", trips: 54, users: 67, activities: 345 },
-        { date: "2024-06", trips: 67, users: 78, activities: 423 },
-        { date: "2024-07", trips: 78, users: 89, activities: 512 },
-        { date: "2024-08", trips: 89, users: 89, activities: 634 },
-        { date: "2024-09", trips: 102, users: 89, activities: 756 },
-        { date: "2024-10", trips: 125, users: 89, activities: 889 },
-        { date: "2024-11", trips: 156, users: 89, activities: 1034 },
-        { date: "2024-12", trips: 189, users: 89, activities: 1167 }
-      ],
-      userFunnel: {
-        totalUsers: 89,
-        usersWithTrips: 89,
-        usersWithActivities: 87,
-        usersWithCompletedTrips: 84,
-        usersWithExports: 45
-      }
-    };
+    // Get authentic analytics data from database
+    const organizationId = req.user.organization_id;
+    
+    // Use organization-specific analytics if user belongs to an organization
+    let analyticsData;
+    if (organizationId) {
+      analyticsData = await getOrganizationAnalytics(organizationId);
+    } else {
+      // Fallback to global analytics for users without organization
+      analyticsData = await getAnalytics();
+    }
 
     res.json(analyticsData);
   } catch (error) {
