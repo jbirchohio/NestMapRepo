@@ -111,13 +111,22 @@ export default function SequentialBookingFlights() {
         class: currentTraveler.travelClass || 'economy'
       };
 
-      const response = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
+      const result = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
+      console.log('Flight search response:', result);
       
-      if (response.ok) {
-        const result = await response.json();
-        setFlightOffers(result.flights || []);
+      setFlightOffers(result.flights || []);
+      
+      if (result.flights && result.flights.length > 0) {
+        toast({
+          title: "Flights Found",
+          description: `Found ${result.flights.length} flight options`,
+        });
       } else {
-        throw new Error('Flight search failed');
+        toast({
+          title: "No Flights Found",
+          description: "No flights available for the selected route and dates.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Flight search error:', error);
