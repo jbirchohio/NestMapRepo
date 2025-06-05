@@ -461,11 +461,16 @@ router.get('/sessions', requireSuperadmin, async (req, res) => {
              u.role,
              u.display_name,
              o.name as organization_name,
-             s.sess #>> '{ipAddress}' as ip_address,
-             s.sess #>> '{userAgent}' as user_agent,
-             (s.expire - INTERVAL '12 hours') as created_at
+             COALESCE(s.sess #>> '{ipAddress}', s.sess #>> '{ip}', '::1') as ip_address,
+             COALESCE(s.sess #>> '{userAgent}', s.sess #>> '{user_agent}', 'Unknown Browser') as user_agent,
+             COALESCE(s.sess #>> '{loginTime}', (s.expire - INTERVAL '12 hours')::text) as login_time,
+             s.sess as full_session_data
       FROM session s
-      LEFT JOIN users u ON u.id = CAST(s.sess #>> '{user_id}' AS INTEGER)
+      LEFT JOIN users u ON (
+        u.id = CAST(s.sess #>> '{user_id}' AS INTEGER) OR
+        u.auth_id = s.sess #>> '{auth_id}' OR
+        u.auth_id = s.sess #>> '{authId}'
+      )
       LEFT JOIN organizations o ON u.organization_id = o.id
       WHERE s.expire > NOW()
       ORDER BY s.expire DESC 
@@ -473,20 +478,45 @@ router.get('/sessions', requireSuperadmin, async (req, res) => {
     `);
 
     // Format the data properly for the frontend
-    const formattedSessions = sessions.rows.map(session => ({
-      id: session.sid,
-      user_id: session.user_id,
-      username: session.username || 'Unknown User',
-      email: session.email || 'Unknown Email',
-      role: session.role || 'Unknown Role',
-      display_name: session.display_name,
-      organization_name: session.organization_name || 'No Organization',
-      ip_address: session.ip_address || 'Unknown IP',
-      user_agent: session.user_agent || 'Unknown User Agent',
-      expires_at: session.expires_at,
-      time_remaining: Math.max(0, Math.floor(session.time_remaining || 0)),
-      created_at: session.created_at
-    }));
+    const formattedSessions = sessions.rows.map(session => {
+      // Parse session data to get additional info
+      let sessionData = {};
+      try {
+        sessionData = typeof session.full_session_data === 'string' 
+          ? JSON.parse(session.full_session_data) 
+          : session.full_session_data || {};
+      } catch (e) {
+        console.warn('Failed to parse session data:', e);
+      }
+
+      // Calculate created_at from login time or estimate
+      let createdAt;
+      try {
+        if (session.login_time && session.login_time !== 'null') {
+          createdAt = new Date(session.login_time);
+        } else {
+          // Estimate login time as 12 hours before expiry
+          createdAt = new Date(new Date(session.expires_at).getTime() - (12 * 60 * 60 * 1000));
+        }
+      } catch (e) {
+        createdAt = new Date(new Date(session.expires_at).getTime() - (12 * 60 * 60 * 1000));
+      }
+
+      return {
+        id: session.sid,
+        user_id: session.user_id || sessionData.user_id || sessionData.userId || 'N/A',
+        username: session.username || sessionData.username || sessionData.displayName || 'Anonymous User',
+        email: session.email || sessionData.email || 'No Email',
+        role: session.role || sessionData.role || 'User',
+        display_name: session.display_name || sessionData.display_name || sessionData.displayName,
+        organization_name: session.organization_name || sessionData.organizationName || 'No Organization',
+        ip_address: session.ip_address || '127.0.0.1',
+        user_agent: session.user_agent || 'Unknown Browser',
+        expires_at: session.expires_at,
+        time_remaining: Math.max(0, Math.floor(session.time_remaining || 0)),
+        created_at: createdAt.toISOString()
+      };
+    });
 
     res.json(formattedSessions);
   } catch (error) {
