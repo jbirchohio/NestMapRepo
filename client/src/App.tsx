@@ -75,6 +75,7 @@ function Router() {
           <Route path="/calendar" component={CalendarSettings} />
           <Route path="/white-label" component={WhiteLabelSettings} />
           <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/superadmin" component={Superadmin} />
           <Route path="/superadmin/organizations/:id" component={SuperadminOrganizationDetail} />
           <Route path="/superadmin/:section" component={Superadmin} />
