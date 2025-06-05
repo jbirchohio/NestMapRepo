@@ -173,21 +173,34 @@ export default function SequentialBookingFlights() {
       setOutboundFlights(allFlights);
       setFlightOffers(allFlights);
       
-      if (bookingData.returnDate) {
-        // Search for return flights separately
+      // Search for return flights if it's a round trip
+      if (data.returnDate && data.returnDate !== data.departureDate) {
         const returnSearchParams = {
-          origin: destinationCode,
-          destination: originCode,
-          departureDate: formatDate(bookingData.returnDate),
+          origin: getCityCode(data.tripDestination),
+          destination: getCityCode(currentTraveler.departureCity),
+          departureDate: data.returnDate,
           passengers: 1,
           class: currentTraveler.travelClass || 'economy'
         };
         
+        console.log('Searching return flights:', returnSearchParams);
+        
         try {
           const returnResult = await apiRequest('POST', '/api/bookings/flights/search', returnSearchParams);
+          console.log('Return flight search response:', returnResult);
           setReturnFlights(returnResult.flights || []);
+          
+          toast({
+            title: "Return Flights Found",
+            description: `Found ${returnResult.flights?.length || 0} return flight options`,
+          });
         } catch (error) {
           console.error('Error searching return flights:', error);
+          toast({
+            title: "Return Flight Search Failed",
+            description: "Could not load return flights. Please try again.",
+            variant: "destructive",
+          });
         }
       }
       
