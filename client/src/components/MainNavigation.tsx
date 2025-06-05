@@ -283,6 +283,27 @@ export default function MainNavigation() {
       badge: 'Pro'
     },
     {
+      path: '/trip-planner',
+      label: 'Plan Trip',
+      icon: MapPin,
+      active: location === '/trip-planner',
+      show: true
+    },
+    {
+      path: '/flights',
+      label: 'Book Flights',
+      icon: Plane,
+      active: location === '/flights',
+      show: true
+    },
+    {
+      path: '/sequential-booking',
+      label: 'Sequential Flights',
+      icon: Plane,
+      active: location === '/sequential-booking',
+      show: true
+    },
+    {
       path: '/team',
       label: roleType === 'agency' ? 'Team & Clients' : 'Team Management',
       icon: Users,
