@@ -229,18 +229,19 @@ export default function SequentialBookingFlights() {
   };
 
   const handleFlightBooking = async () => {
-    if (!selectedFlight || !bookingData) return;
+    if (!selectedOutbound || !selectedReturn || !bookingData) return;
 
     const currentTraveler = bookingData.travelers[bookingData.currentTravelerIndex];
     
     setIsBooking(true);
 
     try {
-      // Store flight selection for current traveler
+      // Store both outbound and return flight selections for current traveler
       const updatedTravelers = [...bookingData.travelers];
       updatedTravelers[bookingData.currentTravelerIndex] = {
         ...currentTraveler,
-        selectedFlight: selectedFlight
+        selectedOutboundFlight: selectedOutbound,
+        selectedReturnFlight: selectedReturn
       };
 
       // Check if more travelers need flights
@@ -254,7 +255,13 @@ export default function SequentialBookingFlights() {
         setBookingData(updatedData);
         sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
         
-        setSelectedFlight(null);
+        // Clear previous selections for new traveler
+        setSelectedOutbound(null);
+        setSelectedReturn(null);
+        setOutboundFlights([]);
+        setReturnFlights([]);
+        
+        // Search flights for the next traveler
         await handleFlightSearch(updatedData);
         
         toast({
@@ -479,11 +486,18 @@ export default function SequentialBookingFlights() {
                   <div
                     key={flight.id}
                     className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                      selectedFlight?.id === flight.id
+                      (activeTab === 'outbound' && selectedOutbound?.id === flight.id) ||
+                      (activeTab === 'return' && selectedReturn?.id === flight.id)
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
                     }`}
-                    onClick={() => setSelectedFlight(flight)}
+                    onClick={() => {
+                      if (activeTab === 'outbound') {
+                        setSelectedOutbound(flight);
+                      } else {
+                        setSelectedReturn(flight);
+                      }
+                    }}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -529,6 +543,33 @@ export default function SequentialBookingFlights() {
               </div>
             )}
 
+            {/* Flight Selection Summary */}
+            {(selectedOutbound || selectedReturn) && (
+              <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                <h4 className="font-medium mb-3">Selected Flights</h4>
+                <div className="space-y-2 text-sm">
+                  {selectedOutbound && (
+                    <div className="flex justify-between">
+                      <span>Outbound: {selectedOutbound.airline?.name || selectedOutbound.airline} {selectedOutbound.segments?.[0]?.flightNumber || selectedOutbound.flightNumber}</span>
+                      <span className="font-medium">${selectedOutbound.price?.amount || selectedOutbound.price}</span>
+                    </div>
+                  )}
+                  {selectedReturn && (
+                    <div className="flex justify-between">
+                      <span>Return: {selectedReturn.airline?.name || selectedReturn.airline} {selectedReturn.segments?.[0]?.flightNumber || selectedReturn.flightNumber}</span>
+                      <span className="font-medium">${selectedReturn.price?.amount || selectedReturn.price}</span>
+                    </div>
+                  )}
+                  {selectedOutbound && selectedReturn && (
+                    <div className="flex justify-between border-t pt-2 font-medium">
+                      <span>Total:</span>
+                      <span>${(selectedOutbound.price?.amount || selectedOutbound.price) + (selectedReturn.price?.amount || selectedReturn.price)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-between pt-6">
               <Button variant="outline" onClick={() => setLocation('/')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -536,9 +577,9 @@ export default function SequentialBookingFlights() {
               </Button>
               <Button
                 onClick={handleFlightBooking}
-                disabled={!selectedFlight || isBooking}
+                disabled={!selectedOutbound || !selectedReturn || isBooking}
               >
-                {isBooking ? 'Saving...' : 'Select Flight'}
+                {isBooking ? 'Saving...' : 'Confirm Flight Selection'}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
