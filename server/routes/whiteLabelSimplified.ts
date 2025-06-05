@@ -166,6 +166,9 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
     const organizationId = req.user.organization_id || req.user.organizationId;
     const { companyName, primaryColor, secondaryColor, accentColor, tagline, logoUrl } = req.body;
 
+    console.log('White label configure request body:', req.body);
+    console.log('Extracted values:', { companyName, primaryColor, secondaryColor, accentColor, tagline, logoUrl });
+
     if (!organizationId) {
       return res.status(400).json({ error: "No organization found" });
     }
@@ -215,11 +218,11 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         await db
           .update(whiteLabelSettings)
           .set({
-            company_name: companyName,
+            company_name: companyName || 'My Company',
             tagline: tagline || null,
-            primary_color: primaryColor,
-            secondary_color: secondaryColor,
-            accent_color: accentColor,
+            primary_color: primaryColor || '#6D5DFB',
+            secondary_color: secondaryColor || '#6D5DFB', 
+            accent_color: accentColor || '#6D5DFB',
             company_logo: logoUrl || null,
             status: 'approved', // Auto-approve for Professional+ plans
             updated_at: new Date()
