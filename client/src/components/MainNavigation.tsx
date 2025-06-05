@@ -382,14 +382,14 @@ export default function MainNavigation() {
                   </Button>
                 </motion.div>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-white dark:bg-dark-800 border-electric-200/30 z-[100]">
-                <SheetHeader>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px] bg-white dark:bg-dark-800 border-electric-200/30 z-[100] flex flex-col">
+                <SheetHeader className="flex-shrink-0">
                   <SheetTitle className="text-left text-electric-900 dark:text-electric-100">Navigation</SheetTitle>
                   <SheetDescription className="text-left text-electric-600 dark:text-electric-400">
                     {roleType === 'agency' ? 'Client Travel Management' : 'Company Travel Management'}
                   </SheetDescription>
                 </SheetHeader>
-                <div className="mt-6 space-y-2">
+                <div className="flex-1 overflow-y-auto mt-6 space-y-2 pr-2">
                   {navigationItems.filter(item => item.show).map((item) => {
                     const IconComponent = item.icon;
                     return (
