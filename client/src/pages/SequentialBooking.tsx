@@ -324,9 +324,7 @@ export default function SequentialBooking() {
 
       console.log('Flight search params:', searchParams);
 
-      const response = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
-
-      const flightData = await response.json();
+      const flightData = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
       console.log('Flight search response:', flightData);
       
       if (flightData.flights && flightData.flights.length > 0) {
