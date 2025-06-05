@@ -18,7 +18,7 @@ import { db } from "./db-connection";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
 import { authenticateUser, getUserById } from "./auth";
-import { unifiedAuthMiddleware } from "./middleware/unifiedAuth";
+import { jwtAuthMiddleware } from "./middleware/jwtAuth";
 import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
 
 const app = express();
@@ -142,61 +142,13 @@ app.use(injectOrganizationContext);
 
 // Apply case conversion middleware first, then JWT authentication
 app.use(caseConversionMiddleware);
-// Use simplified auth to prevent server crashes
-// app.use(unifiedAuthMiddleware);
+app.use(jwtAuthMiddleware);
 
 // JWT-only authentication - no sessions
 
 // Note: Authentication routes are handled in /api/auth/* via the routes module
 
-// Session statistics endpoint for testing PostgreSQL store
-app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
-  try {
-    // Only allow authenticated users to see session stats
-    if (!(req.session as any)?.user_id) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    // CRITICAL SECURITY: Only super_admin users can access system-wide session statistics
-    if (!req.user || req.user.role !== 'super_admin') {
-      console.warn('ADMIN_ACCESS_DENIED: Non-super-admin attempted to access session stats', {
-        userId: req.user?.id,
-        role: req.user?.role,
-        endpoint: '/api/admin/session-stats',
-        ip: req.ip,
-        timestamp: new Date().toISOString()
-      });
-      return res.status(403).json({ 
-        error: 'Access denied', 
-        message: 'Super admin privileges required for session statistics' 
-      });
-    }
-
-    // Use existing database connection to query session statistics
-    const sessionCountResult = await db.execute(`SELECT COUNT(*) as session_count FROM session`);
-    const expiredSessionResult = await db.execute(`SELECT COUNT(*) as expired_count FROM session WHERE expire < NOW()`);
-
-    const totalSessions = parseInt(sessionCountResult.rows[0].session_count as string);
-    const expiredSessions = parseInt(expiredSessionResult.rows[0].expired_count as string);
-
-    res.json({
-      totalSessions,
-      expiredSessions,
-      activeSessions: totalSessions - expiredSessions,
-      storeType: 'PostgreSQL',
-      tableName: 'session',
-      sessionConfig: {
-        name: 'nestmap.sid',
-        maxAge: 12 * 60 * 60 * 1000, // 12 hours
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production'
-      }
-    });
-  } catch (error) {
-    console.error('Session stats error:', error);
-    res.status(500).json({ error: 'Failed to get session statistics' });
-  }
-});
+// JWT-only authentication - session endpoints removed
 
 
 
