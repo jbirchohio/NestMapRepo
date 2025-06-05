@@ -19,6 +19,8 @@ import { db } from "./db-connection";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
 import { authenticateUser, getUserById } from "./auth";
+import { unifiedAuthMiddleware } from "./middleware/unifiedAuth";
+import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
@@ -141,6 +143,10 @@ app.use('/api', authenticateApiKey);
 // Apply organization scoping middleware for multi-tenant security
 app.use(resolveDomainOrganization);
 app.use(injectOrganizationContext);
+
+// Apply JWT authentication and case conversion middleware
+app.use(caseConversionMiddleware);
+app.use(unifiedAuthMiddleware);
 
 // Enhanced session security middleware with PostgreSQL store
 app.use(session({
@@ -279,11 +285,9 @@ app.get('/api/admin/session-stats', async (req: Request, res: Response) => {
   }
 });
 
-// Import unified authentication middleware
-import { unifiedAuthMiddleware } from './middleware/unifiedAuth';
 
-// Apply unified authentication and organization context
-app.use(unifiedAuthMiddleware);
+
+// Apply unified authentication and organization context (already applied above)
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
