@@ -164,10 +164,17 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
     }
 
     const organizationId = req.user.organization_id || req.user.organizationId;
-    const { companyName, primaryColor, secondaryColor, accentColor, tagline, logoUrl } = req.body;
+    const { companyName, primaryColor, secondaryColor, accentColor, tagline, companyLogo } = req.body;
 
     console.log('White label configure request body:', req.body);
-    console.log('Extracted values:', { companyName, primaryColor, secondaryColor, accentColor, tagline, logoUrl });
+    console.log('Extracted camelCase values:', { 
+      companyName, 
+      primaryColor, 
+      secondaryColor, 
+      accentColor, 
+      tagline, 
+      companyLogo 
+    });
 
     if (!organizationId) {
       return res.status(400).json({ error: "No organization found" });
@@ -223,7 +230,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
             primary_color: primaryColor || '#6D5DFB',
             secondary_color: secondaryColor || '#6D5DFB', 
             accent_color: accentColor || '#6D5DFB',
-            company_logo: logoUrl || null,
+            company_logo: companyLogo || null,
             status: 'approved', // Auto-approve for Professional+ plans
             updated_at: new Date()
           })
@@ -236,10 +243,10 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
             organization_id: organizationId,
             company_name: companyName || 'My Company',
             tagline: tagline || null,
-            primary_color: primaryColor,
-            secondary_color: secondaryColor,
-            accent_color: accentColor,
-            company_logo: logoUrl || null,
+            primary_color: primaryColor || '#6D5DFB',
+            secondary_color: secondaryColor || '#6D5DFB',
+            accent_color: accentColor || '#6D5DFB',
+            company_logo: companyLogo || null,
             status: 'approved', // Auto-approve for Professional+ plans
             created_at: new Date(),
             updated_at: new Date()
@@ -255,7 +262,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
           secondaryColor,
           accentColor,
           tagline,
-          logoUrl
+          companyLogo
         }
       });
     } catch (error) {

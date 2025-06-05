@@ -283,6 +283,35 @@ export default function Settings() {
                       </div>
 
                       <div className="space-y-4">
+                        <Label>Company Logo</Label>
+                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
+                          <div className="text-center">
+                            <Image className="mx-auto h-12 w-12 text-gray-400" />
+                            <div className="mt-4">
+                              <Label htmlFor="logo-upload" className="cursor-pointer">
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                  <Button type="button" variant="outline" disabled={!canUseBranding}>
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Upload Logo
+                                  </Button>
+                                </div>
+                              </Label>
+                              <Input
+                                id="logo-upload"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={!canUseBranding}
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                              PNG, JPG, SVG up to 2MB. Recommended: 200x60px
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
                         <Label>Brand Colors</Label>
                         <div className="grid md:grid-cols-3 gap-4">
                           <div className="space-y-2">
