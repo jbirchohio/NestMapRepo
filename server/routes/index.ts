@@ -19,6 +19,7 @@ import superadminRoutes from './superadmin';
 import webhookRoutes from './webhooks';
 import todosRoutes from './todos';
 import notesRoutes from './notes';
+import aiRoutes from './ai';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -45,6 +46,7 @@ router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/todos', todosRoutes);
 router.use('/notes', notesRoutes);
+router.use('/ai', aiRoutes);
 
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {
