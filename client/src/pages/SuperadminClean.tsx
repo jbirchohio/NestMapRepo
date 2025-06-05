@@ -518,7 +518,11 @@ export default function SuperadminClean() {
             </motion.div>
 
             <AnimatedCard variant="glow" className="p-6">
-              {featureFlags.length === 0 ? (
+              {usersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-electric-600"></div>
+                </div>
+              ) : featureFlags.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   No feature flags configured
                 </div>
@@ -552,7 +556,7 @@ export default function SuperadminClean() {
                                   is_enabled: enabled,
                                   default_value: enabled
                                 });
-                                queryClient.invalidateQueries({ queryKey: ['superadmin', 'flags'] });
+                                queryClient.invalidateQueries({ queryKey: ['/api/superadmin/flags'] });
                                 toast({
                                   title: "Feature flag updated",
                                   description: `${flag.flag_name} has been ${enabled ? 'enabled' : 'disabled'}`,
