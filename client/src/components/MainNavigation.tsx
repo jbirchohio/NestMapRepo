@@ -388,6 +388,9 @@ export default function MainNavigation() {
                   </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-2">
+                  {/* Debug: Log navigation items */}
+                  {console.log('All navigation items:', navigationItems)}
+                  {console.log('Filtered navigation items:', navigationItems.filter(item => item.show))}
                   {navigationItems.filter(item => item.show).map((item) => {
                     const IconComponent = item.icon;
                     return (
