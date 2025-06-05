@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
+import { apiRequest } from '@/lib/queryClient';
 
 const quickBrandingSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
@@ -70,21 +71,35 @@ export default function BrandingOnboarding({ onComplete, onSkip, organizationPla
 
     try {
       if (data.enableBranding) {
-        // Update branding configuration
-        updateConfig({
+        // Save branding configuration to backend
+        const response = await apiRequest('POST', '/api/white-label/configure', {
           companyName: data.companyName,
           primaryColor: data.primaryColor,
+          secondaryColor: data.primaryColor,
+          accentColor: data.primaryColor,
           tagline: data.tagline,
-          footerText: `© 2025 ${data.companyName}. All rights reserved.`,
+          logoUrl: null
         });
 
-        // Enable white label mode
-        enableWhiteLabel();
+        if (response.ok) {
+          // Update local context
+          updateConfig({
+            companyName: data.companyName,
+            primaryColor: data.primaryColor,
+            tagline: data.tagline,
+            footerText: `© 2025 ${data.companyName}. All rights reserved.`,
+          });
 
-        toast({
-          title: "Branding Applied",
-          description: `Your ${data.companyName} branding is now active across the platform.`,
-        });
+          // Enable white label mode
+          enableWhiteLabel();
+
+          toast({
+            title: "Branding Applied",
+            description: `Your ${data.companyName} branding is now active across the platform.`,
+          });
+        } else {
+          throw new Error('Failed to save branding configuration');
+        }
       }
 
       onComplete();
