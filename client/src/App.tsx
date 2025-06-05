@@ -4,7 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/JWTAuthContext";
 import { WhiteLabelProvider } from "@/contexts/WhiteLabelContext";
 import MainNavigation from "@/components/MainNavigation";
 import BrandedFooter from "@/components/BrandedFooter";
