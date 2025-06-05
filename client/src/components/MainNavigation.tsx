@@ -43,10 +43,120 @@ import {
   LogOut,
   Sparkles,
   UserCircle,
+  MapPin,
+  Route,
   Edit3,
   Key,
-  HelpCircle
+  HelpCircle,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+
+// Travel Console Menu Component
+function TravelConsoleMenu({ location }: { location: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const travelRoutes = [
+    '/trip-planner', 
+    '/flights', 
+    '/hotels', 
+    '/optimizer', 
+    '/ai-generator',
+    '/sequential-booking'
+  ];
+  
+  const isActive = travelRoutes.includes(location);
+  
+  return (
+    <div className="relative">
+      <Button
+        variant={isActive ? 'default' : 'ghost'}
+        size="sm"
+        className="flex items-center gap-2 whitespace-nowrap"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <Brain className="h-4 w-4" />
+        <span className="text-sm font-medium">Travel Console</span>
+        {isExpanded ? (
+          <ChevronUp className="h-3 w-3" />
+        ) : (
+          <ChevronDown className="h-3 w-3" />
+        )}
+      </Button>
+      
+      {isExpanded && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-2 z-50 min-w-48"
+        >
+          <div className="space-y-1">
+            <Link href="/trip-planner">
+              <Button
+                variant={location === '/trip-planner' ? 'default' : 'ghost'}
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={() => setIsExpanded(false)}
+              >
+                <MapPin className="h-4 w-4" />
+                Plan Trip
+              </Button>
+            </Link>
+            
+            <Link href="/flights">
+              <Button
+                variant={location === '/flights' ? 'default' : 'ghost'}
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={() => setIsExpanded(false)}
+              >
+                <Plane className="h-4 w-4" />
+                Book Flights
+              </Button>
+            </Link>
+            
+            <Link href="/ai-generator">
+              <Button
+                variant={location === '/ai-generator' ? 'default' : 'ghost'}
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={() => setIsExpanded(false)}
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Trip Generator
+              </Button>
+            </Link>
+            
+            <Link href="/optimizer">
+              <Button
+                variant={location === '/optimizer' ? 'default' : 'ghost'}
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={() => setIsExpanded(false)}
+              >
+                <Route className="h-4 w-4" />
+                Trip Optimizer
+              </Button>
+            </Link>
+            
+            <Link href="/sequential-booking">
+              <Button
+                variant={location === '/sequential-booking' ? 'default' : 'ghost'}
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={() => setIsExpanded(false)}
+              >
+                <Plane className="h-4 w-4" />
+                Sequential Flights
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
 
 export default function MainNavigation() {
   const { user, userId, roleType, signOut, loading } = useAuth();
@@ -508,43 +618,8 @@ export default function MainNavigation() {
               </Button>
             </Link>
 
-            {/* Trip Planning - Available to all users for small companies */}
-            <Link href="/trip-planner">
-              <Button
-                variant={location === '/trip-planner' ? 'default' : 'ghost'}
-                size="sm"
-                className="flex items-center gap-2 whitespace-nowrap"
-              >
-                <MapPin className="h-4 w-4" />
-                <span className="text-sm font-medium">Plan Trip</span>
-              </Button>
-            </Link>
-
-            {/* Flight Booking - Available to all users */}
-            <Link href="/flights">
-              <Button
-                variant={location === '/flights' ? 'default' : 'ghost'}
-                size="sm"
-                className="flex items-center gap-2 whitespace-nowrap"
-              >
-                <Plane className="h-4 w-4" />
-                <span className="text-sm font-medium">Flights</span>
-              </Button>
-            </Link>
-
-            {/* Trip Optimizer - Available to users with permission */}
-            <RoleGate requiredPermissions={['canOptimizeTrips']}>
-              <Link href="/optimizer">
-                <Button
-                  variant={location === '/optimizer' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex items-center gap-2 whitespace-nowrap"
-                >
-                  <Route className="h-4 w-4" />
-                  <span className="text-sm font-medium">Optimizer</span>
-                </Button>
-              </Link>
-            </RoleGate>
+            {/* Travel Console - Collapsible menu for trip planning tools */}
+            <TravelConsoleMenu location={location} />
           </div>
         </div>
       </div>
