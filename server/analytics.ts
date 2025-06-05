@@ -660,7 +660,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
 
     // Average trip length
     const [avgTripLengthResult] = await db.select({
-      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1`)
+      avgLength: avg(sql`EXTRACT(DAY FROM (end_date - start_date)) + 1`)
     }).from(trips).where(orgTripsFilter);
 
     // Average activities per trip - simplified query to avoid syntax issues
