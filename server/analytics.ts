@@ -757,27 +757,27 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     }));
 
     // User engagement metrics
-    const [usersWithTripsResult] = await db.select({
-      count: sql`COUNT(DISTINCT ${users.id})`
+    const usersWithTripsResult = await db.select({
+      count: sql`COUNT(DISTINCT ${users.id})`.as('count')
     })
     .from(users)
     .innerJoin(trips, eq(trips.user_id, users.id))
     .where(orgUsersFilter);
 
-    const [usersWithMultipleTripsResult] = await db.select({
-      count: sql`COUNT(*)`
+    const multiTripUsersSubquery = db.select({
+      userId: trips.user_id,
+      tripCount: count(trips.id)
     })
-    .from(
-      db.select({
-        userId: trips.user_id,
-        tripCount: count(trips.id)
-      })
-      .from(trips)
-      .where(orgTripsFilter)
-      .groupBy(trips.user_id)
-      .having(sql`COUNT(${trips.id}) > 1`)
-      .as('multi_trip_users')
-    );
+    .from(trips)
+    .where(orgTripsFilter)
+    .groupBy(trips.user_id)
+    .having(sql`COUNT(${trips.id}) > 1`)
+    .as('multi_trip_users');
+
+    const usersWithMultipleTripsResult = await db.select({
+      count: count()
+    })
+    .from(multiTripUsersSubquery);
 
     const [completedTripsResult] = await db.select({
       count: count()
@@ -808,7 +808,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     .limit(5);
 
     const mostActiveUsers = mostActiveUsersResult.map(user => ({
-      userId: user.user_id,
+      userId: user.userId,
       username: user.username || 'Unknown',
       tripCount: user.tripCount,
       totalBudget: Number(user.totalBudget) || 0
