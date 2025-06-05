@@ -20,11 +20,11 @@ export default function TripOptimizer() {
     enabled: !!user,
   });
 
-  const hasOptimizerAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('ACCESS_ANALYTICS') || 
-    userPermissions.includes('view_analytics') ||
-    userPermissions.includes('MANAGE_ORGANIZATION') ||
-    userPermissions.includes('manage_organizations')
+  const hasOptimizerAccess = userPermissions && (
+    userPermissions.canViewAnalytics || 
+    userPermissions.canManageOrganization ||
+    userPermissions.canAccessAdmin ||
+    user?.role === 'admin'
   );
 
   if (!user) {

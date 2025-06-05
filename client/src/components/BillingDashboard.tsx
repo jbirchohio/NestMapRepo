@@ -39,9 +39,11 @@ export default function BillingDashboard() {
     enabled: !!user,
   });
 
-  const hasBillingAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('BILLING_ACCESS') || 
-    userPermissions.includes('MANAGE_ORGANIZATION')
+  const hasBillingAccess = userPermissions && (
+    userPermissions.canAccessBilling || 
+    userPermissions.canManageOrganization ||
+    userPermissions.canAccessAdmin ||
+    user?.role === 'admin'
   );
 
   // Get billing information

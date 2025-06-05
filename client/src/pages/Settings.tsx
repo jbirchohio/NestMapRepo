@@ -21,10 +21,10 @@ export default function Settings() {
     enabled: !!user,
   });
 
-  const hasSettingsAccess = Array.isArray(userPermissions) && (
-    userPermissions.includes('MANAGE_ORGANIZATION') || 
-    userPermissions.includes('manage_organizations') ||
-    userPermissions.includes('ADMIN_ACCESS')
+  const hasSettingsAccess = userPermissions && (
+    userPermissions.canManageOrganization || 
+    userPermissions.canAccessAdmin ||
+    user?.role === 'admin'
   );
 
   if (!user) {
