@@ -526,10 +526,10 @@ router.get('/sessions', requireSuperadmin, async (req, res) => {
         role: session.role || (sessionData as any)?.role || 'User',
         display_name: session.display_name || (sessionData as any)?.display_name || (sessionData as any)?.displayName,
         organization_name: session.organization_name || (sessionData as any)?.organizationName || 'No Organization',
-        ip_address: session.ip_address === '::1' ? (sessionData.email || sessionData.username || 'Local Development') : session.ip_address || 'Unknown IP',
+        ip_address: session.ip_address === '::1' ? ((sessionData as any)?.email || (sessionData as any)?.username || 'Local Development') : session.ip_address || 'Unknown IP',
         user_agent: session.user_agent || 'Unknown Browser',
         expires_at: session.expires_at,
-        time_remaining: Math.max(0, Math.floor(session.time_remaining || 0)),
+        time_remaining: Math.max(0, Math.floor((session as any).time_remaining || 0)),
         created_at: createdAt.toISOString()
       };
     });
