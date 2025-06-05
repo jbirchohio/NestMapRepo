@@ -450,21 +450,45 @@ router.get('/activity', requireSuperadmin, async (req, res) => {
 
 router.get('/sessions', requireSuperadmin, async (req, res) => {
   try {
-    // Extract user data from JSON sess column
+    // Get active sessions with proper user data by joining with users table
     const sessions = await db.execute(`
-      SELECT sid,
-             sess #>> '{user,id}' as user_id,
-             sess #>> '{user,email}' as email,
-             sess #>> '{user,role}' as role,
-             expire,
-             sess #>> '{user,organizationId}' as organization_id
-      FROM session 
-      WHERE expire > NOW()
-      ORDER BY expire DESC 
+      SELECT s.sid,
+             s.expire as expires_at,
+             EXTRACT(EPOCH FROM (s.expire - NOW())) as time_remaining,
+             u.id as user_id,
+             u.username,
+             u.email,
+             u.role,
+             u.display_name,
+             o.name as organization_name,
+             s.sess #>> '{ipAddress}' as ip_address,
+             s.sess #>> '{userAgent}' as user_agent,
+             (s.expire - INTERVAL '12 hours') as created_at
+      FROM session s
+      LEFT JOIN users u ON u.id = CAST(s.sess #>> '{user_id}' AS INTEGER)
+      LEFT JOIN organizations o ON u.organization_id = o.id
+      WHERE s.expire > NOW()
+      ORDER BY s.expire DESC 
       LIMIT 50
     `);
 
-    res.json(sessions.rows);
+    // Format the data properly for the frontend
+    const formattedSessions = sessions.rows.map(session => ({
+      id: session.sid,
+      user_id: session.user_id,
+      username: session.username || 'Unknown User',
+      email: session.email || 'Unknown Email',
+      role: session.role || 'Unknown Role',
+      display_name: session.display_name,
+      organization_name: session.organization_name || 'No Organization',
+      ip_address: session.ip_address || 'Unknown IP',
+      user_agent: session.user_agent || 'Unknown User Agent',
+      expires_at: session.expires_at,
+      time_remaining: Math.max(0, Math.floor(session.time_remaining || 0)),
+      created_at: session.created_at
+    }));
+
+    res.json(formattedSessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
