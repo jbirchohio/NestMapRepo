@@ -92,7 +92,16 @@ export default function Settings() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/white-label/configure', data);
+      const response = await apiRequest('POST', '/api/white-label/configure', {
+        companyName: data.companyName,
+        primaryColor: data.primaryColor,
+        secondaryColor: data.secondaryColor,
+        accentColor: data.accentColor,
+        tagline: data.tagline,
+        companyLogo: data.companyLogo || null,
+        customDomain: data.customDomain,
+        supportEmail: data.supportEmail
+      });
       return response;
     },
     onSuccess: () => {
