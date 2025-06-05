@@ -660,22 +660,20 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
 
     // Average trip length
     const [avgTripLengthResult] = await db.select({
-      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.endDate} - ${trips.startDate})) + 1`)
+      avgLength: avg(sql`EXTRACT(DAY FROM (${trips.end_date} - ${trips.start_date})) + 1`)
     }).from(trips).where(orgTripsFilter);
 
-    // Average activities per trip
+    // Average activities per trip - simplified query to avoid syntax issues
     const [avgActivitiesResult] = await db.select({
-      avgActivities: avg(sql`activity_count`)
+      avgActivities: sql`AVG(activity_counts.activity_count)`.as('avgActivities')
     }).from(
-      db.select({
-        tripId: activities.trip_id,
-        activityCount: sql`COUNT(*)`.as('activity_count')
-      })
-      .from(activities)
-      .innerJoin(trips, eq(activities.trip_id, trips.id))
-      .where(orgTripsFilter)
-      .groupBy(activities.trip_id)
-      .as('trip_activities')
+      sql`(
+        SELECT trip_id, COUNT(*) as activity_count 
+        FROM activities a 
+        INNER JOIN trips t ON a.trip_id = t.id 
+        WHERE t.organization_id = ${organizationId}
+        GROUP BY trip_id
+      ) as activity_counts`
     );
 
     // Top destinations with budget breakdown
