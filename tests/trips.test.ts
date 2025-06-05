@@ -7,7 +7,7 @@ import request from 'supertest';
 import { app } from '../server/test-app';
 
 describe('Trip Management API', () => {
-  let authCookies: string[];
+  let authCookies: string[] = [];
   let testUserId: number;
 
   beforeAll(async () => {
@@ -29,7 +29,8 @@ describe('Trip Management API', () => {
         password: userData.password
       });
 
-    authCookies = loginResponse.headers['set-cookie'];
+    const cookies = loginResponse.headers['set-cookie'];
+    authCookies = Array.isArray(cookies) ? cookies : cookies ? [cookies] : [];
     testUserId = loginResponse.body.user.id;
   });
 
