@@ -123,7 +123,7 @@ export default function BrandingSetup() {
     );
   }
 
-  const canUseBranding = orgPlan?.plan === 'professional' || orgPlan?.plan === 'enterprise';
+  const canUseBranding = orgPlan?.plan === 'pro' || orgPlan?.plan === 'business' || orgPlan?.plan === 'enterprise';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">

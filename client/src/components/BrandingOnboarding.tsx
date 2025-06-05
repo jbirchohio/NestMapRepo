@@ -55,7 +55,7 @@ export default function BrandingOnboarding({ onComplete, onSkip, organizationPla
   });
 
   const watchedValues = form.watch();
-  const canUseBranding = organizationPlan === 'professional' || organizationPlan === 'enterprise';
+  const canUseBranding = organizationPlan === 'pro' || organizationPlan === 'business' || organizationPlan === 'enterprise';
 
   const onSubmit = async (data: QuickBrandingData) => {
     if (!canUseBranding && data.enableBranding) {
