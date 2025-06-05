@@ -519,9 +519,9 @@ export default function MainNavigation() {
 
             {/* Corporate Cards - Show if user has billing access */}
             {hasBillingAccess && (
-              <Link href="/corporate">
+              <Link href="/corporate-cards">
                 <Button
-                  variant={location === '/corporate' ? 'default' : 'ghost'}
+                  variant={location === '/corporate-cards' ? 'default' : 'ghost'}
                   size="sm"
                   className="flex items-center gap-2 whitespace-nowrap"
                 >

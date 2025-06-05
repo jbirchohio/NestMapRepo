@@ -10,8 +10,8 @@ import { PaymentConfirmation } from '@/components/booking/PaymentConfirmation';
 interface SequentialBookingData {
   tripId: string;
   tripDestination: string;
-  departureDate: string;
-  returnDate: string;
+  departureDate: string | Date;
+  returnDate: string | Date;
   currentTravelerIndex: number;
   travelers: Array<{
     id: number;
@@ -277,16 +277,37 @@ export default function SequentialBooking() {
 
     console.log(`Converting "${currentTraveler.departureCity}" to "${originCode}" and "${bookingData.tripDestination}" to "${destinationCode}"`);
 
-    // Search for flights using authentic Amadeus API with same format as BookingWorkflow
+    // Format dates properly for API
+    const formatDate = (date: string | Date | any): string => {
+      if (!date) return '';
+      if (typeof date === 'string' && date.includes('-')) return date;
+      if (date instanceof Date) return date.toISOString().split('T')[0];
+      if (typeof date === 'object' && Object.keys(date).length === 0) return '';
+      return '';
+    };
+
+    const departureDateStr = formatDate(bookingData.departureDate);
+    const returnDateStr = formatDate(bookingData.returnDate);
+
+    if (!departureDateStr) {
+      toast({
+        title: "Missing Travel Dates",
+        description: "Please select departure date to search for flights.",
+        variant: "destructive",
+      });
+      setIsSearching(false);
+      return;
+    }
+
+    // Search for flights using authentic Duffel API with same format as BookingWorkflow
     try {
       const searchParams = {
         origin: originCode,
         destination: destinationCode,
-        departureDate: bookingData.departureDate,
-        returnDate: bookingData.returnDate,
+        departureDate: departureDateStr,
+        returnDate: returnDateStr || undefined,
         passengers: 1,
-        cabin: currentTraveler.travelClass || 'economy',
-        tripType: bookingData.returnDate ? 'round-trip' : 'one-way',
+        class: currentTraveler.travelClass || 'economy',
       };
 
       console.log('Flight search params:', searchParams);
