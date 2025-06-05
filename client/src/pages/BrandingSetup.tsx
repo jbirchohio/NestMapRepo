@@ -91,12 +91,12 @@ export default function BrandingSetup() {
       title: "Branding Applied",
       description: "Your custom branding is now active across the platform.",
     });
-    setLocation('/dashboard');
+    setLocation('/');
   };
 
   const handleSkipBranding = () => {
     setShowOnboarding(false);
-    setLocation('/dashboard');
+    setLocation('/');
   };
 
   useEffect(() => {
