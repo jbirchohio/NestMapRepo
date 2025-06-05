@@ -472,8 +472,23 @@ export default function MainNavigation() {
         {/* Main Navigation - Full Width Row - Hidden on mobile */}
         <div className="hidden md:block border-t border-slate-200 dark:border-slate-700 py-3">
           <div className="flex flex-wrap gap-2">
-            {/* Analytics - Admin/Manager access */}
-            <RoleGate requiredPermissions={['canAccessAnalytics']}>
+            {/* Always show basic navigation first */}
+            <Link href={getRoleBasedDashboardPath()}>
+              <Button
+                variant={location === getRoleBasedDashboardPath() || location === '/' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex items-center gap-2 whitespace-nowrap"
+              >
+                <Home className="h-4 w-4" />
+                <span className="text-sm font-medium">Dashboard</span>
+              </Button>
+            </Link>
+
+            {/* Travel Console - Collapsible menu for trip planning tools */}
+            <TravelConsoleMenu location={location} />
+
+            {/* Analytics - Show if user has analytics access */}
+            {hasAnalyticsAccess && (
               <Link href="/analytics">
                 <Button
                   variant={location === '/analytics' ? 'default' : 'ghost'}
@@ -482,12 +497,28 @@ export default function MainNavigation() {
                 >
                   <BarChart3 className="h-4 w-4" />
                   <span className="text-sm font-medium">Analytics</span>
+                  <Badge variant="secondary" className="ml-1 text-xs">Pro</Badge>
                 </Button>
               </Link>
-            </RoleGate>
+            )}
 
-            {/* Corporate Cards - Billing access */}
-            <RoleGate requiredPermissions={['canIssueCards', 'canViewTransactions']}>
+            {/* Bookings */}
+            {hasBookingAccess && (
+              <Link href="/bookings">
+                <Button
+                  variant={location === '/bookings' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Plane className="h-4 w-4" />
+                  <span className="text-sm font-medium">Bookings</span>
+                  <Badge variant="secondary" className="ml-1 text-xs">New</Badge>
+                </Button>
+              </Link>
+            )}
+
+            {/* Corporate Cards - Show if user has billing access */}
+            {hasBillingAccess && (
               <Link href="/corporate">
                 <Button
                   variant={location === '/corporate' ? 'default' : 'ghost'}
@@ -498,10 +529,10 @@ export default function MainNavigation() {
                   <span className="text-sm font-medium">Corporate Cards</span>
                 </Button>
               </Link>
-            </RoleGate>
+            )}
 
-            {/* Team Management - Admin/Manager access */}
-            <RoleGate requiredPermissions={['canManageTeam']}>
+            {/* Team Management - Show if user has team access */}
+            {hasTeamAccess && (
               <Link href="/team">
                 <Button
                   variant={location === '/team' ? 'default' : 'ghost'}
@@ -512,13 +543,13 @@ export default function MainNavigation() {
                   <span className="text-sm font-medium">Team</span>
                 </Button>
               </Link>
-            </RoleGate>
+            )}
 
-            {/* Organization Management - Admin only */}
-            <RoleGate requiredPermissions={['canManageOrganization']}>
-              <Link href="/organization-settings">
+            {/* Organization Management - Show if user has organization access */}
+            {hasOrganizationAccess && (
+              <Link href="/admin">
                 <Button
-                  variant={location === '/organization-settings' ? 'default' : 'ghost'}
+                  variant={location === '/admin' ? 'default' : 'ghost'}
                   size="sm"
                   className="flex items-center gap-2 whitespace-nowrap"
                 >
@@ -527,35 +558,21 @@ export default function MainNavigation() {
                   <Badge variant="destructive" className="ml-1 text-xs">Admin</Badge>
                 </Button>
               </Link>
-            </RoleGate>
+            )}
 
-
-
-            {/* Always show basic navigation */}
-            <Link href="/">
-              <Button
-                variant={location === '/' ? 'default' : 'ghost'}
-                size="sm"
-                className="flex items-center gap-2 whitespace-nowrap"
-              >
-                <Home className="h-4 w-4" />
-                <span className="text-sm font-medium">Dashboard</span>
-              </Button>
-            </Link>
-
-            <Link href="/trips">
-              <Button
-                variant={location === '/trips' ? 'default' : 'ghost'}
-                size="sm"
-                className="flex items-center gap-2 whitespace-nowrap"
-              >
-                <Plane className="h-4 w-4" />
-                <span className="text-sm font-medium">Trips</span>
-              </Button>
-            </Link>
-
-            {/* Travel Console - Collapsible menu for trip planning tools */}
-            <TravelConsoleMenu location={location} />
+            {/* Settings - Show if user has settings access */}
+            {hasSettingsAccess && (
+              <Link href="/settings">
+                <Button
+                  variant={location === '/settings' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="text-sm font-medium">Settings</span>
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
