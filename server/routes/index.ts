@@ -51,50 +51,25 @@ router.use('/ai', aiRoutes);
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {
   try {
-    // Return full owner permissions for JonasCo organization
-    const role = 'owner';
-    const organizationId = 1;
-
-    // Define permissions based on role
-    const permissions = [];
-
-    if (role === 'owner' || role === 'admin') {
-      permissions.push(
-        'ACCESS_ANALYTICS',
-        'MANAGE_ORGANIZATION', 
-        'BILLING_ACCESS',
-        'MANAGE_TEAM_ROLES',
-        'INVITE_MEMBERS',
-        'VIEW_TEAM_ACTIVITY',
-        'WHITE_LABEL_SETTINGS',
-        'ADMIN_ACCESS',
-        'BOOK_FLIGHTS',
-        'BOOK_HOTELS',
-        'CREATE_TRIPS',
-        'USE_TRIP_OPTIMIZER',
-        'BULK_OPTIMIZE_TRIPS',
-        'view_analytics',
-        'manage_organizations',
-        'manage_users'
-      );
-    } else if (role === 'manager') {
-      permissions.push(
-        'ACCESS_ANALYTICS',
-        'VIEW_TEAM_ACTIVITY',
-        'CREATE_TRIPS',
-        'BOOK_FLIGHTS',
-        'BOOK_HOTELS',
-        'USE_TRIP_OPTIMIZER'
-      );
-    } else {
-      permissions.push(
-        'CREATE_TRIPS',
-        'BOOK_FLIGHTS',
-        'BOOK_HOTELS'
-      );
+    // Require authentication
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
     }
 
-    res.json({ permissions });
+    // Get user's actual role and organization from database
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const organizationId = req.user.organization_id;
+
+    // Get role-based permissions from permissions system
+    const { getUserPermissions } = await import('../permissions');
+    const permissions = getUserPermissions(userRole || 'user');
+
+    res.json({ 
+      permissions,
+      role: userRole,
+      organizationId 
+    });
   } catch (error) {
     console.error('Permissions error:', error);
     res.status(500).json({ message: 'Failed to get permissions' });

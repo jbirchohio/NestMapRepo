@@ -32,27 +32,11 @@ import { hashPassword } from '../auth';
 
 const router = express.Router();
 
-// Middleware to check superadmin permissions
-const requireSuperadmin = (req: any, res: any, next: any) => {
-  // Check if user is authenticated first
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  
-  // Allow access ONLY if user has proper superadmin role
-  if (req.user && ['superadmin', 'superadmin_owner', 'superadmin_staff', 'superadmin_auditor', 'super_admin'].includes(req.user.role)) {
-    next();
-    return;
-  }
-  
-  // Check if user is authenticated but doesn't have proper role
-  if (req.user) {
-    return res.status(403).json({ error: 'Superadmin access required' });
-  }
-  
-  // If no user, return 401 unauthorized
-  return res.status(401).json({ error: 'Authentication required' });
-};
+// Import standardized role constants and middleware
+import { USER_ROLES } from '@shared/schema';
+import { requireSuperadmin, requireSuperadminOwner, logSuperadminAction } from '../middleware/superadmin';
+
+// Use the standardized middleware instead of custom implementation
 
 // Audit logging helper with fixed admin user ID tracking
 const logSuperadminAction = async (adminUserId: number, action: string, targetType: string, targetId?: number, details?: any) => {
