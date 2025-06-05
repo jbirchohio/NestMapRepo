@@ -797,8 +797,8 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
     const mostActiveUsersResult = await db.select({
       userId: users.id,
       username: users.username,
-      tripCount: count(trips.id),
-      totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`
+      tripCount: count(trips.id).as('trip_count'),
+      totalBudget: sql`COALESCE(SUM(${trips.budget}), 0)`.as('total_budget')
     })
     .from(users)
     .innerJoin(trips, eq(trips.user_id, users.id))
@@ -860,6 +860,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
 
     const totalUsers = totalUsersResult[0]?.count || 0;
     const usersWithTrips = Number(usersWithTripsResult[0]?.count) || 0;
+    const usersWithMultipleTrips = Number(usersWithMultipleTripsResult[0]?.count) || 0;
     const averageTripsPerUser = totalUsers > 0 ? Math.round((totalTrips / totalUsers) * 100) / 100 : 0;
     const tripCompletionRate = totalTrips > 0 ? 
       Math.round(((completedTripsResult[0]?.count || 0) / totalTrips) * 100) : 0;
@@ -886,7 +887,7 @@ export async function getOrganizationAnalytics(organizationId: number): Promise<
       },
       userEngagement: {
         usersWithTrips,
-        usersWithMultipleTrips: Number(usersWithMultipleTripsResult[0]?.count) || 0,
+        usersWithMultipleTrips,
         averageTripsPerUser,
         tripCompletionRate,
         activityCompletionRate,
