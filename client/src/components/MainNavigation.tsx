@@ -373,100 +373,25 @@ export default function MainNavigation() {
                   </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-2">
-                  {/* Always show basic navigation */}
-                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                    <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                      <Home className="h-5 w-5" />
-                      <span className="font-medium">Dashboard</span>
-                    </Link>
-                  </motion.div>
+                  {/* Use navigationItems array for mobile menu */}
+                  {navigationItems.filter(item => item.show).map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <motion.div key={item.path} whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                        <Link href={item.path} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                          <IconComponent className="h-5 w-5" />
+                          <span className="font-medium">{item.label}</span>
+                          {item.badge && (
+                            <Badge variant="secondary" className="ml-auto text-xs bg-electric-100 text-electric-700">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
 
-                  {/* Trip Planning Tools */}
-                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                    <Link href="/trip-planner" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                      <MapPin className="h-5 w-5" />
-                      <span className="font-medium">Plan Trip</span>
-                    </Link>
-                  </motion.div>
 
-                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                    <Link href="/flights" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                      <Plane className="h-5 w-5" />
-                      <span className="font-medium">Book Flights</span>
-                    </Link>
-                  </motion.div>
-
-                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                    <Link href="/ai-generator" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                      <Sparkles className="h-5 w-5" />
-                      <span className="font-medium">AI Trip Generator</span>
-                      <Badge variant="secondary" className="ml-auto text-xs bg-electric-100 text-electric-700">AI</Badge>
-                    </Link>
-                  </motion.div>
-
-                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                    <Link href="/optimizer" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                      <Brain className="h-5 w-5" />
-                      <span className="font-medium">Trip Optimizer</span>
-                      <Badge variant="secondary" className="ml-auto text-xs bg-electric-100 text-electric-700">Pro</Badge>
-                    </Link>
-                  </motion.div>
-
-                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                    <Link href="/sequential-booking" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                      <Plane className="h-5 w-5" />
-                      <span className="font-medium">Sequential Flights</span>
-                    </Link>
-                  </motion.div>
-
-                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                    <Link href="/trips" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                      <Plane className="h-5 w-5" />
-                      <span className="font-medium">Trips</span>
-                    </Link>
-                  </motion.div>
-
-                  {/* Role-based navigation items */}
-                  <RoleGate requiredPermissions={['canAccessAnalytics']}>
-                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                      <Link href="/analytics" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                        <BarChart3 className="h-5 w-5" />
-                        <span className="font-medium">Analytics</span>
-                      </Link>
-                    </motion.div>
-                  </RoleGate>
-
-                  <RoleGate requiredPermissions={['canIssueCards', 'canViewTransactions']}>
-                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                      <Link href="/corporate" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                        <CreditCard className="h-5 w-5" />
-                        <span className="font-medium">Corporate Cards</span>
-                      </Link>
-                    </motion.div>
-                  </RoleGate>
-
-                  <RoleGate requiredPermissions={['canManageTeam']}>
-                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                      <Link href="/team" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                        <div className="flex items-center gap-3">
-                          <Users className="h-5 w-5" />
-                          <span className="font-medium">Team</span>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  </RoleGate>
-
-                  <RoleGate requiredPermissions={['canManageOrganization']}>
-                    <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
-                      <Link href="/organization-settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
-                        <div className="flex items-center gap-3">
-                          <Building2 className="h-5 w-5" />
-                          <span className="font-medium">Organization</span>
-                        </div>
-                        <Badge variant="destructive" className="text-xs">Admin</Badge>
-                      </Link>
-                    </motion.div>
-                  </RoleGate>
 
 
                 </div>
