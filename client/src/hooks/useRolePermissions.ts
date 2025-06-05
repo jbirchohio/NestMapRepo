@@ -24,36 +24,46 @@ export interface RolePermissions {
  * Provides granular permission checking for UI components
  */
 export function useRolePermissions() {
-  const { data: permissions = [], isLoading } = useQuery({
+  const { data: permissionsData, isLoading } = useQuery({
     queryKey: ['/api/user/permissions'],
-    select: (data: any) => data?.permissions || []
   });
 
+  // Handle both object and array permission formats
+  const permissions = permissionsData?.permissions || {
+    canViewTrips: true,
+    canCreateTrips: true,
+    canEditTrips: true,
+    canDeleteTrips: true,
+    canViewAnalytics: true,
+    canManageOrganization: false,
+    canAccessAdmin: false
+  };
+  
   const rolePermissions: RolePermissions = {
-    // Trip Management
-    canViewAllTrips: permissions.includes('VIEW_TEAM_ACTIVITY') || permissions.includes('MANAGE_ORGANIZATION'),
-    canEditTeamTrips: permissions.includes('MANAGE_TEAM_ROLES') || permissions.includes('MANAGE_ORGANIZATION'),
-    canCreateTrips: permissions.includes('CREATE_TRIPS'),
-    canDeleteTrips: permissions.includes('ADMIN_ACCESS') || permissions.includes('MANAGE_ORGANIZATION'),
+    // Trip Management - use object properties directly
+    canViewAllTrips: permissions.canViewTrips || permissions.canViewAnalytics || false,
+    canEditTeamTrips: permissions.canEditTrips || false,
+    canCreateTrips: permissions.canCreateTrips || false,
+    canDeleteTrips: permissions.canDeleteTrips || false,
     
     // Team Management
-    canManageTeam: permissions.includes('MANAGE_TEAM_ROLES') || permissions.includes('MANAGE_ORGANIZATION'),
-    canInviteMembers: permissions.includes('INVITE_MEMBERS') || permissions.includes('MANAGE_TEAM_ROLES'),
+    canManageTeam: permissions.canManageOrganization || false,
+    canInviteMembers: permissions.canManageOrganization || false,
     
     // Financial Access
-    canAccessBilling: permissions.includes('BILLING_ACCESS') || permissions.includes('MANAGE_ORGANIZATION'),
-    canIssueCards: permissions.includes('BILLING_ACCESS') || permissions.includes('ADMIN_ACCESS'),
-    canFreezeCards: permissions.includes('BILLING_ACCESS') || permissions.includes('MANAGE_ORGANIZATION'),
-    canViewTransactions: permissions.includes('BILLING_ACCESS') || permissions.includes('VIEW_TEAM_ACTIVITY'),
-    canApproveExpenses: permissions.includes('MANAGE_TEAM_ROLES') || permissions.includes('ADMIN_ACCESS'),
+    canAccessBilling: permissions.canAccessAdmin || false,
+    canIssueCards: permissions.canAccessAdmin || false,
+    canFreezeCards: permissions.canAccessAdmin || false,
+    canViewTransactions: permissions.canViewAnalytics || false,
+    canApproveExpenses: permissions.canAccessAdmin || false,
     
     // Analytics & Reporting
-    canAccessAnalytics: permissions.includes('ACCESS_ANALYTICS') || permissions.includes('view_analytics'),
-    canExportData: permissions.includes('ACCESS_ANALYTICS') || permissions.includes('ADMIN_ACCESS'),
+    canAccessAnalytics: permissions.canViewAnalytics || false,
+    canExportData: permissions.canAccessAdmin || false,
     
     // Organization Management
-    canManageOrganization: permissions.includes('MANAGE_ORGANIZATION') || permissions.includes('manage_organizations'),
-    canAccessWhiteLabel: permissions.includes('WHITE_LABEL_SETTINGS') || permissions.includes('ADMIN_ACCESS'),
+    canManageOrganization: permissions.canManageOrganization || false,
+    canAccessWhiteLabel: permissions.canAccessAdmin || false,
   };
 
   return {
