@@ -381,6 +381,44 @@ export default function MainNavigation() {
                     </Link>
                   </motion.div>
 
+                  {/* Trip Planning Tools */}
+                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                    <Link href="/trip-planner" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                      <MapPin className="h-5 w-5" />
+                      <span className="font-medium">Plan Trip</span>
+                    </Link>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                    <Link href="/flights" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                      <Plane className="h-5 w-5" />
+                      <span className="font-medium">Book Flights</span>
+                    </Link>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                    <Link href="/ai-generator" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                      <Sparkles className="h-5 w-5" />
+                      <span className="font-medium">AI Trip Generator</span>
+                      <Badge variant="secondary" className="ml-auto text-xs bg-electric-100 text-electric-700">AI</Badge>
+                    </Link>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                    <Link href="/optimizer" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                      <Brain className="h-5 w-5" />
+                      <span className="font-medium">Trip Optimizer</span>
+                      <Badge variant="secondary" className="ml-auto text-xs bg-electric-100 text-electric-700">Pro</Badge>
+                    </Link>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
+                    <Link href="/sequential-booking" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
+                      <Plane className="h-5 w-5" />
+                      <span className="font-medium">Sequential Flights</span>
+                    </Link>
+                  </motion.div>
+
                   <motion.div whileHover={{ scale: 1.02, x: 4 }} whileTap={{ scale: 0.98 }}>
                     <Link href="/trips" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-electric-50 dark:hover:bg-electric-900/10 text-gray-700 dark:text-gray-300">
                       <Plane className="h-5 w-5" />
