@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/contexts/JWTAuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { RoleGate, useRolePermissions } from '@/hooks/useRolePermissions';
 import NotificationCenter from '@/components/NotificationCenter';
 import { PrimaryButton } from '@/components/ui/primary-button';
