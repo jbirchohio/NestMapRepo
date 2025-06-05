@@ -17,6 +17,8 @@ import organizationFundingRoutes from './organizationFunding';
 import stripeOAuthRoutes from './stripeOAuth';
 import superadminRoutes from './superadmin';
 import webhookRoutes from './webhooks';
+import todosRoutes from './todos';
+import notesRoutes from './notes';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -41,6 +43,8 @@ console.log('🔧 Mounting Stripe OAuth routes at /stripe');
 router.use('/stripe', stripeOAuthRoutes);
 router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
+router.use('/todos', todosRoutes);
+router.use('/notes', notesRoutes);
 
 // User permissions endpoint  
 router.get('/user/permissions', async (req, res) => {
