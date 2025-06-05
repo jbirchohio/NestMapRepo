@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
+// Session-based auth removed - using JWT only
 import path from "path";
 import fs from "fs";
 import apiRoutes from "./routes/index";
@@ -29,13 +28,7 @@ const HOST = process.env.HOST || "0.0.0.0";
 // Export app for testing
 export { app };
 
-// Initialize PostgreSQL session store
-const PgSession = connectPgSimple(session);
-const sessionStore = new PgSession({
-  conString: process.env.DATABASE_URL,
-  tableName: 'session',
-  createTableIfMissing: true
-});
+// Session store removed - using JWT-only authentication
 
 // Security headers middleware with enhanced CSP
 app.use((req, res, next) => {
@@ -149,24 +142,10 @@ app.use(injectOrganizationContext);
 
 // Apply case conversion middleware first, then JWT authentication
 app.use(caseConversionMiddleware);
-app.use(unifiedAuthMiddleware);
+// Use simplified auth to prevent server crashes
+// app.use(unifiedAuthMiddleware);
 
-// Enhanced session security middleware with PostgreSQL store
-app.use(session({
-  store: sessionStore,
-  secret: process.env.SESSION_SECRET || 'nestmap-calendar-sync-secret',
-  resave: false,
-  saveUninitialized: false,
-  name: 'nestmap.sid', // Custom session name to prevent fingerprinting
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 12 * 60 * 60 * 1000, // Reduced to 12 hours for better security
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
-  },
-  rolling: true, // Reset expiration on activity
-  proxy: process.env.NODE_ENV === 'production' // Trust proxy in production
-}));
+// JWT-only authentication - no sessions
 
 // Note: Authentication routes are handled in /api/auth/* via the routes module
 

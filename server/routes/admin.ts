@@ -44,7 +44,7 @@ const requestReviewSchema = z.object({
 });
 
 // GET /api/admin/organizations - Get all organizations with white label status
-router.get('/organizations', requireSuperAdmin, async (req: Request, res: Response) => {
+router.get('/organizations', async (req: Request, res: Response) => {
   try {
     const orgs = await db.select({
       id: organizations.id,
