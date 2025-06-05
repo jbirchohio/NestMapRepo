@@ -232,6 +232,10 @@ app.use((req, res, next) => {
     const { registerCorporateCardRoutes } = await import('./routes/corporateCards');
     registerCorporateCardRoutes(app);
 
+    // Register simplified white label routes with full Express app instance
+    const { registerSimplifiedWhiteLabelRoutes } = await import('./routes/whiteLabelSimplified');
+    registerSimplifiedWhiteLabelRoutes(app);
+
     console.log('✅ API routes mounted successfully');
   } catch (error) {
     console.error('❌ Failed to mount API routes:', error);

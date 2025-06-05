@@ -19,13 +19,13 @@ interface AuthenticatedRequest extends Request {
 export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   
   // Auto-enable white label on plan upgrade
-  app.post("/api/white-label/auto-enable", async (req: AuthenticatedRequest, res: Response) => {
-    if (!req.isAuthenticated()) {
+  app.post("/api/white-label/auto-enable", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
     const { plan } = req.body;
-    const organizationId = req.user?.organization_id;
+    const organizationId = req.user.organization_id || req.user.organizationId;
 
     if (!organizationId) {
       return res.status(400).json({ error: "No organization found" });
@@ -76,12 +76,12 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Simplified permissions check
-  app.get("/api/white-label/permissions", async (req, res) => {
-    if (!req.isAuthenticated()) {
+  app.get("/api/white-label/permissions", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const organizationId = req.user.organization_id;
+    const organizationId = req.user.organization_id || req.user.organizationId;
 
     if (!organizationId) {
       return res.status(400).json({ error: "No organization found" });
@@ -122,12 +122,12 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Get organization plan info
-  app.get("/api/organization/plan", async (req, res) => {
-    if (!req.isAuthenticated()) {
+  app.get("/api/organization/plan", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const organizationId = req.user.organization_id;
+    const organizationId = req.user.organization_id || req.user.organizationId;
 
     if (!organizationId) {
       return res.status(400).json({ error: "No organization found" });
@@ -158,12 +158,12 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Instant branding configuration for Professional+ plans
-  app.post("/api/white-label/configure", async (req, res) => {
-    if (!req.isAuthenticated()) {
+  app.post("/api/white-label/configure", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const organizationId = req.user.organization_id;
+    const organizationId = req.user.organization_id || req.user.organizationId;
     const { companyName, primaryColor, secondaryColor, accentColor, tagline, logoUrl } = req.body;
 
     if (!organizationId) {
@@ -226,12 +226,12 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Check if user needs onboarding
-  app.get("/api/white-label/onboarding-status", async (req, res) => {
-    if (!req.isAuthenticated()) {
+  app.get("/api/white-label/onboarding-status", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const organizationId = req.user.organization_id;
+    const organizationId = req.user.organization_id || req.user.organizationId;
 
     if (!organizationId) {
       return res.status(400).json({ error: "No organization found" });
