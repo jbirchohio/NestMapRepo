@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { db } from "../db";
-import { organizations, users } from "../../shared/schema";
+import { organizations, users, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 
 // Use the existing authentication interface
@@ -194,18 +194,54 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         });
       }
 
-      // Update organization branding
+      // Update organization white label status
       await db
         .update(organizations)
         .set({
-          primary_color: primaryColor,
-          secondary_color: secondaryColor,
-          accent_color: accentColor,
-          logo_url: logoUrl,
           white_label_enabled: true,
           updated_at: new Date()
         })
         .where(eq(organizations.id, organizationId));
+
+      // Save branding configuration to white_label_settings table
+      const existingSettings = await db
+        .select()
+        .from(whiteLabelSettings)
+        .where(eq(whiteLabelSettings.organization_id, organizationId))
+        .limit(1);
+
+      if (existingSettings.length > 0) {
+        // Update existing settings
+        await db
+          .update(whiteLabelSettings)
+          .set({
+            company_name: companyName,
+            tagline: tagline || null,
+            primary_color: primaryColor,
+            secondary_color: secondaryColor,
+            accent_color: accentColor,
+            company_logo: logoUrl || null,
+            status: 'approved', // Auto-approve for Professional+ plans
+            updated_at: new Date()
+          })
+          .where(eq(whiteLabelSettings.organization_id, organizationId));
+      } else {
+        // Create new settings
+        await db
+          .insert(whiteLabelSettings)
+          .values({
+            organization_id: organizationId,
+            company_name: companyName,
+            tagline: tagline || null,
+            primary_color: primaryColor,
+            secondary_color: secondaryColor,
+            accent_color: accentColor,
+            company_logo: logoUrl || null,
+            status: 'approved', // Auto-approve for Professional+ plans
+            created_at: new Date(),
+            updated_at: new Date()
+          });
+      }
 
       res.json({
         success: true,
@@ -266,6 +302,70 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
     } catch (error) {
       console.error('Check onboarding status error:', error);
       res.status(500).json({ error: "Failed to check onboarding status" });
+    }
+  });
+
+  // Get current branding configuration
+  app.get("/api/white-label/config", async (req: any, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const organizationId = req.user.organization_id || req.user.organizationId;
+
+    if (!organizationId) {
+      return res.status(400).json({ error: "No organization found" });
+    }
+
+    try {
+      // Get organization white label status
+      const [organization] = await db
+        .select({
+          white_label_enabled: organizations.white_label_enabled,
+          plan: organizations.plan
+        })
+        .from(organizations)
+        .where(eq(organizations.id, organizationId));
+
+      if (!organization) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+
+      // Get white label settings if enabled
+      let brandingConfig = null;
+      if (organization.white_label_enabled) {
+        const [settings] = await db
+          .select()
+          .from(whiteLabelSettings)
+          .where(eq(whiteLabelSettings.organization_id, organizationId))
+          .limit(1);
+
+        if (settings && settings.status === 'approved') {
+          brandingConfig = {
+            companyName: settings.company_name,
+            tagline: settings.tagline,
+            primaryColor: settings.primary_color,
+            secondaryColor: settings.secondary_color,
+            accentColor: settings.accent_color,
+            logoUrl: settings.company_logo
+          };
+        }
+      }
+
+      res.json({
+        isWhiteLabelActive: organization.white_label_enabled && brandingConfig !== null,
+        config: brandingConfig || {
+          companyName: "NestMap",
+          tagline: "",
+          primaryColor: "#6D5DFB",
+          secondaryColor: "#6D5DFB",
+          accentColor: "#6D5DFB",
+          logoUrl: null
+        }
+      });
+    } catch (error) {
+      console.error('Get white label config error:', error);
+      res.status(500).json({ error: "Failed to get branding configuration" });
     }
   });
 }
