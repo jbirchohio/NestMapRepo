@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { USER_ROLES } from '../../shared/schema';
+import { USER_ROLES } from '@shared/schema';
 
-interface AuthenticatedRequest extends Request {
+// Extended request interface for authenticated users
+export interface AuthenticatedRequest extends Request {
   user?: {
     id: number;
     email: string;
@@ -11,82 +12,65 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-/**
- * Middleware to require superadmin permissions
- */
-export function requireSuperadmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+// Middleware to check superadmin permissions
+export const requireSuperadmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  // Check if user is authenticated first
   if (!req.user) {
-    return res.status(401).json({ message: 'Authentication required' });
+    return res.status(401).json({ error: 'Authentication required' });
   }
-
-  const superadminRoles = [
-    'superadmin',
-    'superadmin_owner',
-    'superadmin_staff', 
-    'superadmin_auditor',
-    'super_admin',
+  
+  // Check if user has valid superadmin role
+  const validSuperadminRoles = [
     USER_ROLES.SUPERADMIN_OWNER,
     USER_ROLES.SUPERADMIN_STAFF,
     USER_ROLES.SUPERADMIN_AUDITOR
   ];
-
-  if (!superadminRoles.includes(req.user.role as any)) {
-    return res.status(403).json({ message: 'Superadmin access required' });
+  
+  if (!req.user.role || !validSuperadminRoles.includes(req.user.role as any)) {
+    return res.status(403).json({ error: 'Superadmin access required' });
   }
-
+  
   next();
-}
+};
 
-/**
- * Middleware to require superadmin staff or owner (excludes auditor)
- */
-export function requireSuperadminStaff(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+// Middleware for superadmin owner level permissions
+export const requireSuperadminOwner = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  // Check if user is authenticated first
   if (!req.user) {
-    return res.status(401).json({ message: 'Authentication required' });
+    return res.status(401).json({ error: 'Authentication required' });
   }
-
-  const staffRoles = [
-    USER_ROLES.SUPERADMIN_OWNER,
-    USER_ROLES.SUPERADMIN_STAFF
-  ];
-
-  if (!staffRoles.includes(req.user.role as any)) {
-    return res.status(403).json({ message: 'Superadmin staff access required' });
-  }
-
-  next();
-}
-
-/**
- * Middleware to require superadmin owner
- */
-export function requireSuperadminOwner(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Authentication required' });
-  }
-
+  
+  // Check if user has superadmin owner role
   if (req.user.role !== USER_ROLES.SUPERADMIN_OWNER) {
-    return res.status(403).json({ message: 'Superadmin owner access required' });
+    return res.status(403).json({ error: 'Superadmin owner access required' });
   }
-
+  
   next();
-}
+};
 
-/**
- * Create audit log entry for superadmin actions
- */
-export function logSuperadminAction(action: string, targetType: string, targetId: string, details?: Record<string, any>) {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    // Store audit info in res.locals for the route handler to save
-    res.locals.auditLog = {
+// Audit logging function for superadmin actions
+export const logSuperadminAction = async (
+  adminUserId: number,
+  action: string,
+  targetType: string,
+  targetId?: number,
+  details?: any
+) => {
+  try {
+    const { db } = await import('../db');
+    const { superadminAuditLogs } = await import('@shared/schema');
+    
+    await db.insert(superadminAuditLogs).values({
+      superadmin_user_id: adminUserId,
       action,
-      targetType,
-      targetId: req.params[targetId] || targetId,
-      details: details || req.body,
-      superadminUserId: req.user?.id,
-      ipAddress: req.ip,
-      userAgent: req.get('User-Agent')
-    };
-    next();
-  };
-}
+      target_type: targetType,
+      target_id: targetId?.toString() || '',
+      details,
+      ip_address: null, // Could be extracted from request if needed
+      user_agent: null, // Could be extracted from request if needed
+    });
+  } catch (error) {
+    console.error('Failed to log superadmin action:', error);
+    // Don't throw error to avoid breaking the main operation
+  }
+};

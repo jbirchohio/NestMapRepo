@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { eq, desc, count, sql, and, gte, lte } from 'drizzle-orm';
 import { db } from '../db';
 import { 
@@ -6,59 +6,96 @@ import {
   organizations, 
   organizationMembers,
   featureFlags,
-} from '@shared/schema';
-import { auditLogger } from '../auditLogger';
-import { 
-  stripe, 
-  SUBSCRIPTION_PLANS, 
-  createStripeCustomer, 
-  updateSubscription, 
-  createRefund 
-} from '../stripe';
-import {
   superadminAuditLogs,
+  billingEvents,
+  USER_ROLES
+} from '@shared/schema';
+import {
   activeSessions,
   aiUsageLogs,
   superadminFeatureFlags,
   organizationFeatureFlags,
   superadminBackgroundJobs,
-  billingEvents,
   systemActivitySummary,
   insertSuperadminAuditLogSchema,
   insertSuperadminFeatureFlagSchema,
   insertSuperadminBackgroundJobSchema,
 } from '@shared/superadmin-schema';
+import { auditLogger } from '../auditLogger';
 import { hashPassword } from '../auth';
 
-const router = express.Router();
+// Define authenticated request interface
+interface AuthenticatedUser {
+  id: number;
+  email: string;
+  role: string;
+  organization_id?: number;
+  displayName?: string;
+}
 
-// Import standardized role constants and middleware
-import { USER_ROLES } from '@shared/schema';
-import { requireSuperadmin, requireSuperadminOwner, logSuperadminAction } from '../middleware/superadmin';
+interface AuthenticatedRequest extends Request {
+  user?: AuthenticatedUser;
+}
 
-// Use the standardized middleware instead of custom implementation
+// Middleware to check superadmin permissions
+const requireSuperadmin = (req: AuthenticatedRequest, res: Response, next: any) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  const validSuperadminRoles = [
+    USER_ROLES.SUPERADMIN_OWNER,
+    USER_ROLES.SUPERADMIN_STAFF,
+    USER_ROLES.SUPERADMIN_AUDITOR
+  ];
+  
+  if (!req.user.role || !validSuperadminRoles.includes(req.user.role as any)) {
+    return res.status(403).json({ error: 'Superadmin access required' });
+  }
+  
+  next();
+};
 
-// Audit logging helper with fixed admin user ID tracking
-const logSuperadminAction = async (adminUserId: number, action: string, targetType: string, targetId?: number, details?: any) => {
+// Middleware for owner-level permissions
+const requireSuperadminOwner = (req: AuthenticatedRequest, res: Response, next: any) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  if (req.user.role !== USER_ROLES.SUPERADMIN_OWNER) {
+    return res.status(403).json({ error: 'Superadmin owner access required' });
+  }
+  
+  next();
+};
+
+// Audit logging function
+const logSuperadminAction = async (
+  adminUserId: number,
+  action: string,
+  targetType: string,
+  targetId?: number,
+  details?: any
+) => {
   try {
-    await auditLogger.logAdminAction(
-      adminUserId,
-      targetId || 0, // organizationId for audit context
+    await db.insert(superadminAuditLogs).values({
+      superadmin_user_id: adminUserId,
       action,
-      {
-        target_type: targetType,
-        target_id: targetId,
-        ...details
-      }
-    );
+      target_type: targetType,
+      target_id: targetId?.toString() || '',
+      details,
+      ip_address: null,
+      user_agent: null,
+    });
   } catch (error) {
-    console.error('Audit logging failed:', error);
-    // Continue operation even if audit logging fails
+    console.error('Failed to log superadmin action:', error);
   }
 };
 
+const router = express.Router();
+
 // Organizations endpoints
-router.get('/organizations', requireSuperadmin, async (req, res) => {
+router.get('/organizations', requireSuperadmin, async (req: any, res: any) => {
   try {
     const orgs = await db
       .select({
