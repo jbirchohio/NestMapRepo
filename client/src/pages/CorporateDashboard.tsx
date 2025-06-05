@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -200,30 +202,77 @@ export default function CorporateDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">
       <div className="container mx-auto px-4 py-8">
-        {/* Header with electric violet gradient */}
-        <div className="mb-8 p-8 rounded-2xl bg-gradient-to-r from-electric-500 to-electric-600 text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <Building2 className="h-8 w-8" />
-            <h1 className="text-3xl font-bold">
-              Company Travel Management Console
-            </h1>
+        {/* Hero Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white mb-8"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
+          <div className="absolute inset-0 opacity-30" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }} />
+
+          <div className="relative container mx-auto px-6 py-16">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="flex-1"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
+                    <Building2 className="w-8 h-8" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-electric-200" />
+                    <span className="text-electric-100 text-sm font-medium">Corporate Dashboard</span>
+                  </div>
+                </div>
+
+                <h1 className="text-5xl font-bold mb-4 tracking-tight">
+                  Company Travel Management
+                </h1>
+                <p className="text-xl text-electric-100 mb-6 max-w-2xl">
+                  Streamline your organization's travel planning, expense management, and team coordination
+                </p>
+
+                <div className="flex flex-wrap items-center gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full" />
+                    <span className="text-electric-100">Real-time tracking</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                    <span className="text-electric-100">Team collaboration</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                    <span className="text-electric-100">Smart analytics</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="flex flex-col sm:flex-row gap-4"
+              >
+                <Button 
+                  onClick={() => setIsNewTripModalOpen(true)}
+                  className="bg-white hover:bg-white/90 text-electric-600 font-semibold px-8 py-3 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 electric-glow"
+                  size="lg"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Plan Team Trip
+                </Button>
+              </motion.div>
+            </div>
           </div>
-          <p className="text-electric-100 text-lg">
-            Streamline your organization's travel planning and expense management
-          </p>
-          
-          {/* Primary Action Button */}
-          <div className="mt-6">
-            <Button 
-              onClick={() => setIsNewTripModalOpen(true)}
-              className="bg-white hover:bg-white/90 text-electric-600 font-semibold px-8 py-3 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-              size="lg"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Plan Team Trip
-            </Button>
-          </div>
-        </div>
+        </motion.div>
 
         {/* Onboarding Progress - Only show for new users */}
         {trips.length === 0 && (
@@ -234,79 +283,70 @@ export default function CorporateDashboard() {
           </div>
         )}
 
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Total Company Trips</CardTitle>
-              <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-electric-500" />
+        {/* Quick Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        >
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Company Trips</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{totalTrips}</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-navy-900 dark:text-white">{totalTrips}</div>
-              <p className="text-xs text-navy-600 dark:text-navy-400">
-                Active company trips
-              </p>
-            </CardContent>
-          </Card>
+              <div className="p-3 bg-electric-100 dark:bg-electric-900/20 rounded-xl">
+                <Building2 className="w-6 h-6 text-electric-600" />
+              </div>
+            </div>
+          </AnimatedCard>
 
-          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Travel Budget Used</CardTitle>
-              <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-4 w-4 text-electric-500" />
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Travel Budget Used</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">${totalBudget.toLocaleString()}</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-navy-900 dark:text-white">${totalBudget.toLocaleString()}</div>
-              <p className="text-xs text-navy-600 dark:text-navy-400">
-                Total travel spending
-              </p>
-            </CardContent>
-          </Card>
+              <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
+                <DollarSign className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </AnimatedCard>
 
-          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Team Members</CardTitle>
-              <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
-                <Users className="h-4 w-4 text-electric-500" />
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Team Members</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{uniqueTravelers}</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-navy-900 dark:text-white">{uniqueTravelers}</div>
-              <p className="text-xs text-navy-600 dark:text-navy-400">
-                Unique travelers
-              </p>
-            </CardContent>
-          </Card>
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </AnimatedCard>
 
-          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-navy-700 dark:text-navy-300">Avg Trip Duration</CardTitle>
-              <div className="h-8 w-8 bg-electric-100 dark:bg-electric-900/30 rounded-lg flex items-center justify-center">
-                <Clock className="h-4 w-4 text-electric-500" />
+          <AnimatedCard variant="soft" className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Avg Trip Duration</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{avgTripDuration} days</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-navy-900 dark:text-white">{avgTripDuration} days</div>
-              <p className="text-xs text-navy-600 dark:text-navy-400">
-                Optimal for business travel
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-xl">
+                <Clock className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </AnimatedCard>
+        </motion.div>
 
         {/* Trip Management */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Recent Trips */}
-          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Recent Company Trips
-              </CardTitle>
-            </CardHeader>
+          <AnimatedCard variant="glow" className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <Calendar className="h-6 w-6 text-electric-600" />
+              <h3 className="text-xl font-semibold text-navy-900 dark:text-white">Recent Company Trips</h3>
+            </div>
             <CardContent>
               {tripsLoading ? (
                 <div className="space-y-4">
@@ -376,13 +416,11 @@ export default function CorporateDashboard() {
           </Card>
 
           {/* Upcoming Trips */}
-          <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Upcoming Business Travel
-              </CardTitle>
-            </CardHeader>
+          <AnimatedCard variant="glow" className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <TrendingUp className="h-6 w-6 text-electric-600" />
+              <h3 className="text-xl font-semibold text-navy-900 dark:text-white">Upcoming Business Travel</h3>
+            </div>
             <CardContent>
               {upcomingTrips.length > 0 ? (
                 <div className="space-y-4">
@@ -422,16 +460,16 @@ export default function CorporateDashboard() {
         </div>
 
         {/* Corporate Cards Section */}
-        <Card className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm border border-electric-300/20 hover:shadow-lg hover:shadow-electric-500/10 transition-all duration-300">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Corporate Cards
-              <Badge className="ml-auto bg-electric-100 text-electric-700 dark:bg-electric-900/30 dark:text-electric-300">
-                Stripe Issuing
-              </Badge>
-            </CardTitle>
-          </CardHeader>
+        <AnimatedCard variant="glow" className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <CreditCard className="h-6 w-6 text-electric-600" />
+              <h3 className="text-xl font-semibold text-navy-900 dark:text-white">Corporate Cards</h3>
+            </div>
+            <Badge className="bg-electric-100 text-electric-700 dark:bg-electric-900/30 dark:text-electric-300">
+              Stripe Issuing
+            </Badge>
+          </div>
           <CardContent>
             {cardsLoading ? (
               <div className="space-y-4">
