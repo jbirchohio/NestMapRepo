@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './JWTAuthContext';
+import { useLocation } from 'wouter';
 
 export interface WhiteLabelConfig {
   // Branding
@@ -35,6 +37,9 @@ interface WhiteLabelContextType {
   updateConfig: (newConfig: Partial<WhiteLabelConfig>) => void;
   applyBranding: () => void;
   resetToDefault: () => void;
+  isWhiteLabelActive: boolean;
+  enableWhiteLabel: () => void;
+  disableWhiteLabel: () => void;
 }
 
 const defaultConfig: WhiteLabelConfig = {
@@ -53,11 +58,26 @@ const defaultConfig: WhiteLabelConfig = {
 const WhiteLabelContext = createContext<WhiteLabelContextType | undefined>(undefined);
 
 export function WhiteLabelProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const [location] = useLocation();
+  const [isWhiteLabelActive, setIsWhiteLabelActive] = useState(false);
+  
   const [config, setConfig] = useState<WhiteLabelConfig>(() => {
-    // Load from localStorage if available
+    // Load from localStorage if available, but don't apply automatically
     const saved = localStorage.getItem('whiteLabelConfig');
     return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
   });
+
+  // Determine if we should be in white label mode
+  const shouldUseWhiteLabel = () => {
+    // Only use white label in specific contexts:
+    // 1. When explicitly enabled by user
+    // 2. When on white label settings page
+    // 3. When organization has white label enabled and user is in org context
+    return isWhiteLabelActive || 
+           location === '/white-label' || 
+           location.startsWith('/white-label/');
+  };
 
   const updateConfig = (newConfig: Partial<WhiteLabelConfig>) => {
     setConfig(prev => {
@@ -70,36 +90,58 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
   const applyBranding = () => {
     const root = document.documentElement;
     
-    // Apply CSS custom properties
-    root.style.setProperty('--primary', config.primaryColor);
-    root.style.setProperty('--secondary', config.secondaryColor);
-    root.style.setProperty('--accent', config.accentColor);
-    
-    // Update document title
-    document.title = `${config.companyName} - Travel Management`;
-    
-    // Update favicon if provided
-    if (config.favicon) {
-      const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-      if (favicon) {
-        favicon.href = config.favicon;
+    if (shouldUseWhiteLabel()) {
+      // Apply white label branding
+      root.style.setProperty('--primary', config.primaryColor);
+      root.style.setProperty('--secondary', config.secondaryColor);
+      root.style.setProperty('--accent', config.accentColor);
+      document.title = `${config.companyName} - Travel Management`;
+      
+      if (config.favicon) {
+        const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+        if (favicon) {
+          favicon.href = config.favicon;
+        }
       }
+    } else {
+      // Apply default NestMap branding
+      root.style.setProperty('--primary', defaultConfig.primaryColor);
+      root.style.setProperty('--secondary', defaultConfig.secondaryColor);
+      root.style.setProperty('--accent', defaultConfig.accentColor);
+      document.title = `${defaultConfig.companyName} - Travel Management`;
     }
   };
 
   const resetToDefault = () => {
     setConfig(defaultConfig);
     localStorage.removeItem('whiteLabelConfig');
+    setIsWhiteLabelActive(false);
     applyBranding();
   };
 
-  // Apply branding on mount and config changes
+  const enableWhiteLabel = () => {
+    setIsWhiteLabelActive(true);
+  };
+
+  const disableWhiteLabel = () => {
+    setIsWhiteLabelActive(false);
+  };
+
+  // Apply branding on mount and when relevant dependencies change
   useEffect(() => {
     applyBranding();
-  }, [config]);
+  }, [config, isWhiteLabelActive, location]);
 
   return (
-    <WhiteLabelContext.Provider value={{ config, updateConfig, applyBranding, resetToDefault }}>
+    <WhiteLabelContext.Provider value={{ 
+      config, 
+      updateConfig, 
+      applyBranding, 
+      resetToDefault,
+      isWhiteLabelActive,
+      enableWhiteLabel,
+      disableWhiteLabel
+    }}>
       {children}
     </WhiteLabelContext.Provider>
   );
