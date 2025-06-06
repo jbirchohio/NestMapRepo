@@ -6,8 +6,6 @@ import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { storage } from '../storage';
 import { getOrganizationAnalytics } from '../analytics';
 import { db } from '../db';
-
-const JONASCO_ORG_ID = parseInt(process.env.JONASCO_ORG_ID || '1', 10);
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
@@ -21,7 +19,7 @@ router.get('/users', async (req: Request, res: Response) => {
   try {
     // Dynamically resolve organization ID from authenticated user
     let targetOrgId: number | null = null;
-
+    
     // Use authenticated user's organization ID
     if (req.user?.organization_id) {
       targetOrgId = req.user.organization_id;
@@ -32,12 +30,12 @@ router.get('/users', async (req: Request, res: Response) => {
         .from(users)
         .where(eq(users.id, req.user.id))
         .limit(1);
-
+      
       if (userWithOrg?.organization_id) {
         targetOrgId = userWithOrg.organization_id;
       }
     }
-
+    
     // If no organization found, return error
     if (!targetOrgId) {
       return res.status(400).json({ 
