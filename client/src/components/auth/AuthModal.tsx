@@ -43,13 +43,13 @@ export default function AuthModal({
         style={{
           position: 'fixed',
           top: '10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '95vw',
+          left: '5vw',
+          right: '5vw',
+          width: '90vw',
           maxWidth: '400px',
           maxHeight: 'calc(100vh - 20px)',
           overflow: 'auto',
-          margin: 0,
+          margin: '0 auto',
           zIndex: 50
         }}
       >
