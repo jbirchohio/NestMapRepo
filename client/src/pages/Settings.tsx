@@ -346,12 +346,14 @@ export default function Settings() {
                               <Input
                                 id="primaryColor"
                                 type="color"
-                                {...form.register('primaryColor')}
+                                value={form.watch('primaryColor')}
+                                onChange={(e) => form.setValue('primaryColor', e.target.value)}
                                 disabled={!canUseBranding}
                                 className="w-16 h-10 p-1 border rounded"
                               />
                               <Input
-                                {...form.register('primaryColor')}
+                                value={form.watch('primaryColor')}
+                                onChange={(e) => form.setValue('primaryColor', e.target.value)}
                                 disabled={!canUseBranding}
                                 placeholder="#6D5DFB"
                               />
@@ -364,12 +366,14 @@ export default function Settings() {
                               <Input
                                 id="secondaryColor"
                                 type="color"
-                                {...form.register('secondaryColor')}
+                                value={form.watch('secondaryColor')}
+                                onChange={(e) => form.setValue('secondaryColor', e.target.value)}
                                 disabled={!canUseBranding}
                                 className="w-16 h-10 p-1 border rounded"
                               />
                               <Input
-                                {...form.register('secondaryColor')}
+                                value={form.watch('secondaryColor')}
+                                onChange={(e) => form.setValue('secondaryColor', e.target.value)}
                                 disabled={!canUseBranding}
                                 placeholder="#6D5DFB"
                               />
@@ -382,12 +386,14 @@ export default function Settings() {
                               <Input
                                 id="accentColor"
                                 type="color"
-                                {...form.register('accentColor')}
+                                value={form.watch('accentColor')}
+                                onChange={(e) => form.setValue('accentColor', e.target.value)}
                                 disabled={!canUseBranding}
                                 className="w-16 h-10 p-1 border rounded"
                               />
                               <Input
-                                {...form.register('accentColor')}
+                                value={form.watch('accentColor')}
+                                onChange={(e) => form.setValue('accentColor', e.target.value)}
                                 disabled={!canUseBranding}
                                 placeholder="#6D5DFB"
                               />
