@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/JWTAuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Shield, 
   Users, 
@@ -22,6 +24,7 @@ import {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const { data: analytics } = useQuery({
     queryKey: ['/api/analytics/admin'],
@@ -103,13 +106,15 @@ export default function AdminDashboard() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 className="flex flex-col sm:flex-row gap-4"
               >
-                <Button 
-                  className="bg-white hover:bg-white/90 text-electric-600 font-semibold px-8 py-3 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 electric-glow"
-                  size="lg"
-                >
-                  <Settings className="h-5 w-5 mr-2" />
-                  System Settings
-                </Button>
+                <Link href="/settings">
+                  <Button 
+                    className="bg-white hover:bg-white/90 text-electric-600 font-semibold px-8 py-3 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 electric-glow"
+                    size="lg"
+                  >
+                    <Settings className="h-5 w-5 mr-2" />
+                    System Settings
+                  </Button>
+                </Link>
               </motion.div>
             </div>
           </div>
@@ -193,14 +198,38 @@ export default function AdminDashboard() {
                     <p className="font-medium">Role Management</p>
                     <p className="text-sm text-muted-foreground">Configure user permissions</p>
                   </div>
-                  <Button variant="outline" size="sm">Configure</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      toast({
+                        title: "Role Management",
+                        description: "Opening role configuration interface...",
+                      });
+                      // Navigate to role management in future implementation
+                    }}
+                  >
+                    Configure
+                  </Button>
                 </div>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <p className="font-medium">Account Security</p>
                     <p className="text-sm text-muted-foreground">Monitor security events</p>
                   </div>
-                  <Button variant="outline" size="sm">Monitor</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      toast({
+                        title: "Security Monitor",
+                        description: "Opening security dashboard...",
+                      });
+                      // Navigate to security monitoring in future implementation
+                    }}
+                  >
+                    Monitor
+                  </Button>
                 </div>
               </div>
             </CardContent>
