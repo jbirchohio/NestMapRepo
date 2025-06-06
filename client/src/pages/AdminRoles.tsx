@@ -203,7 +203,7 @@ export default function AdminRoles() {
                       Create Role
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
+                  <DialogContent className="w-[95vw] max-w-[400px] left-[2.5vw] right-[2.5vw] top-[5px] transform-none mx-auto">
                     <DialogHeader>
                       <DialogTitle>Create New Role</DialogTitle>
                     </DialogHeader>
