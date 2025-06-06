@@ -5,7 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/JWTAuthContext";
-import { WhiteLabelProvider } from "@/contexts/WhiteLabelContext";
+import { WhiteLabelProvider, useWhiteLabel } from "@/contexts/WhiteLabelContext";
 import MainNavigation from "@/components/MainNavigation";
 import BrandedFooter from "@/components/BrandedFooter";
 import Home from "@/pages/Home";
@@ -39,6 +39,23 @@ import Onboarding from "@/pages/Onboarding";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 
+function NavigationWrapper() {
+  const { config } = useWhiteLabel();
+  const { user } = useAuth();
+  const [location] = useLocation();
+  
+  const isSuperadminView = location.startsWith('/superadmin');
+  const isLoginPage = location === '/login';
+  
+  // Force re-render when branding colors change
+  const brandingKey = `${config.primaryColor}-${config.secondaryColor}-${config.accentColor}`;
+  
+  if (!isSuperadminView && !isLoginPage && user) {
+    return <MainNavigation key={brandingKey} />;
+  }
+  return null;
+}
+
 function Router() {
   const [location] = useLocation();
   const { user } = useAuth();
@@ -47,7 +64,7 @@ function Router() {
   
   return (
     <div className="min-h-screen flex flex-col bg-soft-100 dark:bg-navy-900">
-      {!isSuperadminView && !isLoginPage && user && <MainNavigation />}
+      <NavigationWrapper />
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
