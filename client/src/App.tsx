@@ -32,6 +32,7 @@ import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import BrandingSetup from "@/pages/BrandingSetup";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminRoles from "@/pages/AdminRoles";
+import AdminSecurity from "@/pages/AdminSecurity";
 import CorporateCards from "@/pages/CorporateCards";
 import OrganizationFunding from "@/pages/OrganizationFunding";
 import Superadmin from "@/pages/SuperadminClean";
@@ -102,6 +103,7 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/admin/roles" component={AdminRoles} />
+          <Route path="/admin/security" component={AdminSecurity} />
           <Route path="/superadmin" component={Superadmin} />
           <Route path="/superadmin/organizations/:id" component={SuperadminOrganizationDetail} />
           <Route path="/superadmin/:section" component={Superadmin} />

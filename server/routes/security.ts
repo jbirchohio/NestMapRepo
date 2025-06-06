@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { db } from '../db';
+import { db } from '../db-connection';
 import { users, adminAuditLog, organizations } from '../../shared/schema';
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';

@@ -209,19 +209,14 @@ export default function AdminDashboard() {
                     <p className="font-medium">Account Security</p>
                     <p className="text-sm text-muted-foreground">Monitor security events</p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      toast({
-                        title: "Security Monitor",
-                        description: "Opening security dashboard...",
-                      });
-                      // Navigate to security monitoring in future implementation
-                    }}
-                  >
-                    Monitor
-                  </Button>
+                  <Link href="/admin/security">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      Monitor
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>
@@ -247,19 +242,14 @@ export default function AdminDashboard() {
                     <p className="font-medium">Error Monitoring</p>
                     <p className="text-sm text-muted-foreground">Track system errors</p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      toast({
-                        title: "System Logs",
-                        description: "Opening log viewer interface...",
-                      });
-                      // Navigate to log viewer in future implementation
-                    }}
-                  >
-                    View Logs
-                  </Button>
+                  <Link href="/admin/security?tab=audit">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      View Logs
+                    </Button>
+                  </Link>
                 </div>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>

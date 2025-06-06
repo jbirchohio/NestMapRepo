@@ -62,7 +62,7 @@ export default function AdminSecurity() {
   const [selectedAlert, setSelectedAlert] = useState<SecurityAlert | null>(null);
 
   // Fetch security alerts
-  const { data: alerts = [], isLoading: alertsLoading } = useQuery({
+  const { data: alerts = [], isLoading: alertsLoading } = useQuery<SecurityAlert[]>({
     queryKey: ['/api/security/alerts'],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -236,7 +236,7 @@ export default function AdminSecurity() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {alerts.length === 0 ? (
+              {(alerts as SecurityAlert[]).length === 0 ? (
                 <div className="text-center py-8">
                   <Shield className="h-12 w-12 text-green-600 mx-auto mb-4" />
                   <p className="text-lg font-medium text-navy-900 dark:text-white">All Clear!</p>
@@ -244,7 +244,7 @@ export default function AdminSecurity() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {alerts.map((alert: SecurityAlert) => (
+                  {(alerts as SecurityAlert[]).map((alert: SecurityAlert) => (
                     <motion.div
                       key={alert.id}
                       initial={{ opacity: 0, y: 20 }}
