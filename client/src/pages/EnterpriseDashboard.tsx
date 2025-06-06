@@ -330,7 +330,7 @@ export default function EnterpriseDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
       </div>
     </div>
   );
