@@ -386,6 +386,20 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
   @apply border border-border bg-background;
 }
 
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 767px) {
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"], 
+  input[type="number"], 
+  textarea, 
+  select {
+    font-size: 16px !important;
+    transform: scale(1);
+    transition: none;
+  }
+}
+
 /* Badge components */
 .badge {
   @apply border border-border/50 shadow-sm;
