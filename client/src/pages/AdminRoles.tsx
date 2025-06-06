@@ -338,16 +338,23 @@ export default function AdminRoles() {
                   <div>
                     <Label className="text-sm font-medium">Users Assigned ({selectedRole.userCount})</Label>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {users?.filter((user: any) => user.role?.toLowerCase() === selectedRole.name.toLowerCase()).map((user: any) => (
+                      {users?.filter((user: any) => {
+                        const userRole = user.role || user.user_role || '';
+                        const selectedRoleName = selectedRole.name.toLowerCase();
+                        return userRole.toLowerCase() === selectedRoleName || 
+                               userRole.toLowerCase().includes(selectedRoleName) ||
+                               selectedRoleName.includes(userRole.toLowerCase());
+                      }).map((user: any) => (
                         <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
                           <div className="w-8 h-8 bg-electric-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
                             {(user.displayName || user.display_name)?.charAt(0) || user.username?.charAt(0) || user.email?.charAt(0)}
                           </div>
                           <div className="flex-1">
                             <p className="text-sm font-medium text-navy-900 dark:text-white">
-                              {user.displayName || user.display_name || user.username}
+                              {user.displayName || user.display_name || user.username || user.email?.split('@')[0]}
                             </p>
                             <p className="text-xs text-gray-500">{user.email}</p>
+                            <p className="text-xs text-blue-600">Role: {user.role || user.user_role || 'No role assigned'}</p>
                           </div>
                         </div>
                       )) || <p className="text-gray-500 text-sm">No users assigned to this role</p>}

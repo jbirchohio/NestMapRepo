@@ -5,6 +5,8 @@
 
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
+
+const JONASCO_ORG_ID = parseInt(process.env.JONASCO_ORG_ID || '1', 10);
 import { users, organizationMembers } from '@shared/schema';
 import { eq, sql, and } from 'drizzle-orm';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
@@ -24,7 +26,7 @@ router.get('/members', async (req: Request, res: Response) => {
   try {
     // Use authenticated user's organization ID
     const organizationId = req.user?.organization_id;
-    
+
     if (!organizationId) {
       return res.status(400).json({ 
         error: 'No organization context found',

@@ -39,10 +39,11 @@ export async function unifiedAuthMiddleware(
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
     if (token) {
-      // Verify Supabase JWT token
-      const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
+      try {
+        // Verify Supabase JWT token
+        const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
 
-      if (!error && supabaseUser) {
+        if (!error && supabaseUser) {
         // Get database user with organization data
         const [dbUser] = await db
           .select()
@@ -65,6 +66,8 @@ export async function unifiedAuthMiddleware(
           req.isAuthenticated = () => true;
           return next();
         }
+      } catch (supabaseError) {
+        console.warn('Supabase connection failed, falling back to session auth:', supabaseError.message);
       }
     }
 
