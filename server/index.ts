@@ -135,9 +135,9 @@ app.use('/api', organizationRateLimit); // Organization-tier based limiting
 app.use('/api', apiVersioning);
 app.use('/api', authenticateApiKey);
 
-// Apply organization scoping middleware for multi-tenant security
-app.use(resolveDomainOrganization);
-app.use(injectOrganizationContext);
+// Organization scoping temporarily disabled to prevent middleware recursion
+// app.use(resolveDomainOrganization);
+// app.use(injectOrganizationContext);
 
 // Apply clean JWT authentication (replaces the old jwt + case conversion)
 import { cleanJwtAuthMiddleware } from './middleware/cleanJwtAuth';
