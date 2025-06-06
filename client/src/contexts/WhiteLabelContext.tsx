@@ -56,6 +56,39 @@ const defaultConfig: WhiteLabelConfig = {
   footerText: "© 2025 NestMap. All rights reserved."
 };
 
+// Helper function to convert hex color to HSL format for CSS variables
+function hexToHsl(hex: string): string {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Parse RGB values
+  const r = parseInt(hex.substr(0, 2), 16) / 255;
+  const g = parseInt(hex.substr(2, 2), 16) / 255;
+  const b = parseInt(hex.substr(4, 2), 16) / 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0, s = 0, l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  
+  h = Math.round(h * 360);
+  s = Math.round(s * 100);
+  l = Math.round(l * 100);
+  
+  return `${h} ${s}% ${l}%`;
+}
+
 const WhiteLabelContext = createContext<WhiteLabelContextType | undefined>(undefined);
 
 export function WhiteLabelProvider({ children }: { children: React.ReactNode }) {
@@ -110,10 +143,17 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
     const root = document.documentElement;
     
     if (shouldUseWhiteLabel()) {
-      // Apply white label branding
-      root.style.setProperty('--primary', config.primaryColor);
-      root.style.setProperty('--secondary', config.secondaryColor);
-      root.style.setProperty('--accent', config.accentColor);
+      // Apply white label branding - convert hex to HSL for CSS variables
+      const primaryHsl = hexToHsl(config.primaryColor);
+      const secondaryHsl = hexToHsl(config.secondaryColor);
+      const accentHsl = hexToHsl(config.accentColor);
+      
+      root.style.setProperty('--primary', primaryHsl);
+      root.style.setProperty('--secondary', secondaryHsl);
+      root.style.setProperty('--accent', accentHsl);
+      root.style.setProperty('--foreground', primaryHsl);
+      root.style.setProperty('--muted-foreground', secondaryHsl);
+      
       document.title = `${config.companyName} - Travel Management`;
       
       if (config.favicon) {
@@ -124,9 +164,16 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
       }
     } else {
       // Apply default NestMap branding
-      root.style.setProperty('--primary', defaultConfig.primaryColor);
-      root.style.setProperty('--secondary', defaultConfig.secondaryColor);
-      root.style.setProperty('--accent', defaultConfig.accentColor);
+      const defaultPrimaryHsl = hexToHsl(defaultConfig.primaryColor);
+      const defaultSecondaryHsl = hexToHsl(defaultConfig.secondaryColor);
+      const defaultAccentHsl = hexToHsl(defaultConfig.accentColor);
+      
+      root.style.setProperty('--primary', defaultPrimaryHsl);
+      root.style.setProperty('--secondary', defaultSecondaryHsl);
+      root.style.setProperty('--accent', defaultAccentHsl);
+      root.style.setProperty('--foreground', defaultPrimaryHsl);
+      root.style.setProperty('--muted-foreground', defaultSecondaryHsl);
+      
       document.title = `${defaultConfig.companyName} - Travel Management`;
     }
   };
