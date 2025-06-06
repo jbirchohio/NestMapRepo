@@ -433,26 +433,6 @@ router.get('/roles', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/admin/users - Get all users in the organization
-router.get('/users', async (req: Request, res: Response) => {
-  try {
-    const organizationUsers = await db.select({
-      id: users.id,
-      username: users.username,
-      email: users.email,
-      display_name: users.display_name,
-      role: users.role,
-      organization_id: users.organization_id,
-      last_login: users.last_login,
-      created_at: users.created_at
-    }).from(users);
-
-    res.json(organizationUsers);
-  } catch (error) {
-    console.error("Database error fetching users:", error);
-    res.status(500).json({ error: "Failed to fetch users" });
-  }
-});
 
 // GET /api/admin/permissions - Get all available permissions
 router.get('/permissions', async (req: Request, res: Response) => {
