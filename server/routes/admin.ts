@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { organizations, users, customDomains, whiteLabelRequests, adminAuditLog } from '../../shared/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import {  } from '../middleware/jwtAuth';
 
@@ -409,27 +409,33 @@ router.get('/audit-log', async (req: Request, res: Response) => {
 // GET /api/admin/roles - Get all roles with user counts
 router.get('/roles', async (req: Request, res: Response) => {
   try {
-    // Basic role structure with user counts from database
-    const rolesQuery = await db.select({
-      role: users.role,
-      count: db.count(users.id).as('count')
-    })
-    .from(users)
-    .groupBy(users.role);
+    // Query actual user data from database
+    const allUsers = await db.select({
+      role: users.role
+    }).from(users);
 
-    const roles = rolesQuery.map((role, index) => ({
+    // Count users by role
+    const userCounts = allUsers.reduce((acc: Record<string, number>, user) => {
+      const role = user.role || 'user';
+      acc[role] = (acc[role] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Create roles from actual database data
+    const uniqueRoles = Object.keys(userCounts);
+    const roles = uniqueRoles.map((role, index) => ({
       id: index + 1,
-      name: role.role.charAt(0).toUpperCase() + role.role.slice(1),
-      description: getRoleDescription(role.role),
-      permissions: getRolePermissions(role.role),
-      userCount: Number(role.count),
+      name: role.charAt(0).toUpperCase() + role.slice(1),
+      description: getRoleDescription(role),
+      permissions: getRolePermissions(role),
+      userCount: userCounts[role],
       created_at: new Date().toISOString()
     }));
 
     res.json(roles);
   } catch (error) {
-    console.error("Error fetching roles:", error);
-    res.status(500).json({ error: "Failed to fetch roles" });
+    console.error("Database error fetching roles:", error);
+    res.status(500).json({ error: "Database connection failed" });
   }
 });
 
