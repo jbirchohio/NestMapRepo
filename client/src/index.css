@@ -416,9 +416,22 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
   [role="dialog"] .card,
   [data-radix-dialog-content] .card {
     transform: scale(1) !important;
-    max-width: 95vw;
+    max-width: 90vw;
     width: 100%;
     margin: 0 auto;
+    font-size: 14px;
+  }
+
+  /* Fix mobile modal positioning */
+  [data-radix-dialog-content] {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90vw !important;
+    max-width: 380px !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
   }
 }
 
