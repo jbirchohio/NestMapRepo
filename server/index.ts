@@ -18,7 +18,8 @@ import { db } from "./db-connection";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
 import { authenticateUser, getUserById } from "./auth";
-// JWT and case conversion handled by cleanJwtAuthMiddleware
+import { jwtAuthMiddleware } from "./middleware/jwtAuth";
+import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
@@ -135,13 +136,9 @@ app.use('/api', organizationRateLimit); // Organization-tier based limiting
 app.use('/api', apiVersioning);
 app.use('/api', authenticateApiKey);
 
-// Organization scoping temporarily disabled to prevent middleware recursion
-// app.use(resolveDomainOrganization);
-// app.use(injectOrganizationContext);
-
-// Apply clean JWT authentication (replaces the old jwt + case conversion)
-import { cleanJwtAuthMiddleware } from './middleware/cleanJwtAuth';
-app.use(cleanJwtAuthMiddleware);
+// Apply case conversion middleware first, then JWT authentication
+app.use(caseConversionMiddleware);
+app.use(jwtAuthMiddleware);
 
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
