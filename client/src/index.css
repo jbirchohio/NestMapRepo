@@ -398,6 +398,28 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
     transform: scale(1);
     transition: none;
   }
+
+  /* Fix modal zoom issues */
+  [role="dialog"] {
+    transform: none !important;
+    zoom: 1;
+  }
+
+  /* Fix dialog content scaling */
+  [data-radix-dialog-content] {
+    transform: scale(1) !important;
+    zoom: 1;
+  }
+
+  /* Prevent content scaling in modals */
+  .modal-content, 
+  [role="dialog"] .card,
+  [data-radix-dialog-content] .card {
+    transform: scale(1) !important;
+    max-width: 95vw;
+    width: 100%;
+    margin: 0 auto;
+  }
 }
 
 /* Badge components */
