@@ -335,8 +335,28 @@ export default function MainNavigation() {
                   whileTap={{ scale: 0.95 }}
                   className="md:hidden"
                 >
-                  <Button variant="ghost" size="sm" className="hover:bg-electric-50 dark:hover:bg-electric-900/20">
-                    <Menu className="h-5 w-5 text-electric-600 dark:text-electric-400" />
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`${
+                      isWhiteLabelActive 
+                        ? 'hover:opacity-80' 
+                        : 'hover:bg-electric-50 dark:hover:bg-electric-900/20'
+                    }`}
+                    style={isWhiteLabelActive ? {
+                      color: config.primaryColor || '#6D5DFB'
+                    } : {}}
+                  >
+                    <Menu 
+                      className={`h-5 w-5 ${
+                        isWhiteLabelActive 
+                          ? '' 
+                          : 'text-electric-600 dark:text-electric-400'
+                      }`}
+                      style={isWhiteLabelActive ? {
+                        color: config.primaryColor || '#6D5DFB'
+                      } : {}}
+                    />
                   </Button>
                 </motion.div>
               </SheetTrigger>
@@ -396,7 +416,7 @@ export default function MainNavigation() {
                         : 'bg-gradient-to-r from-electric-600 to-electric-500 bg-clip-text text-transparent dark:from-electric-400 dark:to-electric-300'
                     }`}
                     style={isWhiteLabelActive ? {
-                      backgroundImage: `linear-gradient(to right, ${config.primaryColor}, ${config.secondaryColor})`
+                      backgroundImage: `linear-gradient(to right, ${config.primaryColor || '#6D5DFB'}, ${config.secondaryColor || '#6D5DFB'})`
                     } : {}}
                   >
                     {isWhiteLabelActive && config?.companyName ? config.companyName : 'NestMap'}
@@ -408,7 +428,7 @@ export default function MainNavigation() {
                         : 'text-electric-600/70 dark:text-electric-400/70'
                     }`}
                     style={isWhiteLabelActive ? {
-                      color: config.primaryColor
+                      color: config.primaryColor || '#6D5DFB'
                     } : {}}
                   >
                     {isWhiteLabelActive && config?.tagline ? config.tagline : (roleType === 'agency' ? 'Client Travel Proposals' : 'Company Travel Management')}
