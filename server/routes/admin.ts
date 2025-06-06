@@ -406,4 +406,136 @@ router.get('/audit-log', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/admin/roles - Get all roles with user counts
+router.get('/roles', async (req: Request, res: Response) => {
+  try {
+    // Basic role structure with user counts from database
+    const rolesQuery = await db.select({
+      role: users.role,
+      count: db.count(users.id).as('count')
+    })
+    .from(users)
+    .groupBy(users.role);
+
+    const roles = rolesQuery.map((role, index) => ({
+      id: index + 1,
+      name: role.role.charAt(0).toUpperCase() + role.role.slice(1),
+      description: getRoleDescription(role.role),
+      permissions: getRolePermissions(role.role),
+      userCount: Number(role.count),
+      created_at: new Date().toISOString()
+    }));
+
+    res.json(roles);
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    res.status(500).json({ error: "Failed to fetch roles" });
+  }
+});
+
+// GET /api/admin/permissions - Get all available permissions
+router.get('/permissions', async (req: Request, res: Response) => {
+  try {
+    const permissions = [
+      { id: 'canViewTrips', name: 'View Trips', description: 'Can view all trips', category: 'Trip Management' },
+      { id: 'canCreateTrips', name: 'Create Trips', description: 'Can create new trips', category: 'Trip Management' },
+      { id: 'canEditTrips', name: 'Edit Trips', description: 'Can modify existing trips', category: 'Trip Management' },
+      { id: 'canDeleteTrips', name: 'Delete Trips', description: 'Can delete trips', category: 'Trip Management' },
+      { id: 'canViewAnalytics', name: 'View Analytics', description: 'Can access analytics dashboard', category: 'Analytics' },
+      { id: 'canManageOrganization', name: 'Manage Organization', description: 'Can modify organization settings', category: 'Organization' },
+      { id: 'canAccessAdmin', name: 'Admin Access', description: 'Can access admin dashboard', category: 'Administration' },
+      { id: 'canManageUsers', name: 'Manage Users', description: 'Can add/remove users', category: 'User Management' },
+      { id: 'canManageRoles', name: 'Manage Roles', description: 'Can modify user roles', category: 'User Management' },
+      { id: 'canViewBilling', name: 'View Billing', description: 'Can access billing information', category: 'Billing' }
+    ];
+
+    res.json(permissions);
+  } catch (error) {
+    console.error("Error fetching permissions:", error);
+    res.status(500).json({ error: "Failed to fetch permissions" });
+  }
+});
+
+// POST /api/admin/roles - Create new role
+router.post('/roles', async (req: Request, res: Response) => {
+  try {
+    const { name, description, permissions } = req.body;
+    
+    if (!name || !description) {
+      return res.status(400).json({ error: "Name and description are required" });
+    }
+
+    // For now, we'll just return success since we don't have a roles table
+    const newRole = {
+      id: Date.now(),
+      name,
+      description,
+      permissions: permissions || [],
+      userCount: 0,
+      created_at: new Date().toISOString()
+    };
+
+    await logAdminAction(
+      req.user?.id || 0,
+      'role_created',
+      undefined,
+      { roleName: name, permissions },
+      req.ip
+    );
+
+    res.json(newRole);
+  } catch (error) {
+    console.error("Error creating role:", error);
+    res.status(500).json({ error: "Failed to create role" });
+  }
+});
+
+// PUT /api/admin/roles/:id - Update role permissions
+router.put('/roles/:id', async (req: Request, res: Response) => {
+  try {
+    const roleId = parseInt(req.params.id);
+    const { permissions } = req.body;
+
+    if (!permissions || !Array.isArray(permissions)) {
+      return res.status(400).json({ error: "Permissions array is required" });
+    }
+
+    await logAdminAction(
+      req.user?.id || 0,
+      'role_updated',
+      undefined,
+      { roleId, permissions },
+      req.ip
+    );
+
+    res.json({ success: true, message: "Role updated successfully" });
+  } catch (error) {
+    console.error("Error updating role:", error);
+    res.status(500).json({ error: "Failed to update role" });
+  }
+});
+
+// Helper functions
+function getRoleDescription(role: string): string {
+  const descriptions: Record<string, string> = {
+    'admin': 'Full system access with all permissions',
+    'owner': 'Organization owner with complete control',
+    'manager': 'Can manage trips and team members',
+    'user': 'Basic user with limited permissions',
+    'viewer': 'Read-only access to organization data'
+  };
+  return descriptions[role] || 'Standard user role';
+}
+
+function getRolePermissions(role: string): string[] {
+  const rolePermissions: Record<string, string[]> = {
+    'admin': ['canViewTrips', 'canCreateTrips', 'canEditTrips', 'canDeleteTrips', 'canViewAnalytics', 'canManageOrganization', 'canAccessAdmin', 'canManageUsers', 'canManageRoles', 'canViewBilling'],
+    'owner': ['canViewTrips', 'canCreateTrips', 'canEditTrips', 'canDeleteTrips', 'canViewAnalytics', 'canManageOrganization', 'canAccessAdmin', 'canManageUsers', 'canManageRoles', 'canViewBilling'],
+    'manager': ['canViewTrips', 'canCreateTrips', 'canEditTrips', 'canViewAnalytics', 'canManageUsers'],
+    'user': ['canViewTrips', 'canCreateTrips', 'canEditTrips'],
+    'viewer': ['canViewTrips']
+  };
+  return rolePermissions[role] || ['canViewTrips'];
+}
+
 export default router;

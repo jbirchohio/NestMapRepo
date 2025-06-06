@@ -198,19 +198,11 @@ export default function AdminDashboard() {
                     <p className="font-medium">Role Management</p>
                     <p className="text-sm text-muted-foreground">Configure user permissions</p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      toast({
-                        title: "Role Management",
-                        description: "Opening role configuration interface...",
-                      });
-                      // Navigate to role management in future implementation
-                    }}
-                  >
-                    Configure
-                  </Button>
+                  <Link href="/admin/roles">
+                    <Button variant="outline" size="sm">
+                      Configure
+                    </Button>
+                  </Link>
                 </div>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>

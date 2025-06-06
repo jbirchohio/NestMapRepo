@@ -31,6 +31,7 @@ import CalendarSettings from "@/pages/CalendarSettings";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import BrandingSetup from "@/pages/BrandingSetup";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminRoles from "@/pages/AdminRoles";
 import CorporateCards from "@/pages/CorporateCards";
 import OrganizationFunding from "@/pages/OrganizationFunding";
 import Superadmin from "@/pages/SuperadminClean";
@@ -100,6 +101,7 @@ function Router() {
           <Route path="/branding" component={Settings} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
+          <Route path="/admin/roles" component={AdminRoles} />
           <Route path="/superadmin" component={Superadmin} />
           <Route path="/superadmin/organizations/:id" component={SuperadminOrganizationDetail} />
           <Route path="/superadmin/:section" component={Superadmin} />
