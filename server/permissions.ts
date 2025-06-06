@@ -243,31 +243,52 @@ export function canUseFeature(userPermissions: string[], feature: string): boole
   return hasAnyPermission(userPermissions, requiredPermissions);
 }
 
-// Subscription tier permissions
+// Subscription tier permissions with inheritance model
+const freePermissions = [
+  PERMISSIONS.CREATE_TRIPS, // Limited to 3 trips
+  PERMISSIONS.VIEW_ALL_TRIPS,
+];
+
+const basicPermissions = [
+  ...freePermissions,
+  PERMISSIONS.USE_TRIP_OPTIMIZER, // Limited usage
+  PERMISSIONS.BOOK_FLIGHTS, // Limited bookings
+  PERMISSIONS.BOOK_HOTELS, // Limited bookings
+];
+
+const proPermissions = [
+  ...basicPermissions,
+  PERMISSIONS.INVITE_MEMBERS, // Up to 10 users
+  PERMISSIONS.ACCESS_ANALYTICS,
+  PERMISSIONS.WHITE_LABEL_SETTINGS, // White label access starts here
+  PERMISSIONS.BULK_OPTIMIZE_TRIPS,
+  PERMISSIONS.EXPORT_ANALYTICS,
+];
+
+const businessPermissions = [
+  ...proPermissions,
+  PERMISSIONS.MANAGE_ORGANIZATION,
+  PERMISSIONS.API_CONFIGURATION,
+  PERMISSIONS.VIEW_FINANCIAL_REPORTS,
+  PERMISSIONS.MANAGE_TEAM_ROLES, // Up to 50 users
+  PERMISSIONS.CANCEL_BOOKINGS,
+];
+
+const enterprisePermissions = [
+  ...businessPermissions,
+  PERMISSIONS.ADMIN_ACCESS,
+  PERMISSIONS.SYSTEM_SETTINGS,
+  PERMISSIONS.USER_IMPERSONATION, // Unlimited users
+  PERMISSIONS.BILLING_ACCESS,
+  PERMISSIONS.MANAGE_SUBSCRIPTIONS,
+];
+
 export const SUBSCRIPTION_PERMISSIONS = {
-  free: [
-    PERMISSIONS.CREATE_TRIPS,
-    PERMISSIONS.VIEW_ALL_TRIPS,
-    PERMISSIONS.USE_TRIP_OPTIMIZER, // Limited usage
-  ],
-  
-  team: [
-    ...SUBSCRIPTION_PERMISSIONS.free,
-    PERMISSIONS.INVITE_MEMBERS,
-    PERMISSIONS.ACCESS_ANALYTICS,
-    PERMISSIONS.BOOK_FLIGHTS,
-    PERMISSIONS.BOOK_HOTELS,
-    PERMISSIONS.BULK_OPTIMIZE_TRIPS,
-  ],
-  
-  enterprise: [
-    ...SUBSCRIPTION_PERMISSIONS.team,
-    PERMISSIONS.MANAGE_ORGANIZATION,
-    PERMISSIONS.WHITE_LABEL_SETTINGS,
-    PERMISSIONS.API_CONFIGURATION,
-    PERMISSIONS.VIEW_FINANCIAL_REPORTS,
-    PERMISSIONS.ADMIN_ACCESS,
-  ]
+  free: freePermissions,
+  basic: basicPermissions,
+  pro: proPermissions,
+  business: businessPermissions,
+  enterprise: enterprisePermissions,
 };
 
 export function getSubscriptionPermissions(tier: string): string[] {
