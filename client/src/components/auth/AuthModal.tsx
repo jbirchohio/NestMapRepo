@@ -38,7 +38,21 @@ export default function AuthModal({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="w-[95vw] max-w-sm p-0 bg-transparent border-none shadow-none max-h-[90vh] overflow-y-auto mx-auto my-2 sm:w-[90vw] sm:m-4">
+      <DialogContent 
+        className="p-0 bg-transparent border-none shadow-none"
+        style={{
+          position: 'fixed',
+          top: '10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '95vw',
+          maxWidth: '400px',
+          maxHeight: 'calc(100vh - 20px)',
+          overflow: 'auto',
+          margin: 0,
+          zIndex: 50
+        }}
+      >
         {view === "login" ? (
           <LoginForm onSuccess={handleSuccess} onToggleForm={toggleView} />
         ) : (
