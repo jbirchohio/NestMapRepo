@@ -90,6 +90,23 @@ export default function Settings() {
     },
   });
 
+  // Update form when white label config loads
+  useEffect(() => {
+    if (whiteLabelConfig?.config) {
+      const config = whiteLabelConfig.config;
+      form.reset({
+        companyName: config.companyName || "",
+        companyLogo: config.logoUrl || "",
+        tagline: config.tagline || "",
+        primaryColor: config.primaryColor || "#6D5DFB",
+        secondaryColor: config.secondaryColor || "#6D5DFB",
+        accentColor: config.accentColor || "#6D5DFB",
+        customDomain: config.customDomain || "",
+        supportEmail: config.supportEmail || "",
+      });
+    }
+  }, [whiteLabelConfig, form]);
+
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest('POST', '/api/white-label/configure', {
