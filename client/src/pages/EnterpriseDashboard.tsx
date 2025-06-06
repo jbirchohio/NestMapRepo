@@ -69,9 +69,9 @@ export default function EnterpriseDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+          <div className="animate-spin w-8 h-8 border-4 border-electric-600 border-t-transparent rounded-full" />
         </div>
       </div>
     );
@@ -158,13 +158,7 @@ export default function EnterpriseDashboard() {
                   <p className="text-sm font-medium text-muted-foreground">Active Trips</p>
                   <p className="text-2xl font-bold text-foreground">{displayStats?.activeTrips || 0}</p>
                 </div>
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-600">+12% vs last month</span>
+                <TrendingUp className="w-8 h-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -176,13 +170,7 @@ export default function EnterpriseDashboard() {
                   <p className="text-sm font-medium text-muted-foreground">Total Clients</p>
                   <p className="text-2xl font-bold text-foreground">{displayStats?.totalClients || 0}</p>
                 </div>
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                  <Users className="w-5 h-5 text-emerald-600" />
-                </div>
-              </div>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-600">+8% vs last month</span>
+                <Users className="w-8 h-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -191,16 +179,10 @@ export default function EnterpriseDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Revenue</p>
+                  <p className="text-sm font-medium text-muted-foreground">Monthly Revenue</p>
                   <p className="text-2xl font-bold text-foreground">${(displayStats?.monthlyRevenue || 0).toLocaleString()}</p>
                 </div>
-                <div className="p-2 bg-purple-500/10 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-purple-600" />
-                </div>
-              </div>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-600">+23% vs last month</span>
+                <DollarSign className="w-8 h-8 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
@@ -209,87 +191,33 @@ export default function EnterpriseDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
+                  <p className="text-sm font-medium text-muted-foreground">Completion Rate</p>
                   <p className="text-2xl font-bold text-foreground">{displayStats?.completionRate || 0}%</p>
                 </div>
-                <div className="p-2 bg-orange-500/10 rounded-lg">
-                  <Target className="w-5 h-5 text-orange-600" />
-                </div>
-              </div>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-                <span className="text-xs text-green-600">+2% vs last month</span>
+                <Target className="w-8 h-8 text-purple-600" />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="grid grid-cols-2 gap-3">
-              <Link href="/ai-generator">
-                <Button variant="outline" className="w-full h-auto p-4 border-dashed">
-                  <div className="text-center">
-                    <Sparkles className="w-6 h-6 mx-auto mb-2" />
-                    <span className="text-sm font-medium">AI Trip Generator</span>
-                  </div>
-                </Button>
-              </Link>
-              
-              <Link href="/proposal-center">
-                <Button variant="outline" className="w-full h-auto p-4 border-dashed">
-                  <div className="text-center">
-                    <FileText className="w-6 h-6 mx-auto mb-2" />
-                    <span className="text-sm font-medium">New Proposal</span>
-                  </div>
-                </Button>
-              </Link>
-              
-              <Link href="/analytics">
-                <Button variant="outline" className="w-full h-auto p-4 border-dashed">
-                  <div className="text-center">
-                    <BarChart3 className="w-6 h-6 mx-auto mb-2" />
-                    <span className="text-sm font-medium">Analytics</span>
-                  </div>
-                </Button>
-              </Link>
-              
-              <Link href="/team">
-                <Button variant="outline" className="w-full h-auto p-4 border-dashed">
-                  <div className="text-center">
-                    <Building2 className="w-6 h-6 mx-auto mb-2" />
-                    <span className="text-sm font-medium">Team Management</span>
-                  </div>
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Recent Activity */}
-        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</CardTitle>
-              <Button variant="ghost" size="sm">
-                <ArrowUpRight className="w-4 h-4" />
-              </Button>
+              <BarChart3 className="w-5 h-5 text-gray-400" />
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="space-y-3">
               {(displayStats?.recentActivity || []).map((activity: any, index: number) => (
-                <div key={index} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <div className={`w-2 h-2 rounded-full ${
                     activity.status === 'success' ? 'bg-green-500' :
                     activity.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
                   }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {activity.description}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
@@ -301,7 +229,7 @@ export default function EnterpriseDashboard() {
         </Card>
 
         {/* Upcoming Deadlines */}
-        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="bg-card/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">Upcoming Deadlines</CardTitle>
@@ -330,7 +258,6 @@ export default function EnterpriseDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
       </div>
     </div>
   );
