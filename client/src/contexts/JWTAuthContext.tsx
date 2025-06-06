@@ -12,6 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithProvider: (provider: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -154,8 +155,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Signed out",
         description: "You have been signed out successfully.",
       });
+      
+      // Redirect to home page after sign out
+      window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);
+    }
+  };
+
+  const signInWithProvider = async (provider: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // This would integrate with OAuth providers
+      // For now, we'll show a message that it's not implemented
+      toast({
+        title: "Coming Soon",
+        description: `${provider} sign-in will be available soon.`,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Provider sign-in failed';
+      setError(errorMessage);
+      toast({
+        title: "Sign in failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -169,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signUp,
     signOut,
+    signInWithProvider,
   };
 
   return (

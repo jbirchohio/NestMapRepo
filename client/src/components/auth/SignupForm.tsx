@@ -76,17 +76,18 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
 
   return (
     <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl flex items-center gap-2">
-          <Building2 className="h-6 w-6 text-primary" />
-          Create Business Account
+      <CardHeader className="text-center space-y-2 pb-4">
+        <CardTitle className="text-lg sm:text-xl flex items-center justify-center gap-2">
+          <Building2 className="h-5 w-5 text-primary" />
+          <span className="hidden sm:inline">Create Business Account</span>
+          <span className="sm:hidden">Sign Up</span>
         </CardTitle>
-        <CardDescription>
-          Join thousands of professionals using NestMap for business travel planning
+        <CardDescription className="text-sm">
+          Join professionals using our travel platform
         </CardDescription>
       </CardHeader>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 px-4 sm:px-6">
           {errorMessage && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -145,8 +146,8 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
           </div>
 
           {/* Business Information Section */}
-          <div className="pt-2 border-t">
-            <h4 className="text-sm font-medium text-muted-foreground mb-3">Business Information</h4>
+          <div className="pt-3 border-t">
+            <h4 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">Business Information</h4>
             
             <div className="space-y-4">
               <div className="space-y-2">
