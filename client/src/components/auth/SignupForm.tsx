@@ -232,13 +232,13 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
           </div>
         </CardContent>
         
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="flex flex-col space-y-3 px-4 sm:px-6">
           <Button
             type="submit"
-            className="w-full"
+            className="w-full h-11 sm:h-10 text-sm sm:text-base"
             disabled={isLoading}
           >
-            {isLoading ? "Creating Business Account..." : "Start Your Business Account"}
+            {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
           
           <div className="text-center text-sm">
