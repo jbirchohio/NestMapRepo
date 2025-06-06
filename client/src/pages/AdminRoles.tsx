@@ -110,21 +110,46 @@ export default function AdminRoles() {
 
   // Update role mutation
   const updateRoleMutation = useMutation({
-    mutationFn: async ({ roleId, permissions }: { roleId: number; permissions: string[] }) => {
-      const response = await apiRequest("PUT", `/api/admin/roles/${roleId}`, { permissions });
-      return response.json();
+    mutationFn: async ({ roleId, name, description, permissions }: { roleId: number; name?: string; description?: string; permissions?: string[] }) => {
+      return await apiRequest("PUT", `/api/admin/roles/${roleId}`, { name, description, permissions });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/roles'] });
       toast({
         title: "Role Updated",
-        description: "Role permissions have been updated successfully.",
+        description: "Role has been updated successfully.",
       });
+      setIsEditDialogOpen(false);
+      setEditingRole(null);
+      setNewRoleName("");
+      setNewRoleDescription("");
+      setSelectedPermissions([]);
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update role",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: number) => {
+      return await apiRequest("DELETE", `/api/admin/roles/${roleId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/roles'] });
+      toast({
+        title: "Role Deleted",
+        description: "Custom role has been deleted successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete role",
         variant: "destructive",
       });
     },
@@ -149,6 +174,47 @@ export default function AdminRoles() {
 
   const handleUpdatePermissions = (roleId: number, permissions: string[]) => {
     updateRoleMutation.mutate({ roleId, permissions });
+  };
+
+  const handleEditRole = (role: Role) => {
+    setEditingRole(role);
+    setNewRoleName(role.name);
+    setNewRoleDescription(role.description);
+    setSelectedPermissions(role.permissions || []);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateRole = () => {
+    if (!editingRole || !newRoleName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Role name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateRoleMutation.mutate({
+      roleId: editingRole.id,
+      name: newRoleName,
+      description: newRoleDescription,
+      permissions: selectedPermissions
+    });
+  };
+
+  const handleDeleteRole = (role: Role) => {
+    if (role.userCount > 0) {
+      toast({
+        title: "Cannot Delete Role",
+        description: `${role.userCount} users are assigned to this role. Please reassign them first.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`)) {
+      deleteRoleMutation.mutate(role.id);
+    }
   };
 
   const groupedPermissions = useMemo(() => {
@@ -280,6 +346,85 @@ export default function AdminRoles() {
                         </Button>
                         <Button onClick={handleCreateRole} disabled={createRoleMutation.isPending}>
                           Create Role
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Edit Role Dialog */}
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                  <DialogContent className="w-[95vw] max-w-[400px] left-[2.5vw] right-[2.5vw] top-[5px] transform-none mx-auto">
+                    <DialogHeader>
+                      <DialogTitle>Edit Role</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="editRoleName">Role Name</Label>
+                        <Input
+                          id="editRoleName"
+                          value={newRoleName}
+                          onChange={(e) => setNewRoleName(e.target.value)}
+                          placeholder="e.g., Travel Manager"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="editRoleDescription">Description</Label>
+                        <Input
+                          id="editRoleDescription"
+                          value={newRoleDescription}
+                          onChange={(e) => setNewRoleDescription(e.target.value)}
+                          placeholder="Role description..."
+                        />
+                      </div>
+                      <div>
+                        <Label>Permissions</Label>
+                        <div className="space-y-3 max-h-48 overflow-y-auto border rounded-md p-3">
+                          {permissions && permissions.length > 0 ? (
+                            Object.entries(groupedPermissions).map(([category, perms]: [string, any]) => (
+                              <div key={category} className="space-y-2">
+                                <h4 className="font-semibold text-sm text-electric-600 dark:text-electric-400 border-b pb-1">
+                                  {category}
+                                </h4>
+                                {Array.isArray(perms) && perms.map((permission: Permission) => (
+                                  <div key={permission.id} className="flex items-center space-x-2 ml-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`edit_${permission.id}`}
+                                      checked={selectedPermissions.includes(permission.id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedPermissions([...selectedPermissions, permission.id]);
+                                        } else {
+                                          setSelectedPermissions(selectedPermissions.filter(p => p !== permission.id));
+                                        }
+                                      }}
+                                      className="rounded border-gray-300"
+                                    />
+                                    <Label htmlFor={`edit_${permission.id}`} className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                      {permission.name}
+                                    </Label>
+                                    <span className="text-xs text-gray-500">({permission.description})</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-4 text-gray-500">
+                              Loading permissions...
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Selected: {selectedPermissions.length} permissions
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleUpdateRole} disabled={updateRoleMutation.isPending}>
+                          Update Role
                         </Button>
                       </div>
                     </div>
