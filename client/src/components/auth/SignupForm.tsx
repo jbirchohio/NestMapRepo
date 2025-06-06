@@ -75,19 +75,19 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="text-center space-y-2 pb-4">
-        <CardTitle className="text-lg sm:text-xl flex items-center justify-center gap-2">
-          <Building2 className="h-5 w-5 text-primary" />
+    <Card className="w-full max-w-md mx-auto mb-4">
+      <CardHeader className="text-center space-y-1 pb-3">
+        <CardTitle className="text-base sm:text-lg flex items-center justify-center gap-2">
+          <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           <span className="hidden sm:inline">Create Business Account</span>
           <span className="sm:hidden">Sign Up</span>
         </CardTitle>
-        <CardDescription className="text-sm">
+        <CardDescription className="text-xs sm:text-sm">
           Join professionals using our travel platform
         </CardDescription>
       </CardHeader>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardContent className="space-y-3 px-4 sm:px-6">
+        <CardContent className="space-y-2 px-4 sm:px-6">
           {errorMessage && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -146,10 +146,10 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
           </div>
 
           {/* Business Information Section */}
-          <div className="pt-3 border-t">
-            <h4 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2">Business Information</h4>
+          <div className="pt-2 border-t">
+            <h4 className="text-xs font-medium text-muted-foreground mb-2">Business Information</h4>
             
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="space-y-2">
                 <Label htmlFor="company">Company Name</Label>
                 <Input
@@ -232,21 +232,21 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
           </div>
         </CardContent>
         
-        <CardFooter className="flex flex-col space-y-3 px-4 sm:px-6">
+        <CardFooter className="flex flex-col space-y-2 px-4 sm:px-6 pt-3">
           <Button
             type="submit"
-            className="w-full h-11 sm:h-10 text-sm sm:text-base"
+            className="w-full h-10 text-sm"
             disabled={isLoading}
           >
             {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
           
-          <div className="text-center text-sm">
+          <div className="text-center text-xs sm:text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
             <Button
               type="button"
               variant="link"
-              className="p-0 h-auto font-medium"
+              className="p-0 h-auto font-medium text-xs sm:text-sm"
               onClick={onToggleForm}
             >
               Sign In
