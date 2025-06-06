@@ -255,7 +255,19 @@ export default function AdminDashboard() {
                     <p className="font-medium">Error Monitoring</p>
                     <p className="text-sm text-muted-foreground">Track system errors</p>
                   </div>
-                  <Button variant="outline" size="sm">View Logs</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      toast({
+                        title: "System Logs",
+                        description: "Opening log viewer interface...",
+                      });
+                      // Navigate to log viewer in future implementation
+                    }}
+                  >
+                    View Logs
+                  </Button>
                 </div>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>

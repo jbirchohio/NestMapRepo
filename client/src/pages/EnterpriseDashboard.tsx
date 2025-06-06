@@ -138,10 +138,12 @@ export default function EnterpriseDashboard() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex gap-3"
             >
-              <Button size="lg" variant="secondary" className="bg-white/10 hover:bg-white/20 border-white/20 text-white">
-                <Plus className="w-5 h-5 mr-2" />
-                New Project
-              </Button>
+              <Link href="/trip-planner">
+                <Button size="lg" variant="secondary" className="bg-white/10 hover:bg-white/20 border-white/20 text-white">
+                  <Plus className="w-5 h-5 mr-2" />
+                  New Project
+                </Button>
+              </Link>
             </motion.div>
           </div>
         </div>
