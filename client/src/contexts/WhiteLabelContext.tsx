@@ -122,13 +122,14 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
 
   // Determine if we should be in white label mode
   const shouldUseWhiteLabel = () => {
-    // Only use white label in specific contexts:
-    // 1. When explicitly enabled by user
-    // 2. When on white label settings page
-    // 3. When organization has white label enabled and user is in org context
+    // Use white label when:
+    // 1. Organization has white label enabled (from database)
+    // 2. When on white label settings page for preview
+    // 3. When explicitly enabled by user for testing
     return isWhiteLabelActive || 
            location === '/white-label' || 
-           location.startsWith('/white-label/');
+           location.startsWith('/white-label/') ||
+           location === '/settings'; // Also apply on settings page for immediate preview
   };
 
   const updateConfig = (newConfig: Partial<WhiteLabelConfig>) => {
@@ -141,18 +142,28 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
 
   const applyBranding = () => {
     const root = document.documentElement;
+    const useWhiteLabel = shouldUseWhiteLabel();
     
-    if (shouldUseWhiteLabel()) {
+    console.log('Applying branding:', { useWhiteLabel, config, location });
+    
+    if (useWhiteLabel) {
       // Apply white label branding - convert hex to HSL for CSS variables
       const primaryHsl = hexToHsl(config.primaryColor);
       const secondaryHsl = hexToHsl(config.secondaryColor);
       const accentHsl = hexToHsl(config.accentColor);
+      
+      console.log('Setting CSS variables:', { primaryHsl, secondaryHsl, accentHsl });
       
       root.style.setProperty('--primary', primaryHsl);
       root.style.setProperty('--secondary', secondaryHsl);
       root.style.setProperty('--accent', accentHsl);
       root.style.setProperty('--foreground', primaryHsl);
       root.style.setProperty('--muted-foreground', secondaryHsl);
+      
+      // Also set the hex values for components that might expect them
+      root.style.setProperty('--primary-hex', config.primaryColor);
+      root.style.setProperty('--secondary-hex', config.secondaryColor);
+      root.style.setProperty('--accent-hex', config.accentColor);
       
       document.title = `${config.companyName} - Travel Management`;
       
@@ -173,6 +184,10 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
       root.style.setProperty('--accent', defaultAccentHsl);
       root.style.setProperty('--foreground', defaultPrimaryHsl);
       root.style.setProperty('--muted-foreground', defaultSecondaryHsl);
+      
+      root.style.setProperty('--primary-hex', defaultConfig.primaryColor);
+      root.style.setProperty('--secondary-hex', defaultConfig.secondaryColor);
+      root.style.setProperty('--accent-hex', defaultConfig.accentColor);
       
       document.title = `${defaultConfig.companyName} - Travel Management`;
     }
@@ -198,11 +213,16 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
     applyBranding();
   }, [config, isWhiteLabelActive, location]);
 
+  const forceApplyBranding = () => {
+    console.log('Force applying branding with current config:', config);
+    applyBranding();
+  };
+
   return (
     <WhiteLabelContext.Provider value={{ 
       config, 
       updateConfig, 
-      applyBranding, 
+      applyBranding: forceApplyBranding, 
       resetToDefault,
       isWhiteLabelActive,
       enableWhiteLabel,
