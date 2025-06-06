@@ -57,12 +57,23 @@ export default function AdminRoles() {
     queryKey: ['/api/admin/roles'],
     queryFn: async () => {
       console.log("Starting roles fetch...");
-      const response = await apiRequest("GET", "/api/admin/roles");
-      const data = await response.json();
-      console.log("Roles data:", data);
-      console.log("Roles length:", data?.length);
-      console.log("Is array:", Array.isArray(data));
-      return data;
+      try {
+        const response = await apiRequest("GET", "/api/admin/roles");
+        console.log("Response received:", response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Roles data:", data);
+        console.log("Roles length:", data?.length);
+        console.log("Is array:", Array.isArray(data));
+        return data;
+      } catch (error) {
+        console.error("Roles fetch error:", error);
+        throw error;
+      }
     },
     enabled: !!user,
   });
