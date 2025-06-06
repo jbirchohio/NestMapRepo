@@ -53,6 +53,8 @@ import {
   ChevronUp
 } from 'lucide-react';
 
+
+
 // Travel Console Menu Component
 function TravelConsoleMenu({ location }: { location: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -372,16 +374,43 @@ export default function MainNavigation() {
               whileTap={{ scale: 0.98 }}
             >
               <Link href={getRoleBasedDashboardPath()} className="flex items-center gap-2 flex-shrink-0">
-                <div className="h-8 w-8 bg-gradient-to-br from-electric-500 to-electric-600 rounded-lg flex items-center justify-center shadow-lg">
+                <div 
+                  className={`h-8 w-8 rounded-lg flex items-center justify-center shadow-lg ${
+                    isWhiteLabelActive 
+                      ? '' 
+                      : 'bg-gradient-to-br from-electric-500 to-electric-600'
+                  }`}
+                  style={isWhiteLabelActive ? {
+                    background: `linear-gradient(to bottom right, ${config.primaryColor || '#6D5DFB'}, ${config.secondaryColor || '#6D5DFB'})`
+                  } : {}}
+                >
                   <span className="text-white font-bold text-sm">
                     {isWhiteLabelActive && config?.companyName ? config.companyName.charAt(0).toUpperCase() : 'N'}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-xl bg-gradient-to-r from-electric-600 to-electric-500 bg-clip-text text-transparent dark:from-electric-400 dark:to-electric-300">
+                  <span 
+                    className={`font-bold text-xl ${
+                      isWhiteLabelActive 
+                        ? 'bg-clip-text text-transparent' 
+                        : 'bg-gradient-to-r from-electric-600 to-electric-500 bg-clip-text text-transparent dark:from-electric-400 dark:to-electric-300'
+                    }`}
+                    style={isWhiteLabelActive ? {
+                      backgroundImage: `linear-gradient(to right, ${config.primaryColor}, ${config.secondaryColor})`
+                    } : {}}
+                  >
                     {isWhiteLabelActive && config?.companyName ? config.companyName : 'NestMap'}
                   </span>
-                  <span className="text-xs text-electric-600/70 dark:text-electric-400/70 -mt-1 hidden sm:block">
+                  <span 
+                    className={`text-xs -mt-1 hidden sm:block ${
+                      isWhiteLabelActive 
+                        ? 'opacity-70' 
+                        : 'text-electric-600/70 dark:text-electric-400/70'
+                    }`}
+                    style={isWhiteLabelActive ? {
+                      color: config.primaryColor
+                    } : {}}
+                  >
                     {isWhiteLabelActive && config?.tagline ? config.tagline : (roleType === 'agency' ? 'Client Travel Proposals' : 'Company Travel Management')}
                   </span>
                 </div>
