@@ -32,7 +32,8 @@ interface Role {
   description: string;
   permissions: string[];
   userCount: number;
-  created_at: string;
+  createdAt: string;
+  isCustom?: boolean;
 }
 
 interface Permission {
@@ -48,9 +49,11 @@ export default function AdminRoles() {
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleDescription, setNewRoleDescription] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
 
   // Fetch roles
   const { data: roles, isLoading: rolesLoading } = useQuery({
@@ -321,6 +324,31 @@ export default function AdminRoles() {
                           <Button variant="ghost" size="sm" onClick={() => setSelectedRole(role)}>
                             <Eye className="h-4 w-4" />
                           </Button>
+                          {role.isCustom && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditRole(role);
+                                }}
+                              >
+                                <Settings className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteRole(role);
+                                }}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

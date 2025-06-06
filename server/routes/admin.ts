@@ -527,13 +527,18 @@ router.post('/roles', async (req: Request, res: Response) => {
       is_default: false
     }).returning();
 
-    await logAdminAction(
-      req.user?.id || 0,
-      'role_created',
-      req.user.organization_id,
-      { roleName: name, permissions },
-      req.ip
-    );
+    try {
+      await logAdminAction(
+        req.user?.id || 0,
+        'role_created',
+        req.user.organization_id,
+        { roleName: name, permissions },
+        req.ip
+      );
+    } catch (auditError) {
+      console.warn('Failed to log admin action:', auditError);
+      // Continue with role creation even if audit logging fails
+    }
 
     // Return role with userCount for consistency with GET endpoint
     const roleWithCount = {
@@ -553,24 +558,108 @@ router.post('/roles', async (req: Request, res: Response) => {
 router.put('/roles/:id', async (req: Request, res: Response) => {
   try {
     const roleId = parseInt(req.params.id);
-    const { permissions } = req.body;
+    const { permissions, name, description } = req.body;
 
-    if (!permissions || !Array.isArray(permissions)) {
-      return res.status(400).json({ error: "Permissions array is required" });
+    if (!req.user?.organization_id) {
+      return res.status(400).json({ error: "Organization ID required" });
     }
 
-    await logAdminAction(
-      req.user?.id || 0,
-      'role_updated',
-      undefined,
-      { roleId, permissions },
-      req.ip
-    );
+    // Check if this is a custom role in organizationRoles table
+    const customRole = await db.select().from(organizationRoles)
+      .where(and(
+        eq(organizationRoles.id, roleId),
+        eq(organizationRoles.organization_id, req.user.organization_id)
+      ));
 
-    res.json({ success: true, message: "Role updated successfully" });
+    if (customRole.length > 0) {
+      // Update custom role
+      const updateData: any = {};
+      if (permissions && Array.isArray(permissions)) updateData.permissions = permissions;
+      if (name) updateData.name = name;
+      if (description) updateData.description = description;
+      updateData.updated_at = new Date();
+
+      await db.update(organizationRoles)
+        .set(updateData)
+        .where(eq(organizationRoles.id, roleId));
+
+      try {
+        await logAdminAction(
+          req.user?.id || 0,
+          'custom_role_updated',
+          req.user.organization_id,
+          { roleId, ...updateData },
+          req.ip
+        );
+      } catch (auditError) {
+        console.warn('Failed to log admin action:', auditError);
+      }
+
+      res.json({ success: true, message: "Custom role updated successfully" });
+    } else {
+      // For default roles, we can't update the role definition but we can track the attempt
+      res.status(400).json({ error: "Cannot modify default system roles" });
+    }
   } catch (error) {
     console.error("Error updating role:", error);
     res.status(500).json({ error: "Failed to update role" });
+  }
+});
+
+// DELETE /api/admin/roles/:id - Delete custom role
+router.delete('/roles/:id', async (req: Request, res: Response) => {
+  try {
+    const roleId = parseInt(req.params.id);
+
+    if (!req.user?.organization_id) {
+      return res.status(400).json({ error: "Organization ID required" });
+    }
+
+    // Check if this is a custom role and if any users have this role
+    const [customRole, usersWithRole] = await Promise.all([
+      db.select().from(organizationRoles)
+        .where(and(
+          eq(organizationRoles.id, roleId),
+          eq(organizationRoles.organization_id, req.user.organization_id)
+        )),
+      db.execute(sql`
+        SELECT COUNT(*) as user_count 
+        FROM users 
+        WHERE role = (SELECT value FROM organization_roles WHERE id = ${roleId}) 
+        AND organization_id = ${req.user.organization_id}
+      `)
+    ]);
+
+    if (customRole.length === 0) {
+      return res.status(404).json({ error: "Custom role not found or cannot delete default roles" });
+    }
+
+    const userCount = parseInt(String(usersWithRole.rows[0]?.user_count || 0));
+    if (userCount > 0) {
+      return res.status(400).json({ 
+        error: `Cannot delete role. ${userCount} users are assigned to this role. Please reassign them first.` 
+      });
+    }
+
+    // Delete the custom role
+    await db.delete(organizationRoles).where(eq(organizationRoles.id, roleId));
+
+    try {
+      await logAdminAction(
+        req.user?.id || 0,
+        'custom_role_deleted',
+        req.user.organization_id,
+        { roleId, roleName: customRole[0].name },
+        req.ip
+      );
+    } catch (auditError) {
+      console.warn('Failed to log admin action:', auditError);
+    }
+
+    res.json({ success: true, message: "Custom role deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting role:", error);
+    res.status(500).json({ error: "Failed to delete role" });
   }
 });
 
