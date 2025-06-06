@@ -3,6 +3,15 @@ import { db } from '../db';
 import { organizations, users, trips } from '../../shared/schema';
 import { eq, and, count } from 'drizzle-orm';
 
+// Import JWTUser type from jwtAuth
+interface JWTUser {
+  id: number;
+  email: string;
+  organization_id: number;
+  role: string;
+  username: string;
+}
+
 // Subscription tier limits configuration
 export const TIER_LIMITS = {
   free: {
@@ -53,11 +62,7 @@ export const TIER_LIMITS = {
 };
 
 interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    organization_id?: number;
-    role: string;
-  };
+  user?: JWTUser;
 }
 
 // Get organization tier and limits

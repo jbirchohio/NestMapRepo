@@ -18,8 +18,7 @@ import { db } from "./db-connection";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
 import { authenticateUser, getUserById } from "./auth";
-import { jwtAuthMiddleware } from "./middleware/jwtAuth";
-import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
+// JWT and case conversion handled by cleanJwtAuthMiddleware
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
@@ -140,19 +139,7 @@ app.use('/api', authenticateApiKey);
 app.use(resolveDomainOrganization);
 app.use(injectOrganizationContext);
 
-// Apply case conversion middleware first, then JWT authentication
-app.use(caseConversionMiddleware);
-app.use(jwtAuthMiddleware);
-
-// JWT-only authentication - no sessions
-
-// Note: Authentication routes are handled in /api/auth/* via the routes module
-
-// JWT-only authentication - session endpoints removed
-
-
-
-// Apply clean JWT authentication
+// Apply clean JWT authentication (replaces the old jwt + case conversion)
 import { cleanJwtAuthMiddleware } from './middleware/cleanJwtAuth';
 app.use(cleanJwtAuthMiddleware);
 
