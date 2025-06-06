@@ -88,21 +88,7 @@ export const tripCollaborators = pgTable("trip_collaborators", {
   status: text("status").default("pending"), // pending, accepted, declined
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  auth_id: true,
-  username: true,
-  email: true,
-  password_hash: true,
-  display_name: true,
-  avatar_url: true,
-  role: true,
-  role_type: true,
-  organization_id: true,
-  company: true,
-  job_title: true,
-  team_size: true,
-  use_case: true,
-});
+export const insertUserSchema = createInsertSchema(users);
 
 // Authentication schema for registration (includes password field)
 export const registerUserSchema = insertUserSchema.omit({ 
@@ -117,26 +103,11 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required")
 });
 
-export const insertOrganizationSchema = createInsertSchema(organizations).pick({
-  name: true,
-  domain: true,
-  plan: true,
-});
+export const insertOrganizationSchema = createInsertSchema(organizations);
 
-export const insertOrganizationMemberSchema = createInsertSchema(organizationMembers).pick({
-  organization_id: true,
-  user_id: true,
-  org_role: true,
-  permissions: true,
-  invited_by: true,
-});
+export const insertOrganizationMemberSchema = createInsertSchema(organizationMembers);
 
-export const insertTripCollaboratorSchema = createInsertSchema(tripCollaborators).pick({
-  trip_id: true,
-  user_id: true,
-  role: true,
-  invited_by: true,
-});
+export const insertTripCollaboratorSchema = createInsertSchema(tripCollaborators);
 
 // Team invitations table
 export const invitations = pgTable("invitations", {
