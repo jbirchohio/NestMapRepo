@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -65,8 +65,7 @@ export default function AdminRoles() {
   const { data: permissions } = useQuery({
     queryKey: ['/api/admin/permissions'],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/permissions");
-      return response.json();
+      return await apiRequest("GET", "/api/admin/permissions");
     },
     enabled: !!user,
   });
@@ -75,8 +74,7 @@ export default function AdminRoles() {
   const { data: users } = useQuery({
     queryKey: ['/api/organizations/users'],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/organizations/users");
-      return response.json();
+      return await apiRequest("GET", "/api/organizations/users");
     },
     enabled: !!user,
   });
@@ -150,13 +148,18 @@ export default function AdminRoles() {
     updateRoleMutation.mutate({ roleId, permissions });
   };
 
-  const groupedPermissions = permissions?.reduce((acc: any, permission: Permission) => {
-    if (!acc[permission.category]) {
-      acc[permission.category] = [];
-    }
-    acc[permission.category].push(permission);
-    return acc;
-  }, {}) || {};
+  const groupedPermissions = useMemo(() => {
+    if (!permissions || !Array.isArray(permissions)) return {};
+    
+    return permissions.reduce((acc: any, permission: Permission) => {
+      const category = permission.category || 'Other';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(permission);
+      return acc;
+    }, {});
+  }, [permissions]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">

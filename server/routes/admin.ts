@@ -460,7 +460,7 @@ router.get('/roles', async (req: Request, res: Response) => {
           value: role.value,
           description: role.description,
           permissions: role.permissions,
-          userCount: parseInt(userCountResult.rows[0]?.user_count || '0'),
+          userCount: parseInt(String(userCountResult.rows[0]?.user_count || 0)),
           createdAt: role.created_at?.toISOString() || new Date().toISOString(),
           isCustom: true
         };
