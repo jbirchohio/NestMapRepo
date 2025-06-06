@@ -71,6 +71,16 @@ export default function AdminRoles() {
     enabled: !!user,
   });
 
+  // Fetch users for the organization
+  const { data: users } = useQuery({
+    queryKey: ['/api/admin/users'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/admin/users");
+      return response.json();
+    },
+    enabled: !!user,
+  });
+
   // Create role mutation
   const createRoleMutation = useMutation({
     mutationFn: async (roleData: { name: string; description: string; permissions: string[] }) => {
@@ -193,7 +203,7 @@ export default function AdminRoles() {
                       Create Role
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
                       <DialogTitle>Create New Role</DialogTitle>
                     </DialogHeader>
