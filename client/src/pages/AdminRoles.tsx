@@ -28,6 +28,7 @@ import {
 interface Role {
   id: number;
   name: string;
+  value: string;
   description: string;
   permissions: string[];
   userCount: number;
@@ -71,14 +72,15 @@ export default function AdminRoles() {
     enabled: !!user,
   });
 
-  // Fetch users for the organization
+  // Fetch users for the organization with detailed role information
   const { data: users } = useQuery({
-    queryKey: ['/api/organizations/users'],
+    queryKey: ['/api/organizations', user?.organizationId, 'members'],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/organizations/users");
+      const orgId = user?.organizationId || 1;
+      const response = await apiRequest("GET", `/api/organizations/${orgId}/members`);
       return response.json();
     },
-    enabled: !!user,
+    enabled: !!user && !!user.organizationId,
   });
 
   // Create role mutation
