@@ -19,18 +19,43 @@ export default function BrandedFooter() {
   };
 
   return (
-    <footer className="border-t border-electric-200/30 dark:border-electric-700/30 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm mt-auto">
+    <footer 
+      className={`border-t backdrop-blur-sm mt-auto ${
+        isWhiteLabelActive 
+          ? 'bg-white/80 dark:bg-navy-800/80' 
+          : 'border-electric-200/30 dark:border-electric-700/30 bg-white/80 dark:bg-navy-800/80'
+      }`}
+      style={isWhiteLabelActive ? {
+        borderTopColor: `${config.primaryColor}30`
+      } : {}}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div 
-                className="h-6 w-6 rounded flex items-center justify-center text-white font-bold text-xs bg-gradient-to-br from-electric-500 to-electric-600 shadow-sm"
+                className={`h-6 w-6 rounded flex items-center justify-center text-white font-bold text-xs shadow-sm ${
+                  isWhiteLabelActive 
+                    ? '' 
+                    : 'bg-gradient-to-br from-electric-500 to-electric-600'
+                }`}
+                style={isWhiteLabelActive ? {
+                  background: `linear-gradient(to bottom right, ${config.primaryColor || '#6D5DFB'}, ${config.secondaryColor || '#6D5DFB'})`
+                } : {}}
               >
                 {activeConfig.companyName.charAt(0)}
               </div>
-              <span className="font-semibold bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent">
+              <span 
+                className={`font-semibold ${
+                  isWhiteLabelActive 
+                    ? 'bg-clip-text text-transparent' 
+                    : 'bg-gradient-to-r from-electric-600 to-electric-700 bg-clip-text text-transparent'
+                }`}
+                style={isWhiteLabelActive ? {
+                  backgroundImage: `linear-gradient(to right, ${config.primaryColor || '#6D5DFB'}, ${config.secondaryColor || '#6D5DFB'})`
+                } : {}}
+              >
                 {activeConfig.companyName}
               </span>
             </div>
@@ -45,14 +70,66 @@ export default function BrandedFooter() {
           <div className="space-y-3">
             <h4 className="font-semibold text-navy-700 dark:text-navy-200">Product</h4>
             <div className="space-y-2">
-              <a href="/" className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200">
+              <a 
+                href="/" 
+                className={`block text-sm text-navy-600 dark:text-navy-400 transition-colors duration-200 ${
+                  isWhiteLabelActive 
+                    ? 'hover:opacity-80' 
+                    : 'hover:text-electric-600 dark:hover:text-electric-400'
+                }`}
+
+                onMouseEnter={(e) => {
+                  if (isWhiteLabelActive) {
+                    e.currentTarget.style.color = config.primaryColor || '#6D5DFB';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (isWhiteLabelActive) {
+                    e.currentTarget.style.color = '';
+                  }
+                }}
+              >
                 Dashboard
               </a>
-              <a href="/analytics" className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200">
+              <a 
+                href="/analytics" 
+                className={`block text-sm text-navy-600 dark:text-navy-400 transition-colors duration-200 ${
+                  isWhiteLabelActive 
+                    ? 'hover:opacity-80' 
+                    : 'hover:text-electric-600 dark:hover:text-electric-400'
+                }`}
+                onMouseEnter={(e) => {
+                  if (isWhiteLabelActive) {
+                    e.currentTarget.style.color = config.primaryColor || '#6D5DFB';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (isWhiteLabelActive) {
+                    e.currentTarget.style.color = '';
+                  }
+                }}
+              >
                 Analytics
               </a>
               {activeConfig.enableMobileApp && (
-                <a href="#" className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200">
+                <a 
+                  href="#" 
+                  className={`block text-sm text-navy-600 dark:text-navy-400 transition-colors duration-200 ${
+                    isWhiteLabelActive 
+                      ? 'hover:opacity-80' 
+                      : 'hover:text-electric-600 dark:hover:text-electric-400'
+                  }`}
+                  onMouseEnter={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = config.primaryColor || '#6D5DFB';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = '';
+                    }
+                  }}
+                >
                   Mobile App
                 </a>
               )}
@@ -68,7 +145,21 @@ export default function BrandedFooter() {
                   href={activeConfig.helpUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
+                  className={`block text-sm text-navy-600 dark:text-navy-400 transition-colors duration-200 ${
+                    isWhiteLabelActive 
+                      ? 'hover:opacity-80' 
+                      : 'hover:text-electric-600 dark:hover:text-electric-400'
+                  }`}
+                  onMouseEnter={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = config.primaryColor || '#6D5DFB';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = '';
+                    }
+                  }}
                 >
                   Help Center
                 </a>
@@ -76,7 +167,21 @@ export default function BrandedFooter() {
               {activeConfig.supportEmail && (
                 <a 
                   href={`mailto:${activeConfig.supportEmail}`}
-                  className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
+                  className={`block text-sm text-navy-600 dark:text-navy-400 transition-colors duration-200 ${
+                    isWhiteLabelActive 
+                      ? 'hover:opacity-80' 
+                      : 'hover:text-electric-600 dark:hover:text-electric-400'
+                  }`}
+                  onMouseEnter={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = config.primaryColor || '#6D5DFB';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = '';
+                    }
+                  }}
                 >
                   Contact Support
                 </a>
@@ -93,7 +198,21 @@ export default function BrandedFooter() {
                   href={activeConfig.companyWebsite} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
+                  className={`block text-sm text-navy-600 dark:text-navy-400 transition-colors duration-200 ${
+                    isWhiteLabelActive 
+                      ? 'hover:opacity-80' 
+                      : 'hover:text-electric-600 dark:hover:text-electric-400'
+                  }`}
+                  onMouseEnter={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = config.primaryColor || '#6D5DFB';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = '';
+                    }
+                  }}
                 >
                   About Us
                 </a>
@@ -103,7 +222,21 @@ export default function BrandedFooter() {
                   href={activeConfig.privacyPolicyUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="block text-sm text-navy-600 dark:text-navy-400 hover:text-electric-600 dark:hover:text-electric-400 transition-colors duration-200"
+                  className={`block text-sm text-navy-600 dark:text-navy-400 transition-colors duration-200 ${
+                    isWhiteLabelActive 
+                      ? 'hover:opacity-80' 
+                      : 'hover:text-electric-600 dark:hover:text-electric-400'
+                  }`}
+                  onMouseEnter={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = config.primaryColor || '#6D5DFB';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = '';
+                    }
+                  }}
                 >
                   Privacy Policy
                 </a>
@@ -113,7 +246,21 @@ export default function BrandedFooter() {
                   href={activeConfig.termsOfServiceUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="block text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                  className={`block text-sm text-slate-600 dark:text-slate-400 transition-colors duration-200 ${
+                    isWhiteLabelActive 
+                      ? 'hover:opacity-80' 
+                      : 'hover:text-slate-900 dark:hover:text-slate-100'
+                  }`}
+                  onMouseEnter={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = config.primaryColor || '#6D5DFB';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isWhiteLabelActive) {
+                      e.currentTarget.style.color = '';
+                    }
+                  }}
                 >
                   Terms of Service
                 </a>
