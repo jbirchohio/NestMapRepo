@@ -314,7 +314,7 @@ export default function Dashboard() {
           transition={{ duration: 0.6, delay: roleType === 'corporate' ? 0.6 : 0 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          {currentConfig.metrics.map((metric, index) => {
+          {currentConfig.metrics.map((metric: any, index: number) => {
             const IconComponent = metric.icon;
             return (
               <AnimatedCard key={metric.label} variant={roleType === 'corporate' ? 'soft' : 'default'} className="p-6">
@@ -339,8 +339,9 @@ export default function Dashboard() {
 
         {/* Content Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {currentConfig.sections.map((section, index) => {
+          {currentConfig.sections.map((section: any, index: number) => {
             const IconComponent = section.icon;
+            const sectionData = section.data || [];
             return (
               <AnimatedCard key={section.title} variant={roleType === 'corporate' ? 'glow' : 'default'} className="p-6">
                 <CardHeader>
@@ -356,9 +357,9 @@ export default function Dashboard() {
                         <div key={i} className="h-16 bg-muted animate-pulse rounded" />
                       ))}
                     </div>
-                  ) : section.data.length > 0 ? (
+                  ) : sectionData.length > 0 ? (
                     <div className="space-y-4">
-                      {section.data.map((trip) => (
+                      {sectionData.map((trip: any) => (
                         <div 
                           key={trip.id} 
                           className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:shadow-md hover:bg-muted/50 transition-all"
