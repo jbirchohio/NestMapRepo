@@ -220,12 +220,16 @@ export function enforceWhiteLabelAccess() {
 // Middleware to enforce analytics access
 export function enforceAnalyticsAccess() {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ error: 'Organization required' });
+    // Apply Option 1 pattern: allow undefined organization for global analytics
+    const organizationId = req.user?.organization_id || undefined;
+    
+    // If no organization, allow global analytics access for authenticated users
+    if (!organizationId) {
+      return next();
     }
 
     try {
-      const { tier, limits } = await getOrganizationLimits(req.user.organization_id);
+      const { tier, limits } = await getOrganizationLimits(organizationId);
       
       if (!limits.analyticsAccess) {
         return res.status(403).json({
