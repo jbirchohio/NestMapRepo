@@ -57,7 +57,11 @@ export default function AdminRoles() {
     queryKey: ['/api/admin/roles'],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/admin/roles");
-      return response.json();
+      const data = await response.json();
+      console.log("Roles data:", data);
+      console.log("Roles length:", data?.length);
+      console.log("Is array:", Array.isArray(data));
+      return data;
     },
     enabled: !!user,
   });
