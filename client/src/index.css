@@ -262,10 +262,18 @@ button {
     @apply border-border;
   }
 
+  html {
+    height: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     letter-spacing: -0.01em;
+    height: 100%;
+    overflow-x: hidden;
+    position: relative;
   }
 
   /* Navan-style typography */
@@ -393,6 +401,30 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
   .itinerary-container {
     max-height: 50vh;
     overflow-y: auto;
+  }
+  
+  /* Mobile viewport fixes */
+  html, body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  body {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  /* Ensure proper scrolling on mobile */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix iOS Safari viewport issues */
+  @supports (-webkit-touch-callout: none) {
+    .min-h-screen {
+      min-height: -webkit-fill-available;
+    }
   }
   
   /* Fix day buttons overflow */

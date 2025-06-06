@@ -38,6 +38,7 @@ import SuperadminOrganizationDetail from "@/pages/SuperadminOrganizationDetail";
 import BillingDemo from "@/pages/BillingDemo";
 import Onboarding from "@/pages/Onboarding";
 import Login from "@/pages/Login";
+import Signup from "@/pages/Signup";
 import NotFound from "@/pages/not-found";
 
 function NavigationWrapper() {
@@ -70,6 +71,7 @@ function Router() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/login" component={Login} />
+          <Route path="/signup" component={Signup} />
           <Route path="/trip/:id" component={TripPlanner} />
           <Route path="/trip-planner/:id" component={TripPlanner} />
           <Route path="/trip-planner" component={TripPlanner} />
