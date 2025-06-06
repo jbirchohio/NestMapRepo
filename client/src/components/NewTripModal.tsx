@@ -238,7 +238,21 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        style={{
+          position: 'fixed',
+          top: '10px',
+          left: '5vw',
+          right: '5vw',
+          width: '90vw',
+          maxWidth: '425px',
+          maxHeight: 'calc(100vh - 20px)',
+          overflow: 'auto',
+          margin: '0 auto',
+          zIndex: 50
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Create New Trip</DialogTitle>
           <DialogDescription>
