@@ -338,7 +338,7 @@ export default function AdminRoles() {
                   <div>
                     <Label className="text-sm font-medium">Users Assigned ({selectedRole.userCount})</Label>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {users?.filter((user: any) => user.role?.toLowerCase() === selectedRole.name.toLowerCase()).map((user: any) => (
+                      {users?.filter((user: any) => user.role === selectedRole.value || user.role?.toLowerCase() === selectedRole.name.toLowerCase()).map((user: any) => (
                         <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
                           <div className="w-8 h-8 bg-electric-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
                             {(user.displayName || user.display_name)?.charAt(0) || user.username?.charAt(0) || user.email?.charAt(0)}

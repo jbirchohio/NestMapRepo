@@ -420,6 +420,7 @@ router.get('/roles', async (req: Request, res: Response) => {
     const roles = roleCountsResult.rows.map((row: any, index: number) => ({
       id: index + 1,
       name: row.role.charAt(0).toUpperCase() + row.role.slice(1),
+      value: row.role, // Add original lowercase value for filtering
       description: getRoleDescription(row.role),
       permissions: getRolePermissions(row.role),
       userCount: parseInt(row.user_count),
