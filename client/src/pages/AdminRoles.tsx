@@ -338,20 +338,7 @@ export default function AdminRoles() {
                   <div>
                     <Label className="text-sm font-medium">Users Assigned ({selectedRole.userCount})</Label>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {users?.filter((user: any) => {
-                        // Handle role name mapping - database uses different case/format
-                        const userRole = user.role?.toLowerCase();
-                        const roleName = selectedRole.name.toLowerCase();
-                        
-                        // Map role names to match database values
-                        if (roleName === 'admin' && userRole === 'admin') return true;
-                        if (roleName === 'manager' && userRole === 'manager') return true;
-                        if (roleName === 'user' && userRole === 'user') return true;
-                        if (roleName === 'member' && userRole === 'member') return true;
-                        if (roleName === 'superadmin' && userRole === 'superadmin') return true;
-                        
-                        return false;
-                      }).map((user: any) => (
+                      {users?.filter((user: any) => user.role?.toLowerCase() === selectedRole.name.toLowerCase()).map((user: any) => (
                         <div key={user.id} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
                           <div className="w-8 h-8 bg-electric-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
                             {(user.displayName || user.display_name)?.charAt(0) || user.username?.charAt(0) || user.email?.charAt(0)}
