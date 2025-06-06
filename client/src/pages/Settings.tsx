@@ -23,6 +23,7 @@ import {
   CheckCircle,
   Building2,
   Globe,
+  RotateCcw,
   Image,
   Eye,
   Save,
@@ -400,6 +401,26 @@ export default function Settings() {
                             </div>
                           </div>
                         </div>
+                        
+                        {/* Reset to Default Button */}
+                        {canUseBranding && (
+                          <div className="pt-4 border-t">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                // Reset to NestMap default colors
+                                form.setValue('primaryColor', '#6D5DFB');
+                                form.setValue('secondaryColor', '#6D5DFB');
+                                form.setValue('accentColor', '#6D5DFB');
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                              Reset to NestMap Colors
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
                       {!canUseBranding && (
