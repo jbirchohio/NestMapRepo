@@ -61,6 +61,19 @@ export const organizations = pgTable("organizations", {
   updated_at: timestamp("updated_at").defaultNow(),
 });
 
+// Custom roles for organizations
+export const organizationRoles = pgTable("organization_roles", {
+  id: serial("id").primaryKey(),
+  organization_id: integer("organization_id").notNull(),
+  name: text("name").notNull(),
+  value: text("value").notNull(), // Slug/key for the role
+  description: text("description"),
+  permissions: jsonb("permissions").$type<string[]>().notNull(),
+  is_default: boolean("is_default").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Organization members with roles - enables granular permissions within organizations
 export const organizationMembers = pgTable("organization_members", {
   id: serial("id").primaryKey(),
@@ -104,6 +117,12 @@ export const loginSchema = z.object({
 });
 
 export const insertOrganizationSchema = createInsertSchema(organizations);
+
+export const insertOrganizationRoleSchema = createInsertSchema(organizationRoles).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
 
 export const insertOrganizationMemberSchema = createInsertSchema(organizationMembers);
 

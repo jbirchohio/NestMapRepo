@@ -228,31 +228,44 @@ export default function AdminRoles() {
                       </div>
                       <div>
                         <Label>Permissions</Label>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                          {Object.entries(groupedPermissions).map(([category, perms]: [string, any]) => (
-                            <div key={category}>
-                              <h4 className="font-medium text-sm text-gray-700 mb-1">{category}</h4>
-                              {perms.map((permission: Permission) => (
-                                <div key={permission.id} className="flex items-center space-x-2">
-                                  <input
-                                    type="checkbox"
-                                    id={permission.id}
-                                    checked={selectedPermissions.includes(permission.id)}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setSelectedPermissions([...selectedPermissions, permission.id]);
-                                      } else {
-                                        setSelectedPermissions(selectedPermissions.filter(p => p !== permission.id));
-                                      }
-                                    }}
-                                  />
-                                  <Label htmlFor={permission.id} className="text-sm">
-                                    {permission.name}
-                                  </Label>
-                                </div>
-                              ))}
+                        <div className="space-y-3 max-h-48 overflow-y-auto border rounded-md p-3">
+                          {permissions && permissions.length > 0 ? (
+                            Object.entries(groupedPermissions).map(([category, perms]: [string, any]) => (
+                              <div key={category} className="space-y-2">
+                                <h4 className="font-semibold text-sm text-electric-600 dark:text-electric-400 border-b pb-1">
+                                  {category}
+                                </h4>
+                                {Array.isArray(perms) && perms.map((permission: Permission) => (
+                                  <div key={permission.id} className="flex items-center space-x-2 ml-2">
+                                    <input
+                                      type="checkbox"
+                                      id={permission.id}
+                                      checked={selectedPermissions.includes(permission.id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setSelectedPermissions([...selectedPermissions, permission.id]);
+                                        } else {
+                                          setSelectedPermissions(selectedPermissions.filter(p => p !== permission.id));
+                                        }
+                                      }}
+                                      className="rounded border-gray-300"
+                                    />
+                                    <Label htmlFor={permission.id} className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                      {permission.name}
+                                    </Label>
+                                    <span className="text-xs text-gray-500">({permission.description})</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-4 text-gray-500">
+                              Loading permissions...
                             </div>
-                          ))}
+                          )}
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Selected: {selectedPermissions.length} permissions
                         </div>
                       </div>
                       <div className="flex justify-end gap-2">
