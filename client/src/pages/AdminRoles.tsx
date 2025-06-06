@@ -53,26 +53,13 @@ export default function AdminRoles() {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   // Fetch roles
-  const { data: roles, isLoading: rolesLoading, error: rolesError } = useQuery({
+  const { data: roles, isLoading: rolesLoading } = useQuery({
     queryKey: ['/api/admin/roles'],
     queryFn: async () => {
-      console.log("Starting roles fetch...");
-      try {
-        const data = await apiRequest("GET", "/api/admin/roles");
-        console.log("Roles data:", data);
-        console.log("Roles length:", data?.length);
-        console.log("Is array:", Array.isArray(data));
-        return data;
-      } catch (error) {
-        console.error("Roles fetch error:", error);
-        throw error;
-      }
+      return await apiRequest("GET", "/api/admin/roles");
     },
     enabled: !!user,
   });
-
-  // Debug roles state
-  console.log("Roles state:", { roles, rolesLoading, rolesError, userExists: !!user });
 
   // Fetch available permissions
   const { data: permissions } = useQuery({
