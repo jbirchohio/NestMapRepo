@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { organizations, users, customDomains, whiteLabelRequests, adminAuditLog } from '../../shared/schema';
+import { organizations, users, customDomains, whiteLabelRequests, adminAuditLog, organizationRoles, insertOrganizationRoleSchema } from '../../shared/schema';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -420,25 +420,57 @@ router.get('/roles', async (req: Request, res: Response) => {
       });
     }
 
-    // Count users by role within the organization only
-    const roleCountsResult = await db.execute(sql`
-      SELECT role, COUNT(*) as user_count 
-      FROM users 
-      WHERE role IS NOT NULL AND organization_id = ${organizationId}
-      GROUP BY role
-    `);
+    // Get both default roles from users table and custom roles from organization_roles table
+    const [roleCountsResult, customRolesResult] = await Promise.all([
+      // Count users by role within the organization
+      db.execute(sql`
+        SELECT role, COUNT(*) as user_count 
+        FROM users 
+        WHERE role IS NOT NULL AND organization_id = ${organizationId}
+        GROUP BY role
+      `),
+      // Get custom organization roles
+      db.select().from(organizationRoles).where(eq(organizationRoles.organization_id, organizationId))
+    ]);
 
-    const roles = roleCountsResult.rows.map((row: any, index: number) => ({
+    // Map default roles from user table
+    const defaultRoles = roleCountsResult.rows.map((row: any, index: number) => ({
       id: index + 1,
       name: row.role.charAt(0).toUpperCase() + row.role.slice(1),
-      value: row.role, // Add original lowercase value for filtering
+      value: row.role,
       description: getRoleDescription(row.role),
       permissions: getRolePermissions(row.role),
       userCount: parseInt(row.user_count),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isCustom: false
     }));
 
-    res.json(roles);
+    // Map custom organization roles and count users for each
+    const customRoles = await Promise.all(
+      customRolesResult.map(async (role, index) => {
+        const userCountResult = await db.execute(sql`
+          SELECT COUNT(*) as user_count 
+          FROM users 
+          WHERE role = ${role.value} AND organization_id = ${organizationId}
+        `);
+        
+        return {
+          id: defaultRoles.length + index + 1,
+          name: role.name,
+          value: role.value,
+          description: role.description,
+          permissions: role.permissions,
+          userCount: parseInt(userCountResult.rows[0]?.user_count || '0'),
+          createdAt: role.created_at?.toISOString() || new Date().toISOString(),
+          isCustom: true
+        };
+      })
+    );
+
+    // Combine default and custom roles
+    const allRoles = [...defaultRoles, ...customRoles];
+
+    res.json(allRoles);
   } catch (error) {
     console.error("Database error fetching roles:", error);
     res.status(500).json({ error: "Database connection failed" });
@@ -478,25 +510,39 @@ router.post('/roles', async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Name and description are required" });
     }
 
-    // For now, we'll just return success since we don't have a roles table
-    const newRole = {
-      id: Date.now(),
+    if (!req.user?.organization_id) {
+      return res.status(400).json({ error: "Organization ID required" });
+    }
+
+    // Create role value from name (slugify)
+    const value = name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
+
+    // Insert the new role into the database
+    const [newRole] = await db.insert(organizationRoles).values({
+      organization_id: req.user.organization_id,
       name,
+      value,
       description,
       permissions: permissions || [],
-      userCount: 0,
-      created_at: new Date().toISOString()
-    };
+      is_default: false
+    }).returning();
 
     await logAdminAction(
       req.user?.id || 0,
       'role_created',
-      undefined,
+      req.user.organization_id,
       { roleName: name, permissions },
       req.ip
     );
 
-    res.json(newRole);
+    // Return role with userCount for consistency with GET endpoint
+    const roleWithCount = {
+      ...newRole,
+      userCount: 0,
+      createdAt: newRole.created_at
+    };
+
+    res.json(roleWithCount);
   } catch (error) {
     console.error("Error creating role:", error);
     res.status(500).json({ error: "Failed to create role" });
