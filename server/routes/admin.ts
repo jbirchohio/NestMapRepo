@@ -3,11 +3,12 @@ import { db } from '../db';
 import { organizations, users, customDomains, whiteLabelRequests, adminAuditLog } from '../../shared/schema';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import {  } from '../middleware/jwtAuth';
 
 const router = Router();
 
 // Temporarily remove auth middleware to fix server startup
+
+
 
 // Audit logging function
 const logAdminAction = async (
@@ -406,14 +407,24 @@ router.get('/audit-log', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/admin/roles - Get all roles with user counts
+// GET /api/admin/roles - Get organization-specific roles with user counts
 router.get('/roles', async (req: Request, res: Response) => {
   try {
-    // Use raw SQL query for better compatibility
+    // Get organization ID from authenticated user
+    const organizationId = req.user?.organization_id;
+    
+    if (!organizationId) {
+      return res.status(400).json({ 
+        error: 'No organization context found',
+        message: 'User must be associated with an organization to view roles'
+      });
+    }
+
+    // Count users by role within the organization only
     const roleCountsResult = await db.execute(sql`
       SELECT role, COUNT(*) as user_count 
       FROM users 
-      WHERE role IS NOT NULL 
+      WHERE role IS NOT NULL AND organization_id = ${organizationId}
       GROUP BY role
     `);
 
@@ -424,7 +435,7 @@ router.get('/roles', async (req: Request, res: Response) => {
       description: getRoleDescription(row.role),
       permissions: getRolePermissions(row.role),
       userCount: parseInt(row.user_count),
-      created_at: new Date().toISOString()
+      createdAt: new Date().toISOString()
     }));
 
     res.json(roles);
