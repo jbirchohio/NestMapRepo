@@ -1,21 +1,39 @@
-import { useState } from 'react';
-import { useAuth } from '@/contexts/JWTAuthContext';
 import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Link } from 'wouter';
+import SignupForm from '@/components/auth/SignupForm';
+import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 
 export default function Signup() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [roleType, setRoleType] = useState<'corporate' | 'agency'>('corporate');
+  const [, setLocation] = useLocation();
+  const { config } = useWhiteLabel();
+  
+  const handleSignupSuccess = () => {
+    setLocation('/dashboard');
+  };
+  
+  const handleToggleToLogin = () => {
+    setLocation('/login');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-navy-800 dark:text-navy-100">
+            Join {config.companyName}
+          </h1>
+          <p className="text-navy-600 dark:text-navy-300 mt-2">
+            Create your business travel account
+          </p>
+        </div>
+        
+        <SignupForm 
+          onSuccess={handleSignupSuccess}
+          onToggleForm={handleToggleToLogin}
+        />
+      </div>
+    </div>
+  );
+}
   const [company, setCompany] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);

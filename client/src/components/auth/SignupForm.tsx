@@ -205,16 +205,29 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
                 <Label htmlFor="useCase">Primary Use Case</Label>
                 <Select onValueChange={(value) => form.setValue("useCase", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="How will you use NestMap?" />
+                    <SelectValue placeholder="How will you use this platform?" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="corporate-travel">Corporate Travel Management</SelectItem>
-                    <SelectItem value="team-retreats">Team Retreats & Offsites</SelectItem>
-                    <SelectItem value="conferences">Conference & Trade Show Planning</SelectItem>
-                    <SelectItem value="sales-trips">Sales Team Travel</SelectItem>
-                    <SelectItem value="client-services">Travel Agency & Client Services</SelectItem>
-                    <SelectItem value="client-planning">Client Trip Planning & Proposals</SelectItem>
-                    <SelectItem value="other">Other Business Use</SelectItem>
+                    <div className="px-2 py-1 text-xs font-medium text-muted-foreground bg-muted">Corporate Travel</div>
+                    <SelectItem value="corporate-travel-management">Corporate Travel Management</SelectItem>
+                    <SelectItem value="employee-business-trips">Employee Business Trips</SelectItem>
+                    <SelectItem value="team-retreats-offsite">Team Retreats & Offsites</SelectItem>
+                    <SelectItem value="conference-event-attendance">Conference & Event Attendance</SelectItem>
+                    <SelectItem value="sales-client-meetings">Sales & Client Meetings</SelectItem>
+                    <SelectItem value="training-workshops">Training & Workshops</SelectItem>
+                    <SelectItem value="site-visits-inspections">Site Visits & Inspections</SelectItem>
+                    <SelectItem value="company-relocations">Company Relocations</SelectItem>
+                    <SelectItem value="executive-travel">Executive Travel</SelectItem>
+                    
+                    <div className="px-2 py-1 text-xs font-medium text-muted-foreground bg-muted mt-2">Travel Agency Services</div>
+                    <SelectItem value="travel-agency-operations">Travel Agency Operations</SelectItem>
+                    <SelectItem value="client-trip-planning">Client Trip Planning & Booking</SelectItem>
+                    <SelectItem value="destination-management">Destination Management Services</SelectItem>
+                    <SelectItem value="group-travel-coordination">Group Travel Coordination</SelectItem>
+                    <SelectItem value="luxury-travel-services">Luxury Travel Services</SelectItem>
+                    <SelectItem value="corporate-client-services">Corporate Client Services</SelectItem>
+                    <SelectItem value="event-travel-planning">Event & Conference Travel</SelectItem>
+                    <SelectItem value="leisure-travel-booking">Leisure Travel Booking</SelectItem>
                   </SelectContent>
                 </Select>
                 {form.formState.errors.useCase && (
