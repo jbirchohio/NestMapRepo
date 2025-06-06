@@ -409,26 +409,20 @@ router.get('/audit-log', async (req: Request, res: Response) => {
 // GET /api/admin/roles - Get all roles with user counts
 router.get('/roles', async (req: Request, res: Response) => {
   try {
-    // Query actual user data from database
-    const allUsers = await db.select({
-      role: users.role
-    }).from(users);
+    // Use raw SQL query for better compatibility
+    const roleCountsResult = await db.execute(sql`
+      SELECT role, COUNT(*) as user_count 
+      FROM users 
+      WHERE role IS NOT NULL 
+      GROUP BY role
+    `);
 
-    // Count users by role
-    const userCounts = allUsers.reduce((acc: Record<string, number>, user) => {
-      const role = user.role || 'user';
-      acc[role] = (acc[role] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Create roles from actual database data
-    const uniqueRoles = Object.keys(userCounts);
-    const roles = uniqueRoles.map((role, index) => ({
+    const roles = roleCountsResult.rows.map((row: any, index: number) => ({
       id: index + 1,
-      name: role.charAt(0).toUpperCase() + role.slice(1),
-      description: getRoleDescription(role),
-      permissions: getRolePermissions(role),
-      userCount: userCounts[role],
+      name: row.role.charAt(0).toUpperCase() + row.role.slice(1),
+      description: getRoleDescription(row.role),
+      permissions: getRolePermissions(row.role),
+      userCount: parseInt(row.user_count),
       created_at: new Date().toISOString()
     }));
 
