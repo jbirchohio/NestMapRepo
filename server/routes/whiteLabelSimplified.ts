@@ -164,10 +164,17 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
     }
 
     const organizationId = req.user.organization_id || req.user.organizationId;
-    const { companyName, primaryColor, secondaryColor, accentColor, tagline, companyLogo } = req.body;
+    
+    // Handle both camelCase (from frontend) and snake_case (from middleware transformation)
+    const companyName = req.body.companyName || req.body.company_name;
+    const primaryColor = req.body.primaryColor || req.body.primary_color;
+    const secondaryColor = req.body.secondaryColor || req.body.secondary_color;
+    const accentColor = req.body.accentColor || req.body.accent_color;
+    const tagline = req.body.tagline;
+    const companyLogo = req.body.companyLogo || req.body.company_logo;
 
     console.log('White label configure request body:', req.body);
-    console.log('Extracted camelCase values:', { 
+    console.log('Extracted values:', { 
       companyName, 
       primaryColor, 
       secondaryColor, 
