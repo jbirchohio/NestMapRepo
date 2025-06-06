@@ -17,11 +17,10 @@ router.use(unifiedAuthMiddleware);
 // Add users endpoint for card issuance dropdown (matches frontend API call) - MUST be before /:id route
 router.get('/users', async (req: Request, res: Response) => {
   try {
-    // Since we know the user exists and has organization_id = 1, let's fetch directly
-    // For superadmin users, we can access any organization, but default to their own
-    let targetOrgId = 1; // JonasCo organization
+    // Dynamically resolve organization ID from authenticated user
+    let targetOrgId: number | null = null;
     
-    // If user has organization context, use it; otherwise default to JonasCo
+    // Use authenticated user's organization ID
     if (req.user?.organization_id) {
       targetOrgId = req.user.organization_id;
     } else if (req.user?.id) {
@@ -35,6 +34,14 @@ router.get('/users', async (req: Request, res: Response) => {
       if (userWithOrg?.organization_id) {
         targetOrgId = userWithOrg.organization_id;
       }
+    }
+    
+    // If no organization found, return error
+    if (!targetOrgId) {
+      return res.status(400).json({ 
+        error: 'No organization context found',
+        message: 'User must be associated with an organization to access this endpoint'
+      });
     }
 
     const organizationUsers = await db

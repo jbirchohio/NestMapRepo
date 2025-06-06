@@ -5,11 +5,12 @@
 
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { users } from '@shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { users, organizationMembers } from '@shared/schema';
+import { eq, sql, and } from 'drizzle-orm';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
-import { OrganizationRole, getRoleDescription } from '../rbac/organizationRoles';
+import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles';
 import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -21,8 +22,15 @@ router.use(unifiedAuthMiddleware);
  */
 router.get('/members', async (req: Request, res: Response) => {
   try {
-    // Use JonasCo organization ID for demo
-    const organizationId = req.user?.organization_id || 1;
+    // Use authenticated user's organization ID
+    const organizationId = req.user?.organization_id;
+    
+    if (!organizationId) {
+      return res.status(400).json({ 
+        error: 'No organization context found',
+        message: 'User must be associated with an organization to access members'
+      });
+    }
 
     const members = await db
       .select({

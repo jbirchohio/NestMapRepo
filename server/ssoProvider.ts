@@ -254,8 +254,9 @@ export class SSOManager {
   }
 
   private async getOrganizationFromEntityId(entityId: string): Promise<number> {
-    // In production, store entity ID mapping in database
-    return 1; // Default org for demo
+    // TODO: Implement actual entity ID to organization mapping from database
+    // This should look up the organization_id based on the SAML entity ID
+    throw new Error('Entity ID mapping not implemented - please configure organization mapping');
   }
 
   private async getOrganizationFromState(state: string): Promise<number> {
