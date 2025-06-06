@@ -62,14 +62,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
       // Determine role type based on use case using utility function
       const roleType = mapUseCaseToRoleType(values.useCase);
       
-      await signUp(values.email, values.password, {
-        display_name: values.name,
-        company: values.company,
-        job_title: values.jobTitle,
-        team_size: values.teamSize,
-        use_case: values.useCase,
-        role_type: roleType,
-      });
+      await signUp(values.email, values.password, values.name);
       
       if (onSuccess) {
         onSuccess();
