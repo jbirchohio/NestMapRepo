@@ -105,7 +105,7 @@ export default function Settings() {
         supportEmail: config.supportEmail || "",
       });
     }
-  }, [whiteLabelConfig, form]);
+  }, [whiteLabelConfig]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
