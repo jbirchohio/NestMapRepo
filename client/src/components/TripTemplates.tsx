@@ -135,7 +135,21 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
           Browse Trip Templates
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent 
+        className="max-w-4xl max-h-[80vh] overflow-y-auto"
+        style={{
+          position: 'fixed',
+          top: '10px',
+          left: '5vw',
+          right: '5vw',
+          width: '90vw',
+          maxWidth: '800px',
+          maxHeight: 'calc(100vh - 20px)',
+          overflow: 'auto',
+          margin: '0 auto',
+          zIndex: 50
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Choose a Trip Template</DialogTitle>
         </DialogHeader>
