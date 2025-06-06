@@ -49,15 +49,8 @@ export default function RoleBasedRedirect() {
         console.log('Could not check permissions, proceeding with role-based redirect');
       }
 
-      // Map role types to dashboard routes for regular users
-      if (roleType === 'agency') {
-        setLocation('/dashboard/agency');
-      } else if (roleType === 'corporate') {
-        setLocation('/dashboard/corporate');
-      } else {
-        // Default to corporate dashboard if role type is not set
-        setLocation('/dashboard/corporate');
-      }
+      // Map role types to unified dashboard route
+      setLocation('/dashboard');
       setPermissionsChecked(true);
     };
 

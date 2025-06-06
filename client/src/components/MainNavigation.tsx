@@ -204,8 +204,7 @@ export default function MainNavigation() {
 
   // Role-based navigation items
   const getRoleBasedDashboardPath = () => {
-    if (roleType === 'agency') return '/dashboard/agency';
-    return '/dashboard/corporate';
+    return '/dashboard';
   };
 
   const navigationItems = [

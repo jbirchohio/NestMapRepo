@@ -9,12 +9,8 @@ export default function Onboarding() {
   const { roleType, user, loading } = useAuth();
 
   const handleOnboardingComplete = () => {
-    // Redirect to appropriate dashboard based on role
-    if (roleType === 'agency') {
-      setLocation('/dashboard/agency');
-    } else {
-      setLocation('/dashboard/corporate');
-    }
+    // Redirect to unified dashboard
+    setLocation('/dashboard');
   };
 
   // Show loading state while authentication is being checked
