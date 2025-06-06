@@ -72,15 +72,14 @@ export default function AdminRoles() {
     enabled: !!user,
   });
 
-  // Fetch users for the organization with detailed role information
+  // Fetch users for the organization
   const { data: users } = useQuery({
-    queryKey: ['/api/organizations', user?.organizationId, 'members'],
+    queryKey: ['/api/organizations/users'],
     queryFn: async () => {
-      const orgId = user?.organizationId || 1;
-      const response = await apiRequest("GET", `/api/organizations/${orgId}/members`);
+      const response = await apiRequest("GET", "/api/organizations/users");
       return response.json();
     },
-    enabled: !!user && !!user.organizationId,
+    enabled: !!user,
   });
 
   // Create role mutation
