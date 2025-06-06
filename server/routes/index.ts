@@ -21,6 +21,7 @@ import subscriptionStatusRoutes from './subscription-status';
 // import todosRoutes from './todos';
 // import notesRoutes from './notes';
 import aiRoutes from './ai';
+import securityRoutes from './security';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -47,6 +48,7 @@ router.use('/stripe', stripeOAuthRoutes);
 router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/subscription-status', subscriptionStatusRoutes);
+router.use('/security', securityRoutes);
 
 // Import and register simplified white label routes
 import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
