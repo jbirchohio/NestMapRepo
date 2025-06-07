@@ -47,9 +47,22 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     return next();
   }
 
-  // Extract JWT from Authorization header
+  // Development mode: provide default user context when no auth header
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (process.env.NODE_ENV === 'development') {
+      // Development fallback user
+      req.user = {
+        id: 5,
+        email: 'demo@nestmap.com',
+        organization_id: 1,
+        role: 'admin',
+        username: 'demo'
+      };
+      req.organizationId = 1;
+      req.organization_id = 1;
+      return next();
+    }
     return res.status(401).json({ message: 'No valid authorization header' });
   }
 
