@@ -301,10 +301,14 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <p className="font-medium">Performance Metrics</p>
-                    <p className="text-sm text-muted-foreground">View system performance</p>
+                    <p className="font-medium">System Metrics</p>
+                    <p className="text-sm text-muted-foreground">Real-time server performance monitoring</p>
                   </div>
-                  <Badge className="bg-green-100 text-green-700">Healthy</Badge>
+                  <Link href="/admin/system-metrics">
+                    <Button variant="outline" size="sm">
+                      View Metrics
+                    </Button>
+                  </Link>
                 </div>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>

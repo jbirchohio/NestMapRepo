@@ -33,6 +33,7 @@ import BrandingSetup from "@/pages/BrandingSetup";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminRoles from "@/pages/AdminRoles";
 import AdminSecurity from "@/pages/AdminSecurity";
+import AdminSystemMetrics from "@/pages/AdminSystemMetrics";
 import CorporateCards from "@/pages/CorporateCards";
 import OrganizationFunding from "@/pages/OrganizationFunding";
 import Superadmin from "@/pages/SuperadminClean";
@@ -104,6 +105,7 @@ function Router() {
           <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/admin/roles" component={AdminRoles} />
           <Route path="/admin/security" component={AdminSecurity} />
+          <Route path="/admin/system-metrics" component={AdminSystemMetrics} />
           <Route path="/superadmin" component={Superadmin} />
           <Route path="/superadmin/organizations/:id" component={SuperadminOrganizationDetail} />
           <Route path="/superadmin/:section" component={Superadmin} />
