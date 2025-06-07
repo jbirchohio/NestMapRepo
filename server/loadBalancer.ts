@@ -33,7 +33,7 @@ export async function domainRoutingMiddleware(req: Request, res: Response, next:
     }
 
     // Skip routing for default domain or localhost
-    if (host.includes('localhost') || host.includes('nestmap.com') || host.includes('replit.dev')) {
+    if (host.includes('localhost') || host.includes('nestmap.com') || host.includes('replit.dev') || host.includes('replit.app')) {
       return next();
     }
 

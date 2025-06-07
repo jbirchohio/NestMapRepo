@@ -404,7 +404,7 @@ export default function ActivityModal({
                           cityContext = trip.location;
 
                         } else {
-                          console.log("No city found in trip, using default:", cityContext);
+
                         }
                         
                         const aiResponse = await fetch("/api/ai/find-location", {
@@ -424,7 +424,7 @@ export default function ActivityModal({
                         
                         // Parse the AI response
                         const aiData = await aiResponse.json();
-                        console.log("OpenAI location result:", aiData);
+
                         
                         // Remove hardcoded location - let AI handle all location searches
                         
@@ -448,7 +448,7 @@ export default function ActivityModal({
                                 
                                 if (mapboxResponse.ok) {
                                   const mapboxData = await mapboxResponse.json();
-                                  console.log("Mapbox result:", mapboxData);
+
                                   
                                   if (mapboxData.features && mapboxData.features.length > 0) {
                                     const feature = mapboxData.features[0];
@@ -506,7 +506,7 @@ export default function ActivityModal({
                         }
                         
                         // Fallback for old API response format or errors
-                        console.log("Using default location with fallback coordinates");
+
                         setLocationResults([{
                           name: aiData.name || locationName,
                           address: aiData.address || "",
