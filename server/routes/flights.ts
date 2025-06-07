@@ -69,7 +69,15 @@ router.post('/search', async (req, res) => {
           },
           departure_datetime: slice.segments[0].departing_at,
           arrival_datetime: slice.segments[slice.segments.length - 1].arriving_at,
-          duration: slice.segments.reduce((total, seg) => total + parseInt(seg.duration.replace(/[^\d]/g, '')), 0) + 'min',
+          duration: slice.segments.reduce((total, seg) => {
+            const match = seg.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+            if (match) {
+              const hours = parseInt(match[1] || '0');
+              const minutes = parseInt(match[2] || '0');
+              return total + (hours * 60) + minutes;
+            }
+            return total;
+          }, 0) + ' minutes',
           segments: slice.segments.map(segment => ({
             airline: {
               name: segment.operating_carrier?.name || 'Unknown Airline',
@@ -77,9 +85,9 @@ router.post('/search', async (req, res) => {
               logo_url: segment.operating_carrier?.logo_symbol_url || ''
             },
             flight_number: segment.operating_carrier_flight_number || 'N/A',
-            aircraft: {
-              name: segment.aircraft?.name || 'Unknown Aircraft'
-            },
+            aircraft: segment.aircraft ? {
+              name: segment.aircraft.name || 'Unknown Aircraft'
+            } : null,
             origin: {
               iata_code: segment.origin.iata_code,
               name: segment.origin.name
