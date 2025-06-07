@@ -18,6 +18,7 @@ import stripeOAuthRoutes from './stripeOAuth';
 import superadminRoutes from './superadmin';
 import webhookRoutes from './webhooks';
 import subscriptionStatusRoutes from './subscription-status';
+import { registerAdminSettingsRoutes } from './admin-settings';
 // import todosRoutes from './todos';
 // import notesRoutes from './notes';
 import aiRoutes from './ai';
@@ -334,5 +335,10 @@ router.get('/health', (req, res) => {
     service: 'nestmap-api'
   });
 });
+
+// Function to register admin settings routes that need app instance
+export function registerDirectRoutes(app: any) {
+  registerAdminSettingsRoutes(app);
+}
 
 export default router;
