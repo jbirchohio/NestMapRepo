@@ -4,7 +4,7 @@ import tripRoutes from './trips';
 import activityRoutes from './activities';
 import organizationRoutes from './organizations';
 import analyticsRoutes from './analytics';
-import performanceRoutes from './performance';
+import { registerPerformanceRoutes } from './performance';
 import adminRoutes from './admin';
 import calendarRoutes from './calendar';
 import collaborationRoutes from './collaboration';
@@ -34,7 +34,7 @@ router.use('/trips', tripRoutes);
 router.use('/activities', activityRoutes);
 router.use('/organizations', organizationRoutes);
 router.use('/analytics', analyticsRoutes);
-router.use('/performance', performanceRoutes);
+// Performance routes registered separately as function
 router.use('/admin', adminRoutes);
 router.use('/calendar', calendarRoutes);
 router.use('/collaboration', collaborationRoutes);

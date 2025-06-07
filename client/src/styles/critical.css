@@ -1,0 +1,58 @@
+/* Critical CSS for immediate rendering - Phase 3 Performance Optimization */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 224 71% 14%;
+  --primary: 252 60% 68%;
+  --primary-foreground: 0 0% 100%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71% 14%;
+  --border: 240 30% 90%;
+  --input: 240 30% 90%;
+  --ring: 252 60% 68%;
+  --radius: 1rem;
+}
+
+.dark {
+  --background: 224 71% 4%;
+  --foreground: 0 0% 98%;
+  --primary: 252 60% 68%;
+  --primary-foreground: 0 0% 100%;
+  --card: 224 71% 7%;
+  --card-foreground: 0 0% 98%;
+  --border: 224 71% 15%;
+  --input: 224 71% 15%;
+  --ring: 252 60% 68%;
+}
+
+/* Critical base styles */
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+.card {
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Critical button styles */
+.btn-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
