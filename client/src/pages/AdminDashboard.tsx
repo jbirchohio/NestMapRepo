@@ -97,19 +97,10 @@ export default function AdminDashboard() {
   const { toast } = useToast();
 
   const { data: analytics } = useQuery({
-    queryKey: ['/api/analytics/admin'],
+    queryKey: ['/api/admin/analytics'],
     queryFn: async () => {
-      const res = await fetch('/api/analytics', {
-        credentials: 'include'
-      });
-      if (!res.ok) return { totalUsers: 0, totalOrganizations: 0, totalTrips: 0, activeUsers: 0 };
-      const data = await res.json();
-      return {
-        totalUsers: data.overview?.totalUsers || 0,
-        totalOrganizations: data.overview?.totalOrganizations || 0,
-        totalTrips: data.overview?.totalTrips || 0,
-        activeUsers: data.overview?.activeUsers || 0
-      };
+      const res = await apiRequest('GET', '/api/admin/analytics');
+      return res.json();
     },
     enabled: !!user,
   });
@@ -206,7 +197,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.totalUsers || 0}</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.overview?.totalUsers || 0}</p>
               </div>
               <div className="p-3 bg-electric-100 dark:bg-electric-900/20 rounded-xl">
                 <Users className="w-6 h-6 text-electric-600" />
@@ -218,7 +209,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Organizations</p>
-                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.totalOrganizations || 0}</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.overview?.totalOrganizations || 0}</p>
               </div>
               <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
                 <Building2 className="w-6 h-6 text-green-600" />
@@ -230,7 +221,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Trips</p>
-                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.totalTrips || 0}</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.overview?.totalTrips || 0}</p>
               </div>
               <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
                 <TrendingUp className="w-6 h-6 text-blue-600" />
@@ -242,7 +233,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Active Users</p>
-                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.activeUsers || 0}</p>
+                <p className="text-3xl font-bold text-navy-900 dark:text-white">{analytics?.overview?.activeUsers || 0}</p>
               </div>
               <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-xl">
                 <Activity className="w-6 h-6 text-orange-600" />

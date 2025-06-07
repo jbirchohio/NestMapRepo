@@ -236,6 +236,10 @@ app.use((req, res, next) => {
     const { registerAdminSettingsRoutes } = await import('./routes/admin-settings');
     registerAdminSettingsRoutes(app);
 
+    // Register admin analytics routes with full Express app instance
+    const { registerAdminAnalyticsRoutes } = await import('./routes/admin-analytics');
+    registerAdminAnalyticsRoutes(app);
+
     console.log('✅ API routes mounted successfully');
   } catch (error) {
     console.error('❌ Failed to mount API routes:', error);

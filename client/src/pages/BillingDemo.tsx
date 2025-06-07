@@ -66,7 +66,7 @@ function SystemHealthStatus() {
   const apiStatus = healthData?.status || 'unknown';
   const stripeIntegrationStatus = stripeStatus?.connected ? 'connected' : 'disconnected';
   const databaseStatus = healthData?.endpoints?.total > 0 ? 'connected' : 'disconnected';
-  const auditStatus = 'active'; // Audit logging is always active when app runs
+  const auditStatus = healthData?.status === 'healthy' ? 'active' : 'inactive';
 
   return (
     <Card>
