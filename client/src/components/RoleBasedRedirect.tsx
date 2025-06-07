@@ -46,7 +46,7 @@ export default function RoleBasedRedirect() {
           }
         }
       } catch (err) {
-        console.log('Could not check permissions, proceeding with role-based redirect');
+        // Could not check permissions, proceeding with role-based redirect
       }
 
       // Map role types to unified dashboard route

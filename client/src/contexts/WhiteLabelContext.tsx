@@ -152,7 +152,7 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
       const secondaryHsl = hexToHsl(config.secondaryColor);
       const accentHsl = hexToHsl(config.accentColor);
       
-      console.log('Setting CSS variables:', { primaryHsl, secondaryHsl, accentHsl });
+      // Setting CSS variables for dynamic theming
       
       root.style.setProperty('--primary', primaryHsl);
       root.style.setProperty('--secondary', secondaryHsl);
@@ -214,7 +214,7 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
   }, [config, isWhiteLabelActive, location]);
 
   const forceApplyBranding = () => {
-    console.log('Force applying branding with current config:', config);
+    // Force applying branding with current configuration
     applyBranding();
   };
 

@@ -42,19 +42,15 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
   const { data: templates, isLoading, error } = useQuery({
     queryKey: ["/api/templates"],
     queryFn: async () => {
-      console.log("Fetching templates...");
       const response = await fetch("/api/templates");
-      console.log("Templates response:", response.status, response.ok);
       if (!response.ok) throw new Error("Failed to fetch templates");
       const text = await response.text();
-      console.log("Templates raw response:", text);
       const data = JSON.parse(text);
-      console.log("Templates data:", data);
       return data;
     }
   });
 
-  console.log("Templates query state:", { templates, isLoading, error });
+  // Query state for templates
 
   const createTripMutation = useMutation({
     mutationFn: async ({ templateId, userId, startDate, customTitle }: {

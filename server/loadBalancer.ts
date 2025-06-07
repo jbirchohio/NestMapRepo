@@ -57,10 +57,12 @@ export async function domainRoutingMiddleware(req: Request, res: Response, next:
     // Inject domain context into request
     (req as any).domainConfig = domainConfig;
     (req as any).isWhiteLabel = true;
+    (req as any).domainOrganizationId = domainConfig.organizationId;
+    (req as any).isWhiteLabelDomain = true;
 
     // Add white label headers for frontend
     res.setHeader('X-White-Label-Domain', domainConfig.domain);
-    res.setHeader('X-Organization-ID', domainConfig.organization_id.toString());
+    res.setHeader('X-Organization-ID', domainConfig.organizationId.toString());
     
     if (domainConfig.branding) {
       res.setHeader('X-White-Label-Config', JSON.stringify(domainConfig.branding));
