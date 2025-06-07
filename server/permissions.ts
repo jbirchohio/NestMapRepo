@@ -140,6 +140,64 @@ export const DEPARTMENT_PERMISSIONS = {
   ]
 };
 
+// Get user permissions based on role and organization - async version
+export async function getUserPermissionsByRole(userId: number, role: string, organizationId?: number): Promise<any> {
+  const { db } = await import('./db');
+  const { users, organizations } = await import('../shared/schema');
+  const { eq } = await import('drizzle-orm');
+
+  try {
+    // Get user's actual role and organization status
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Get organization subscription level for feature gating
+    const [org] = organizationId ? await db.select().from(organizations).where(eq(organizations.id, organizationId)) : [null];
+    const subscriptionLevel = org?.plan || 'free';
+
+    // Map role to permissions
+    const basePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] || ROLE_PERMISSIONS.user;
+    
+    // Convert to boolean object for frontend consumption
+    const permissionObj: any = {};
+    
+    // Basic permissions all authenticated users have
+    permissionObj.canViewTrips = true;
+    permissionObj.canCreateTrips = true;
+    permissionObj.canEditTrips = basePermissions.includes(PERMISSIONS.EDIT_ALL_TRIPS);
+    permissionObj.canDeleteTrips = basePermissions.includes(PERMISSIONS.DELETE_TRIPS);
+    permissionObj.canViewAnalytics = basePermissions.includes(PERMISSIONS.ACCESS_ANALYTICS);
+    permissionObj.canManageOrganization = basePermissions.includes(PERMISSIONS.MANAGE_ORGANIZATION);
+    permissionObj.canAccessAdmin = basePermissions.includes(PERMISSIONS.ADMIN_ACCESS);
+    permissionObj.canManageTeam = basePermissions.includes(PERMISSIONS.MANAGE_TEAM_ROLES);
+    permissionObj.canBookFlights = basePermissions.includes(PERMISSIONS.BOOK_FLIGHTS);
+    permissionObj.canUseOptimizer = basePermissions.includes(PERMISSIONS.USE_TRIP_OPTIMIZER);
+    permissionObj.canAccessBilling = basePermissions.includes(PERMISSIONS.BILLING_ACCESS);
+    permissionObj.canWhiteLabel = basePermissions.includes(PERMISSIONS.WHITE_LABEL_SETTINGS) && (subscriptionLevel === 'pro' || subscriptionLevel === 'enterprise');
+
+    return permissionObj;
+  } catch (error) {
+    console.error('Error getting user permissions:', error);
+    // Return minimal permissions on error
+    return {
+      canViewTrips: true,
+      canCreateTrips: true,
+      canEditTrips: false,
+      canDeleteTrips: false,
+      canViewAnalytics: false,
+      canManageOrganization: false,
+      canAccessAdmin: false,
+      canManageTeam: false,
+      canBookFlights: true,
+      canUseOptimizer: false,
+      canAccessBilling: false,
+      canWhiteLabel: false
+    };
+  }
+}
+
 // Navigation rules based on permissions
 export const NAVIGATION_RULES = {
   '/': [], // Dashboard - available to all authenticated users

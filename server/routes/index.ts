@@ -24,6 +24,7 @@ import { registerAdminSettingsRoutes } from './admin-settings';
 import aiRoutes from './ai';
 import securityRoutes from './security';
 import healthRoutes from './health';
+import notificationsRoutes from './notifications';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -52,6 +53,7 @@ router.use('/webhooks', webhookRoutes);
 router.use('/subscription-status', subscriptionStatusRoutes);
 router.use('/security', securityRoutes);
 router.use('/health', healthRoutes);
+router.use('/notifications', notificationsRoutes);
 
 // Import and register simplified white label routes
 import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
@@ -72,24 +74,21 @@ router.get('/templates', async (req, res) => {
   }
 });
 
-// User permissions endpoint - bypass auth temporarily to fix access
+// User permissions endpoint - requires authentication
 router.get('/user/permissions', async (req, res) => {
   try {
-    // Provide admin permissions for authenticated Supabase users
-    const permissions = {
-      canViewTrips: true,
-      canCreateTrips: true,
-      canEditTrips: true,
-      canDeleteTrips: true,
-      canViewAnalytics: true,
-      canManageOrganization: true,
-      canAccessAdmin: true
-    };
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    // Get user's actual permissions from database based on role
+    const { getUserPermissionsByRole } = await import('../permissions');
+    const permissions = await getUserPermissionsByRole(req.user.id, req.user.role, req.user.organization_id);
 
     res.json({ 
       permissions,
-      role: 'admin',
-      organizationId: 1
+      role: req.user.role,
+      organizationId: req.user.organization_id
     });
   } catch (error) {
     console.error('Permissions error:', error);
