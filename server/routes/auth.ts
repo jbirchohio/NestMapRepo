@@ -45,8 +45,8 @@ router.post('/register', async (req: Request, res: Response) => {
     // Create default organization for new user
     const [organization] = await db.insert(organizations).values({
       name: `${username}'s Organization`,
-      organization_type: 'corporate',
-      settings: {}
+      plan: 'free',
+      white_label_enabled: false
     }).returning();
 
     // Create user
