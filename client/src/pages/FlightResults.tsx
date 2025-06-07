@@ -222,7 +222,7 @@ export default function FlightResults() {
   }
 
   const flights = sortFlights(filterFlights(flightResults?.data || []));
-  const allAirlines = Array.from(new Set(
+  const allAirlines: string[] = Array.from(new Set(
     flightResults?.data?.flatMap((flight: FlightOffer) => 
       flight.slices.flatMap(slice => 
         slice.segments.map(segment => segment.airline.iataCode)
@@ -313,7 +313,7 @@ export default function FlightResults() {
                     <div>
                       <label className="text-sm font-medium mb-2 block">Airlines</label>
                       <div className="space-y-2 max-h-32 overflow-y-auto">
-                        {allAirlines.map(airline => (
+                        {allAirlines.map((airline: string) => (
                           <label key={airline} className="flex items-center gap-2">
                             <input
                               type="checkbox"

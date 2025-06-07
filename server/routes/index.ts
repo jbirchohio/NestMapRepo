@@ -54,26 +54,6 @@ router.use('/webhooks', webhookRoutes);
 router.use('/subscription-status', subscriptionStatusRoutes);
 router.use('/security', securityRoutes);
 router.use('/health', healthRoutes);
-// Public notification status endpoint (no auth required) - must come before auth-protected routes
-router.get('/notifications', async (req, res) => {
-  try {
-    // Return empty notifications for unauthenticated users
-    res.json({
-      success: true,
-      data: {
-        notifications: [],
-        unread_count: 0
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching public notifications:', error);
-    res.status(500).json({ 
-      success: false,
-      error: { message: 'Failed to fetch notifications' }
-    });
-  }
-});
-
 router.use('/notifications', notificationsRoutes);
 router.use('/flights', flightRoutes);
 
