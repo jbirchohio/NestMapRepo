@@ -224,6 +224,10 @@ app.use((req, res, next) => {
     const { registerSimplifiedWhiteLabelRoutes } = await import('./routes/whiteLabelSimplified');
     registerSimplifiedWhiteLabelRoutes(app);
 
+    // Register system metrics routes with full Express app instance
+    const { registerSystemMetricsRoutes } = await import('./routes/system-metrics');
+    registerSystemMetricsRoutes(app);
+
     console.log('✅ API routes mounted successfully');
   } catch (error) {
     console.error('❌ Failed to mount API routes:', error);

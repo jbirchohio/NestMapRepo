@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { endpointMonitor } from './api-security';
 import { trackEndpointHealth } from '../routes/health';
+import { trackRequest } from '../routes/system-metrics';
 
 interface UnifiedMetrics {
   startTime: bigint;
@@ -119,6 +120,9 @@ export function unifiedMonitoringMiddleware(req: Request, res: Response, next: N
     
     // Track API health metrics
     trackEndpointHealth(req.path, duration, res.statusCode, isError ? 'HTTP Error' : undefined);
+    
+    // Track system metrics
+    trackRequest(duration, isError);
     
     return originalEnd.call(this, chunk, encoding, cb);
   };
