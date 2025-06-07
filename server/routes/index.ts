@@ -25,6 +25,7 @@ import aiRoutes from './ai';
 import securityRoutes from './security';
 import healthRoutes from './health';
 import notificationsRoutes from './notifications';
+import flightRoutes from './flights';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -54,6 +55,7 @@ router.use('/subscription-status', subscriptionStatusRoutes);
 router.use('/security', securityRoutes);
 router.use('/health', healthRoutes);
 router.use('/notifications', notificationsRoutes);
+router.use('/flights', flightRoutes);
 
 // Import and register simplified white label routes
 import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
