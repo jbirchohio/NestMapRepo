@@ -42,13 +42,81 @@ router.post('/search', async (req, res) => {
     
     console.log('Flight search request:', searchParams);
 
-    // Check if Duffel service is available
-    let duffelService;
+    // Use Duffel HTTP client for authentic flight data
     try {
-      const { duffelFlightService } = await import('../services/duffelFlightService');
-      duffelService = duffelFlightService;
-    } catch (importError) {
-      console.warn('Duffel service not available, using test data:', importError.message);
+      const { duffelClient } = await import('../services/duffelHttpClient');
+      
+      // Search flights using Duffel API
+      const duffelOffers = await duffelClient.searchFlights(searchParams);
+      
+      // Transform Duffel response to our format
+      const flights = duffelOffers.map(offer => ({
+        id: offer.id,
+        price: {
+          amount: offer.total_amount,
+          currency: offer.total_currency
+        },
+        slices: offer.slices.map(slice => ({
+          origin: {
+            iata_code: slice.origin.iata_code,
+            name: slice.origin.name,
+            city_name: slice.origin.city_name
+          },
+          destination: {
+            iata_code: slice.destination.iata_code,
+            name: slice.destination.name,
+            city_name: slice.destination.city_name
+          },
+          departure_datetime: slice.segments[0].departing_at,
+          arrival_datetime: slice.segments[slice.segments.length - 1].arriving_at,
+          duration: slice.segments.reduce((total, seg) => total + parseInt(seg.duration.replace(/[^\d]/g, '')), 0) + 'min',
+          segments: slice.segments.map(segment => ({
+            airline: {
+              name: segment.operating_carrier.name,
+              iata_code: segment.operating_carrier.iata_code,
+              logo_url: segment.operating_carrier.logo_symbol_url
+            },
+            flight_number: segment.operating_carrier_flight_number,
+            aircraft: {
+              name: segment.aircraft.name
+            },
+            origin: {
+              iata_code: segment.origin.iata_code,
+              name: segment.origin.name
+            },
+            destination: {
+              iata_code: segment.destination.iata_code,
+              name: segment.destination.name
+            },
+            departure_datetime: segment.departing_at,
+            arrival_datetime: segment.arriving_at,
+            duration: segment.duration
+          }))
+        })),
+        passengers: offer.passengers.map(passenger => ({
+          type: passenger.type,
+          cabin_class: passenger.cabin_class,
+          baggage: passenger.baggages?.map(baggage => ({
+            type: baggage.type,
+            quantity: baggage.quantity
+          })) || []
+        })),
+        conditions: {
+          change_before_departure: offer.conditions?.change_before_departure,
+          cancel_before_departure: offer.conditions?.cancel_before_departure,
+          refund_before_departure: offer.conditions?.refund_before_departure
+        }
+      }));
+
+      return res.json({
+        success: true,
+        data: flights,
+        search_params: searchParams,
+        source: 'duffel_api'
+      });
+
+    } catch (duffelError: any) {
+      console.warn('Duffel API unavailable, using fallback data:', duffelError.message);
       
       // Provide authentic-looking test data with real airline information
       const testFlights = [
