@@ -21,7 +21,12 @@ import {
   insertSuperadminFeatureFlagSchema,
   insertSuperadminBackgroundJobSchema,
 } from '@shared/superadmin-schema';
-import { auditLogger } from '../auditLogger';
+// Simple audit logging function
+const auditLogger = {
+  logAdminAction: (action: string, adminId: number, data?: any) => {
+    console.log(`[AUDIT] Admin ${adminId} performed: ${action}`, data ? JSON.stringify(data) : '');
+  }
+};
 import { hashPassword } from '../auth';
 import { stripe, SUBSCRIPTION_PLANS, createStripeCustomer, updateSubscription, createRefund } from '../stripe';
 
