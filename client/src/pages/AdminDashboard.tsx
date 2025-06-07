@@ -21,6 +21,75 @@ import {
   TrendingUp,
   Activity
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+
+interface ApiHealthData {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  performance: {
+    avgResponseTime: number;
+    errorRate: number;
+  };
+  endpoints: {
+    total: number;
+    healthy: number;
+    degraded: number;
+    unhealthy: number;
+  };
+}
+
+function ApiHealthStatus() {
+  const { data: healthData, isLoading } = useQuery<ApiHealthData>({
+    queryKey: ['/api/health'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-between p-4 border rounded-lg">
+        <div>
+          <p className="font-medium">API Health</p>
+          <p className="text-sm text-muted-foreground">Checking status...</p>
+        </div>
+        <Badge variant="outline">Loading</Badge>
+      </div>
+    );
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy': return 'bg-green-100 text-green-700';
+      case 'degraded': return 'bg-yellow-100 text-yellow-700';
+      case 'unhealthy': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'healthy': return 'Healthy';
+      case 'degraded': return 'Degraded';
+      case 'unhealthy': return 'Unhealthy';
+      default: return 'Unknown';
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-4 border rounded-lg">
+      <div>
+        <p className="font-medium">API Health</p>
+        <p className="text-sm text-muted-foreground">
+          {healthData?.endpoints.total || 0} endpoints monitored
+          {healthData?.performance.avgResponseTime && (
+            <> • {Math.round(healthData.performance.avgResponseTime)}ms avg</>
+          )}
+        </p>
+      </div>
+      <Badge className={getStatusColor(healthData?.status || 'unknown')}>
+        {getStatusText(healthData?.status || 'unknown')}
+      </Badge>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -251,13 +320,7 @@ export default function AdminDashboard() {
                     </Button>
                   </Link>
                 </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">API Health</p>
-                    <p className="text-sm text-muted-foreground">Monitor API endpoints</p>
-                  </div>
-                  <Badge className="bg-green-100 text-green-700">Online</Badge>
-                </div>
+                <ApiHealthStatus />
               </div>
             </CardContent>
           </AnimatedCard>

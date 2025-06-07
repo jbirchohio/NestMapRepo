@@ -22,6 +22,7 @@ import subscriptionStatusRoutes from './subscription-status';
 // import notesRoutes from './notes';
 import aiRoutes from './ai';
 import securityRoutes from './security';
+import healthRoutes from './health';
 import { getUserById } from '../auth';
 
 const router = Router();
@@ -49,6 +50,7 @@ router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/subscription-status', subscriptionStatusRoutes);
 router.use('/security', securityRoutes);
+router.use('/health', healthRoutes);
 
 // Import and register simplified white label routes
 import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
