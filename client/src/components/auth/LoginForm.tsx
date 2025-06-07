@@ -57,7 +57,7 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
           }
         }
       } catch (err) {
-        console.log('Could not check permissions, proceeding with normal flow');
+        // Could not check permissions, proceeding with normal flow
       }
       
       if (onSuccess) {

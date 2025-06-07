@@ -144,7 +144,7 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
     const root = document.documentElement;
     const useWhiteLabel = shouldUseWhiteLabel();
     
-    console.log('Applying branding:', { useWhiteLabel, config, location });
+    // Applying branding configuration
     
     if (useWhiteLabel) {
       // Apply white label branding - convert hex to HSL for CSS variables

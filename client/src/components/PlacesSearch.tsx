@@ -60,7 +60,7 @@ export default function PlacesSearch({
       }
       return null;
     } catch (error) {
-      console.error("Error getting coordinates:", error);
+      // Error getting coordinates from Mapbox API
       return null;
     }
   }
@@ -100,7 +100,7 @@ export default function PlacesSearch({
                            (data.city || "New York City") + ", " + 
                            (data.region || "NY"));
         
-        console.log("Looking up coordinates for:", fullAddress);
+        // Looking up coordinates for location
         
         // Get coordinates for the resolved address
         const coords = await getCoordinates(fullAddress);
