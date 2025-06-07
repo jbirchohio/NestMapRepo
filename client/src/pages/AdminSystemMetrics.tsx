@@ -25,6 +25,7 @@ import {
   TrendingUp,
   AlertCircle
 } from "lucide-react";
+import { AlertNotifications } from "@/components/AlertNotifications";
 
 interface SystemMetrics {
   server: {
@@ -440,6 +441,18 @@ export default function AdminSystemMetrics() {
               </div>
             </CardContent>
           </AnimatedCard>
+        </motion.div>
+      </motion.div>
+
+      {/* Real-time Alerts */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="mb-6"
+      >
+        <motion.div variants={itemVariants}>
+          <AlertNotifications />
         </motion.div>
       </motion.div>
 

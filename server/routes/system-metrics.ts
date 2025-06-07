@@ -236,6 +236,18 @@ export function registerSystemMetricsRoutes(app: Express): void {
       // Generate alerts based on current metrics
       metrics.alerts = generateAlerts(metrics);
       
+      // Auto-generate system alerts based on metrics
+      checkSystemHealthAndGenerateAlerts({
+        memory: { utilization: metrics.memory.memoryUtilization },
+        cpu: { usage: metrics.cpu.cpuUsage },
+        disk: { utilization: metrics.disk.diskUtilization },
+        performance: { 
+          errorRate: metrics.performance.errorRate,
+          responseTimeP95: metrics.performance.responseTimeP95
+        },
+        network: { activeConnections: metrics.network.activeConnections }
+      });
+      
       res.json(metrics);
     } catch (error) {
       console.error('Error getting system metrics:', error);
