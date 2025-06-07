@@ -395,7 +395,9 @@ export default function AdminSecurity() {
                 </div>
                 <div className="flex justify-between">
                   <span>Monitoring Status</span>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
+                  <Badge className={metrics ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                    {metrics ? "Active" : "Disconnected"}
+                  </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span>Alert Resolution</span>

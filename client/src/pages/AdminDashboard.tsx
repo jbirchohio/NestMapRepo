@@ -22,6 +22,7 @@ import {
   Activity
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { SystemStatusIndicator } from "@/components/SystemStatusIndicator";
 
 interface ApiHealthData {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -265,7 +266,7 @@ export default function AdminDashboard() {
                     <p className="font-medium">User Registration</p>
                     <p className="text-sm text-muted-foreground">Manage new user approvals</p>
                   </div>
-                  <Badge variant="secondary">Active</Badge>
+                  <SystemStatusIndicator service="registration" />
                 </div>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
