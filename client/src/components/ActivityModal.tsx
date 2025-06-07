@@ -130,7 +130,7 @@ export default function ActivityModal({
   // Process debounced search term
   useEffect(() => {
     if (debouncedSearchTerm && debouncedSearchTerm.length >= 3) {
-      console.log("Auto-searching for completed term:", debouncedSearchTerm);
+
       setValue("locationName", debouncedSearchTerm);
     }
   }, [debouncedSearchTerm, setValue]);
@@ -149,10 +149,10 @@ export default function ActivityModal({
       const guestTripsData = localStorage.getItem("nestmap_guest_trips");
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
       
-      console.log("Guest mode check:", { tripId, guestTripsData: !!guestTripsData, isGuestTrip });
+
       
       if (isGuestTrip) {
-        console.log("Creating guest activity:", activityData);
+
         // For guest mode, store in localStorage
         const newActivity = {
           ...activityData,
@@ -162,10 +162,10 @@ export default function ActivityModal({
         
         // Get existing guest activities
         const existingActivities = JSON.parse(localStorage.getItem(`guest_activities_${tripId}`) || '[]');
-        console.log("Existing guest activities:", existingActivities);
+
         existingActivities.push(newActivity);
         localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(existingActivities));
-        console.log("Saved guest activity, total activities:", existingActivities.length);
+
         
         return newActivity;
       }
@@ -203,7 +203,7 @@ export default function ActivityModal({
       const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
       
       if (isGuestTrip) {
-        console.log("Updating guest activity:", activity.id);
+
         // For guest mode, update in localStorage
         const updatedActivity = {
           ...activity,
@@ -224,7 +224,7 @@ export default function ActivityModal({
           act.id === activity.id ? updatedActivity : act
         );
         localStorage.setItem(`guest_activities_${tripId}`, JSON.stringify(updatedActivities));
-        console.log("Updated guest activity in localStorage");
+
         
         return updatedActivity;
       }
@@ -245,12 +245,12 @@ export default function ActivityModal({
         travelMode: String(data.travelMode || 'walking')  
       };
       
-      console.log("Updating activity with explicit data:", updateData);
+
       
       const res = await apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, updateData);
       
       const result = await res.json();
-      console.log("Server response after update:", result);
+
       return result;
     },
     onSuccess: () => {
@@ -385,7 +385,7 @@ export default function ActivityModal({
                       if (!locationName) return;
                       
                       // Show what we're actually searching for in the logs
-                      console.log("Executing search for:", locationName);
+
                       
                       try {
                         // Clear existing location results
@@ -393,16 +393,16 @@ export default function ActivityModal({
                         
                         // Step 1: Use our AI-powered location API to get structured data with trip city context
                         // Print full trip object to debug
-                        console.log("Trip details for location search:", trip);
+
                         
                         // Extract city from trip - try multiple properties
                         let cityContext = "New York City"; // Default
                         if (trip?.city && trip.city !== "") {
                           cityContext = trip.city;
-                          console.log("Using trip city for search:", cityContext);
+
                         } else if (trip?.location && trip.location !== "") {
                           cityContext = trip.location;
-                          console.log("Using trip location for search:", cityContext);
+
                         } else {
                           console.log("No city found in trip, using default:", cityContext);
                         }
