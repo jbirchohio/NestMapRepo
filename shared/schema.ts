@@ -844,11 +844,11 @@ export const adminSettings = pgTable("admin_settings", {
 // Admin Audit Log for tracking administrative actions
 export const adminAuditLog = pgTable("admin_audit_log", {
   id: serial("id").primaryKey(),
-  adminUserId: integer("admin_user_id").references(() => users.id).notNull(),
-  action: text("action").notNull(), // SYSTEM_SETTINGS_UPDATE, EMAIL_TEST, etc.
-  details: jsonb("details"), // JSON data containing details of the action
-  ipAddress: text("ip_address"),
-  createdAt: timestamp("created_at").defaultNow(),
+  admin_user_id: integer("admin_user_id").references(() => users.id).notNull(),
+  action_type: text("action_type").notNull(), // SYSTEM_SETTINGS_UPDATE, EMAIL_TEST, etc.
+  action_data: jsonb("action_data"), // JSON data containing details of the action
+  ip_address: text("ip_address"),
+  timestamp: timestamp("timestamp").defaultNow(),
 });
 
 // Insert schemas for new tables

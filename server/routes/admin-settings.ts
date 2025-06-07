@@ -71,7 +71,7 @@ export function registerAdminSettingsRoutes(app: Express) {
   // Get system settings
   app.get("/api/admin/settings", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+      if (!req.user || req.user?.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -98,7 +98,7 @@ export function registerAdminSettingsRoutes(app: Express) {
   // Update system settings
   app.put("/api/admin/settings", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+      if (!req.user || req.user?.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -137,11 +137,10 @@ export function registerAdminSettingsRoutes(app: Express) {
 
       // Log the change
       await db.insert(adminAuditLog).values({
-        adminUserId: req.user.id,
-        action: 'SYSTEM_SETTINGS_UPDATE',
-        details: { updatedSettings },
-        ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
-        createdAt: new Date(),
+        admin_user_id: req.user.id,
+        action_type: 'SYSTEM_SETTINGS_UPDATE',
+        action_data: { updatedSettings },
+        ip_address: req.ip || req.connection.remoteAddress || 'unknown',
       });
 
       res.json({ message: "Settings updated successfully" });
@@ -154,7 +153,7 @@ export function registerAdminSettingsRoutes(app: Express) {
   // Test email configuration
   app.post("/api/admin/settings/test-email", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+      if (!req.user || req.user?.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -178,11 +177,10 @@ export function registerAdminSettingsRoutes(app: Express) {
 
       // Log the test
       await db.insert(adminAuditLog).values({
-        adminUserId: req.user.id,
-        action: 'EMAIL_TEST',
-        details: { smtpHost: emailConfig.smtpHost, fromEmail: emailConfig.fromEmail },
-        ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
-        createdAt: new Date(),
+        admin_user_id: req.user.id,
+        action_type: 'EMAIL_TEST',
+        action_data: { smtpHost: emailConfig.smtpHost, fromEmail: emailConfig.fromEmail },
+        ip_address: req.ip || req.connection.remoteAddress || 'unknown',
       });
 
       // In a real implementation, you would send an actual test email here
@@ -196,7 +194,7 @@ export function registerAdminSettingsRoutes(app: Express) {
   // Get admin logs endpoint
   app.get("/api/admin/logs", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+      if (!req.user || req.user?.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -207,7 +205,7 @@ export function registerAdminSettingsRoutes(app: Express) {
       const logs = await db
         .select()
         .from(adminAuditLog)
-        .orderBy(adminAuditLog.createdAt)
+        .orderBy(adminAuditLog.timestamp)
         .limit(limit)
         .offset(offset);
 
