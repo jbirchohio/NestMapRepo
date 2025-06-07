@@ -730,12 +730,7 @@ router.post('/billing/:orgId/upgrade', requireSuperadminRole, async (req, res) =
       auditLogger.logAdminAction(
         'UPGRADE_PLAN',
         req.user.id,
-        { 
-          organization_id: orgId,
-          organization_name: updatedOrg.name,
-          new_plan: newPlan,
-          previous_plan: previousPlan 
-        }
+        { organization_id: orgId, organization_name: updatedOrg.name, new_plan: newPlan, previous_plan: previousPlan }
       );
     }
 
@@ -800,12 +795,7 @@ router.post('/billing/:orgId/downgrade', requireSuperadminRole, async (req, res)
       auditLogger.logAdminAction(
         'DOWNGRADE_PLAN',
         req.user.id,
-        { 
-          organization_id: orgId,
-          organization_name: updatedOrg.name,
-          new_plan: newPlan,
-          previous_plan: previousPlan 
-        }
+        { organization_id: orgId, organization_name: updatedOrg.name, new_plan: newPlan, previous_plan: previousPlan }
       );
     }
 
@@ -847,13 +837,7 @@ router.post('/billing/:orgId/refund', requireSuperadminRole, async (req, res) =>
     auditLogger.logAdminAction(
       'PROCESS_REFUND',
       adminUserId,
-      { 
-        organization_id: orgId,
-        organization_name: org.name,
-        amount: parseFloat(amount),
-        reason,
-        refund_type: refundType
-      }
+      { organization_id: orgId, organization_name: org.name, amount: parseFloat(amount), reason, refund_type: refundType }
     );
 
     res.json({ success: true, refund: refundData });
@@ -887,11 +871,7 @@ router.post('/billing/:orgId/suspend', requireSuperadminRole, async (req, res) =
       auditLogger.logAdminAction(
         'SUSPEND_BILLING',
         req.user.id,
-        { 
-          organization_id: orgId,
-          organization_name: updatedOrg.name,
-          reason 
-        }
+        { organization_id: orgId, organization_name: updatedOrg.name, reason }
       );
     }
 
@@ -925,10 +905,7 @@ router.post('/billing/:orgId/reactivate', requireSuperadminRole, async (req, res
     auditLogger.logAdminAction(
       'REACTIVATE_BILLING',
       adminUserId,
-      { 
-        organization_id: orgId,
-        organization_name: updatedOrg.name 
-      }
+      { organization_id: orgId, organization_name: updatedOrg.name }
     );
 
     res.json({ success: true, organization: updatedOrg });
