@@ -38,7 +38,9 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     '/api/stripe/',
     '/api/webhooks/',
     '/api/acme-challenge',
-    '/api/user/permissions'
+    '/api/user/permissions',
+    '/api/white-label/config',
+    '/api/notifications'
   ];
 
   const isPublicPath = publicPaths.some(path => req.path.startsWith(path));

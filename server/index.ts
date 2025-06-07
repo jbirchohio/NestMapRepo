@@ -143,9 +143,9 @@ app.use('/api', authenticateApiKey);
 import { domainRoutingMiddleware } from "./loadBalancer";
 app.use(domainRoutingMiddleware);
 
-// Apply case conversion middleware first, then JWT authentication
+// Apply case conversion middleware first, then JWT authentication only to API routes
 app.use(caseConversionMiddleware);
-app.use(jwtAuthMiddleware);
+app.use('/api', jwtAuthMiddleware);
 
 // Track user activity for security monitoring
 app.use(trackUserActivity);
@@ -215,7 +215,7 @@ app.use((req, res, next) => {
 
   console.log('📍 Mounting API routes...');
   try {
-    // Mount API routes
+    // Mount API routes with proper middleware order
     app.use('/api', apiRoutes);
 
     // Register booking routes with full Express app instance
@@ -269,7 +269,7 @@ app.use((req, res, next) => {
   });
 
   if (process.env.NODE_ENV === "development") {
-    // Create server first, then setup Vite
+    // Setup Vite before starting server to ensure proper middleware order
     const server = app.listen(PORT, HOST, () => {
       log(`serving on http://${HOST}:${PORT}`);
     });
