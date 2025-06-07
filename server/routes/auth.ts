@@ -6,12 +6,21 @@ import { eq } from 'drizzle-orm';
 
 const router = express.Router();
 
-// Simple JWT creation function
+// Secure JWT creation function with proper HMAC signing
+import crypto from 'crypto';
+
 function createJWT(payload: any): string {
   const header = { alg: 'HS256', typ: 'JWT' };
   const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const signature = 'signature'; // Simplified for demo - would use proper HMAC in production
+  
+  // Use proper HMAC signing with secret key
+  const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback_dev_secret_change_in_production';
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(`${headerB64}.${payloadB64}`)
+    .digest('base64url');
+    
   return `${headerB64}.${payloadB64}.${signature}`;
 }
 
@@ -35,7 +44,7 @@ router.post('/register', async (req: Request, res: Response) => {
 
     // Create default organization for new user
     const [organization] = await db.insert(organizations).values({
-      organization_name: `${username}'s Organization`,
+      name: `${username}'s Organization`,
       organization_type: 'corporate',
       settings: {}
     }).returning();

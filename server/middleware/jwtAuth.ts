@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
 // Define user interface for JWT authentication
 interface JWTUser {
@@ -46,19 +47,56 @@ export function jwtAuthMiddleware(req: Request, res: Response, next: NextFunctio
     return next();
   }
 
-  // For authenticated paths, provide default admin user context
-  req.user = {
-    id: 1,
-    email: 'demo@nestmap.com',
-    organization_id: 1,
-    role: 'admin',
-    username: 'demo'
-  };
+  // Extract JWT from Authorization header
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No valid authorization header' });
+  }
 
-  req.organizationId = 1;
-  req.organization_id = 1;
+  const token = authHeader.substring(7);
+  
+  try {
+    // Verify JWT signature
+    const [headerB64, payloadB64, signatureB64] = token.split('.');
+    if (!headerB64 || !payloadB64 || !signatureB64) {
+      return res.status(401).json({ message: 'Invalid token format' });
+    }
 
-  next();
+    // Verify signature
+    const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback_dev_secret_change_in_production';
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest('base64url');
+
+    if (signatureB64 !== expectedSignature) {
+      return res.status(401).json({ message: 'Invalid token signature' });
+    }
+
+    // Decode payload
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
+    
+    // Check expiration
+    if (payload.exp && Date.now() >= payload.exp * 1000) {
+      return res.status(401).json({ message: 'Token expired' });
+    }
+
+    // Set user context from validated JWT
+    req.user = {
+      id: payload.id,
+      email: payload.email,
+      organization_id: payload.organization_id,
+      role: payload.role,
+      username: payload.username
+    };
+
+    req.organizationId = payload.organization_id;
+    req.organization_id = payload.organization_id;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
 }
 
 /**
