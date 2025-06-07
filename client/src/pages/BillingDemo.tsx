@@ -11,7 +11,141 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { CreditCard, DollarSign, TrendingUp, Users, Building, RefreshCw, Ban, CheckCircle, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { CreditCard, DollarSign, TrendingUp, Users, Building, RefreshCw, Ban, CheckCircle, ArrowUpCircle, ArrowDownCircle, XCircle, AlertTriangle } from 'lucide-react';
+
+function SystemHealthStatus() {
+  const { data: healthData } = useQuery({
+    queryKey: ['/api/health'],
+    refetchInterval: 30000,
+  });
+
+  const { data: stripeStatus } = useQuery({
+    queryKey: ['/api/stripe/status'],
+    refetchInterval: 60000,
+  });
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'healthy':
+      case 'active':
+      case 'connected': return CheckCircle;
+      case 'degraded':
+      case 'warning': return AlertTriangle;
+      case 'unhealthy':
+      case 'error': return XCircle;
+      default: return CheckCircle;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy':
+      case 'active':
+      case 'connected': return 'text-green-600 bg-green-50 dark:bg-green-900/20';
+      case 'degraded':
+      case 'warning': return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20';
+      case 'unhealthy':
+      case 'error': return 'text-red-600 bg-red-50 dark:bg-red-900/20';
+      default: return 'text-green-600 bg-green-50 dark:bg-green-900/20';
+    }
+  };
+
+  const getBadgeColor = (status: string) => {
+    switch (status) {
+      case 'healthy':
+      case 'active':
+      case 'connected': return 'bg-green-600';
+      case 'degraded':
+      case 'warning': return 'bg-yellow-600';
+      case 'unhealthy':
+      case 'error': return 'bg-red-600';
+      default: return 'bg-green-600';
+    }
+  };
+
+  const apiStatus = healthData?.status || 'unknown';
+  const stripeIntegrationStatus = stripeStatus?.connected ? 'connected' : 'disconnected';
+  const databaseStatus = healthData?.endpoints?.total > 0 ? 'connected' : 'disconnected';
+  const auditStatus = 'active'; // Audit logging is always active when app runs
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>System Status</CardTitle>
+        <CardDescription>
+          Real-time system health and integration status
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`flex items-center justify-between p-4 rounded-lg ${getStatusColor(stripeIntegrationStatus)}`}>
+            <div className="flex items-center gap-3">
+              {React.createElement(getStatusIcon(stripeIntegrationStatus), { className: "w-5 h-5" })}
+              <span className="font-medium">Stripe Integration</span>
+            </div>
+            <Badge variant="default" className={getBadgeColor(stripeIntegrationStatus)}>
+              {stripeIntegrationStatus === 'connected' ? 'Connected' : 'Disconnected'}
+            </Badge>
+          </div>
+          
+          <div className={`flex items-center justify-between p-4 rounded-lg ${getStatusColor(auditStatus)}`}>
+            <div className="flex items-center gap-3">
+              {React.createElement(getStatusIcon(auditStatus), { className: "w-5 h-5" })}
+              <span className="font-medium">Audit Logging</span>
+            </div>
+            <Badge variant="default" className={getBadgeColor(auditStatus)}>
+              Active
+            </Badge>
+          </div>
+          
+          <div className={`flex items-center justify-between p-4 rounded-lg ${getStatusColor('test')}`}>
+            <div className="flex items-center gap-3">
+              <CreditCard className="w-5 h-5 text-blue-600" />
+              <span className="font-medium">Payment Processing</span>
+            </div>
+            <Badge variant="secondary">
+              {process.env.NODE_ENV === 'production' ? 'Live' : 'Test Mode'}
+            </Badge>
+          </div>
+          
+          <div className={`flex items-center justify-between p-4 rounded-lg ${getStatusColor(databaseStatus)}`}>
+            <div className="flex items-center gap-3">
+              {React.createElement(getStatusIcon(databaseStatus), { className: "w-5 h-5" })}
+              <span className="font-medium">Database Connection</span>
+            </div>
+            <Badge variant="default" className={getBadgeColor(databaseStatus)}>
+              {databaseStatus === 'connected' ? 'Connected' : 'Disconnected'}
+            </Badge>
+          </div>
+          
+          <div className={`flex items-center justify-between p-4 rounded-lg ${getStatusColor(apiStatus)}`}>
+            <div className="flex items-center gap-3">
+              {React.createElement(getStatusIcon(apiStatus), { className: "w-5 h-5" })}
+              <span className="font-medium">API Health</span>
+            </div>
+            <Badge variant="default" className={getBadgeColor(apiStatus)}>
+              {apiStatus === 'healthy' ? 'Healthy' : 
+               apiStatus === 'degraded' ? 'Degraded' : 
+               apiStatus === 'unhealthy' ? 'Unhealthy' : 'Unknown'}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Building className="w-5 h-5 text-blue-600" />
+              <span className="font-medium">Response Time</span>
+            </div>
+            <Badge variant="outline">
+              {healthData?.performance?.avgResponseTime ? 
+                `${Math.round(healthData.performance.avgResponseTime)}ms` : 
+                'Unknown'}
+            </Badge>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function BillingDemo() {
   const { toast } = useToast();
@@ -465,46 +599,7 @@ export default function BillingDemo() {
         </Card>
 
         {/* System Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>System Status</CardTitle>
-            <CardDescription>
-              Billing system health and integration status
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Stripe Integration</span>
-                </div>
-                <Badge variant="default" className="bg-green-600">Active</Badge>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Audit Logging</span>
-                </div>
-                <Badge variant="default" className="bg-green-600">Active</Badge>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CreditCard className="w-5 h-5 text-blue-600" />
-                  <span className="font-medium">Payment Processing</span>
-                </div>
-                <Badge variant="secondary">Test Mode</Badge>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Database Connection</span>
-                </div>
-                <Badge variant="default" className="bg-green-600">Connected</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SystemHealthStatus />
       </div>
     </div>
   );

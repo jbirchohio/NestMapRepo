@@ -113,6 +113,11 @@ export default function AdminDashboard() {
     enabled: !!user,
   });
 
+  const { data: whiteLabelConfig } = useQuery({
+    queryKey: ['/api/white-label/config'],
+    enabled: !!user,
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">
       <div className="container mx-auto px-4 py-8">
