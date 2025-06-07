@@ -121,9 +121,9 @@ export default function PerformanceDashboard() {
     );
   }
 
-  const performance = performanceData?.data as PerformanceMetrics | undefined;
-  const realtime = realtimeData?.data;
-  const recommendations = recommendationsData?.data as OptimizationRecommendation[] | undefined;
+  const performance = (performanceData as any)?.data as PerformanceMetrics | undefined;
+  const realtime = (realtimeData as any)?.data;
+  const recommendations = (recommendationsData as any)?.data as OptimizationRecommendation[] | undefined;
 
   return (
     <div className="p-6 space-y-6">
