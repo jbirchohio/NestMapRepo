@@ -4,7 +4,7 @@ import tripRoutes from './trips';
 import activityRoutes from './activities';
 import organizationRoutes from './organizations';
 import analyticsRoutes from './analytics';
-import { registerPerformanceRoutes } from './performance';
+// Performance routes registered in main server file
 import adminRoutes from './admin';
 import calendarRoutes from './calendar';
 import collaborationRoutes from './collaboration';

@@ -123,7 +123,9 @@ app.use(configureCORS);
 
 // Apply unified monitoring (replaces performance, memory, database, and endpoint monitoring)
 import { unifiedMonitoringMiddleware } from "./middleware/unified-monitoring";
+import { createPerformanceMiddleware } from "./performance-monitor";
 app.use(unifiedMonitoringMiddleware);
+app.use(createPerformanceMiddleware());
 
 // Apply SQL injection prevention
 app.use(preventSQLInjection);
@@ -239,6 +241,10 @@ app.use((req, res, next) => {
     // Register admin analytics routes with full Express app instance
     const { registerAdminAnalyticsRoutes } = await import('./routes/admin-analytics');
     registerAdminAnalyticsRoutes(app);
+
+    // Register performance monitoring routes with full Express app instance
+    const { registerPerformanceRoutes } = await import('./routes/performance');
+    registerPerformanceRoutes(app);
 
     console.log('✅ API routes mounted successfully');
   } catch (error) {

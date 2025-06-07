@@ -28,7 +28,7 @@ export function registerPerformanceRoutes(app: Express): void {
 
   // Get real-time performance metrics
   app.get("/api/admin/performance/realtime", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+    if (!req.user || req.user?.role !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
 
@@ -58,7 +58,7 @@ export function registerPerformanceRoutes(app: Express): void {
 
   // Export performance data for analysis
   app.get("/api/admin/performance/export", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+    if (!req.user || req.user?.role !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
 
@@ -76,7 +76,7 @@ export function registerPerformanceRoutes(app: Express): void {
 
   // Performance optimization recommendations
   app.get("/api/admin/performance/recommendations", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+    if (!req.user || req.user?.role !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
 
@@ -97,7 +97,7 @@ export function registerPerformanceRoutes(app: Express): void {
 
   // Clear old performance data
   app.post("/api/admin/performance/cleanup", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+    if (!req.user || req.user?.role !== 'admin') {
       return res.status(403).json({ error: "Admin access required" });
     }
 
