@@ -1,38 +1,40 @@
+
 #!/usr/bin/env tsx
 
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import { migrate } from 'drizzle-orm/neon-serverless/migrator';
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import ws from 'ws';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import postgres from 'postgres';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-neonConfig.webSocketConstructor = ws;
-
-if (!process.env.DATABASE_URL) {
-  console.error('❌ DATABASE_URL environment variable is required');
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_DB_PASSWORD) {
+  console.error('❌ SUPABASE_URL and SUPABASE_DB_PASSWORD are required');
   process.exit(1);
 }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle({ client: pool });
+// Extract database URL from Supabase
+const supabaseUrl = new URL(process.env.SUPABASE_URL);
+const databaseUrl = `postgresql://postgres.${supabaseUrl.hostname.split('.')[0]}:${process.env.SUPABASE_DB_PASSWORD}@${supabaseUrl.hostname}:5432/postgres`;
+
+const client = postgres(databaseUrl, { prepare: false });
+const db = drizzle(client);
 
 async function runMigrations() {
-  console.log('🔄 Running database migrations...');
+  console.log('🔄 Running database migrations on Supabase...');
   
   try {
     await migrate(db, {
       migrationsFolder: './migrations',
     });
     
-    console.log('✅ Database migrations completed successfully');
+    console.log('✅ Supabase database migrations completed successfully');
   } catch (error) {
     console.error('❌ Migration failed:', error);
     process.exit(1);
   } finally {
-    await pool.end();
+    await client.end();
   }
 }
 

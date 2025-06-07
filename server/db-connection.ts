@@ -1,46 +1,52 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+
+import { createClient } from '@supabase/supabase-js';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from "@shared/schema";
 import { DB_CONFIG } from './config';
 
-// This is a standard database configuration file that works with any hosting environment
-
-// Configure WebSocket support for Neon serverless
-// (only needed for Neon Database - can be removed for other PostgreSQL providers)
-try {
-  neonConfig.webSocketConstructor = ws;
-} catch (error) {
-  console.warn('Failed to set webSocketConstructor, continuing without it', error);
-}
-
-// Check if database URL is provided
-if (!DB_CONFIG.url) {
+// Check if Supabase credentials are provided
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.SUPABASE_DB_PASSWORD) {
   throw new Error(
-    "DATABASE_URL must be set. Check your environment variables.",
+    "SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_DB_PASSWORD must be set. Check your environment variables.",
   );
 }
 
-// Create connection pool with configurable size from environment
-export const pool = new Pool({
-  connectionString: DB_CONFIG.url,
-  max: DB_CONFIG.connectionPoolSize
+// Create Supabase client
+export const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// Extract database URL from Supabase
+const supabaseUrl = new URL(process.env.SUPABASE_URL);
+const databaseUrl = `postgresql://postgres.${supabaseUrl.hostname.split('.')[0]}:${process.env.SUPABASE_DB_PASSWORD}@${supabaseUrl.hostname}:5432/postgres`;
+
+// Create PostgreSQL connection for Drizzle ORM
+const client = postgres(databaseUrl, { 
+  prepare: false,
+  max: DB_CONFIG.connectionPoolSize || 10
 });
 
 // Create Drizzle ORM instance
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(client, { schema });
 
 // Utility function to test database connection
 export async function testConnection() {
   try {
-    const result = await pool.query('SELECT NOW()');
-    console.log('Database connection successful');
+    const result = await client`SELECT NOW()`;
+    console.log('Supabase database connection successful');
     return true;
   } catch (error) {
-    console.error('Database connection failed:', error);
+    console.error('Supabase database connection failed:', error);
     return false;
   }
 }
+
+// For backward compatibility
+export const pool = {
+  query: (text: string, params?: any[]) => client.unsafe(text, params || [])
+};
 
 // Export database connection
 export default db;

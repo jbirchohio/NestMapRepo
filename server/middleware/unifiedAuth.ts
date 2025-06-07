@@ -7,107 +7,67 @@ import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client
 const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_ANON_KEY || ''
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    authId: string;
-    username: string;
-    email: string;
-    role: string;
-    roleType: string;
-    organizationId?: number;
-  };
-  isAuthenticated: () => boolean;
-}
-
-/**
- * Unified Authentication Middleware
- * Handles both JWT and session-based authentication
- */
-export async function unifiedAuthMiddleware(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> {
+export const unifiedAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Try JWT authentication first
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const token = req.headers.authorization?.replace('Bearer ', '');
 
-    if (token) {
-      // Verify Supabase JWT token
-      const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
-
-      if (!error && supabaseUser) {
-        // Get database user with organization data
-        const [dbUser] = await db
-          .select()
-          .from(users)
-          .where(eq(users.auth_id, supabaseUser.id))
-          .limit(1);
-
-        if (dbUser) {
-          // Attach user data to request
-          req.user = {
-            id: dbUser.id,
-            authId: dbUser.auth_id,
-            username: dbUser.username,
-            email: dbUser.email,
-            role: dbUser.role || 'user',
-            roleType: dbUser.role_type || 'corporate',
-            organizationId: dbUser.organization_id || undefined
-          };
-
-          req.isAuthenticated = () => true;
-          return next();
-        }
-      }
+    if (!token) {
+      return res.status(401).json({ error: 'No authorization token provided' });
     }
 
-    // Fallback to session authentication
-    const sessionUserId = (req.session as any)?.user_id;
-    if (sessionUserId) {
-      const [dbUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, sessionUserId))
-        .limit(1);
+    // Verify Supabase JWT token
+    const { data: { user }, error } = await supabase.auth.getUser(token);
 
-      if (dbUser) {
-        req.user = {
-          id: dbUser.id,
-          authId: dbUser.auth_id,
-          username: dbUser.username,
-          email: dbUser.email,
-          role: dbUser.role || 'user',
-          roleType: dbUser.role_type || 'corporate',
-          organizationId: dbUser.organization_id || undefined
-        };
-
-        req.isAuthenticated = () => true;
-        return next();
-      }
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
     }
 
-    // No valid authentication found
-    req.isAuthenticated = () => false;
+    // Get user from our database using Supabase auth ID
+    const [dbUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.auth_id, user.id))
+      .limit(1);
+
+    if (!dbUser) {
+      return res.status(401).json({ error: 'User not found in database' });
+    }
+
+    // Transform to camelCase for frontend
+    req.user = {
+      id: dbUser.id,
+      authId: dbUser.auth_id,
+      username: dbUser.username,
+      email: dbUser.email,
+      displayName: dbUser.display_name,
+      avatarUrl: dbUser.avatar_url,
+      role: dbUser.role,
+      roleType: dbUser.role_type,
+      organizationId: dbUser.organization_id,
+      company: dbUser.company,
+      jobTitle: dbUser.job_title,
+      teamSize: dbUser.team_size,
+      useCase: dbUser.use_case,
+      lastLogin: dbUser.last_login,
+      createdAt: dbUser.created_at,
+    };
+
     next();
   } catch (error) {
-    console.error('Unified Auth Middleware Error:', error);
-    req.isAuthenticated = () => false;
-    next();
+    console.error('Authentication error:', error);
+    res.status(500).json({ error: 'Authentication failed' });
   }
-}
+};
 
 /**
  * Require Authentication Middleware
  */
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
-  if (!req.isAuthenticated?.() || !req.user) {
+export function requireAuth(req: Request & { user?: any }, res: Response, next: NextFunction): void {
+  if (!req.user) {
     res.status(401).json({ message: 'Authentication required' });
     return;
   }
@@ -117,8 +77,8 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
 /**
  * Admin Role Middleware
  */
-export function requireAdminRole(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
-  if (!req.isAuthenticated?.() || !req.user) {
+export function requireAdminRole(req: Request & { user?: any }, res: Response, next: NextFunction): void {
+  if (!req.user) {
     res.status(401).json({ message: 'Authentication required' });
     return;
   }
@@ -135,8 +95,8 @@ export function requireAdminRole(req: AuthenticatedRequest, res: Response, next:
 /**
  * Superadmin Role Middleware
  */
-export function requireSuperadminRole(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
-  if (!req.isAuthenticated?.() || !req.user) {
+export function requireSuperadminRole(req: Request & { user?: any }, res: Response, next: NextFunction): void {
+  if (!req.user) {
     res.status(401).json({ message: 'Authentication required' });
     return;
   }
