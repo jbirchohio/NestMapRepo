@@ -851,6 +851,23 @@ export const adminAuditLog = pgTable("admin_audit_log", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+// Notifications table for user notifications system
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id),
+  type: text("type").notNull(), // booking_confirmation, trip_reminder, team_invite, etc.
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  priority: text("priority").default("normal"), // low, normal, high, urgent
+  read: boolean("read").default(false),
+  actions: jsonb("actions"), // Array of action objects with label and url
+  metadata: jsonb("metadata"), // Additional context data
+  expires_at: timestamp("expires_at"), // Optional expiration for temporary notifications
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas for new tables
 export const insertWhiteLabelSettingsSchema = createInsertSchema(whiteLabelSettings).pick({
   organization_id: true,
@@ -878,6 +895,16 @@ export const insertWhiteLabelRequestSchema = createInsertSchema(whiteLabelReques
   request_type: true,
   request_data: true,
 });
+
+// Notifications schema
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 
 // White Label constants
 export const WHITE_LABEL_PLANS = {
