@@ -1,14 +1,45 @@
-import { DuffelAPI } from '@duffel/api';
-
 if (!process.env.DUFFEL_API_KEY) {
   throw new Error('DUFFEL_API_KEY environment variable is required');
 }
 
-const duffel = new DuffelAPI({
-  token: process.env.DUFFEL_API_KEY,
-  // Use sandbox for development, production for live bookings
-  environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox'
-});
+const DUFFEL_API_BASE = process.env.NODE_ENV === 'production' 
+  ? 'https://api.duffel.com' 
+  : 'https://api.duffel.com'; // Duffel uses same endpoint for both
+
+// HTTP client for Duffel API
+class DuffelHTTPClient {
+  private baseURL = DUFFEL_API_BASE;
+  private apiKey = process.env.DUFFEL_API_KEY!;
+
+  async request(endpoint: string, options: RequestInit = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const headers = {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
+      'Duffel-Version': 'v1',
+      ...options.headers
+    };
+
+    console.log(`Duffel API Request: ${options.method || 'GET'} ${url}`);
+
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Duffel API Error: ${response.status} ${errorText}`);
+      throw new Error(`Duffel API Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`Duffel API Response: ${response.status} - Data length: ${JSON.stringify(data).length}`);
+    return data;
+  }
+}
+
+const duffelClient = new DuffelHTTPClient();
 
 export interface FlightSearchParams {
   origin: string;
@@ -175,20 +206,21 @@ export class DuffelFlightService {
         });
       }
 
-      const offerRequest = await duffel.offerRequests.create(offerRequestData);
+      // Create offer request via HTTP
+      const offerRequest = await duffelClient.request('/air/offer_requests', {
+        method: 'POST',
+        body: JSON.stringify({ data: offerRequestData })
+      });
       
-      console.log('Duffel offer request created:', offerRequest.id);
+      console.log('Duffel offer request created:', offerRequest.data.id);
 
       // Get offers from the request
-      const offers = await duffel.offers.list({
-        offer_request_id: offerRequest.id,
-        limit: 50 // Get up to 50 offers
-      });
+      const offersResponse = await duffelClient.request(`/air/offers?offer_request_id=${offerRequest.data.id}&limit=50`);
 
-      console.log(`Found ${offers.data.length} flight offers`);
+      console.log(`Found ${offersResponse.data.length} flight offers`);
 
       // Transform Duffel response to our format
-      return offers.data.map(offer => ({
+      return offersResponse.data.map((offer: any) => ({
         id: offer.id,
         price: {
           amount: offer.total_amount,
@@ -231,11 +263,11 @@ export class DuffelFlightService {
             duration: segment.duration
           }))
         })),
-        passengers: offer.passengers.map(passenger => ({
+        passengers: offer.passengers.map((passenger: any) => ({
           type: passenger.type,
           fare_basis_code: passenger.fare_basis_code,
           cabin_class: passenger.cabin_class,
-          baggage: passenger.baggages?.map(baggage => ({
+          baggage: passenger.baggages?.map((baggage: any) => ({
             type: baggage.type,
             quantity: baggage.quantity
           })) || []
@@ -275,7 +307,8 @@ export class DuffelFlightService {
    */
   async getOffer(offerId: string): Promise<FlightOffer> {
     try {
-      const offer = await duffel.offers.get(offerId);
+      const offerResponse = await duffelClient.request(`/air/offers/${offerId}`);
+      const offer = offerResponse.data;
       
       // Transform to our format (same as in searchFlights)
       return {
