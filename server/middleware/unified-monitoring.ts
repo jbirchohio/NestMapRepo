@@ -105,11 +105,18 @@ export function unifiedMonitoringMiddleware(req: Request, res: Response, next: N
       });
     }
     
-    // Memory usage warnings
-    if (memoryDelta > 50 * 1024 * 1024) { // 50MB threshold
+    // Memory usage warnings (development-aware thresholds)
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isViteAsset = req.path.startsWith('/src/') || req.path.startsWith('/@');
+    const memoryThreshold = isDevelopment && isViteAsset ? 300 * 1024 * 1024 : 50 * 1024 * 1024; // 300MB for Vite assets, 50MB otherwise
+    
+    if (memoryDelta > memoryThreshold) {
       console.warn('HIGH_MEMORY_USAGE:', {
         endpoint: req.path,
         memoryDelta: `${(memoryDelta / 1024 / 1024).toFixed(2)}MB`,
+        threshold: `${(memoryThreshold / 1024 / 1024).toFixed(0)}MB`,
+        isViteAsset,
+        environment: process.env.NODE_ENV,
         timestamp: new Date().toISOString()
       });
     }

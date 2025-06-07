@@ -228,6 +228,10 @@ app.use((req, res, next) => {
     const { registerSystemMetricsRoutes } = await import('./routes/system-metrics');
     registerSystemMetricsRoutes(app);
 
+    // Register alerts routes with full Express app instance
+    const { registerAlertsRoutes } = await import('./routes/alerts');
+    registerAlertsRoutes(app);
+
     console.log('✅ API routes mounted successfully');
   } catch (error) {
     console.error('❌ Failed to mount API routes:', error);

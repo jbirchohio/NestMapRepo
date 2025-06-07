@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { requireSuperadminRole } from "../middleware/auth";
+import { checkSystemHealthAndGenerateAlerts } from "./alerts";
 import os from "os";
 import process from "process";
 
