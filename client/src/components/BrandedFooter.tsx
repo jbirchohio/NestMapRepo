@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { Separator } from '@/components/ui/separator';
 

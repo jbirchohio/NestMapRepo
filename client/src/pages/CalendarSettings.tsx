@@ -1,4 +1,4 @@
-import React from 'react';
+
 import CalendarIntegration from '@/components/CalendarIntegration';
 
 export default function CalendarSettings() {
