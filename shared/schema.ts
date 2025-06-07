@@ -973,6 +973,13 @@ export const tripCollaborations = pgTable("trip_collaborations", {
 export type OrganizationMember = typeof organizationMembers.$inferSelect;
 export type InsertOrganizationMember = z.infer<typeof insertOrganizationMemberSchema>;
 
+// Expense Schema
+export const insertExpenseSchema = createInsertSchema(expenses).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // Expense Types
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
