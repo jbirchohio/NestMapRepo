@@ -48,6 +48,8 @@ import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import FlightSearch from "@/pages/FlightSearch";
 import FlightBooking from "@/pages/FlightBooking";
+import FlightResults from "@/pages/FlightResults";
+import BookingConfirmation from "@/pages/BookingConfirmation";
 import NotFound from "@/pages/not-found";
 
 function NavigationWrapper() {
@@ -85,7 +87,9 @@ function Router() {
           <Route path="/trip-planner/:id" component={TripPlanner} />
           <Route path="/trip-planner" component={TripPlanner} />
           <Route path="/flights" component={FlightSearch} />
+          <Route path="/flights/results" component={FlightResults} />
           <Route path="/flights/book/:offerId" component={FlightBooking} />
+          <Route path="/bookings/:bookingId" component={BookingConfirmation} />
           <Route path="/share/:shareCode" component={SimpleShare} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/bookings" component={Bookings} />
