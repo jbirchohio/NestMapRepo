@@ -33,6 +33,7 @@ import BrandingSetup from "@/pages/BrandingSetup";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminRoles from "@/pages/AdminRoles";
 import AdminSecurity from "@/pages/AdminSecurity";
+import AdminSettings from "@/pages/AdminSettings";
 import AdminSystemMetrics from "@/pages/AdminSystemMetrics";
 import CorporateCards from "@/pages/CorporateCards";
 import OrganizationFunding from "@/pages/OrganizationFunding";
@@ -103,6 +104,7 @@ function Router() {
           <Route path="/branding" component={Settings} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin-dashboard" component={AdminDashboard} />
+          <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/roles" component={AdminRoles} />
           <Route path="/admin/security" component={AdminSecurity} />
           <Route path="/admin/system-metrics" component={AdminSystemMetrics} />

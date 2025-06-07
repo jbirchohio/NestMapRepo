@@ -832,15 +832,23 @@ export const userSessions = pgTable("user_sessions", {
   expires_at: timestamp("expires_at").notNull(),
 });
 
+// Admin Settings for system configuration
+export const adminSettings = pgTable("admin_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Admin Audit Log for tracking administrative actions
 export const adminAuditLog = pgTable("admin_audit_log", {
   id: serial("id").primaryKey(),
-  admin_user_id: integer("admin_user_id").references(() => users.id).notNull(),
-  action_type: text("action_type").notNull(), // organization_updated, request_reviewed, domain_verified, etc.
-  target_organization_id: integer("target_organization_id").references(() => organizations.id),
-  action_data: jsonb("action_data"), // JSON data containing details of the action
-  ip_address: text("ip_address"),
-  timestamp: timestamp("timestamp").defaultNow(),
+  adminUserId: integer("admin_user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(), // SYSTEM_SETTINGS_UPDATE, EMAIL_TEST, etc.
+  details: jsonb("details"), // JSON data containing details of the action
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Insert schemas for new tables
