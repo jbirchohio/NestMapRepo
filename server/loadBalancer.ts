@@ -112,7 +112,7 @@ async function getDomainConfig(domain: string): Promise<DomainConfig | null> {
     
     return {
       domain: row.domain,
-      organizationId: row.organization_id,
+      organizationId: row.organizationId,
       ssl_verified: row.ssl_verified || false,
       status: row.status || 'pending',
       branding: row.companyName ? {
@@ -251,7 +251,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-White-Label-Domain ${domain.domain};
-        proxy_set_header X-Organization-ID ${domain.organization_id};
+        proxy_set_header X-Organization-ID ${domain.organizationId};
     }
 }
 
@@ -280,9 +280,9 @@ export async function updateLoadBalancerConfig(): Promise<void> {
 
     const domainConfigs: DomainConfig[] = domains.map(d => ({
       domain: d.domain,
-      organizationId: d.organization_id,
-      ssl_verified: d.ssl_verified,
-      status: d.status,
+      organizationId: d.organizationId,
+      ssl_verified: d.ssl_verified || false,
+      status: d.status || 'pending',
       branding: null
     }));
 
