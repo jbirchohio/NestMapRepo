@@ -72,13 +72,13 @@ router.post('/search', async (req, res) => {
           duration: slice.segments.reduce((total, seg) => total + parseInt(seg.duration.replace(/[^\d]/g, '')), 0) + 'min',
           segments: slice.segments.map(segment => ({
             airline: {
-              name: segment.operating_carrier.name,
-              iata_code: segment.operating_carrier.iata_code,
-              logo_url: segment.operating_carrier.logo_symbol_url
+              name: segment.operating_carrier?.name || 'Unknown Airline',
+              iata_code: segment.operating_carrier?.iata_code || 'XX',
+              logo_url: segment.operating_carrier?.logo_symbol_url || ''
             },
-            flight_number: segment.operating_carrier_flight_number,
+            flight_number: segment.operating_carrier_flight_number || 'N/A',
             aircraft: {
-              name: segment.aircraft.name
+              name: segment.aircraft?.name || 'Unknown Aircraft'
             },
             origin: {
               iata_code: segment.origin.iata_code,
@@ -116,154 +116,17 @@ router.post('/search', async (req, res) => {
       });
 
     } catch (duffelError: any) {
-      console.warn('Duffel API unavailable, using fallback data:', duffelError.message);
-      
-      // Provide authentic-looking test data with real airline information
-      const testFlights = [
-        {
-          id: `test_offer_${Date.now()}_1`,
-          price: {
-            amount: '385.50',
-            currency: 'USD'
-          },
-          slices: [{
-            origin: {
-              iata_code: searchParams.origin,
-              name: getAirportName(searchParams.origin),
-              city_name: getCityName(searchParams.origin)
-            },
-            destination: {
-              iata_code: searchParams.destination,
-              name: getAirportName(searchParams.destination),
-              city_name: getCityName(searchParams.destination)
-            },
-            departure_datetime: `${searchParams.departure_date}T08:30:00Z`,
-            arrival_datetime: `${searchParams.departure_date}T12:45:00Z`,
-            duration: 'PT4H15M',
-            segments: [{
-              airline: {
-                name: 'United Airlines',
-                iata_code: 'UA',
-                logo_url: 'https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UA.svg'
-              },
-              flight_number: 'UA1234',
-              aircraft: {
-                name: 'Boeing 737-800'
-              },
-              origin: {
-                iata_code: searchParams.origin,
-                name: getAirportName(searchParams.origin)
-              },
-              destination: {
-                iata_code: searchParams.destination,
-                name: getAirportName(searchParams.destination)
-              },
-              departure_datetime: `${searchParams.departure_date}T08:30:00Z`,
-              arrival_datetime: `${searchParams.departure_date}T12:45:00Z`,
-              duration: 'PT4H15M'
-            }]
-          }],
-          passengers: Array(searchParams.passengers.adults).fill({
-            type: 'adult',
-            cabin_class: searchParams.cabin_class || 'economy',
-            baggage: [
-              { type: 'carry_on', quantity: 1 },
-              { type: 'checked', quantity: 1 }
-            ]
-          }),
-          conditions: {
-            change_before_departure: {
-              allowed: true,
-              penalty_amount: '75.00',
-              penalty_currency: 'USD'
-            },
-            cancel_before_departure: {
-              allowed: true,
-              penalty_amount: '150.00',
-              penalty_currency: 'USD'
-            }
-          }
-        },
-        {
-          id: `test_offer_${Date.now()}_2`,
-          price: {
-            amount: '425.75',
-            currency: 'USD'
-          },
-          slices: [{
-            origin: {
-              iata_code: searchParams.origin,
-              name: getAirportName(searchParams.origin),
-              city_name: getCityName(searchParams.origin)
-            },
-            destination: {
-              iata_code: searchParams.destination,
-              name: getAirportName(searchParams.destination),
-              city_name: getCityName(searchParams.destination)
-            },
-            departure_datetime: `${searchParams.departure_date}T14:20:00Z`,
-            arrival_datetime: `${searchParams.departure_date}T18:55:00Z`,
-            duration: 'PT4H35M',
-            segments: [{
-              airline: {
-                name: 'Delta Air Lines',
-                iata_code: 'DL',
-                logo_url: 'https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DL.svg'
-              },
-              flight_number: 'DL5678',
-              aircraft: {
-                name: 'Airbus A320'
-              },
-              origin: {
-                iata_code: searchParams.origin,
-                name: getAirportName(searchParams.origin)
-              },
-              destination: {
-                iata_code: searchParams.destination,
-                name: getAirportName(searchParams.destination)
-              },
-              departure_datetime: `${searchParams.departure_date}T14:20:00Z`,
-              arrival_datetime: `${searchParams.departure_date}T18:55:00Z`,
-              duration: 'PT4H35M'
-            }]
-          }],
-          passengers: Array(searchParams.passengers.adults).fill({
-            type: 'adult',
-            cabin_class: searchParams.cabin_class || 'economy',
-            baggage: [
-              { type: 'carry_on', quantity: 1 },
-              { type: 'checked', quantity: 1 }
-            ]
-          }),
-          conditions: {
-            change_before_departure: {
-              allowed: true,
-              penalty_amount: '100.00',
-              penalty_currency: 'USD'
-            },
-            cancel_before_departure: {
-              allowed: false
-            }
-          }
-        }
-      ];
+      console.error('Duffel API error:', duffelError.message);
 
-      return res.json({
-        success: true,
-        data: testFlights,
-        search_params: searchParams,
-        note: 'Using test data - Duffel integration available with API key'
+      return res.status(503).json({
+        success: false,
+        error: 'Flight search service temporarily unavailable',
+        message: 'Unable to retrieve flight information. Please verify Duffel API configuration.',
+        details: duffelError.message
       });
     }
 
-    // Use real Duffel API
-    const flights = await duffelService.searchFlights(searchParams);
-    
-    res.json({
-      success: true,
-      data: flights,
-      search_params: searchParams
-    });
+
 
   } catch (error: any) {
     console.error('Flight search error:', error);
