@@ -46,6 +46,8 @@ import BillingDemo from "@/pages/BillingDemo";
 import Onboarding from "@/pages/Onboarding";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import FlightSearch from "@/pages/FlightSearch";
+import FlightBooking from "@/pages/FlightBooking";
 import NotFound from "@/pages/not-found";
 
 function NavigationWrapper() {
@@ -82,7 +84,8 @@ function Router() {
           <Route path="/trip/:id" component={TripPlanner} />
           <Route path="/trip-planner/:id" component={TripPlanner} />
           <Route path="/trip-planner" component={TripPlanner} />
-          <Route path="/flights" component={Bookings} />
+          <Route path="/flights" component={FlightSearch} />
+          <Route path="/flights/book/:offerId" component={FlightBooking} />
           <Route path="/share/:shareCode" component={SimpleShare} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/bookings" component={Bookings} />
