@@ -58,14 +58,14 @@ router.post('/search', async (req, res) => {
         },
         slices: offer.slices.map(slice => ({
           origin: {
-            iata_code: slice.origin.iata_code,
-            name: slice.origin.name,
-            city_name: slice.origin.city_name
+            iata_code: slice.origin?.iata_code || 'N/A',
+            name: slice.origin?.name || 'Unknown Airport',
+            city_name: slice.origin?.city_name || slice.origin?.name || 'Unknown City'
           },
           destination: {
-            iata_code: slice.destination.iata_code,
-            name: slice.destination.name,
-            city_name: slice.destination.city_name
+            iata_code: slice.destination?.iata_code || 'N/A',
+            name: slice.destination?.name || 'Unknown Airport',
+            city_name: slice.destination?.city_name || slice.destination?.name || 'Unknown City'
           },
           departure_datetime: slice.segments[0].departing_at,
           arrival_datetime: slice.segments[slice.segments.length - 1].arriving_at,
