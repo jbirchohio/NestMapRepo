@@ -172,7 +172,7 @@ router.get('/metrics', async (req: Request, res: Response) => {
     const metrics = {
       securityScore,
       totalUsers: totalUsers[0].count,
-      activeUsers24h: activeUsers24h[0].count,
+      activeUsers24h: activeUsers24h.count,
       adminActions24h: adminActions24h[0].count,
       suspiciousActivity7d: suspiciousActivity7d[0].count,
       failedLogins30d: failedLogins30d[0].count,

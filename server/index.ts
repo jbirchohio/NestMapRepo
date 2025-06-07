@@ -141,6 +141,9 @@ app.use('/api', authenticateApiKey);
 app.use(caseConversionMiddleware);
 app.use(jwtAuthMiddleware);
 
+// Track user activity for security monitoring
+app.use(trackUserActivity);
+
 // Global error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled error:', {
