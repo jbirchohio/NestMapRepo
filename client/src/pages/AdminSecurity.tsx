@@ -1,441 +1,432 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Shield, AlertTriangle, Activity, TrendingUp, Clock, User, Globe, Database } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { AnimatedCard } from "@/components/ui/animated-card";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Shield, 
+  AlertTriangle, 
+  Eye, 
+  Download, 
+  Filter,
+  Search,
+  Clock,
+  User,
+  MapPin,
+  Activity,
+  Lock,
+  Unlock,
+  CheckCircle,
+  XCircle,
+  AlertCircle
+} from "lucide-react";
 
-interface SecurityAlert {
+interface SecurityEvent {
   id: string;
-  type: 'suspicious_login' | 'privilege_escalation' | 'unusual_activity' | 'failed_authentication' | 'data_access';
+  timestamp: string;
+  type: 'login' | 'failed_login' | 'permission_change' | 'data_access' | 'security_alert';
   severity: 'low' | 'medium' | 'high' | 'critical';
-  title: string;
-  description: string;
-  timestamp: Date;
-  userId?: number;
-  organizationId?: number;
-  metadata: Record<string, any>;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  details: string;
+  ip: string;
+  location: string;
+  userAgent: string;
   resolved: boolean;
 }
 
 interface SecurityMetrics {
-  securityScore: number;
-  totalUsers: number;
-  activeUsers24h: number;
-  adminActions24h: number;
-  suspiciousActivity7d: number;
-  failedLogins30d: number;
-  lastUpdated: Date;
-  trends: {
-    securityTrend: 'improving' | 'declining' | 'stable';
-    riskLevel: 'low' | 'medium' | 'high';
-  };
+  totalEvents: number;
+  criticalAlerts: number;
+  failedLogins: number;
+  suspiciousActivity: number;
+  activeThreats: number;
 }
 
-interface AuditSummary {
-  actionSummary: {
-    action: string;
-    count: number;
-    lastOccurrence: Date;
-  }[];
-  criticalActions: {
-    id: number;
-    action: string;
-    adminUserId: number;
-    details: any;
-    createdAt: Date;
-    ipAddress: string;
-  }[];
-  period: string;
-  generatedAt: Date;
-}
+const mockSecurityEvents: SecurityEvent[] = [
+  {
+    id: '1',
+    timestamp: '2025-06-07T02:30:00Z',
+    type: 'security_alert',
+    severity: 'critical',
+    user: { id: '1', name: 'Admin User', email: 'admin@nestmap.com' },
+    details: 'Multiple failed login attempts detected from suspicious IP',
+    ip: '192.168.1.100',
+    location: 'Unknown',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    resolved: false
+  },
+  {
+    id: '2',
+    timestamp: '2025-06-07T02:25:00Z',
+    type: 'failed_login',
+    severity: 'medium',
+    user: { id: '2', name: 'John Doe', email: 'john@company.com' },
+    details: 'Failed login attempt with incorrect password',
+    ip: '203.0.113.42',
+    location: 'New York, US',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+    resolved: true
+  },
+  {
+    id: '3',
+    timestamp: '2025-06-07T02:20:00Z',
+    type: 'permission_change',
+    severity: 'high',
+    user: { id: '3', name: 'Sarah Wilson', email: 'sarah@company.com' },
+    details: 'User role elevated to administrator',
+    ip: '198.51.100.15',
+    location: 'San Francisco, US',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    resolved: true
+  },
+  {
+    id: '4',
+    timestamp: '2025-06-07T02:15:00Z',
+    type: 'data_access',
+    severity: 'low',
+    user: { id: '4', name: 'Mike Chen', email: 'mike@company.com' },
+    details: 'Accessed sensitive financial data outside normal hours',
+    ip: '172.16.0.5',
+    location: 'Seattle, US',
+    userAgent: 'Mozilla/5.0 (iPad; CPU OS 15_6 like Mac OS X)',
+    resolved: true
+  },
+  {
+    id: '5',
+    timestamp: '2025-06-07T02:10:00Z',
+    type: 'login',
+    severity: 'low',
+    user: { id: '5', name: 'Lisa Johnson', email: 'lisa@company.com' },
+    details: 'Successful login from new device',
+    ip: '10.0.0.25',
+    location: 'Chicago, US',
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_6 like Mac OS X)',
+    resolved: true
+  }
+];
+
+const mockMetrics: SecurityMetrics = {
+  totalEvents: 127,
+  criticalAlerts: 3,
+  failedLogins: 15,
+  suspiciousActivity: 8,
+  activeThreats: 2
+};
 
 export default function AdminSecurity() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedAlert, setSelectedAlert] = useState<SecurityAlert | null>(null);
+  const [selectedTab, setSelectedTab] = useState("events");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterSeverity, setFilterSeverity] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch security alerts
-  const { data: alerts = [], isLoading: alertsLoading } = useQuery<SecurityAlert[]>({
-    queryKey: ['/api/security/alerts'],
-    refetchInterval: 30000, // Refresh every 30 seconds
+  const { data: securityEvents = mockSecurityEvents } = useQuery({
+    queryKey: ['/api/admin/security/events'],
+    queryFn: () => mockSecurityEvents
   });
 
-  // Fetch security metrics
-  const { data: metrics, isLoading: metricsLoading } = useQuery<SecurityMetrics>({
-    queryKey: ['/api/security/metrics'],
-    refetchInterval: 60000, // Refresh every minute
+  const { data: metrics = mockMetrics } = useQuery({
+    queryKey: ['/api/admin/security/metrics'],
+    queryFn: () => mockMetrics
   });
 
-  // Fetch audit summary
-  const { data: auditSummary, isLoading: auditLoading } = useQuery<AuditSummary>({
-    queryKey: ['/api/security/audit-summary'],
-    refetchInterval: 300000, // Refresh every 5 minutes
-  });
-
-  // Resolve alert mutation
-  const resolveAlertMutation = useMutation({
-    mutationFn: ({ alertId, resolution, notes }: { alertId: string; resolution: string; notes: string }) =>
-      apiRequest('POST', `/api/security/alerts/${alertId}/resolve`, { resolution, notes }),
-    onSuccess: () => {
-      toast({
-        title: "Alert Resolved",
-        description: "Security alert has been successfully resolved.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/security/alerts'] });
-      setSelectedAlert(null);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to resolve alert",
-        variant: "destructive",
-      });
-    },
+  const filteredEvents = securityEvents.filter(event => {
+    const matchesType = filterType === "all" || event.type === filterType;
+    const matchesSeverity = filterSeverity === "all" || event.severity === filterSeverity;
+    const matchesSearch = !searchQuery || 
+      event.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.details.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesType && matchesSeverity && matchesSearch;
   });
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'critical': return 'bg-red-100 text-red-700 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'low': return 'bg-blue-100 text-blue-700 border-blue-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
-  const getSecurityScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'login': return <CheckCircle className="w-4 h-4" />;
+      case 'failed_login': return <XCircle className="w-4 h-4" />;
+      case 'permission_change': return <Shield className="w-4 h-4" />;
+      case 'data_access': return <Eye className="w-4 h-4" />;
+      case 'security_alert': return <AlertTriangle className="w-4 h-4" />;
+      default: return <Activity className="w-4 h-4" />;
+    }
   };
-
-  const handleResolveAlert = (alert: SecurityAlert) => {
-    setSelectedAlert(alert);
-  };
-
-  const confirmResolveAlert = () => {
-    if (!selectedAlert) return;
-    
-    resolveAlertMutation.mutate({
-      alertId: selectedAlert.id,
-      resolution: 'reviewed_and_resolved',
-      notes: 'Resolved by administrator'
-    });
-  };
-
-  if (alertsLoading || metricsLoading || auditLoading) {
-    return (
-      <div className="space-y-6 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, index) => (
-            <Card key={index} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
-                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-navy-900 dark:text-white">Security Monitoring</h1>
-          <p className="text-muted-foreground">Monitor security events and system health</p>
-        </div>
-        <Badge variant="outline" className="flex items-center gap-2">
-          <Activity className="h-4 w-4" />
-          Live Monitoring
-        </Badge>
-      </div>
-
-      {/* Security Score Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <AnimatedCard variant="glow" className="p-6">
-          <div className="flex items-center gap-3">
-            <Shield className="h-8 w-8 text-electric-600" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Security Score</p>
-              <p className={`text-2xl font-bold ${getSecurityScoreColor(metrics?.securityScore || 0)}`}>
-                {metrics?.securityScore || 0}/100
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                Security Dashboard
+              </h1>
+              <p className="text-slate-600 dark:text-slate-300">
+                Monitor security events and system access patterns
               </p>
             </div>
+            <Button variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export Report
+            </Button>
           </div>
-        </AnimatedCard>
+        </motion.div>
 
-        <AnimatedCard variant="glow" className="p-6">
-          <div className="flex items-center gap-3">
-            <User className="h-8 w-8 text-blue-600" />
-            <div>
-              <p className="text-sm text-muted-foreground">Active Users (24h)</p>
-              <p className="text-2xl font-bold text-navy-900 dark:text-white">
-                {metrics?.activeUsers24h || 0}
-              </p>
-            </div>
-          </div>
-        </AnimatedCard>
-
-        <AnimatedCard variant="glow" className="p-6">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-8 w-8 text-orange-600" />
-            <div>
-              <p className="text-sm text-muted-foreground">Admin Actions (24h)</p>
-              <p className="text-2xl font-bold text-navy-900 dark:text-white">
-                {metrics?.adminActions24h || 0}
-              </p>
-            </div>
-          </div>
-        </AnimatedCard>
-
-        <AnimatedCard variant="glow" className="p-6">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 text-green-600" />
-            <div>
-              <p className="text-sm text-muted-foreground">Risk Level</p>
-              <Badge className={`${
-                metrics?.trends.riskLevel === 'low' ? 'bg-green-100 text-green-800' :
-                metrics?.trends.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }`}>
-                {metrics?.trends.riskLevel || 'Unknown'}
-              </Badge>
-            </div>
-          </div>
-        </AnimatedCard>
-      </div>
-
-      {/* Security Tabs */}
-      <Tabs defaultValue="alerts" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="alerts">Security Alerts</TabsTrigger>
-          <TabsTrigger value="audit">Audit Log</TabsTrigger>
-          <TabsTrigger value="metrics">Detailed Metrics</TabsTrigger>
-        </TabsList>
-
-        {/* Security Alerts Tab */}
-        <TabsContent value="alerts" className="space-y-4">
+        {/* Security Metrics */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8"
+        >
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Active Security Alerts
-              </CardTitle>
-              <CardDescription>
-                Review and resolve security alerts detected in your organization
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {(alerts as SecurityAlert[]).length === 0 ? (
-                <div className="text-center py-8">
-                  <Shield className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                  <p className="text-lg font-medium text-navy-900 dark:text-white">All Clear!</p>
-                  <p className="text-muted-foreground">No security alerts detected.</p>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Events</p>
+                  <p className="text-2xl font-bold">{metrics.totalEvents}</p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {(alerts as SecurityAlert[]).map((alert: SecurityAlert) => (
-                    <motion.div
-                      key={alert.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="border rounded-lg p-4 space-y-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Badge className={getSeverityColor(alert.severity)}>
-                              {alert.severity.toUpperCase()}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(alert.timestamp).toLocaleString()}
-                            </span>
-                          </div>
-                          <h4 className="font-medium text-navy-900 dark:text-white">{alert.title}</h4>
-                          <p className="text-sm text-muted-foreground">{alert.description}</p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleResolveAlert(alert)}
-                          disabled={alert.resolved}
-                        >
-                          {alert.resolved ? 'Resolved' : 'Resolve'}
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+                <Activity className="w-8 h-8 text-blue-600" />
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Audit Log Tab */}
-        <TabsContent value="audit" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Action Summary (7 days)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {auditSummary?.actionSummary.slice(0, 10).map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded">
-                      <div>
-                        <p className="font-medium text-navy-900 dark:text-white">{item.action}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Last: {new Date(item.lastOccurrence).toLocaleDateString()}
-                        </p>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Critical Alerts</p>
+                  <p className="text-2xl font-bold text-red-600">{metrics.criticalAlerts}</p>
+                </div>
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Failed Logins</p>
+                  <p className="text-2xl font-bold text-orange-600">{metrics.failedLogins}</p>
+                </div>
+                <XCircle className="w-8 h-8 text-orange-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Suspicious Activity</p>
+                  <p className="text-2xl font-bold text-yellow-600">{metrics.suspiciousActivity}</p>
+                </div>
+                <Eye className="w-8 h-8 text-yellow-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Threats</p>
+                  <p className="text-2xl font-bold text-red-600">{metrics.activeThreats}</p>
+                </div>
+                <Shield className="w-8 h-8 text-red-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Main Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="events">Security Events</TabsTrigger>
+              <TabsTrigger value="audit">Audit Logs</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="events" className="space-y-6">
+              {/* Filters */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex flex-wrap gap-4 items-center">
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          placeholder="Search events..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-9"
+                        />
                       </div>
-                      <Badge variant="secondary">{item.count}</Badge>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Event Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="login">Login</SelectItem>
+                        <SelectItem value="failed_login">Failed Login</SelectItem>
+                        <SelectItem value="permission_change">Permission Change</SelectItem>
+                        <SelectItem value="data_access">Data Access</SelectItem>
+                        <SelectItem value="security_alert">Security Alert</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Recent Critical Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {auditSummary?.criticalActions.map((action, index) => (
-                    <div key={index} className="p-3 border rounded space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-navy-900 dark:text-white">{action.action}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(action.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="h-4 w-4" />
-                        User ID: {action.adminUserId}
-                        <Globe className="h-4 w-4 ml-2" />
-                        IP: {action.ipAddress}
-                      </div>
+                    <Select value={filterSeverity} onValueChange={setFilterSeverity}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Severity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Severities</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Events List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Security Events</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[600px]">
+                    <div className="space-y-4">
+                      {filteredEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                        >
+                          <div className="flex-shrink-0 p-2 rounded-lg bg-accent">
+                            {getTypeIcon(event.type)}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                <h4 className="font-medium capitalize">
+                                  {event.type.replace('_', ' ')}
+                                </h4>
+                                <Badge className={getSeverityColor(event.severity)}>
+                                  {event.severity}
+                                </Badge>
+                                {event.resolved ? (
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                    Resolved
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                    Active
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center text-sm text-muted-foreground">
+                                <Clock className="w-4 h-4 mr-1" />
+                                {new Date(event.timestamp).toLocaleString()}
+                              </div>
+                            </div>
+                            
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {event.details}
+                            </p>
+                            
+                            <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                              <div className="flex items-center">
+                                <User className="w-3 h-3 mr-1" />
+                                {event.user.name} ({event.user.email})
+                              </div>
+                              <div className="flex items-center">
+                                <MapPin className="w-3 h-3 mr-1" />
+                                {event.location}
+                              </div>
+                              <div>IP: {event.ip}</div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex-shrink-0">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        {/* Detailed Metrics Tab */}
-        <TabsContent value="metrics" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Activity</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Total Users</span>
-                  <span className="font-medium">{metrics?.totalUsers || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Active (24h)</span>
-                  <span className="font-medium">{metrics?.activeUsers24h || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Admin Actions (24h)</span>
-                  <span className="font-medium">{metrics?.adminActions24h || 0}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <TabsContent value="audit" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>System Audit Logs</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Lock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">Audit Logs</h3>
+                    <p>Detailed system audit logs and compliance tracking will be displayed here.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Events</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Suspicious Activity (7d)</span>
-                  <span className="font-medium">{metrics?.suspiciousActivity7d || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Failed Logins (30d)</span>
-                  <span className="font-medium">{metrics?.failedLogins30d || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Security Trend</span>
-                  <Badge variant="outline">{metrics?.trends.securityTrend || 'stable'}</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>System Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Last Updated</span>
-                  <span className="text-sm">
-                    {metrics?.lastUpdated ? new Date(metrics.lastUpdated).toLocaleTimeString() : 'Unknown'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Monitoring Status</span>
-                  <Badge className={metrics ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
-                    {metrics ? "Active" : "Disconnected"}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span>Alert Resolution</span>
-                  <Badge className="bg-blue-100 text-blue-800">Real-time</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Alert Resolution Dialog */}
-      {selectedAlert && (
-        <Alert className="border-orange-200 bg-orange-50">
-          <AlertTriangle className="h-4 w-4 text-orange-600" />
-          <AlertTitle className="text-orange-800">Resolve Security Alert</AlertTitle>
-          <AlertDescription className="text-orange-700">
-            Are you sure you want to mark "{selectedAlert.title}" as resolved?
-            <div className="flex gap-2 mt-3">
-              <Button
-                size="sm"
-                onClick={confirmResolveAlert}
-                disabled={resolveAlertMutation.isPending}
-              >
-                {resolveAlertMutation.isPending ? 'Resolving...' : 'Confirm'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setSelectedAlert(null)}
-                disabled={resolveAlertMutation.isPending}
-              >
-                Cancel
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
+            <TabsContent value="analytics" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Security Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">Security Analytics</h3>
+                    <p>Advanced security analytics and threat intelligence will be displayed here.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      </div>
     </div>
   );
 }
