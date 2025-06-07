@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/JWTAuthContext";
 import { WhiteLabelProvider, useWhiteLabel } from "@/contexts/WhiteLabelContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import MainNavigation from "@/components/MainNavigation";
 import BrandedFooter from "@/components/BrandedFooter";
 import Home from "@/pages/Home";
@@ -133,8 +134,10 @@ function App() {
       <AuthProvider>
         <WhiteLabelProvider>
           <TooltipProvider>
-            <Toaster />
-            <Router />
+            <ErrorBoundary>
+              <Toaster />
+              <Router />
+            </ErrorBoundary>
           </TooltipProvider>
         </WhiteLabelProvider>
       </AuthProvider>

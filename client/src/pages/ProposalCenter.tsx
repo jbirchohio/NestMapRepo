@@ -123,7 +123,11 @@ export default function ProposalCenter() {
                               </div>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedTrip(trip.id)}
+                          >
                             Create Proposal
                           </Button>
                         </div>
