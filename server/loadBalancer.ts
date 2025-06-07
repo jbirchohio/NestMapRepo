@@ -80,11 +80,12 @@ export async function domainRoutingMiddleware(req: Request, res: Response, next:
  */
 async function getDomainConfig(domain: string): Promise<DomainConfig | null> {
   try {
+    // Graceful fallback for database schema migration
     const result = await db
       .select({
         domain: customDomains.domain,
         organizationId: customDomains.organization_id,
-        ssl_verified: customDomains.ssl_verified,
+        dns_verified: customDomains.dns_verified,
         status: customDomains.status,
         companyName: whiteLabelSettings.company_name,
         companyLogo: whiteLabelSettings.company_logo,
@@ -113,7 +114,7 @@ async function getDomainConfig(domain: string): Promise<DomainConfig | null> {
     return {
       domain: row.domain,
       organizationId: row.organizationId,
-      ssl_verified: row.ssl_verified || false,
+      ssl_verified: row.dns_verified || false, // Use dns_verified as fallback
       status: row.status || 'pending',
       branding: row.companyName ? {
         companyName: row.companyName,

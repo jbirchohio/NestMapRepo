@@ -139,6 +139,10 @@ app.use('/api', organizationRateLimit); // Organization-tier based limiting
 app.use('/api', apiVersioning);
 app.use('/api', authenticateApiKey);
 
+// Apply domain routing middleware for white label domains BEFORE authentication
+import { domainRoutingMiddleware } from "./loadBalancer";
+app.use(domainRoutingMiddleware);
+
 // Apply case conversion middleware first, then JWT authentication
 app.use(caseConversionMiddleware);
 app.use(jwtAuthMiddleware);
@@ -225,6 +229,10 @@ app.use((req, res, next) => {
     // Register simplified white label routes with full Express app instance
     const { registerSimplifiedWhiteLabelRoutes } = await import('./routes/whiteLabelSimplified');
     registerSimplifiedWhiteLabelRoutes(app);
+
+    // Register domain management routes with full Express app instance
+    const { registerDomainRoutes } = await import('./routes/domains');
+    registerDomainRoutes(app);
 
     // Register system metrics routes with full Express app instance
     const { registerSystemMetricsRoutes } = await import('./routes/system-metrics');
