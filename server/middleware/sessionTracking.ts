@@ -39,15 +39,15 @@ export async function trackUserActivity(req: Request, res: Response, next: NextF
 
 export function getActiveUserCount(organizationId: number): number {
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  let count = 0;
+  const uniqueUsers = new Set<number>();
   
-  for (const session of activeSessions.values()) {
+  for (const [key, session] of activeSessions.entries()) {
     if (session.organizationId === organizationId && session.lastActivity > cutoff) {
-      count++;
+      uniqueUsers.add(session.userId);
     }
   }
   
-  return count;
+  return uniqueUsers.size;
 }
 
 export function getActiveSessions(organizationId: number) {
