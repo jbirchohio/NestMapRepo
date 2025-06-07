@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { adminSettings, adminAuditLog } from "@shared/schema";
 
 interface SystemSettings {
@@ -209,22 +209,54 @@ export function registerAdminSettingsRoutes(app: Express) {
         .limit(limit)
         .offset(offset);
 
-      const totalCount = await db
-        .select({ count: adminAuditLog.id })
+      const [totalCountResult] = await db
+        .select({ count: count(adminAuditLog.id) })
         .from(adminAuditLog);
+
+      const totalCount = totalCountResult.count;
 
       res.json({
         logs,
         pagination: {
           page,
           limit,
-          total: totalCount.length,
-          pages: Math.ceil(totalCount.length / limit),
+          total: totalCount,
+          pages: Math.ceil(totalCount / limit),
         }
       });
     } catch (error) {
       console.error("Error fetching admin logs:", error);
       res.status(500).json({ error: "Failed to fetch logs" });
+    }
+  });
+
+  // Export admin logs as CSV
+  app.get("/api/admin/logs/export", async (req, res) => {
+    try {
+      if (!req.user || req.user?.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const logs = await db
+        .select()
+        .from(adminAuditLog)
+        .orderBy(adminAuditLog.timestamp);
+
+      // Generate CSV content
+      const csvHeader = 'ID,Admin User ID,Action,IP Address,Timestamp,Details\n';
+      const csvRows = logs.map(log => {
+        const details = log.action_data ? JSON.stringify(log.action_data).replace(/"/g, '""') : '';
+        return `${log.id},"${log.admin_user_id}","${log.action_type}","${log.ip_address || ''}","${log.timestamp}","${details}"`;
+      }).join('\n');
+
+      const csvContent = csvHeader + csvRows;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="admin-logs.csv"');
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Error exporting admin logs:", error);
+      res.status(500).json({ error: "Failed to export logs" });
     }
   });
 }

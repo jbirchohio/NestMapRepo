@@ -34,6 +34,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminRoles from "@/pages/AdminRoles";
 import AdminSecurity from "@/pages/AdminSecurity";
 import AdminSettings from "@/pages/AdminSettings";
+import AdminLogs from "@/pages/AdminLogs";
 import AdminSystemMetrics from "@/pages/AdminSystemMetrics";
 import CorporateCards from "@/pages/CorporateCards";
 import OrganizationFunding from "@/pages/OrganizationFunding";
@@ -107,6 +108,7 @@ function Router() {
           <Route path="/admin/settings" component={AdminSettings} />
           <Route path="/admin/roles" component={AdminRoles} />
           <Route path="/admin/security" component={AdminSecurity} />
+          <Route path="/admin/logs" component={AdminLogs} />
           <Route path="/admin/system-metrics" component={AdminSystemMetrics} />
           <Route path="/superadmin" component={Superadmin} />
           <Route path="/superadmin/organizations/:id" component={SuperadminOrganizationDetail} />
