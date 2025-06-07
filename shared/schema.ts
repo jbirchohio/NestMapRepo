@@ -819,6 +819,19 @@ export const whiteLabelFeatures = pgTable("white_label_features", {
   monthly_price: integer("monthly_price").default(0), // in cents
 });
 
+// User Sessions for tracking active users
+export const userSessions = pgTable("user_sessions", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id),
+  session_token: text("session_token").notNull().unique(),
+  ip_address: text("ip_address"),
+  user_agent: text("user_agent"),
+  last_activity: timestamp("last_activity").defaultNow(),
+  created_at: timestamp("created_at").defaultNow(),
+  expires_at: timestamp("expires_at").notNull(),
+});
+
 // Admin Audit Log for tracking administrative actions
 export const adminAuditLog = pgTable("admin_audit_log", {
   id: serial("id").primaryKey(),

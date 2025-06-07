@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db-connection';
-import { users, adminAuditLog, organizations } from '../../shared/schema';
+import { users, adminAuditLog, organizations, userSessions } from '../../shared/schema';
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
+import { getActiveUserCount } from '../middleware/sessionTracking';
 
 const router = Router();
 
@@ -132,12 +133,8 @@ router.get('/metrics', async (req: Request, res: Response) => {
         .from(users)
         .where(eq(users.organization_id, organizationId)),
       
-      db.select({ count: count() })
-        .from(adminAuditLog)
-        .where(and(
-          eq(adminAuditLog.target_organization_id, organizationId),
-          gte(adminAuditLog.timestamp, last24h)
-        )),
+      // Use in-memory tracking for active users until database is updated
+      Promise.resolve({ count: getActiveUserCount(organizationId) }),
       
       db.select({ count: count() })
         .from(adminAuditLog)

@@ -20,6 +20,7 @@ import { eq } from "drizzle-orm";
 import { authenticateUser, getUserById } from "./auth";
 import { jwtAuthMiddleware } from "./middleware/jwtAuth";
 import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
+import { trackUserActivity } from "./middleware/sessionTracking";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
