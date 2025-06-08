@@ -1,164 +1,131 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { Calendar as CalendarIcon, Plane, MapPin, Users, Plus, X } from 'lucide-react';
-import { format } from 'date-fns';
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface FlightSearchFormProps {
-  formData: {
-    origin: string;
-    destination: string;
-    departureDate: string;
-    returnDate: string;
-    tripType: "one-way" | "round-trip";
-    passengers: number;
-    primaryTraveler: {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      dateOfBirth: string;
-    };
-    additionalTravelers: Array<{
-      firstName: string;
-      lastName: string;
-      dateOfBirth: string;
-    }>;
-    cabin: "economy" | "premium-economy" | "business" | "first";
-    budget?: number;
-    department: string;
-    projectCode: string;
-    costCenter: string;
-  };
-  setFormData: (data: any) => void;
+  tripType: 'one-way' | 'round-trip';
+  dateRange: { from: Date | undefined; to: Date | undefined };
+  onTripTypeChange: (type: 'one-way' | 'round-trip') => void;
+  onDateRangeChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
   onSubmit: (e: React.FormEvent) => void;
+  isSearching: boolean;
 }
 
-export function FlightSearchForm({ formData, setFormData, onSubmit }: FlightSearchFormProps) {
-  const [departureCalendarOpen, setDepartureCalendarOpen] = useState(false);
-  const [returnCalendarOpen, setReturnCalendarOpen] = useState(false);
-
-  const addTraveler = () => {
-    setFormData({
-      ...formData,
-      additionalTravelers: [
-        ...formData.additionalTravelers,
-        { firstName: '', lastName: '', dateOfBirth: '' }
-      ],
-      passengers: formData.passengers + 1
-    });
-  };
-
-  const removeTraveler = (index: number) => {
-    const updatedTravelers = formData.additionalTravelers.filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      additionalTravelers: updatedTravelers,
-      passengers: formData.passengers - 1
-    });
-  };
-
-  const updateTraveler = (index: number, field: string, value: string) => {
-    const updatedTravelers = [...formData.additionalTravelers];
-    updatedTravelers[index] = { ...updatedTravelers[index], [field]: value };
-    setFormData({
-      ...formData,
-      additionalTravelers: updatedTravelers
-    });
-  };
-
+export function FlightSearchForm({
+  tripType,
+  dateRange,
+  onTripTypeChange,
+  onDateRangeChange,
+  onSubmit,
+  isSearching,
+}: FlightSearchFormProps) {
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      {/* Travel Details */}
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="flex space-x-2 mb-4">
+        <button
+          type="button"
+          className={`px-4 py-2 rounded-md ${
+            tripType === 'round-trip' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-200 dark:bg-gray-700'
+          }`}
+          onClick={() => onTripTypeChange('round-trip')}
+        >
+          Round Trip
+        </button>
+        <button
+          type="button"
+          className={`px-4 py-2 rounded-md ${
+            tripType === 'one-way' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-200 dark:bg-gray-700'
+          }`}
+          onClick={() => onTripTypeChange('one-way')}
+        >
+          One Way
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="origin">From</Label>
-          <Input 
+          <Input
             id="origin"
-            placeholder="Departure city or airport"
-            value={formData.origin}
-            onChange={(e) => setFormData({...formData, origin: e.target.value})}
+            name="origin"
+            placeholder="City or airport"
             required
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="destination">To</Label>
-          <Input 
+          <Input
             id="destination"
-            placeholder="Destination city or airport"
-            value={formData.destination}
-            onChange={(e) => setFormData({...formData, destination: e.target.value})}
+            name="destination"
+            placeholder="City or airport"
             required
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label>Trip Type</Label>
-          <Select value={formData.tripType} onValueChange={(value: "one-way" | "round-trip") => setFormData({...formData, tripType: value})}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="one-way">One Way</SelectItem>
-              <SelectItem value="round-trip">Round Trip</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Departure Date</Label>
-          <Popover open={departureCalendarOpen} onOpenChange={setDepartureCalendarOpen}>
+          <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start text-left font-normal">
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+              >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.departureDate ? format(new Date(formData.departureDate), 'PPP') : 'Pick a date'}
+                {dateRange?.from ? (
+                  format(dateRange.from, 'PPP')
+                ) : (
+                  <span>Pick a date</span>
+                )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
               <Calendar
                 mode="single"
-                selected={formData.departureDate ? new Date(formData.departureDate) : undefined}
-                onSelect={(date) => {
-                  if (date) {
-                    setFormData({...formData, departureDate: date.toISOString().split('T')[0]});
-                    setDepartureCalendarOpen(false);
-                  }
-                }}
-                disabled={(date) => date < new Date()}
+                selected={dateRange?.from}
+                onSelect={(date) => onDateRangeChange({ ...dateRange, from: date || undefined })}
                 initialFocus
               />
             </PopoverContent>
           </Popover>
         </div>
 
-        {formData.tripType === 'round-trip' && (
+        {tripType === 'round-trip' && (
           <div className="space-y-2">
             <Label>Return Date</Label>
-            <Popover open={returnCalendarOpen} onOpenChange={setReturnCalendarOpen}>
+            <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                  disabled={!dateRange.from}
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.returnDate ? format(new Date(formData.returnDate), 'PPP') : 'Pick a date'}
+                  {dateRange?.to ? (
+                    format(dateRange.to, 'PPP')
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={formData.returnDate ? new Date(formData.returnDate) : undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      setFormData({...formData, returnDate: date.toISOString().split('T')[0]});
-                      setReturnCalendarOpen(false);
-                    }
-                  }}
-                  disabled={(date) => date < new Date(formData.departureDate)}
+                  selected={dateRange?.to}
+                  onSelect={(date) => onDateRangeChange({ ...dateRange, to: date || undefined })}
                   initialFocus
+                  disabled={(date) =>
+                    date < (dateRange?.from || new Date()) || date < new Date()
+                  }
                 />
               </PopoverContent>
             </Popover>
@@ -166,183 +133,46 @@ export function FlightSearchForm({ formData, setFormData, onSubmit }: FlightSear
         )}
       </div>
 
-      {/* Primary Traveler */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Primary Traveler</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
-            <Input 
-              id="firstName"
-              value={formData.primaryTraveler.firstName}
-              onChange={(e) => setFormData({
-                ...formData, 
-                primaryTraveler: {...formData.primaryTraveler, firstName: e.target.value}
-              })}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input 
-              id="lastName"
-              value={formData.primaryTraveler.lastName}
-              onChange={(e) => setFormData({
-                ...formData, 
-                primaryTraveler: {...formData.primaryTraveler, lastName: e.target.value}
-              })}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email"
-              type="email"
-              value={formData.primaryTraveler.email}
-              onChange={(e) => setFormData({
-                ...formData, 
-                primaryTraveler: {...formData.primaryTraveler, email: e.target.value}
-              })}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
-            <Input 
-              id="phone"
-              value={formData.primaryTraveler.phone}
-              onChange={(e) => setFormData({
-                ...formData, 
-                primaryTraveler: {...formData.primaryTraveler, phone: e.target.value}
-              })}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="dateOfBirth">Date of Birth</Label>
-            <Input 
-              id="dateOfBirth"
-              type="date"
-              value={formData.primaryTraveler.dateOfBirth}
-              onChange={(e) => setFormData({
-                ...formData, 
-                primaryTraveler: {...formData.primaryTraveler, dateOfBirth: e.target.value}
-              })}
-              required
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Travelers */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium">Additional Travelers</h3>
-          <Button type="button" variant="outline" onClick={addTraveler}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Traveler
-          </Button>
-        </div>
-        
-        {formData.additionalTravelers.map((traveler, index) => (
-          <div key={index} className="border rounded-lg p-4 space-y-4">
-            <div className="flex justify-between items-center">
-              <h4 className="font-medium">Traveler {index + 2}</h4>
-              <Button type="button" variant="ghost" size="sm" onClick={() => removeTraveler(index)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>First Name</Label>
-                <Input 
-                  value={traveler.firstName}
-                  onChange={(e) => updateTraveler(index, 'firstName', e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Last Name</Label>
-                <Input 
-                  value={traveler.lastName}
-                  onChange={(e) => updateTraveler(index, 'lastName', e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Date of Birth</Label>
-                <Input 
-                  type="date"
-                  value={traveler.dateOfBirth}
-                  onChange={(e) => updateTraveler(index, 'dateOfBirth', e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Preferences */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Cabin Class</Label>
-          <Select value={formData.cabin} onValueChange={(value: any) => setFormData({...formData, cabin: value})}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="economy">Economy</SelectItem>
-              <SelectItem value="premium-economy">Premium Economy</SelectItem>
-              <SelectItem value="business">Business</SelectItem>
-              <SelectItem value="first">First Class</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="budget">Budget (Optional)</Label>
-          <Input 
-            id="budget"
+          <Label htmlFor="passengers">Passengers</Label>
+          <Input
+            id="passengers"
+            name="passengers"
             type="number"
-            placeholder="Maximum budget"
-            value={formData.budget || ''}
-            onChange={(e) => setFormData({...formData, budget: e.target.value ? parseInt(e.target.value) : undefined})}
+            min="1"
+            max="10"
+            defaultValue={1}
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cabin">Cabin Class</Label>
+          <select
+            id="cabin"
+            name="cabin"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+            defaultValue="economy"
+          >
+            <option value="economy">Economy</option>
+            <option value="premium">Premium Economy</option>
+            <option value="business">Business</option>
+            <option value="first">First Class</option>
+          </select>
         </div>
       </div>
 
-      {/* Corporate Information */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="department">Department</Label>
-          <Input 
-            id="department"
-            value={formData.department}
-            onChange={(e) => setFormData({...formData, department: e.target.value})}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="projectCode">Project Code</Label>
-          <Input 
-            id="projectCode"
-            value={formData.projectCode}
-            onChange={(e) => setFormData({...formData, projectCode: e.target.value})}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="costCenter">Cost Center</Label>
-          <Input 
-            id="costCenter"
-            value={formData.costCenter}
-            onChange={(e) => setFormData({...formData, costCenter: e.target.value})}
-          />
-        </div>
+      <div className="flex items-center space-x-2">
+        <input
+          id="directFlights"
+          name="directFlights"
+          type="checkbox"
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+        <Label htmlFor="directFlights">Direct flights only</Label>
       </div>
 
-      <Button type="submit" size="lg" className="w-full">
-        <Plane className="w-4 h-4 mr-2" />
-        Search Flights
+      <Button type="submit" className="w-full" disabled={isSearching}>
+        {isSearching ? 'Searching...' : 'Search Flights'}
       </Button>
     </form>
   );

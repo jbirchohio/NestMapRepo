@@ -1,293 +1,330 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Phone, Mail, Calendar, AlertTriangle } from 'lucide-react';
+import { User, Mail, Phone, Calendar, MapPin, Info, Briefcase, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 const travelerInfoSchema = z.object({
-  name: z.string().min(1, 'Full name is required'),
-  email: z.string().email('Valid email is required'),
-  phone: z.string().min(10, 'Valid phone number is required'),
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  departureCity: z.string().min(1, 'Departure city is required'),
-  departureCountry: z.string().min(1, 'Departure country is required'),
-  travelClass: z.enum(['economy', 'premium', 'business', 'first']),
-  dietaryRequirements: z.string().optional(),
-  emergencyContact: z.object({
-    name: z.string().min(1, 'Emergency contact name is required'),
-    phone: z.string().min(10, 'Emergency contact phone is required'),
-    relationship: z.string().min(1, 'Relationship is required'),
+  // Primary Traveler
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(10, "Phone number is required"),
+  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  
+  // Travel Details
+  tripPurpose: z.enum(["business", "leisure", "family", "medical", "other"], {
+    required_error: "Please select a trip purpose",
   }),
+  companyName: z.string().optional(),
+  costCenter: z.string().optional(),
+  specialRequests: z.string().optional(),
+  
+  // Emergency Contact
+  emergencyContactName: z.string().min(1, "Emergency contact name is required"),
+  emergencyContactPhone: z.string().min(10, "Emergency contact phone is required"),
+  emergencyContactRelationship: z.string().min(1, "Relationship is required"),
 });
 
-type TravelerInfoValues = z.infer<typeof travelerInfoSchema>;
+type TravelerInfoFormValues = z.infer<typeof travelerInfoSchema>;
 
 interface TravelerInfoFormProps {
-  travelerIndex: number;
-  totalTravelers: number;
-  initialData?: Partial<TravelerInfoValues>;
-  onSubmit: (data: TravelerInfoValues) => void;
-  onBack?: () => void;
-  isLoading?: boolean;
+  onSubmit: (data: TravelerInfoFormValues) => void;
+  isSubmitting?: boolean;
+  initialValues?: Partial<TravelerInfoFormValues>;
 }
 
-export function TravelerInfoForm({ 
-  travelerIndex, 
-  totalTravelers, 
-  initialData, 
-  onSubmit, 
-  onBack, 
-  isLoading 
+export function TravelerInfoForm({
+  onSubmit,
+  isSubmitting = false,
+  initialValues = {},
 }: TravelerInfoFormProps) {
-  const form = useForm<TravelerInfoValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<TravelerInfoFormValues>({
     resolver: zodResolver(travelerInfoSchema),
     defaultValues: {
-      name: initialData?.name || '',
-      email: initialData?.email || '',
-      phone: initialData?.phone || '',
-      dateOfBirth: initialData?.dateOfBirth || '',
-      departureCity: initialData?.departureCity || '',
-      departureCountry: initialData?.departureCountry || '',
-      travelClass: initialData?.travelClass || 'economy',
-      dietaryRequirements: initialData?.dietaryRequirements || '',
-      emergencyContact: {
-        name: initialData?.emergencyContact?.name || '',
-        phone: initialData?.emergencyContact?.phone || '',
-        relationship: initialData?.emergencyContact?.relationship || '',
-      },
+      tripPurpose: "leisure",
+      ...initialValues,
     },
   });
 
-  const handleSubmit = (data: TravelerInfoValues) => {
-    onSubmit(data);
-  };
+  const tripPurpose = watch("tripPurpose");
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
-          Traveler {travelerIndex + 1} of {totalTravelers}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Personal Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Personal Information
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-6">
+        {/* Primary Traveler Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-lg font-medium">
+            <User className="h-5 w-5" />
+            <h3>Primary Traveler Information</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name *</Label>
+              <div className="relative">
+                <Input
+                  id="firstName"
+                  {...register("firstName")}
+                  placeholder="John"
+                  className={errors.firstName ? "border-red-500" : ""}
                 />
-
-                <FormField
-                  control={form.control}
-                  name="dateOfBirth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date of Birth</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email Address</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="john@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="+1 (555) 123-4567" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {errors.firstName && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  </div>
+                )}
               </div>
-            </div>
-
-            {/* Travel Preferences */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                Travel Preferences
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="departureCity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Departure City</FormLabel>
-                      <FormControl>
-                        <Input placeholder="New York" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="departureCountry"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Departure Country</FormLabel>
-                      <FormControl>
-                        <Input placeholder="United States" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="travelClass"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Travel Class</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select travel class" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="economy">Economy</SelectItem>
-                          <SelectItem value="premium">Premium Economy</SelectItem>
-                          <SelectItem value="business">Business</SelectItem>
-                          <SelectItem value="first">First Class</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dietaryRequirements"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dietary Requirements (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Vegetarian, Kosher, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Emergency Contact */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Emergency Contact
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="emergencyContact.name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Jane Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="emergencyContact.phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Phone</FormLabel>
-                      <FormControl>
-                        <Input placeholder="+1 (555) 987-6543" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="emergencyContact.relationship"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Relationship</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Spouse, Parent, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-between pt-6">
-              {onBack && (
-                <Button type="button" variant="outline" onClick={onBack}>
-                  Back
-                </Button>
+              {errors.firstName && (
+                <p className="text-sm text-red-500">{errors.firstName.message}</p>
               )}
-              <div className="flex gap-3 ml-auto">
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Processing...' : `Continue to Flight Selection`}
-                </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name *</Label>
+              <div className="relative">
+                <Input
+                  id="lastName"
+                  {...register("lastName")}
+                  placeholder="Doe"
+                  className={errors.lastName ? "border-red-500" : ""}
+                />
+                {errors.lastName && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  </div>
+                )}
+              </div>
+              {errors.lastName && (
+                <p className="text-sm text-red-500">{errors.lastName.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-4 w-4 text-gray-500" />
+                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  {...register("email")}
+                  placeholder="john.doe@example.com"
+                  className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
+                />
+                {errors.email && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  </div>
+                )}
+              </div>
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number *</Label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-4 w-4 text-gray-500" />
+                </div>
+                <Input
+                  id="phone"
+                  type="tel"
+                  {...register("phone")}
+                  placeholder="(123) 456-7890"
+                  className={`pl-10 ${errors.phone ? "border-red-500" : ""}`}
+                />
+                {errors.phone && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  </div>
+                )}
+              </div>
+              {errors.phone && (
+                <p className="text-sm text-red-500">{errors.phone.message}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Calendar className="h-4 w-4 text-gray-500" />
+              </div>
+              <Input
+                id="dateOfBirth"
+                type="date"
+                {...register("dateOfBirth")}
+                className={`pl-10 ${errors.dateOfBirth ? "border-red-500" : ""}`}
+                max={new Date().toISOString().split('T')[0]}
+              />
+              {errors.dateOfBirth && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                </div>
+              )}
+            </div>
+            {errors.dateOfBirth && (
+              <p className="text-sm text-red-500">{errors.dateOfBirth.message}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Trip Details Section */}
+        <div className="space-y-4 pt-6">
+          <div className="flex items-center gap-2 text-lg font-medium">
+            <MapPin className="h-5 w-5" />
+            <h3>Trip Details</h3>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tripPurpose">Purpose of Trip *</Label>
+            <Select
+              onValueChange={(value) => setValue("tripPurpose", value as any)}
+              value={tripPurpose}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select trip purpose" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="business">Business</SelectItem>
+                <SelectItem value="leisure">Leisure</SelectItem>
+                <SelectItem value="family">Family</SelectItem>
+                <SelectItem value="medical">Medical</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.tripPurpose && (
+              <p className="text-sm text-red-500">{errors.tripPurpose.message}</p>
+            )}
+          </div>
+
+          {tripPurpose === "business" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company Name</Label>
+                <Input
+                  id="companyName"
+                  {...register("companyName")}
+                  placeholder="Company name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="costCenter">Cost Center (if applicable)</Label>
+                <Input
+                  id="costCenter"
+                  {...register("costCenter")}
+                  placeholder="Cost center"
+                />
               </div>
             </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="specialRequests">Special Requests</Label>
+            <Textarea
+              id="specialRequests"
+              {...register("specialRequests")}
+              placeholder="Any special requests or requirements?"
+              rows={3}
+            />
+            <p className="text-sm text-muted-foreground">
+              We'll do our best to accommodate your requests.
+            </p>
+          </div>
+        </div>
+
+        {/* Emergency Contact Section */}
+        <div className="space-y-4 pt-6">
+          <div className="flex items-center gap-2 text-lg font-medium">
+            <AlertCircle className="h-5 w-5" />
+            <h3>Emergency Contact</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="emergencyContactName">Name *</Label>
+              <Input
+                id="emergencyContactName"
+                {...register("emergencyContactName")}
+                placeholder="Emergency contact name"
+                className={errors.emergencyContactName ? "border-red-500" : ""}
+              />
+              {errors.emergencyContactName && (
+                <p className="text-sm text-red-500">
+                  {errors.emergencyContactName.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="emergencyContactRelationship">Relationship *</Label>
+              <Input
+                id="emergencyContactRelationship"
+                {...register("emergencyContactRelationship")}
+                placeholder="Relationship (e.g., Spouse, Parent)"
+                className={
+                  errors.emergencyContactRelationship ? "border-red-500" : ""
+                }
+              />
+              {errors.emergencyContactRelationship && (
+                <p className="text-sm text-red-500">
+                  {errors.emergencyContactRelationship.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="emergencyContactPhone">Phone Number *</Label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Phone className="h-4 w-4 text-gray-500" />
+              </div>
+              <Input
+                id="emergencyContactPhone"
+                type="tel"
+                {...register("emergencyContactPhone")}
+                placeholder="(123) 456-7890"
+                className={`pl-10 ${errors.emergencyContactPhone ? "border-red-500" : ""}`}
+              />
+              {errors.emergencyContactPhone && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                </div>
+              )}
+            </div>
+            {errors.emergencyContactPhone && (
+              <p className="text-sm text-red-500">
+                {errors.emergencyContactPhone.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end pt-6">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save Traveler Information"}
+        </Button>
+      </div>
+    </form>
   );
 }

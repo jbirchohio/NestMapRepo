@@ -1,0 +1,28 @@
+{
+	"appId": "com.nestmap.app",
+	"appName": "NestMap",
+	"webDir": "dist/public",
+	"server": {
+		"url": "https://nestmaprepo-production.up.railway.app",
+		"androidScheme": "https",
+		"cleartext": true
+	},
+	"android": {},
+	"ios": {
+		"scheme": "NestMap",
+		"limitsNavigationsToAppBoundDomains": true
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 2000,
+			"launchAutoHide": true,
+			"backgroundColor": "#ffffff",
+			"androidSplashResourceName": "splash",
+			"androidScaleType": "CENTER_CROP",
+			"showSpinner": true,
+			"spinnerColor": "#4374CB",
+			"splashFullScreen": true,
+			"splashImmersive": true
+		}
+	}
+}
