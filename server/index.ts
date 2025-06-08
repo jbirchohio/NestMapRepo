@@ -1,306 +1,432 @@
 import 'dotenv/config';
-import express, { type Request, Response, NextFunction } from "express";
-// Session-based auth removed - using JWT only
-import path from "path";
-import fs from "fs";
-import apiRoutes from "./routes/index";
-import { setupVite, serveStatic, log } from "./vite";
-import { performanceMonitor, memoryMonitor } from "./middleware/performance";
-import { performanceOptimizer } from "./services/performanceOptimizer";
-import { preventSQLInjection, configureCORS } from "./middleware/security";
-import { monitorDatabasePerformance } from "./middleware/database";
-import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
-import { apiRateLimit, authRateLimit, organizationRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting";
-import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
-import { globalErrorHandler } from "./middleware/globalErrorHandler";
-import { runMigrations } from "../scripts/migrate";
-import { db } from "./db-connection";
-import { users } from "../shared/schema";
-import { eq } from "drizzle-orm";
-import { authenticateUser, getUserById } from "./auth";
-import { jwtAuthMiddleware } from "./middleware/jwtAuth";
-import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
-import { trackUserActivity } from "./middleware/sessionTracking";
+import express, { type Request, Response, NextFunction } from 'express';
+import cookieParser from 'cookie-parser';
+import compression from 'compression';
+import cors from 'cors';
+import path from 'path';
+import fs from 'fs';
+import { setupVite, serveStatic } from './vite';
+import { logger } from './utils/logger';
+import config from './config';
+import { asyncHandler, commonErrors } from './middleware/errorHandler';
+import { validateRequest, commonSchemas } from './middleware/validation';
+import { z } from 'zod';
+import { extendRequest } from './utils/request';
+import { extendResponse } from './utils/response';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { v4 as uuidv4 } from 'uuid';
 
+// Import security middleware
+import { preventSQLInjection, enforceOrganizationSecurity } from './middleware/security';
+
+// Import routes with type safety
+import apiRoutes from './routes/index';
+import authRoutes from './routes/auth';
+
+// Middleware
+import { globalErrorHandler } from './middleware/globalErrorHandler';
+import { trackUserActivity } from './middleware/sessionTracking';
+import { performanceMonitor, memoryMonitor, responseCompression } from './middleware/performance';
+import { authenticate } from './src/auth/middleware'; // New auth middleware
+import { validate } from './utils/validation';
+
+// Re-export types for easier access
+export * from '../shared/types';
+
+// Initialize Express app
 const app = express();
-const PORT = Number(process.env.PORT) || 5000;
-const HOST = process.env.HOST || "0.0.0.0";
+const PORT = config.server.port;
+const HOST = config.server.host;
+
+// Performance monitoring
+app.use(performanceMonitor);
+
+// Extend request/response objects with our custom methods
+app.use(extendRequest);
+app.use(extendResponse);
+app.use(memoryMonitor);
 
 // Export app for testing
 export { app };
 
-// Session store removed - using JWT-only authentication
+// ======================
+// Security Middleware
+// ======================
 
-// Security headers middleware with enhanced CSP
-app.use((req, res, next) => {
-  // Prevent clickjacking
-  res.setHeader('X-Frame-Options', 'DENY');
-  // Prevent MIME type sniffing
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  // Enable XSS protection
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  // Strict transport security for HTTPS
-  if (process.env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+// 1. Set security HTTP headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      fontSrc: ["'self'", 'https:'],
+      connectSrc: ["'self'"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true,
+  },
+  frameguard: {
+    action: 'deny',
+  },
+  xssFilter: true,
+  noSniff: true,
+  referrerPolicy: { policy: 'same-origin' },
+}));
+
+// 2. Enable CORS with secure defaults
+app.use(cors({
+  origin: config.server.corsOrigin,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  maxAge: 600, // 10 minutes
+  optionsSuccessStatus: 200
+}));
+
+// 3. Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again later',
+  skip: (req: Request) => {
+    // Skip rate limiting for certain paths or in development
+    const skipPaths = ['/health', '/api/health'];
+    return process.env.NODE_ENV === 'development' || skipPaths.some(path => req.path.startsWith(path));
   }
-
-  // Enhanced Content Security Policy
-  let csp;
-  if (process.env.NODE_ENV === 'production') {
-    // Generate nonce for production inline scripts
-    const nonce = Buffer.from(Math.random().toString()).toString('base64');
-    res.locals.nonce = nonce;
-
-    // Production CSP - strict security with nonce-based scripts
-    csp = [
-      "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' https://cdn.jsdelivr.net https://unpkg.com`,
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https: wss: ws:",
-      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
-      "worker-src 'self' blob:",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-      "upgrade-insecure-requests"
-    ].join('; ');
-  } else {
-    // Development CSP - compatible with Vite React plugin (no nonce needed)
-    csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
-      "img-src 'self' data: https: blob:",
-      "connect-src 'self' https: wss: ws: http://localhost:* http://127.0.0.1:*",
-      "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
-      "worker-src 'self' blob:",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'"
-    ].join('; ');
-  }
-
-  res.setHeader('Content-Security-Policy', csp);
-  next();
 });
 
-// Performance optimization middleware (early in stack)
-app.use(performanceOptimizer.viteAssetOptimizer());
-app.use(performanceOptimizer.memoryReliefMiddleware());
+app.use('/api', apiLimiter);
 
-// Input validation and sanitization middleware
-app.use((req, res, next) => {
-  // Sanitize common XSS patterns in request body
-  if (req.body && typeof req.body === 'object') {
-    const sanitizeObject = (obj: any): any => {
-      if (typeof obj === 'string') {
-        return obj.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-                 .replace(/javascript:/gi, '')
-                 .replace(/on\w+\s*=/gi, '');
-      }
-      if (typeof obj === 'object' && obj !== null) {
-        const sanitized: any = Array.isArray(obj) ? [] : {};
-        for (const key in obj) {
-          sanitized[key] = sanitizeObject(obj[key]);
-        }
-        return sanitized;
-      }
-      return obj;
-    };
-    req.body = sanitizeObject(req.body);
-  }
-  next();
-});
-
-// Rate limiting for JSON parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
-
-// Apply CORS configuration
-app.use(configureCORS);
-
-// Apply unified monitoring (replaces performance, memory, database, and endpoint monitoring)
-import { unifiedMonitoringMiddleware } from "./middleware/unified-monitoring";
-import { createPerformanceMiddleware } from "./performance-monitor";
-app.use(unifiedMonitoringMiddleware);
-app.use(createPerformanceMiddleware());
-
-// Apply SQL injection prevention
+// 4. Prevent SQL injection and other security threats
 app.use(preventSQLInjection);
 
-// Apply comprehensive rate limiting first for maximum protection
-app.use('/api', apiRateLimit); // Global API rate limiting
-app.use('/api/auth', authRateLimit); // Stricter limits for authentication endpoints
-app.use('/api', organizationRateLimit); // Organization-tier based limiting
+// 5. Enforce organization security for all routes under /api
+app.use('/api', enforceOrganizationSecurity);
 
-// Apply API security middleware only to API routes
-app.use('/api', apiVersioning);
-app.use('/api', authenticateApiKey);
-
-// Apply domain routing middleware for white label domains BEFORE authentication
-import { domainRoutingMiddleware } from "./loadBalancer";
-app.use(domainRoutingMiddleware);
-
-// Apply case conversion middleware first, then JWT authentication only to API routes
-app.use(caseConversionMiddleware);
-app.use('/api', jwtAuthMiddleware);
-
-// Track user activity for security monitoring
-app.use(trackUserActivity);
-
-// Global error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Unhandled error:', {
-    error: err.message,
-    stack: err.stack,
-    url: req.url,
-    method: req.method,
-    timestamp: new Date().toISOString()
+// ======================
+// Rate limiting configuration
+const createRateLimiter = () => {
+  return rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    message: 'Too many requests from this IP, please try again later',
+    skip: (request: Request) => {
+      // Skip rate limiting for certain paths or in development
+      const skipPaths = ['/health', '/api/health'];
+      return process.env.NODE_ENV === 'development' || skipPaths.some(path => request.path.startsWith(path));
+    },
+    handler: (_req: Request, res: Response) => {
+      res.status(429).json({
+        success: false,
+        error: {
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many requests, please try again later',
+        },
+      });
+    },
   });
+};
 
+// Apply rate limiting to all API routes
+app.use('/api', createRateLimiter());
+
+// Apply authentication to API routes
+app.use('/api', authenticate);
+
+// Use new auth routes
+app.use('/api/auth', authRouter);
+
+// ======================
+// Middleware
+// ======================
+app.use(helmet()); // Security headers
+app.use(compression()); // Response compression
+app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Parse URL-encoded bodies
+app.use(cookieParser()); // Parse cookies
+
+// Add request ID and start time to each request
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  req.requestId = uuidv4();
+  req.startTime = process.hrtime();
+  next();
+});
+
+// Log all requests
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = process.hrtime();
+  const { method, originalUrl, ip } = req;
+  
+  res.on('finish', () => {
+    const durationInMs = process.hrtime(start)[1] / 1000000; // Convert to ms
+    const { statusCode } = res;
+    const contentLength = res.get('content-length');
+    
+    logger.info(
+      `${method} ${originalUrl} ${statusCode} ${durationInMs.toFixed(2)}ms ${contentLength || 0}b - ${ip}`
+    );
+  });
+  
+  next();
+});
+
+// API Routes
+app.use('/api', apiRoutes);
+app.use('/api/auth', authRoutes);
+
+// ======================
+// Request Validation
+// ======================
+app.use(express.json({ 
+  limit: '10kb',
+  strict: true
+}));
+
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '10kb',
+  parameterLimit: 50 // Limit number of parameters
+}));
+
+// ======================
+// Security Headers
+// ======================
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  // Remove X-Powered-By header
+  res.removeHeader('X-Powered-By');
+  
+  // Set security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // Content Security Policy
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: https:; " +
+    "font-src 'self' data:; " +
+    "connect-src 'self'"
+  );
+  
+  next();
+});
+
+// ======================
+// Request Logging
+// ======================
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info(`${req.method} ${req.originalUrl} - ${res.statusCode} - ${duration}ms`);
+  });
+  
+  next();
+});
+
+// ======================
+// Error Handling
+// ======================
+// Error handling middleware
+app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
+  logger.error(`Error: ${err.message}`, { stack: err.stack });
+  
   if (res.headersSent) {
     return next(err);
   }
-
+  
   res.status(500).json({
-    message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
-  });
-});
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const reqPath = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (reqPath.startsWith("/api")) {
-      let logLine = `${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-      log(logLine);
+    success: false,
+    error: {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: process.env.NODE_ENV === 'production' 
+        ? 'An unexpected error occurred' 
+        : err.message,
+      ...(process.env.NODE_ENV === 'development' && { 
+        stack: err.stack,
+        name: err.name 
+      })
     }
   });
-
-  next();
 });
 
-(async () => {
-  console.log('🚀 Starting server initialization...');
+// Health check endpoint
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
-  // Run database migrations on startup
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🔄 Running database migrations...');
+// Example protected route with validation
+app.post(
+  '/api/example/:id',
+  validateRequest({
+    body: z.object({
+      name: z.string().min(3).max(100),
+      email: z.string().email(),
+      age: z.number().int().positive().optional()
+    }),
+    query: commonSchemas.pagination,
+    params: commonSchemas.id
+  }),
+  asyncHandler(async (req: Request, res: Response) => {
     try {
-      await runMigrations();
-      console.log('✅ Database migrations completed');
+      // Type-safe access to validated request data
+      const params = req.params as { id: string };  // id is string from URL, will be converted to number by validation
+      const query = req.query as { page?: string; limit?: string };
+      const body = req.body as { name: string; email: string; age?: number };
+      
+      // Convert string ID to number (validation ensures it's a valid number)
+      const id = parseInt(params.id, 10);
+      const page = query.page ? parseInt(query.page, 10) : 1;
+      const limit = query.limit ? parseInt(query.limit, 10) : 20;
+      
+      // Return response with typed data
+      return res.status(200).json({ 
+        status: 'success',
+        data: {
+          id,
+          ...body,
+          pagination: { page, limit }
+        } 
+      });
     } catch (error) {
-      console.error('❌ Migration failed:', error);
-      process.exit(1);
+      logger.error('Error in example route:', { error });
+      res.status(500).json({ error: 'Internal server error' });
     }
-  }
-
-  console.log('📍 Mounting API routes...');
-  try {
-    // Mount API routes with proper middleware order
-    app.use('/api', apiRoutes);
-
-    // Register booking routes with full Express app instance
-    const { registerBookingRoutes } = await import('./routes/bookings');
-    registerBookingRoutes(app);
-
-    // Register corporate cards routes with full Express app instance
-    const { registerCorporateCardRoutes } = await import('./routes/corporateCards');
-    registerCorporateCardRoutes(app);
-
-    // Register simplified white label routes with full Express app instance
-    const { registerSimplifiedWhiteLabelRoutes } = await import('./routes/whiteLabelSimplified');
-    registerSimplifiedWhiteLabelRoutes(app);
-
-    // Register domain management routes with full Express app instance
-    const { registerDomainRoutes } = await import('./routes/domains');
-    registerDomainRoutes(app);
-
-    // Register system metrics routes with full Express app instance
-    const { registerSystemMetricsRoutes } = await import('./routes/system-metrics');
-    registerSystemMetricsRoutes(app);
-
-    // Register alerts routes with full Express app instance
-    const { registerAlertsRoutes } = await import('./routes/alerts');
-    registerAlertsRoutes(app);
-
-    // Register admin settings routes with full Express app instance
-    const { registerAdminSettingsRoutes } = await import('./routes/admin-settings');
-    registerAdminSettingsRoutes(app);
-
-    // Register admin analytics routes with full Express app instance
-    const { registerAdminAnalyticsRoutes } = await import('./routes/admin-analytics');
-    registerAdminAnalyticsRoutes(app);
-
-    // Register performance monitoring routes with full Express app instance
-    const { registerPerformanceRoutes } = await import('./routes/performance');
-    registerPerformanceRoutes(app);
-
-    console.log('✅ API routes mounted successfully');
-  } catch (error) {
-    console.error('❌ Failed to mount API routes:', error);
-    throw error;
-  }
-
-  // Error handling middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    res.status(status).json({ message });
-    throw err;
   });
 
-  if (process.env.NODE_ENV === "development") {
-    // Setup Vite before starting server to ensure proper middleware order
-    const server = app.listen(PORT, HOST, () => {
-      log(`serving on http://${HOST}:${PORT}`);
-    });
-
-    await setupVite(app, server);
-
-    // Handle server cleanup on process termination
-    process.on('SIGTERM', () => server.close());
-    process.on('SIGINT', () => server.close());
-  } else {
-    const staticPath =
-      process.env.STATIC_PATH || path.resolve(process.cwd(), "dist", "public");
-    console.log("🚀 Serving static files from:", staticPath);
-
-    if (fs.existsSync(staticPath)) {
-      app.use(express.static(staticPath));
-      app.get("*", (_req, res) => {
-        res.sendFile(path.join(staticPath, "index.html"));
-      });
-    } else {
-      console.error("❌ Static directory not found:", staticPath);
-      serveStatic(app);
-    }
-
-    // Start server for production
-    const server = app.listen(PORT, HOST, () => {
-      log(`serving on http://${HOST}:${PORT}`);
-    });
-
-    // Handle server cleanup on process termination
-    process.on('SIGTERM', () => server.close());
-    process.on('SIGINT', () => server.close());
+// Error handler - Must be the last middleware
+app.use((err: unknown, req: Request, res: Response) => {
+  // Handle known error types with statusCode
+  if (err && typeof err === 'object' && 'statusCode' in err) {
+    const apiError = err as { statusCode: number; message: string; code?: string; stack?: string };
+    const response = {
+      status: 'error',
+      message: apiError.message || 'An error occurred',
+      ...(apiError.code && { code: apiError.code }),
+      ...(process.env.NODE_ENV !== 'production' && apiError.stack && { stack: apiError.stack })
+    };
+    
+    return res.status(apiError.statusCode).json(response);
   }
-})();
+
+  // Handle unexpected errors
+  const error = err instanceof Error ? err : new Error('An unknown error occurred');
+  logger.error('Unexpected error:', { 
+    message: error.message, 
+    stack: error.stack, 
+    path: req.path 
+  });
+  
+  const response = {
+    status: 'error',
+    message: 'Internal Server Error',
+    ...(process.env.NODE_ENV !== 'production' && { 
+      error: error.message,
+      ...(error.stack && { stack: error.stack })
+    })
+  };
+  
+  return res.status(500).json(response);
+});
+
+// Start the server
+const startServer = async (): Promise<void> => {
+  try {
+    // Run database migrations if needed
+    if (process.env.NODE_ENV !== 'test') {
+      await runMigrations();
+    }
+    
+    // Start the server
+    const server = app.listen(PORT, HOST, () => {
+      logger.info(`Server is running on http://${HOST}:${PORT}`, {
+        environment: process.env.NODE_ENV || 'development',
+        nodeVersion: process.version,
+        platform: process.platform
+      });
+    });
+
+    // Handle graceful shutdown
+    const shutdown = async (signal: string): Promise<void> => {
+      logger.info(`Received ${signal}. Shutting down gracefully...`);
+      
+      // Close the server
+      server.close((err) => {
+        if (err) {
+          logger.error('Error during shutdown', { error: err });
+          process.exit(1);
+        }
+        
+        logger.info('Server has been stopped');
+        process.exit(0);
+      });
+
+      // Force shutdown after 10 seconds
+      setTimeout(() => {
+        logger.warn('Forcing shutdown after timeout');
+        process.exit(1);
+      }, 10000);
+    };
+
+    // Handle signals
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error: Error) => {
+      logger.error('Uncaught Exception:', error);
+      shutdown('uncaughtException');
+    });
+    
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason: unknown) => {
+      logger.error('Unhandled Rejection:', { reason });
+      shutdown('unhandledRejection');
+    });
+    
+    return new Promise((resolve) => {
+      server.on('listening', () => resolve());
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', { error });
+    process.exit(1);
+  }
+};
+
+// Start the server if this file is run directly
+if (require.main === module) {
+  logger.info('🚀 Starting server...');
+  
+  // Access server configuration safely
+  const serverConfig = config as any;
+  const env = serverConfig.server?.env || process.env.NODE_ENV || 'development';
+  
+  logger.info('Server configuration', {
+    environment: env,
+    host: HOST,
+    port: PORT,
+    corsOrigins: serverConfig.server?.corsOrigin || 'Not configured'
+  });
+  
+  // Start the server with proper error handling
+  startServer().catch((error: Error) => {
+    logger.error('Fatal error during server startup:', { error });
+    process.exit(1);
+  });
+}
+
+// For testing

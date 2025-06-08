@@ -27,7 +27,7 @@ const auditLogger = {
     console.log(`[AUDIT] Admin ${adminId} performed: ${action}`, data ? JSON.stringify(data) : '');
   }
 };
-import { hashPassword } from '../auth';
+import { hashPassword } from '../utils/auth';
 import { stripe, SUBSCRIPTION_PLANS, createStripeCustomer, updateSubscription, createRefund } from '../stripe';
 
 // Define authenticated request interface

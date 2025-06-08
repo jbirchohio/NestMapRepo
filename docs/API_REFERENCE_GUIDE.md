@@ -1,23 +1,40 @@
 # NestMap API Reference Guide
 
-**Version**: 1.0  
+**Version**: 2.0  
 **Base URL**: `https://your-domain.com/api`  
-**Authentication**: JWT Bearer Token required for most endpoints
+**Documentation Last Updated**: June 8, 2025
+
+## Table of Contents
+- [Authentication](#authentication)
+- [Users](#users)
+- [Organizations](#organizations)
+- [Trips](#trips)
+- [Activities](#activities)
+- [Bookings](#bookings)
+- [Expenses](#expenses)
+- [Flights](#flights)
+- [Calendar](#calendar)
+- [Analytics](#analytics)
+- [Admin](#admin)
+- [System](#system)
 
 ## Authentication
 
 ### POST `/api/auth/login`
-Login with email and password.
+Authenticate a user and retrieve an access token.
 
-**Request Body:**
-```json
+**Request:**
+```http
+POST /api/auth/login
+Content-Type: application/json
+
 {
   "email": "user@example.com",
   "password": "password123"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "success": true,
@@ -32,19 +49,336 @@ Login with email and password.
 ```
 
 ### POST `/api/auth/register`
-Register new user account.
+Register a new user account.
 
-**Request Body:**
-```json
+**Request:**
+```http
+POST /api/auth/register
+Content-Type: application/json
+
 {
   "email": "user@example.com",
   "password": "password123",
-  "username": "johndoe"
+  "username": "johndoe",
+  "organizationName": "Acme Corp"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Registration successful",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "username": "johndoe",
+    "organization_id": 1,
+    "role": "admin"
+  },
+  "token": "jwt_token_here"
+}
+```
+
+### POST `/api/auth/refresh-token`
+Refresh an expired access token.
+
+**Request:**
+```http
+POST /api/auth/refresh-token
+Authorization: Bearer <refresh_token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "token": "new_jwt_token_here",
+  "expiresIn": 3600
 }
 ```
 
 ### POST `/api/auth/logout`
-Logout current user session.
+Invalidate the current user's session.
+
+**Request:**
+```http
+POST /api/auth/logout
+Authorization: Bearer <token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Successfully logged out"
+}
+```
+
+## Users
+
+### GET `/api/users/me`
+Get current user's profile information.
+
+**Request:**
+```http
+GET /api/users/me
+Authorization: Bearer <token>
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "username": "johndoe",
+  "firstName": "John",
+  "lastName": "Doe",
+  "role": "user",
+  "organization_id": 1,
+  "createdAt": "2023-01-01T00:00:00.000Z",
+  "updatedAt": "2023-01-01T00:00:00.000Z"
+}
+```
+
+### PUT `/api/users/me`
+Update current user's profile.
+
+**Request:**
+```http
+PUT /api/users/me
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "timezone": "America/New_York"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "user": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "timezone": "America/New_York",
+    "updatedAt": "2023-01-02T12:00:00.000Z"
+  }
+}
+```
+
+## Organizations
+
+### GET `/api/organizations`
+List all organizations (admin only).
+
+### GET `/api/organizations/:id`
+Get organization details.
+
+### POST `/api/organizations`
+Create a new organization.
+
+### PUT `/api/organizations/:id`
+Update organization details.
+
+## Trips
+
+### GET `/api/trips`
+List all trips for the current user.
+
+### POST `/api/trips`
+Create a new trip.
+
+### GET `/api/trips/:id`
+Get trip details.
+
+### PUT `/api/trips/:id`
+Update a trip.
+
+### DELETE `/api/trips/:id`
+Delete a trip.
+
+## Activities
+
+### GET `/api/activities`
+List activities for a trip.
+
+### POST `/api/activities`
+Create a new activity.
+
+## Bookings
+
+### GET `/api/bookings`
+List all bookings.
+
+### POST `/api/bookings`
+Create a new booking.
+
+## Expenses
+
+### GET `/api/expenses`
+List all expenses.
+
+### POST `/api/expenses`
+Create a new expense.
+
+## Flights
+
+### GET `/api/flights/search`
+Search for flights.
+
+### POST `/api/flights/book`
+Book a flight.
+
+## Calendar
+
+### GET `/api/calendar/events`
+Get calendar events.
+
+## Analytics
+
+### GET `/api/analytics/overview`
+Get analytics overview.
+
+## Admin
+
+### GET `/api/admin/users`
+List all users (admin only).
+
+### POST `/api/admin/users`
+Create a new user (admin only).
+
+## System
+
+### GET `/api/health`
+Check system health.
+
+**Request:**
+```http
+GET /api/health
+```
+
+**Response (200 OK):**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2023-01-01T00:00:00.000Z",
+  "version": "1.0.0",
+  "services": {
+    "database": "connected",
+    "cache": "connected",
+    "storage": "connected"
+  }
+}
+```
+
+## Error Responses
+
+### 400 Bad Request
+```json
+{
+  "error": "Validation Error",
+  "message": "Invalid input data",
+  "details": [
+    {
+      "field": "email",
+      "message": "Invalid email format"
+    }
+  ]
+}
+```
+
+### 401 Unauthorized
+```json
+{
+  "error": "Unauthorized",
+  "message": "Authentication required"
+}
+```
+
+### 403 Forbidden
+```json
+{
+  "error": "Forbidden",
+  "message": "Insufficient permissions"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "error": "Not Found",
+  "message": "Resource not found"
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "error": "Internal Server Error",
+  "message": "An unexpected error occurred",
+  "requestId": "req_12345"
+}
+```
+
+## Rate Limiting
+- All API endpoints are rate limited to 100 requests per minute per IP address.
+- Authentication endpoints have stricter rate limits (10 requests per minute).
+- Exceeding rate limits will result in a 429 Too Many Requests response.
+
+## Authentication
+- Include the JWT token in the `Authorization` header for authenticated requests:
+  ```
+  Authorization: Bearer <your_jwt_token>
+  ```
+- Tokens expire after 24 hours by default.
+- Use the refresh token endpoint to obtain a new access token.
+
+## Webhooks
+
+### POST `/api/webhooks/stripe`
+Handle Stripe webhook events.
+
+**Request:**
+```http
+POST /api/webhooks/stripe
+Stripe-Signature: <signature>
+Content-Type: application/json
+
+{
+  "id": "evt_123456789",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_123456789",
+      "amount": 1000,
+      "currency": "usd"
+    }
+  }
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "received": true
+}
+```
+
+## Changelog
+
+### v2.0 (2025-06-08)
+- Complete API reference documentation
+- Added detailed request/response examples
+- Included error handling documentation
+- Added rate limiting information
+- Improved authentication documentation
+
+### v1.0 (2023-01-01)
+- Initial API release
 
 ## User Management
 

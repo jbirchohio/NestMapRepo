@@ -1,6 +1,15 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import compression from 'compression';
+import { performance } from 'perf_hooks';
 
-// Performance metrics tracking
+declare global {
+  namespace NodeJS {
+    interface Global {
+      gc?: () => void;
+    }
+  }
+}
+
 interface EndpointMetrics {
   totalRequests: number;
   totalDuration: number;
@@ -11,11 +20,17 @@ interface EndpointMetrics {
 const endpointMetrics = new Map<string, EndpointMetrics>();
 const dbQueryCounts = new Map<string, number>();
 
+interface PerformanceRequest extends Request {
+  dbQueryCount?: number;
+  startTime?: [number, number];
+}
+
 /**
  * Enhanced performance monitoring middleware
  * Tracks response times, memory usage, and database queries
  */
-export function performanceMonitor(req: Request, res: Response, next: NextFunction) {
+// Performance monitoring middleware
+export const performanceMonitor: RequestHandler = (req: PerformanceRequest, res: Response, next: NextFunction) => {
   const start = process.hrtime.bigint();
   const startMemory = process.memoryUsage();
   
@@ -97,7 +112,8 @@ export function performanceMonitor(req: Request, res: Response, next: NextFuncti
 /**
  * Enhanced memory usage monitoring with garbage collection optimization
  */
-export function memoryMonitor(req: Request, res: Response, next: NextFunction) {
+// Memory monitoring middleware
+export const memoryMonitor: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   const memUsage = process.memoryUsage();
   const memoryThreshold = 400 * 1024 * 1024; // 400MB - lowered threshold
   
@@ -208,7 +224,8 @@ export function queryOptimizer() {
 /**
  * Response compression middleware
  */
-export function responseCompression(req: Request, res: Response, next: NextFunction) {
+// Response compression middleware
+export const responseCompression: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   const acceptEncoding = req.get('Accept-Encoding') || '';
   
   if (acceptEncoding.includes('gzip')) {

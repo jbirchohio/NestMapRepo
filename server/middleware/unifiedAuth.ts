@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { getUserById } from '../auth';
 import { db } from '../db';
 import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
@@ -37,24 +36,24 @@ export const unifiedAuth = async (req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ error: 'User not found in database' });
     }
 
-    // Transform to camelCase for frontend
+    // Transform to camelCase for frontend with proper null handling
     req.user = {
       id: dbUser.id,
-      authId: dbUser.auth_id,
-      username: dbUser.username,
+      authId: dbUser.auth_id ?? undefined,
+      username: dbUser.username ?? undefined,
       email: dbUser.email,
-      displayName: dbUser.display_name,
-      avatarUrl: dbUser.avatar_url,
+      displayName: dbUser.display_name ?? undefined,
+      avatarUrl: dbUser.avatar_url ?? undefined,
       role: dbUser.role,
-      roleType: dbUser.role_type,
-      organizationId: dbUser.organization_id,
-      company: dbUser.company,
-      jobTitle: dbUser.job_title,
-      teamSize: dbUser.team_size,
-      useCase: dbUser.use_case,
-      lastLogin: dbUser.last_login,
-      createdAt: dbUser.created_at,
-    };
+      roleType: dbUser.role_type ?? undefined,
+      organizationId: dbUser.organization_id ?? undefined,
+      company: dbUser.company ?? undefined,
+      jobTitle: dbUser.job_title ?? undefined,
+      teamSize: dbUser.team_size ?? undefined,
+      useCase: dbUser.use_case ?? undefined,
+      lastLogin: dbUser.last_login ? new Date(dbUser.last_login) : undefined,
+      createdAt: dbUser.created_at ? new Date(dbUser.created_at) : new Date(),
+    } as const;
 
     next();
   } catch (error) {

@@ -1,10 +1,13 @@
 import { Router } from 'express';
+
+// Core routes
 import authRoutes from './auth';
 import tripRoutes from './trips';
 import activityRoutes from './activities';
 import organizationRoutes from './organizations';
 import analyticsRoutes from './analytics';
-// Performance routes registered in main server file
+
+// Feature routes
 import adminRoutes from './admin';
 import calendarRoutes from './calendar';
 import collaborationRoutes from './collaboration';
@@ -19,14 +22,14 @@ import superadminRoutes from './superadmin';
 import webhookRoutes from './webhooks';
 import subscriptionStatusRoutes from './subscription-status';
 import { registerAdminSettingsRoutes } from './admin-settings';
-// import todosRoutes from './todos';
-// import notesRoutes from './notes';
 import aiRoutes from './ai';
 import securityRoutes from './security';
 import healthRoutes from './health';
 import notificationsRoutes from './notifications';
 import flightRoutes from './flights';
-import { getUserById } from '../auth';
+
+// Test routes (development only)
+import testRoutes from './test.routes';
 
 const router = Router();
 
@@ -36,19 +39,23 @@ router.use('/trips', tripRoutes);
 router.use('/activities', activityRoutes);
 router.use('/organizations', organizationRoutes);
 router.use('/analytics', analyticsRoutes);
-// Performance routes registered separately as function
+
+// Mount admin and feature routes
 router.use('/admin', adminRoutes);
 router.use('/calendar', calendarRoutes);
 router.use('/collaboration', collaborationRoutes);
-// Register booking routes directly to app instance (not router)
-// Note: This will be handled in the main routes file
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
-// Corporate cards routes registered directly to app in main server file
 router.use('/organization-funding', organizationFundingRoutes);
-console.log('🔧 Mounting Stripe OAuth routes at /stripe');
 router.use('/stripe', stripeOAuthRoutes);
+
+// Mount test routes in development only
+if (process.env.NODE_ENV === 'development') {
+  router.use('/test', testRoutes);
+  console.log(' Mounting Test routes at /test');
+}
+
 router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/subscription-status', subscriptionStatusRoutes);

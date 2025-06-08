@@ -1,9 +1,10 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import * as schema from "@shared/schema";
-import { DB_CONFIG } from './config';
+import config from './config';
+import { logger } from './utils/logger';
 
 // Check if Supabase credentials are provided
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.SUPABASE_DB_PASSWORD) {
@@ -22,31 +23,53 @@ export const supabase = createClient(
 const supabaseUrl = new URL(process.env.SUPABASE_URL);
 const databaseUrl = `postgresql://postgres.${supabaseUrl.hostname.split('.')[0]}:${process.env.SUPABASE_DB_PASSWORD}@${supabaseUrl.hostname}:5432/postgres`;
 
-// Create PostgreSQL connection for Drizzle ORM
-const client = postgres(databaseUrl, { 
-  prepare: false,
-  max: DB_CONFIG.connectionPoolSize || 10
+// Create PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: databaseUrl,
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+  maxUses: 7500, // Close and remove a connection after it has been used 7500 times
 });
 
 // Create Drizzle ORM instance
-export const db = drizzle(client, { schema });
+export const db = drizzle(pool, { 
+  schema,
+  logger: config.server.env === 'development' 
+    ? { logQuery: (query, params) => logger.debug('Query:', { query, params }) }
+    : false
+});
 
 // Utility function to test database connection
 export async function testConnection() {
+  let client;
   try {
-    const result = await client`SELECT NOW()`;
-    console.log('Supabase database connection successful');
+    client = await pool.connect();
+    await client.query('SELECT NOW()');
+    logger.info('Database connection successful');
     return true;
   } catch (error) {
-    console.error('Supabase database connection failed:', error);
+    logger.error('Database connection failed:', error);
     return false;
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 }
 
-// For backward compatibility
-export const pool = {
-  query: (text: string, params?: any[]) => client.unsafe(text, params || [])
-};
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received. Closing database connections...');
+  await pool.end();
+  process.exit(0);
+});
 
-// Export database connection
-export default db;
+process.on('SIGINT', async () => {
+  logger.info('SIGINT received. Closing database connections...');
+  await pool.end();
+  process.exit(0);
+});
+
+// For backward compatibility
+export { pool };

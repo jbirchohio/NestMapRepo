@@ -1,20 +1,11 @@
-import { User } from '@shared/schema';
+import { JWTUser } from '../controllers/authController';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        email?: string;
-        role?: string;
-        organizationId?: number;
-        organization_id?: number; // Keep for backward compatibility
-        userId?: string;
-        user_id?: string; // Keep for backward compatibility
-        permissions?: string[];
-      };
+      user?: JWTUser;
       organization?: {
-        id: number;
+        id: string;
         name: string;
         settings: any;
       };

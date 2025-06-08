@@ -1,0 +1,140 @@
+import jwt, { SignOptions, Algorithm } from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
+import { redis } from '../db/redis';
+import { logger } from './logger';
+import { TOKEN_EXPIRATION, JWT_CONFIG, getJwtSecret, TokenType } from '../config/jwt.config';
+
+// Token blacklist management
+const TOKEN_BLACKLIST_KEY_PREFIX = 'jwt_blacklist:';
+const TOKEN_WHITELIST_KEY_PREFIX = 'jwt_whitelist:';
+
+export interface TokenPayload {
+  jti: string;
+  userId: string;
+  email: string;
+  role: string;
+  type: TokenType;
+  iat: number;
+  exp: number;
+  organizationId?: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+// Token management utilities
+const generateTokenId = (): string => uuidv4();
+
+const addToBlacklist = async (tokenId: string, expiresAt: number): Promise<void> => {
+  const ttl = Math.ceil((expiresAt - Date.now()) / 1000);
+  if (ttl > 0) {
+    await redis.setex(`${TOKEN_BLACKLIST_KEY_PREFIX}${tokenId}`, ttl, '1');
+  }
+};
+
+export const isTokenBlacklisted = async (tokenId: string): Promise<boolean> => {
+  const result = await redis.exists(`${TOKEN_BLACKLIST_KEY_PREFIX}${tokenId}`);
+  return result === 1;
+};
+
+// Token generation and verification
+export const generateToken = async (
+  payload: Omit<TokenPayload, 'jti' | 'iat' | 'exp' | 'type'>,
+  type: TokenType = 'access'
+): Promise<{ token: string; jti: string; expiresAt: number }> => {
+  const jti = generateTokenId();
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAt = now + TOKEN_EXPIRATION[type];
+
+  const tokenPayload: TokenPayload = {
+    ...payload,
+    jti,
+    type,
+    iat: now,
+    exp: expiresAt,
+  };
+
+  const token = jwt.sign(tokenPayload, getJwtSecret(type), {
+    algorithm: JWT_CONFIG.algorithm,
+    issuer: JWT_CONFIG.issuer,
+    audience: JWT_CONFIG.audience,
+    jwtid: jti,
+  });
+
+  return { token, jti, expiresAt };
+};
+
+export const verifyToken = async (
+  token: string,
+  type: TokenType
+): Promise<{ payload: TokenPayload; expired: boolean } | null> => {
+  try {
+    const payload = jwt.verify(token, getJwtSecret(type), {
+      issuer: JWT_CONFIG.issuer,
+      audience: JWT_CONFIG.audience,
+      algorithms: [JWT_CONFIG.algorithm],
+    }) as TokenPayload;
+
+    // Check if token is blacklisted
+    if (await isTokenBlacklisted(payload.jti)) {
+      throw new Error('Token has been revoked');
+    }
+
+    return { payload, expired: false };
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      return { payload: error.payload, expired: true };
+    }
+    logger.warn('Token verification failed', { error: error.message });
+    return null;
+  }
+};
+
+// Token pair generation
+export const generateAuthTokens = async (
+  userId: string,
+  email: string,
+  role: string = 'user'
+): Promise<{
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: number;
+  refreshTokenExpiresAt: number;
+}> => {
+  // Generate access token
+  const { token: accessToken, expiresAt: accessTokenExpiresAt } = await generateToken(
+    { userId, email, role },
+    'access'
+  );
+
+  // Generate refresh token
+  const { token: refreshToken, jti, expiresAt: refreshTokenExpiresAt } = await generateToken(
+    { userId, email, role },
+    'refresh'
+  );
+
+  // Store refresh token in whitelist
+  await redis.setex(
+    `${TOKEN_WHITELIST_KEY_PREFIX}${userId}:${jti}`,
+    TOKEN_EXPIRATION.refresh,
+    '1'
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    accessTokenExpiresAt,
+    refreshTokenExpiresAt,
+  };
+};
+
+// Token revocation
+export const revokeToken = async (userId: string, tokenId: string): Promise<void> => {
+  await redis.del(`${TOKEN_WHITELIST_KEY_PREFIX}${userId}:${tokenId}`);
+};
+
+export const revokeAllUserTokens = async (userId: string): Promise<void> => {
+  const keys = await redis.keys(`${TOKEN_WHITELIST_KEY_PREFIX}${userId}:*`);
+  if (keys.length > 0) {
+    await redis.del(...keys);
+  }
+};

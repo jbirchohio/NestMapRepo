@@ -7,6 +7,7 @@ interface AuthContextType {
   userId: number | null;
   roleType: 'corporate' | 'agency' | null;
   loading: boolean;
+  isLoading: boolean;
   authReady: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
@@ -192,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userId,
     roleType,
     loading,
+    isLoading: loading,
     authReady,
     error,
     signIn,
