@@ -42,19 +42,7 @@ export default function Login() {
     }
   };
 
-  const handleDemoMode = () => {
-    // Set demo mode in localStorage
-    localStorage.setItem('demo-mode', 'true');
-    localStorage.setItem('demo-user', JSON.stringify({
-      id: 1,
-      email: 'demo@nestmap.com',
-      name: 'Demo User',
-      roleType: 'corporate'
-    }));
-    
-    // Reload to trigger auth context update
-    window.location.reload();
-  };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -64,7 +52,7 @@ export default function Login() {
             Welcome to NestMap
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Sign in to your account or continue with demo mode
+            Sign in to your account
           </p>
         </div>
 

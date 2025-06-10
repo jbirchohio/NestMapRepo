@@ -115,7 +115,6 @@ export const protectedRoutes: RouteObject[] = [
     children: [
       { path: 'corporate-cards', element: lazyLoad(() => import('@/pages/CorporateCards')) },
       { path: 'funding', element: lazyLoad(() => import('@/pages/OrganizationFunding')) },
-      { path: 'billing-demo', element: lazyLoad(() => import('@/pages/BillingDemo')) },
     ],
   },
 ];

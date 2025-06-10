@@ -1,53 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { queryClient } from "@/lib/queryClient";
-import { apiRequest } from "@/lib/queryClient";
-import { API_ENDPOINTS, ACTIVITY_TAGS } from "@/lib/constants";
-import { ClientActivity } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import useMapbox from "@/hooks/useMapbox";
-import PlacesSearch from "@/components/PlacesSearch";
-import { Search } from "lucide-react";
-import useTrip from "@/hooks/useTrip";
-import { useDebounce } from "@/hooks/use-debounce";
-import TripDatePicker from "@/components/TripDatePicker";
+import ActivityModal from "./activities/ActivityModal";
 
-interface ActivityModalProps {
-  tripId: string | number;
-  date: Date;
-  activity: ClientActivity | null;
-  onClose: () => void;
-  onSave: () => void;
-}
-
-const activitySchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  date: z.date(),
-  time: z.string().min(1, "Time is required"),
-  locationName: z.string().min(1, "Location is required"),
-  notes: z.string().optional(),
-  tag: z.string().optional(),
-  latitude: z.string().optional(),
-  longitude: z.string().optional(),
-  assignedTo: z.string().optional(),
-  travelMode: z.string().default("walking"),
-});
-
-type ActivityFormValues = z.infer<typeof activitySchema>;
-
-export default function ActivityModal({ 
-  tripId, 
-  date, 
-  activity, 
-  onClose, 
-  onSave 
-}: ActivityModalProps) {
+export default ActivityModal;
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();
   const { trip } = useTrip(tripId);

@@ -53,6 +53,16 @@ export const ACTIVITY_TAGS = {
   },
 };
 
+// Travel modes
+export const TravelMode = {
+  WALKING: "walking",
+  DRIVING: "driving",
+  TRANSIT: "transit",
+  BIKING: "biking"
+} as const;
+
+export type TravelMode = typeof TravelMode[keyof typeof TravelMode];
+
 // Format functions
 export const formatDateRange = (start: Date, end: Date): string => {
   const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };

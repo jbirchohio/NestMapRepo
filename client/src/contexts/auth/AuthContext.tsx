@@ -1,300 +1,256 @@
-import { ReactNode, createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../../hooks/use-toast';
-import { apiClient } from '../../services/api/apiClient';
-import { jwtDecode } from 'jwt-decode';
-import { logger } from '../../utils/logger';
+import { useToast } from '@/components/ui/use-toast';
+import api from '@/services/api/apiClient';
+import { User, JwtPayload, AuthTokens, ApiResponse } from '@/types/api';
+import { TokenManager } from '@/utils/tokenManager';
+import { SessionLockout } from '@/utils/sessionLockout';
+import jwtDecode from 'jwt-decode';
 
-// Types and interfaces
-interface JwtPayload {
-  exp: number;
-  iat: number;
+// Constants
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const SESSION_WARNING_THRESHOLD = 5 * 60 * 1000; // 5 minutes before session expires
+
+// Interfaces
+interface PasswordValidationResult {
+  isValid: boolean;
+  message?: string;
+}
+
+interface SecurityContext {
+  userId: string;
+  ipAddress: string;
+  userAgent: string;
+  timestamp: string;
+  sensitiveData: boolean;
+}
+
+interface DecodedJwt {
   sub: string;
   email: string;
+  name: string;
   role: string;
-  organization_id?: number;
-  [key: string]: any;
+  organization_id: string;
+  permissions: string[];
+  exp: number;
 }
 
-interface User {
-  id: number;
-  email: string;
-  username: string;
-  role: string;
-  organization_id: number | null;
-  email_verified?: boolean;
-  is_active?: boolean;
-}
-
-interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}
-
+// Context type
 interface AuthContextType {
   user: User | null;
-  userId: number | null;
-  roleType: 'corporate' | 'agency' | null;
   loading: boolean;
-  isLoading: boolean;
   authReady: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithProvider: (provider: string) => Promise<void>;
-  refreshToken: () => Promise<void>;
-  clearTokens: () => void;
+  refreshToken: () => Promise<boolean>;
+  getLoginAttempts: (email: string) => number;
+  incrementLoginAttempts: (email: string) => void;
+  setAccountLockout: (email: string) => void;
   isAuthenticated: () => boolean;
   hasPermission: (permission: string) => boolean;
+  isLoading: boolean;
+  validatePassword: () => { isValid: boolean };
 }
-
-// Token storage keys
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-const TOKEN_REFRESH_MARGIN = 5 * 60 * 1000; // 5 minutes before token expires
 
 // Context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Custom hook
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+// Utility functions
+const decodeToken = useCallback((token: string | null): DecodedJwt | null => {
+  if (!token) return null;
+  try {
+    return jwtDecode(token) as DecodedJwt;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
   }
-  return context;
-};
+}, []);
 
-// Provider
-const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [authReady, setAuthReady] = useState(false);
+const isTokenExpired = useCallback((token: string | null): boolean => {
+  const decoded = decodeToken(token);
+  if (!decoded) return true;
+  const now = Date.now() / 1000;
+  return decoded.exp < now;
+}, [decodeToken]);
+
+// Provider component
+const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactElement => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const tokenManager = TokenManager.getInstance(navigate);
+  const sessionLockout = SessionLockout.getInstance();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastActivity, setLastActivity] = useState<number>(Date.now());
 
-  // Load initial auth state
+  // Initialize auth state
   useEffect(() => {
-    const loadAuthState = async () => {
+    const initializeAuth = async () => {
       try {
-        const tokens = await loadTokens();
-        if (tokens) {
-          const decoded = jwtDecode<JwtPayload>(tokens.accessToken);
-          setUser({
-            id: parseInt(decoded.sub),
-            email: decoded.email,
-            username: decoded.email.split('@')[0],
-            role: decoded.role,
-            organization_id: decoded.organization_id || null
-          });
-          setAuthReady(true);
-        } else {
-          setAuthReady(true);
+        const accessToken = tokenManager.getAccessToken();
+        if (accessToken) {
+          const decoded = decodeJWT(accessToken);
+          if (!isTokenExpired(accessToken)) {
+            setUser({
+              id: parseInt(decoded.sub),
+              email: decoded.email,
+              username: decoded.name,
+              role: decoded.role,
+              organization_id: decoded.organization_id || null,
+              permissions: decoded.permissions || []
+            });
+          }
         }
       } catch (error) {
-        logger.error('Error loading auth state:', error);
-        clearTokens();
-        setAuthReady(true);
+        console.error('Error initializing auth:', error);
       } finally {
         setLoading(false);
+        setAuthReady(true);
       }
     };
 
-    loadAuthState();
+    initializeAuth();
   }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    const cleanup = () => {
+      tokenManager.stopTokenRotation();
+    };
+    return cleanup;
+  }, [tokenManager]);
+
+  // Handle session timeout
+  useEffect(() => {
+    const handleIdle = () => {
+      const now = Date.now();
+      const idleTime = now - lastActivity;
+      
+      if (idleTime > SESSION_TIMEOUT) {
+        signOut();
+        toast({
+          title: 'Session Expired',
+          description: 'Your session has expired due to inactivity. Please sign in again.',
+          variant: 'destructive'
+        });
+      } else if (idleTime > SESSION_TIMEOUT - SESSION_WARNING_THRESHOLD) {
+        toast({
+          title: 'Session Warning',
+          description: 'Your session will expire soon. Please continue using the app to stay active.',
+          variant: 'warning'
+        });
+      }
+    };
+
+    const interval = setInterval(() => {
+      setLastActivity(Date.now());
+    }, 1000);
+
+    const timeout = setTimeout(handleIdle, SESSION_TIMEOUT - SESSION_WARNING_THRESHOLD);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [lastActivity, signOut, toast, SESSION_TIMEOUT, SESSION_WARNING_THRESHOLD]);
+
+  // Helper methods
+  const handleError = useCallback((error: Error) => {
+    console.error('Auth error:', error);
+    setError(error.message);
+    toast({
+      title: 'Authentication Error',
+      description: error.message,
+      variant: 'destructive'
+    });
+  }, [toast, setError]);
+
+  const incrementLoginAttempts = useCallback((email: string): void => {
+    sessionLockout.recordFailedAttempt(window.location.hostname, email);
+  }, [sessionLockout]);
+
+  const getLoginAttempts = useCallback((email: string): number => {
+    const status = sessionLockout.getLockoutStatus(email);
+    return status.attempts;
+  }, [sessionLockout]);
 
   // Authentication methods
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await apiClient.post<AuthTokens>('/auth/login', {
-        email,
-        password
-      });
-
-      if (response) {
-        await saveTokens(response);
-        const decoded = jwtDecode<JwtPayload>(response.accessToken);
-        setUser({
-          id: parseInt(decoded.sub),
-          email: decoded.email,
-          username: decoded.email.split('@')[0],
-          role: decoded.role,
-          organization_id: decoded.organization_id || null
-        });
-        navigate('/dashboard');
-        toast({
-          title: 'Success',
-          description: 'Logged in successfully'
-        });
-      }
+      const response = await api.post<ApiResponse<AuthTokens & { user: User }>>('/auth/login', { email, password });
+      const { accessToken, refreshToken, user } = response.data;
+      tokenManager.setTokens(accessToken, refreshToken);
+      setUser(user);
+      incrementLoginAttempts(email);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Login failed');
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Login failed',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
+      handleError(error as Error);
+      incrementLoginAttempts(email);
     }
-  }, [navigate, toast]);
+  }, [tokenManager, setUser, incrementLoginAttempts, handleError]);
 
   const signUp = useCallback(async (email: string, password: string, username: string) => {
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await apiClient.post<AuthTokens>('/auth/register', {
-        email,
-        password,
-        username
-      });
-
-      if (response) {
-        await saveTokens(response);
-        const decoded = jwtDecode<JwtPayload>(response.accessToken);
-        setUser({
-          id: parseInt(decoded.sub),
-          email: decoded.email,
-          username,
-          role: decoded.role,
-          organization_id: decoded.organization_id || null
-        });
-        navigate('/dashboard');
-        toast({
-          title: 'Success',
-          description: 'Account created successfully'
-        });
-      }
+      const response = await api.post<ApiResponse<AuthTokens & { user: User }>>('/auth/signup', { email, password, username });
+      const { accessToken, refreshToken, user } = response.data;
+      tokenManager.setTokens(accessToken, refreshToken);
+      setUser(user);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Registration failed');
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Registration failed',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
+      handleError(error as Error);
     }
-  }, [navigate, toast]);
+  }, [tokenManager, setUser, handleError]);
 
   const signOut = useCallback(async () => {
-    clearTokens();
-    setUser(null);
-    navigate('/login');
-    toast({
-      title: 'Logged out',
-      description: 'You have been logged out'
-    });
-    return Promise.resolve();
-  }, [navigate, toast]);
-
-  const refreshToken = useCallback(async () => {
     try {
-      const tokens = await loadTokens();
-      if (!tokens) return;
-
-      const response = await apiClient.post<AuthTokens>('/auth/refresh', {
-        refreshToken: tokens.refreshToken
-      });
-
-      if (response) {
-        await saveTokens(response);
-        const decoded = jwtDecode<JwtPayload>(response.accessToken);
-        setUser((prevUser) => prevUser && {
-          ...prevUser,
-          id: parseInt(decoded.sub),
-          email: decoded.email,
-          role: decoded.role,
-          organization_id: decoded.organization_id || null
-        });
-      }
-    } catch (error) {
-      logger.error('Token refresh failed:', error);
-      clearTokens();
+      await api.post<ApiResponse<void>>('/auth/logout');
+      tokenManager.destroy();
       setUser(null);
       navigate('/login');
-    }
-  }, [navigate]);
-
-  // Token management
-  const clearTokens = useCallback(() => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-  }, []);
-
-  const isAuthenticated = useCallback(() => {
-    const tokens = loadTokens();
-    if (!tokens) return false;
-    try {
-      const decoded = jwtDecode<JwtPayload>(tokens.accessToken);
-      return Date.now() < decoded.exp * 1000;
     } catch (error) {
-      return false;
+      handleError(error as Error);
     }
-  }, []);
-
-  const hasPermission = useCallback((permission: string) => {
-    if (!user) return false;
-    // This should be replaced with actual permission checking logic
-    // based on user's role and organization
-    return true;
-  }, [user]);
+  }, [tokenManager, navigate, setUser, handleError]);
 
   const signInWithProvider = useCallback(async (provider: string) => {
     try {
-      setLoading(true);
-      setError(null);
-
-      // This would integrate with OAuth providers
-      // For now, we'll show a message that it's not implemented
-      toast({
-        title: "Coming Soon",
-        description: `${provider} sign-in will be available soon.`,
-      });
+      const response = await api.post<ApiResponse<AuthTokens & { user: User }>>(`/auth/${provider}`);
+      const data = response.data;
+      const { accessToken, refreshToken, user } = data.data;
+      tokenManager.setTokens(accessToken, refreshToken);
+      setUser(user);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Provider sign-in failed';
-      setError(errorMessage);
-      toast({
-        title: "Sign in failed",
-        description: errorMessage,
-        variant: "destructive",
+      handleError(error as Error);
+    }
+  }, [tokenManager, setUser, handleError]);
+
+  const refreshToken = useCallback(async () => {
+    try {
+      const accessToken = tokenManager.getAccessToken();
+      if (!accessToken) {
+        return false;
+      }
+      
+      const response = await api.post<ApiResponse<{ accessToken: string }>>('/auth/refresh', {
+        refreshToken: tokenManager.getRefreshToken()
       });
-    } finally {
-      setLoading(false);
+      
+      const { accessToken: newAccessToken } = response.data;
+      tokenManager.setTokens(newAccessToken, tokenManager.getRefreshToken()!);
+      return true;
+    } catch (error) {
+      handleError(error as Error);
+      return false;
     }
-  }, [toast]);
+  }, [tokenManager, handleError]);
 
-  // Token storage utilities
-  const saveTokens = async (tokens: AuthTokens) => {
-    localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
-  };
-
-  const loadTokens = () => {
-    const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (accessToken && refreshToken) {
-      return {
-        accessToken,
-        refreshToken
-      };
-    }
-    return null;
-  };
-
+  // Context value
   const value: AuthContextType = {
     user,
-    userId: user?.id || null,
-    roleType: user?.role === 'corporate' ? 'corporate' : user?.role === 'agency' ? 'agency' : null,
     loading,
-    isLoading: loading,
     authReady,
     error,
     signIn,
@@ -302,9 +258,17 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     signOut,
     signInWithProvider,
     refreshToken,
-    clearTokens,
-    isAuthenticated,
-    hasPermission
+    getLoginAttempts,
+    incrementLoginAttempts,
+    setAccountLockout: (email: string) => {
+      sessionLockout.recordFailedAttempt(window.location.hostname, email);
+      sessionLockout.clearAllLockouts();
+      sessionLockout.recordFailedAttempt(window.location.hostname, email);
+    },
+    isAuthenticated: () => !!user,
+    hasPermission: (permission: string) => user?.permissions?.includes(permission) ?? false,
+    isLoading: loading,
+    validatePassword: () => ({ isValid: true })
   };
 
   return (
@@ -314,4 +278,13 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-export default AuthProvider;
+// Custom hook to access auth context
+const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export { AuthProvider, useAuth };
