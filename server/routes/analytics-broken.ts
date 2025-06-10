@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { validateJWT } from '../middleware/jwtAuth';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { getSimpleAnalytics } from '../analytics-simple';
 
 const router = Router();
 
 // Apply authentication to all analytics routes
-router.use(unifiedAuthMiddleware);
+router.use(validateJWT);
 
 // Root analytics endpoint (requires JWT authentication)
 router.get("/", async (req: Request, res: Response) => {

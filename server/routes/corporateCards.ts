@@ -2,15 +2,19 @@ import type { Express } from "express";
 import { db } from "../db";
 import { corporateCards, cardTransactions, users } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth";
+import { validateJWT } from '../middleware/jwtAuth';
 
 export function registerCorporateCardRoutes(app: Express) {
   
   // Get all corporate cards for organization
-  app.get("/api/corporate-cards/cards", requireAuth, async (req, res) => {
-    try {
-      const organizationId = req.user!.organization_id;
+  app.get("/api/corporate-cards/cards", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
 
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+
+    try {
       const cards = await db
         .select({
           id: corporateCards.id,
@@ -34,18 +38,22 @@ export function registerCorporateCardRoutes(app: Express) {
         .where(eq(corporateCards.organization_id, organizationId))
         .orderBy(desc(corporateCards.created_at));
 
-      res.json({ cards });
+      return res.json({ cards });
     } catch (error) {
       console.error("Error fetching corporate cards:", error);
-      res.status(500).json({ error: "Failed to fetch corporate cards" });
+      return res.status(500).json({ error: "Failed to fetch corporate cards" });
     }
   });
 
   // Create new corporate card
-  app.post("/api/corporate-cards/cards", requireAuth, async (req, res) => {
+  app.post("/api/corporate-cards/cards", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+
     try {
-      const organizationId = req.user!.organization_id;
-      const { user_id, spend_limit, interval, cardholder_name, purpose, department } = req.body;
+      const { user_id, spend_limit, cardholder_name, purpose, department } = req.body;
 
       // Generate mock card data for demo
       const cardNumber = "1234" + Math.random().toString().slice(2, 8);
@@ -73,18 +81,22 @@ export function registerCorporateCardRoutes(app: Express) {
         })
         .returning();
 
-      res.json(newCard);
+      return res.json(newCard);
     } catch (error) {
       console.error("Error creating corporate card:", error);
-      res.status(500).json({ error: "Failed to create corporate card" });
+      return res.status(500).json({ error: "Failed to create corporate card" });
     }
   });
 
   // Freeze/unfreeze card
-  app.post("/api/corporate-cards/cards/:cardId/freeze", requireAuth, async (req, res) => {
+  app.post("/api/corporate-cards/cards/:cardId/freeze", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+
     try {
       const cardId = parseInt(req.params.cardId);
-      const organizationId = req.user!.organization_id;
       const { freeze } = req.body;
 
       // Verify card belongs to organization
@@ -109,18 +121,22 @@ export function registerCorporateCardRoutes(app: Express) {
         .where(eq(corporateCards.id, cardId))
         .returning();
 
-      res.json(updatedCard);
+      return res.json(updatedCard);
     } catch (error) {
       console.error("Error updating card status:", error);
-      res.status(500).json({ error: "Failed to update card status" });
+      return res.status(500).json({ error: "Failed to update card status" });
     }
   });
 
   // Update card
-  app.put("/api/corporate-cards/cards/:cardId", requireAuth, async (req, res) => {
+  app.put("/api/corporate-cards/cards/:cardId", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+
     try {
       const cardId = parseInt(req.params.cardId);
-      const organizationId = req.user!.organization_id;
       const updates = req.body;
 
       // Verify card belongs to organization
@@ -151,18 +167,22 @@ export function registerCorporateCardRoutes(app: Express) {
         .where(eq(corporateCards.id, cardId))
         .returning();
 
-      res.json(updatedCard);
+      return res.json(updatedCard);
     } catch (error) {
       console.error("Error updating card:", error);
-      res.status(500).json({ error: "Failed to update card" });
+      return res.status(500).json({ error: "Failed to update card" });
     }
   });
 
   // Add funds to card
-  app.post("/api/corporate-cards/cards/:cardId/add-funds", requireAuth, async (req, res) => {
+  app.post("/api/corporate-cards/cards/:cardId/add-funds", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+    
     try {
       const cardId = parseInt(req.params.cardId);
-      const organizationId = req.user!.organization_id;
       const { amount } = req.body;
 
       // Verify card belongs to organization
@@ -182,25 +202,131 @@ export function registerCorporateCardRoutes(app: Express) {
       const [updatedCard] = await db
         .update(corporateCards)
         .set({
-          available_balance: card.available_balance + amountInCents,
-          spending_limit: card.spending_limit + amountInCents,
+          available_balance: (card.available_balance || 0) + amountInCents,
+          spending_limit: (card.spending_limit || 0) + amountInCents,
           updated_at: new Date()
         })
         .where(eq(corporateCards.id, cardId))
         .returning();
 
-      res.json(updatedCard);
+      return res.json(updatedCard);
     } catch (error) {
       console.error("Error adding funds to card:", error);
-      res.status(500).json({ error: "Failed to add funds to card" });
+      return res.status(500).json({ error: "Failed to add funds to card" });
     }
   });
 
   // Delete card
-  app.delete("/api/corporate-cards/cards/:cardId", requireAuth, async (req, res) => {
+  app.delete("/api/corporate-cards/cards/:cardId", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+
     try {
       const cardId = parseInt(req.params.cardId);
-      const organizationId = req.user!.organization_id;
+
+      // Verify card belongs to organization before deleting
+      const [card] = await db
+        .select()
+        .from(corporateCards)
+        .where(and(
+          eq(corporateCards.id, cardId),
+          eq(corporateCards.organization_id, organizationId)
+        ));
+
+      if (!card) {
+        return res.status(404).json({ error: "Card not found" });
+      }
+
+      await db.delete(corporateCards).where(eq(corporateCards.id, cardId));
+
+      return res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting card:", error);
+      return res.status(500).json({ error: "Failed to delete card" });
+    }
+  });
+
+  // Get all transactions for organization
+  app.get("/api/corporate-cards/transactions", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+
+    try {
+      const transactions = await db
+        .select()
+        .from(cardTransactions)
+        .leftJoin(corporateCards, eq(cardTransactions.card_id, corporateCards.id))
+        .where(eq(corporateCards.organization_id, organizationId))
+        .orderBy(desc(cardTransactions.transaction_date));
+
+      return res.json({ transactions });
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      return res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
+  // Get a single transaction
+  app.get("/api/corporate-cards/transactions/:transactionId", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+
+    try {
+      const transactionId = parseInt(req.params.transactionId);
+
+      const [transaction] = await db
+        .select()
+        .from(cardTransactions)
+        .leftJoin(corporateCards, eq(cardTransactions.card_id, corporateCards.id))
+        .where(and(
+          eq(cardTransactions.id, transactionId),
+          eq(corporateCards.organization_id, organizationId)
+        ));
+
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      return res.json(transaction);
+    } catch (error) {
+      console.error("Error fetching transaction:", error);
+      return res.status(500).json({ error: "Failed to fetch transaction" });
+    }
+  });
+
+  // Get users for corporate card assignment
+  app.get("/api/corporate-cards/users", validateJWT, async (req, res) => {
+    const organizationId = req.user?.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ error: "Organization ID is missing" });
+    }
+
+    try {
+      const orgUsers = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email
+        })
+        .from(users)
+        .where(eq(users.organization_id, organizationId));
+
+      return res.json({ users: orgUsers });
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+}
+      const cardId = parseInt(req.params.cardId);
+            const organizationId = req.user!.organizationId;
 
       // Verify card belongs to organization
       const [card] = await db
@@ -227,10 +353,10 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Get card transactions
-  app.get("/api/corporate-cards/cards/:cardId/transactions", requireAuth, async (req, res) => {
+  app.get("/api/corporate-cards/cards/:cardId/transactions", validateJWT, async (req, res) => {
     try {
       const cardId = parseInt(req.params.cardId);
-      const organizationId = req.user!.organization_id;
+            const organizationId = req.user!.organizationId;
 
       // Verify card belongs to organization
       const [card] = await db
@@ -259,9 +385,9 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Get corporate card analytics
-  app.get("/api/corporate-card/analytics", requireAuth, async (req, res) => {
+  app.get("/api/corporate-card/analytics", validateJWT, async (req, res) => {
     try {
-      const organizationId = req.user!.organization_id;
+            const organizationId = req.user!.organizationId;
 
       // Get basic analytics for demo
       const cards = await db
@@ -284,7 +410,7 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Get expenses (placeholder for corporate card expenses)
-  app.get("/api/expenses", requireAuth, async (req, res) => {
+  app.get("/api/expenses", validateJWT, async (req, res) => {
     try {
       // Return empty array for now - this would integrate with expense tracking
       res.json([]);
@@ -295,7 +421,7 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Approve expense
-  app.post("/api/expenses/approve", requireAuth, async (req, res) => {
+  app.post("/api/expenses/approve", validateJWT, async (req, res) => {
     try {
       // Placeholder for expense approval
       res.json({ success: true });
@@ -306,9 +432,9 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Get organization users for dropdown
-  app.get("/api/organizations/users", requireAuth, async (req, res) => {
+  app.get("/api/organizations/users", validateJWT, async (req, res) => {
     try {
-      const organizationId = req.user!.organization_id;
+            const organizationId = req.user!.organizationId;
 
       const organizationUsers = await db
         .select({

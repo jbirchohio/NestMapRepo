@@ -1,7 +1,8 @@
 /**
  * JWT-only Authentication System
- * Replaces Supabase authentication with custom JWT tokens
+ * Uses the API client for authentication requests
  */
+import { apiClient } from '../services/api/apiClient.js';
 
 interface User {
   id: number;
@@ -14,6 +15,15 @@ interface User {
 interface AuthResponse {
   user: User;
   token: string;
+}
+
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface RegisterRequest extends LoginRequest {
+  username: string;
 }
 
 class JWTAuth {
@@ -49,53 +59,56 @@ class JWTAuth {
 
   async signIn(email: string, password: string): Promise<{ user: User | null; error: Error | null }> {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      const data = await apiClient.post<AuthResponse, LoginRequest>('/auth/login', {
+        email,
+        password
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+      
+      if (!data.token || !data.user) {
+        throw new Error('Invalid response from server');
       }
-
-      const data: AuthResponse = await response.json();
       
       this.token = data.token;
       this.user = data.user;
       
       localStorage.setItem('auth_token', this.token);
+      this.updateAuthState(this.user, this.token);
       
       return { user: this.user, error: null };
     } catch (error) {
-      return { user: null, error: error as Error };
+      this.updateAuthState(null, null);
+      return { 
+        user: null, 
+        error: error instanceof Error ? error : new Error('Login failed') 
+      };
     }
   }
 
   async signUp(email: string, password: string, username: string): Promise<{ user: User | null; error: Error | null }> {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, username })
+      const data = await apiClient.post<AuthResponse, RegisterRequest>('/auth/register', {
+        email,
+        password,
+        username
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+      
+      if (!data.token || !data.user) {
+        throw new Error('Invalid response from server');
       }
-
-      const data: AuthResponse = await response.json();
       
       this.token = data.token;
       this.user = data.user;
       
       localStorage.setItem('auth_token', this.token);
+      this.updateAuthState(this.user, this.token);
       
       return { user: this.user, error: null };
     } catch (error) {
-      return { user: null, error: error as Error };
+      this.updateAuthState(null, null);
+      return { 
+        user: null, 
+        error: error instanceof Error ? error : new Error('Registration failed') 
+      };
     }
   }
 
@@ -103,6 +116,7 @@ class JWTAuth {
     this.token = null;
     this.user = null;
     localStorage.removeItem('auth_token');
+    this.updateAuthState(null, null);
   }
 
   getUser(): User | null {

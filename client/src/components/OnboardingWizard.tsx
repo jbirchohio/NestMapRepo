@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/contexts/JWTAuthContext';
+import { useAuth } from '@/contexts/SecureJWTAuthContext';
 import { 
   CheckCircle, 
   Circle, 

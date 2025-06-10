@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { unifiedAuthMiddleware } from "../middleware/unifiedAuth";
+import { validateJWT } from "../middleware/jwtAuth";
 import { organizationFundingService } from "../services/organizationFundingService";
 import { z } from "zod";
 
@@ -30,7 +30,7 @@ const fundingSourceSchema = z.object({
 });
 
 // Get organization funding status
-router.get("/status", unifiedAuthMiddleware, async (req, res) => {
+router.get("/status", validateJWT, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: "No organization found" });
@@ -45,7 +45,7 @@ router.get("/status", unifiedAuthMiddleware, async (req, res) => {
 });
 
 // Create Stripe Connect account for organization
-router.post("/create-account", unifiedAuthMiddleware, async (req, res) => {
+router.post("/create-account", validateJWT, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: "No organization found" });
@@ -70,7 +70,7 @@ router.post("/create-account", unifiedAuthMiddleware, async (req, res) => {
 });
 
 // Generate onboarding link for Stripe Connect
-router.post("/onboarding-link", unifiedAuthMiddleware, async (req, res) => {
+router.post("/onboarding-link", validateJWT, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: "No organization found" });
@@ -100,7 +100,7 @@ router.post("/onboarding-link", unifiedAuthMiddleware, async (req, res) => {
 });
 
 // Check Stripe account readiness
-router.get("/account-status", unifiedAuthMiddleware, async (req, res) => {
+router.get("/account-status", validateJWT, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: "No organization found" });
@@ -115,7 +115,7 @@ router.get("/account-status", unifiedAuthMiddleware, async (req, res) => {
 });
 
 // Setup funding source
-router.post("/setup-funding", unifiedAuthMiddleware, async (req, res) => {
+router.post("/setup-funding", validateJWT, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: "No organization found" });
@@ -140,7 +140,7 @@ router.post("/setup-funding", unifiedAuthMiddleware, async (req, res) => {
 });
 
 // Add funds to organization account
-router.post("/add-funds", unifiedAuthMiddleware, async (req, res) => {
+router.post("/add-funds", validateJWT, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: "No organization found" });

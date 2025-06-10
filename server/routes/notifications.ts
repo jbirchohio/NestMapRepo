@@ -2,12 +2,12 @@ import { Router } from 'express';
 import { db } from '../db';
 import { notifications } from '../../shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import { requireAuth } from '../middleware/jwtAuth';
+import { validateJWT } from '../middleware/jwtAuth';
 
 const router = Router();
 
 // Apply authentication to all notification routes
-router.use(requireAuth);
+router.use(validateJWT);
 
 // GET /api/notifications - Get user notifications
 router.get('/', async (req, res) => {

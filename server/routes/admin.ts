@@ -3,6 +3,7 @@ import { db } from '../db';
 import { organizations, users, customDomains, whiteLabelRequests, adminAuditLog, organizationRoles, insertOrganizationRoleSchema } from '../../shared/schema';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { userActivityLogs } from '../../shared/schema';
 
 const router = Router();
 
@@ -685,5 +686,49 @@ function getRolePermissions(role: string): string[] {
   };
   return rolePermissions[role] || ['canViewTrips'];
 }
+
+// GET /api/admin/organizations/:orgId/activity-logs - Get user activity logs for an organization
+router.get('/organizations/:orgId/activity-logs', async (req: Request, res: Response) => {
+  try {
+    const orgId = parseInt(req.params.orgId);
+    if (isNaN(orgId)) {
+      return res.status(400).json({ error: 'Invalid organization ID' });
+    }
+
+    // Security check: Ensure the user is an admin of the organization or a super_admin
+    if (req.user?.organization_id !== orgId && req.user?.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const logs = await db
+      .select({
+        id: userActivityLogs.id,
+        action: userActivityLogs.action,
+        details: userActivityLogs.details,
+        ip_address: userActivityLogs.ip_address,
+        user_agent: userActivityLogs.user_agent,
+        created_at: userActivityLogs.created_at,
+        user_name: users.display_name,
+        user_email: users.email,
+      })
+      .from(userActivityLogs)
+      .leftJoin(users, eq(userActivityLogs.user_id, users.id))
+      .where(eq(userActivityLogs.organization_id, orgId))
+      .orderBy(desc(userActivityLogs.created_at));
+
+    await logAdminAction(
+      req.user!.id,
+      'activity_logs_viewed',
+      orgId,
+      { count: logs.length },
+      req.ip
+    );
+
+    res.json(logs);
+  } catch (error) {
+    console.error('Error fetching activity logs:', error);
+    res.status(500).json({ error: 'Failed to fetch activity logs' });
+  }
+});
 
 export default router;

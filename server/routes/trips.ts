@@ -1,86 +1,28 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { insertTripSchema } from '@shared/schema';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { validateJWT } from '../middleware/jwtAuth';
 import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { fieldTransformMiddleware } from '../middleware/fieldTransform';
 import { enforceTripLimit } from '../middleware/subscription-limits';
 import { storage } from '../storage';
 import { generatePdfBuffer } from '../utils/pdfHelper';
 import { generateAIProposal } from '../proposalGenerator';
-import { db } from '../db';
-import { trips as tripsTable, users } from '@shared/schema';
-import { eq, desc } from 'drizzle-orm';
+import { logUserActivity } from '../utils/activityLogger';
+import { tripController } from '../src/trips/trip.container';
 
 const router = Router();
 
 // Apply authentication and organization context to all trip routes
-router.use(unifiedAuthMiddleware);
+router.use(validateJWT);
 router.use(injectOrganizationContext);
 router.use(fieldTransformMiddleware);
 
 // Get all trips for authenticated user with organization filtering
-router.get("/", async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.id;
-    const orgId = req.user?.organization_id;
-    
-    if (!userId) {
-      return res.status(401).json({ message: "User ID required" });
-    }
-
-    // Use secure storage method that enforces organization isolation
-    const trips = await storage.getTripsByUserId(userId, orgId);
-    res.json(trips);
-  } catch (error) {
-    console.error("Error fetching trips:", error);
-    res.status(500).json({ message: "Could not fetch trips" });
-  }
-});
+router.get('/', (req, res) => tripController.getTrips(req, res));
 
 // Add organization-scoped trips endpoint for corporate features
-router.get('/corporate', async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.id;
-    const orgId = req.user?.organization_id;
-    
-    if (!userId || !orgId) {
-      return res.status(400).json({ message: "User and organization context required" });
-    }
-
-    // Get all trips for the organization, not just the current user
-    const trips = await storage.getTripsByOrganizationId(orgId);
-    
-    // Transform database field names to match frontend expectations and add user details
-    const tripsWithUserDetails = await Promise.all(
-      trips.map(async (trip) => {
-        const user = await storage.getUser(trip.user_id);
-        return {
-          id: trip.id,
-          title: trip.title,
-          startDate: trip.start_date.toISOString(),
-          endDate: trip.end_date.toISOString(),
-          userId: trip.user_id,
-          city: trip.city,
-          country: trip.country,
-          budget: trip.budget,
-          completed: trip.completed,
-          trip_type: trip.trip_type,
-          client_name: trip.client_name,
-          project_type: trip.project_type,
-          userName: user?.display_name || 'Unknown User',
-          userEmail: user?.email || 'No Email'
-        };
-      })
-    );
-
-    console.log(`Found ${trips.length} trips for organization ${orgId}`);
-    res.json(tripsWithUserDetails);
-  } catch (error) {
-    console.error('Error fetching corporate trips:', error);
-    res.status(500).json({ message: "Failed to fetch corporate trips" });
-  }
-});
+router.get('/corporate', (req, res) => tripController.getCorporateTrips(req, res));
 
 // Get todos for a specific trip
 router.get("/:id/todos", async (req: Request, res: Response) => {
@@ -184,69 +126,8 @@ router.get("/:id/activities", async (req: Request, res: Response) => {
   }
 });
 
-// Get specific trip by ID with organization access control - bypassing case conversion for dates
-router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
-  // Skip case conversion middleware for this route
-  req.skipCaseConversion = true;
-  try {
-    const tripId = parseInt(req.params.id);
-    if (isNaN(tripId)) {
-      return res.status(400).json({ message: "Invalid trip ID" });
-    }
-
-    // Direct database query to avoid case conversion middleware corrupting dates
-    const [trip] = await db
-      .select()
-      .from(tripsTable)
-      .where(eq(tripsTable.id, tripId));
-
-    if (!trip) {
-      return res.status(404).json({ message: "Trip not found" });
-    }
-
-    // Verify organization access
-    const userOrgId = req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this trip" });
-    }
-
-    // Manual transformation to ensure dates are properly formatted as ISO date strings
-    const transformedTrip = {
-      id: trip.id,
-      title: trip.title,
-      startDate: trip.start_date ? new Date(trip.start_date).toISOString().split('T')[0] : null,
-      endDate: trip.end_date ? new Date(trip.end_date).toISOString().split('T')[0] : null,
-      userId: trip.user_id,
-      organizationId: trip.organization_id,
-      collaborators: trip.collaborators || [],
-      isPublic: trip.is_public,
-      shareCode: trip.share_code,
-      sharingEnabled: trip.sharing_enabled,
-      sharePermission: trip.share_permission,
-      city: trip.city,
-      country: trip.country,
-      location: trip.location,
-      cityLatitude: trip.city_latitude,
-      cityLongitude: trip.city_longitude,
-      hotel: trip.hotel,
-      hotelLatitude: trip.hotel_latitude,
-      hotelLongitude: trip.hotel_longitude,
-      completed: trip.completed,
-      completedAt: trip.completed_at,
-      tripType: trip.trip_type,
-      clientName: trip.client_name,
-      projectType: trip.project_type,
-      budget: trip.budget,
-      createdAt: trip.created_at ? new Date(trip.created_at).toISOString() : null,
-      updatedAt: trip.updated_at ? new Date(trip.updated_at).toISOString() : null,
-    };
-
-    res.json(transformedTrip);
-  } catch (error) {
-    console.error("Error fetching trip:", error);
-    res.status(500).json({ message: "Could not fetch trip" });
-  }
-});
+// Get specific trip by ID with organization access control
+router.get('/:id', (req, res) => tripController.getTripById(req, res));
 
 // Create new trip with organization context and subscription limits
 router.post("/", enforceTripLimit(), async (req: Request, res: Response) => {
@@ -254,11 +135,22 @@ router.post("/", enforceTripLimit(), async (req: Request, res: Response) => {
     const tripData = insertTripSchema.parse({
       ...req.body,
       user_id: req.user?.id,
-      organization_id: req.user?.organization_id
+      organization_id: req.user?.organizationId
     });
 
-    const trip = await storage.createTrip(tripData);
-    res.status(201).json(trip);
+    const newTrip = await storage.createTrip(tripData);
+
+    // Log this activity
+    await logUserActivity(
+      req.user!.id,
+      'create_trip',
+      req.user?.organizationId,
+      { tripId: newTrip.id, tripTitle: newTrip.title },
+      req.ip,
+      req.headers['user-agent']
+    );
+
+    res.status(201).json(newTrip);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: "Invalid trip data", errors: error.errors });
@@ -282,7 +174,7 @@ router.put("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
@@ -293,6 +185,16 @@ router.put("/:id", async (req: Request, res: Response) => {
     if (!updatedTrip) {
       return res.status(404).json({ message: "Trip not found" });
     }
+
+    // Log this activity
+    await logUserActivity(
+      req.user!.id,
+      'update_trip',
+      req.user?.organizationId,
+      { tripId: updatedTrip.id, tripTitle: updatedTrip.title, changes: updateData },
+      req.ip,
+      req.headers['user-agent']
+    );
 
     res.json(updatedTrip);
   } catch (error) {
@@ -318,7 +220,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
     }
@@ -327,6 +229,16 @@ router.delete("/:id", async (req: Request, res: Response) => {
     if (!success) {
       return res.status(404).json({ message: "Trip not found" });
     }
+
+    // Log this activity
+    await logUserActivity(
+      req.user!.id,
+      'delete_trip',
+      req.user?.organizationId,
+      { tripId: existingTrip.id, tripTitle: existingTrip.title },
+      req.ip,
+      req.headers['user-agent']
+    );
 
     res.json({ message: "Trip deleted successfully" });
   } catch (error) {
@@ -349,7 +261,7 @@ router.get("/:id/export/pdf", async (req: Request, res: Response) => {
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot export this trip" });
     }
@@ -396,7 +308,7 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot generate proposal for this trip" });
     }
@@ -407,6 +319,7 @@ router.post("/:tripId/proposal", async (req: Request, res: Response) => {
       trip,
       activities,
       clientName,
+      user: { name: req.user?.name || 'N/A', email: req.user?.email || 'N/A' },
       agentName: req.user?.displayName || "Travel Agent",
       companyName: "NestMap Travel Services",
       estimatedCost: trip.budget || 0,

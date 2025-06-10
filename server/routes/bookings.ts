@@ -2,13 +2,13 @@ import type { Express } from "express";
 import { db } from "../db";
 import { trips, bookings, activities } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { requireAuth } from "../middleware/auth";
+import { validateJWT } from '../middleware/jwtAuth';
 import { duffelProvider } from "../duffelProvider";
 
 export function registerBookingRoutes(app: Express) {
   
   // Get all bookings for a trip
-  app.get("/api/trips/:tripId/bookings", requireAuth, async (req, res) => {
+  app.get("/api/trips/:tripId/bookings", validateJWT, async (req, res) => {
     try {
       const tripId = parseInt(req.params.tripId);
       const organizationId = req.user!.organizationId;
@@ -44,7 +44,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Create new booking for a trip
-  app.post("/api/trips/:tripId/bookings", requireAuth, async (req, res) => {
+  app.post("/api/trips/:tripId/bookings", validateJWT, async (req, res) => {
     try {
       const tripId = parseInt(req.params.tripId);
       const organizationId = req.user!.organizationId;
@@ -139,7 +139,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Get booking by ID
-  app.get("/api/bookings/:bookingId", requireAuth, async (req, res) => {
+  app.get("/api/bookings/:bookingId", validateJWT, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.bookingId);
       const organizationId = req.user!.organizationId;
@@ -164,7 +164,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Update booking
-  app.patch("/api/bookings/:bookingId", requireAuth, async (req, res) => {
+  app.patch("/api/bookings/:bookingId", validateJWT, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.bookingId);
       const organizationId = req.user!.organizationId;
@@ -200,7 +200,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Cancel booking
-  app.delete("/api/bookings/:bookingId", requireAuth, async (req, res) => {
+  app.delete("/api/bookings/:bookingId", validateJWT, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.bookingId);
       const organizationId = req.user!.organizationId;
@@ -252,7 +252,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Search flights (both endpoints for compatibility)
-  app.post("/api/flights/search", requireAuth, async (req, res) => {
+  app.post("/api/flights/search", validateJWT, async (req, res) => {
     try {
       if (!process.env.DUFFEL_API_KEY) {
         return res.status(400).json({ 
@@ -278,7 +278,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Alternative flight search endpoint for compatibility
-  app.post("/api/bookings/flights/search", requireAuth, async (req, res) => {
+  app.post("/api/bookings/flights/search", validateJWT, async (req, res) => {
     try {
       if (!process.env.DUFFEL_API_KEY) {
         return res.status(400).json({ 
@@ -318,7 +318,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Search hotels
-  app.post("/api/hotels/search", requireAuth, async (req, res) => {
+  app.post("/api/hotels/search", validateJWT, async (req, res) => {
     try {
       if (!process.env.DUFFEL_API_KEY) {
         return res.status(400).json({ 
@@ -344,7 +344,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Get trip activities
-  app.get("/api/trips/:tripId/activities", requireAuth, async (req, res) => {
+  app.get("/api/trips/:tripId/activities", validateJWT, async (req, res) => {
     try {
       const tripId = parseInt(req.params.tripId);
       const organizationId = req.user!.organizationId;
@@ -379,7 +379,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Add activity to trip
-  app.post("/api/trips/:tripId/activities", requireAuth, async (req, res) => {
+  app.post("/api/trips/:tripId/activities", validateJWT, async (req, res) => {
     try {
       const tripId = parseInt(req.params.tripId);
       const organizationId = req.user!.organizationId;

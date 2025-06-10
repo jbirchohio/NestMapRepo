@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { insertOrganizationSchema } from '@shared/schema';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { validateJWT } from '../middleware/jwtAuth';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { storage } from '../storage';
 import { getOrganizationAnalytics } from '../analytics';
@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm';
 const router = Router();
 
 // Apply authentication to all organization routes
-router.use(unifiedAuthMiddleware);
+router.use(validateJWT);
 
 // Add users endpoint for card issuance dropdown (matches frontend API call) - MUST be before /:id route
 router.get('/users', async (req: Request, res: Response) => {

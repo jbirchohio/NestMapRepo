@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { unifiedAuthMiddleware } from "../middleware/unifiedAuth";
+import { validateJWT } from "../middleware/jwtAuth";
 import { z } from "zod";
 import OpenAI from "openai";
 import { db } from "../db";
@@ -12,7 +12,7 @@ const openai = new OpenAI({
 });
 
 const router = Router();
-router.use(unifiedAuthMiddleware);
+router.use(validateJWT);
 
 // Validation schemas
 const summarizeDaySchema = z.object({

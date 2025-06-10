@@ -131,6 +131,7 @@ export const adminRoutes: RouteObject[] = [
       { path: 'settings', element: lazyLoad(() => import('@/pages/AdminSettings')) },
       { path: 'logs', element: lazyLoad(() => import('@/pages/AdminLogs')) },
       { path: 'metrics', element: lazyLoad(() => import('@/pages/AdminSystemMetrics')) },
+      { path: 'user-activity', element: lazyLoad(() => import('@/pages/AdminUserActivity')) },
     ],
   },
 ];

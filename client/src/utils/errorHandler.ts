@@ -1,27 +1,89 @@
 import { toast } from "@/hooks/use-toast";
 
+// Security context interface
+export interface SecurityContext {
+  userId?: string;
+  sessionId?: string;
+  token?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  timestamp?: string;
+  sensitiveData?: boolean;
+}
+
+// Base error class
 export class ApplicationError extends Error {
   public readonly code: string;
   public readonly statusCode: number;
   public readonly isOperational: boolean;
+  public readonly isSecurityError: boolean;
+  public readonly securityContext: SecurityContext;
 
   constructor(
     message: string,
     code: string = 'UNKNOWN_ERROR',
     statusCode: number = 500,
-    isOperational: boolean = true
+    isOperational: boolean = true,
+    isSecurityError: boolean = false,
+    securityContext: SecurityContext = {}
   ) {
     super(message);
     this.name = 'ApplicationError';
     this.code = code;
     this.statusCode = statusCode;
     this.isOperational = isOperational;
+    this.isSecurityError = isSecurityError;
+    this.securityContext = securityContext;
 
     // Maintains proper stack trace for where our error was thrown
     Error.captureStackTrace(this, ApplicationError);
   }
 }
 
+// Security-specific error types
+export class SecurityError extends ApplicationError {
+  constructor(
+    message: string = 'Security violation detected',
+    code: string = 'SECURITY_ERROR',
+    statusCode: number = 403,
+    isOperational: boolean = true,
+    securityContext: SecurityContext = {}
+  ) {
+    super(message, code, statusCode, isOperational, true, securityContext);
+  }
+}
+
+export class TokenError extends SecurityError {
+  constructor(message: string = 'Token validation failed') {
+    super(message, 'TOKEN_ERROR', 401);
+  }
+}
+
+export class CSRFError extends SecurityError {
+  constructor(message: string = 'CSRF token validation failed') {
+    super(message, 'CSRF_ERROR', 403);
+  }
+}
+
+export class SessionError extends SecurityError {
+  constructor(message: string = 'Session validation failed') {
+    super(message, 'SESSION_ERROR', 401);
+  }
+}
+
+export class RateLimitError extends SecurityError {
+  constructor(message: string = 'Rate limit exceeded') {
+    super(message, 'RATE_LIMIT_ERROR', 429);
+  }
+}
+
+export class AccountLockoutError extends SecurityError {
+  constructor(message: string = 'Account is locked') {
+    super(message, 'ACCOUNT_LOCKED', 403);
+  }
+}
+
+// General error types
 export class NetworkError extends ApplicationError {
   constructor(message: string = 'Network request failed') {
     super(message, 'NETWORK_ERROR', 503);
@@ -46,9 +108,85 @@ export class AuthorizationError extends ApplicationError {
   }
 }
 
+// Error handling utilities
+export const handleError = (error: Error, context?: SecurityContext): void => {
+  // Handle security errors
+  if (error instanceof SecurityError) {
+    console.error('Security error:', {
+      code: error.code,
+      message: error.message,
+      context: error.securityContext
+    });
+    
+    // Log security event
+    logSecurityEvent(error);
+    
+    // Show generic error to user
+    toast({
+      title: 'Security Error',
+      description: 'A security error occurred. Please try again later.',
+      variant: 'destructive'
+    });
+    
+    // Force sign out for security errors
+    if (error instanceof TokenError || error instanceof SessionError) {
+      window.location.href = '/login';
+    }
+    return;
+  }
+
+  // Handle other errors
+  console.error('Application error:', {
+    code: error instanceof ApplicationError ? error.code : 'UNKNOWN_ERROR',
+    message: error.message
+  });
+
+  // Show appropriate error message
+  if (error instanceof NetworkError) {
+    toast({
+      title: 'Network Error',
+      description: 'Failed to connect to server. Please check your internet connection.',
+      variant: 'destructive'
+    });
+  } else if (error instanceof ValidationError) {
+    toast({
+      title: 'Validation Error',
+      description: error.message,
+      variant: 'destructive'
+    });
+  } else {
+    toast({
+      title: 'Error',
+      description: 'An unexpected error occurred. Please try again later.',
+      variant: 'destructive'
+    });
+  }
+};
+
+// Security event logging
+const logSecurityEvent = (error: SecurityError): void => {
+  // Log security event to server
+  if (error.securityContext && error.securityContext.sensitiveData) {
+    // Send security event to server
+    fetch('/api/security/event', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        error: error.code,
+        timestamp: new Date().toISOString(),
+        ...error.securityContext
+      })
+    }).catch(() => {
+      // Fail silently if logging fails
+    });
+  }
+};
+
 export interface ErrorContext {
-  userId?: number;
-  organizationId?: number;
+  userId?: string;
+  organizationId?: string;
   action?: string;
   metadata?: Record<string, any>;
 }

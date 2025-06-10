@@ -1,190 +1,312 @@
-import React, { useState } from 'react';
-import { useAuth } from "@/contexts/JWTAuthContext";
-import { useQuery } from "@tanstack/react-query";
+import React, { useMemo, useState } from 'react';
+import { useLocation, Link } from 'wouter';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link, useLocation } from 'wouter';
+import { Loader2, Plus, Calendar, BarChart3, Settings, Building2, DollarSign, Users, Clock, FileText, Target, User } from 'lucide-react';
 import NewTripModal from "@/components/NewTripModal";
-import OnboardingProgress from "@/components/OnboardingProgress";
-import { AnimatedCard } from "@/components/ui/animated-card";
-import {
-  Building2,
-  Sparkles,
-  Plus,
-  BarChart3,
-  Settings,
-  FileText,
-  DollarSign,
-  Target,
-  User,
-  Briefcase,
-  TrendingUp,
-  MapPin,
-  Calendar,
-  Clock,
-  Users,
-  Home
-} from 'lucide-react';
+import { useAuth } from '@/contexts/SecureJWTAuthContext';
+import { useTrips } from '@/hooks/useTrips';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { TripStatus, UserRole } from '@/types/dtos/common';
+import { TripDTO } from '@/types/dtos/trip';
+import { AgencyAnalyticsDTO, CorporateAnalyticsDTO } from '@/types/dtos/analytics';
+import OnboardingProgress from '@/components/OnboardingProgress';
 
-interface Trip {
-  id: number;
-  title: string;
-  destination: string;
-  city?: string;
-  country?: string;
-  start_date?: string;
-  end_date?: string;
-  startDate?: string;
-  endDate?: string;
-  status: string;
-  budget?: number | string;
-  client_name?: string;
-  userId?: number;
-  completed?: boolean;
-}
+const AnimatedCard = motion(Card);
 
 export default function Dashboard() {
-  const { userId, user, roleType } = useAuth();
+  const { user } = useAuth();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [, setLocation] = useLocation();
+  const isCorporate = useMemo(() => user?.roles.includes(UserRole.CORPORATE), [user]);
+
+  const { 
+    data: tripsData, 
+    isLoading: isLoadingTrips, 
+    error: tripsError 
+  } = useTrips({ 
+    page: 1, 
+    pageSize: 5, 
+    sortBy: 'startDate',
+    sortDirection: 'asc' as const
+  });
+
+  const { 
+    data: analyticsData, 
+    isLoading: isLoadingAnalytics, 
+    error: analyticsError 
+  } = useAnalytics({ isCorporate });
+
+  const isLoading = isLoadingTrips || isLoadingAnalytics;
+  const error = tripsError || analyticsError;
+  const trips = useMemo(() => (tripsData?.data || []) as TripDTO[], [tripsData]);
 
   const handleOnboardingTaskClick = (taskId: string, url: string) => {
     setLocation(url);
   };
 
-  // Unified trip query - adapts based on role
-  const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
-    queryKey: roleType === 'agency' ? ['/api/trips', { userId }] : ['/api/trips/corporate'],
-    queryFn: async () => {
-      if (roleType === 'agency') {
-        const res = await fetch(`/api/trips?userId=${userId}`);
-        if (!res.ok) throw new Error("Failed to fetch trips");
-        return res.json();
-      } else {
-        const res = await fetch('/api/trips/corporate', { credentials: 'include' });
-        if (!res.ok) throw new Error("Failed to fetch corporate trips");
-        return res.json();
-      }
-    },
-    enabled: !!userId,
-  });
+  const analytics = useMemo(() => {
+    if (!analyticsData) return null;
 
-  // Unified analytics query - adapts based on role
-  const { data: analytics } = useQuery({
-    queryKey: roleType === 'agency' ? ['/api/analytics/agency', { userId }] : ['/api/analytics/corporate', { userId }],
-    queryFn: async () => {
-      if (roleType === 'agency') {
-        const res = await fetch(`/api/analytics/agency?userId=${userId}`);
-        if (!res.ok) return { totalProposals: 0, totalRevenue: 0, winRate: 0, activeClients: 0 };
-        return res.json();
-      } else {
-        const res = await fetch('/api/analytics', { credentials: 'include' });
-        if (!res.ok) return { totalTrips: 0, totalBudget: 0, avgDuration: 0, teamSize: 0 };
-        const data = await res.json();
-        return {
-          totalTrips: data.overview?.totalTrips || 0,
-          totalBudget: data.overview?.totalBudget || 0,
-          avgDuration: data.overview?.averageTripLength || 0,
-          teamSize: data.overview?.totalUsers || 0
-        };
-      }
-    },
-    enabled: !!user,
-  });
-
-  // Process trips based on role
-  const processedTrips = roleType === 'agency' 
-    ? {
-        recent: trips.slice(0, 3),
-        active: trips.filter(trip => trip.status === 'in_progress' || trip.status === 'pending').slice(0, 3)
-      }
-    : {
-        recent: trips.slice(0, 3),
-        upcoming: trips.filter(trip => {
-          const startDate = trip.startDate || trip.start_date;
-          return startDate && new Date(startDate) > new Date();
-        }).slice(0, 3)
+    if (isCorporate) {
+      const corpData = analyticsData as CorporateAnalyticsDTO;
+      return {
+        totalTrips: corpData.overview?.totalTrips || 0,
+        totalBudget: corpData.overview?.totalBudget || 0,
+        avgDuration: corpData.overview?.averageTripLength || 0,
+        teamSize: corpData.overview?.totalUsers || 0,
       };
-
-  // Calculate metrics for corporate dashboard
-  const corporateMetrics = roleType === 'corporate' ? {
-    totalTrips: trips.length,
-    totalBudget: trips.reduce((sum, trip) => {
-      const budget = trip.budget ? (typeof trip.budget === 'string' ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')) : trip.budget) : 0;
-      return sum + (isNaN(budget) ? 0 : budget);
-    }, 0),
-    avgTripDuration: trips.length > 0 ? Math.round(
-      trips.reduce((sum, trip) => {
-        const startDate = trip.startDate || trip.start_date;
-        const endDate = trip.endDate || trip.end_date;
-        if (!startDate || !endDate) return sum;
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) return sum;
-
-        const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        return sum + duration;
-      }, 0) / trips.length
-    ) : 0,
-    uniqueTravelers: new Set(trips.map(trip => trip.userId)).size
-  } : null;
-
-  // Role-based content configuration
-  const config = {
-    agency: {
-      title: "Client Travel Proposal Workspace",
-      subtitle: "Create compelling travel proposals and manage client relationships",
-      heroTitle: "Client Travel Proposal Workspace",
-      heroSubtitle: "Create compelling travel proposals and manage client relationships",
-      createButtonText: "Create Client Proposal",
-      aiGeneratorText: "AI Proposal Generator",
-      analyticsText: "Client Analytics",
-      settingsText: "Agency Settings",
-      metrics: [
-        { label: "Total Proposals", value: analytics?.totalProposals || 0, icon: FileText, suffix: "", growth: "+18% from last month" },
-        { label: "Revenue Generated", value: analytics?.totalRevenue || 0, icon: DollarSign, prefix: "$", suffix: "", growth: "Commission + markups" },
-        { label: "Proposal Win Rate", value: analytics?.winRate || 0, icon: Target, suffix: "%", growth: "Above industry average" },
-        { label: "Active Clients", value: analytics?.activeClients || 0, icon: User, suffix: "", growth: "Ongoing relationships" }
-      ],
-      sections: [
-        { title: "Recent Client Proposals", icon: FileText, data: processedTrips.recent },
-        { title: "Active Client Projects", icon: TrendingUp, data: processedTrips.active }
-      ]
-    },
-    corporate: {
-      title: "Company Travel Management",
-      subtitle: "Streamline your organization's travel planning, expense management, and team coordination",
-      heroTitle: "Company Travel Management",
-      heroSubtitle: "Streamline your organization's travel planning, expense management, and team coordination",
-      createButtonText: "Plan Team Trip",
-      aiGeneratorText: "AI Trip Generator",
-      analyticsText: "Travel Analytics",
-      settingsText: "Company Settings",
-      metrics: [
-        { label: "Total Company Trips", value: corporateMetrics?.totalTrips || 0, icon: Building2, suffix: "", growth: "" },
-        { label: "Travel Budget Used", value: corporateMetrics?.totalBudget || 0, icon: DollarSign, prefix: "$", suffix: "", growth: "" },
-        { label: "Team Members", value: corporateMetrics?.uniqueTravelers || 0, icon: Users, suffix: "", growth: "" },
-        { label: "Avg Trip Duration", value: corporateMetrics?.avgTripDuration || 0, icon: Clock, suffix: " days", growth: "" }
-      ],
-      sections: [
-        { title: "Recent Company Trips", icon: Calendar, data: processedTrips.recent },
-        { title: "Upcoming Team Travel", icon: MapPin, data: processedTrips.upcoming }
-      ]
+    } else {
+      const agencyData = analyticsData as AgencyAnalyticsDTO;
+      return {
+        totalProposals: agencyData.overview?.totalProposals || 0,
+        totalRevenue: agencyData.overview?.totalRevenue || 0,
+        winRate: agencyData.overview?.winRate || 0,
+        activeClients: agencyData.overview?.activeClients || 0,
+      };
     }
-  };
+  }, [analyticsData, isCorporate]);
 
-  const currentConfig = config[roleType as keyof typeof config] || config.corporate;
+  const upcomingTrips = useMemo(() => {
+    return trips
+      .filter(trip => trip.startDate && new Date(trip.startDate) > new Date())
+      .slice(0, 3);
+  }, [trips]);
+
+  const dashboardConfig = useMemo(() => ({
+    title: isCorporate ? 'Corporate Dashboard' : 'Agency Dashboard',
+    description: isCorporate 
+      ? 'Manage your corporate travel program' 
+      : 'Manage your travel agency operations',
+  }), [isCorporate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-500">Error loading dashboard data: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
-        {/* Hero Header - Enhanced for Corporate */}
-        {roleType === 'corporate' ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+        
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{dashboardConfig.title}</h1>
+          <p className="text-md text-gray-600 dark:text-gray-300 mt-1">{dashboardConfig.description}</p>
+        </motion.div>
+
+        {user && <OnboardingProgress user={user} onTaskClick={handleOnboardingTaskClick} />}
+
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {isCorporate ? (
+            <>
+              <AnimatedCard>
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Trips</CardTitle><Building2 className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{analytics?.totalTrips}</div></CardContent>
+              </AnimatedCard>
+              <AnimatedCard>
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Budget</CardTitle><DollarSign className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold">${analytics?.totalBudget.toLocaleString()}</div></CardContent>
+              </AnimatedCard>
+              <AnimatedCard>
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Avg. Trip Duration</CardTitle><Clock className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{analytics?.avgDuration} Days</div></CardContent>
+              </AnimatedCard>
+              <AnimatedCard>
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Team Size</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{analytics?.teamSize}</div></CardContent>
+              </AnimatedCard>
+            </>
+          ) : (
+            <>
+              <AnimatedCard>
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Proposals</CardTitle><FileText className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{analytics?.totalProposals}</div></CardContent>
+              </AnimatedCard>
+              <AnimatedCard>
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Revenue</CardTitle><DollarSign className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold">${analytics?.totalRevenue.toLocaleString()}</div></CardContent>
+              </AnimatedCard>
+              <AnimatedCard>
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Win Rate</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{analytics?.winRate}%</div></CardContent>
+              </AnimatedCard>
+              <AnimatedCard>
+                <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Active Clients</CardTitle><User className="h-4 w-4 text-muted-foreground" /></CardHeader>
+                <CardContent><div className="text-2xl font-bold">{analytics?.activeClients}</div></CardContent>
+              </AnimatedCard>
+            </>
+          )}
+        </div>
+
+        {/* Upcoming Trips Section */}
+        <div className="grid grid-cols-1 gap-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="h-6 w-6 mr-2 text-gray-500" />
+                  Upcoming Trips
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {upcomingTrips.length > 0 ? (
+                  <ul className="space-y-4">
+                    {upcomingTrips.map((trip: TripDTO) => (
+                      <li key={trip.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div>
+                          <Link to={`/trips/${trip.id}`} className="font-semibold text-blue-600 hover:underline">
+                            {trip.name}
+                          </Link>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{trip.destination}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">{new Date(trip.startDate).toLocaleDateString()}</p>
+                          <Badge variant={trip.status === TripStatus.PLANNING ? 'secondary' : 'default'}>{trip.status}</Badge>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400">No upcoming trips scheduled.</p>
+                )}
+              </CardContent>
+            </Card>
+        </div>
+
+        {/* CTA Button */}
+        <div className="text-center mt-12">
+          <Button size="lg" onClick={() => setIsNewTripModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+            <Plus className="mr-2 h-5 w-5" />
+            {isCorporate ? 'Plan a New Trip' : 'Create New Proposal'}
+          </Button>
+        </div>
+
+        <NewTripModal 
+          isOpen={isNewTripModalOpen} 
+          onClose={() => setIsNewTripModalOpen(false)} 
+        />
+      </div>
+    </div>
+  );
+}                <AnimatedCard className="hover:shadow-xl transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Team Size</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{analytics?.teamSize}</div>
+                  </CardContent>
+                </AnimatedCard>
+              </>
+            ) : (
+              <>
+                <AnimatedCard className="hover:shadow-xl transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Proposals</CardTitle>
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{analytics?.totalProposals}</div>
+                  </CardContent>
+                </AnimatedCard>
+                <AnimatedCard className="hover:shadow-xl transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">${analytics?.totalRevenue.toLocaleString()}</div>
+                  </CardContent>
+                </AnimatedCard>
+                <AnimatedCard className="hover:shadow-xl transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
+                    <Target className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{analytics?.winRate}%</div>
+                  </CardContent>
+                </AnimatedCard>
+                <AnimatedCard className="hover:shadow-xl transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{analytics?.activeClients}</div>
+                  </CardContent>
+                </AnimatedCard>
+              </>
+            )}
+          </div>
+
+          {/* Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {dashboardConfig.sections.map((section, index) => (
+              <Card key={index} className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <section.icon className="h-6 w-6 mr-2 text-gray-500" />
+                    {section.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {section.data.length > 0 ? (
+                    <ul className="space-y-4">
+                      {section.title === 'Upcoming Trips' && (section.data as TripDTO[]).map((trip: TripDTO) => (
+                        <li key={trip.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          <div>
+                            <Link to={`/trips/${trip.id}`} className="font-semibold text-blue-600 hover:underline">
+                              {trip.name}
+                            </Link>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{trip.destination}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium">{new Date(trip.startDate).toLocaleDateString()}</p>
+                            <Badge variant={trip.status === TripStatus.PLANNING ? 'secondary' : 'default'}>{trip.status}</Badge>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400">{section.emptyMessage}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* CTA Button */}
+          <div className="text-center mt-12">
+            <Button size="lg" onClick={() => setIsNewTripModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+              <Plus className="mr-2 h-5 w-5" />
+              {isCorporate ? 'Plan a New Trip' : 'Create New Proposal'}
+            </Button>
+          </div>
+
+          <NewTripModal 
+            isOpen={isNewTripModalOpen} 
+            onClose={() => setIsNewTripModalOpen(false)} 
+          />
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white mb-8 rounded-2xl"
@@ -213,10 +335,10 @@ export default function Dashboard() {
                   </div>
 
                   <h1 className="text-5xl font-bold mb-4 tracking-tight">
-                    {currentConfig.heroTitle}
+                    {dashboardConfig.title}
                   </h1>
                   <p className="text-xl text-electric-100 mb-6 max-w-2xl">
-                    {currentConfig.heroSubtitle}
+                    {dashboardConfig.description}
                   </p>
 
                   <div className="flex flex-wrap items-center gap-6 text-sm">
@@ -247,7 +369,7 @@ export default function Dashboard() {
                     size="lg"
                   >
                     <Plus className="h-5 w-5 mr-2" />
-                    {currentConfig.createButtonText}
+                    Plan Team Trip
                   </Button>
                 </motion.div>
               </div>
@@ -257,23 +379,23 @@ export default function Dashboard() {
           /* Agency Header - Simple */
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              {currentConfig.title}
+              {dashboardConfig.title}
             </h1>
             <p className="text-muted-foreground">
-              {currentConfig.subtitle}
+              {dashboardConfig.description}
             </p>
           </div>
         )}
 
         {/* Onboarding Progress - Only show for new users in corporate mode */}
-        {roleType === 'corporate' && trips.length === 0 && (
+        {isCorporate && trips.length === 0 && (
           <div className="mb-8">
             <OnboardingProgress onTaskClick={handleOnboardingTaskClick} />
           </div>
         )}
 
         {/* Quick Actions - Role-based layout */}
-        {roleType === 'agency' && (
+        {!isCorporate && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Button 
               onClick={() => setIsNewTripModalOpen(true)}
@@ -281,27 +403,27 @@ export default function Dashboard() {
               size="lg"
             >
               <Plus className="h-5 w-5" />
-              {currentConfig.createButtonText}
+              Create Client Proposal
             </Button>
             
             <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
               <Link href="/ai-generator">
                 <Sparkles className="h-5 w-5" />
-                {currentConfig.aiGeneratorText}
+                AI Proposal Generator
               </Link>
             </Button>
             
             <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
               <Link href="/analytics">
                 <BarChart3 className="h-5 w-5" />
-                {currentConfig.analyticsText}
+                Client Analytics
               </Link>
             </Button>
             
             <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
               <Link href="/settings">
                 <Settings className="h-5 w-5" />
-                {currentConfig.settingsText}
+                Agency Settings
               </Link>
             </Button>
           </div>
@@ -311,39 +433,113 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: roleType === 'corporate' ? 0.6 : 0 }}
+          transition={{ duration: 0.6, delay: isCorporate ? 0.6 : 0 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          {currentConfig.metrics.map((metric: any, index: number) => {
-            const IconComponent = metric.icon;
-            return (
-              <AnimatedCard key={metric.label} variant={roleType === 'corporate' ? 'soft' : 'default'} className="p-6">
+          {isCorporate ? (
+            <>
+              <AnimatedCard variant="soft" className="p-6">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{metric.label}</CardTitle>
-                  <IconComponent className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Total Company Trips</CardTitle>
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {metric.prefix || ''}{metric.value.toLocaleString()}{metric.suffix || ''}
+                    {trips.length}
                   </div>
-                  {metric.growth && (
-                    <p className="text-xs text-muted-foreground">
-                      {metric.growth}
-                    </p>
-                  )}
                 </CardContent>
               </AnimatedCard>
-            );
-          })}
+              <AnimatedCard variant="soft" className="p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Travel Budget Used</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${totalBudget.toLocaleString()}
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+              <AnimatedCard variant="soft" className="p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Team Members</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {new Set(trips.map(trip => trip.userId)).size}
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+              <AnimatedCard variant="soft" className="p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Avg Trip Duration</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {averageTripDuration} days
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+            </>
+          ) : (
+            <>
+              <AnimatedCard variant="soft" className="p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Proposals</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.totalProposals || 0}
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+              <AnimatedCard variant="soft" className="p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Revenue Generated</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${analytics?.totalRevenue || 0}
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+              <AnimatedCard variant="soft" className="p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Proposal Win Rate</CardTitle>
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.winRate || 0}%
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+              <AnimatedCard variant="soft" className="p-6">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {analytics?.activeClients || 0}
+                  </div>
+                </CardContent>
+              </AnimatedCard>
+            </>
+          )}
         </motion.div>
 
         {/* Content Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {currentConfig.sections.map((section: any, index: number) => {
+          {dashboardConfig.sections.map((section, index) => {
             const IconComponent = section.icon;
             const sectionData = section.data || [];
             return (
-              <AnimatedCard key={section.title} variant={roleType === 'corporate' ? 'glow' : 'default'} className="p-6">
+              <AnimatedCard key={section.title} variant={isCorporate ? 'glow' : 'default'} className="p-6">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <IconComponent className="h-5 w-5" />
@@ -351,17 +547,11 @@ export default function Dashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {tripsLoading ? (
+                  {sectionData.length > 0 ? (
                     <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-16 bg-muted animate-pulse rounded" />
-                      ))}
-                    </div>
-                  ) : sectionData.length > 0 ? (
-                    <div className="space-y-4">
-                      {sectionData.map((trip: any) => (
+                      {sectionData.map((trip, i) => (
                         <div 
-                          key={trip.id} 
+                          key={i} 
                           className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:shadow-md hover:bg-muted/50 transition-all"
                           onClick={() => setLocation(`/trip/${trip.id}`)}
                         >
@@ -370,20 +560,22 @@ export default function Dashboard() {
                             <div>
                               <p className="font-medium">{trip.title}</p>
                               <p className="text-sm text-muted-foreground">
-                                {roleType === 'agency' 
-                                  ? `${trip.client_name || 'Client'} • ${trip.destination}` 
-                                  : trip.city || trip.country || trip.destination || 'Location TBD'
+                                {isCorporate 
+                                  ? trip.city || trip.country || trip.destination || 'Location TBD' 
+                                  : `${trip.client_name || 'Client'} • ${trip.destination}`
                                 }
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <Badge variant={trip.status === 'completed' || trip.completed ? 'default' : 'secondary'}>
-                              {trip.status === 'completed' || trip.completed ? 'Completed' : trip.status || 'Active'}
+                            <Badge variant={trip.status === TripStatus.COMPLETED || trip.completed ? 'default' : 'secondary'}>
+                              {trip.status === TripStatus.COMPLETED || trip.completed ? 'Completed' : trip.status || 'Active'}
                             </Badge>
-                            {roleType === 'agency' && trip.budget && (
+                            {!isCorporate && hasBudget(trip) && (
                               <p className="text-xs text-muted-foreground mt-1">
-                                ${typeof trip.budget === 'string' ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')).toLocaleString() : trip.budget.toLocaleString()}
+                                ${typeof trip.budget === 'string' 
+                                  ? parseFloat(trip.budget.replace(/[^0-9.-]+/g, '')).toLocaleString() 
+                                  : trip.budget.toLocaleString()}
                               </p>
                             )}
                           </div>
@@ -394,21 +586,15 @@ export default function Dashboard() {
                     <div className="text-center py-8">
                       <IconComponent className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-medium mb-2">
-                        {roleType === 'agency' 
-                          ? (index === 0 ? 'No client proposals yet' : 'No active projects')
-                          : (index === 0 ? 'No company trips yet' : 'No upcoming travel')
-                        }
+                        {index === 0 ? 'No upcoming trips found' : 'No analytics data available'}
                       </h3>
                       <p className="text-muted-foreground mb-4">
-                        {roleType === 'agency' 
-                          ? (index === 0 ? 'Start creating proposals to win new business' : 'Win proposals to see active client work here')
-                          : (index === 0 ? 'Start planning team trips' : 'Schedule upcoming travel to see it here')
-                        }
+                        {index === 0 ? 'Start planning team trips' : 'No analytics data available'}
                       </p>
                       {index === 0 && (
                         <Button onClick={() => setIsNewTripModalOpen(true)}>
                           <Plus className="h-4 w-4 mr-2" />
-                          {roleType === 'agency' ? 'Create First Proposal' : 'Plan First Trip'}
+                          Plan Team Trip
                         </Button>
                       )}
                     </div>
@@ -424,7 +610,7 @@ export default function Dashboard() {
         isOpen={isNewTripModalOpen} 
         onClose={() => setIsNewTripModalOpen(false)} 
         onSuccess={() => setIsNewTripModalOpen(false)}
-        userId={userId!}
+        userId={user?.id}
       />
     </div>
   );

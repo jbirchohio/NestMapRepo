@@ -1,63 +1,66 @@
 import { Router } from 'express';
-import authController from '../controllers/auth.controller';
-import { rateLimiterMiddleware } from '../middleware/rateLimit';
-import { validateRequest } from '../middleware/validation';
-import { z } from 'zod';
+import { ConfigService } from '@nestjs/config';
+import { AuthContainer } from '../src/auth/auth.container';
 
-const router = Router();
+// Import validation schemas from DTOs to avoid duplication
+import { 
+  loginSchema, 
+  refreshTokenSchema, 
+  logoutSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema 
+} from '../src/auth/dtos/auth.dto';
 
-// Define validation schemas
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters')
-});
+// Import middleware
+import { rateLimiterMiddleware } from '../src/auth/middleware/rate-limiter.middleware';
+import { validateRequest } from '../src/auth/middleware/validation.middleware';
 
-const refreshTokenSchema = z.object({
-  refreshToken: z.string()
-});
+export const createAuthRouter = (configService: ConfigService): Router => {
+  const router = Router();
+  
+  // Initialize auth container with required dependencies
+  const authContainer = new AuthContainer({
+    configService,
+  });
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email address')
-});
+  // Register auth routes
+  // Login route
+  router.post(
+    '/login',
+    validateRequest({ body: loginSchema }),
+    ...authContainer.authController.login
+  );
 
-const resetPasswordSchema = z.object({
-  token: z.string(),
-  password: z.string().min(8, 'Password must be at least 8 characters')
-});
+  // Refresh token route
+  router.post(
+    '/refresh-token',
+    validateRequest({ body: refreshTokenSchema }),
+    ...authContainer.authController.refreshToken
+  );
 
-// Public routes
-router.post(
-  '/login',
-  rateLimiterMiddleware,
-  validateRequest({ body: loginSchema }),
-  authController.login
-);
+  // Logout route
+  router.post(
+    '/logout',
+    validateRequest({ body: logoutSchema }),
+    ...authContainer.authController.logout
+  );
 
-router.post(
-  '/refresh-token',
-  rateLimiterMiddleware,
-  validateRequest({ body: refreshTokenSchema }),
-  authController.refreshToken
-);
+  // Password reset routes
+  router.post(
+    '/forgot-password',
+    rateLimiterMiddleware, // Apply rate limiting
+    validateRequest({ body: requestPasswordResetSchema }),
+    ...authContainer.authController.requestPasswordReset
+  );
 
-// Protected routes (require authentication)
-router.post('/logout', authController.logout);
+  router.post(
+    '/reset-password',
+    validateRequest({ body: resetPasswordSchema }),
+    ...authContainer.authController.resetPassword
+  );
 
-// Password reset routes
-router.post(
-  '/forgot-password',
-  rateLimiterMiddleware,
-  validateRequest({ body: forgotPasswordSchema }),
-  (_req: import('express').Request, res: import('express').Response) => 
-    res.status(501).json({ message: 'Not implemented' })
-);
+  return router;
+};
 
-router.post(
-  '/reset-password',
-  rateLimiterMiddleware,
-  validateRequest({ body: resetPasswordSchema }),
-  (_req: import('express').Request, res: import('express').Response) => 
-    res.status(501).json({ message: 'Not implemented' })
-);
-
-export default router;
+// For backward compatibility
+export default createAuthRouter;

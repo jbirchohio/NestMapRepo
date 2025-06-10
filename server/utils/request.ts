@@ -38,7 +38,7 @@ export const extendRequest = (
   };
 
   // Add hasPermission method
-  req.hasPermission = function (permission: string | string[]): boolean {
+  req.hasPermission = function (_permission: string | string[]): boolean {
     if (!this.user) return false;
     
     // If user is admin, they have all permissions
@@ -46,38 +46,11 @@ export const extendRequest = (
       return true;
     }
 
-    const permissions = Array.isArray(permission) ? permission : [permission];
-    
-    // Check if user has any of the required permissions
-    // This is a basic implementation - you might want to check against user's actual permissions
-    // stored in the database or JWT token
-    return permissions.some(p => {
-      // Example: Check if permission is in the user's permissions array
-      // This assumes user.permissions is an array of permission strings
-      return this.user.permissions?.includes(p) || false;
-    });
+    // This is a basic implementation. For now, we only check roles.
+    // A more robust permission system would check a user.permissions array.
+    return false;
   };
 
-  next();
-};
-
-/**
- * Middleware to ensure the request is authenticated
- */
-export const requireAuth = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({
-      success: false,
-      error: {
-        code: 'UNAUTHORIZED',
-        message: 'Authentication required',
-      },
-    });
-  }
   next();
 };
 
@@ -85,7 +58,7 @@ export const requireAuth = (
  * Middleware to check if user has required role(s)
  */
 export const requireRole = (roles: string | string[]) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated || !req.isAuthenticated()) {
       return res.status(401).json({
         success: false,
@@ -109,7 +82,7 @@ export const requireRole = (roles: string | string[]) => {
       });
     }
 
-    next();
+    return next();
   };
 };
 
@@ -117,7 +90,7 @@ export const requireRole = (roles: string | string[]) => {
  * Middleware to check if user has required permission(s)
  */
 export const requirePermission = (permissions: string | string[]) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated || !req.isAuthenticated()) {
       return res.status(401).json({
         success: false,
@@ -143,6 +116,6 @@ export const requirePermission = (permissions: string | string[]) => {
       });
     }
 
-    next();
+    return next();
   };
 };

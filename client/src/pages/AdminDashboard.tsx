@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/JWTAuthContext";
+import { useAuth } from "@/contexts/SecureJWTAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Shield, 

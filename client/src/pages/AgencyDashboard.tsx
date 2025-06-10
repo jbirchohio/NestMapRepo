@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/JWTAuthContext";
+import { useAuth } from "@/contexts/SecureJWTAuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { 

@@ -9,13 +9,13 @@ import { users, organizationMembers } from '@shared/schema';
 import { eq, sql, and } from 'drizzle-orm';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { validateJWT } from '../middleware/jwtAuth';
 import { z } from 'zod';
 
 const router = Router();
 
 // Apply unified auth middleware
-router.use(unifiedAuthMiddleware);
+router.use(validateJWT);
 
 /**
  * Get organization members with their roles

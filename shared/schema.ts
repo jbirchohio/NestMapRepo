@@ -19,7 +19,12 @@ export const users = pgTable("users", {
   team_size: text("team_size"), // Team size range
   use_case: text("use_case"), // Primary use case
   last_login: timestamp("last_login"), // Track last login time
+  failed_login_attempts: integer("failed_login_attempts").default(0),
+  locked_until: timestamp("locked_until"),
+  password_reset_token: text("password_reset_token"),
+  password_reset_expires_at: timestamp("password_reset_expires_at"),
   created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // Organizations for B2B/Enterprise customers
@@ -841,8 +846,23 @@ export const adminSettings = pgTable("admin_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User Activity Logs for tracking regular user actions
+export const userActivityLogs = pgTable("user_activity_logs", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  organization_id: integer("organization_id").references(() => organizations.id),
+  action: text("action").notNull(), // e.g., 'create_trip', 'update_profile', 'add_collaborator'
+  details: jsonb("details"), // Additional context, e.g., { trip_id: 123, collaborator_id: 456 }
+  ip_address: text("ip_address"),
+  user_agent: text("user_agent"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs);
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;
+
 // Admin Audit Log for tracking administrative actions
-export const adminAuditLog = pgTable("admin_audit_log", {
+export const adminAuditLog = pgTable("admin_audit_logs", {
   id: serial("id").primaryKey(),
   admin_user_id: integer("admin_user_id").references(() => users.id).notNull(),
   action_type: text("action_type").notNull(), // SYSTEM_SETTINGS_UPDATE, EMAIL_TEST, etc.

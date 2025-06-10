@@ -1,373 +1,170 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../utils/jwt';
-import { db } from '../db-connection';
-import { users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
-import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
+import { logger } from '../utils/logger';
+import { config } from '../config';
+import { User } from '../types/user';
+import { redisClient } from '../utils/redis';
+import rateLimit from 'express-rate-limit';
+import { RateLimiterRedis } from 'rate-limiter-flexible';
 
-// Initialize Supabase client if needed
-const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY
-  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
-  : null;
+// Rate limiting configuration
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
 
-// Define user interface for JWT authentication
-export interface JWTUser {
-  id: number;
+// Redis-based rate limiter
+const rateLimiter = new RateLimiterRedis({
+  storeClient: redisClient,
+  points: 100, // Number of points
+  duration: 15 * 60, // Per 15 minutes
+  blockDuration: 60 * 60 // Block for 1 hour on rate limit
+});
+
+interface JwtPayload {
+  id: string;
   email: string;
-  organization_id: number;
   role: string;
-  username: string;
-  authId?: string;
-  roleType?: string;
-  iat?: number;
-  exp?: number;
+  iat: number;
+  exp: number;
+  organization_id?: number;
 }
 
-// Extend Express Request interface
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: JWTUser;
-    organizationId?: number;
-    organization_id?: number;
-    token?: string;
-    isAuthenticated?: () => boolean;
-  }
-}
-
-// Global declaration for backward compatibility
-declare global {
-  namespace Express {
-    // Empty interface to avoid duplicate property errors
-    // The actual extension is handled by the module declaration above
-    interface Request {}
-  }
-}
-
-// Type for our auth response body - used for type safety in response construction
-interface AuthResponseBody {
-  error: string;
-  code: string;
-  details?: string;
-}
-
-// Type guard for error with name property
-interface ErrorWithName extends Error {
-  name: string;
-}
-
-function isErrorWithName(error: unknown): error is ErrorWithName {
-  return error instanceof Error && 'name' in error;
-}
-
-// This interface is used for routes that require authentication
-export interface AuthenticatedRequest extends Omit<Request, 'user'> {
-  user: JWTUser;
-  organizationId: number;
-  organization_id: number;
-  token: string;
-  isAuthenticated: () => boolean;
-}
-
-// This type guard can be used to check if a request is authenticated
-export function isAuthenticatedRequest(req: Request): req is AuthenticatedRequest {
-  return !!(req as AuthenticatedRequest).user;
-}
-
-// List of paths that don't require authentication
-const PUBLIC_PATHS = [
-  '/api/auth/',
-  '/api/auth/refresh-token',
-  '/api/health',
-  '/api/templates',
-  '/api/share/',
-  '/api/amadeus',
-  '/api/dashboard-stats',
-  '/api/stripe/',
-  '/api/webhooks/',
-  '/api/acme-challenge',
-  '/api/user/permissions',
-  '/api/white-label/config',
-  '/api/notifications'
-];
-
-/**
- * Extract token from request headers, cookies, or query params
- */
-function extractToken(req: Request): string | null {
-  return (
-    req.headers.authorization?.split(' ')[1] ||
-    req.cookies?.token ||
-    req.query.token as string ||
-    null
-  );
-}
-
-/**
- * JWT Authentication Middleware with Supabase and JWT support
- */
-export const jwtAuthMiddleware = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  // Skip auth for public paths
-  if (PUBLIC_PATHS.some(path => req.path.startsWith(path))) {
-    return next();
-  }
-
-  const token = extractToken(req);
-  if (!token) {
-    return sendUnauthorized(res, 'Authentication required', 'MISSING_TOKEN');
-  }
-
+export const validateJWT = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Try to authenticate with local JWT first
-    const localAuthSuccess = await authenticateWithLocalJWT(token, req, res, next);
-    if (localAuthSuccess) return;
-    
-    // Fallback to Supabase auth if enabled
-    if (supabase) {
-      const supabaseAuthSuccess = await authenticateWithSupabase(token, req, res, next);
-      if (supabaseAuthSuccess) return;
-    }
-    
-    // If we get here, both auth methods failed
-    sendUnauthorized(res, 'Invalid or expired token', 'INVALID_TOKEN');
-    return;
-  } catch (error: unknown) {
-    console.error('Authentication error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    sendUnauthorized(
-      res,
-      'Authentication failed',
-      'AUTH_ERROR',
-      process.env.NODE_ENV === 'development' ? errorMessage : undefined
-    );
-    return;
-  }
-}
-
-/**
- * Authenticate using local JWT tokens
- */
-async function authenticateWithLocalJWT(
-  token: string,
-  req: Request,
-  _res: Response, // Prefix with underscore to indicate it's intentionally unused
-  next: NextFunction
-): Promise<boolean | void> {
-  try {
-    const decoded = verifyAccessToken(token) as { id?: number; userId?: number };
-    const userId = decoded?.userId || decoded?.id;
-    if (!userId) return false;
-
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (!user) return false;
-
-    attachUserToRequest(req as AuthenticatedRequest, {
-      id: user.id,
-      email: user.email || '',
-      organization_id: user.organization_id || 0,
-      role: user.role || 'user',
-      username: user.username || '',
-      authId: user.auth_id || undefined,
-      roleType: user.role_type || undefined
-    }, token);
-
-    next();
-    return true;
-  } catch (error) {
-    if (isErrorWithName(error) && error.name === 'TokenExpiredError') {
-      // Don't send response here, just return false to try next auth method
-      console.log('Token expired, trying next auth method');
-      return false;
-    }
-    return false;
-  }
-}
-
-/**
- * Authenticate using Supabase
- */
-async function authenticateWithSupabase(
-  token: string,
-  req: Request,
-  _res: Response, // Prefix with underscore to indicate it's intentionally unused
-  next: NextFunction
-): Promise<boolean | void> {
-  if (!supabase) return false;
-
-  try {
-    try {
-      const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
+    // Check if JWT is required for this route
+    if (!req.path.startsWith('/api/auth') && !req.path.startsWith('/api/public')) {
+      const authHeader = req.headers.authorization;
       
-      if (error || !supabaseUser) {
-        return false;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ 
+          error: 'No token provided',
+          code: 'TOKEN_MISSING'
+        });
       }
+
+      const token = authHeader.split(' ')[1];
       
-      // Look up user in database by auth ID
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.auth_id, supabaseUser.id))
-        .limit(1);
-        
-      if (!user) return false;
+      // Check token blacklist
+      const isBlacklisted = await redisClient.get(`blacklisted_token:${token}`);
+      if (isBlacklisted) {
+        return res.status(401).json({ 
+          error: 'Token has been revoked',
+          code: 'TOKEN_REVOKED'
+        });
+      }
+
+      // Validate token
+      const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
       
-      attachUserToRequest(req as AuthenticatedRequest, {
-        id: user.id,
-        email: user.email || '',
-        organization_id: user.organization_id || 0,
-        role: user.role || 'user',
-        username: user.username || '',
-        authId: user.auth_id || undefined,
-        roleType: user.role_type || undefined
-      }, token);
+      // Check token expiration
+      if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+        return res.status(401).json({ 
+          error: 'Token expired',
+          code: 'TOKEN_EXPIRED'
+        });
+      }
+
+      // Validate required claims
+      if (!decoded.id || !decoded.email || !decoded.role) {
+        return res.status(401).json({ 
+          error: 'Invalid token claims',
+          code: 'INVALID_CLAIMS'
+        });
+      }
+
+      // Rate limiting based on user
+      const key = `rate_limit:${decoded.id}`;
+      const rateLimitResult = await rateLimiter.consume(key);
+      if (!rateLimitResult.consumed) {
+        return res.status(429).json({
+          error: 'Too many requests',
+          code: 'RATE_LIMIT_EXCEEDED',
+          retryAfter: Math.ceil(rateLimitResult.msBeforeNext / 1000)
+        });
+      }
+
+      // Add user info to request
+      req.user = {
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role,
+        organization_id: decoded.organization_id,
+      } as User;
+
+      // Log successful authentication
+      logger.info(`User ${decoded.email} authenticated successfully`, {
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+      });
+
+      // Add security headers
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-XSS-Protection', '1; mode=block');
       
       next();
-      return true;
-    } catch (error) {
-      console.error('Supabase authentication error:', error);
-      return false;
+    } else {
+      next(); // Public routes don't require auth
     }
   } catch (error) {
-    console.error('Supabase auth error:', error);
-    return false;
-  }
-}
-
-/**
- * Attach user to request object
- */
-function attachUserToRequest(
-  req: AuthenticatedRequest,
-  user: JWTUser,
-  token: string
-): void {
-  req.user = user;
-  req.organizationId = user.organization_id;
-  req.organization_id = user.organization_id;
-  req.token = token;
-  req.isAuthenticated = () => true;
-}
-
-/**
- * Send unauthorized response
- */
-function sendUnauthorized(
-  res: Response,
-  message: string,
-  code: string,
-  details?: string
-): void {
-  const response: AuthResponseBody = {
-    error: message,
-    code,
-    ...(details && { details })
-  };
-  res.status(401).json(response);
-}
-
-/**
- * Require Authentication Middleware
- */
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  if (!(req as AuthenticatedRequest).isAuthenticated?.() || !(req as AuthenticatedRequest).user) {
-    return sendUnauthorized(res, 'Authentication required', 'UNAUTHORIZED');
-  }
-  next();
-}
-
-/**
- * Admin middleware that checks if user is an admin
- */
-export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
-  if (!req.user || req.user.role !== 'admin') {
-    sendUnauthorized(
-      res,
-      'Admin access required',
-      'ADMIN_ACCESS_REQUIRED'
-    );
-    return;
-  }
-  next();
-};
-
-/**
- * Superadmin Role Middleware
- */
-export function requireSuperadminRole(req: Request, res: Response, next: NextFunction): void {
-  const user = (req as AuthenticatedRequest).user;
-  if (!user || user.role !== 'superadmin') {
-    return res.status(403).json({
-      error: 'Superadmin access required',
-      code: 'FORBIDDEN'
+    logger.error('JWT validation error:', error);
+    return res.status(401).json({ 
+      error: 'Invalid or expired token',
+      code: 'INVALID_TOKEN',
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
-  next();
-}
-
-// Alias for backwards compatibility
-export const requireSuperAdmin = requireSuperadminRole;
-
-/**
- * Role-based access control middleware
- */
-export const requireRole = (requiredRole: string) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user || req.user.role !== requiredRole) {
-      sendUnauthorized(
-        res,
-        'Insufficient permissions',
-        'INSUFFICIENT_PERMISSIONS'
-      );
-      return;
-    }
-    next();
-  };
 };
 
-/**
- * Organization access control middleware
- */
-export const requireOrganizationAccess = (req: Request, res: Response, next: NextFunction): void => {
-  const requestedOrgId = parseInt(req.params.organizationId, 10) || req.organizationId;
+// Rate limiting for auth endpoints
+export const rateLimitAuth = (req: Request, res: Response, next: NextFunction) => {
+  const ip = req.ip || req.headers['x-forwarded-for'];
+  const now = Date.now();
+  const key = `auth_attempts:${ip}`;
+
+  // Check redis for existing attempts
+  // This assumes you have redis configured
+  // In production, this should use a distributed rate limiter
   
-  if (!requestedOrgId || !req.user || req.user.organization_id !== requestedOrgId) {
-    sendUnauthorized(
-      res,
-      'Access to this organization is forbidden',
-      'FORBIDDEN'
-    );
-    return;
+  // For simplicity, we'll use a simple in-memory cache
+  const attempts = req.app.get(key) || 0;
+  
+  if (attempts > 5) {
+    const resetTime = req.app.get(`${key}:reset`) || now;
+    if (now < resetTime) {
+      const remainingTime = Math.ceil((resetTime - now) / 1000);
+      return res.status(429).json({
+        error: 'Too many authentication attempts',
+        retryAfter: remainingTime
+      });
+    }
+    // Reset counter if time has passed
+    req.app.set(key, 1);
+    req.app.set(`${key}:reset`, now + 900000); // 15 minutes
+  } else {
+    req.app.set(key, (attempts + 1));
+    req.app.set(`${key}:reset`, now + 900000);
   }
+
   next();
 };
 
-/**
- * Role and organization access control middleware
- */
-export const requireRoleAndOrgAccess = (requiredRole: string) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const requestedOrgId = parseInt(req.params.organizationId, 10) || req.organizationId;
-    
-    if (!requestedOrgId || !req.user || 
-        req.user.organization_id !== requestedOrgId || 
-        req.user.role !== requiredRole) {
-      sendUnauthorized(
-        res,
-        'Access forbidden',
-        'FORBIDDEN'
-      );
-      return;
-    }
-    next();
+// Security audit logging
+export const auditLogAuth = (req: Request, res: Response, next: NextFunction) => {
+  const auditLog = {
+    timestamp: new Date().toISOString(),
+    ip: req.ip || req.headers['x-forwarded-for'],
+    method: req.method,
+    path: req.path,
+    user: req.user ? {
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role
+    } : null,
+    userAgent: req.headers['user-agent']
   };
-};
+
+  logger.audit('AUTH_ATTEMPT', auditLog);
   next();
-}
+};

@@ -2,14 +2,14 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { insertActivitySchema, transformActivityToFrontend } from '@shared/schema';
 import { transformActivityToDatabase } from '@shared/fieldTransforms';
-import { unifiedAuthMiddleware } from '../middleware/unifiedAuth';
+import { validateJWT } from '../middleware/jwtAuth';
 import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { storage } from '../storage';
 
 const router = Router();
 
 // Apply authentication and organization context to all activity routes
-router.use(unifiedAuthMiddleware);
+router.use(validateJWT);
 router.use(injectOrganizationContext);
 
 // Get activities for a specific trip

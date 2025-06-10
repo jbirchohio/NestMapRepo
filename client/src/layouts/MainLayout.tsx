@@ -1,5 +1,6 @@
 import React from 'react';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
+import { useAuth } from '@/contexts/SecureJWTAuthContext';
 import MainNavigation from '@/components/MainNavigation';
 import BrandedFooter from '@/components/BrandedFooter';
 
@@ -15,6 +16,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   hideFooter = false,
 }) => {
   const { config } = useWhiteLabel();
+  const { user, signOut } = useAuth();
 
   return (
     <div 
@@ -25,7 +27,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         '--accent': config.accentColor || '#8b5cf6',
       } as React.CSSProperties}
     >
-      {!hideNav && <MainNavigation />}
+      {!hideNav && (
+        <MainNavigation 
+          isAuthenticated={!!user}
+          user={user}
+          onLogout={signOut}
+        />
+      )}
       <main className="flex-1">
         {children}
       </main>
