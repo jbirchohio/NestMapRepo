@@ -1,6 +1,8 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { auditLogs as auditLogsTableDefinition } from "./auditLog"; // Assuming auditLog.ts is in the same directory
 
 // Enums
 const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
@@ -117,6 +119,291 @@ export const refreshTokens = pgTable('refresh_tokens', {
   )
 }));
 
+
+// Additional Enums for new tables
+export const cardTransactionTypeEnum = pgEnum('card_transaction_type', ['purchase', 'refund', 'fee', 'withdrawal', 'adjustment']);
+export const cardTransactionStatusEnum = pgEnum('card_transaction_status', ['pending', 'posted', 'declined', 'disputed', 'settled', 'cancelled']);
+export const cardTransactionCategoryEnum = pgEnum('card_transaction_category', ['travel', 'meals', 'software', 'office_supplies', 'utilities', 'professional_services', 'advertising', 'equipment', 'other']);
+
+export const tripCollaboratorRoleEnum = pgEnum('trip_collaborator_role', ['admin', 'editor', 'viewer', 'commenter']);
+export const invitationStatusEnum = pgEnum('invitation_status', ['pending', 'accepted', 'expired', 'revoked']);
+export const organizationMemberRoleEnum = pgEnum('organization_member_role', ['admin', 'manager', 'member', 'viewer', 'billing']); // Added billing as a common role
+export const organizationMemberStatusEnum = pgEnum('organization_member_status', ['active', 'invited', 'suspended', 'inactive']);
+export const tripTypeEnum = pgEnum('trip_type', ['personal', 'business']);
+export const sharePermissionEnum = pgEnum('share_permission', ['read-only', 'edit']);
+
+// Trips Table
+export const trips = pgTable('trips', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }), // Nullable, set null if org deleted
+  collaborators: jsonb('collaborators').$type<Array<{ userId: string; role: string }>>().default(sql`'[]'::jsonb`), // e.g., [{ userId: 'uuid', role: 'editor' }]
+  isPublic: boolean('is_public').default(false),
+  shareCode: text('share_code').unique(),
+  sharingEnabled: boolean('sharing_enabled').default(false),
+  sharePermission: sharePermissionEnum('share_permission').default('read-only'),
+  city: text('city'),
+  country: text('country'),
+  location: text('location'), // Could be more structured, e.g., GeoJSON
+  cityLatitude: text('city_latitude'),
+  cityLongitude: text('city_longitude'),
+  hotel: text('hotel'),
+  hotelLatitude: text('hotel_latitude'),
+  hotelLongitude: text('hotel_longitude'),
+  completed: boolean('completed').default(false),
+  completedAt: timestamp('completed_at'),
+  tripType: tripTypeEnum('trip_type').default('personal'),
+  clientName: text('client_name'), // Relevant for business trips
+  projectType: text('project_type'), // Relevant for business trips
+  budget: integer('budget'), // Store in cents
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Activities Table
+export const activities = pgTable('activities', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }), // Nullable, set null if org deleted
+  title: text('title').notNull(),
+  date: timestamp('date').notNull(),
+  time: text('time'), // Consider timestamp with timezone if time is critical across zones
+  locationName: text('location_name'),
+  latitude: text('latitude'),
+  longitude: text('longitude'),
+  notes: text('notes'),
+  tag: text('tag'),
+  assignedTo: uuid('assigned_to').references(() => users.id, { onDelete: 'set null' }), // Assign to a user
+  order: integer('order').default(0),
+  travelMode: text('travel_mode'),
+  completed: boolean('completed').default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Todos Table
+export const todos = pgTable('todos', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }),
+  task: text('task').notNull(),
+  completed: boolean('completed').default(false),
+  assignedTo: uuid('assigned_to').references(() => users.id, { onDelete: 'set null' }),
+  dueDate: timestamp('due_date'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Notes Table
+export const notes = pgTable('notes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }), // Can be null if note is general
+  activityId: uuid('activity_id').references(() => activities.id, { onDelete: 'cascade' }), // Can be null
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(), // Author of the note
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }),
+  content: text('content').notNull(),
+  title: text('title'),
+  category: text('category'), // e.g., 'General', 'Flight', 'Hotel'
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Trip Collaborators Table
+export const tripCollaborators = pgTable('trip_collaborators', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  role: tripCollaboratorRoleEnum('role').notNull(),
+  invitedBy: uuid('invited_by').references(() => users.id, { onDelete: 'set null' }),
+  invitedAt: timestamp('invited_at').defaultNow(),
+  acceptedAt: timestamp('accepted_at'),
+  status: invitationStatusEnum('status').default('pending'), // Using invitationStatusEnum for consistency
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  tripUserUnique: index('trip_collaborators_trip_user_unique_idx').on(table.tripId, table.userId), // Ensure a user has only one role per trip
+}));
+
+// Organization Roles Table (Custom roles within an organization)
+export const organizationRoles = pgTable('organization_roles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  name: text('name').notNull(), // e.g., 'Trip Planner', 'Finance Approver'
+  description: text('description'),
+  permissions: jsonb('permissions').$type<string[]>().notNull().default(sql`'[]'::jsonb`), // List of permission keys
+  isDefault: boolean('is_default').default(false), // Is this a default role for new members?
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Organization Members Table (Link users to organizations with specific roles)
+export const organizationMembers = pgTable('organization_members', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  role: organizationMemberRoleEnum('role').notNull().default('member'), // Role within the organization
+  // customRoleId: uuid('custom_role_id').references(() => organizationRoles.id, { onDelete: 'set null' }), // Optional: for more granular custom roles
+  permissionsOverride: jsonb('permissions_override').$type<string[]>().default(sql`'[]'::jsonb`), // Specific permissions that override the role
+  invitedBy: uuid('invited_by').references(() => users.id, { onDelete: 'set null' }),
+  invitedAt: timestamp('invited_at'),
+  joinedAt: timestamp('joined_at'),
+  status: organizationMemberStatusEnum('status').default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  orgUserUnique: index('organization_members_org_user_unique_idx').on(table.organizationId, table.userId), // Ensure a user is only listed once per org
+}));
+
+// Invitations Table (For inviting users to organizations or specific resources)
+export const invitations = pgTable('invitations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull(), // Email of the invitee
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }), // Invitation to an organization
+  // tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }), // Optional: invitation to a specific trip
+  invitedByUserId: uuid('invited_by_user_id').references(() => users.id, { onDelete: 'set null' }), // User who sent the invitation
+  roleToAssign: organizationMemberRoleEnum('role_to_assign'), // Role to assign upon accepting org invitation
+  // tripRoleToAssign: tripCollaboratorRoleEnum('trip_role_to_assign'), // Role to assign for trip invitation
+  token: text('token').notNull().unique(), // Secure, unique token for the invitation link
+  status: invitationStatusEnum('status').default('pending'),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  acceptedAt: timestamp('accepted_at'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Card Transactions Table
+export const cardTransactions = pgTable('card_transactions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }), // User who made/is associated with the transaction
+  corporateCardId: uuid('corporate_card_id'), // Placeholder for FK to a future 'corporate_cards' table
+  amount: integer('amount').notNull(), // In cents
+  currency: text('currency').notNull().default('usd'),
+  merchantName: text('merchant_name'),
+  transactionDate: timestamp('transaction_date').notNull(),
+  postedDate: timestamp('posted_date'),
+  category: cardTransactionCategoryEnum('category').default('other'),
+  type: cardTransactionTypeEnum('type').notNull().default('purchase'),
+  status: cardTransactionStatusEnum('status').notNull().default('pending'),
+  description: text('description'),
+  notes: text('notes'),
+  metadata: jsonb('metadata').$type<Record<string, any>>(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Expenses Table
+export const expenseCategoryEnum = pgEnum('expense_category', ['travel', 'meals', 'accommodation', 'software', 'office_supplies', 'other']);
+export const expenseStatusEnum = pgEnum('expense_status', ['pending', 'approved', 'rejected', 'reimbursed']);
+
+export const expenses = pgTable("expenses", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  tripId: uuid("trip_id").references(() => trips.id, { onDelete: 'set null' }), // Expense might not be tied to a trip
+  transactionId: uuid("transaction_id").references(() => cardTransactions.id, { onDelete: 'set null' }), // Link to a corporate card transaction
+  amount: integer("amount").notNull(), // In cents
+  currency: text("currency").default("usd").notNull(),
+  description: text("description").notNull(),
+  category: expenseCategoryEnum("category").default('other'),
+  status: expenseStatusEnum("status").default('pending'),
+  receiptUrl: text("receipt_url"),
+  notes: text("notes"),
+  expenseDate: timestamp("expense_date").notNull().defaultNow(),
+  approvedBy: uuid("approved_by").references(() => users.id, { onDelete: 'set null' }),
+  approvedAt: timestamp("approved_at"),
+  reimbursedAt: timestamp("reimbursed_at"),
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Budgets Table
+export const budgetCategoryEnum = pgEnum('budget_category', ['project', 'department', 'trip_type', 'general']);
+export const budgetStatusEnum = pgEnum('budget_status', ['active', 'archived', 'planned']);
+
+export const budgets = pgTable("budgets", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  amount: integer("amount").notNull(), // Total budget amount in cents
+  currency: text("currency").default("usd").notNull(),
+  category: budgetCategoryEnum("category").default('general'),
+  status: budgetStatusEnum("status").default('active'),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  ownerId: uuid("owner_id").references(() => users.id, { onDelete: 'set null' }), // User responsible for the budget
+  metadata: jsonb("metadata").$type<Record<string, any>>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Custom Domains Table
+export const domainStatusEnum = pgEnum('domain_status', ['pending_verification', 'active', 'failed', 'disabled']);
+
+export const customDomains = pgTable("custom_domains", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull().unique(), // One custom domain per org
+  domainName: text("domain_name").notNull().unique(),
+  status: domainStatusEnum("status").default('pending_verification'),
+  verificationRecordName: text("verification_record_name"), // e.g., TXT record name
+  verificationRecordValue: text("verification_record_value"), // e.g., TXT record value
+  sslEnabled: boolean("ssl_enabled").default(false),
+  sslCertificateArn: text("ssl_certificate_arn"), // If using AWS ACM or similar
+  dnsRecords: jsonb("dns_records").$type<Array<{ type: string; name: string; value: string; ttl?: number }>>(), // Required DNS records for setup
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Trip Comments Table
+export const tripComments = pgTable("trip_comments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tripId: uuid("trip_id").references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(), // Author of the comment
+  parentId: uuid("parent_id").references((): AnyPgColumn => tripComments.id, { onDelete: 'cascade' }), // For threaded comments
+  content: text("content").notNull(),
+  mentionedUserIds: uuid("mentioned_user_ids").array(), // Store as array of UUIDs
+  reactions: jsonb("reactions").$type<Record<string, number>>(), // e.g., { '👍': 10, '❤️': 5 }
+  isEdited: boolean("is_edited").default(false),
+  isDeleted: boolean("is_deleted").default(false), // Soft delete
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Approval Requests Table
+export const approvalRequestTypeEnum = pgEnum('approval_request_type', ['trip_booking', 'expense_report', 'budget_change', 'leave_request']);
+export const approvalRequestStatusEnum = pgEnum('approval_request_status', ['pending', 'approved', 'rejected', 'cancelled']);
+
+export const approvalRequests = pgTable("approval_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  requesterId: uuid("requester_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  approverId: uuid("approver_id").references(() => users.id, { onDelete: 'set null' }), // Can be a specific user or a role (handled by logic)
+  type: approvalRequestTypeEnum("type").notNull(),
+  status: approvalRequestStatusEnum("status").default('pending'),
+  resourceId: uuid("resource_id"), // ID of the resource needing approval (e.g., tripId, expenseId)
+  details: jsonb("details").$type<Record<string, any>>(), // Specific details about the request
+  comments: text("comments"), // Comments from requester or approver
+  approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
+  cancelledAt: timestamp("cancelled_at"),
+  dueDate: timestamp("due_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Admin Audit Log (alias to the main auditLogs table)
+export const adminAuditLog = auditLogsTableDefinition;
+
+// Superadmin Audit Log (alias to the main auditLogs table)
+export const superadminAuditLogs = auditLogsTableDefinition;
+
+
 // Base schemas without validation
 export const baseUserSchema = createInsertSchema(users);
 export const baseOrganizationSchema = createInsertSchema(organizations);
@@ -127,7 +414,7 @@ export const insertUserSchema = baseUserSchema.extend({
   passwordHash: z.string().min(8, 'Password must be at least 8 characters long')
 });
 
-export const selectUserSchema = createSelectSchema(users);
+// ... (rest of the code remains the same)
 
 export const insertOrganizationSchema = baseOrganizationSchema.extend({
   name: z.string()
@@ -141,6 +428,107 @@ export const insertOrganizationSchema = baseOrganizationSchema.extend({
 
 export const selectOrganizationSchema = createSelectSchema(organizations);
 
+// Zod schemas for new tables
+export const insertTripSchema = createInsertSchema(trips, {
+  // Customize Zod validation for specific fields if needed
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+  budget: z.number().int().positive().optional().nullable(), // Assuming budget is in cents
+  collaborators: z.array(z.any()).optional(), // Add more specific validation if collaborator structure is known
+});
+export const selectTripSchema = createSelectSchema(trips);
+
+export const insertActivitySchema = createInsertSchema(activities, {
+  date: z.coerce.date(),
+});
+export const selectActivitySchema = createSelectSchema(activities);
+
+export const insertTodoSchema = createInsertSchema(todos, {
+  dueDate: z.coerce.date().optional().nullable(),
+});
+export const selectTodoSchema = createSelectSchema(todos);
+
+export const insertNoteSchema = createInsertSchema(notes);
+export const selectNoteSchema = createSelectSchema(notes);
+
+export const insertTripCollaboratorSchema = createInsertSchema(tripCollaborators);
+export const selectTripCollaboratorSchema = createSelectSchema(tripCollaborators);
+
+export const insertOrganizationRoleSchema = createInsertSchema(organizationRoles, {
+  permissions: z.array(z.string()).optional(),
+});
+export const selectOrganizationRoleSchema = createSelectSchema(organizationRoles);
+
+export const insertOrganizationMemberSchema = createInsertSchema(organizationMembers, {
+  permissionsOverride: z.array(z.string()).optional(),
+});
+export const selectOrganizationMemberSchema = createSelectSchema(organizationMembers);
+
+export const insertInvitationSchema = createInsertSchema(invitations, {
+  email: z.string().email(),
+  expiresAt: z.coerce.date(),
+});
+export const selectInvitationSchema = createSelectSchema(invitations);
+
+// Zod schemas for TripTravelers, CorporateCards, Cardholders, CardTransactions
+export const insertTripTravelerSchema = createInsertSchema(tripTravelers);
+export const selectTripTravelerSchema = createSelectSchema(tripTravelers);
+
+export const insertCorporateCardSchema = createInsertSchema(corporateCards, {
+  spendingLimit: z.number().int().positive().optional().nullable(),
+});
+export const selectCorporateCardSchema = createSelectSchema(corporateCards);
+
+export const insertCardholderSchema = createInsertSchema(cardholders);
+export const selectCardholderSchema = createSelectSchema(cardholders);
+
+export const insertCardTransactionSchema = createInsertSchema(cardTransactions, {
+  amount: z.number().int(), // Amount is required and should be an integer (cents)
+});
+export const selectCardTransactionSchema = createSelectSchema(cardTransactions);
+
+// Zod schemas for Expenses, Budgets, CustomDomains
+export const insertExpenseSchema = createInsertSchema(expenses, {
+  amount: z.number().int(), // Amount is required and should be an integer (cents)
+  expenseDate: z.coerce.date(),
+});
+export const selectExpenseSchema = createSelectSchema(expenses);
+
+export const insertBudgetSchema = createInsertSchema(budgets, {
+  amount: z.number().int(), // Amount is required and should be an integer (cents)
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date().optional().nullable(),
+});
+export const selectBudgetSchema = createSelectSchema(budgets);
+
+export const insertCustomDomainSchema = createInsertSchema(customDomains, {
+  dnsRecords: z.array(z.object({
+    type: z.string(),
+    name: z.string(),
+    value: z.string(),
+    ttl: z.number().optional()
+  })).optional().nullable()
+});
+export const selectCustomDomainSchema = createSelectSchema(customDomains);
+
+// Zod schemas for TripComments, ApprovalRequests
+export const insertTripCommentSchema = createInsertSchema(tripComments, {
+  mentionedUserIds: z.array(z.string().uuid()).optional().nullable(),
+  reactions: z.record(z.number()).optional().nullable(),
+});
+export const selectTripCommentSchema = createSelectSchema(tripComments);
+
+export const insertApprovalRequestSchema = createInsertSchema(approvalRequests, {
+  details: z.record(z.any()).optional().nullable(),
+  resourceId: z.string().uuid().optional().nullable(),
+});
+export const selectApprovalRequestSchema = createSelectSchema(approvalRequests);
+
+// Zod schemas for aliased audit logs (reuse existing auditLog schemas if compatible or define specific ones if needed)
+// Assuming the structure of adminAuditLog and superadminAuditLogs is identical to the main auditLogs table
+export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLog);
+export const selectAdminAuditLogSchema = createSelectSchema(adminAuditLog);
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -150,3 +538,51 @@ export type RefreshToken = typeof refreshTokens.$inferSelect;
 export type NewRefreshToken = typeof refreshTokens.$inferInsert;
 export type PasswordHistory = typeof passwordHistory.$inferSelect;
 export type NewPasswordHistory = typeof passwordHistory.$inferInsert;
+
+// Types for new tables
+export type Trip = typeof trips.$inferSelect;
+export type NewTrip = typeof trips.$inferInsert;
+export type Activity = typeof activities.$inferSelect;
+export type NewActivity = typeof activities.$inferInsert;
+export type Todo = typeof todos.$inferSelect;
+export type NewTodo = typeof todos.$inferInsert;
+export type Note = typeof notes.$inferSelect;
+export type NewNote = typeof notes.$inferInsert;
+export type TripCollaborator = typeof tripCollaborators.$inferSelect;
+export type NewTripCollaborator = typeof tripCollaborators.$inferInsert;
+export type OrganizationRole = typeof organizationRoles.$inferSelect;
+export type NewOrganizationRole = typeof organizationRoles.$inferInsert;
+export type OrganizationMember = typeof organizationMembers.$inferSelect;
+export type NewOrganizationMember = typeof organizationMembers.$inferInsert;
+export type Invitation = typeof invitations.$inferSelect;
+export type NewInvitation = typeof invitations.$inferInsert;
+
+// Types for CardTransactions
+export type CardTransaction = typeof cardTransactions.$inferSelect;
+export type NewCardTransaction = typeof cardTransactions.$inferInsert;
+
+// Types for TripTravelers, CorporateCards, Cardholders
+export type TripTraveler = typeof tripTravelers.$inferSelect;
+export type NewTripTraveler = typeof tripTravelers.$inferInsert;
+export type CorporateCard = typeof corporateCards.$inferSelect;
+export type NewCorporateCard = typeof corporateCards.$inferInsert;
+export type Cardholder = typeof cardholders.$inferSelect;
+export type NewCardholder = typeof cardholders.$inferInsert;
+
+// Types for Expenses, Budgets, CustomDomains
+export type Expense = typeof expenses.$inferSelect;
+export type NewExpense = typeof expenses.$inferInsert;
+export type Budget = typeof budgets.$inferSelect;
+export type NewBudget = typeof budgets.$inferInsert;
+export type CustomDomain = typeof customDomains.$inferSelect;
+export type NewCustomDomain = typeof customDomains.$inferInsert;
+
+// Types for TripComments, ApprovalRequests
+export type TripComment = typeof tripComments.$inferSelect;
+export type NewTripComment = typeof tripComments.$inferInsert;
+export type ApprovalRequest = typeof approvalRequests.$inferSelect;
+export type NewApprovalRequest = typeof approvalRequests.$inferInsert;
+
+// Types for aliased audit logs
+export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
+export type NewAdminAuditLog = typeof adminAuditLog.$inferInsert;

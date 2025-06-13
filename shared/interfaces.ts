@@ -127,6 +127,8 @@ export interface WeatherInfo {
   recommendations: string[];
 }
 
+import { UserRole } from './types/auth';
+
 export interface User {
   id: number;
   auth_id: string;
@@ -134,8 +136,7 @@ export interface User {
   email: string;
   display_name?: string;
   avatar_url?: string;
-  role: string;
-  role_type: string;
+  role: UserRole;
   organization_id?: number;
   company?: string;
   job_title?: string;

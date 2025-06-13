@@ -360,6 +360,108 @@ export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 *
   };
 }
 
+// New comprehensive validation and sanitization middleware
+export function validateAndSanitizeRequest(schemas: {
+  body?: z.ZodSchema;
+  query?: z.ZodSchema;
+  params?: z.ZodSchema;
+}) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Sanitize and Validate Body
+      if (schemas.body && req.body && typeof req.body === 'object') {
+        req.body = sanitizeObject(req.body); // Sanitize first
+        const bodyResult = await schemas.body.safeParseAsync(req.body);
+        if (!bodyResult.success) {
+          return res.status(400).json({
+            message: 'Invalid request body',
+            errors: bodyResult.error.issues.map(issue => ({
+              field: issue.path.join('.'),
+              message: issue.message
+            }))
+          });
+        }
+        req.body = bodyResult.data; // Use validated (and casted) data
+      }
+
+      // Sanitize and Validate Query Parameters
+      if (schemas.query && req.query && typeof req.query === 'object') {
+        const sanitizedQuery: Record<string, any> = {};
+        for (const key in req.query) {
+          if (Object.prototype.hasOwnProperty.call(req.query, key)) {
+            const value = req.query[key];
+            if (typeof value === 'string') {
+              sanitizedQuery[key] = sanitizeText(value);
+            } else if (Array.isArray(value)) {
+              sanitizedQuery[key] = value.map(v => typeof v === 'string' ? sanitizeText(v) : v);
+            } else {
+              sanitizedQuery[key] = value; // Keep non-string, non-array values as is for Zod to handle
+            }
+          }
+        }
+        req.query = sanitizedQuery; // Apply sanitized query for Zod parsing
+
+        const queryResult = await schemas.query.safeParseAsync(req.query);
+        if (!queryResult.success) {
+          return res.status(400).json({
+            message: 'Invalid query parameters',
+            errors: queryResult.error.issues.map(issue => ({
+              field: issue.path.join('.'),
+              message: issue.message
+            }))
+          });
+        }
+        req.query = queryResult.data; // Use validated (and casted) data
+      }
+
+      // Sanitize and Validate Route Parameters
+      if (schemas.params && req.params && typeof req.params === 'object') {
+        const sanitizedParams: Record<string, any> = {};
+        for (const key in req.params) {
+          if (Object.prototype.hasOwnProperty.call(req.params, key)) {
+            const value = req.params[key];
+            if (typeof value === 'string') {
+              sanitizedParams[key] = sanitizeText(value);
+            } else {
+              sanitizedParams[key] = value; // Keep non-string values as is for Zod to handle
+            }
+          }
+        }
+        req.params = sanitizedParams; // Apply sanitized params for Zod parsing
+
+        const paramsResult = await schemas.params.safeParseAsync(req.params);
+        if (!paramsResult.success) {
+          return res.status(400).json({
+            message: 'Invalid route parameters',
+            errors: paramsResult.error.issues.map(issue => ({
+              field: issue.path.join('.'),
+              message: issue.message
+            }))
+          });
+        }
+        req.params = paramsResult.data; // Use validated (and casted) data
+      }
+
+      next();
+    } catch (error) {
+      // If ZodError, it's already handled by the errorHandler. 
+      // For other errors, pass to generic error handler.
+      if (error instanceof z.ZodError) {
+        // This case should ideally be caught by safeParse, but as a fallback:
+        return res.status(400).json({
+            message: 'Validation error',
+            errors: error.issues.map(issue => ({
+              field: issue.path.join('.'),
+              message: issue.message
+            }))
+          });
+      }
+      console.error('Comprehensive validation middleware error:', error);
+      next(error); // Pass to global error handler
+    }
+  };
+}
+
 // Export validation schemas for use in routes
 export const validationSchemas = {
   trip: tripValidationSchema,

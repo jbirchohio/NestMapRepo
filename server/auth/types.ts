@@ -1,4 +1,4 @@
-import { users } from '@shared/schema';
+import { users } from '../db/schema';
 import { InferSelectModel } from 'drizzle-orm';
 
 export type AuthUser = Omit<InferSelectModel<typeof users>, 'password_hash' | 'auth_id' | 'organization_id'> & {
@@ -12,10 +12,10 @@ export type AuthUser = Omit<InferSelectModel<typeof users>, 'password_hash' | 'a
 };
 
 export interface JwtUser {
-  id: number;
+  id: string;
   email: string;
   role: string;
-  organization_id: number | null;
+  organization_id: string | null;
   tokenType: 'access' | 'refresh';
 }
 

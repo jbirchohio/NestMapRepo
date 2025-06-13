@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { insertOrganizationSchema } from '@shared/schema';
 import { validateJWT } from '../middleware/jwtAuth';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation';
 import { storage } from '../storage';
 import { getOrganizationAnalytics } from '../analytics';
 import { db } from '../db';
@@ -14,6 +15,26 @@ const router = Router();
 // Apply authentication to all organization routes
 router.use(validateJWT);
 
+// Zod Schemas for validation
+const orgIdParamSchema = z.object({
+  id: z.coerce.number().int().positive("Invalid Organization ID"),
+});
+
+const orgAndUserIdParamsSchema = z.object({
+  id: z.coerce.number().int().positive("Invalid Organization ID"),
+  userId: z.coerce.number().int().positive("Invalid User ID"),
+});
+
+const inviteMemberBodySchema = z.object({
+  email: z.string().email("Invalid email format"),
+  org_role: z.string().optional(), // Consider using an enum if roles are predefined
+});
+
+const updateMemberBodySchema = z.object({
+  org_role: z.string().optional(), // Consider enum
+  permissions: z.array(z.string()).optional(), // Consider more specific permission types
+});
+
 // Add users endpoint for card issuance dropdown (matches frontend API call) - MUST be before /:id route
 router.get('/users', async (req: Request, res: Response) => {
   try {
@@ -21,14 +42,14 @@ router.get('/users', async (req: Request, res: Response) => {
     let targetOrgId: number | null = null;
     
     // Use authenticated user's organization ID
-    if (req.user?.organization_id) {
-      targetOrgId = req.user.organization_id;
-    } else if (req.user?.id) {
+    if (req.user?.organizationId) {
+      targetOrgId = req.user.organizationId;
+    } else if (req.user?.userId) {
       // Fallback: get organization from database
       const [userWithOrg] = await db
         .select({ organization_id: users.organization_id })
         .from(users)
-        .where(eq(users.id, req.user.id))
+        .where(eq(users.id, req.user.userId))
         .limit(1);
       
       if (userWithOrg?.organization_id) {
@@ -66,15 +87,12 @@ router.get('/users', async (req: Request, res: Response) => {
 });
 
 // Get organization details
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", validateAndSanitizeRequest({ params: orgIdParamSchema }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.id);
-    if (isNaN(orgId)) {
-      return res.status(400).json({ message: "Invalid organization ID" });
-    }
+    const orgId = req.params.id;
 
     // Verify user can access this organization
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this organization" });
     }
@@ -92,20 +110,17 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 // Update organization (admin only)
-router.put("/:id", requireOrgPermission('manage_organization'), async (req: Request, res: Response) => {
+router.put("/:id", requireOrgPermission('manage_organization'), validateAndSanitizeRequest({ params: orgIdParamSchema, body: insertOrganizationSchema.partial() }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.id);
-    if (isNaN(orgId)) {
-      return res.status(400).json({ message: "Invalid organization ID" });
-    }
+    const orgId = req.params.id;
+    const updateData = req.body;
 
     // Verify user can modify this organization
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this organization" });
     }
 
-    const updateData = insertOrganizationSchema.partial().parse(req.body);
     const updatedOrganization = await storage.updateOrganization(orgId, updateData);
 
     if (!updatedOrganization) {
@@ -123,15 +138,12 @@ router.put("/:id", requireOrgPermission('manage_organization'), async (req: Requ
 });
 
 // Get organization members
-router.get("/:id/members", requireOrgPermission('view_members'), async (req: Request, res: Response) => {
+router.get("/:id/members", requireOrgPermission('view_members'), validateAndSanitizeRequest({ params: orgIdParamSchema }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.id);
-    if (isNaN(orgId)) {
-      return res.status(400).json({ message: "Invalid organization ID" });
-    }
+    const orgId = req.params.id;
 
     // Verify user can access this organization
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this organization's members" });
     }
@@ -145,30 +157,22 @@ router.get("/:id/members", requireOrgPermission('view_members'), async (req: Req
 });
 
 // Invite member to organization
-router.post("/:id/invite", requireOrgPermission('invite_members'), async (req: Request, res: Response) => {
+router.post("/:id/invite", requireOrgPermission('invite_members'), validateAndSanitizeRequest({ params: orgIdParamSchema, body: inviteMemberBodySchema }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.id);
-    if (isNaN(orgId)) {
-      return res.status(400).json({ message: "Invalid organization ID" });
-    }
-
-    // Verify user can invite to this organization
-    const userOrgId = req.user?.organization_id;
-    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot invite members to this organization" });
-    }
-
+    const orgId = req.params.id;
     const { email, org_role = 'member' } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+    // Verify user can invite to this organization
+    const userOrgId = req.user?.organizationId;
+    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
+      return res.status(403).json({ message: "Access denied: Cannot invite members to this organization" });
     }
 
     // Create invitation
     const invitation = await storage.createInvitation({
       email,
       organizationId: orgId,
-      invitedBy: req.user!.id,
+      invitedBy: req.user!.userId,
       role: org_role,
       token: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
@@ -182,22 +186,17 @@ router.post("/:id/invite", requireOrgPermission('invite_members'), async (req: R
 });
 
 // Update member role
-router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async (req: Request, res: Response) => {
+router.put("/:id/members/:userId", requireOrgPermission('manage_members'), validateAndSanitizeRequest({ params: orgAndUserIdParamsSchema, body: updateMemberBodySchema }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.id);
-    const userId = parseInt(req.params.user_id);
-
-    if (isNaN(orgId) || isNaN(userId)) {
-      return res.status(400).json({ message: "Invalid organization or user ID" });
-    }
+    const orgId = req.params.id;
+    const userId = req.params.userId;
+    const { org_role, permissions } = req.body;
 
     // Verify user can manage this organization
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot manage this organization's members" });
     }
-
-    const { org_role, permissions } = req.body;
 
     const updatedMember = await storage.updateOrganizationMember(orgId, userId, {
       org_role,
@@ -216,23 +215,19 @@ router.put("/:id/members/:userId", requireOrgPermission('manage_members'), async
 });
 
 // Remove member from organization
-router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), async (req: Request, res: Response) => {
+router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), validateAndSanitizeRequest({ params: orgAndUserIdParamsSchema }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.id);
-    const userId = parseInt(req.params.user_id);
-
-    if (isNaN(orgId) || isNaN(userId)) {
-      return res.status(400).json({ message: "Invalid organization or user ID" });
-    }
+    const orgId = req.params.id;
+    const userId = req.params.userId;
 
     // Verify user can manage this organization
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot manage this organization's members" });
     }
 
     // Prevent removing self
-    if (userId === req.user?.id) {
+    if (userId === req.user?.userId) {
       return res.status(400).json({ message: "Cannot remove yourself from the organization" });
     }
 
@@ -249,15 +244,12 @@ router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), as
 });
 
 // Get organization analytics
-router.get("/:id/analytics", requireOrgPermission('access_analytics'), async (req: Request, res: Response) => {
+router.get("/:id/analytics", requireOrgPermission('access_analytics'), validateAndSanitizeRequest({ params: orgIdParamSchema }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.id);
-    if (isNaN(orgId)) {
-      return res.status(400).json({ message: "Invalid organization ID" });
-    }
+    const orgId = req.params.id;
 
     // Verify user can access this organization's analytics
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this organization's analytics" });
     }
@@ -273,7 +265,7 @@ router.get("/:id/analytics", requireOrgPermission('access_analytics'), async (re
 // Add members endpoint for organization management
 router.get('/members', async (req: Request, res: Response) => {
   try {
-    const userOrgId = req.user?.organization_id || req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (!userOrgId) {
       return res.status(400).json({ message: "Organization context required" });
     }

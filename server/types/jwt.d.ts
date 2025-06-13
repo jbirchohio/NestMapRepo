@@ -1,11 +1,12 @@
 import 'express';
-
-export type UserRole = 'user' | 'admin' | 'moderator';
+import { UserRole } from '../src/auth/types';
 
 export interface JWTUser {
-  userId: string;
+  userId: number;
   email: string;
   role: UserRole;
+  organizationId?: number;
+  displayName?: string;
   jti: string;
   iat: number;
   exp: number;

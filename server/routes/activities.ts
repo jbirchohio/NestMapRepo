@@ -5,6 +5,7 @@ import { transformActivityToDatabase } from '@shared/fieldTransforms';
 import { validateJWT } from '../middleware/jwtAuth';
 import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { storage } from '../storage';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation';
 
 const router = Router();
 
@@ -12,13 +13,23 @@ const router = Router();
 router.use(validateJWT);
 router.use(injectOrganizationContext);
 
+// Zod schemas for route parameters
+const tripIdParamSchema = z.object({
+  trip_id: z.coerce.number().int().positive("Invalid Trip ID"),
+});
+
+const activityIdParamSchema = z.object({
+  id: z.coerce.number().int().positive("Invalid Activity ID"),
+});
+
+const activityOrderSchema = z.object({
+  order: z.number().int(),
+});
+
 // Get activities for a specific trip
-router.get("/trip/:trip_id", async (req: Request, res: Response) => {
+router.get("/trip/:trip_id", validateAndSanitizeRequest({ params: tripIdParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = parseInt(req.params.trip_id);
-    if (isNaN(tripId)) {
-      return res.status(400).json({ message: "Invalid trip ID" });
-    }
+    const tripId = req.params.trip_id as number;
 
     // Verify trip exists and user has access
     const trip = await storage.getTrip(tripId);
@@ -26,7 +37,7 @@ router.get("/trip/:trip_id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip's activities" });
     }
@@ -40,12 +51,13 @@ router.get("/trip/:trip_id", async (req: Request, res: Response) => {
 });
 
 // Create new activity
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", validateAndSanitizeRequest({ body: insertActivitySchema }), async (req: Request, res: Response) => {
   try {
-    const activityData = insertActivitySchema.parse({
-      ...req.body,
-      organizationId: req.user?.organization_id
-    });
+    const validatedBody = req.body as z.infer<typeof insertActivitySchema>;
+    const activityData = {
+      ...validatedBody,
+      organizationId: req.user?.organizationId === null ? undefined : req.user?.organizationId
+    };
 
     // Verify trip exists and user has access
     const trip = await storage.getTrip(activityData.tripId);
@@ -53,7 +65,7 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot add activities to this trip" });
     }
@@ -70,12 +82,9 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 // Update activity
-router.put("/:id", async (req: Request, res: Response) => {
+router.put("/:id", validateAndSanitizeRequest({ params: activityIdParamSchema, body: insertActivitySchema.partial() }), async (req: Request, res: Response) => {
   try {
-    const activityId = parseInt(req.params.id);
-    if (isNaN(activityId)) {
-      return res.status(400).json({ message: "Invalid activity ID" });
-    }
+    const activityId = req.params.id as number;
 
     // Verify activity exists
     const existingActivity = await storage.getActivity(activityId);
@@ -89,12 +98,12 @@ router.put("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this activity" });
     }
 
-    const updateData = insertActivitySchema.partial().parse(req.body);
+    const updateData = req.body as Partial<z.infer<typeof insertActivitySchema>>;
     const updatedActivity = await storage.updateActivity(activityId, updateData);
     
     if (!updatedActivity) {
@@ -112,12 +121,9 @@ router.put("/:id", async (req: Request, res: Response) => {
 });
 
 // Delete activity
-router.delete("/:id", async (req: Request, res: Response) => {
+router.delete("/:id", validateAndSanitizeRequest({ params: activityIdParamSchema }), async (req: Request, res: Response) => {
   try {
-    const activityId = parseInt(req.params.id);
-    if (isNaN(activityId)) {
-      return res.status(400).json({ message: "Invalid activity ID" });
-    }
+    const activityId = req.params.id as number;
 
     // Verify activity exists
     const existingActivity = await storage.getActivity(activityId);
@@ -131,7 +137,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot delete this activity" });
     }
@@ -149,14 +155,10 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 // Update activity order (for drag-and-drop reordering)
-router.put("/:id/order", async (req: Request, res: Response) => {
+router.put("/:id/order", validateAndSanitizeRequest({ params: activityIdParamSchema, body: activityOrderSchema }), async (req: Request, res: Response) => {
   try {
-    const activityId = parseInt(req.params.id);
-    const { order } = req.body;
-    
-    if (isNaN(activityId) || typeof order !== 'number') {
-      return res.status(400).json({ message: "Invalid activity ID or order" });
-    }
+    const activityId = req.params.id as number;
+    const { order } = req.body as { order: number };
 
     // Verify activity exists
     const existingActivity = await storage.getActivity(activityId);
@@ -170,7 +172,7 @@ router.put("/:id/order", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot reorder this activity" });
     }
@@ -189,12 +191,9 @@ router.put("/:id/order", async (req: Request, res: Response) => {
 });
 
 // Toggle activity completion status
-router.patch("/:id/complete", async (req: Request, res: Response) => {
+router.patch("/:id/complete", validateAndSanitizeRequest({ params: activityIdParamSchema }), async (req: Request, res: Response) => {
   try {
-    const activityId = parseInt(req.params.id);
-    if (isNaN(activityId)) {
-      return res.status(400).json({ message: "Invalid activity ID" });
-    }
+    const activityId = Number(req.params.id);
 
     // Verify activity exists
     const existingActivity = await storage.getActivity(activityId);
@@ -208,7 +207,7 @@ router.patch("/:id/complete", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Associated trip not found" });
     }
 
-    const userOrgId = req.user?.organization_id || req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this activity" });
     }

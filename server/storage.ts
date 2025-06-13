@@ -17,11 +17,10 @@ import {
   featureFlags,
   organizationFeatureFlags,
   backgroundJobs,
-  billingEvents,
-  transformTripToFrontend, transformActivityToFrontend
+  billingEvents
 } from "@shared/schema";
 
-import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
+import { eq, and, desc, sql, getTableColumns, gte, lte } from 'drizzle-orm';
 
 // Interface for storage operations
 export interface IStorage {
@@ -34,34 +33,34 @@ export interface IStorage {
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
 
   // Trip operations
-  getTrip(id: number): Promise<Trip | undefined>;
+  getTrip(id: number, organizationId: number): Promise<Trip | undefined>;
   getTripsByUserId(userId: number, organizationId?: number | null): Promise<Trip[]>;
   getTripsByOrganizationId(organizationId: number): Promise<Trip[]>;
   getUserTrips(userId: number, organizationId?: number | null): Promise<Trip[]>;
   getTripByShareCode(shareCode: string): Promise<Trip | undefined>;
   createTrip(trip: InsertTrip): Promise<Trip>;
-  updateTrip(id: number, trip: Partial<InsertTrip>): Promise<Trip | undefined>;
-  deleteTrip(id: number): Promise<boolean>;
+  updateTrip(id: number, organizationId: number, trip: Partial<InsertTrip>): Promise<Trip | undefined>;
+  deleteTrip(id: number, organizationId: number): Promise<boolean>;
 
   // Activity operations
-  getActivity(id: number): Promise<Activity | undefined>;
-  getActivitiesByTripId(tripId: number): Promise<Activity[]>;
-  getActivities(tripId: number): Promise<Activity[]>;
-  createActivity(activity: InsertActivity): Promise<Activity>;
-  updateActivity(id: number, activity: Partial<InsertActivity>): Promise<Activity | undefined>;
-  deleteActivity(id: number): Promise<boolean>;
+  getActivity(id: number, organizationId: number): Promise<Activity | undefined>;
+  getActivitiesByTripId(tripId: number, organizationId: number): Promise<Activity[]>;
+  getActivities(tripId: number, organizationId: number): Promise<Activity[]>; 
+  createActivity(organizationId: number, activityData: InsertActivity): Promise<Activity | undefined>;
+  updateActivity(organizationId: number, activityId: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined>;
+  deleteActivity(organizationId: number, activityId: number): Promise<boolean>;
 
   // Todo operations
-  getTodo(id: number): Promise<Todo | undefined>;
-  getTodosByTripId(tripId: number): Promise<Todo[]>;
-  createTodo(todo: InsertTodo): Promise<Todo>;
-  updateTodo(id: number, todo: Partial<InsertTodo>): Promise<Todo | undefined>;
-  deleteTodo(id: number): Promise<boolean>;
+  getTodo(id: number, organizationId: number): Promise<Todo | undefined>;
+  getTodosByTripId(tripId: number, organizationId: number): Promise<Todo[]>;
+  createTodo(organizationId: number, todoData: InsertTodo): Promise<Todo | undefined>;
+  updateTodo(organizationId: number, todoId: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined>;
+  deleteTodo(organizationId: number, todoId: number): Promise<boolean>;
 
   // Note operations
-  getNote(id: number): Promise<Note | undefined>;
-  getNotesByTripId(tripId: number): Promise<Note[]>;
-  createNote(note: InsertNote): Promise<Note>;
+  getNote(id: number, organizationId: number): Promise<Note | undefined>;
+  getNotesByTripId(tripId: number, organizationId: number): Promise<Note[]>;
+  createNote(organizationId: number, noteData: InsertNote): Promise<Note | undefined>;
   updateNote(id: number, note: Partial<InsertNote>): Promise<Note | undefined>;
   deleteNote(id: number): Promise<boolean>;
 
@@ -230,8 +229,12 @@ export class MemStorage implements IStorage {
   }
 
   // Trip operations
-  async getTrip(id: number): Promise<Trip | undefined> {
-    return this.trips.get(id);
+  async getTrip(id: number, organizationId: number): Promise<Trip | undefined> {
+    const trip = this.trips.get(id);
+    if (trip && trip.organization_id === organizationId) {
+      return trip;
+    }
+    return undefined;
   }
 
   async getTripsByUserId(userId: number): Promise<Trip[]> {
@@ -293,130 +296,239 @@ export class MemStorage implements IStorage {
     return trip;
   }
 
-  async updateTrip(id: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
-    const trip = this.trips.get(id);
-    if (!trip) return undefined;
+  async updateTrip(id: number, organizationId: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
+    const existingTrip = this.trips.get(id);
+    if (!existingTrip || existingTrip.organization_id !== organizationId) {
+      return undefined;
+    }
 
-    const updatedTrip = { ...trip, ...tripData };
+    const updatedTrip = { ...existingTrip, ...tripData, updated_at: new Date() };
     this.trips.set(id, updatedTrip);
     return updatedTrip;
   }
 
-  async deleteTrip(id: number): Promise<boolean> {
-    return this.trips.delete(id);
+  async deleteTrip(id: number, organizationId: number): Promise<boolean> {
+    const existingTrip = this.trips.get(id);
+    if (existingTrip && existingTrip.organization_id === organizationId) {
+      return this.trips.delete(id);
+    }
+    return false;
   }
 
   // Activity operations
-  async getActivity(id: number): Promise<Activity | undefined> {
-    return this.activities.get(id);
+  async getActivity(id: number, organizationId: number): Promise<Activity | undefined> {
+    const activity = this.activities.get(id);
+    if (!activity || typeof activity.trip_id !== 'number') {
+      return undefined;
+    }
+    const trip = this.trips.get(activity.trip_id);
+    if (!trip || trip.organization_id !== organizationId) {
+      return undefined;
+    }
+    return activity;
   }
 
-  async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
+  async getActivitiesByTripId(tripId: number, organizationId: number): Promise<Activity[]> {
+    const trip = this.trips.get(tripId);
+    if (!trip || trip.organization_id !== organizationId) {
+      return []; // Trip doesn't exist or doesn't belong to the organization
+    }
     return Array.from(this.activities.values())
       .filter((activity) => activity.trip_id === tripId)
-      .sort((a, b) => a.order - b.order);
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
   }
 
-  async getActivities(tripId: number): Promise<Activity[]> {
-    return this.getActivitiesByTripId(tripId);
+  async getActivities(tripId: number, organizationId: number): Promise<Activity[]> {
+    return this.getActivitiesByTripId(tripId, organizationId);
   }
 
-  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+  async createActivity(organizationId: number, activityData: InsertActivity): Promise<Activity | undefined> {
+    const trip = this.trips.get(activityData.tripId);
+    if (!trip || trip.organization_id !== organizationId) {
+      console.error(`Attempt to create activity for trip ${activityData.tripId} not in organization ${organizationId}`);
+      return undefined; // Trip doesn't exist or doesn't belong to the organization
+    }
+
     const id = this.activityIdCounter++;
-    
-    // Create activity object with proper snake_case database field names
-    const activity: Activity = { 
+    const activity: Activity = {
       id,
-      title: insertActivity.title,
-      date: insertActivity.date,
-      time: insertActivity.time,
-      order: insertActivity.order || 0,
-      completed: insertActivity.completed ?? false,
-      trip_id: insertActivity.tripId,
-      location_name: insertActivity.locationName,
-      organization_id: insertActivity.organizationId || null,
-      latitude: insertActivity.latitude || null,
-      longitude: insertActivity.longitude || null,
-      notes: insertActivity.notes || null,
-      tag: insertActivity.tag || null,
-      assigned_to: insertActivity.assignedTo || null,
-      travel_mode: insertActivity.travelMode || null
+      title: activityData.title,
+      date: activityData.date,
+      time: activityData.time,
+      order: activityData.order || 0,
+      completed: activityData.completed ?? false,
+      trip_id: activityData.tripId,
+      location_name: activityData.locationName,
+      organization_id: organizationId, // Enforce organizationId from parameter
+      latitude: activityData.latitude || null,
+      longitude: activityData.longitude || null,
+      notes: activityData.notes || null,
+      tag: activityData.tag || null,
+      assigned_to: activityData.assignedTo || null,
+      travel_mode: activityData.travelMode || null
     };
     this.activities.set(id, activity);
     return activity;
   }
 
-  async updateActivity(id: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
-    const activity = this.activities.get(id);
-    if (!activity) return undefined;
+  async updateActivity(organizationId: number, activityId: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
+    const activity = this.activities.get(activityId);
+    if (!activity || typeof activity.trip_id !== 'number') {
+      return undefined; // Activity not found or trip_id missing
+    }
 
-    const updatedActivity = { ...activity, ...activityData };
-    this.activities.set(id, updatedActivity);
+    const trip = this.trips.get(activity.trip_id);
+    if (!trip || trip.organization_id !== organizationId) {
+      console.error(`Attempt to update activity ${activityId} for trip ${activity.trip_id} not in organization ${organizationId}`);
+      return undefined; // Trip doesn't exist or doesn't belong to the organization
+    }
+
+    // Prevent changing trip_id or organization_id during an update
+    const { tripId, organizationId: _, ...restOfActivityData } = activityData;
+    if (tripId !== undefined && tripId !== activity.trip_id) {
+        console.warn(`Attempt to change tripId during activity update for activity ${activityId} was blocked.`);
+    }
+
+    const updatedActivity = { ...activity, ...restOfActivityData };
+    this.activities.set(activityId, updatedActivity);
     return updatedActivity;
   }
 
-  async deleteActivity(id: number): Promise<boolean> {
-    return this.activities.delete(id);
+  async deleteActivity(organizationId: number, activityId: number): Promise<boolean> {
+    const activity = this.activities.get(activityId);
+    if (!activity || typeof activity.trip_id !== 'number') {
+      return false; // Activity not found or trip_id missing
+    }
+
+    const trip = this.trips.get(activity.trip_id);
+    if (!trip || trip.organization_id !== organizationId) {
+      console.error(`Attempt to delete activity ${activityId} for trip ${activity.trip_id} not in organization ${organizationId}`);
+      return false; // Trip doesn't exist or doesn't belong to the organization
+    }
+
+    return this.activities.delete(activityId);
   }
 
   // Todo operations
-  async getTodo(id: number): Promise<Todo | undefined> {
-    return this.todos.get(id);
+  async getTodo(id: number, organizationId: number): Promise<Todo | undefined> {
+    const todo = this.todos.get(id);
+    if (!todo || typeof todo.trip_id !== 'number') {
+      return undefined;
+    }
+    const trip = this.trips.get(todo.trip_id);
+    if (!trip || trip.organization_id !== organizationId) {
+      return undefined;
+    }
+    return todo;
   }
 
-  async getTodosByTripId(tripId: number): Promise<Todo[]> {
+  async getTodosByTripId(tripId: number, organizationId: number): Promise<Todo[]> {
+    const trip = this.trips.get(tripId);
+    if (!trip || trip.organization_id !== organizationId) {
+      return []; // Trip doesn't exist or doesn't belong to the organization
+    }
     return Array.from(this.todos.values()).filter(
       (todo) => todo.trip_id === tripId
     );
   }
 
-  async createTodo(insertTodo: InsertTodo): Promise<Todo> {
+  async createTodo(organizationId: number, todoData: InsertTodo): Promise<Todo | undefined> {
+    const trip = this.trips.get(todoData.tripId);
+    if (!trip || trip.organization_id !== organizationId) {
+      console.error(`Attempt to create todo for trip ${todoData.tripId} not in organization ${organizationId}`);
+      return undefined; // Trip doesn't exist or doesn't belong to the organization
+    }
+
     const id = this.todoIdCounter++;
-    const todo: Todo = { 
-      ...insertTodo, 
+    const todo: Todo = {
       id,
-      organization_id: insertTodo.organizationId || null,
-      assigned_to: insertTodo.assignedTo || null,
-      completed: insertTodo.completed ?? false,
-      trip_id: insertTodo.tripId,
-      task: insertTodo.task
+      trip_id: todoData.tripId,
+      task: todoData.task,
+      completed: todoData.completed ?? false,
+      organization_id: organizationId, // Enforce organizationId from parameter
+      due_date: todoData.dueDate || null,
+      assigned_to: todoData.assignedTo || null
     };
     this.todos.set(id, todo);
     return todo;
   }
 
-  async updateTodo(id: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined> {
-    const todo = this.todos.get(id);
-    if (!todo) return undefined;
+  async updateTodo(organizationId: number, todoId: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined> {
+    const todo = this.todos.get(todoId);
+    if (!todo || typeof todo.trip_id !== 'number') {
+      return undefined; // Todo not found or trip_id missing
+    }
 
-    const updatedTodo = { ...todo, ...todoData };
-    this.todos.set(id, updatedTodo);
+    const trip = this.trips.get(todo.trip_id);
+    if (!trip || trip.organization_id !== organizationId) {
+      console.error(`Attempt to update todo ${todoId} for trip ${todo.trip_id} not in organization ${organizationId}`);
+      return undefined; // Trip doesn't exist or doesn't belong to the organization
+    }
+
+    // Prevent changing trip_id or organization_id during an update
+    const { tripId, organizationId: _, ...restOfTodoData } = todoData;
+    if (tripId !== undefined && tripId !== todo.trip_id) {
+        console.warn(`Attempt to change tripId during todo update for todo ${todoId} was blocked.`);
+    }
+
+    const updatedTodo = { ...todo, ...restOfTodoData };
+    this.todos.set(todoId, updatedTodo);
     return updatedTodo;
   }
 
-  async deleteTodo(id: number): Promise<boolean> {
-    return this.todos.delete(id);
+  async deleteTodo(organizationId: number, todoId: number): Promise<boolean> {
+    const todo = this.todos.get(todoId);
+    if (!todo || typeof todo.trip_id !== 'number') {
+      return false; // Todo not found or trip_id missing
+    }
+
+    const trip = this.trips.get(todo.trip_id);
+    if (!trip || trip.organization_id !== organizationId) {
+      console.error(`Attempt to delete todo ${todoId} for trip ${todo.trip_id} not in organization ${organizationId}`);
+      return false; // Trip doesn't exist or doesn't belong to the organization
+    }
+
+    return this.todos.delete(todoId);
   }
 
   // Note operations
-  async getNote(id: number): Promise<Note | undefined> {
-    return this.notes.get(id);
+  async getNote(id: number, organizationId: number): Promise<Note | undefined> {
+    const note = this.notes.get(id);
+    if (!note || typeof note.trip_id !== 'number') {
+      return undefined;
+    }
+    const trip = this.trips.get(note.trip_id);
+    if (!trip || trip.organization_id !== organizationId) {
+      return undefined;
+    }
+    return note;
   }
 
-  async getNotesByTripId(tripId: number): Promise<Note[]> {
+  async getNotesByTripId(tripId: number, organizationId: number): Promise<Note[]> {
+    const trip = this.trips.get(tripId);
+    if (!trip || trip.organization_id !== organizationId) {
+      return []; // Trip doesn't exist or doesn't belong to the organization
+    }
     return Array.from(this.notes.values()).filter(
       (note) => note.trip_id === tripId
     );
   }
 
-  async createNote(insertNote: InsertNote): Promise<Note> {
+  async createNote(organizationId: number, noteData: InsertNote): Promise<Note | undefined> {
+    const trip = this.trips.get(noteData.tripId);
+    if (!trip || trip.organization_id !== organizationId) {
+      console.error(`Attempt to create note for trip ${noteData.tripId} not in organization ${organizationId}`);
+      return undefined; // Trip doesn't exist or doesn't belong to the organization
+    }
+
     const id = this.noteIdCounter++;
-    const note: Note = { 
-      ...insertNote, 
+    const note: Note = {
       id,
-      organization_id: insertNote.organizationId || null,
-      trip_id: insertNote.tripId,
-      content: insertNote.content
+      trip_id: noteData.tripId,
+      content: noteData.content,
+      organization_id: organizationId, // Enforce organizationId from parameter
+      created_at: new Date(),
+      updated_at: new Date()
     };
     this.notes.set(id, note);
     return note;
@@ -549,8 +661,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Trip operations
-  async getTrip(id: number): Promise<Trip | undefined> {
-    const [trip] = await db.select().from(trips).where(eq(trips.id, id));
+  async getTrip(id: number, organizationId: number): Promise<Trip | undefined> {
+    const [trip] = await db.select().from(trips).where(
+      and(
+        eq(trips.id, id),
+        eq(trips.organization_id, organizationId)
+      )
+    );
     return trip || undefined;
   }
 
@@ -601,7 +718,7 @@ export class DatabaseStorage implements IStorage {
       organization_id: insertTrip.organization_id || null,
       is_public: insertTrip.isPublic || false,
       sharing_enabled: insertTrip.sharingEnabled || false,
-      share_permission: insertTrip.sharePermission || 'read-only',
+      share_permission: insertTrip.sharePermission || "read-only",
       collaborators: insertTrip.collaborators || [],
       city: insertTrip.city,
       country: insertTrip.country,
@@ -620,7 +737,7 @@ export class DatabaseStorage implements IStorage {
     return trip;
   }
 
-  async updateTrip(id: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
+  async updateTrip(id: number, organizationId: number, tripData: Partial<InsertTrip>): Promise<Trip | undefined> {
     // Transform camelCase frontend data to snake_case database format  
     const dbData: any = {};
     if (tripData.title !== undefined) dbData.title = tripData.title;
@@ -628,48 +745,56 @@ export class DatabaseStorage implements IStorage {
     if (tripData.end_date !== undefined) dbData.end_date = tripData.end_date;
     if (tripData.isPublic !== undefined) dbData.is_public = tripData.isPublic;
     if (tripData.budget !== undefined) dbData.budget = tripData.budget;
-    
+    // Ensure updated_at is set
+    dbData.updated_at = new Date();
+
     const [updatedTrip] = await db
       .update(trips)
       .set(dbData)
-      .where(eq(trips.id, id))
+      .where(and(eq(trips.id, id), eq(trips.organization_id, organizationId)))
       .returning();
     
     return updatedTrip || undefined;
   }
 
-  async deleteTrip(id: number): Promise<boolean> {
+  async deleteTrip(id: number, organizationId: number): Promise<boolean> {
     const result = await db
       .delete(trips)
-      .where(eq(trips.id, id))
+      .where(and(eq(trips.id, id), eq(trips.organization_id, organizationId)))
       .returning({ id: trips.id });
     return result.length > 0;
   }
 
-  // Activity operations
-  async getActivity(id: number): Promise<Activity | undefined> {
-    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
+  async getActivity(id: number, organizationId: number): Promise<Activity | undefined> {
+    const [activity] = await db
+      .select(getTableColumns(activities))
+      .from(activities)
+      .leftJoin(trips, eq(activities.trip_id, trips.id))
+      .where(and(eq(activities.id, id), eq(trips.organization_id, organizationId)));
     return activity || undefined;
   }
 
-  async getActivitiesByTripId(tripId: number): Promise<Activity[]> {
+  async getActivitiesByTripId(tripId: number, organizationId: number): Promise<Activity[]> {
     try {
-      console.log(`🔍 Fetching activities for trip ID: ${tripId}`);
-      const activityList = await db.select().from(activities).where(eq(activities.trip_id, tripId));
-      console.log(`✅ Query successful - Found ${activityList.length} activities for trip ${tripId}`);
+      console.log(`🔍 Fetching activities for trip ID: ${tripId}, Organization ID: ${organizationId}`);
+      const activityList = await db
+        .select(getTableColumns(activities))
+        .from(activities)
+        .leftJoin(trips, eq(activities.trip_id, trips.id))
+        .where(and(eq(activities.trip_id, tripId), eq(trips.organization_id, organizationId)));
+
+      console.log(`✅ Query successful - Found ${activityList.length} activities for trip ${tripId} in organization ${organizationId}`);
       
-      // Handle empty results gracefully
       if (activityList.length === 0) {
-        console.log(`📝 No activities found for trip ${tripId} - returning empty array`);
+        console.log(`📝 No activities found for trip ${tripId} in organization ${organizationId} - returning empty array`);
         return [];
       }
       
-      // Sort in memory
       const sorted = activityList.sort((a, b) => (a.order || 0) - (b.order || 0));
       console.log(`🔢 Sorted ${sorted.length} activities`);
       return sorted;
     } catch (error) {
-      console.error(`❌ Database error fetching activities for trip ${tripId}:`);
+      console.error(`❌ Database error fetching activities for trip ${tripId}, org ${organizationId}:`);
       console.error("Error details:", error);
       console.error("Error message:", error instanceof Error ? error.message : 'Unknown error');
       console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
@@ -678,52 +803,92 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getActivities(tripId: number): Promise<Activity[]> {
-    return this.getActivitiesByTripId(tripId);
+  async getActivities(tripId: number, organizationId: number): Promise<Activity[]> {
+    return this.getActivitiesByTripId(tripId, organizationId);
   }
 
-  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+  async createActivity(organizationId: number, activityData: InsertActivity): Promise<Activity | undefined> {
+    // Verify trip ownership by organizationId
+    const [trip] = await db
+      .select({ id: trips.id, orgId: trips.organization_id })
+      .from(trips)
+      .where(eq(trips.id, activityData.tripId));
+
+    if (!trip || trip.orgId !== organizationId) {
+      console.error(`Attempt to create activity for trip ${activityData.tripId} not in organization ${organizationId}`);
+      return undefined;
+    }
+
     // Transform camelCase frontend data to snake_case database format
-    const dbData = {
-      trip_id: insertActivity.tripId,
-      title: insertActivity.title,
-      date: insertActivity.date,
-      time: insertActivity.time,
-      location_name: insertActivity.locationName,
-      order: insertActivity.order || 0,
-      completed: insertActivity.completed || false,
-      organization_id: insertActivity.organizationId || null
+    const dbInsertData = {
+      trip_id: activityData.tripId,
+      title: activityData.title,
+      date: activityData.date,
+      time: activityData.time,
+      location_name: activityData.locationName,
+      order: activityData.order || 0,
+      completed: activityData.completed ?? false,
+      organization_id: organizationId, // Enforce organizationId from parameter
+      latitude: activityData.latitude || null,
+      longitude: activityData.longitude || null,
+      notes: activityData.notes || null,
+      tag: activityData.tag || null,
+      assigned_to: activityData.assignedTo || null,
+      travel_mode: activityData.travelMode || null
     };
     
     const [activity] = await db
       .insert(activities)
-      .values(dbData)
+      .values(dbInsertData)
       .returning();
     
     return activity;
   }
 
-  async updateActivity(id: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
+  async updateActivity(organizationId: number, activityId: number, activityData: Partial<InsertActivity>): Promise<Activity | undefined> {
     try {
       // Special handling for completion toggle
       if (Object.keys(activityData).length === 1 && 'completed' in activityData) {
-        console.log(`Direct DB update for activity completion: ${id}, value: ${activityData.completed}`);
+        console.log(`Direct DB update for activity completion: ${activityId}, value: ${activityData.completed}`);
 
         // Direct SQL query to update just the completion field
         const [updatedActivity] = await db
           .update(activities)
           .set({ completed: activityData.completed === true })
-          .where(eq(activities.id, id))
+          .where(eq(activities.id, activityId))
           .returning();
 
         return updatedActivity;
       }
 
       // Normal update for other cases
+      // Prevent changing trip_id or organization_id during an update
+      const { tripId, organizationId: _, ...restOfActivityData } = activityData;
+      if (tripId !== undefined) {
+        console.warn(`Attempt to change tripId during activity update for activity ${activityId} was blocked.`);
+      }
+
+      const [activityToUpdate] = await db
+        .select({ tripOrgId: trips.organization_id })
+        .from(activities)
+        .leftJoin(trips, eq(activities.trip_id, trips.id))
+        .where(eq(activities.id, activityId));
+
+      if (!activityToUpdate || activityToUpdate.tripOrgId !== organizationId) {
+        console.error(`Attempt to update activity ${activityId} not found or not in organization ${organizationId}`);
+        return undefined;
+      }
+
+      if (Object.keys(restOfActivityData).length === 0) {
+        // If, after removing tripId and organizationId, there's nothing to update, fetch and return current activity.
+        // This can happen if only tripId or organizationId was in activityData.
+        return this.getActivity(activityId, organizationId);
+      }
+
       const [updatedActivity] = await db
         .update(activities)
-        .set(activityData)
-        .where(eq(activities.id, id))
+        .set(restOfActivityData)
+        .where(eq(activities.id, activityId)) // The check above ensures this activity belongs to the org
         .returning();
 
       return updatedActivity || undefined;
@@ -733,76 +898,165 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async deleteActivity(id: number): Promise<boolean> {
+  async deleteActivity(organizationId: number, activityId: number): Promise<boolean> {
+    // First, verify the activity belongs to the organization via its trip
+    const [activityToDelete] = await db
+      .select({ tripOrgId: trips.organization_id })
+      .from(activities)
+      .leftJoin(trips, eq(activities.trip_id, trips.id))
+      .where(eq(activities.id, activityId));
+
+    if (!activityToDelete || activityToDelete.tripOrgId !== organizationId) {
+      console.error(`Attempt to delete activity ${activityId} not found or not in organization ${organizationId}`);
+      return false;
+    }
+
+    // If verification passes, proceed with deletion
     const result = await db
       .delete(activities)
-      .where(eq(activities.id, id))
-      .returning({ id: activities.id });
-    return result.length > 0;
+      .where(eq(activities.id, activityId));
+    
+    return result.rowCount > 0;
   }
 
   // Todo operations
-  async getTodo(id: number): Promise<Todo | undefined> {
-    const [todo] = await db.select().from(todos).where(eq(todos.id, id));
+  async getTodo(id: number, organizationId: number): Promise<Todo | undefined> {
+    const [todo] = await db
+      .select(getTableColumns(todos))
+      .from(todos)
+      .leftJoin(trips, eq(todos.trip_id, trips.id))
+      .where(and(eq(todos.id, id), eq(trips.organization_id, organizationId)));
     return todo || undefined;
   }
 
-  async getTodosByTripId(tripId: number): Promise<Todo[]> {
-    const todoList = await db.select().from(todos).where(eq(todos.trip_id, tripId));
+  async getTodosByTripId(tripId: number, organizationId: number): Promise<Todo[]> {
+    const todoList = await db
+      .select(getTableColumns(todos))
+      .from(todos)
+      .leftJoin(trips, eq(todos.trip_id, trips.id))
+      .where(and(eq(todos.trip_id, tripId), eq(trips.organization_id, organizationId)));
     return todoList;
   }
 
-  async createTodo(insertTodo: InsertTodo): Promise<Todo> {
+  async createTodo(organizationId: number, todoData: InsertTodo): Promise<Todo | undefined> {
+    // Verify trip ownership by organizationId
+    const [trip] = await db
+      .select({ id: trips.id, orgId: trips.organization_id })
+      .from(trips)
+      .where(eq(trips.id, todoData.tripId));
+
+    if (!trip || trip.orgId !== organizationId) {
+      console.error(`Attempt to create todo for trip ${todoData.tripId} not in organization ${organizationId}`);
+      return undefined; // Trip doesn't exist or doesn't belong to the organization
+    }
+
     // Transform camelCase frontend data to snake_case database format
-    const dbData = {
-      trip_id: insertTodo.tripId,
-      task: insertTodo.task,
-      completed: insertTodo.completed || false,
-      organization_id: insertTodo.organizationId || null
+    const dbInsertData = {
+      trip_id: todoData.tripId,
+      task: todoData.task,
+      completed: todoData.completed || false,
+      organization_id: organizationId, // Enforce organizationId from parameter
+      due_date: todoData.dueDate || null,
+      assigned_to: todoData.assignedTo || null
     };
     
     const [todo] = await db
       .insert(todos)
-      .values(dbData)
+      .values(dbInsertData)
       .returning();
     
     return todo;
   }
 
-  async updateTodo(id: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined> {
+  async updateTodo(organizationId: number, todoId: number, todoData: Partial<InsertTodo>): Promise<Todo | undefined> {
+    // Prevent changing trip_id or organization_id during an update
+    const { tripId, organizationId: _, ...restOfTodoData } = todoData;
+    if (tripId !== undefined) {
+      console.warn(`Attempt to change tripId during todo update for todo ${todoId} was blocked.`);
+    }
+
+    // Verify ownership and get current todo data for the organization
+    const [todoToUpdate] = await db
+      .select({ id: todos.id, tripOrgId: trips.organization_id })
+      .from(todos)
+      .leftJoin(trips, eq(todos.trip_id, trips.id))
+      .where(eq(todos.id, todoId));
+
+    if (!todoToUpdate || todoToUpdate.tripOrgId !== organizationId) {
+      console.error(`Attempt to update todo ${todoId} not found or not in organization ${organizationId}`);
+      return undefined;
+    }
+
+    if (Object.keys(restOfTodoData).length === 0) {
+      // If, after removing tripId and organizationId, there's nothing to update, fetch and return current todo.
+      return this.getTodo(todoId, organizationId);
+    }
+
     const [updatedTodo] = await db
       .update(todos)
-      .set(todoData)
-      .where(eq(todos.id, id))
+      .set(restOfTodoData) // Update only with allowed fields
+      .where(eq(todos.id, todoId)) // The check above ensures this todo belongs to the org
       .returning();
     return updatedTodo || undefined;
   }
 
-  async deleteTodo(id: number): Promise<boolean> {
+  async deleteTodo(organizationId: number, todoId: number): Promise<boolean> {
+    // First, verify the todo belongs to the organization via its trip
+    const [todoToDelete] = await db
+      .select({ tripOrgId: trips.organization_id })
+      .from(todos)
+      .leftJoin(trips, eq(todos.trip_id, trips.id))
+      .where(eq(todos.id, todoId));
+
+    if (!todoToDelete || todoToDelete.tripOrgId !== organizationId) {
+      console.error(`Attempt to delete todo ${todoId} not found or not in organization ${organizationId}`);
+      return false;
+    }
+
+    // If verification passes, proceed with deletion
     const result = await db
       .delete(todos)
-      .where(eq(todos.id, id))
-      .returning({ id: todos.id });
-    return result.length > 0;
+      .where(eq(todos.id, todoId));
+    
+    return result.rowCount > 0;
   }
 
   // Note operations
-  async getNote(id: number): Promise<Note | undefined> {
-    const [note] = await db.select().from(notes).where(eq(notes.id, id));
+  async getNote(id: number, organizationId: number): Promise<Note | undefined> {
+    const [note] = await db
+      .select(getTableColumns(notes))
+      .from(notes)
+      .leftJoin(trips, eq(notes.trip_id, trips.id))
+      .where(and(eq(notes.id, id), eq(trips.organization_id, organizationId)));
     return note || undefined;
   }
 
-  async getNotesByTripId(tripId: number): Promise<Note[]> {
-    const noteList = await db.select().from(notes).where(eq(notes.trip_id, tripId));
+  async getNotesByTripId(tripId: number, organizationId: number): Promise<Note[]> {
+    const noteList = await db
+      .select(getTableColumns(notes))
+      .from(notes)
+      .leftJoin(trips, eq(notes.trip_id, trips.id))
+      .where(and(eq(notes.trip_id, tripId), eq(trips.organization_id, organizationId)));
     return noteList;
   }
 
-  async createNote(insertNote: InsertNote): Promise<Note> {
+  async createNote(organizationId: number, noteData: InsertNote): Promise<Note | undefined> {
+    // Verify trip ownership by organizationId
+    const [trip] = await db
+      .select({ id: trips.id, orgId: trips.organization_id })
+      .from(trips)
+      .where(eq(trips.id, noteData.tripId));
+
+    if (!trip || trip.orgId !== organizationId) {
+      console.error(`Attempt to create note for trip ${noteData.tripId} not in organization ${organizationId}`);
+      return undefined;
+    }
+
     // Transform camelCase frontend data to snake_case database format
     const dbData = {
-      trip_id: insertNote.tripId,
-      content: insertNote.content,
-      organization_id: insertNote.organizationId || null
+      trip_id: noteData.tripId,
+      content: noteData.content,
+      organization_id: organizationId // Enforce organizationId from parameter
     };
     
     const [note] = await db
@@ -928,8 +1182,6 @@ export class DatabaseStorage implements IStorage {
     return updatedUser || undefined;
   }
 }
-
-
 
 // Extend DatabaseStorage class
 export class ExtendedDatabaseStorage extends DatabaseStorage {

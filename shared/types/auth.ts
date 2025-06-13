@@ -1,6 +1,6 @@
 import { BaseModel } from './base';
 
-export type UserRole = 'superadmin' | 'admin' | 'manager' | 'user' | 'guest';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 
 export interface JwtPayload {
   userId: string | number;
@@ -42,6 +42,7 @@ export interface User extends BaseModel {
   username: string;
   firstName: string | null;
   lastName: string | null;
+  displayName?: string;
   role: UserRole;
   organizationId: number | null;
   emailVerified: boolean;

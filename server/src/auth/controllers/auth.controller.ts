@@ -3,14 +3,10 @@ import { IAuthService } from '../interfaces/auth.service.interface';
 import { 
   AuthResponse,
   LoginDto, 
-  loginSchema, 
-  refreshTokenSchema, 
-  logoutSchema,
   UserResponse,
-  requestPasswordResetSchema,
-  resetPasswordSchema
+  RequestPasswordResetDto, 
+  ResetPasswordDto
 } from '../dtos/auth.dto';
-import { validateRequest } from '../middleware/validation.middleware';
 import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware';
 import { isErrorWithMessage } from '../../utils/error-utils';
 import { Logger } from '@nestjs/common';
@@ -38,7 +34,6 @@ export class AuthController {
   }
 
   login: RequestHandler[] = [
-    validateRequest({ body: loginSchema }),
     rateLimiterMiddleware,
     async (req: Request, res: Response<AuthResponseWithoutRefreshToken | { error: string }>, next: NextFunction): Promise<void> => {
       try {
@@ -69,7 +64,6 @@ export class AuthController {
   ];
 
   refreshToken: RequestHandler[] = [
-    validateRequest({ body: refreshTokenSchema }),
     async (req: Request, res: Response<AuthResponseWithoutRefreshToken | { error: string }>, next: NextFunction): Promise<void> => {
       try {
         // Try to get refresh token from cookie first, then from body
@@ -109,7 +103,6 @@ export class AuthController {
   ];
 
   logout: RequestHandler[] = [
-    validateRequest({ body: logoutSchema }),
     async (req: Request, res: Response<{ success: boolean } | { error: string }>, next: NextFunction): Promise<void> => {
       try {
         const refreshToken = (req.cookies?.refreshToken || req.body.refreshToken) as string | undefined;
@@ -139,11 +132,10 @@ export class AuthController {
   ];
 
   requestPasswordReset: RequestHandler[] = [
-    validateRequest({ body: requestPasswordResetSchema }),
     rateLimiterMiddleware, // Apply rate limiting
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
-        const { email } = req.body as { email: string };
+        const { email } = req.body as RequestPasswordResetDto;
         await this.authService.requestPasswordReset(email);
         res.status(200).json({ 
           success: true,
@@ -157,10 +149,9 @@ export class AuthController {
   ];
 
   resetPassword: RequestHandler[] = [
-    validateRequest({ body: resetPasswordSchema }),
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
-        const { token, newPassword } = req.body as { token: string; newPassword: string };
+        const { token, newPassword } = req.body as ResetPasswordDto;
         await this.authService.resetPassword(token, newPassword);
         res.status(200).json({ 
           success: true,

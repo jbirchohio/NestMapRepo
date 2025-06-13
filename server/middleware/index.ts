@@ -1,6 +1,6 @@
 import { Application, Request, Response, NextFunction, RequestHandler } from 'express';
 import express from 'express';
-import { sanitizeRequestBody } from '../utils/sanitize';
+
 import { configureCORS, preventSQLInjection } from './security';
 import { unifiedMonitoringMiddleware } from './unified-monitoring';
 import { createPerformanceMiddleware } from '../performance-monitor';
@@ -22,7 +22,7 @@ type Middleware = RequestHandler | RequestHandler[];
 
 export function setupMiddlewares(app: Application): void {
   // Security headers and CSP
-  app.use(sanitizeRequestBody());
+
   
   // Body parsing
   app.use(express.json({ limit: '10mb' }));

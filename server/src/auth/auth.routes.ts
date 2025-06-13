@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
+
 import { 
   login, 
   refreshToken, 
@@ -9,51 +9,42 @@ import {
   resetPassword 
 } from './auth.controller';
 import { authenticate } from './middleware';
-import { validateRequest } from '../../middleware/validate-request';
+import { validateAndSanitizeRequest } from '../../middleware/inputValidation';
+import { loginSchema, requestPasswordResetSchema, resetPasswordSchema, refreshTokenSchema, logoutSchema } from './dtos/auth.dto';
 
 const router = Router();
 
 // Public routes
 router.post(
   '/login',
-  [
-    body('email').isEmail().withMessage('Email must be valid'),
-    body('password').trim().notEmpty().withMessage('You must supply a password')
-  ],
-  validateRequest,
+  validateAndSanitizeRequest({ body: loginSchema }),
   login
 );
 
 router.post(
   '/refresh-token',
+  validateAndSanitizeRequest({ body: refreshTokenSchema }),
   refreshToken
 );
 
 router.post(
   '/request-password-reset',
-  [
-    body('email').isEmail().withMessage('Email must be valid')
-  ],
-  validateRequest,
+  validateAndSanitizeRequest({ body: requestPasswordResetSchema }),
   requestPasswordReset
 );
 
 router.post(
   '/reset-password',
-  [
-    body('token').notEmpty().withMessage('Token is required'),
-    body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
-  ],
-  validateRequest,
+  validateAndSanitizeRequest({ body: resetPasswordSchema }),
   resetPassword
 );
 
 // Protected routes
-router.post('/logout', authenticate, logout);
+router.post('/logout', authenticate, validateAndSanitizeRequest({ body: logoutSchema }), logout);
 router.post('/logout-all', authenticate, logoutAllDevices);
 
 // Health check endpoint
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { getWeatherForecast } from "./weather";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -256,40 +257,6 @@ export async function optimizeItinerary(
   } catch (error) {
     console.error('Error optimizing itinerary:', error);
     throw new Error('Itinerary optimization requires valid API credentials. Please provide necessary API keys.');
-  }
-}
-
-// Weather API integration
-async function getWeatherForecast(destination: string, dates: string[]) {
-  try {
-    if (!process.env.OPENWEATHERMAP_API_KEY) {
-      throw new Error('OpenWeatherMap API key required for weather data. Please provide OPENWEATHERMAP_API_KEY.');
-    }
-
-    const forecasts = [];
-    for (const date of dates) {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${destination}&appid=${process.env.OPENWEATHERMAP_API_KEY}&units=metric`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      forecasts.push({
-        date,
-        condition: data.list[0]?.weather[0]?.main || 'Unknown',
-        temperature: data.list[0]?.main?.temp || 0,
-        precipitation: data.list[0]?.rain?.['3h'] || 0,
-        recommendations: []
-      });
-    }
-    
-    return forecasts;
-  } catch (error) {
-    console.error('Error fetching weather forecast:', error);
-    throw new Error('Weather data requires valid API credentials. Please provide OPENWEATHERMAP_API_KEY.');
   }
 }
 

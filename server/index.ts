@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+
 import crypto from 'crypto';
 import http from 'http';
 import { ConfigService } from '@nestjs/config';
@@ -19,6 +19,9 @@ import { preventSQLInjection, enforceOrganizationSecurity } from './middleware/s
 import { performanceMonitor, memoryMonitor } from './middleware/performance';
 import { authenticate } from './src/auth/middleware';
 import { caseConverterMiddleware } from './middleware/caseConverter';
+import { cspMiddleware } from './middleware/csp';
+import { auditLogMiddleware } from './middleware/auditLog';
+import { apiRateLimit as comprehensiveApiRateLimit } from './middleware/comprehensive-rate-limiting';
 
 // Import route factories
 import { createAuthRouter } from './routes/auth';
@@ -46,6 +49,7 @@ app.use(cookieParser());
 // ======================
 // Security Middleware
 // ======================
+app.use(cspMiddleware);
 app.use(helmet());
 app.use((_req, res, next) => {
   res.removeHeader('X-Powered-By');
@@ -60,19 +64,17 @@ app.use(cors({
   optionsSuccessStatus: 200,
 }));
 
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Too many requests from this IP, please try again later',
-  skip: (req: Request) => {
-    const skipPaths = ['/health', '/api/health'];
-    return process.env.NODE_ENV === 'development' || skipPaths.some(path => req.path.startsWith(path));
-  },
+// Apply comprehensive API rate limiting globally
+// Skip for health check and dev environment
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+  const skipPaths = ['/health', '/api/health'];
+  if (process.env.NODE_ENV === 'development' || skipPaths.some(path => req.path.startsWith(path))) {
+    return next();
+  }
+  return comprehensiveApiRateLimit(req, res, next);
 });
-app.use('/api', apiLimiter);
 app.use(preventSQLInjection);
+app.use(auditLogMiddleware);
 
 // ======================
 // Body Parsers & Validation

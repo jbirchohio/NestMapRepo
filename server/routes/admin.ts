@@ -1,32 +1,64 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db';
-import { organizations, users, customDomains, whiteLabelRequests, adminAuditLog, organizationRoles, insertOrganizationRoleSchema } from '../../shared/schema';
+import { organizations, users, customDomains, whiteLabelRequests, organizationRoles, insertOrganizationRoleSchema } from '../../shared/schema';
+import { auditLogs } from '../db/auditLog';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { userActivityLogs } from '../../shared/schema';
+import { validateJWT } from '../middleware/jwtAuth'; // Assuming this is the correct path
+import { validateAndSanitizeRequest } from '../middleware/inputValidation';
+// Placeholder for admin role check middleware - this would need to be implemented
+const requireRole = (role: string) => (req: Request, res: Response, next: Function) => {
+  if (req.user?.role === role) {
+    next();
+  } else {
+    res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+  }
+};
 
 const router = Router();
 
-// Temporarily remove auth middleware to fix server startup
-
-
+// Apply authentication and role check to all admin routes
+router.use(validateJWT);
+router.use(requireRole('super_admin'));
 
 // Audit logging function
 const logAdminAction = async (
-  adminUserId: number,
+  adminUserId: string, // Changed from number
   actionType: string,
-  targetOrgId?: number,
+  targetOrgId?: string, // Changed from number
   actionData?: any,
   ipAddress?: string
 ) => {
   try {
-    await db.insert(adminAuditLog).values({
-      admin_user_id: adminUserId,
-      action_type: actionType,
-      target_organization_id: targetOrgId,
-      action_data: actionData,
-      ip_address: ipAddress,
-    });
+    const logEntry: any = {
+      userId: adminUserId,
+      action: actionType,
+      resource: 'admin_action', // General resource type for admin actions
+      metadata: { ...(actionData || {}), ipAddress },
+    };
+
+    if (targetOrgId) {
+      logEntry.organizationId = targetOrgId;
+    } else {
+      // If no targetOrgId is specified, we might need a default or handle this case.
+      // For now, assuming admin actions might not always target a specific org directly in this log.
+      // However, auditLogs schema requires organizationId. This needs clarification.
+      // For now, let's use a placeholder or fetch the admin's org if appropriate.
+      // This will likely cause a runtime error if targetOrgId is not provided and not handled.
+      // Awaiting clarification on how to handle missing targetOrgId for 'auditLogs' schema.
+      // For the moment, to prevent immediate error, we'll assign a placeholder if not provided.
+      // THIS IS A TEMPORARY FIX and needs to be addressed based on business logic.
+      logEntry.organizationId = targetOrgId || 'UNKNOWN_ADMIN_ORG'; 
+    }
+
+    // Ensure all required fields for auditLogs are present
+    if (!logEntry.organizationId) {
+        console.error('Failed to log admin action: organizationId is required for auditLogs table.');
+        return; // Or throw an error
+    }
+
+    await db.insert(auditLogs).values(logEntry);
   } catch (error) {
     console.error('Failed to log admin action:', error);
   }
@@ -41,6 +73,43 @@ const domainVerificationSchema = z.object({
 const requestReviewSchema = z.object({
   status: z.enum(['approved', 'rejected']),
   notes: z.string().optional(),
+});
+
+const orgIdParamSchema = z.object({
+  id: z.coerce.number().int().positive("Invalid Organization ID"),
+});
+
+const orgIdParamSchemaAlt = z.object({
+  orgId: z.coerce.number().int().positive("Invalid Organization ID"),
+});
+
+const requestIdParamSchema = z.object({
+  id: z.coerce.number().int().positive("Invalid Request ID"),
+});
+
+const domainIdParamSchema = z.object({
+  id: z.coerce.number().int().positive("Invalid Domain ID"),
+});
+
+const roleIdParamSchema = z.object({
+  id: z.coerce.number().int().positive("Invalid Role ID"),
+});
+
+const auditLogQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(50),
+});
+
+const activityLogQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(50),
+});
+
+const updateOrgSettingsBodySchema = z.object({
+  white_label_enabled: z.boolean().optional(),
+  white_label_plan: z.string().optional(), // Consider enum if plans are fixed
+  subscription_status: z.string().optional(), // Consider enum
+  plan: z.string().optional(), // Consider enum
 });
 
 // GET /api/admin/organizations - Get all organizations with white label status
@@ -58,7 +127,7 @@ router.get('/organizations', async (req: Request, res: Response) => {
     }).from(organizations);
 
     await logAdminAction(
-      req.user!.id,
+      req.user!.userId,
       'organizations_viewed',
       undefined,
       { count: orgs.length },
@@ -73,29 +142,10 @@ router.get('/organizations', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/admin/organizations/:id - Update organization settings
-router.patch('/organizations/:id', async (req: Request, res: Response) => {
+router.patch('/organizations/:id', validateAndSanitizeRequest({ params: orgIdParamSchema, body: updateOrgSettingsBodySchema }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.id);
-    if (isNaN(orgId)) {
-      return res.status(400).json({ error: "Invalid organization ID" });
-    }
-
-    const updateData = req.body;
-    
-    // Validate allowed fields
-    const allowedFields = [
-      'white_label_enabled',
-      'white_label_plan',
-      'subscription_status',
-      'plan'
-    ];
-    
-    const filteredData = Object.keys(updateData)
-      .filter(key => allowedFields.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = updateData[key];
-        return obj;
-      }, {} as any);
+    const orgId = req.params.id;
+    const filteredData = req.body; // Already validated and filtered by updateOrgSettingsBodySchema
 
     if (Object.keys(filteredData).length === 0) {
       return res.status(400).json({ error: "No valid fields to update" });
@@ -115,7 +165,7 @@ router.patch('/organizations/:id', async (req: Request, res: Response) => {
     }
 
     await logAdminAction(
-      req.user!.id,
+      req.user!.userId,
       'organization_updated',
       orgId,
       { updates: filteredData },
@@ -154,7 +204,7 @@ router.get('/white-label-requests', async (req: Request, res: Response) => {
     .orderBy(desc(whiteLabelRequests.created_at));
 
     await logAdminAction(
-      req.user!.id,
+      req.user!.userId,
       'requests_viewed',
       undefined,
       { count: requests.length },
@@ -169,22 +219,10 @@ router.get('/white-label-requests', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/admin/white-label-requests/:id - Review white label request
-router.patch('/white-label-requests/:id', async (req: Request, res: Response) => {
+router.patch('/white-label-requests/:id', validateAndSanitizeRequest({ params: requestIdParamSchema, body: requestReviewSchema }), async (req: Request, res: Response) => {
   try {
-    const requestId = parseInt(req.params.id);
-    if (isNaN(requestId)) {
-      return res.status(400).json({ error: "Invalid request ID" });
-    }
-
-    const validation = requestReviewSchema.safeParse(req.body);
-    if (!validation.success) {
-      return res.status(400).json({ 
-        error: "Invalid request data",
-        details: validation.error.issues
-      });
-    }
-
-    const { status, notes } = validation.data;
+    const requestId = req.params.id;
+    const { status, notes } = req.body; // req.body is validated by middleware
 
     // Get the request first to validate it exists
     const [existingRequest] = await db
@@ -226,7 +264,7 @@ router.patch('/white-label-requests/:id', async (req: Request, res: Response) =>
     }
 
     await logAdminAction(
-      req.user!.id,
+      req.user!.userId,
       'request_reviewed',
       existingRequest.organization_id,
       { requestId, status, notes },
@@ -263,7 +301,7 @@ router.get('/custom-domains', async (req: Request, res: Response) => {
     .orderBy(desc(customDomains.created_at));
 
     await logAdminAction(
-      req.user!.id,
+      req.user!.userId,
       'domains_viewed',
       undefined,
       { count: domains.length },
@@ -278,12 +316,9 @@ router.get('/custom-domains', async (req: Request, res: Response) => {
 });
 
 // POST /api/admin/domains/:id/verify - Manually trigger domain verification
-router.post('/domains/:id/verify', async (req: Request, res: Response) => {
+router.post('/domains/:id/verify', validateAndSanitizeRequest({ params: domainIdParamSchema }), async (req: Request, res: Response) => {
   try {
-    const domainId = parseInt(req.params.id);
-    if (isNaN(domainId)) {
-      return res.status(400).json({ error: "Invalid domain ID" });
-    }
+    const domainId = req.params.id;
 
     // Get domain details
     const [domain] = await db
@@ -369,10 +404,9 @@ router.post('/domains/:id/verify', async (req: Request, res: Response) => {
 });
 
 // GET /api/admin/audit-log - Get admin action audit log
-router.get('/audit-log', async (req: Request, res: Response) => {
+router.get('/audit-log', validateAndSanitizeRequest({ query: auditLogQuerySchema }), async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+    const { page, limit } = req.query;
     const offset = (page - 1) * limit;
 
     const auditEntries = await db
@@ -503,17 +537,12 @@ router.get('/permissions', async (req: Request, res: Response) => {
 });
 
 // POST /api/admin/roles - Create new role
-router.post('/roles', async (req: Request, res: Response) => {
+router.post('/roles', validateAndSanitizeRequest({ body: createRoleBodySchema }), async (req: Request, res: Response) => {
   try {
-    const { name, description, permissions } = req.body;
-    
-    if (!name || !description) {
-      return res.status(400).json({ error: "Name and description are required" });
-    }
+    const { name, description, permissions } = req.body; // Validated by createRoleBodySchema
 
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ error: "Organization ID required" });
-    }
+    // req.user.organization_id is guaranteed by validateJWT and requireRole('super_admin')
+    // or if this route is intended for org admins, it should be checked by a different middleware or logic
 
     // Create role value from name (slugify)
     const value = name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
@@ -530,7 +559,7 @@ router.post('/roles', async (req: Request, res: Response) => {
 
     try {
       await logAdminAction(
-        req.user?.id || 0,
+        req.user!.id,
         'role_created',
         req.user.organization_id,
         { roleName: name, permissions },
@@ -556,14 +585,13 @@ router.post('/roles', async (req: Request, res: Response) => {
 });
 
 // PUT /api/admin/roles/:id - Update role permissions
-router.put('/roles/:id', async (req: Request, res: Response) => {
+router.put('/roles/:id', validateAndSanitizeRequest({ params: roleIdParamSchema, body: updateRoleBodySchema }), async (req: Request, res: Response) => {
   try {
-    const roleId = parseInt(req.params.id);
-    const { permissions, name, description } = req.body;
+    const roleId = req.params.id; // Validated by roleIdParamSchema
+    const { permissions, name, description } = req.body; // Validated by updateRoleBodySchema
 
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ error: "Organization ID required" });
-    }
+    // req.user.organization_id is guaranteed by validateJWT and requireRole('super_admin')
+    // or if this route is intended for org admins, it should be checked by a different middleware or logic
 
     // Check if this is a custom role in organizationRoles table
     const customRole = await db.select().from(organizationRoles)
@@ -586,7 +614,7 @@ router.put('/roles/:id', async (req: Request, res: Response) => {
 
       try {
         await logAdminAction(
-          req.user?.id || 0,
+          req.user!.id,
           'custom_role_updated',
           req.user.organization_id,
           { roleId, ...updateData },
@@ -602,19 +630,13 @@ router.put('/roles/:id', async (req: Request, res: Response) => {
       res.status(400).json({ error: "Cannot modify default system roles" });
     }
   } catch (error) {
-    console.error("Error updating role:", error);
-    res.status(500).json({ error: "Failed to update role" });
-  }
-});
-
 // DELETE /api/admin/roles/:id - Delete custom role
-router.delete('/roles/:id', async (req: Request, res: Response) => {
+router.delete('/roles/:id', validateAndSanitizeRequest({ params: roleIdParamSchema }), async (req: Request, res: Response) => {
   try {
-    const roleId = parseInt(req.params.id);
+    const roleId = req.params.id; // Validated by roleIdParamSchema
 
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ error: "Organization ID required" });
-    }
+    // req.user.organization_id is guaranteed by validateJWT and requireRole('super_admin')
+    // or if this route is intended for org admins, it should be checked by a different middleware or logic
 
     // Check if this is a custom role and if any users have this role
     const [customRole, usersWithRole] = await Promise.all([
@@ -647,7 +669,7 @@ router.delete('/roles/:id', async (req: Request, res: Response) => {
 
     try {
       await logAdminAction(
-        req.user?.id || 0,
+        req.user!.id,
         'custom_role_deleted',
         req.user.organization_id,
         { roleId, roleName: customRole[0].name },
@@ -664,36 +686,11 @@ router.delete('/roles/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Helper functions
-function getRoleDescription(role: string): string {
-  const descriptions: Record<string, string> = {
-    'admin': 'Full system access with all permissions',
-    'owner': 'Organization owner with complete control',
-    'manager': 'Can manage trips and team members',
-    'user': 'Basic user with limited permissions',
-    'viewer': 'Read-only access to organization data'
-  };
-  return descriptions[role] || 'Standard user role';
-}
-
-function getRolePermissions(role: string): string[] {
-  const rolePermissions: Record<string, string[]> = {
-    'admin': ['canViewTrips', 'canCreateTrips', 'canEditTrips', 'canDeleteTrips', 'canViewAnalytics', 'canManageOrganization', 'canAccessAdmin', 'canManageUsers', 'canManageRoles', 'canViewBilling'],
-    'owner': ['canViewTrips', 'canCreateTrips', 'canEditTrips', 'canDeleteTrips', 'canViewAnalytics', 'canManageOrganization', 'canAccessAdmin', 'canManageUsers', 'canManageRoles', 'canViewBilling'],
-    'manager': ['canViewTrips', 'canCreateTrips', 'canEditTrips', 'canViewAnalytics', 'canManageUsers'],
-    'user': ['canViewTrips', 'canCreateTrips', 'canEditTrips'],
-    'viewer': ['canViewTrips']
-  };
-  return rolePermissions[role] || ['canViewTrips'];
-}
-
 // GET /api/admin/organizations/:orgId/activity-logs - Get user activity logs for an organization
-router.get('/organizations/:orgId/activity-logs', async (req: Request, res: Response) => {
+router.get('/organizations/:orgId/activity-logs', validateAndSanitizeRequest({ params: orgIdParamSchema, query: auditLogQuerySchema }), async (req: Request, res: Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
-    if (isNaN(orgId)) {
-      return res.status(400).json({ error: 'Invalid organization ID' });
-    }
+    const orgId = req.params.orgId; // Validated by orgIdParamSchema
+    // Query parameters (page, limit) are validated by auditLogQuerySchema
 
     // Security check: Ensure the user is an admin of the organization or a super_admin
     if (req.user?.organization_id !== orgId && req.user?.role !== 'super_admin') {

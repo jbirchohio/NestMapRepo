@@ -1,9 +1,9 @@
-import { JWTUser } from '../controllers/authController';
+import { JwtUser } from '../auth/types';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: JWTUser;
+      user?: JwtUser;
       organization?: {
         id: string;
         name: string;

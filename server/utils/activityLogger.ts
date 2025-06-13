@@ -12,9 +12,9 @@ import { userActivityLogs } from '../../shared/schema';
  * @param userAgent - The user agent string of the user's browser.
  */
 export const logUserActivity = async (
-  userId: number,
+  userId: string, // Changed to string for UUID
   action: string,
-  organizationId?: number,
+  organizationId?: string, // Changed to string for UUID
   details?: any,
   ipAddress?: string,
   userAgent?: string

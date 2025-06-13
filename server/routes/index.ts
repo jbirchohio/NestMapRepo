@@ -27,6 +27,7 @@ import securityRoutes from './security';
 import healthRoutes from './health';
 import notificationsRoutes from './notifications';
 import flightRoutes from './flights';
+import exportRoutes from './export';
 
 // Test routes (development only)
 import testRoutes from './test.routes';
@@ -63,6 +64,7 @@ router.use('/security', securityRoutes);
 router.use('/health', healthRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/flights', flightRoutes);
+router.use('/export', exportRoutes);
 
 // Import and register simplified white label routes
 import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';

@@ -12,7 +12,7 @@ import {
 } from '../src/auth/dtos/auth.dto';
 
 // Import middleware
-import { rateLimiterMiddleware } from '../src/auth/middleware/rate-limiter.middleware';
+import { authRateLimit } from '../../middleware/comprehensive-rate-limiting';
 import { validateRequest } from '../src/auth/middleware/validation.middleware';
 
 export const createAuthRouter = (configService: ConfigService): Router => {
@@ -27,6 +27,7 @@ export const createAuthRouter = (configService: ConfigService): Router => {
   // Login route
   router.post(
     '/login',
+    authRateLimit, // Apply comprehensive auth rate limiting
     validateRequest({ body: loginSchema }),
     ...authContainer.authController.login
   );
@@ -34,6 +35,7 @@ export const createAuthRouter = (configService: ConfigService): Router => {
   // Refresh token route
   router.post(
     '/refresh-token',
+    authRateLimit, // Apply comprehensive auth rate limiting
     validateRequest({ body: refreshTokenSchema }),
     ...authContainer.authController.refreshToken
   );
@@ -41,6 +43,7 @@ export const createAuthRouter = (configService: ConfigService): Router => {
   // Logout route
   router.post(
     '/logout',
+    authRateLimit, // Apply comprehensive auth rate limiting
     validateRequest({ body: logoutSchema }),
     ...authContainer.authController.logout
   );
@@ -48,13 +51,14 @@ export const createAuthRouter = (configService: ConfigService): Router => {
   // Password reset routes
   router.post(
     '/forgot-password',
-    rateLimiterMiddleware, // Apply rate limiting
+    authRateLimit, // Apply comprehensive auth rate limiting
     validateRequest({ body: requestPasswordResetSchema }),
     ...authContainer.authController.requestPasswordReset
   );
 
   router.post(
     '/reset-password',
+    authRateLimit, // Apply comprehensive auth rate limiting
     validateRequest({ body: resetPasswordSchema }),
     ...authContainer.authController.resetPassword
   );
