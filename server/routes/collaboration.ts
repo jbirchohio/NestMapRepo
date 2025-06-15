@@ -3,11 +3,13 @@ import { eq, and, desc, isNull } from 'drizzle-orm';
 import { db } from '../db';
 import { tripComments, activityLog, trips, users, insertTripCommentSchema } from '@shared/schema';
 import { z } from 'zod';
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 const router = Router();
 
 // Get comments for a trip (organization-scoped)
-router.get('/trips/:tripId/comments', async (req, res) => {
+router.get('/trips/:tripId/comments', validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(401).json({ error: "Organization membership required" });

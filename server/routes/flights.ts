@@ -1,7 +1,14 @@
 import { Router } from 'express';
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
 
 const router = Router();
+
+// Apply middleware to all routes
+router.use(validateJWT);
+router.use(injectOrganizationContext);
+router.use(validateOrganizationAccess);
 
 // Flight search schema validation
 const flightSearchSchema = z.object({

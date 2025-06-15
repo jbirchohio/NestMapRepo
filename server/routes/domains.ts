@@ -3,6 +3,8 @@ import { db } from "../db";
 import { customDomains, organizations, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -15,6 +17,10 @@ interface AuthenticatedRequest extends Request {
 }
 
 export function registerDomainRoutes(app: Express) {
+  // Apply middleware to all domain routes
+  app.use('/api/domains', validateJWT);
+  app.use('/api/domains', injectOrganizationContext);
+  app.use('/api/domains', validateOrganizationAccess);
   
   // Get organization's custom domains
   app.get("/api/domains", async (req: AuthenticatedRequest, res: Response) => {

@@ -12,6 +12,29 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Users, UserPlus, MapPin, Plane, DollarSign, X } from 'lucide-react';
 
+interface ArrivalPreferences {
+  preferredAirport?: string;
+  arrivalTime?: 'morning' | 'afternoon' | 'evening' | 'night';
+  transportationType?: 'flight' | 'train' | 'bus' | 'car' | 'other';
+  assistanceNeeded?: boolean;
+  luggageCount?: number;
+  specialRequirements?: string;
+  flexibleDates?: boolean;
+  maxConnections?: number;
+  preferredAirlines?: string[];
+}
+
+interface AccommodationPreferences {
+  roomType?: 'single' | 'double' | 'suite' | 'shared';
+  amenities?: string[];
+  location?: 'city-center' | 'near-attractions' | 'quiet' | 'beach' | 'countryside';
+  accessibility?: boolean;
+  maxPrice?: number;
+  preferredChains?: string[];
+  specialRequests?: string;
+  breakfastIncluded?: boolean;
+}
+
 interface TripTraveler {
   id: number;
   tripId?: number;
@@ -37,10 +60,10 @@ interface TripTraveler {
   departure_latitude?: string;
   departureLongitude?: string;
   departure_longitude?: string;
-  arrivalPreferences: Record<string, any>;
-  arrival_preferences?: Record<string, any>;
-  accommodationPreferences: Record<string, any>;
-  accommodation_preferences?: Record<string, any>;
+  arrivalPreferences: ArrivalPreferences;
+  arrival_preferences?: ArrivalPreferences;
+  accommodationPreferences: AccommodationPreferences;
+  accommodation_preferences?: AccommodationPreferences;
   dietaryRequirements?: string;
   dietary_requirements?: string;
   budgetAllocation?: number;

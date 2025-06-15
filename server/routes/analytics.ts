@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { validateJWT } from '../middleware/jwtAuth';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
+import { injectOrganizationContext, requireAnalyticsAccess } from '../middleware/organizationContext';
 import { enforceAnalyticsAccess } from '../middleware/subscription-limits';
 import { getSimpleAnalytics } from '../analytics-simple';
 

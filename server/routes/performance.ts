@@ -5,8 +5,14 @@
 
 import type { Express } from "express";
 import { performanceMonitor } from "../performance-monitor";
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 export function registerPerformanceRoutes(app: Express): void {
+  // Apply middleware to all admin performance routes
+  app.use('/api/admin/performance', validateJWT);
+  app.use('/api/admin/performance', injectOrganizationContext);
+  app.use('/api/admin/performance', validateOrganizationAccess);
   // Get comprehensive performance report
   app.get("/api/admin/performance", async (req, res) => {
     if (!req.user || req.user?.role !== 'admin') {

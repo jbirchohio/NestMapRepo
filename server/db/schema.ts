@@ -9,6 +9,35 @@ const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'me
 const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
 
 // Tables
+export const tripTravelers = pgTable('trip_travelers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const corporateCards = pgTable('corporate_cards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  lastFourDigits: text('last_four_digits').notNull(),
+  expiryMonth: integer('expiry_month').notNull(),
+  expiryYear: integer('expiry_year').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const cardholders = pgTable('cardholders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  cardId: uuid('card_id').references(() => corporateCards.id, { onDelete: 'cascade' }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Tables
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
@@ -74,11 +103,45 @@ export const organizations = pgTable('organizations', {
       primaryColor?: string;
     };
   }>(),
+  // Stripe fields
+  stripeCustomerId: text('stripe_customer_id').unique(),
+  stripeSubscriptionId: text('stripe_subscription_id').unique(),
+  stripePriceId: text('stripe_price_id'),
+  stripeCurrentPeriodEnd: timestamp('stripe_current_period_end'),
+  stripeCancelAtPeriodEnd: boolean('stripe_cancel_at_period_end').default(false),
+  // Stripe Connect fields
+  stripeConnectAccountId: text('stripe_connect_account_id').unique(),
+  stripeExternalAccountId: text('stripe_external_account_id'),
+  stripePayoutId: text('stripe_payout_id'),
+  stripePayoutStatus: text('stripe_payout_status').$type<'pending' | 'paid' | 'failed' | null>(),
+  stripePayoutFailureReason: text('stripe_payout_failure_reason'),
+  // Billing details
+  billingEmail: text('billing_email'),
+  billingAddress: jsonb('billing_address').$type<{
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postal_code?: string;
+    country?: string;
+  }>(),
+  // Subscription status
+  subscriptionStatus: text('subscription_status').$type<
+    'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | 'incomplete_expired' | null
+  >(),
+  // Metadata
+  metadata: jsonb('metadata').$type<Record<string, any>>(),
+  
   timezone: text('timezone').notNull().default('UTC'),
   locale: text('locale').notNull().default('en-US'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+}, (table) => ({
+  // Indexes for Stripe fields
+  stripeCustomerIdIdx: index('organizations_stripe_customer_id_idx').on(table.stripeCustomerId),
+  stripeSubscriptionIdIdx: index('organizations_stripe_subscription_id_idx').on(table.stripeSubscriptionId),
+  subscriptionStatusIdx: index('organizations_subscription_status_idx').on(table.subscriptionStatus),
+}));
 
 // Refresh tokens
 export const refreshTokens = pgTable('refresh_tokens', {
@@ -475,7 +538,6 @@ export const insertTripTravelerSchema = createInsertSchema(tripTravelers);
 export const selectTripTravelerSchema = createSelectSchema(tripTravelers);
 
 export const insertCorporateCardSchema = createInsertSchema(corporateCards, {
-  spendingLimit: z.number().int().positive().optional().nullable(),
 });
 export const selectCorporateCardSchema = createSelectSchema(corporateCards);
 

@@ -1,5 +1,15 @@
 import ActivityModal from "./activities/ActivityModal";
 
+// Define Trip interface to replace 'any' types
+interface GuestTrip {
+  id: number | string;
+  title?: string;
+  startDate?: string;
+  endDate?: string;
+  location?: string;
+  city?: string;
+}
+
 export default ActivityModal;
   const { toast } = useToast();
   const { geocodeLocation } = useMapbox();

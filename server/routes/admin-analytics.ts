@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { db } from "../db";
 import { users, organizations, trips, activities } from "@shared/schema";
 import { eq, count, sql, and, gte, desc } from "drizzle-orm";
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 interface AdminAnalytics {
   overview: {
@@ -38,6 +40,15 @@ interface AdminAnalytics {
 }
 
 export function registerAdminAnalyticsRoutes(app: Express) {
+  // Apply middleware to all admin analytics routes
+  app.use('/api/admin/analytics', validateJWT);
+  app.use('/api/admin/analytics', injectOrganizationContext);
+  app.use('/api/admin/analytics', validateOrganizationAccess);
+  
+  // Apply middleware to organization performance routes
+  app.use('/api/admin/organizations/performance', validateJWT);
+  app.use('/api/admin/organizations/performance', injectOrganizationContext);
+  app.use('/api/admin/organizations/performance', validateOrganizationAccess);
   // Admin analytics endpoint
   app.get("/api/admin/analytics", async (req, res) => {
     try {

@@ -21,10 +21,33 @@ import {
   Phone
 } from 'lucide-react';
 
+interface TravelActivity {
+  id: number;
+  title: string;
+  description: string;
+  locationName: string;
+  address?: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  category: string;
+  duration: number;
+  startTime?: string;
+  endTime?: string;
+  day?: number;
+  price?: number;
+  rating?: number;
+  imageUrl?: string;
+  tags?: string[];
+  status?: 'planned' | 'in-progress' | 'completed' | 'cancelled';
+  notes?: string;
+}
+
 interface TravelModeProps {
   tripId: number;
-  activities: any[];
-  currentActivity?: any;
+  activities: TravelActivity[];
+  currentActivity?: TravelActivity;
 }
 
 export default function TravelMode({ tripId, activities, currentActivity }: TravelModeProps) {

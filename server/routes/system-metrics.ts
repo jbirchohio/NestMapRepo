@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { requireSuperadminRole } from "../middleware/auth";
+import { validateJWT } from "../middleware/jwtAuth";
+import { injectOrganizationContext, validateOrganizationAccess } from "../middleware/organizationContext";
 import { checkSystemHealthAndGenerateAlerts } from "./alerts";
 import os from "os";
 import process from "process";
@@ -166,6 +168,11 @@ function generateAlerts(metrics: Partial<SystemMetrics>): { critical: number; wa
 }
 
 export function registerSystemMetricsRoutes(app: Express): void {
+  // Apply middleware to all system metrics routes
+  app.use('/api/system', validateJWT);
+  app.use('/api/system', injectOrganizationContext);
+  app.use('/api/system', validateOrganizationAccess);
+  
   // Get comprehensive system metrics
   app.get("/api/system/metrics", requireSuperadminRole, async (req, res) => {
     try {

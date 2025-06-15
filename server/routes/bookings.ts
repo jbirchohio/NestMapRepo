@@ -3,12 +3,17 @@ import { db } from "../db";
 import { trips, bookings, activities } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { duffelProvider } from "../duffelProvider";
 
 export function registerBookingRoutes(app: Express) {
+  // Apply middleware to all booking routes
+  app.use('/api/trips', validateJWT);
+  app.use('/api/trips', injectOrganizationContext);
+  app.use('/api/trips', validateOrganizationAccess);
   
   // Get all bookings for a trip
-  app.get("/api/trips/:tripId/bookings", validateJWT, async (req, res) => {
+  app.get("/api/trips/:tripId/bookings", async (req, res) => {
     try {
       const tripId = parseInt(req.params.tripId);
       const organizationId = req.user!.organizationId;
@@ -44,7 +49,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Create new booking for a trip
-  app.post("/api/trips/:tripId/bookings", validateJWT, async (req, res) => {
+  app.post("/api/trips/:tripId/bookings", async (req, res) => {
     try {
       const tripId = parseInt(req.params.tripId);
       const organizationId = req.user!.organizationId;
@@ -139,7 +144,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Get booking by ID
-  app.get("/api/bookings/:bookingId", validateJWT, async (req, res) => {
+  app.get("/api/bookings/:bookingId", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.bookingId);
       const organizationId = req.user!.organizationId;
@@ -164,7 +169,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Update booking
-  app.patch("/api/bookings/:bookingId", validateJWT, async (req, res) => {
+  app.patch("/api/bookings/:bookingId", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.bookingId);
       const organizationId = req.user!.organizationId;
@@ -200,7 +205,7 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Cancel booking
-  app.delete("/api/bookings/:bookingId", validateJWT, async (req, res) => {
+  app.delete("/api/bookings/:bookingId", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
     try {
       const bookingId = parseInt(req.params.bookingId);
       const organizationId = req.user!.organizationId;

@@ -3,6 +3,8 @@ import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { desc } from 'drizzle-orm';
 import { db } from '../db';
 import { expenses, trips, users } from '@shared/schema';
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
 import { approvalEngine } from '../approvalEngine';
 
@@ -32,6 +34,11 @@ const insertExpenseSchema = z.object({
 });
 
 const router = Router();
+
+// Apply middleware to all routes
+router.use(validateJWT);
+router.use(injectOrganizationContext);
+router.use(validateOrganizationAccess);
 
 // Get expenses for organization
 router.get('/', async (req, res) => {

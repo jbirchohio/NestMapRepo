@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { logger } from './utils/logger';
 import config from './config';
 import { errorHandler } from './middleware/errorHandler';
+import { standardizedErrorAdapter } from './middleware/standardized-error-adapter';
 import { extendRequest } from './utils/request';
 import { extendResponse } from './utils/response';
 import { preventSQLInjection, enforceOrganizationSecurity } from './middleware/security';
@@ -121,6 +122,9 @@ app.use('/api', customDomainRoutes);
 // ======================
 // Error Handling & Final Handlers
 // ======================
+// Use the standardized error adapter first (for new error handling)
+// and fall back to legacy error handler for backward compatibility
+app.use(standardizedErrorAdapter());
 app.use(errorHandler);
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() });

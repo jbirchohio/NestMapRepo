@@ -8,9 +8,22 @@ import { useToast } from "@/hooks/use-toast";
 import { ClientTrip } from "@/lib/types";
 import { UtensilsCrossed, Coffee, MapPin, DollarSign } from "lucide-react";
 
+// Define a proper Activity interface to replace 'any'
+interface FoodActivity {
+  title: string;
+  date: Date;
+  time: string;
+  locationName: string;
+  notes?: string;
+  tag?: string;
+  latitude?: string;
+  longitude?: string;
+  travelMode?: string;
+}
+
 interface FoodSuggestionsPanelProps {
   trip: ClientTrip;
-  onAddActivity: (activity: any) => Promise<void>;
+  onAddActivity: (activity: FoodActivity) => Promise<void>;
 }
 
 interface FoodSuggestion {

@@ -67,8 +67,9 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error: any) {
-      setErrorMessage(error.message || "Failed to sign up. Please try again.");
+    } catch (error: Error | unknown) {
+      const err = error as Error;
+      setErrorMessage(err.message || "Failed to sign up. Please try again.");
     } finally {
       setIsLoading(false);
     }

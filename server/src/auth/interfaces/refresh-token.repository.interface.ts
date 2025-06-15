@@ -1,11 +1,12 @@
 import { RefreshToken } from '../../../db/schema';
+import { BaseRepository } from '../../common/repositories/base.repository.interface';
 
 /**
  * Interface defining the contract for refresh token repository operations.
- * All methods should be implemented to handle refresh token CRUD operations
- * with proper error handling and logging.
+ * Extends the base repository interface to include common CRUD operations
+ * and adds refresh token specific operations.
  */
-export interface RefreshTokenRepository {
+export interface RefreshTokenRepository extends BaseRepository<RefreshToken, string, Omit<RefreshToken, 'id' | 'createdAt'>, Partial<Omit<RefreshToken, 'id' | 'createdAt'>>> {
   /**
    * Creates a new refresh token
    * @param token The refresh token data to create (excluding id and createdAt)

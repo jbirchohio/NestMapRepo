@@ -2,6 +2,8 @@ import type { Express, Request, Response } from "express";
 import { db } from "../db";
 import { organizations, users, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 // Use the existing authentication interface
 interface AuthenticatedRequest extends Request {
@@ -17,6 +19,15 @@ interface AuthenticatedRequest extends Request {
 }
 
 export function registerSimplifiedWhiteLabelRoutes(app: Express) {
+  // Apply middleware to all white label routes
+  app.use('/api/white-label', validateJWT);
+  app.use('/api/white-label', injectOrganizationContext);
+  app.use('/api/white-label', validateOrganizationAccess);
+  
+  // Apply middleware to organization plan routes
+  app.use('/api/organization/plan', validateJWT);
+  app.use('/api/organization/plan', injectOrganizationContext);
+  app.use('/api/organization/plan', validateOrganizationAccess);
   
   // Auto-enable white label on plan upgrade
   app.post("/api/white-label/auto-enable", async (req: any, res: Response) => {

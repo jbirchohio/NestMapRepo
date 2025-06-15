@@ -29,9 +29,21 @@ type LoginFormValues = {
   password: string;
 };
 
+// User interface to replace 'any' type
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+  organizationId?: string;
+  preferences?: Record<string, unknown>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // Type for the signIn function return value
 interface SignInResult {
-  user: any; // Replace 'any' with your User type
+  user: User;
   error: Error | null;
 }
 
@@ -113,9 +125,10 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
       if (!isSuperAdmin && onSuccess) {
         onSuccess();
       }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setErrorMessage(error?.message || 'Failed to sign in. Please try again.');
+    } catch (error: Error | unknown) {
+      const err = error as Error;
+      console.error('Login error:', err);
+      setErrorMessage(err?.message || 'Failed to sign in. Please try again.');
     } finally {
       setIsLoading(false);
     }

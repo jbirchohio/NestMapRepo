@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { db } from "../db";
 import { eq, count } from "drizzle-orm";
 import { adminSettings, adminAuditLog } from "@shared/schema";
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 interface SystemSettings {
   general: {
@@ -68,6 +70,15 @@ const defaultSettings: SystemSettings = {
 };
 
 export function registerAdminSettingsRoutes(app: Express) {
+  // Apply middleware to all admin settings routes
+  app.use('/api/admin/settings', validateJWT);
+  app.use('/api/admin/settings', injectOrganizationContext);
+  app.use('/api/admin/settings', validateOrganizationAccess);
+  
+  // Apply middleware to admin logs routes
+  app.use('/api/admin/logs', validateJWT);
+  app.use('/api/admin/logs', injectOrganizationContext);
+  app.use('/api/admin/logs', validateOrganizationAccess);
   // Get system settings
   app.get("/api/admin/settings", async (req, res) => {
     try {

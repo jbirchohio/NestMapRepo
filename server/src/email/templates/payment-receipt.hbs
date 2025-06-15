@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Receipt - {{invoiceNumber}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eeeeee;
+            padding-bottom: 20px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        .receipt-details {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2ecc71;
+            margin: 10px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eeeeee;
+        }
+        .item-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {{#if companyLogo}}
+            <img src="{{companyLogo}}" alt="{{companyName}}" class="logo">
+        {{else}}
+            <h1>{{companyName}}</h1>
+        {{/if}}
+        <h2>Payment Receipt</h2>
+        <p>Receipt #{{invoiceNumber}}</p>
+    </div>
+
+    <div class="receipt-details">
+        <p>Hello {{customerName}},</p>
+        <p>Thank you for your payment. We've received your payment of:</p>
+        
+        <div class="amount">{{amountPaid}} {{currency}}</div>
+        
+        <div class="item-row">
+            <span class="item-label">Date Paid:</span>
+            <span>{{paymentDate}}</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">Payment Method:</span>
+            <span>{{paymentMethod}}</span>
+        </div>
+        <div class="item-row">
+            <span class="item-label">Transaction ID:</span>
+            <span>{{transactionId}}</span>
+        </div>
+        
+        {{#if invoiceLink}}
+            <p>You can view and download your invoice using the link below:</p>
+            <a href="{{invoiceLink}}" class="button">View Invoice</a>
+        {{/if}}
+    </div>
+
+    {{#if notes}}
+    <div class="notes">
+        <h3>Notes</h3>
+        <p>{{notes}}</p>
+    </div>
+    {{/if}}
+
+    <div class="footer">
+        <p>If you have any questions about this receipt, please contact our support team.</p>
+        <p>© {{currentYear}} {{companyName}}. All rights reserved.</p>
+    </div>
+</body>
+</html>

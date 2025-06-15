@@ -1,6 +1,76 @@
 import puppeteer from 'puppeteer';
 import Handlebars from 'handlebars';
-import { Trip, Activity, Todo, Note } from '@shared/schema';
+import { Buffer } from 'buffer';
+
+// Define local types since we can't import from @shared/schema
+type Activity = {
+  id: string;
+  title: string;
+  description?: string;
+  date: string | Date;
+  time?: string;
+  duration?: number;
+  location?: string;
+  cost?: number;
+  notes?: string;
+  status?: string;
+  tag?: string;
+};
+
+type Todo = {
+  id: string;
+  title: string;
+  completed: boolean;
+  dueDate?: string | Date;
+  priority?: 'low' | 'medium' | 'high';
+};
+
+type Note = {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+};
+
+type Trip = {
+  id: string;
+  title: string;
+  description?: string;
+  startDate: string | Date;
+  endDate: string | Date;
+  destination: string;
+  country?: string;
+  budget?: number;
+  status?: 'draft' | 'planned' | 'in-progress' | 'completed' | 'cancelled';
+  tags?: string[];
+};
+
+// Import invoice schema
+type Invoice = {
+  id: string;
+  proposalId: string | null;
+  organizationId: string;
+  createdById: string | null;
+  clientName: string;
+  clientEmail: string;
+  clientAddress?: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'refunded' | null;
+  amount: number;
+  currency: string;
+  taxAmount?: number;
+  discountAmount?: number;
+  dueDate?: string | Date;
+  notes?: string;
+  items?: Array<{
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    amount: number;
+  }>;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+};
 
 // Professional proposal template with branding and cost estimates
 const proposalTemplate = `
@@ -834,8 +904,8 @@ function groupActivitiesByDay(activities: Activity[]) {
     }, {} as Record<string, { date: Date; dayName: string; activities: Activity[] }>);
     
     // Sort activities within each day by time
-    Object.values(grouped).forEach(day => {
-        day.activities.sort((a, b) => {
+    Object.values(grouped).forEach((day: { date: Date; dayName: string; activities: Activity[] }) => {
+        day.activities.sort((a: Activity, b: Activity) => {
             const timeA = a.time || '00:00';
             const timeB = b.time || '00:00';
             return timeA.localeCompare(timeB);
@@ -858,6 +928,12 @@ export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
     // Group activities by day
     const activitiesByDay = groupActivitiesByDay(data.activities);
     
+    // Calculate trip duration
+    const startDate = new Date(data.trip.startDate);
+    const endDate = new Date(data.trip.endDate);
+    const tripDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Generate HTML with template data
     const html = template({
         ...data,
         activitiesByDay,
@@ -865,7 +941,8 @@ export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
             year: 'numeric', 
             month: 'long', 
             day: 'numeric' 
-        })
+        }),
+        tripDuration
     });
     
     const browser = await puppeteer.launch({
@@ -875,11 +952,15 @@ export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
     
     try {
         const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
+        await page.setContent(html, { 
+            waitUntil: 'networkidle0',
+            timeout: 30000
+        });
         
         const pdf = await page.pdf({
             format: 'A4',
             printBackground: true,
+            preferCSSPageSize: true,
             margin: {
                 top: '20mm',
                 right: '15mm',
@@ -889,76 +970,312 @@ export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
         });
         
         return Buffer.from(pdf);
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        throw error;
     } finally {
         await browser.close();
     }
 }
 
-// AI-powered cost estimation based on trip data
-export async function generateCostEstimate(trip: Trip, activities: Activity[]): Promise<{
-    estimatedCost: number;
-    costBreakdown: ProposalData['costBreakdown'];
-}> {
-    const { generateThemedItinerary } = await import('./openai');
-    
-    try {
-        // Calculate trip duration
-        const startDate = new Date(trip.startDate);
-        const endDate = new Date(trip.endDate);
-        const tripDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // Base estimates per day based on destination and trip type
-        const baseRates = {
-            domestic: { daily: 200, flights: 400, hotels: 120 },
-            international: { daily: 350, flights: 800, hotels: 180 },
-            luxury: { daily: 500, flights: 1200, hotels: 300 },
-            budget: { daily: 100, flights: 250, hotels: 60 }
-        };
-        
-        // Determine trip category
-        const isInternational = trip.country && trip.country.toLowerCase() !== 'usa' && trip.country.toLowerCase() !== 'united states';
-        const isLuxury = tripActivities.some(a => a.tag === 'luxury' || a.notes?.toLowerCase().includes('luxury'));
-        const isBudget = tripActivities.some(a => a.tag === 'budget' || a.notes?.toLowerCase().includes('budget'));
-        
-        let rates = baseRates.domestic;
-        if (isLuxury) rates = baseRates.luxury;
-        else if (isBudget) rates = baseRates.budget;
-        else if (isInternational) rates = baseRates.international;
-        
-        // Calculate detailed breakdown
-        const flights = rates.flights;
-        const hotels = rates.hotels * tripDuration;
-        const activities = activities.length * 75; // Average activity cost
-        const meals = tripDuration * 60; // 3 meals per day estimate
-        const transportation = tripDuration * 40; // Local transport
-        const miscellaneous = Math.round((flights + hotels + activities + meals + transportation) * 0.1); // 10% buffer
-        
-        const estimatedCost = flights + hotels + activities + meals + transportation + miscellaneous;
-        
-        return {
-            estimatedCost,
-            costBreakdown: {
-                flights,
-                hotels,
-                activities,
-                meals,
-                transportation,
-                miscellaneous
-            }
-        };
-    } catch (error) {
-        console.error('Error generating cost estimate:', error);
-        // Fallback estimates
-        return {
-            estimatedCost: 1500,
-            costBreakdown: {
-                flights: 600,
-                hotels: 480,
-                activities: 300,
-                meals: 180,
-                transportation: 120,
-                miscellaneous: 120
-            }
-        };
-    }
+// Add the missing InvoicePdfData interface
+interface InvoicePdfData {
+  invoice: Invoice;
+  companyInfo?: {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+    logoUrl?: string;
+  };
+  includeWatermark?: boolean;
 }
+
+// Add the invoice PDF generation function
+export async function generateInvoicePdf(data: InvoicePdfData): Promise<Buffer> {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-gpu',
+    ],
+  });
+
+  try {
+    const page = await browser.newPage();
+    
+    // Compile the invoice template
+    const template = Handlebars.compile(invoiceTemplate);
+    const html = template({
+      ...data,
+      includeWatermark: data.includeWatermark !== false,
+    });
+
+    await page.setContent(html, {
+      waitUntil: 'networkidle0',
+      timeout: 30000,
+    });
+
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      preferCSSPageSize: true,
+      margin: {
+        top: '20mm',
+        right: '15mm',
+        bottom: '20mm',
+        left: '15mm',
+      },
+    });
+    return Buffer.from(pdf);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw error;
+  } finally {
+    await browser.close();
+  }
+}
+
+// Add the invoice template
+const invoiceTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice #{{invoice.id}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #007bff;
+        }
+        
+        .company-info {
+            text-align: right;
+        }
+        
+        .company-logo {
+            max-height: 60px;
+            margin-bottom: 10px;
+        }
+        
+        .invoice-title {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .invoice-info {
+            margin: 20px 0;
+        }
+        
+        .client-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .total-row {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            font-size: 0.9em;
+            color: #6c757d;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    {{#if includeWatermark}}
+    <div class="watermark">SAMPLE</div>
+    {{/if}}
+    
+    <div class="header">
+        <div>
+            <h1 class="invoice-title">INVOICE</h1>
+            <div class="invoice-info">
+                <div><strong>Invoice #:</strong> {{invoice.id}}</div>
+                <div><strong>Date:</strong> {{formatDate invoice.createdAt}}</div>
+                {{#if invoice.dueDate}}
+                <div><strong>Due Date:</strong> {{formatDate invoice.dueDate}}</div>
+                {{/if}}
+                {{#if invoice.status}}
+                <div><strong>Status:</strong> <span style="text-transform: capitalize;">{{invoice.status}}</span></div>
+                {{/if}}
+            </div>
+        </div>
+        {{#if companyInfo}}
+        <div class="company-info">
+            {{#if companyInfo.logoUrl}}
+            <img src="{{companyInfo.logoUrl}}" alt="{{companyInfo.name}}" class="company-logo">
+            {{/if}}
+            <div><strong>{{companyInfo.name}}</strong></div>
+            <div>{{companyInfo.address}}</div>
+            <div>Phone: {{companyInfo.phone}}</div>
+            <div>Email: {{companyInfo.email}}</div>
+        </div>
+        {{/if}}
+    </div>
+
+    <div class="client-info">
+        <h3>Bill To:</h3>
+        <div><strong>{{invoice.clientName}}</strong></div>
+        <div>{{invoice.clientEmail}}</div>
+        {{#if invoice.clientAddress}}
+        <div>{{invoice.clientAddress}}</div>
+        {{/if}}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each invoice.items}}
+            <tr>
+                <td>{{this.description}}</td>
+                <td>{{this.quantity}}</td>
+                <td>{{formatCurrency this.unitPrice ../invoice.currency}}</td>
+                <td>{{formatCurrency this.amount ../invoice.currency}}</td>
+            </tr>
+            {{/each}}
+            <tr class="total-row">
+                <td colspan="3" class="text-right"><strong>Subtotal</strong></td>
+                <td>{{formatCurrency invoice.amount invoice.currency}}</td>
+            </tr>
+            {{#if invoice.taxAmount}}
+            <tr>
+                <td colspan="3" class="text-right"><strong>Tax</strong></td>
+                <td>{{formatCurrency invoice.taxAmount invoice.currency}}</td>
+            </tr>
+            {{/if}}
+            {{#if invoice.discountAmount}}
+            <tr>
+                <td colspan="3" class="text-right"><strong>Discount</strong></td>
+                <td>-{{formatCurrency invoice.discountAmount invoice.currency}}</td>
+            </tr>
+            {{/if}}
+            <tr class="total-row">
+                <td colspan="3" class="text-right"><strong>Total</strong></td>
+                <td><strong>{{formatCurrency (add invoice.amount (or invoice.taxAmount 0) (or (negate invoice.discountAmount) 0)) invoice.currency}}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    {{#if invoice.notes}}
+    <div class="notes" style="margin-top: 30px;">
+        <h3>Notes</h3>
+        <p>{{invoice.notes}}</p>
+    </div>
+    {{/if}}
+
+    <div class="footer">
+        <p>Thank you for your business!</p>
+        <p>{{#if companyInfo}}{{companyInfo.name}}{{else}}NestMap{{/if}}</p>
+    </div>
+</body>
+</html>
+`;
+
+// Helper functions for Handlebars templates
+Handlebars.registerHelper('add', function(this: any, ...args: any[]) {
+  // The last argument is the Handlebars options object
+  const numbers = args.slice(0, -1) as number[];
+  return numbers.reduce((sum, num) => sum + (Number(num) || 0), 0);
+});
+
+Handlebars.registerHelper('negate', function(this: any, value: any) {
+  const num = Number(value);
+  return isNaN(num) ? 0 : -num;
+});
+
+Handlebars.registerHelper('or', function(this: any, a: any, b: any) {
+  return a || b;
+});
+
+// Register the formatDate helper
+Handlebars.registerHelper('formatDate', function(this: any, date: string | Date | undefined) {
+  if (!date) return '';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+});
+
+// Register the formatCurrency helper
+Handlebars.registerHelper('formatCurrency', function(this: any, amount: any, currency = 'USD') {
+  const numAmount = Number(amount) || 0;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numAmount / 100); // Convert from cents to dollars
+});

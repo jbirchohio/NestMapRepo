@@ -1,6 +1,11 @@
 import { User } from '../../../db/schema';
+import { BaseRepository } from '../../common/repositories/base.repository.interface';
 
-export interface UserRepository {
+/**
+ * User repository interface that extends the base repository interface
+ * Adds user-specific operations to the common CRUD operations
+ */
+export interface UserRepository extends BaseRepository<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'emailVerified' | 'isActive' | 'failedLoginAttempts' | 'lockedUntil'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> {
   // User retrieval
   findByEmail(email: string): Promise<User | undefined>;
   findById(id: string): Promise<User | undefined>;

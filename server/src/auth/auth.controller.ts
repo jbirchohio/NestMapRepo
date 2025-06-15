@@ -1,17 +1,35 @@
-import { Request, Response } from 'express';
-import { compare } from 'bcryptjs';
-import { eq } from 'drizzle-orm';
-import { db } from '../../db';
-import { users } from '../../db/schema';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { decode } from 'jsonwebtoken';
+import { IAuthService } from './interfaces/auth.service.interface';
 import { 
-  generateAuthTokens, 
-  revokeToken,
-  revokeAllUserTokens,
-  verifyToken
-} from './jwt';
-import { logger } from '../../utils/logger';
+  LoginDto, 
+  RequestPasswordResetDto, 
+  ResetPasswordDto,
+  RefreshTokenDto
+} from './dtos/auth.dto';
+import { rateLimiterMiddleware } from './middleware/rate-limiter.middleware';
+import { isErrorWithMessage } from '../utils/error-utils';
+import { Logger } from '@nestjs/common';
 import { UserRole } from './types';
+
+// DTOs
+interface LoginDto {
+  email: string;
+  password: string;
+}
+
+interface RequestPasswordResetDto {
+  email: string;
+}
+
+interface ResetPasswordDto {
+  token: string;
+  newPassword: string;
+}
+
+interface RefreshTokenDto {
+  refreshToken: string;
+}
 
 // Response types
 interface AuthResponse {
@@ -27,317 +45,249 @@ interface AuthResponse {
   };
 }
 
+interface AuthResponseWithoutRefreshToken {
+  accessToken: string;
+  user: {
+    id: string;
+    email: string;
+    role: string | null;
+    organizationId: string | null;
+  };
+}
+
 interface ErrorResponse {
   error: string;
   code?: string;
   message?: string;
+  expired?: boolean;
 }
 
-// Request types
-interface LoginRequest {
-  email: string;
-  password: string;
+// Utility function to check if an error has a message property
+function isErrorWithMessage(error: unknown): error is { message: string; stack?: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as Record<string, unknown>).message === 'string'
+  );
 }
 
-interface RegisterRequest {
-  email: string;
-  username: string;
-  firstName?: string;
-  lastName?: string;
-  password: string;
-  organizationName?: string;
-}
-
-interface PasswordResetRequest {
-  token: string;
-  newPassword: string;
-}
-
-/**
- * Login user
- */
-export const login = async (
-  req: Request<{}, {}, LoginRequest>,
-  res: Response<AuthResponse | ErrorResponse>
-) => {
-  try {
-    const { email, password } = req.body;
-
-    // Find user by email
-    const user = await db.query.users.findFirst({
-      where: eq(users.email, email)
-    });
-
-    if (!user) {
-      return res.status(401).json({
-        error: 'Invalid credentials',
-        code: 'INVALID_CREDENTIALS'
-      });
-    }
-
-    if (!user || !user.password_hash) {
-      return res.status(401).json({
-        error: 'Invalid credentials',
-        code: 'INVALID_CREDENTIALS'
-      });
-    }
-
-    // Verify password
-    const isPasswordValid = await compare(password, user.password_hash);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        error: 'Invalid credentials',
-        code: 'INVALID_CREDENTIALS'
-      });
-    }
-
-    // Generate tokens
-    const tokens = await generateAuthTokens(
-      user.id,
-      user.email,
-      (user.role as UserRole) || 'user',
-      user.organization_id || undefined
-    );
-
-    // Update last login
-    await db.update(users)
-      .set({ lastLoginAt: new Date() })
-      .where(eq(users.id, user.id));
-
-    // Set HTTP-only cookie for refresh token
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-
-    // Return response
-    return res.status(200).json({
-      ...tokens,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        organizationId: user.organizationId
-      }
-    });
-
-  } catch (error) {
-    logger.error('Login error:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
-  }
+// Rate limiter middleware for sensitive endpoints
+const rateLimiterMiddleware: RequestHandler = (req, res, next) => {
+  // In a real implementation, this would check against a rate limiter
+  // For now, we'll just pass through
+  next();
 };
 
 /**
- * Refresh access token
+ * Modern class-based Auth Controller implementation
+ * This replaces the legacy function-based controller
  */
-export const refreshToken = async (
-  req: Request,
-  res: Response<AuthResponse | ErrorResponse>
-) => {
-  try {
-    const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
-    
-    if (!refreshToken) {
-      return res.status(401).json({
-        error: 'Refresh token is required',
-        code: 'REFRESH_TOKEN_REQUIRED'
-      });
-    }
+export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
 
-    // Verify refresh token
-    const result = await verifyToken(refreshToken, 'refresh');
-    
-    if (!result.valid || !result.payload) {
-      return res.status(401).json({
-        error: result.error || 'Invalid refresh token',
-        code: 'INVALID_REFRESH_TOKEN',
-        expired: result.expired
-      });
-    }
+  constructor(private readonly authService: IAuthService) {}
 
-    // Get user from database
-    const [user] = await db.select().from(users).where(eq(users.id, result.payload.sub));
-
-    if (!user) {
-      return res.status(404).json({
-        error: 'User not found',
-        code: 'USER_NOT_FOUND'
-      });
-    }
-
-    // Generate new tokens
-    const tokens = await generateAuthTokens(
-      user.id,
-      user.email,
-      (user.role as UserRole) || 'user',
-      user.organization_id || undefined
-    );
-
-    // Set HTTP-only cookie for refresh token
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-
-    return res.status(200).json({
-      ...tokens,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        organizationId: user.organizationId
-      }
-    });
-
-  } catch (error) {
-    logger.error('Refresh token error:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
-  }
-};
-
-/**
- * Logout user
- */
-export const logout = async (
-  req: Request,
-  res: Response<{ success: boolean } | ErrorResponse>
-) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    
-    if (token) {
-      const decoded = decode(token, { json: true }) as { jti?: string; exp?: number } | null;
+  private handleError(error: unknown, context: string, res: Response): Response {
+    if (isErrorWithMessage(error)) {
+      this.logger.error(`[${context}] Error: ${error.message}`, error.stack);
       
-      if (decoded?.jti && decoded.exp) {
-        // Calculate token TTL in seconds
-        const ttl = Math.ceil((decoded.exp * 1000 - Date.now()) / 1000);
-        if (ttl > 0) {
-          await revokeToken(decoded.jti, ttl);
-        }
+      // Handle specific error types
+      if (error.message.includes('credentials')) {
+        return res.status(401).json({
+          error: 'Invalid credentials',
+          code: 'INVALID_CREDENTIALS'
+        });
+      } else if (error.message.includes('token')) {
+        return res.status(401).json({
+          error: error.message,
+          code: 'INVALID_TOKEN'
+        });
       }
     }
-
-    // Clear refresh token cookie
-    res.clearCookie('refreshToken');
-
-    return res.status(200).json({ success: true });
-
-  } catch (error) {
-    logger.error('Logout error:', error);
+    
+    // Default error response
     return res.status(500).json({
       error: 'Internal server error',
       code: 'INTERNAL_ERROR'
     });
   }
-};
 
-/**
- * Logout from all devices
- */
-export const logoutAllDevices = async (
-  req: Request,
-  res: Response<{ success: boolean } | ErrorResponse>
-) => {
-  try {
-    const user = (req as any).user;
-    
-    if (!user) {
-      return res.status(401).json({
-        error: 'Authentication required',
-        code: 'AUTH_REQUIRED'
-      });
+  /**
+   * Login user
+   */
+  login: RequestHandler[] = [
+    rateLimiterMiddleware,
+    async (req: Request, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, next: NextFunction): Promise<void> => {
+      try {
+        const ip = req.ip || req.socket.remoteAddress || 'unknown';
+        const userAgent = req.headers['user-agent'] || '';
+        
+        const loginData: LoginDto = req.body;
+        const response = await this.authService.login(loginData, ip, userAgent);
+        
+        // Set refresh token in HTTP-only cookie
+        res.cookie('refreshToken', response.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          path: '/api/auth/refresh-token'
+        });
+
+        // Don't send refresh token in response body when using cookies
+        const { refreshToken, ...rest } = response;
+        res.status(200).json(rest);
+      } catch (error) {
+        this.handleError(error, 'Login', res);
+      }
     }
+  ];
 
-    // Revoke all user tokens
-    await revokeAllUserTokens(user.id);
-    
-    // Clear refresh token cookie
-    res.clearCookie('refreshToken');
+  /**
+   * Refresh access token
+   */
+  refreshToken: RequestHandler[] = [
+    async (req: Request, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, next: NextFunction): Promise<void> => {
+      try {
+        // Try to get refresh token from cookie first, then from body
+        const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+        const ip = req.ip || req.socket.remoteAddress || 'unknown';
+        const userAgent = req.headers['user-agent'] || '';
+        
+        if (!refreshToken) {
+          res.status(401).json({
+            error: 'Refresh token is required',
+            code: 'REFRESH_TOKEN_REQUIRED'
+          });
+          return;
+        }
 
-    return res.status(200).json({ success: true });
+        const response = await this.authService.refreshToken(
+          { refreshToken },
+          ip,
+          userAgent
+        );
 
-  } catch (error) {
-    logger.error('Logout all devices error:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
-  }
-};
+        // Set the new refresh token in an HTTP-only cookie
+        res.cookie('refreshToken', response.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          path: '/api/auth/refresh-token'
+        });
 
-/**
- * Request password reset
- */
-export const requestPasswordReset = async (
-  req: Request<{}, {}, { email: string }>,
-  res: Response<{ success: boolean; message: string } | ErrorResponse>
-) => {
-  try {
-    const { email } = req.body;
-
-    const user = await db.query.users.findFirst({
-      where: eq(users.email, email)
-    });
-
-    if (user) {
-      // In a real app, you would:
-      // 1. Generate a password reset token
-      // 2. Send an email with the reset link
-      // 3. Return success (don't leak if email exists)
-      logger.info(`Password reset requested for: ${email}`);
+        // Don't send refresh token in response body when using cookies
+        const { refreshToken: _, ...rest } = response;
+        res.status(200).json(rest);
+      } catch (error) {
+        this.handleError(error, 'RefreshToken', res);
+      }
     }
+  ];
 
-    return res.status(200).json({
-      success: true,
-      message: 'If an account with that email exists, a password reset link has been sent.'
-    });
+  /**
+   * Logout user
+   */
+  logout: RequestHandler[] = [
+    async (req: Request, res: Response<{ success: boolean } | ErrorResponse>, next: NextFunction): Promise<void> => {
+      try {
+        const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
+        const authHeader = req.headers.authorization;
+        
+        if (!refreshToken) {
+          res.status(400).json({ error: 'Refresh token is required', code: 'REFRESH_TOKEN_REQUIRED' });
+          return;
+        }
 
-  } catch (error) {
-    logger.error('Password reset request error:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
-  }
-};
+        await this.authService.logout(refreshToken, authHeader);
 
-/**
- * Reset password with token
- */
-export const resetPassword = async (
-  req: Request<{}, {}, PasswordResetRequest>,
-  res: Response<{ success: boolean; message?: string } | ErrorResponse>
-) => {
-  try {
-    const { token, newPassword } = req.body;
+        // Clear refresh token cookie
+        res.clearCookie('refreshToken', {
+          path: '/api/auth/refresh-token',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict'
+        });
 
-    // In a real implementation, you would:
-    // 1. Verify the reset token
-    // 2. Update the user's password
-    // 3. Invalidate the used token
-    
-    logger.info(`Password reset attempt with token: ${token.substring(0, 10)}...`);
+        res.status(200).json({ success: true });
+      } catch (error) {
+        this.handleError(error, 'Logout', res);
+      }
+    }
+  ];
 
-    return res.status(200).json({
-      success: true,
-      message: 'Password has been reset successfully.'
-    });
+  /**
+   * Logout from all devices
+   */
+  logoutAllDevices: RequestHandler[] = [
+    async (req: Request, res: Response<{ success: boolean } | ErrorResponse>, next: NextFunction): Promise<void> => {
+      try {
+        const user = (req as any).user;
+        
+        if (!user) {
+          res.status(401).json({
+            error: 'Authentication required',
+            code: 'AUTH_REQUIRED'
+          });
+          return;
+        }
 
-  } catch (error) {
-    logger.error('Password reset error:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
-  }
-};
+        // Revoke all user tokens
+        await this.authService.revokeAllSessions(user.id);
+        
+        // Clear refresh token cookie
+        res.clearCookie('refreshToken', {
+          path: '/api/auth/refresh-token',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict'
+        });
+
+        res.status(200).json({ success: true });
+      } catch (error) {
+        this.handleError(error, 'LogoutAllDevices', res);
+      }
+    }
+  ];
+
+  /**
+   * Request password reset
+   */
+  requestPasswordReset: RequestHandler[] = [
+    rateLimiterMiddleware, // Apply rate limiting
+    async (req: Request, res: Response<{ success: boolean; message: string } | ErrorResponse>, next: NextFunction): Promise<void> => {
+      try {
+        const { email } = req.body as RequestPasswordResetDto;
+        await this.authService.requestPasswordReset(email);
+        
+        res.status(200).json({ 
+          success: true,
+          message: 'If an account with that email exists, a password reset link has been sent.' 
+        });
+      } catch (error) {
+        this.handleError(error, 'RequestPasswordReset', res);
+      }
+    }
+  ];
+
+  /**
+   * Reset password with token
+   */
+  resetPassword: RequestHandler[] = [
+    async (req: Request, res: Response<{ success: boolean; message?: string } | ErrorResponse>, next: NextFunction): Promise<void> => {
+      try {
+        const { token, newPassword } = req.body as ResetPasswordDto;
+        await this.authService.resetPassword(token, newPassword);
+        
+        res.status(200).json({ 
+          success: true,
+          message: 'Password has been reset successfully.' 
+        });
+      } catch (error) {
+        this.handleError(error, 'ResetPassword', res);
+      }
+    }
+  ];
+}

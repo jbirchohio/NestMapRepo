@@ -3,8 +3,51 @@ import {
   FlightSearchParams, 
   FlightSearchResponse,
   HotelSearchParams,
-  HotelSearchResponse
+  HotelSearchResponse,
+  BookingDetails,
 } from '../types';
+
+// Interface for booking data to replace 'any' type
+export interface BookingData {
+  type: 'flight' | 'hotel' | 'activity';
+  tripId?: string;
+  userId?: string;
+  flightDetails?: {
+    flightNumber: string;
+    airline: string;
+    departureDate: string;
+    departureTime: string;
+    arrivalDate: string;
+    arrivalTime: string;
+    origin: string;
+    destination: string;
+    passengers: number;
+    price: number;
+  };
+  hotelDetails?: {
+    hotelName: string;
+    location: string;
+    checkIn: string;
+    checkOut: string;
+    roomType: string;
+    guests: number;
+    price: number;
+  };
+  activityDetails?: {
+    name: string;
+    date: string;
+    time: string;
+    location: string;
+    participants: number;
+    price: number;
+  };
+  paymentDetails?: {
+    method: string;
+    cardLastFour?: string;
+    totalAmount: number;
+    currency: string;
+  };
+}
 
 class BookingService {
   private static instance: BookingService;
@@ -41,15 +84,17 @@ class BookingService {
   }
 
   // Create Booking
-  public async createBooking(bookingData: any): Promise<{ success: boolean; bookingId?: string; error?: string }> {
+  public async createBooking(bookingData: BookingData): Promise<{ success: boolean; bookingId?: string; error?: string }> {
     try {
       const response = await apiClientV2.post('/api/bookings', bookingData);
       return { success: true, bookingId: response.data.bookingId };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating booking:', error);
+      // Type guard for axios error with response property
+      const axiosError = error as { response?: { data?: { message?: string } } };
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Failed to create booking' 
+        error: axiosError.response?.data?.message || 'Failed to create booking' 
       };
     }
   }

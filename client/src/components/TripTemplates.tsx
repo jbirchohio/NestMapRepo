@@ -9,6 +9,26 @@ import { Calendar, MapPin, Clock, Users, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
+interface TemplateActivity {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  locationName: string;
+  address?: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  duration: number;
+  price?: number;
+  rating?: number;
+  imageUrl?: string;
+  tags: string[];
+  day?: number;
+  timeSlot?: string;
+}
+
 interface TripTemplate {
   id: string;
   title: string;
@@ -17,7 +37,7 @@ interface TripTemplate {
   city: string;
   country: string;
   tags: string[];
-  activities: any[];
+  activities: TemplateActivity[];
   suggestedTodos: string[];
   bestTimeToVisit?: string;
   budget?: {

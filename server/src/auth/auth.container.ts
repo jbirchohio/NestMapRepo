@@ -4,12 +4,14 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { UserRepositoryImpl } from './repositories/user.repository';
 import { RefreshTokenRepositoryImpl } from './repositories/refresh-token';
 import { AuthService } from './services/auth.service.new';
+import { JwtAuthService } from './services/jwtAuthService';
 import { AuthController } from './controllers/auth.controller';
 import { EmailService } from '../email/interfaces/email.service.interface';
 import { NodemailerEmailService } from '../email/services/nodemailer-email.service';
 import { UserRepository } from './interfaces/user.repository.interface';
 import { RefreshTokenRepository } from './interfaces/refresh-token.repository.interface';
 import { AuthResponse } from './services/auth.service.new';
+import { IAuthService } from './interfaces/auth.service.interface';
 
 export interface AuthContainerDependencies {
   emailService?: EmailService;
@@ -30,7 +32,7 @@ export class AuthContainer {
   // Services
   public readonly emailService: EmailService;
   public readonly jwtService: JwtService;
-  public readonly authService: AuthService;
+  public readonly authService: IAuthService;
 
   // Controllers
   public readonly authController: AuthController;
@@ -60,10 +62,9 @@ export class AuthContainer {
     this.emailService = deps.emailService || new NodemailerEmailService(this.configService);
     
     // Initialize auth service with all required dependencies
-    this.authService = new AuthService(
+    this.authService = new JwtAuthService(
       this.userRepository,
       this.refreshTokenRepository,
-      this.jwtService,
       this.configService,
       this.emailService
     );
@@ -78,7 +79,7 @@ export class AuthContainer {
       },
     });
 
-    // Initialize auth controller
+    // Initialize auth controller with the new auth service
     this.authController = new AuthController(this.authService);
   }
 

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { eq, and, desc, gte, lte, sql, count } from 'drizzle-orm';
 import { db } from '../db';
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { 
   trips, 
   expenses, 
@@ -12,6 +14,11 @@ import {
 } from '@shared/schema';
 
 const router = Router();
+
+// Apply middleware to all routes
+router.use(validateJWT);
+router.use(injectOrganizationContext);
+router.use(validateOrganizationAccess);
 
 // Enterprise analytics dashboard
 router.get('/dashboard', async (req, res) => {

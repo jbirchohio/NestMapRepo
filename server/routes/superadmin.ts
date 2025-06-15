@@ -40,14 +40,17 @@ interface AuthenticatedUser {
 }
 
 import { cleanJwtAuthMiddleware, requireSuperadminRole } from '../middleware/cleanJwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 // Apply JWT auth to all superadmin routes with proper middleware
 const createSuperadminRoutes = () => {
   const router = express.Router();
   
-  // Apply JWT auth to all routes
+  // Apply JWT auth and organization context to all routes
   router.use(cleanJwtAuthMiddleware);
   router.use(requireSuperadminRole);
+  router.use(injectOrganizationContext);
+  router.use(validateOrganizationAccess);
   
   return router;
 };

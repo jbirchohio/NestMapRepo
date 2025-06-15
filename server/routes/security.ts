@@ -4,8 +4,15 @@ import { users, adminAuditLog, organizations, userSessions } from '../../shared/
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { getActiveUserCount } from '../middleware/sessionTracking';
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 const router = Router();
+
+// Apply middleware to all security routes
+router.use(validateJWT);
+router.use(injectOrganizationContext);
+router.use(validateOrganizationAccess);
 
 // Security alert types
 export interface SecurityAlert {

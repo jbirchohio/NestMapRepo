@@ -15,6 +15,28 @@ import { Users, UserPlus, Mail, Shield, Eye, Edit3, Trash2, User, X, Check, Sett
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
+interface TeamMemberPermissions {
+  canViewAllTrips: boolean;
+  canEditAllTrips: boolean;
+  canCreateTrips: boolean;
+  canInviteMembers: boolean;
+  canManageBudgets: boolean;
+  canExportData: boolean;
+  canAccessAnalytics: boolean;
+}
+
+interface TeamMember {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  joinedAt?: string;
+  lastActive?: string;
+  avatar?: string;
+  permissions: TeamMemberPermissions;
+}
+
 // Permission schema with smart defaults
 const inviteSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -147,12 +169,12 @@ export default function TeamManagement() {
     }
   };
 
-  const handleViewMember = (member: any) => {
+  const handleViewMember = (member: TeamMember) => {
     setSelectedMember(member);
     setShowMemberDetails(true);
   };
 
-  const handleEditMember = (member: any) => {
+  const handleEditMember = (member: TeamMember) => {
     setSelectedMember(member);
     setShowEditPermissions(true);
   };
@@ -166,7 +188,7 @@ export default function TeamManagement() {
       return response.json();
     },
     onSuccess: (data, memberId) => {
-      const member = teamMembers?.find((m: any) => m.id === memberId);
+      const member = teamMembers?.find((m: TeamMember) => m.id === memberId);
       queryClient.invalidateQueries({ queryKey: ['/api/organizations/members'] });
       toast({
         title: "Member Removed",
@@ -183,7 +205,7 @@ export default function TeamManagement() {
     }
   });
 
-  const handleRemoveMember = (member: any) => {
+  const handleRemoveMember = (member: TeamMember) => {
     if (confirm(`Are you sure you want to remove ${member.name} from the organization? This action cannot be undone.`)) {
       removeMemberMutation.mutate(member.id);
     }
@@ -583,7 +605,7 @@ export default function TeamManagement() {
                 <p className="text-navy-500 dark:text-navy-400">Loading team members...</p>
               </div>
             ) : teamMembers && teamMembers.length > 0 ? (
-              teamMembers.map((member: any) => (
+              teamMembers.map((member: TeamMember) => (
                 <div key={member.id} className="flex items-center justify-between p-4 border border-electric-300/20 rounded-lg bg-white/50 dark:bg-navy-900/50 backdrop-blur-sm">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-full bg-electric-100 dark:bg-electric-900/20 flex items-center justify-center">

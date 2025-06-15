@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { TripService } from '../interfaces/trip.service.interface';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { User } from '@shared/schema';
+import { ResponseFormatter } from '../../common/utils/response-formatter.util';
+import { asyncHandler } from '../../common/middleware/error-handler.middleware';
+import { requireAuth, requireOrgContext } from '../../common/middleware/auth.middleware';
 
 @Injectable()
 export class TripController {
@@ -9,59 +12,44 @@ export class TripController {
 
   constructor(@Inject('TripService') private readonly tripService: TripService) {}
 
-  async getTrips(req: Request, res: Response): Promise<Response> {
-    try {
-      const userId = req.user?.id;
-      const orgId = req.user?.organizationId;
-
-      if (!userId || !orgId) {
-        return res.status(401).json({ message: 'User and organization context are required.' });
-      }
-
+  getTrips = [
+    requireAuth(this.logger),
+    requireOrgContext(this.logger),
+    asyncHandler(async (req: Request, res: Response) => {
+      const userId = req.user!.id;
+      const orgId = req.user!.organizationId;
+      
       const trips = await this.tripService.getTripsByUserId(userId, orgId);
-      return res.json(trips);
-    } catch (error) {
-      this.logger.error('Error fetching trips:', error);
-      return res.status(500).json({ message: 'Could not fetch trips' });
-    }
-  }
+      return ResponseFormatter.success(res, trips, 'Trips retrieved successfully');
+    }, this.logger)
+  ];
 
-  async getCorporateTrips(req: Request, res: Response): Promise<Response> {
-    try {
-      const orgId = req.user?.organizationId;
-
-      if (!orgId) {
-        return res.status(400).json({ message: 'Organization context required' });
-      }
-
+  getCorporateTrips = [
+    requireAuth(this.logger),
+    requireOrgContext(this.logger),
+    asyncHandler(async (req: Request, res: Response) => {
+      const orgId = req.user!.organizationId;
+      
       const trips = await this.tripService.getCorporateTrips(orgId);
-      return res.json(trips);
-    } catch (error) {
-      this.logger.error('Error fetching corporate trips:', error);
-      return res.status(500).json({ message: 'Failed to fetch corporate trips' });
-    }
-  }
+      return ResponseFormatter.success(res, trips, 'Corporate trips retrieved successfully');
+    }, this.logger)
+  ];
 
-  async getTripById(req: Request, res: Response): Promise<Response> {
-    try {
+  getTripById = [
+    requireAuth(this.logger),
+    asyncHandler(async (req: Request, res: Response) => {
       const tripId = parseInt(req.params.id, 10);
       if (isNaN(tripId)) {
-        return res.status(400).json({ message: 'Invalid trip ID' });
+        return ResponseFormatter.badRequest(res, 'Invalid trip ID');
       }
 
       const trip = await this.tripService.getTripById(tripId, req.user as User);
 
       if (!trip) {
-        return res.status(404).json({ message: 'Trip not found' });
+        return ResponseFormatter.notFound(res, 'Trip not found');
       }
 
-      return res.json(trip);
-    } catch (error: any) {
-      this.logger.error(`Error fetching trip ${req.params.id}:`, error);
-      if (error.name === 'UnauthorizedError') {
-        return res.status(403).json({ message: error.message });
-      }
-      return res.status(500).json({ message: 'Could not fetch trip' });
-    }
-  }
+      return ResponseFormatter.success(res, trip, 'Trip retrieved successfully');
+    }, this.logger)
+  ];
 }

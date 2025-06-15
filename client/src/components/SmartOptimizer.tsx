@@ -23,10 +23,32 @@ import {
   Target
 } from 'lucide-react';
 
+interface OptimizableActivity {
+  id: number;
+  title: string;
+  description: string;
+  locationName: string;
+  address?: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  category: string;
+  duration: number;
+  startTime?: string;
+  endTime?: string;
+  day?: number;
+  price?: number;
+  rating?: number;
+  imageUrl?: string;
+  tags?: string[];
+  status?: string;
+}
+
 interface SmartOptimizerProps {
   tripId: number;
-  activities: any[];
-  onActivitiesUpdate: (activities: any[]) => void;
+  activities: OptimizableActivity[];
+  onActivitiesUpdate: (activities: OptimizableActivity[]) => void;
 }
 
 export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate }: SmartOptimizerProps) {
@@ -242,7 +264,29 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
   );
 }
 
-function OptimizationTab({ optimization, onApplyOptimization, isApplying }: any) {
+interface OptimizationImprovement {
+  efficiencyGain: number;
+  timeSaved: number;
+  routeChanges: number;
+  suggestedActivities: OptimizableActivity[];
+  optimizedSchedule: OptimizableActivity[];
+}
+
+interface Optimization {
+  id: string;
+  tripId: number;
+  improvements: OptimizationImprovement;
+  createdAt: string;
+  status: 'pending' | 'completed' | 'failed';
+}
+
+interface OptimizationTabProps {
+  optimization: Optimization;
+  onApplyOptimization: () => void;
+  isApplying: boolean;
+}
+
+function OptimizationTab({ optimization, onApplyOptimization, isApplying }: OptimizationTabProps) {
   if (!optimization) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -310,7 +354,23 @@ function OptimizationTab({ optimization, onApplyOptimization, isApplying }: any)
   );
 }
 
-function ConflictsTab({ conflicts, onAutoFix, isFixing }: any) {
+interface Conflict {
+  id: string;
+  type: 'time' | 'location' | 'budget' | 'logistics';
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+  affectedActivities: OptimizableActivity[];
+  autoFixAvailable: boolean;
+  suggestedFix?: string;
+}
+
+interface ConflictsTabProps {
+  conflicts: Conflict[];
+  onAutoFix: (conflictIds: string[]) => void;
+  isFixing: boolean;
+}
+
+function ConflictsTab({ conflicts, onAutoFix, isFixing }: ConflictsTabProps) {
   if (conflicts.length === 0) {
     return (
       <div className="text-center py-8">
@@ -390,8 +450,22 @@ function ConflictsTab({ conflicts, onAutoFix, isFixing }: any) {
   );
 }
 
-function RemindersTab({ reminders }: any) {
-  const groupedReminders = reminders.reduce((acc: any, reminder: any) => {
+interface Reminder {
+  id: string;
+  type: 'booking' | 'preparation' | 'weather' | 'logistics' | 'safety';
+  priority: 'low' | 'medium' | 'high';
+  message: string;
+  dueDate?: string;
+  relatedActivityId?: number;
+  isCompleted: boolean;
+}
+
+interface RemindersTabProps {
+  reminders: Reminder[];
+}
+
+function RemindersTab({ reminders }: RemindersTabProps) {
+  const groupedReminders = reminders.reduce((acc: Record<string, Reminder[]>, reminder: Reminder) => {
     const type = reminder.type;
     if (!acc[type]) acc[type] = [];
     acc[type].push(reminder);
@@ -448,7 +522,12 @@ function RemindersTab({ reminders }: any) {
   );
 }
 
-function SettingsTab({ isAutoOptimizeEnabled, onAutoOptimizeChange }: any) {
+interface SettingsTabProps {
+  isAutoOptimizeEnabled: boolean;
+  onAutoOptimizeChange: (enabled: boolean) => void;
+}
+
+function SettingsTab({ isAutoOptimizeEnabled, onAutoOptimizeChange }: SettingsTabProps) {
   return (
     <div className="space-y-6">
       <Card>

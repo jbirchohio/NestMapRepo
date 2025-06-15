@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { validateJWT } from "../middleware/jwtAuth";
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from "zod";
 import OpenAI from "openai";
 import { db } from "../db";
@@ -13,6 +14,8 @@ const openai = new OpenAI({
 
 const router = Router();
 router.use(validateJWT);
+router.use(injectOrganizationContext);
+router.use(validateOrganizationAccess);
 
 // Validation schemas
 const summarizeDaySchema = z.object({
@@ -348,10 +351,6 @@ Format as JSON:
     res.status(500).json({ 
       success: false, 
       error: "Failed to generate activity suggestions" 
-    });
-  }
-});
-
 // POST /api/ai/translate-content - Translate content using AI
 router.post("/translate-content", async (req, res) => {
   try {

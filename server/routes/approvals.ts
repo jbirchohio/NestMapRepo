@@ -11,8 +11,15 @@ import {
   insertApprovalRuleSchema 
 } from '@shared/schema';
 import { z } from 'zod';
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 const router = Router();
+
+// Apply middleware to all approval routes
+router.use(validateJWT);
+router.use(injectOrganizationContext);
+router.use(validateOrganizationAccess);
 
 // Get pending approval requests for manager
 router.get('/pending', async (req, res) => {

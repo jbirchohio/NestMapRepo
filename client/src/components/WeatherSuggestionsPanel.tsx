@@ -13,9 +13,27 @@ import { ClientTrip } from "@/lib/types";
 import { CloudSun, Umbrella, ThermometerSun, Snowflake, Wind, Sparkles, MapPin } from "lucide-react";
 import TripDatePicker from "@/components/TripDatePicker";
 
+interface Activity {
+  id?: string;
+  title: string;
+  description: string;
+  category: string;
+  locationName: string;
+  tag: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  duration?: number;
+  price?: number;
+  rating?: number;
+  imageUrl?: string;
+  weatherCondition?: WeatherCondition;
+}
+
 interface WeatherSuggestionsPanelProps {
   trip: ClientTrip;
-  onAddActivity: (activity: any) => Promise<void>;
+  onAddActivity: (activity: Activity) => Promise<void>;
 }
 
 type WeatherCondition = "sunny" | "rainy" | "hot" | "cold" | "windy";

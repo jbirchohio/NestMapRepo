@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { requireSuperadminRole } from "../middleware/auth";
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { db } from "../db";
 import { adminAuditLog } from "@shared/schema";
 import { desc, eq, and, gte } from "drizzle-orm";
@@ -295,6 +297,11 @@ export async function generateSecurityAlerts(): Promise<void> {
 }
 
 export function registerAlertsRoutes(app: Express): void {
+  // Apply middleware to all alert routes
+  app.use('/api/alerts', validateJWT);
+  app.use('/api/alerts', injectOrganizationContext);
+  app.use('/api/alerts', validateOrganizationAccess);
+  
   // Get all active alerts
   app.get("/api/alerts", requireSuperadminRole, async (req, res) => {
     try {
@@ -327,7 +334,7 @@ export function registerAlertsRoutes(app: Express): void {
   });
   
   // Acknowledge an alert
-  app.post("/api/alerts/:id/acknowledge", requireSuperadminRole, (req, res) => {
+  app.post("/api/alerts/:id/acknowledge", validateJWT, injectOrganizationContext, requireSuperadminRole, validateOrganizationAccess, (req, res) => {
     try {
       const { id } = req.params;
       const alert = systemAlerts.find(a => a.id === id);
@@ -349,7 +356,7 @@ export function registerAlertsRoutes(app: Express): void {
   });
   
   // Acknowledge all alerts
-  app.post("/api/alerts/acknowledge-all", requireSuperadminRole, (req, res) => {
+  app.post("/api/alerts/acknowledge-all", validateJWT, injectOrganizationContext, requireSuperadminRole, validateOrganizationAccess, (req, res) => {
     try {
       const unacknowledgedCount = systemAlerts.filter(a => !a.acknowledged).length;
       systemAlerts.forEach(alert => alert.acknowledged = true);
@@ -365,7 +372,7 @@ export function registerAlertsRoutes(app: Express): void {
   });
   
   // Clear old alerts
-  app.delete("/api/alerts/clear-old", requireSuperadminRole, (req, res) => {
+  app.delete("/api/alerts/clear-old", validateJWT, injectOrganizationContext, requireSuperadminRole, validateOrganizationAccess, (req, res) => {
     try {
       const hoursOld = parseInt(req.query.hours as string) || 24;
       const cutoffTime = new Date(Date.now() - hoursOld * 60 * 60 * 1000);
@@ -388,7 +395,7 @@ export function registerAlertsRoutes(app: Express): void {
   });
   
   // Get alert statistics
-  app.get("/api/alerts/stats", requireSuperadminRole, (req, res) => {
+  app.get("/api/alerts/stats", validateJWT, injectOrganizationContext, requireSuperadminRole, validateOrganizationAccess, (req, res) => {
     try {
       const now = new Date();
       const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);

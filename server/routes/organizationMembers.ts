@@ -10,6 +10,7 @@ import { eq, sql, and } from 'drizzle-orm';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles';
 import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
 
 const router = Router();

@@ -3,8 +3,19 @@ import { db } from '../../../db';
 import { RefreshToken, refreshTokens } from '../../../db/schema';
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface';
 import { InternalServerError, NotFoundError } from '../../common/errors';
+import { BaseRepositoryImpl } from '../../common/repositories/base.repository';
+import { Injectable } from '@nestjs/common';
 
-export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
+/**
+ * Implementation of the refresh token repository
+ * Extends the base repository implementation to include common CRUD operations
+ * and implements refresh token specific operations
+ */
+@Injectable()
+export class RefreshTokenRepositoryImpl extends BaseRepositoryImpl<RefreshToken, string, Omit<RefreshToken, 'id' | 'createdAt'>, Partial<Omit<RefreshToken, 'id' | 'createdAt'>>> implements RefreshTokenRepository {
+  constructor() {
+    super('RefreshToken', refreshTokens, refreshTokens.id);
+  }
   async create(token: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken> {
     try {
       const [newToken] = await db

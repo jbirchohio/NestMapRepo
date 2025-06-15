@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { insertOrganizationSchema } from '@shared/schema';
 import { validateJWT } from '../middleware/jwtAuth';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation';
 import { storage } from '../storage';
 import { getOrganizationAnalytics } from '../analytics';

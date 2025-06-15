@@ -2,9 +2,16 @@ import { Router } from 'express';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../db';
 import { calendarIntegrations, trips, activities } from '@shared/schema';
+import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
 
 const router = Router();
+
+// Apply middleware to all routes
+router.use(validateJWT);
+router.use(injectOrganizationContext);
+router.use(validateOrganizationAccess);
 
 // Calendar event generation for trips
 router.post('/generate-ical/:tripId', async (req, res) => {

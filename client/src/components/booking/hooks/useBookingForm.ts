@@ -25,13 +25,18 @@ export const useBookingForm = () => {
       clientInfoSchema.parse(formData);
       setErrors({});
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       const newErrors: Record<string, string> = {};
       
-      error.issues.forEach((issue: any) => {
-        const path = issue.path.join('.');
-        newErrors[path] = issue.message;
-      });
+      // Type guard for Zod validation error
+      const zodError = error as { issues: Array<{ path: string[], message: string }> };
+      
+      if (zodError.issues) {
+        zodError.issues.forEach((issue) => {
+          const path = issue.path.join('.');
+          newErrors[path] = issue.message;
+        });
+      }
       
       setErrors(newErrors);
       
@@ -47,7 +52,7 @@ export const useBookingForm = () => {
     }
   }, [formData]);
 
-  const handleChange = useCallback((field: string, value: any) => {
+  const handleChange = useCallback((field: string, value: string | number | boolean | Date) => {
     setFormData(prev => {
       // Handle nested fields (e.g., primaryTraveler.firstName)
       if (field.includes('.')) {

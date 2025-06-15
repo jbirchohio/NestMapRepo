@@ -3,11 +3,14 @@ import { db } from '../db';
 import { notifications } from '../../shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 const router = Router();
 
 // Apply authentication to all notification routes
 router.use(validateJWT);
+router.use(injectOrganizationContext);
+router.use(validateOrganizationAccess);
 
 // GET /api/notifications - Get user notifications
 router.get('/', async (req, res) => {

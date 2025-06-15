@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { logger } from '../utils/logger';
-import { config } from '../config';
 import { User } from '../types/user';
 import { redisClient } from '../utils/redis';
 import rateLimit from 'express-rate-limit';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
+import { jwtService } from '../utils/jwtService';
 
 // Rate limiting configuration
 const limiter = rateLimit({
@@ -21,14 +20,7 @@ const rateLimiter = new RateLimiterRedis({
   blockDuration: 60 * 60 // Block for 1 hour on rate limit
 });
 
-interface JwtPayload {
-  id: string;
-  email: string;
-  role: string;
-  iat: number;
-  exp: number;
-  organization_id?: number;
-}
+// Using TokenPayload from jwtService.ts
 
 export const validateJWT = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -45,36 +37,27 @@ export const validateJWT = async (req: Request, res: Response, next: NextFunctio
 
       const token = authHeader.split(' ')[1];
       
-      // Check token blacklist
-      const isBlacklisted = await redisClient.get(`blacklisted_token:${token}`);
-      if (isBlacklisted) {
+      // Verify token using jwtService
+      const tokenResult = await jwtService.verifyToken(token, 'access');
+      
+      if (!tokenResult) {
         return res.status(401).json({ 
-          error: 'Token has been revoked',
-          code: 'TOKEN_REVOKED'
+          error: 'Invalid token',
+          code: 'INVALID_TOKEN'
         });
       }
-
-      // Validate token
-      const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
       
-      // Check token expiration
-      if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+      if (tokenResult.expired) {
         return res.status(401).json({ 
           error: 'Token expired',
           code: 'TOKEN_EXPIRED'
         });
       }
-
-      // Validate required claims
-      if (!decoded.id || !decoded.email || !decoded.role) {
-        return res.status(401).json({ 
-          error: 'Invalid token claims',
-          code: 'INVALID_CLAIMS'
-        });
-      }
+      
+      const { payload } = tokenResult;
 
       // Rate limiting based on user
-      const key = `rate_limit:${decoded.id}`;
+      const key = `rate_limit:${payload.userId}`;
       const rateLimitResult = await rateLimiter.consume(key);
       if (!rateLimitResult.consumed) {
         return res.status(429).json({
@@ -86,10 +69,10 @@ export const validateJWT = async (req: Request, res: Response, next: NextFunctio
 
       // Add user info to request
       req.user = {
-        id: decoded.id,
-        email: decoded.email,
-        role: decoded.role,
-        organization_id: decoded.organization_id,
+        id: payload.userId,
+        email: payload.email,
+        role: payload.role,
+        organization_id: payload.organization_id,
       } as User;
 
       // Log successful authentication

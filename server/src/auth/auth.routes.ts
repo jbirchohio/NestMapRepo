@@ -1,47 +1,45 @@
 import { Router } from 'express';
 
-import { 
-  login, 
-  refreshToken, 
-  logout, 
-  logoutAllDevices, 
-  requestPasswordReset, 
-  resetPassword 
-} from './auth.controller';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { authenticate } from './middleware';
 import { validateAndSanitizeRequest } from '../../middleware/inputValidation';
 import { loginSchema, requestPasswordResetSchema, resetPasswordSchema, refreshTokenSchema, logoutSchema } from './dtos/auth.dto';
 
 const router = Router();
 
+// Initialize services and controllers
+const authService = new AuthService();
+const authController = new AuthController(authService);
+
 // Public routes
 router.post(
   '/login',
   validateAndSanitizeRequest({ body: loginSchema }),
-  login
+  ...authController.login
 );
 
 router.post(
   '/refresh-token',
   validateAndSanitizeRequest({ body: refreshTokenSchema }),
-  refreshToken
+  ...authController.refreshToken
 );
 
 router.post(
   '/request-password-reset',
   validateAndSanitizeRequest({ body: requestPasswordResetSchema }),
-  requestPasswordReset
+  ...authController.requestPasswordReset
 );
 
 router.post(
   '/reset-password',
   validateAndSanitizeRequest({ body: resetPasswordSchema }),
-  resetPassword
+  ...authController.resetPassword
 );
 
 // Protected routes
-router.post('/logout', authenticate, validateAndSanitizeRequest({ body: logoutSchema }), logout);
-router.post('/logout-all', authenticate, logoutAllDevices);
+router.post('/logout', authenticate, validateAndSanitizeRequest({ body: logoutSchema }), ...authController.logout);
+router.post('/logout-all', authenticate, ...authController.logoutAllDevices);
 
 // Health check endpoint
 router.get('/health', (_req, res) => {

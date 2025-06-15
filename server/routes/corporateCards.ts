@@ -3,12 +3,17 @@ import { db } from "../db";
 import { corporateCards, cardTransactions, users } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { validateJWT } from '../middleware/jwtAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 export function registerCorporateCardRoutes(app: Express) {
+  // Apply middleware to all corporate card routes
+  app.use('/api/corporate-cards', validateJWT);
+  app.use('/api/corporate-cards', injectOrganizationContext);
+  app.use('/api/corporate-cards', validateOrganizationAccess);
   
   // Get all corporate cards for organization
-  app.get("/api/corporate-cards/cards", validateJWT, async (req, res) => {
-    const organizationId = req.user?.organizationId;
+  app.get("/api/corporate-cards/cards", async (req, res) => {
+    const organizationId = req.organization?.id;
 
     if (!organizationId) {
       return res.status(400).json({ error: "Organization ID is missing" });
@@ -46,8 +51,8 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Create new corporate card
-  app.post("/api/corporate-cards/cards", validateJWT, async (req, res) => {
-    const organizationId = req.user?.organizationId;
+  app.post("/api/corporate-cards/cards", async (req, res) => {
+    const organizationId = req.organization?.id;
     if (!organizationId) {
       return res.status(400).json({ error: "Organization ID is missing" });
     }
@@ -89,8 +94,8 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Freeze/unfreeze card
-  app.post("/api/corporate-cards/cards/:cardId/freeze", validateJWT, async (req, res) => {
-    const organizationId = req.user?.organizationId;
+  app.post("/api/corporate-cards/cards/:cardId/freeze", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
+    const organizationId = req.organization?.id;
     if (!organizationId) {
       return res.status(400).json({ error: "Organization ID is missing" });
     }
@@ -129,8 +134,8 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Update card
-  app.put("/api/corporate-cards/cards/:cardId", validateJWT, async (req, res) => {
-    const organizationId = req.user?.organizationId;
+  app.put("/api/corporate-cards/cards/:cardId", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
+    const organizationId = req.organization?.id;
     if (!organizationId) {
       return res.status(400).json({ error: "Organization ID is missing" });
     }
@@ -175,8 +180,8 @@ export function registerCorporateCardRoutes(app: Express) {
   });
 
   // Add funds to card
-  app.post("/api/corporate-cards/cards/:cardId/add-funds", validateJWT, async (req, res) => {
-    const organizationId = req.user?.organizationId;
+  app.post("/api/corporate-cards/cards/:cardId/add-funds", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
+    const organizationId = req.organization?.id;
     if (!organizationId) {
       return res.status(400).json({ error: "Organization ID is missing" });
     }

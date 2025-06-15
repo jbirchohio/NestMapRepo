@@ -75,6 +75,20 @@ export const protectedRoutes: RouteObject[] = [
     element: lazyLoad(() => import('@/pages/AITripGenerator')),
   },
 
+  // Invoice routes
+  {
+    path: '/invoice/:id',
+    element: lazyLoad(() => import('@/pages/InvoiceView')),
+  },
+  {
+    path: '/invoice/success',
+    element: lazyLoad(() => import('@/pages/InvoiceSuccess')),
+  },
+  {
+    path: '/invoice/failure',
+    element: lazyLoad(() => import('@/pages/InvoiceFailure')),
+  },
+
   // Booking routes
   {
     path: '/flights',

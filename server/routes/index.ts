@@ -2,15 +2,18 @@ import { Router } from 'express';
 
 // Core routes
 import authRoutes from './auth';
+import proposalsRoutes from './proposals';
 import tripRoutes from './trips';
 import activityRoutes from './activities';
 import organizationRoutes from './organizations';
 import analyticsRoutes from './analytics';
+import paymentsRoutes from './payments';
+import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus';
 
 // Feature routes
 import adminRoutes from './admin';
+import invoicesRoutes from './invoices';
 import calendarRoutes from './calendar';
-import collaborationRoutes from './collaboration';
 import { registerBookingRoutes } from './bookings';
 import approvalRoutes from './approvals';
 import expenseRoutes from './expenses';
@@ -23,6 +26,7 @@ import webhookRoutes from './webhooks';
 import subscriptionStatusRoutes from './subscription-status';
 import { registerAdminSettingsRoutes } from './admin-settings';
 import aiRoutes from './ai';
+import billingRoutes from './billing';
 import securityRoutes from './security';
 import healthRoutes from './health';
 import notificationsRoutes from './notifications';
@@ -36,6 +40,7 @@ const router = Router();
 
 // Mount all route modules
 router.use('/auth', authRoutes);
+router.use('/proposals', proposalsRoutes);
 router.use('/trips', tripRoutes);
 router.use('/activities', activityRoutes);
 router.use('/organizations', organizationRoutes);
@@ -50,6 +55,9 @@ router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
 router.use('/organization-funding', organizationFundingRoutes);
 router.use('/stripe', stripeOAuthRoutes);
+router.use('/custom-domains', customDomainsRoutes);
+router.use('/white-label', whiteLabelRoutes);
+
 
 // Mount test routes in development only
 if (process.env.NODE_ENV === 'development') {
@@ -72,6 +80,9 @@ import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
 // router.use('/todos', todosRoutes);
 // router.use('/notes', notesRoutes);
 router.use('/ai', aiRoutes);
+router.use('/billing', billingRoutes);
+router.use('/invoices', invoicesRoutes);
+router.use('/payments', paymentsRoutes);
 
 // Templates endpoint
 router.get('/templates', async (req, res) => {
@@ -349,6 +360,7 @@ router.get('/health', (req, res) => {
 // Function to register admin settings routes that need app instance
 export function registerDirectRoutes(app: any) {
   registerAdminSettingsRoutes(app);
+  registerWhiteLabelStatusRoutes(app);
 }
 
 export default router;

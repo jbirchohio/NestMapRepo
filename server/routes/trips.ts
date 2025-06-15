@@ -3,7 +3,7 @@ import { validateAndSanitizeRequest } from '../middleware/inputValidation';
 import { z } from 'zod';
 import { insertTripSchema } from '@shared/schema';
 import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext } from '../middleware/organizationScoping';
+import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext';
 import { fieldTransformMiddleware } from '../middleware/fieldTransform';
 import { enforceTripLimit } from '../middleware/subscription-limits';
 import { storage } from '../storage';

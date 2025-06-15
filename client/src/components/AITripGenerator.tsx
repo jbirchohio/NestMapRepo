@@ -1,6 +1,86 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+
+interface TripActivity {
+  id?: number;
+  name: string;
+  description: string;
+  location: string;
+  startTime: string;
+  endTime: string;
+  cost?: number;
+  category: string;
+  tags?: string[];
+  imageUrl?: string;
+  bookingUrl?: string;
+  notes?: string;
+}
+
+interface TripDay {
+  date: string;
+  activities: TripActivity[];
+}
+
+interface Flight {
+  id?: number;
+  airline: string;
+  flightNumber: string;
+  departureAirport: string;
+  arrivalAirport: string;
+  departureTime: string;
+  arrivalTime: string;
+  price?: number;
+  bookingReference?: string;
+}
+
+interface Accommodation {
+  id?: number;
+  name: string;
+  location: string;
+  checkIn: string;
+  checkOut: string;
+  price?: number;
+  bookingReference?: string;
+  amenities?: string[];
+  imageUrl?: string;
+}
+
+interface Meal {
+  id?: number;
+  name: string;
+  restaurant: string;
+  location: string;
+  time: string;
+  price?: number;
+  cuisine: string;
+  reservationDetails?: string;
+}
+
+interface GeneratedTrip {
+  id?: number;
+  title: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  budget: number;
+  travelers: number;
+  summary: string;
+  days: TripDay[];
+  highlights?: string[];
+  recommendations?: string[];
+  totalCost?: number;
+  flights?: Flight[];
+  accommodation?: Accommodation[];
+  activities?: TripActivity[];
+  meals?: Meal[];
+}
+
+interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,8 +113,8 @@ import {
 export default function AITripGenerator() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedTrip, setGeneratedTrip] = useState<any>(null);
-  const [conversation, setConversation] = useState<any[]>([]);
+  const [generatedTrip, setGeneratedTrip] = useState<GeneratedTrip | null>(null);
+  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [showQuestions, setShowQuestions] = useState(false);
   const [assistantMessage, setAssistantMessage] = useState('');
   const [clientEmail, setClientEmail] = useState('');
@@ -42,7 +122,7 @@ export default function AITripGenerator() {
   const { toast } = useToast();
 
   const createItineraryMutation = useMutation({
-    mutationFn: async (data: { tripData: any; clientEmail: string }) => {
+    mutationFn: async (data: { tripData: GeneratedTrip; clientEmail: string }) => {
       const response = await apiRequest('POST', '/api/create-client-itinerary', data);
       if (!response.ok) {
         throw new Error('Failed to create itinerary');
@@ -294,7 +374,7 @@ export default function AITripGenerator() {
   );
 }
 
-function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
+function TripResultsView({ trip, onBack }: { trip: GeneratedTrip; onBack: () => void }) {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -354,7 +434,7 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <Plane className="w-5 h-5 text-blue-600" />
                 <span>Flights</span>
               </h3>
-              {trip.flights?.map((flight: any, index: number) => (
+              {trip.flights?.map((flight: Flight, index: number) => (
                 <Card key={index} className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
@@ -374,7 +454,7 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <Bed className="w-5 h-5 text-purple-600" />
                 <span>Accommodation</span>
               </h3>
-              {trip.accommodation?.map((hotel: any, index: number) => (
+              {trip.accommodation?.map((hotel: Accommodation, index: number) => (
                 <Card key={index} className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
@@ -400,7 +480,7 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <MapPin className="w-5 h-5 text-red-600" />
                 <span>Activities & Schedule</span>
               </h3>
-              {trip.activities?.map((activity: any, index: number) => (
+              {trip.activities?.map((activity: TripActivity, index: number) => (
                 <Card key={index} className="p-4">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -420,7 +500,7 @@ function TripResultsView({ trip, onBack }: { trip: any; onBack: () => void }) {
                 <Utensils className="w-5 h-5 text-orange-600" />
                 <span>Dining</span>
               </h3>
-              {trip.meals?.map((meal: any, index: number) => (
+              {trip.meals?.map((meal: Meal, index: number) => (
                 <Card key={index} className="p-4">
                   <div className="flex justify-between items-start">
                     <div>

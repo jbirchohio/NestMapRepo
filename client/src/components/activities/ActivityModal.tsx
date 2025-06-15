@@ -36,7 +36,7 @@ export default function ActivityModal({
       onClose();
       onSave();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message,

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { insertActivitySchema, transformActivityToFrontend } from '@shared/schema';
 import { transformActivityToDatabase } from '@shared/fieldTransforms';
 import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext } from '../middleware/organizationScoping';
+import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext';
 import { storage } from '../storage';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation';
 

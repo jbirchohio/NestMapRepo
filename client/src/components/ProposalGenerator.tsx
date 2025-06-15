@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { FileText, DollarSign, User, Building, Mail, Phone, Globe, Download, Calculator } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProposalGeneratorProps {
@@ -17,6 +18,8 @@ interface ProposalGeneratorProps {
 }
 
 export default function ProposalGenerator({ tripId, tripTitle }: ProposalGeneratorProps) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     clientName: "",
@@ -27,6 +30,8 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
     contactPhone: "",
     contactWebsite: ""
   });
+  const [selectedProposal, setSelectedProposal] = useState<any>(null);
+  const [signature, setSignature] = useState({ signedBy: "", signatureImage: "" });
 
   // Fetch real cost estimate from API
   const { data: costEstimate, isLoading: loadingCost } = useQuery({
@@ -39,6 +44,74 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
       return response.json();
     }
   });
+
+  // Fetch proposals for this trip
+  const { data: proposals, refetch: refetchProposals } = useQuery({
+    queryKey: ['/api/proposals', { tripId }],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/proposals?tripId=${tripId}`);
+      if (!response.ok) throw new Error("Failed to fetch proposals");
+      return response.json();
+    }
+  });
+
+  // Create proposal
+  const createProposal = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", `/api/proposals`, data);
+      if (!response.ok) throw new Error("Failed to save proposal");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSelectedProposal(data);
+      queryClient.invalidateQueries({ queryKey: ['/api/proposals', { tripId }] });
+      toast({ title: "Proposal saved!", description: "Your proposal has been saved and is ready for approval/updates." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save proposal", variant: "destructive" });
+    }
+  });
+
+  // Update proposal status
+  const updateProposalStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string, status: string }) => {
+      const response = await apiRequest("PATCH", `/api/proposals/${id}/status`, { status });
+      if (!response.ok) throw new Error("Failed to update status");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSelectedProposal(data);
+      queryClient.invalidateQueries({ queryKey: ['/api/proposals', { tripId }] });
+      toast({ title: "Proposal status updated" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    }
+  });
+
+  // Sign proposal
+  const signProposal = useMutation({
+    mutationFn: async ({ id, signedBy, signatureImage }: { id: string, signedBy: string, signatureImage?: string }) => {
+      const response = await apiRequest("PATCH", `/api/proposals/${id}/sign`, { signedBy, signatureImage });
+      if (!response.ok) throw new Error("Failed to sign proposal");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSelectedProposal(data);
+      queryClient.invalidateQueries({ queryKey: ['/api/proposals', { tripId }] });
+      toast({ title: "Proposal signed!", description: "Proposal is now ready for invoicing." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to sign proposal", variant: "destructive" });
+    }
+  });
+
+  // Load latest proposal for trip on mount or when proposals change
+  useEffect(() => {
+    if (proposals && proposals.length > 0) {
+      setSelectedProposal(proposals[0]); // Use most recent or allow selection
+    }
+  }, [proposals]);
 
   // Generate actual PDF proposal
   const generateProposal = useMutation({
@@ -78,7 +151,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleGenerateProposal = () => {
+  const handleSaveProposal = () => {
     if (!formData.clientName || !formData.contactEmail) {
       toast({
         title: "Missing Information",
@@ -87,7 +160,44 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
       });
       return;
     }
-    generateProposal.mutate(formData);
+    const payload = {
+      tripId,
+      clientName: formData.clientName,
+      agentName: formData.agentName,
+      companyName: formData.companyName,
+      proposalNotes: formData.proposalNotes,
+      clientEmail: formData.contactEmail,
+      clientPhone: formData.contactPhone,
+      contactInfo: {
+        email: formData.contactEmail,
+        phone: formData.contactPhone,
+        website: formData.contactWebsite
+      },
+      estimatedCost: costEstimate?.estimatedCost || 0,
+      costBreakdown: costEstimate?.costBreakdown || {},
+      status: "draft"
+    };
+    createProposal.mutate(payload);
+  };
+
+  const handleStatusChange = (status: string) => {
+    if (!selectedProposal) return;
+    updateProposalStatus.mutate({ id: selectedProposal.id, status });
+  };
+
+  const handleSignProposal = () => {
+    if (!selectedProposal) return;
+    if (!signature.signedBy) {
+      toast({ title: "Signer name required", description: "Please enter the signer's name.", variant: "destructive" });
+      return;
+    }
+    signProposal.mutate({ id: selectedProposal.id, signedBy: signature.signedBy, signatureImage: signature.signatureImage });
+  };
+
+  const handleConvertToInvoice = () => {
+    if (!selectedProposal) return;
+    // Navigate to InvoiceCenter with selected proposalId
+    navigate(`/invoice-center?proposalId=${selectedProposal.id}`);
   };
 
   const formatCurrency = (amount: number) => {
@@ -101,6 +211,39 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
 
   return (
     <div className="space-y-6">
+      {/* Proposal Status & Actions */}
+      {selectedProposal && (
+        <div className="flex flex-wrap items-center gap-4 justify-between p-3 bg-gray-50 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">Status: {selectedProposal.status}</Badge>
+            {selectedProposal.status === 'signed' && <Badge variant="success">Ready to Invoice</Badge>}
+          </div>
+          <div className="flex items-center gap-2">
+            {selectedProposal.status !== 'signed' && (
+              <Button size="sm" onClick={() => handleStatusChange('sent')}>Mark as Sent</Button>
+            )}
+            {selectedProposal.status === 'sent' && (
+              <Button size="sm" onClick={() => handleStatusChange('viewed')}>Mark as Viewed</Button>
+            )}
+            {selectedProposal.status !== 'signed' && (
+              <Button size="sm" onClick={() => handleStatusChange('rejected')} variant="destructive">Reject</Button>
+            )}
+            {selectedProposal.status !== 'signed' && (
+              <Button size="sm" onClick={() => handleStatusChange('expired')}>Expire</Button>
+            )}
+            {selectedProposal.status !== 'signed' && (
+              <Button size="sm" onClick={() => handleStatusChange('cancelled')}>Cancel</Button>
+            )}
+            {selectedProposal.status !== 'signed' && (
+              <Button size="sm" onClick={() => handleStatusChange('signed')}>Mark as Signed</Button>
+            )}
+            {selectedProposal.status === 'signed' && (
+              <Button size="sm" variant="success" onClick={handleConvertToInvoice}>Convert to Invoice</Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <FileText className="h-6 w-6 text-blue-600" />
@@ -293,26 +436,40 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
         </Card>
       </div>
 
-      {/* Generate Button */}
-      <div className="flex justify-center">
+      {/* Save Proposal & Signature */}
+      <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
         <Button
-          onClick={handleGenerateProposal}
-          disabled={generateProposal.isPending || !formData.clientName || !formData.contactEmail}
+          onClick={handleSaveProposal}
+          disabled={createProposal.isPending || !formData.clientName || !formData.contactEmail}
           size="lg"
           className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
         >
-          {generateProposal.isPending ? (
+          {createProposal.isPending ? (
             <>
               <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-              Generating Proposal...
+              Saving Proposal...
             </>
           ) : (
             <>
               <Download className="h-4 w-4 mr-2" />
-              Generate Professional Proposal
+              Save/Update Proposal
             </>
           )}
         </Button>
+        {/* Signature UI */}
+        {selectedProposal && selectedProposal.status !== 'signed' && (
+          <div className="flex flex-col gap-2 items-center">
+            <Input
+              placeholder="Signer Name"
+              value={signature.signedBy}
+              onChange={e => setSignature(s => ({ ...s, signedBy: e.target.value }))}
+              className="max-w-xs"
+            />
+            <Button size="sm" onClick={handleSignProposal} disabled={signProposal.isPending || !signature.signedBy} variant="secondary">
+              {signProposal.isPending ? 'Signing...' : 'Sign Proposal'}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Features Badge */}

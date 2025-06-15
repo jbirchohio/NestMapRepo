@@ -5,8 +5,18 @@ import { UserRepository } from '../interfaces/user.repository.interface';
 import { User } from '../../../db/schema';
 import { hash, compare } from 'bcryptjs';
 import { BadRequestError } from '../../common/errors';
+import { BaseRepositoryImpl } from '../../common/repositories/base.repository';
+import { Injectable } from '@nestjs/common';
 
-export class UserRepositoryImpl implements UserRepository {
+/**
+ * User repository implementation that extends the base repository implementation
+ * Implements user-specific operations in addition to common CRUD operations
+ */
+@Injectable()
+export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'emailVerified' | 'isActive' | 'failedLoginAttempts' | 'lockedUntil'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> implements UserRepository {  
+  constructor() {
+    super('User', users, users.id);
+  }
   async findByEmail(email: string): Promise<User | undefined> {
     const [user] = await db
       .select()
