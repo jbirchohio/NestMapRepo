@@ -3,14 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { UserRepositoryImpl } from './repositories/user.repository';
 import { RefreshTokenRepositoryImpl } from './repositories/refresh-token';
-import { AuthService } from './services/auth.service.new';
 import { JwtAuthService } from './services/jwtAuthService';
 import { AuthController } from './controllers/auth.controller';
 import { EmailService } from '../email/interfaces/email.service.interface';
 import { NodemailerEmailService } from '../email/services/nodemailer-email.service';
 import { UserRepository } from './interfaces/user.repository.interface';
 import { RefreshTokenRepository } from './interfaces/refresh-token.repository.interface';
-import { AuthResponse } from './services/auth.service.new';
 import { IAuthService } from './interfaces/auth.service.interface';
 
 export interface AuthContainerDependencies {

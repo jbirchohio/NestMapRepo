@@ -348,11 +348,12 @@ Format as JSON:
     });
   } catch (error) {
     console.error("AI suggest-activities error:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Failed to generate activity suggestions" 
-// POST /api/ai/translate-content - Translate content using AI
-router.post("/translate-content", async (req, res) => {
+    res.status(500).json({
+      success: false,
+      error: "Failed to generate activity suggestions"
+    });
+  }
+});
   try {
     const { text, target_language } = req.body;
     
