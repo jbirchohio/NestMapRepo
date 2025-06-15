@@ -311,11 +311,6 @@ export class TokenManager {
     }
   }
 
-  public getTokenExpiration(): number {
-    const decoded = this.getDecodedToken();
-    return decoded ? decoded.exp : 0;
-  }
-
   public getTokenType(): string {
     const decoded = this.getDecodedToken();
     return decoded ? decoded.type || 'access' : 'unknown';
@@ -450,15 +445,4 @@ export class TokenManager {
     }
   }
 
-  // Decode token safely
-  private async decodeToken(token: string): Promise<{ exp: number }> {
-    try {
-      const decoded = await api.get<{ exp: number }>('/auth/decode', {
-        params: { token }
-      });
-      return decoded.data;
-    } catch (error) {
-      throw new Error('Failed to decode token');
-    }
-  }
 }

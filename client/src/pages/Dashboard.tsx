@@ -207,57 +207,7 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}                <AnimatedCard className="hover:shadow-xl transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Team Size</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{analytics?.teamSize}</div>
-                  </CardContent>
-                </AnimatedCard>
-              </>
-            ) : (
-              <>
-                <AnimatedCard className="hover:shadow-xl transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Proposals</CardTitle>
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{analytics?.totalProposals}</div>
-                  </CardContent>
-                </AnimatedCard>
-                <AnimatedCard className="hover:shadow-xl transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">${analytics?.totalRevenue.toLocaleString()}</div>
-                  </CardContent>
-                </AnimatedCard>
-                <AnimatedCard className="hover:shadow-xl transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{analytics?.winRate}%</div>
-                  </CardContent>
-                </AnimatedCard>
-                <AnimatedCard className="hover:shadow-xl transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{analytics?.activeClients}</div>
-                  </CardContent>
-                </AnimatedCard>
-              </>
-            )}
-          </div>
+}
 
           {/* Sections */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -303,10 +253,12 @@ export default function Dashboard() {
             </Button>
           </div>
 
-          <NewTripModal 
-            isOpen={isNewTripModalOpen} 
-            onClose={() => setIsNewTripModalOpen(false)} 
+          <NewTripModal
+            isOpen={isNewTripModalOpen}
+            onClose={() => setIsNewTripModalOpen(false)}
           />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="relative overflow-hidden bg-gradient-to-br from-electric-500 via-electric-600 to-electric-700 text-white mb-8 rounded-2xl"
@@ -606,9 +558,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <NewTripModal 
-        isOpen={isNewTripModalOpen} 
-        onClose={() => setIsNewTripModalOpen(false)} 
+      <NewTripModal
+        isOpen={isNewTripModalOpen}
+        onClose={() => setIsNewTripModalOpen(false)}
         onSuccess={() => setIsNewTripModalOpen(false)}
         userId={user?.id}
       />
