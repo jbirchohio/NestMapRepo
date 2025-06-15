@@ -31,10 +31,10 @@ export class InputValidator {
   ];
 
   private static filePatterns: RegExp[] = [
-    /\b(\.{2}\\|\.{2}/)/g,
-    /\b(\.{2}\\\.\\|\.{2}/\.)/g,
-    /\b(\\\\|//)/g,
-    /\b(\\|/)/g
+    /\b(\.\.\\|\.\.\/)/g,
+    /\b(\.\.\\\.\\|\.\.\/\.)/g,
+    /\b(\\\\|\/\/)/g,
+    /\b(\\|\/)/g
   ];
 
   static validateString(input: string, options: { maxLength?: number; minLength?: number; pattern?: RegExp } = {}): string {
@@ -42,7 +42,6 @@ export class InputValidator {
       throw new ValidationError('Input must be a string');
     }
 
-    // Check length
     if (options.maxLength && input.length > options.maxLength) {
       throw new ValidationError(`Input exceeds maximum length of ${options.maxLength}`);
     }
@@ -51,12 +50,10 @@ export class InputValidator {
       throw new ValidationError(`Input is shorter than minimum length of ${options.minLength}`);
     }
 
-    // Check pattern
     if (options.pattern && !options.pattern.test(input)) {
       throw new ValidationError('Input does not match required pattern');
     }
 
-    // Sanitize input
     return this.sanitizeString(input);
   }
 
@@ -87,27 +84,22 @@ export class InputValidator {
   private static sanitizeString(input: string): string {
     let sanitized = input;
 
-    // Remove XSS patterns
     this.xssPatterns.forEach(pattern => {
       sanitized = sanitized.replace(pattern, '');
     });
 
-    // Remove SQL injection patterns
     this.sqlPatterns.forEach(pattern => {
       sanitized = sanitized.replace(pattern, '');
     });
 
-    // Remove command injection patterns
     this.cmdPatterns.forEach(pattern => {
       sanitized = sanitized.replace(pattern, '');
     });
 
-    // Remove file injection patterns
     this.filePatterns.forEach(pattern => {
       sanitized = sanitized.replace(pattern, '');
     });
 
-    // Additional sanitization
     sanitized = sanitized.replace(/&/g, '&amp;');
     sanitized = sanitized.replace(/</g, '&lt;');
     sanitized = sanitized.replace(/>/g, '&gt;');

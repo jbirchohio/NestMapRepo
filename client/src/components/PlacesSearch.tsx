@@ -7,7 +7,6 @@ import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useDebounce } from "@/hooks/use-debounce";
 
 
-}
 
 interface Place {
   name: string;

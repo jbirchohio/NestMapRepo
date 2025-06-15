@@ -132,7 +132,7 @@ export class SecurityUtils {
       console.error('Request validation failed:', error);
       return false;
     }
-  // Security Audit
+  }
   public auditSecurity(): void {
     // Check security headers
     const headers = this.getSecurityHeaders();
