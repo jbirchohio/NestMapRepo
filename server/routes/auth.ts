@@ -12,7 +12,7 @@ import {
 } from '../src/auth/dtos/auth.dto';
 
 // Import middleware
-import { authRateLimit } from '../../middleware/comprehensive-rate-limiting';
+import { authRateLimit } from '../middleware/comprehensive-rate-limiting';
 import { validateRequest } from '../src/auth/middleware/validation.middleware';
 
 export const createAuthRouter = (configService: ConfigService): Router => {

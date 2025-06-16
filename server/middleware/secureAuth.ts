@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, TokenPayload, TokenType } from '../../utils/secureJwt';
+import { verifyToken, TokenPayload, TokenType } from '../utils/secureJwt';
 import { redis } from '../db/redis';
 import { logger } from '../utils/logger';
 

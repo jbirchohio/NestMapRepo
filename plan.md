@@ -19,6 +19,7 @@
 - Added root node type path in `client/tsconfig.json` for tsc.
 - Fixed auth logger to use `payload.email` and marked unused rate limiter in `jwtAuth`.
 - Flagged raw SQL queries in `superadmin` routes for parameterization.
+- Fixed backend import paths (`comprehensive-rate-limiting`, `secureJwt`, `jwt` utilities) to resolve module not found errors.
 
 ## 🔮 Suggested Enhancements
 - [ ] Add sample orgs and proposals for demo [optional]
