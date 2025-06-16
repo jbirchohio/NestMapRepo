@@ -62,3 +62,11 @@ export const CogIcon = createIcon(
 export const LogoutIcon = createIcon(
   'M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'
 );
+
+export const CheckIcon = createIcon(
+  'M5 13l4 4L19 7'
+);
+
+export const FileTextIcon = createIcon(
+  'M12 1H6a2 2 0 00-2 2v18a2 2 0 002 2h12a2 2 0 002-2V7l-6-6zM14 2v6h6M16 13H8m8 4H8m0-8h.01'
+);

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,19 @@ export default function InvoiceCenter() {
       taxRate: 0
     }
   });
+
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const proposalId = searchParams.get('proposalId');
+    if (proposalId && proposals) {
+      const proposal = proposals.find((p: any) => String(p.id) === proposalId);
+      if (proposal) {
+        convertProposalToInvoice(proposal);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, proposals]);
 
   const convertProposalToInvoice = (proposal: any) => {
     setSelectedProposal(proposal);
