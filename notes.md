@@ -73,3 +73,8 @@ This document contains technical notes, reasoning behind fixes, edge case handli
 
 ## TODOs for Follow-up
 <!-- To be populated during audit -->
+
+### Frontend audit notes
+- Adjusted `client/tsconfig.json` to include root `node_modules` for TypeScript checks.
+- Marked `SuperadminFixed.tsx` and `SuperadminSimple.tsx` as `// UNUSED` for potential deletion.
+- Fixed some minor type issues in `Dashboard` and `FlightSearch`.
