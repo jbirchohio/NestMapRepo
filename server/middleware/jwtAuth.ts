@@ -10,7 +10,7 @@ import { jwtService } from '../utils/jwtService';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
-});
+}); // UNUSED
 
 // Redis-based rate limiter
 const rateLimiter = new RateLimiterRedis({
@@ -76,7 +76,7 @@ export const validateJWT = async (req: Request, res: Response, next: NextFunctio
       } as User;
 
       // Log successful authentication
-      logger.info(`User ${decoded.email} authenticated successfully`, {
+      logger.info(`User ${payload.email} authenticated successfully`, {
         ip: req.ip,
         userAgent: req.headers['user-agent']
       });

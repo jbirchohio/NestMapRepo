@@ -447,11 +447,11 @@ router.delete('/users/:id', requireSuperadminRole, async (req, res) => {
 router.get('/activity', requireSuperadminRole, async (req, res) => {
   try {
     // Use direct SQL to avoid schema mismatches
-    const activities = await db.execute(`
-      SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type, 
+    const activities = await db.execute(` // TODO: parameterize query
+      SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type,
              target_id as entity_id, details, risk_level, created_at
-      FROM superadmin_audit_logs 
-      ORDER BY created_at DESC 
+      FROM superadmin_audit_logs
+      ORDER BY created_at DESC
       LIMIT 100
     `);
 
@@ -964,7 +964,7 @@ router.get('/dashboard', requireSuperadminRole, async (req, res) => {
       `),
       
       // Activity logs
-      db.execute(`
+      db.execute(` // TODO: parameterize query
         SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type, target_id as entity_id, details, risk_level, created_at
         FROM superadmin_audit_logs
         ORDER BY created_at DESC

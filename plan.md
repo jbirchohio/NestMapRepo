@@ -17,6 +17,8 @@
 - Fixed role check in `Dashboard` to use `user.role`.
 - Marked legacy `SuperadminFixed` and `SuperadminSimple` pages as unused.
 - Added root node type path in `client/tsconfig.json` for tsc.
+- Fixed auth logger to use `payload.email` and marked unused rate limiter in `jwtAuth`.
+- Flagged raw SQL queries in `superadmin` routes for parameterization.
 
 ## 🔮 Suggested Enhancements
 - [ ] Add sample orgs and proposals for demo [optional]
