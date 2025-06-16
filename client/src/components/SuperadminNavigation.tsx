@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation } from 'react-router-dom';
 import { Shield, Users, Building2, Activity, CreditCard, Settings, LogOut, BarChart3, Flag, Briefcase, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

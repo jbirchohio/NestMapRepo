@@ -94,7 +94,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
       try {
         const accessToken = tokenManager.getAccessToken();
         if (accessToken) {
-          const decoded = decodeJWT(accessToken);
+          const decoded = decodeToken(accessToken);
           if (!isTokenExpired(accessToken)) {
             setUser({
               id: parseInt(decoded.sub),

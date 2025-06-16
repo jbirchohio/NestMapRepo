@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { MenuIcon, XIcon } from '../Icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';

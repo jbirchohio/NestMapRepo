@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { useAuthContext as useAuth } from '@/contexts/SecureJWTAuthContext';
 import { userService } from '@/services/api/userService';
 
 export default function RoleBasedRedirect() {
   const { roleType, authReady, user } = useAuth();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [permissionsChecked, setPermissionsChecked] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function RoleBasedRedirect() {
               userData.role === 'superadmin_staff' || 
               userData.role === 'superadmin_auditor' || 
               userData.role === 'super_admin') {
-            setLocation('/superadmin');
+            navigate('/superadmin');
             setPermissionsChecked(true);
             return;
           }
@@ -36,7 +36,7 @@ export default function RoleBasedRedirect() {
           if (permissions.includes('ACCESS_ANALYTICS') &&
               permissions.includes('BILLING_ACCESS') &&
               permissions.includes('MANAGE_TEAM_ROLES')) {
-            setLocation('/admin');
+            navigate('/admin');
             setPermissionsChecked(true);
             return;
           }
@@ -48,12 +48,12 @@ export default function RoleBasedRedirect() {
       }
 
       // Map role types to unified dashboard route
-      setLocation('/dashboard');
+      navigate('/dashboard');
       setPermissionsChecked(true);
     };
 
     checkPermissions();
-  }, [authReady, user, roleType, setLocation, permissionsChecked]);
+  }, [authReady, user, roleType, navigate, permissionsChecked]);
 
   return null; // This component doesn't render anything
 }

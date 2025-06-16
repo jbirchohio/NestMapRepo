@@ -148,9 +148,9 @@ export function HotelResults({
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {hotel.amenities.slice(0, 4).map((amenity, index) => (
+                        {hotel.amenities.slice(0, 4).map((amenity) => (
                           <Badge
-                            key={index}
+                            key={amenity}
                             variant="secondary"
                             className="flex items-center gap-1"
                           >

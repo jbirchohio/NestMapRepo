@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { NavigationItem } from './types';
 
 interface NavigationLinkProps extends Omit<NavigationItem, 'requiresAuth'> {

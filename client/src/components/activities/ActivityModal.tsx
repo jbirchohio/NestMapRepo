@@ -17,6 +17,7 @@ export default function ActivityModal({
 }: ActivityModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(date);
 
   const activityMutation = useMutation({
     mutationFn: async (data: ActivityFormValues) => {
@@ -61,29 +62,31 @@ export default function ActivityModal({
             <TripDatePicker
               startDate={date}
               endDate={date}
-              selectedDate={date.toISOString().split('T')[0]}
-              onDateSelect={(selectedDate: string) => {
-                // TODO: Implement date change handler
+              selectedDate={selectedDate.toISOString().split('T')[0]}
+              onDateSelect={(selected: string) => {
+                setSelectedDate(new Date(selected));
               }}
             />
           </div>
 
-          <ActivityForm
-            activity={activity ? {
-              title: activity.title,
-              date: new Date(activity.date),
-              time: activity.time,
-              locationName: activity.locationName,
-              travelMode: activity.travelMode,
-              notes: activity.notes,
-              tag: activity.tag,
-              latitude: activity.latitude,
-              longitude: activity.longitude,
-              assignedTo: activity.assignedTo
-            } : undefined}
-            tripId={tripId.toString()}
-            onSubmit={handleSubmit}
-          />
+            <ActivityForm
+              activity={activity
+                ? {
+                    title: activity.title,
+                    date: selectedDate,
+                    time: activity.time,
+                    locationName: activity.locationName,
+                    travelMode: activity.travelMode,
+                    notes: activity.notes,
+                    tag: activity.tag,
+                    latitude: activity.latitude,
+                    longitude: activity.longitude,
+                    assignedTo: activity.assignedTo,
+                  }
+                : { date: selectedDate }}
+              tripId={tripId.toString()}
+              onSubmit={handleSubmit}
+            />
         </div>
       </div>
     </div>

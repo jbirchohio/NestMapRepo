@@ -165,8 +165,8 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {result.optimizations.map((optimization, index) => (
-              <div key={index} className="flex items-start justify-between p-3 border rounded-lg dark:border-gray-700">
+            {result.optimizations.map((optimization) => (
+              <div key={optimization.description} className="flex items-start justify-between p-3 border rounded-lg dark:border-gray-700">
                 <div className="flex items-start gap-3 flex-1">
                   <span className="text-xl">{getOptimizationIcon(optimization.type)}</span>
                   <div className="flex-1">

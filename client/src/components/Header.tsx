@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,16 +31,16 @@ export default function Header({
   onExportPDF,
   onDeleteTrip
 }: HeaderProps) {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   return (
     <header className="bg-white dark:bg-[hsl(var(--card))] shadow-sm z-10">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <div 
-            className="flex items-center cursor-pointer" 
-            onClick={() => setLocation('/')}
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => navigate('/')}
           >
             <div className="h-8 w-8 bg-[hsl(var(--secondary))] rounded-full flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[hsl(var(--foreground))]" viewBox="0 0 20 20" fill="currentColor">

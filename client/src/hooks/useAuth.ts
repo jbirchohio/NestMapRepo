@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { User } from '../types/user';
 
 interface AuthState {

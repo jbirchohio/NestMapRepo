@@ -280,8 +280,8 @@ function CarbonTrackingTab({ carbonData }: { carbonData: any }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {recommendations?.map((rec: any, index: number) => (
-              <Alert key={index}>
+            {recommendations?.map((rec: any) => (
+              <Alert key={rec.action}>
                 <Leaf className="w-4 h-4" />
                 <AlertDescription>
                   <div className="flex justify-between items-start">
@@ -407,8 +407,8 @@ function ExpenseManagementTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {expenseData.categories?.map((cat: any, index: number) => (
-                  <div key={index} className="space-y-2">
+                {expenseData.categories?.map((cat: any) => (
+                  <div key={cat.name} className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{cat.name}</span>
                       <div className="flex items-center gap-2">
@@ -445,8 +445,8 @@ function ExpenseManagementTab({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {expenseData.receipts.slice(0, 5).map((receipt: any, index: number) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              {expenseData.receipts.slice(0, 5).map((receipt: any) => (
+                <div key={receipt.description} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex-1">
                     <div className="font-medium">{receipt.description}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -480,8 +480,8 @@ function CarbonOffsetsTab({ offsetOptions, carbonFootprint, onPurchaseOffset, is
       </Alert>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {offsetOptions?.map((option: any, index: number) => (
-          <Card key={index} className="relative">
+        {offsetOptions?.map((option: any) => (
+          <Card key={option.provider + option.project} className="relative">
             <CardHeader>
               <CardTitle className="text-lg">{option.provider}</CardTitle>
               <CardDescription>{option.project}</CardDescription>
