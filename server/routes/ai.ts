@@ -354,6 +354,8 @@ Format as JSON:
     });
   }
 });
+
+router.post("/translate-content", async (req, res) => {
   try {
     const { text, target_language } = req.body;
     

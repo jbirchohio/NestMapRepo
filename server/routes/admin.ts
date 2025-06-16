@@ -629,9 +629,14 @@ router.put('/roles/:id', validateAndSanitizeRequest({ params: roleIdParamSchema,
       // For default roles, we can't update the role definition but we can track the attempt
       res.status(400).json({ error: "Cannot modify default system roles" });
     }
-  } catch (error) {
-// DELETE /api/admin/roles/:id - Delete custom role
-router.delete('/roles/:id', validateAndSanitizeRequest({ params: roleIdParamSchema }), async (req: Request, res: Response) => {
+    } catch (error) {
+      console.error("Error updating role:", error);
+      res.status(500).json({ error: "Failed to update role" });
+    }
+  });
+
+  // DELETE /api/admin/roles/:id - Delete custom role
+  router.delete('/roles/:id', validateAndSanitizeRequest({ params: roleIdParamSchema }), async (req: Request, res: Response) => {
   try {
     const roleId = req.params.id; // Validated by roleIdParamSchema
 
