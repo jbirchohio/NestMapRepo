@@ -1,9 +1,12 @@
 -- Initial schema migration for NestMap
 -- This migration creates the core database structure with proper indexing
 
+-- Enable pgcrypto extension for UUID generation
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 -- Organizations table
 CREATE TABLE IF NOT EXISTS organizations (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   domain TEXT,
   plan TEXT DEFAULT 'free',
@@ -28,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_organizations_domain ON organizations(domain);
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   auth_id TEXT NOT NULL UNIQUE,
   username TEXT NOT NULL UNIQUE,
   email TEXT NOT NULL UNIQUE,
@@ -51,7 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_users_organization_id ON users(organization_id);
 
 -- Trips table with organization isolation
 CREATE TABLE IF NOT EXISTS trips (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   start_date TIMESTAMP NOT NULL,
   end_date TIMESTAMP NOT NULL,
@@ -87,7 +90,7 @@ CREATE INDEX IF NOT EXISTS idx_trips_share_code ON trips(share_code);
 
 -- Activities table with organization isolation
 CREATE TABLE IF NOT EXISTS activities (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id INTEGER NOT NULL,
   organization_id INTEGER REFERENCES organizations(id),
   title TEXT NOT NULL,
@@ -110,7 +113,7 @@ CREATE INDEX IF NOT EXISTS idx_activities_organization_id ON activities(organiza
 
 -- Todos table with organization isolation
 CREATE TABLE IF NOT EXISTS todos (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id INTEGER NOT NULL,
   organization_id INTEGER REFERENCES organizations(id),
   task TEXT NOT NULL,
@@ -124,7 +127,7 @@ CREATE INDEX IF NOT EXISTS idx_todos_organization_id ON todos(organization_id);
 
 -- Notes table with organization isolation
 CREATE TABLE IF NOT EXISTS notes (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id INTEGER NOT NULL,
   organization_id INTEGER REFERENCES organizations(id),
   content TEXT NOT NULL
@@ -136,7 +139,7 @@ CREATE INDEX IF NOT EXISTS idx_notes_organization_id ON notes(organization_id);
 
 -- Team invitations table
 CREATE TABLE IF NOT EXISTS invitations (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL,
   organization_id INTEGER REFERENCES organizations(id),
   invited_by INTEGER REFERENCES users(id) NOT NULL,
@@ -154,7 +157,7 @@ CREATE INDEX IF NOT EXISTS idx_invitations_organization_id ON invitations(organi
 
 -- Trip collaborators table
 CREATE TABLE IF NOT EXISTS trip_collaborators (
-  id SERIAL PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL,
   role TEXT NOT NULL,
