@@ -9,7 +9,7 @@ import {
   updateSubscription 
 } from '../stripe';
 import { db } from '../db';
-import { organizations } from '../schema';
+import { organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 const router = Router();

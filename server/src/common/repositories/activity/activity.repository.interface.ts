@@ -1,4 +1,4 @@
-import { Activity } from '../../../../db/schema';
+import { Activity } from '../../../../db/schema.js';
 
 export interface ActivityRepository {
   // Activity retrieval

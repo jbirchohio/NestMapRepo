@@ -1,5 +1,5 @@
-import express, { Request, Response } from 'express';
-import { eq, desc, count, sql, and, gte, lte } from 'drizzle-orm';
+import express from 'express';
+import { eq, desc, sql, and } from 'drizzle-orm';
 import { db } from '../db';
 import { 
   users, 
@@ -7,39 +7,26 @@ import {
   organizationMembers,
   featureFlags,
   superadminAuditLogs,
-  billingEvents,
   USER_ROLES
-} from '@shared/schema';
+} from '../db/schema.js';
 import {
-  activeSessions,
-  aiUsageLogs,
   superadminFeatureFlags,
   organizationFeatureFlags,
-  superadminBackgroundJobs,
-  systemActivitySummary,
-  insertSuperadminAuditLogSchema,
   insertSuperadminFeatureFlagSchema,
-  insertSuperadminBackgroundJobSchema,
-} from '@shared/superadmin-schema';
+  type SuperadminFeatureFlag
+} from '../db/superadminSchema.js';
+
 // Simple audit logging function
 const auditLogger = {
   logAdminAction: (action: string, adminId: number, data?: any) => {
     console.log(`[AUDIT] Admin ${adminId} performed: ${action}`, data ? JSON.stringify(data) : '');
   }
 };
-import { hashPassword } from '../utils/auth';
-import { stripe, SUBSCRIPTION_PLANS, createStripeCustomer, updateSubscription, createRefund } from '../stripe';
 
-// Define authenticated request interface
-interface AuthenticatedUser {
-  id: number;
-  email: string;
-  role: string;
-  organization_id?: number;
-  displayName?: string;
-}
+import { stripe, SUBSCRIPTION_PLANS, createStripeCustomer, updateSubscription } from '../stripe.js';
 
-import { cleanJwtAuthMiddleware, requireSuperadminRole } from '../middleware/cleanJwtAuth';
+import { validateJWT } from '../middleware/jwtAuth.js';
+import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 // Apply JWT auth to all superadmin routes with proper middleware
@@ -47,8 +34,8 @@ const createSuperadminRoutes = () => {
   const router = express.Router();
   
   // Apply JWT auth and organization context to all routes
-  router.use(cleanJwtAuthMiddleware);
-  router.use(requireSuperadminRole);
+  router.use(validateJWT);
+  router.use(requireSuperadmin);
   router.use(injectOrganizationContext);
   router.use(validateOrganizationAccess);
   
@@ -58,12 +45,12 @@ const createSuperadminRoutes = () => {
 const router = createSuperadminRoutes();
 
 // Middleware for owner-level permissions
-const requireSuperadminRoleOwner = (req: any, res: any, next: any) => {
+const requireSuperadminOwner = (req: AuthenticatedRequest, res: express.Response, next: express.NextFunction) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
-  if (req.user.role !== USER_ROLES.SUPERADMIN_OWNER) {
+  if (req.user.role !== 'super_admin_owner') {
     return res.status(403).json({ error: 'Superadmin owner access required' });
   }
   
@@ -94,7 +81,7 @@ const logSuperadminAction = async (
 };
 
 // Organizations endpoints
-router.get('/organizations', requireSuperadminRole, async (req: any, res: any) => {
+router.get('/organizations', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const orgs = await db
       .select({
@@ -121,9 +108,9 @@ router.get('/organizations', requireSuperadminRole, async (req: any, res: any) =
   }
 });
 
-router.get('/organizations/:id', requireSuperadminRole, async (req: any, res: any) => {
+router.get('/organizations/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.id);
+    const orgId = req.params.id;
     const [org] = await db
       .select()
       .from(organizations)
@@ -156,7 +143,7 @@ router.get('/organizations/:id', requireSuperadminRole, async (req: any, res: an
   }
 });
 
-router.post('/organizations', requireSuperadminRole, async (req, res) => {
+router.post('/organizations', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const { name, domain, plan, employee_count } = req.body;
 
@@ -186,9 +173,9 @@ router.post('/organizations', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.put('/organizations/:id', requireSuperadminRole, async (req, res) => {
+router.put('/organizations/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.id);
+    const orgId = req.params.id;
     const updates = req.body;
 
     const [updatedOrg] = await db
@@ -219,9 +206,9 @@ router.put('/organizations/:id', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.delete('/organizations/:id', requireSuperadminRole, async (req, res) => {
+router.delete('/organizations/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.id);
+    const orgId = req.params.id;
 
     // First check if organization exists
     const [org] = await db
@@ -259,7 +246,7 @@ router.delete('/organizations/:id', requireSuperadminRole, async (req, res) => {
 });
 
 // Users endpoints
-router.get('/users', requireSuperadminRole, async (req, res) => {
+router.get('/users', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const usersData = await db
       .select({
@@ -286,9 +273,9 @@ router.get('/users', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.get('/users/:id', requireSuperadminRole, async (req, res) => {
+router.get('/users/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
     const [user] = await db
       .select({
         id: users.id,
@@ -320,9 +307,9 @@ router.get('/users/:id', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.put('/users/:id', requireSuperadminRole, async (req, res) => {
+router.put('/users/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
     const updates = req.body;
 
     // Validate role if it's being updated
@@ -367,9 +354,9 @@ router.put('/users/:id', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.post('/users/:id/reset-password', requireSuperadminRole, async (req, res) => {
+router.post('/users/:id/reset-password', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
     const { newPassword } = req.body;
 
     if (!newPassword || newPassword.length < 8) {
@@ -404,9 +391,9 @@ router.post('/users/:id/reset-password', requireSuperadminRole, async (req, res)
   }
 });
 
-router.delete('/users/:id', requireSuperadminRole, async (req, res) => {
+router.delete('/users/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
 
     // Get user info before deletion
     const [user] = await db
@@ -444,7 +431,7 @@ router.delete('/users/:id', requireSuperadminRole, async (req, res) => {
 });
 
 // System activity and monitoring
-router.get('/activity', requireSuperadminRole, async (req, res) => {
+router.get('/activity', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const activities = await db
       .select({
@@ -468,7 +455,7 @@ router.get('/activity', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.get('/sessions', requireSuperadminRole, async (req, res) => {
+router.get('/sessions', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     // Get active sessions with proper user data by joining with users table
     const sessions = await db.execute(`
@@ -545,7 +532,7 @@ router.get('/sessions', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.get('/jobs', requireSuperadminRole, async (req, res) => {
+router.get('/jobs', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const jobs = await db.execute(`
       SELECT id, job_type, status, payload, result, error_message, 
@@ -562,7 +549,7 @@ router.get('/jobs', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.get('/billing', requireSuperadminRole, async (req, res) => {
+router.get('/billing', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const billing = await db
       .select({
@@ -595,7 +582,7 @@ router.get('/billing', requireSuperadminRole, async (req, res) => {
 // Billing management endpoints
 
 // Get subscription plans
-router.get('/billing/plans', requireSuperadminRole, async (req, res) => {
+router.get('/billing/plans', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     res.json({ plans: SUBSCRIPTION_PLANS });
   } catch (error) {
@@ -605,7 +592,7 @@ router.get('/billing/plans', requireSuperadminRole, async (req, res) => {
 });
 
 // Test Stripe integration
-router.get('/billing/test-stripe', requireSuperadminRole, async (req, res) => {
+router.get('/billing/test-stripe', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const testResults: any = {
       timestamp: new Date().toISOString(),
@@ -668,9 +655,10 @@ router.get('/billing/test-stripe', requireSuperadminRole, async (req, res) => {
     res.status(500).json({ error: 'Failed to test Stripe integration' });
   }
 });
-router.post('/billing/:orgId/upgrade', requireSuperadminRole, async (req, res) => {
+
+router.post('/billing/:orgId/upgrade', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
+    const orgId = req.params.orgId;
     const { newPlan, previousPlan } = req.body;
     
     // Validate plan upgrade path
@@ -750,9 +738,9 @@ router.post('/billing/:orgId/upgrade', requireSuperadminRole, async (req, res) =
   }
 });
 
-router.post('/billing/:orgId/downgrade', requireSuperadminRole, async (req, res) => {
+router.post('/billing/:orgId/downgrade', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
+    const orgId = req.params.orgId;
     const { newPlan, previousPlan } = req.body;
     
     // Validate plan downgrade path
@@ -815,9 +803,9 @@ router.post('/billing/:orgId/downgrade', requireSuperadminRole, async (req, res)
   }
 });
 
-router.post('/billing/:orgId/refund', requireSuperadminRole, async (req, res) => {
+router.post('/billing/:orgId/refund', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
+    const orgId = req.params.orgId;
     const { amount, reason, refundType } = req.body;
     
     // Get organization details
@@ -856,9 +844,9 @@ router.post('/billing/:orgId/refund', requireSuperadminRole, async (req, res) =>
   }
 });
 
-router.post('/billing/:orgId/suspend', requireSuperadminRole, async (req, res) => {
+router.post('/billing/:orgId/suspend', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
+    const orgId = req.params.orgId;
     const { reason } = req.body;
     
     // Update organization status
@@ -891,9 +879,9 @@ router.post('/billing/:orgId/suspend', requireSuperadminRole, async (req, res) =
   }
 });
 
-router.post('/billing/:orgId/reactivate', requireSuperadminRole, async (req, res) => {
+router.post('/billing/:orgId/reactivate', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
+    const orgId = req.params.orgId;
     
     // Update organization status
     const [updatedOrg] = await db
@@ -925,7 +913,7 @@ router.post('/billing/:orgId/reactivate', requireSuperadminRole, async (req, res
 });
 
 // Consolidated dashboard endpoint to prevent rate limiting
-router.get('/dashboard', requireSuperadminRole, async (req, res) => {
+router.get('/dashboard', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     // Execute all queries in parallel but return as single response
     const [
@@ -1042,9 +1030,9 @@ router.get('/dashboard', requireSuperadminRole, async (req, res) => {
 });
 
 // Update feature flag
-router.put('/flags/:id', requireSuperadminRole, async (req, res) => {
+router.put('/flags/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const flagId = parseInt(req.params.id);
+    const flagId = req.params.id;
     const { default_value } = req.body;
 
     const updateResult = await db.execute(`
@@ -1075,11 +1063,11 @@ router.put('/flags/:id', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.get('/flags', requireSuperadminRole, async (req, res) => {
+router.get('/flags', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const flags = await db
       .select()
-      .from(featureFlags)
+      .from(superadminFeatureFlags)
       .orderBy(featureFlags.flag_name);
 
     res.json(flags);
@@ -1089,7 +1077,7 @@ router.get('/flags', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.post('/flags', requireSuperadminRole, async (req, res) => {
+router.post('/flags', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const flagData = insertSuperadminFeatureFlagSchema.parse(req.body);
 
@@ -1113,18 +1101,18 @@ router.post('/flags', requireSuperadminRole, async (req, res) => {
   }
 });
 
-router.put('/flags/:id', requireSuperadminRole, async (req, res) => {
+router.put('/flags/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const flagId = parseInt(req.params.id);
+    const flagId = req.params.id;
     const updates = req.body;
 
     const [updatedFlag] = await db
-      .update(featureFlags)
+      .update(superadminFeatureFlags)
       .set({
         ...updates,
         updated_at: new Date()
       })
-      .where(eq(featureFlags.id, flagId))
+      .where(eq(superadminFeatureFlags.id, flagId))
       .returning();
 
     if (!updatedFlag) {
@@ -1147,9 +1135,9 @@ router.put('/flags/:id', requireSuperadminRole, async (req, res) => {
 });
 
 // Organization-specific feature flag overrides
-router.get('/organizations/:orgId/flags', requireSuperadminRole, async (req, res) => {
+router.get('/organizations/:orgId/flags', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
+    const orgId = req.params.orgId;
 
     // Get all global flags and organization-specific overrides
     const globalFlags = await db
@@ -1179,9 +1167,9 @@ router.get('/organizations/:orgId/flags', requireSuperadminRole, async (req, res
   }
 });
 
-router.post('/organizations/:orgId/flags/:flagName', requireSuperadminRole, async (req, res) => {
+router.post('/organizations/:orgId/flags/:flagName', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
+    const orgId = req.params.orgId;
     const flagName = req.params.flagName;
     const { enabled } = req.body;
 
@@ -1242,9 +1230,9 @@ router.post('/organizations/:orgId/flags/:flagName', requireSuperadminRole, asyn
   }
 });
 
-router.delete('/organizations/:orgId/flags/:flagName', requireSuperadminRole, async (req, res) => {
+router.delete('/organizations/:orgId/flags/:flagName', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const orgId = parseInt(req.params.orgId);
+    const orgId = req.params.orgId;
     const flagName = req.params.flagName;
 
     // Delete the override (reverts to global default)
@@ -1287,7 +1275,7 @@ router.delete('/organizations/:orgId/flags/:flagName', requireSuperadminRole, as
 });
 
 // Bulk feature flag operations
-router.post('/flags/bulk-update', requireSuperadminRole, async (req, res) => {
+router.post('/flags/bulk-update', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const { updates } = req.body; // Array of { flagId, enabled }
 
@@ -1323,7 +1311,7 @@ router.post('/flags/bulk-update', requireSuperadminRole, async (req, res) => {
 });
 
 // Create new feature flag
-router.post('/flags', requireSuperadminRole, async (req, res) => {
+router.post('/flags', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const { flag_name, description, default_value } = req.body;
 
@@ -1362,9 +1350,9 @@ router.post('/flags', requireSuperadminRole, async (req, res) => {
 });
 
 // Delete feature flag
-router.delete('/flags/:id', requireSuperadminRole, async (req, res) => {
+router.delete('/flags/:id', requireSuperadmin, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
-    const flagId = parseInt(req.params.id);
+    const flagId = req.params.id;
 
     // Get flag info before deletion
     const [flag] = await db

@@ -1,4 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, Application } from 'express';
+import cors from 'cors';
 import { logger } from '../utils/logger';
 
 // Extend the Express Request type to include the user property
@@ -72,7 +73,7 @@ export function enforceOrganizationSecurity(
   next: NextFunction
 ): void {
   try {
-    const userOrgId = req.user?.organization_id;
+    const userOrgId = req.user?.organizationId;
     const requestedOrgId = req.params.organizationId || req.body.organizationId;
 
     // Skip if no organization ID is being requested
@@ -110,8 +111,27 @@ export function enforceOrganizationSecurity(
   }
 }
 
+/**
+ * Configures CORS (Cross-Origin Resource Sharing) for the application.
+ * @param app The Express application instance.
+ */
+export function configureCORS(app: Application): void {
+  // Define your CORS options
+  // Example: Allow requests from 'http://localhost:3001' and 'https://your-frontend-domain.com'
+  const corsOptions = {
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'https://app.nestmap.com'], // Add your frontend origins here
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // Allow cookies to be sent
+    optionsSuccessStatus: 204,
+  };
+
+  app.use(cors(corsOptions));
+  logger.info('CORS middleware configured.');
+}
+
 // Export the middleware functions
 export default {
   preventSQLInjection,
   enforceOrganizationSecurity,
+  configureCORS,
 };

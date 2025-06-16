@@ -1,8 +1,8 @@
 import { eq, sql, and, isNull, gte } from 'drizzle-orm';
 import { db } from '../../../db';
-import { users } from '../../../db/schema';
+import { users } from '../../../db/schema.js';
 import { UserRepository } from '../interfaces/user.repository.interface';
-import { User } from '../../../db/schema';
+import { User } from '../../../db/schema.js';
 import { hash, compare } from 'bcryptjs';
 import { BadRequestError } from '../../common/errors';
 import { BaseRepositoryImpl } from '../../common/repositories/base.repository';

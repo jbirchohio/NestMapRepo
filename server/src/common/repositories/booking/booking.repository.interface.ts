@@ -1,4 +1,4 @@
-import { Booking } from '../../../db/schema';
+import { Booking } from '../../../db/bookingSchema.js';
 import { BaseRepository } from '../base.repository.interface';
 import { BookingConfirmationDetails } from '../../interfaces/booking.interfaces';
 

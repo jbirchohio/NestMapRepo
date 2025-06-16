@@ -28,7 +28,7 @@ export const createAuthRouter = (configService: ConfigService): Router => {
   router.post(
     '/login',
     authRateLimit, // Apply comprehensive auth rate limiting
-    validateRequest({ body: loginSchema }),
+    validateRequest(loginSchema),
     ...authContainer.authController.login
   );
 
@@ -36,7 +36,7 @@ export const createAuthRouter = (configService: ConfigService): Router => {
   router.post(
     '/refresh-token',
     authRateLimit, // Apply comprehensive auth rate limiting
-    validateRequest({ body: refreshTokenSchema }),
+    validateRequest(refreshTokenSchema),
     ...authContainer.authController.refreshToken
   );
 
@@ -44,7 +44,7 @@ export const createAuthRouter = (configService: ConfigService): Router => {
   router.post(
     '/logout',
     authRateLimit, // Apply comprehensive auth rate limiting
-    validateRequest({ body: logoutSchema }),
+    validateRequest(logoutSchema),
     ...authContainer.authController.logout
   );
 
@@ -52,14 +52,14 @@ export const createAuthRouter = (configService: ConfigService): Router => {
   router.post(
     '/forgot-password',
     authRateLimit, // Apply comprehensive auth rate limiting
-    validateRequest({ body: requestPasswordResetSchema }),
+    validateRequest(requestPasswordResetSchema),
     ...authContainer.authController.requestPasswordReset
   );
 
   router.post(
     '/reset-password',
     authRateLimit, // Apply comprehensive auth rate limiting
-    validateRequest({ body: resetPasswordSchema }),
+    validateRequest(resetPasswordSchema),
     ...authContainer.authController.resetPassword
   );
 

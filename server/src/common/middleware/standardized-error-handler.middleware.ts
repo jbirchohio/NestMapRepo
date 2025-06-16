@@ -1,6 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { Logger } from '@nestjs/common';
-import { ApiError, ErrorType, errorTypeToStatusCode } from './error-handler.middleware';
+import { ApiError, ErrorType } from './error-handler.middleware';
+
+// Define the mapping locally if it's not exported from the module
+const errorTypeToStatusCode: Record<ErrorType, number> = {
+  [ErrorType.UNAUTHORIZED]: 401,
+  [ErrorType.FORBIDDEN]: 403,
+  [ErrorType.NOT_FOUND]: 404,
+  [ErrorType.BAD_REQUEST]: 400,
+  [ErrorType.CONFLICT]: 409,
+  [ErrorType.INTERNAL_SERVER_ERROR]: 500,
+};
 
 /**
  * Standardized error handler middleware
@@ -37,8 +47,20 @@ export const standardizedErrorHandler = (logger: Logger) => {
       errorResponse.error.type = apiError.type;
       errorResponse.error.message = apiError.message;
       
-      if (apiError.details) {
-        errorResponse.error['details'] = apiError.details;
+      // Use type assertion with interface extension to handle optional properties
+      interface ExtendedErrorResponse {
+        type: ErrorType;
+        message: string;
+        timestamp: string;
+        path: string;
+        method: string;
+        details?: unknown;
+        stack?: string;
+        requestId?: string;
+      }
+      
+      if ('details' in apiError && apiError.details !== undefined) {
+        (errorResponse.error as ExtendedErrorResponse).details = apiError.details;
       }
       
       // Map error type to status code
@@ -60,8 +82,8 @@ export const standardizedErrorHandler = (logger: Logger) => {
       errorResponse.error.message = error.message || 'An unexpected error occurred';
       
       // Add stack trace in development
-      if (process.env.NODE_ENV !== 'production') {
-        errorResponse.error['stack'] = error.stack;
+      if (process.env.NODE_ENV !== 'production' && error.stack) {
+        (errorResponse.error as ExtendedErrorResponse).stack = error.stack;
       }
       
       // Log error
@@ -69,8 +91,9 @@ export const standardizedErrorHandler = (logger: Logger) => {
     }
 
     // Add request ID if available
-    if (req.headers['x-request-id']) {
-      errorResponse.error['requestId'] = req.headers['x-request-id'];
+    const requestId = req.headers['x-request-id'];
+    if (requestId && typeof requestId === 'string') {
+      (errorResponse.error as ExtendedErrorResponse).requestId = requestId;
     }
 
     // Send response

@@ -688,10 +688,6 @@ export const selectCorporateCardSchema = createSelectSchema(corporateCards);
 export const insertCardholderSchema = createInsertSchema(cardholders);
 export const selectCardholderSchema = createSelectSchema(cardholders);
 
-export const insertCardTransactionSchema = createInsertSchema(cardTransactions, {
-  amount: z.number().int(), // Amount is required and should be an integer (cents)
-});
-export const selectCardTransactionSchema = createSelectSchema(cardTransactions);
 
 // Zod schemas for Expenses, Budgets, CustomDomains
 export const insertExpenseSchema = createInsertSchema(expenses, {

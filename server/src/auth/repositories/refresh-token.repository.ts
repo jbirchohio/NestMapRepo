@@ -1,6 +1,6 @@
 import { and, eq, lte } from 'drizzle-orm';
 import { db } from '../../../db';
-import { RefreshToken, refreshTokens } from '../../../db/schema';
+import { RefreshToken, refreshTokens } from '../../../db/schema.js';
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface';
 import { InternalServerError, NotFoundError } from '../../common/errors';
 import { BaseRepositoryImpl } from '../../common/repositories/base.repository';

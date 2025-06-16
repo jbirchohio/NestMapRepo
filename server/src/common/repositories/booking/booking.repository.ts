@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { db } from '../../../../db';
-import { bookings, type Booking } from '../../../../db/schema';
+import { bookings, type Booking } from '../../../../db/bookingSchema.js';
 import { BookingRepository } from './booking.repository.interface';
 import { BaseRepositoryImpl } from '../base.repository';
 import { BookingConfirmationDetails } from '../../interfaces/booking.interfaces';
