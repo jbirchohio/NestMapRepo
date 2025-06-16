@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'wouter';
-import { MenuIcon, XIcon } from '../Icons';
-import { useAuth } from '../../contexts/AuthContext';
+import { MenuIcon, XIcon } from '../icons';
+import { useAuth } from '../../contexts/auth/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { MobileMenu } from './MobileMenu';
 import { DesktopNavigation } from './DesktopNavigation';

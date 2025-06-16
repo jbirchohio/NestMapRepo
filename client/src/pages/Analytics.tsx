@@ -1,5 +1,5 @@
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
-import { useAuth } from "@/contexts/SecureJWTAuthContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion } from "framer-motion";

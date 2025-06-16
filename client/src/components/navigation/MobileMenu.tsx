@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { XIcon } from '../Icons';
+import { XIcon } from '../icons';
 import { NavigationLink } from './NavigationLink';
 import { MobileMenuProps } from './types';
 
