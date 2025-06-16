@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Inject, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Delete, Inject, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { BookingService } from '../services/booking.service';
 import { Booking } from '../../../db/bookingSchema.js';
 import { ResponseFormatter } from '../utils/response-formatter.util';
 import { asyncHandler } from '../middleware/error-handler.middleware';
-import { requireAuth, requireOrgContext } from '../middleware/auth.middleware';
+import { requireAuth, requireOrgContext, enforceOrganizationSecurity } from '../middleware/auth.middleware';
+import { validateBookingRequest } from '../middleware/validation.middleware';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces';
 import { ErrorService } from '../services/error.service';
 
