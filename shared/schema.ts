@@ -4,6 +4,8 @@ import { z } from "zod";
 import {
   users,
   organizations,
+  trips,
+  activities,
   todos,
   notes,
   invitations,
@@ -31,6 +33,27 @@ import {
 // invitations, organizationRoles, organizationMembers, tripCollaborators
 // are imported from '../server/db/schema'.
 // Other table definitions below will be moved progressively.
+
+// Re-export commonly used tables and schemas for backward compatibility
+export {
+  users,
+  organizations,
+  trips,
+  activities,
+  todos,
+  notes,
+  invitations,
+  organizationRoles,
+  organizationMembers,
+  tripCollaborators,
+  tripComments,
+  insertTripSchema,
+  selectTripSchema,
+  insertActivitySchema,
+  selectActivitySchema,
+  insertTripCommentSchema,
+  selectTripCommentSchema,
+} from "../server/db/schema";
 
 // Re-export types from server/db/schema for consistent usage
 export type {
@@ -656,7 +679,6 @@ export type UserActivityLog = typeof userActivityLogs.$inferSelect;
 // Trip Collaboration Types
 // export type TripCollaboration = typeof tripCollaborators.$inferSelect; // TripCollaborator type is already re-exported from server/db/schema
 export type { TripComment, NewTripComment }; // Re-exporting types imported above
-export { insertTripCommentSchema, selectTripCommentSchema }; // Re-exporting Zod schemas imported above
 // The .omit logic for insertTripCommentSchema should ideally be in server/db/schema.ts if it's the standard schema.
 // If a specific variant is needed here, it would require createInsertSchema and tripComments to be available/imported.
 // For now, re-exporting the standard schemas from server/db/schema.ts.
@@ -697,7 +719,6 @@ export { insertTripCommentSchema, selectTripCommentSchema }; // Re-exporting Zod
 // export type InsertBillingEvent = z.infer<typeof insertBillingEventSchema>;
 */
 
-export { insertTripSchema, selectTripSchema, insertActivitySchema, selectActivitySchema };
 
 // User roles constants
 export const USER_ROLES = {

@@ -2,9 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "types": ["jest", "node"],
-    "module": "CommonJS",
-    "moduleResolution": "node"
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["es2017", "esnext", "dom"]
   },
   "include": ["tests/**/*"],
   "exclude": ["node_modules"]
-} 
+}
