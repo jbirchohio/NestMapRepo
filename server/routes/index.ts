@@ -1,40 +1,40 @@
 import { Router } from 'express';
 
 // Core routes
-import authRoutes from './auth';
-import proposalsRoutes from './proposals';
-import tripRoutes from './trips';
-import activityRoutes from './activities';
-import organizationRoutes from './organizations';
-import analyticsRoutes from './analytics';
-import paymentsRoutes from './payments';
-import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus';
+import authRoutes from './auth.js';
+import proposalsRoutes from './proposals.js';
+import tripRoutes from './trips.js';
+import activityRoutes from './activities.js';
+import organizationRoutes from './organizations.js';
+import analyticsRoutes from './analytics.js';
+import paymentsRoutes from './payments.js';
+import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus.js';
 
 // Feature routes
-import adminRoutes from './admin';
-import invoicesRoutes from './invoices';
-import calendarRoutes from './calendar';
-import { registerBookingRoutes } from './bookings';
-import approvalRoutes from './approvals';
-import expenseRoutes from './expenses';
-import reportingRoutes from './reporting';
-import { registerCorporateCardRoutes } from './corporateCards';
-import organizationFundingRoutes from './organizationFunding';
-import stripeOAuthRoutes from './stripeOAuth';
-import superadminRoutes from './superadmin';
-import webhookRoutes from './webhooks';
-import subscriptionStatusRoutes from './subscription-status';
-import { registerAdminSettingsRoutes } from './admin-settings';
-import aiRoutes from './ai';
-import billingRoutes from './billing';
-import securityRoutes from './security';
-import healthRoutes from './health';
-import notificationsRoutes from './notifications';
-import flightRoutes from './flights';
-import exportRoutes from './export';
+import adminRoutes from './admin.js';
+import invoicesRoutes from './invoices.js';
+import calendarRoutes from './calendar.js';
+import { registerBookingRoutes } from './bookings.js';
+import approvalRoutes from './approvals.js';
+import expenseRoutes from './expenses.js';
+import reportingRoutes from './reporting.js';
+import { registerCorporateCardRoutes } from './corporateCards.js';
+import organizationFundingRoutes from './organizationFunding.js';
+import stripeOAuthRoutes from './stripeOAuth.js';
+import superadminRoutes from './superadmin.js';
+import webhookRoutes from './webhooks.js';
+import subscriptionStatusRoutes from './subscription-status.js';
+import { registerAdminSettingsRoutes } from './admin-settings.js';
+import aiRoutes from './ai.js';
+import billingRoutes from './billing.js';
+import securityRoutes from './security.js';
+import healthRoutes from './health.js';
+import notificationsRoutes from './notifications.js';
+import flightRoutes from './flights.js';
+import exportRoutes from './export.js';
 
 // Test routes (development only)
-import testRoutes from './test.routes';
+import testRoutes from './test.routes.js';
 
 const router = Router();
 
@@ -46,17 +46,24 @@ router.use('/activities', activityRoutes);
 router.use('/organizations', organizationRoutes);
 router.use('/analytics', analyticsRoutes);
 
+// Register routes that need the router instance
+
+
 // Mount admin and feature routes
 router.use('/admin', adminRoutes);
+import collaborationRoutes from './collaborationRoutes.js';
+import customDomainsRoutes from './customDomainsRoutes.js';
+import whiteLabelRoutes from './whiteLabelRoutes.js';
+
 router.use('/calendar', calendarRoutes);
-router.use('/collaboration', collaborationRoutes);
+router.use('/collaboration', collaborationRoutes); // Now defined
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
 router.use('/organization-funding', organizationFundingRoutes);
 router.use('/stripe', stripeOAuthRoutes);
-router.use('/custom-domains', customDomainsRoutes);
-router.use('/white-label', whiteLabelRoutes);
+router.use('/custom-domains', customDomainsRoutes); // Now defined
+router.use('/white-label', whiteLabelRoutes); // Now defined
 
 
 // Mount test routes in development only
@@ -75,7 +82,7 @@ router.use('/flights', flightRoutes);
 router.use('/export', exportRoutes);
 
 // Import and register simplified white label routes
-import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
+import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified.js';
 // Note: This will be handled in the main server file since it needs the app instance
 // router.use('/todos', todosRoutes);
 // router.use('/notes', notesRoutes);
@@ -87,7 +94,7 @@ router.use('/payments', paymentsRoutes);
 // Templates endpoint
 router.get('/templates', async (req, res) => {
   try {
-    const { getAllTemplates } = await import('../tripTemplates');
+    const { getAllTemplates } = await import('../tripTemplates.js');
     const templates = getAllTemplates();
     res.json(templates);
   } catch (error) {
@@ -104,23 +111,40 @@ router.get('/user/permissions', async (req, res) => {
     }
 
     // Get user's actual permissions from database based on role
-    const { getUserPermissionsByRole } = await import('../permissions');
-    const permissions = await getUserPermissionsByRole(req.user.id, req.user.role, req.user.organization_id);
+    const { getUserPermissionsByRole } = await import('../permissions.js');
+    let parsedOrganizationId: number | undefined;
+    if (req.user.organizationId != null) { // Check if it's not null or undefined
+      parsedOrganizationId = parseInt(req.user.organizationId, 10);
+      if (isNaN(parsedOrganizationId)) {
+        console.error('Invalid organizationId format:', req.user.organizationId);
+        return res.status(400).json({ message: 'Invalid organization ID format' });
+      }
+    } else {
+      parsedOrganizationId = undefined;
+    }
+    const userId = parseInt(req.user.id, 10);
+    if (isNaN(userId)) {
+      console.error('Invalid userId format:', req.user.id);
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    const permissions = await getUserPermissionsByRole(userId, req.user.role, parsedOrganizationId);
 
     res.json({ 
       permissions,
       role: req.user.role,
-      organizationId: req.user.organization_id
+      organizationId: req.user.organizationId // Keep original string/null for response
     });
+    return;
   } catch (error) {
     console.error('Permissions error:', error);
     res.status(500).json({ message: 'Failed to get permissions' });
+    return;
   }
 });
 
 // Dashboard stats endpoint
 router.get('/dashboard-stats', (req, res) => {
-  if (!req.user || !req.user.organization_id) {
+  if (!req.user || !req.user.organizationId) {
     return res.status(401).json({ message: 'Organization membership required' });
   }
 
@@ -167,6 +191,7 @@ router.get('/dashboard-stats', (req, res) => {
   };
 
   res.json(stats);
+  return;
 });
 
 
@@ -246,9 +271,11 @@ router.post('/locations/airport-code', (req, res) => {
 
     const airportCode = getAirportCode(cityName);
     res.json({ airportCode });
+    return;
   } catch (error) {
     console.error('Airport code conversion error:', error);
     res.status(500).json({ error: 'Failed to convert city to airport code' });
+    return;
   }
 });
 
@@ -361,6 +388,9 @@ router.get('/health', (req, res) => {
 export function registerDirectRoutes(app: any) {
   registerAdminSettingsRoutes(app);
   registerWhiteLabelStatusRoutes(app);
+  registerSimplifiedWhiteLabelRoutes(app); // Call the imported function
+  registerBookingRoutes(app);
+  registerCorporateCardRoutes(app);
 }
 
 export default router;

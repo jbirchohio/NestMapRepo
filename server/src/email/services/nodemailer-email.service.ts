@@ -12,7 +12,9 @@ import {
   PasswordResetConfirmationOptions,
   PaymentReceiptEmailOptions
 } from '../interfaces/email.service.interface';
-import { compile, TemplateDelegate } from 'handlebars';
+import handlebars from 'handlebars';
+const { compile } = handlebars;
+type TemplateDelegate = handlebars.TemplateDelegate;
 
 // Get the current module's directory in ESM
 const __filename = fileURLToPath(import.meta.url);

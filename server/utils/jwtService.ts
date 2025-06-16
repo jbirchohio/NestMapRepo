@@ -1,8 +1,9 @@
-import { sign, verify, decode, JwtPayload as BaseJwtPayload } from 'jsonwebtoken';
-import { redisClient } from './redis';
-import { logger } from './logger';
+import jwt from 'jsonwebtoken';
+const { sign, verify, decode } = jwt;
+import { redisClient } from './redis.js';
+import { logger } from './logger.js';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../config';
+import config from '../config.js';
 
 // Token types
 export type TokenType = 'access' | 'refresh' | 'password_reset' | 'api_key';
@@ -39,15 +40,22 @@ export interface PasswordResetTokenResult {
   jti: string;
 }
 
-// Extend JWT payload to include our custom claims
+// Define our custom JWT payload interface
 declare module 'jsonwebtoken' {
-  interface JwtPayload extends BaseJwtPayload {
+  interface JwtPayload {
     jti: string;
     type: TokenType;
     userId: string;
     email: string;
     role?: UserRole;
     organization_id?: number;
+    // Standard JWT fields
+    iss?: string;
+    sub?: string;
+    aud?: string | string[];
+    exp?: number;
+    nbf?: number;
+    iat?: number;
   }
 }
 

@@ -1,4 +1,4 @@
-import { Trip, User } from '@shared/schema';
+import { Trip, User } from '../../../db/schema.js';
 
 // A DTO for the transformed corporate trip data
 export interface CorporateTripDto {

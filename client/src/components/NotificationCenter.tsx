@@ -49,7 +49,7 @@ const notificationIcons = {
 const notificationColors = {
   trip_shared: 'text-blue-600',
   trip_update: 'text-green-600',
-  booking_confirmed: 'text-purple-600',
+  booking_confirmed: 'text-electric-600',
   payment_due: 'text-red-600',
   team_invite: 'text-orange-600',
   system: 'text-slate-600',

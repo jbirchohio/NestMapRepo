@@ -421,7 +421,7 @@ export default function SuperadminOrganizationDetail() {
             { 
               label: 'Plan', 
               value: organization.plan, 
-              color: 'from-purple-500 to-purple-600',
+              color: 'from-electric-500 to-electric-600',
               icon: CreditCard,
               badge: organization.subscription_status || 'inactive'
             },

@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import * as schema from './schema';
 import * as invoiceSchema from './invoiceSchema';
 import * as proposalSchema from './proposalSchema';
+import * as superadminSchema from './superadminSchema';
 
 // Create a connection pool
 const pool = new Pool({
@@ -11,7 +12,7 @@ const pool = new Pool({
 });
 
 // Create the Drizzle instance with schema
-export const db = drizzle(pool, { schema: { ...schema, ...invoiceSchema, ...proposalSchema } });
+export const db = drizzle(pool, { schema: { ...schema, ...invoiceSchema, ...proposalSchema, ...superadminSchema } });
 
 // Export types
 export type Database = typeof db;

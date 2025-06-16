@@ -1,4 +1,4 @@
-import { Application, Request, Response, NextFunction, RequestHandler } from 'express';
+import { Application, Response, NextFunction } from 'express';
 import express from 'express';
 
 import { configureCORS, preventSQLInjection } from './security';
@@ -8,17 +8,15 @@ import {
   apiRateLimit, 
   authRateLimit, 
   organizationRateLimit 
-} from './comprehensive-rate-limiting';
+} from './comprehensive-rate-limiting.js';
 import { 
   apiVersioning, 
   authenticateApiKey 
 } from './api-security';
 import { domainRoutingMiddleware } from '../loadBalancer';
 import { caseConversionMiddleware } from './caseConversionMiddleware';
-import { jwtAuthMiddleware } from './jwtAuth';
+import { validateJWT as jwtAuthMiddleware } from './jwtAuth';
 import { trackUserActivity } from './sessionTracking';
-
-type Middleware = RequestHandler | RequestHandler[];
 
 export function setupMiddlewares(app: Application): void {
   // Security headers and CSP

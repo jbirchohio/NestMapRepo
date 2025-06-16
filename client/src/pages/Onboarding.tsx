@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/contexts/SecureJWTAuthContext';
+import { useAuth } from '@/contexts/auth/AuthContext';
 import OnboardingWizard from '@/components/OnboardingWizard';
 import { motion } from 'framer-motion';
 

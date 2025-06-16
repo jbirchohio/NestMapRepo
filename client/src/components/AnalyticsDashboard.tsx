@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Users, MapPin, Calendar, Activity, TrendingUp, Download, Globe, BarChart3 } from "lucide-react";
-import { useAuth } from "@/contexts/SecureJWTAuthContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 
 interface AnalyticsData {
   overview: {
@@ -106,7 +106,7 @@ export default function AnalyticsDashboard() {
   });
 
   const handleExportCSV = () => {
-    window.open("/api/analytics/export", "_blank");
+    window.open("/api/analytics/export/csv", "_blank");
   };
 
   if (isLoading) {
@@ -434,8 +434,8 @@ export default function AnalyticsDashboard() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Activity className="h-4 w-4 text-purple-600" />
+                <div className="w-8 h-8 bg-electric-100 rounded-full flex items-center justify-center">
+                  <Activity className="h-4 w-4 text-electric-600" />
                 </div>
                 <span className="font-medium">Added Activities</span>
               </div>
@@ -470,8 +470,8 @@ export default function AnalyticsDashboard() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <Download className="h-4 w-4 text-indigo-600" />
+                <div className="w-8 h-8 bg-electric-100 rounded-full flex items-center justify-center">
+                  <Download className="h-4 w-4 text-electric-600" />
                 </div>
                 <span className="font-medium">Exported Data</span>
               </div>
@@ -496,7 +496,7 @@ export default function AnalyticsDashboard() {
             </div>
             <div className="text-center">
               <div className="text-sm text-muted-foreground">Activity Rate</div>
-              <div className="text-xl font-bold text-purple-600">
+              <div className="text-xl font-bold text-electric-600">
                 {Math.round((analytics.userFunnel.usersWithActivities / analytics.userFunnel.totalUsers) * 100)}%
               </div>
             </div>
@@ -508,7 +508,7 @@ export default function AnalyticsDashboard() {
             </div>
             <div className="text-center">
               <div className="text-sm text-muted-foreground">Export Rate</div>
-              <div className="text-xl font-bold text-indigo-600">
+              <div className="text-xl font-bold text-electric-600">
                 {Math.round((analytics.userFunnel.usersWithExports / analytics.userFunnel.totalUsers) * 100)}%
               </div>
             </div>

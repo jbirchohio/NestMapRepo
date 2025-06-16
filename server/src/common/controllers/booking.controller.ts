@@ -1,12 +1,14 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Inject, Logger, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Delete, Inject, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { BookingService } from '../services/booking.service';
-import { Booking } from '../../../db/schema';
+import { Booking } from '../../../db/bookingSchema.js';
 import { ResponseFormatter } from '../utils/response-formatter.util';
 import { asyncHandler } from '../middleware/error-handler.middleware';
-import { requireAuth, requireOrgContext } from '../middleware/auth.middleware';
+import { requireAuth, requireOrgContext, enforceOrganizationSecurity } from '../middleware/auth.middleware';
+import { validateBookingRequest } from '../middleware/validation.middleware';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces';
 import { ErrorService } from '../services/error.service';
+import { trips, activities, calendarIntegrations } from '@shared/schema';
 
 /**
  * Controller for booking endpoints
@@ -39,7 +41,7 @@ export class BookingController {
         
         return ResponseFormatter.success(res, booking, 'Booking retrieved successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
@@ -54,7 +56,7 @@ export class BookingController {
         const bookings = await this.bookingService.getBookingsByUserId(userId);
         return ResponseFormatter.success(res, bookings, 'User bookings retrieved successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
@@ -69,7 +71,7 @@ export class BookingController {
         const bookings = await this.bookingService.getBookingsByTripId(tripId);
         return ResponseFormatter.success(res, bookings, 'Trip bookings retrieved successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
@@ -85,7 +87,7 @@ export class BookingController {
         const booking = await this.bookingService.createBooking(bookingData);
         return ResponseFormatter.created(res, booking, 'Booking created successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
@@ -144,7 +146,7 @@ export class BookingController {
         
         return ResponseFormatter.success(res, booking, 'Booking confirmed successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuthContext as useAuth } from './SecureJWTAuthContext';
+import { useAuthContext as useAuth } from './auth/AuthContext';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 

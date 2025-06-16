@@ -5,7 +5,7 @@ import { AnimatedCard } from "@/components/ui/animated-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/contexts/SecureJWTAuthContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
@@ -314,7 +314,7 @@ export default function AdminSystemMetrics() {
                     {metrics?.performance.throughput.toFixed(1) || '0'} req/s
                   </p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-purple-500" />
+                <TrendingUp className="h-8 w-8 text-electric-500" />
               </div>
             </CardContent>
           </AnimatedCard>

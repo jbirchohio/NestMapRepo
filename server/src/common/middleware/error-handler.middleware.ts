@@ -43,7 +43,7 @@ export const createApiError = (
 /**
  * Maps error types to HTTP status codes
  */
-const errorTypeToStatusCode: Record<ErrorType, number> = {
+export const errorTypeToStatusCode: Record<ErrorType, number> = {
   [ErrorType.UNAUTHORIZED]: 401,
   [ErrorType.FORBIDDEN]: 403,
   [ErrorType.NOT_FOUND]: 404,
@@ -110,20 +110,38 @@ export const asyncHandler = (
       await handler(req, res, next);
     } catch (error) {
       // If it's already an ApiError, pass it through
-      if ('type' in error) {
-        next(error);
+      let errorMessage = 'An unexpected error occurred';
+      let errorStack: string | undefined = undefined;
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        errorStack = error.stack;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+        // Handle cases where error is an object with a message property but not an Error instance
+        errorMessage = error.message;
+        if ('stack' in error && typeof error.stack === 'string') {
+          errorStack = error.stack;
+        }
+      }
+
+      // If it's already an ApiError (checked by 'type' property), pass it through
+      // This check should ideally be more robust, e.g., checking specific properties of ApiError
+      if (typeof error === 'object' && error !== null && 'type' in error) {
+        next(error); // Assuming error is indeed ApiError or compatible
         return;
       }
 
-      // Convert standard errors to ApiError
+      // Convert standard errors or other thrown types to ApiError
       const apiError = createApiError(
         ErrorType.INTERNAL_SERVER_ERROR,
-        error.message || 'An unexpected error occurred'
+        errorMessage
       );
       
       // Add stack trace in development
-      if (process.env.NODE_ENV !== 'production') {
-        apiError.stack = error.stack;
+      if (process.env.NODE_ENV !== 'production' && errorStack) {
+        apiError.stack = errorStack;
       }
       
       next(apiError);

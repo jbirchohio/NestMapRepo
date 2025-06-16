@@ -11,14 +11,17 @@ import {
   expenses,
   cardTransactions,
   expenseApprovals,
-  superadminAuditLogs,
-  activeSessions,
-  aiUsageLogs,
-  featureFlags,
-  organizationFeatureFlags,
-  backgroundJobs,
-  billingEvents
+  superadminAuditLogs
 } from "@shared/schema";
+
+import { 
+  activeSessions, 
+  aiUsageLogs, 
+  billingEvents,
+  superadminFeatureFlags as featureFlags, 
+  organizationFeatureFlags,
+  superadminBackgroundJobs as backgroundJobs 
+} from "./db/superadminSchema";
 
 import { eq, and, desc, sql, getTableColumns, gte, lte } from 'drizzle-orm';
 

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/SecureJWTAuthContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { 
@@ -111,7 +111,7 @@ export default function AgencyDashboard() {
                   <span className="text-white/80">Revenue tracking</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                  <div className="w-2 h-2 bg-electric-400 rounded-full" />
                   <span className="text-white/80">Win rate analytics</span>
                 </div>
               </div>

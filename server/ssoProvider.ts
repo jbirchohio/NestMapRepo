@@ -254,9 +254,20 @@ export class SSOManager {
   }
 
   private async getOrganizationFromEntityId(entityId: string): Promise<number> {
-    // TODO: Implement actual entity ID to organization mapping from database
-    // This should look up the organization_id based on the SAML entity ID
-    throw new Error('Entity ID mapping not implemented - please configure organization mapping');
+    const envMap = process.env.SAML_ENTITY_MAP ? JSON.parse(process.env.SAML_ENTITY_MAP) : {};
+    if (envMap[entityId]) {
+      return parseInt(envMap[entityId], 10);
+    }
+
+    const [org] = await db
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.domain as any, entityId))
+      .limit(1);
+
+    if (org) return org.id as unknown as number;
+
+    throw new Error('Organization not found for entity ID');
   }
 
   private async getOrganizationFromState(state: string): Promise<number> {

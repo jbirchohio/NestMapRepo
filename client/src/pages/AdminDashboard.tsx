@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/SecureJWTAuthContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Shield, 
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
                     <span className="text-electric-100">System monitoring</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                    <div className="w-2 h-2 bg-electric-400 rounded-full" />
                     <span className="text-electric-100">Platform analytics</span>
                   </div>
                 </div>

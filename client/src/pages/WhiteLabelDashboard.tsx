@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import WhiteLabelPreview from '@/components/WhiteLabelPreview';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth/AuthContext';
 import { CheckCircle, AlertCircle, ChevronRight, Globe, Palette, Settings, Shield } from 'lucide-react';
 import api from '@/services/api';
 

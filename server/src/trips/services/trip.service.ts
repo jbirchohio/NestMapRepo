@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Trip, User } from '../../../db/schema';
+import { Trip, User } from '../../../db/schema.js';
 import { CorporateTripDto, TripService } from '../interfaces/trip.service.interface';
 import { TripRepository } from '../interfaces/trip.repository.interface';
 import { UnauthorizedError } from '../../common/errors';

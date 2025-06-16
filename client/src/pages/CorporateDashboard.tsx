@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/SecureJWTAuthContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -249,7 +249,7 @@ export default function CorporateDashboard() {
                     <span className="text-electric-100">Team collaboration</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                    <div className="w-2 h-2 bg-electric-400 rounded-full" />
                     <span className="text-electric-100">Smart analytics</span>
                   </div>
                 </div>
@@ -486,7 +486,7 @@ export default function CorporateDashboard() {
                     onClick={() => setSelectedCard(card)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
+                      <div className="w-10 h-6 bg-gradient-to-r from-blue-500 to-electric-600 rounded flex items-center justify-center">
                         <CreditCard className="h-3 w-3 text-white" />
                       </div>
                       <div>

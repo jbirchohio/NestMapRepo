@@ -1,4 +1,4 @@
-import { RefreshToken } from '../../../db/schema';
+import { RefreshToken } from '../../../db/schema.js';
 import { BaseRepository } from '../../common/repositories/base.repository.interface';
 
 /**

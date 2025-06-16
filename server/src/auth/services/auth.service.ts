@@ -20,6 +20,7 @@ import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.i
 import { EmailService } from '../../email/interfaces/email.service.interface';
 import { TokenType, AuthResponse as IAuthResponse } from '../interfaces/auth.interface';
 import { User, UserRole, UserRoles } from '../interfaces/user.interface';
+import { decodeToken, blacklistToken, TokenPayload } from '../jwt';
 
 // Extend the AuthResponse interface to include token expiration times
 interface ExtendedAuthResponse extends IAuthResponse {
@@ -278,8 +279,15 @@ export class AuthService {
     try {
       // Revoke the refresh token
       await this.refreshTokenRepository.revokeByToken(refreshToken);
-      
-      // TODO: Implement access token blacklisting if needed
+      if (accessToken) {
+        const token = accessToken.startsWith('Bearer ')
+          ? accessToken.split(' ')[1]
+          : accessToken;
+        const payload = decodeToken<TokenPayload>(token);
+        if (payload?.jti) {
+          await blacklistToken(payload.jti);
+        }
+      }
       
       return { success: true };
     } catch (error) {

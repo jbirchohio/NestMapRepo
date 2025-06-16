@@ -3,7 +3,9 @@ import type Stripe from 'stripe';
 import { db } from '../db/db';
 import { stripe } from '../stripe';
 import { invoices } from '../db/invoiceSchema';
+import { billingEvents } from '../db/superadminSchema';
 import { eq } from 'drizzle-orm';
+import nodemailer from 'nodemailer';
 import { authenticateJWT, type AuthRequest } from '../middleware/auth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { logger } from '../utils/logger';
@@ -290,13 +292,32 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
       } as any)
       .where(eq(invoices.id as any, invoiceId));
 
-    logger.warn('Payment failed for invoice', { 
+    logger.warn('Payment failed for invoice', {
       invoiceId,
       paymentIntentId: paymentIntent.id,
-      error: paymentIntent.last_payment_error 
+      error: paymentIntent.last_payment_error
     });
+    const [invoice] = await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.id as any, invoiceId));
 
-    // TODO: Send payment failure notification
+    if (invoice) {
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'localhost',
+        port: parseInt(process.env.SMTP_PORT || '25'),
+        secure: false,
+        auth: process.env.SMTP_USER
+          ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+          : undefined,
+      });
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM || 'noreply@example.com',
+        to: invoice.clientEmail,
+        subject: `Payment Failed for Invoice #${invoice.number}`,
+        text: 'Your payment could not be processed. Please try again.',
+      });
+    }
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
@@ -369,14 +390,21 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
       } as any)
       .where(eq(invoices.id as any, invoice.id));
 
-    logger.info(`Charge ${isFullRefund ? 'fully' : 'partially'} refunded`, { 
+    logger.info(`Charge ${isFullRefund ? 'fully' : 'partially'} refunded`, {
       chargeId: charge.id,
       invoiceId: invoice.id,
       amount: charge.amount_refunded,
       currency: charge.currency
     });
 
-    // TODO: Create a refund record in the database
+    await db.insert(billingEvents).values({
+      organizationId: invoice.organizationId as any,
+      eventType: 'charge.refunded',
+      stripeEventId: charge.id,
+      amountCents: charge.amount_refunded,
+      currency: charge.currency,
+      metadata: { invoiceId: invoice.id },
+    });
     
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -2,8 +2,8 @@ import { Pool, PoolConfig } from 'pg';
 import { createClient } from 'redis';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
-import { config } from '../config';
-import { logger } from '../utils/logger';
+import config from '../config.js';
+import { logger } from '../utils/logger.js';
 
 type QueryResult<T = any> = {
   rows: T[];

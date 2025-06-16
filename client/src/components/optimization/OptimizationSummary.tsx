@@ -108,15 +108,15 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Carbon Reduction</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <p className="text-2xl font-bold text-electric-600 dark:text-electric-400">
                   {result.carbonReduction}kg
                 </p>
                 <p className="text-sm text-gray-500">
                   CO₂ emissions saved
                 </p>
               </div>
-              <div className="h-12 w-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="h-12 w-12 bg-electric-100 dark:bg-electric-900/20 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-electric-600 dark:text-electric-400" />
               </div>
             </div>
           </CardContent>

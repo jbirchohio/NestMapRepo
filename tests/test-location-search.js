@@ -11,7 +11,7 @@ async function testLocationSearch(query) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ searchQuery: query }),
+      body: JSON.stringify({ description: query }),
     });
     
     if (!response.ok) {

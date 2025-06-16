@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'wouter';
-import { MenuIcon, XIcon } from '../Icons';
-import { useAuth } from '../../contexts/AuthContext';
+import { MenuIcon, XIcon, BarChartIcon, CheckIcon, FileTextIcon, HomeIcon } from '../icons';
+import { useAuth } from '../../contexts/auth/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { MobileMenu } from './MobileMenu';
 import { DesktopNavigation } from './DesktopNavigation';
@@ -25,19 +25,40 @@ export const MainNavigation: React.FC = () => {
 
   // Navigation items
   const navigationItems: NavigationItem[] = [
-    { 
-      name: 'Home', 
-      href: '/', 
+    {
+      name: 'Home',
+      href: '/',
       icon: <HomeIcon className="h-5 w-5" aria-hidden="true" />,
       ariaLabel: 'Home',
-      requiresAuth: false 
+      requiresAuth: false
     },
-    { 
-      name: 'Dashboard', 
-      href: '/dashboard', 
+    {
+      name: 'Dashboard',
+      href: '/dashboard',
       icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" />,
       ariaLabel: 'Dashboard',
-      requiresAuth: true 
+      requiresAuth: true
+    },
+    {
+      name: 'Analytics',
+      href: '/analytics',
+      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" />,
+      ariaLabel: 'Analytics',
+      requiresAuth: true
+    },
+    {
+      name: 'Approvals',
+      href: '/approvals',
+      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" />,
+      ariaLabel: 'Approvals',
+      requiresAuth: true
+    },
+    {
+      name: 'Invoices',
+      href: '/invoice-center',
+      icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" />,
+      ariaLabel: 'Invoices',
+      requiresAuth: true
     },
   ];
 

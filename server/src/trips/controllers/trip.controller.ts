@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { TripService } from '../interfaces/trip.service.interface';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { User } from '@shared/schema';
+import { User } from '../../../db/schema.js';
 import { ResponseFormatter } from '../../common/utils/response-formatter.util';
 import { asyncHandler } from '../../common/middleware/error-handler.middleware';
 import { requireAuth, requireOrgContext } from '../../common/middleware/auth.middleware';

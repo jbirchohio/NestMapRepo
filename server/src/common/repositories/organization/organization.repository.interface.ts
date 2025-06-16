@@ -1,4 +1,4 @@
-import { Organization, User } from '../../../db/schema';
+import { Organization, User } from '../../../db/schema.js';
 import { OrganizationBookingSettings } from '../../interfaces/booking.interfaces';
 
 export interface OrganizationRepository {

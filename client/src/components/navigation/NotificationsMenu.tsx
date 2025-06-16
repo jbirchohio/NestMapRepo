@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { BellIcon } from '../Icons';
+import { BellIcon } from '../icons';
 import { NotificationsMenuProps } from './types';
 
 export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({

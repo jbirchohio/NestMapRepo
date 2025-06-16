@@ -21,7 +21,7 @@ import { Alert, AlertDescription } from '../../components/ui/alert.js';
 import { apiClient } from '../../services/api/apiClient.js';
 
 // Local imports with explicit .js extensions for Node16/NodeNext module resolution
-import { useAuth } from '../../contexts/SecureJWTAuthContext.js';
+import { useAuth } from '../../contexts/auth/AuthContext';
 
 // Type definitions for the form
 type LoginFormValues = {

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserIcon } from '../Icons';
+import { UserIcon } from '../icons';
 import { UserMenuProps } from './types';
 
 export const UserMenu: React.FC<UserMenuProps> = ({

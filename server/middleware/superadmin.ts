@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { USER_ROLES } from '@shared/schema';
+import { USER_ROLES } from '../db/schema.js';
 
 // Extended request interface for authenticated users
 export interface AuthenticatedRequest extends Request {

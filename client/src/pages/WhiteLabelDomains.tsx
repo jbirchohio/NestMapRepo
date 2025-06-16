@@ -135,7 +135,7 @@ export default function WhiteLabelDomains() {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex items-center space-x-2">
-                      <ExternalLink className="h-5 w-5 text-purple-500" />
+                      <ExternalLink className="h-5 w-5 text-electric-500" />
                       <div>
                         <p className="text-sm font-medium">Active</p>
                         <p className="text-2xl font-bold">0</p>
@@ -160,7 +160,7 @@ export default function WhiteLabelDomains() {
             </CardHeader>
             <CardContent>
               {whiteLabelConfig?.isWhiteLabelActive ? (
-                <div className="p-6 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
+                <div className="p-6 border rounded-lg bg-gradient-to-r from-blue-50 to-electric-50">
                   <div 
                     className="text-2xl font-bold mb-2"
                     style={{ color: whiteLabelConfig.config.primaryColor }}

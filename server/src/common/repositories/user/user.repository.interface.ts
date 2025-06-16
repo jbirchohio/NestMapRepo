@@ -1,4 +1,4 @@
-import { User } from '../../../db/schema';
+import { User } from '../../../db/schema.js';
 import { BaseRepository } from '../base.repository.interface';
 import { UserBookingPreferences } from '../../interfaces/booking.interfaces';
 

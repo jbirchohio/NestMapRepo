@@ -3,13 +3,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "../",
     "target": "es2020",
     "module": "commonjs",
     "lib": ["es2020", "dom"],
     "types": ["node"],
     "paths": {
-      "@server/*": ["src/*"]
+      "@server/*": ["src/*"],
+      "@shared/*": ["../shared/*"]
     },
     "esModuleInterop": true,
     "moduleResolution": "node",

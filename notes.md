@@ -73,3 +73,19 @@ This document contains technical notes, reasoning behind fixes, edge case handli
 
 ## TODOs for Follow-up
 <!-- To be populated during audit -->
+
+## Backend Stability & Import Resolution Notes
+- **ESM Runtime Requirement (.js extensions):** Due to `"type": "module"` in the project's `package.json`, the Node.js runtime strictly requires full file paths, including the `.js` extension, for local module imports. All backend import statements for local TypeScript files (compiled to JavaScript) were updated accordingly (e.g., `import ... from './module'` became `import ... from './module.js'`).
+- **Validation Middleware (`validation.middleware.ts`):** A new middleware was created at `server/src/auth/middleware/validation.middleware.ts`. It provides a `validateRequest` function that uses Zod schemas to validate incoming request bodies, params, or query strings. This was introduced to resolve a missing import in `server/routes/auth.ts` and provides a reusable pattern for request validation.
+- **Placeholder Route Modules:** To address missing route module imports in `server/routes/index.ts` without commenting out functionality (as per user instruction), placeholder modules (`collaborationRoutes.ts`, `customDomainsRoutes.ts`, `whiteLabelRoutes.ts`) were created. These are minimal Express Router instances that export a router, allowing the main router to mount them. They currently lack business logic and serve only to prevent import errors and allow server startup. Further development is needed to implement their actual features.
+- **Route Registration (`registerDirectRoutes`):** Certain route registration functions (e.g., `registerBookingRoutes`, `registerCorporateCardRoutes`) were identified as needing the main Express `app` instance rather than a sub-`router` instance. These calls were moved into the `registerDirectRoutes` function in `server/routes/index.ts`, which is designed to be called with `app` from the main server setup file (`server/index.ts`).
+- **Type Safety in Route Handlers (`server/routes/index.ts`):
+  - **ID Parsing:** User-provided identifiers like `req.user.id` and `req.user.organizationId`, if sourced from request objects as strings, must be explicitly parsed to `number` (e.g., using `parseInt(id, 10)`) before being used with service functions or database queries that expect numeric types. Added checks for `isNaN` after parsing to return a `400 Bad Request` if a non-null ID is not a valid number.
+  - **Explicit Returns:** TypeScript's `compilerOptions.noImplicitReturns` (or similar strict checks) requires that all code paths in a function that declares a return type (or is inferred to have one by usage like `async (req, res) => {...}`) must return a value. For Express route handlers, this means ensuring that after any response is sent (e.g., `res.json(...)`, `res.status(...).send(...)`), an explicit `return;` statement is used, especially within `try...catch` blocks or conditional logic, to prevent the "Not all code paths return a value" lint error.
+- **User Object Properties:** Assumed that properties on the `req.user` object (populated by authentication middleware) use camelCase (e.g., `req.user.organizationId`). Code was adjusted to use camelCase consistently when accessing these properties.
+
+### Frontend audit notes
+- Adjusted `client/tsconfig.json` to include root `node_modules` for TypeScript checks.
+- Marked `SuperadminFixed.tsx` and `SuperadminSimple.tsx` as `// UNUSED` for potential deletion.
+- Fixed some minor type issues in `Dashboard` and `FlightSearch`.
+- Updated JWT middleware logging and flagged raw SQL queries for review.

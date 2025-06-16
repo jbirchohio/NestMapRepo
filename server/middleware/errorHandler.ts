@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 import { ZodError } from 'zod';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+const { JsonWebTokenError, TokenExpiredError } = jwt;
 
 export interface ApiError extends Error {
   statusCode?: number;

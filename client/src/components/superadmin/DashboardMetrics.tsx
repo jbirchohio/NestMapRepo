@@ -51,7 +51,7 @@ export function DashboardMetrics({ data }: DashboardMetricsProps) {
       value: `$${totalRevenue.toLocaleString()}`,
       description: "Total billing volume",
       icon: DollarSign,
-      color: "text-purple-600"
+      color: "text-electric-600"
     }
   ];
 

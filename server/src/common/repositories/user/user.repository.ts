@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../../../../db';
-import { users, organizationMembers, type User } from '../../../../db/schema';
+import { users, organizationMembers, type User } from '../../../../db/schema.js';
 import { UserRepository } from './user.repository.interface';
 import { UserBookingPreferences } from '../../interfaces/booking.interfaces';
 import { BaseRepositoryImpl } from '../base.repository';

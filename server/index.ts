@@ -10,27 +10,27 @@ import http from 'http';
 import { ConfigService } from '@nestjs/config';
 
 // Local imports
-import { logger } from './utils/logger';
-import config from './config';
-import { errorHandler } from './middleware/errorHandler';
-import { standardizedErrorAdapter } from './middleware/standardized-error-adapter';
-import { extendRequest } from './utils/request';
-import { extendResponse } from './utils/response';
-import { preventSQLInjection, enforceOrganizationSecurity } from './middleware/security';
-import { performanceMonitor, memoryMonitor } from './middleware/performance';
-import { authenticate } from './src/auth/middleware';
-import { caseConverterMiddleware } from './middleware/caseConverter';
-import { cspMiddleware } from './middleware/csp';
-import { auditLogMiddleware } from './middleware/auditLog';
-import { apiRateLimit as comprehensiveApiRateLimit } from './middleware/comprehensive-rate-limiting';
+import { logger } from './utils/logger.js';
+import config from './config.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { standardizedErrorAdapter } from './middleware/standardized-error-adapter.js';
+import { extendRequest } from './utils/request.js';
+import { extendResponse } from './utils/response.js';
+import { preventSQLInjection, enforceOrganizationSecurity } from './middleware/security.js';
+import { performanceMonitor, memoryMonitor } from './middleware/performance.js';
+import { authenticate } from './src/auth/middleware/index.js';
+import { caseConverterMiddleware } from './middleware/caseConverter.js';
+import { cspMiddleware } from './middleware/csp.js';
+import { auditLogMiddleware } from './middleware/auditLog.js';
+import { apiRateLimit as comprehensiveApiRateLimit } from './middleware/comprehensive-rate-limiting.js';
 
 // Import route factories
-import { createAuthRouter } from './routes/auth';
-import apiRoutes from './routes/index';
-import customDomainRoutes from './routes/customDomains';
+import { createAuthRouter } from './routes/auth.js';
+import apiRoutes from './routes/index.js';
+import customDomainRoutes from './routes/customDomains.js';
 
 // Re-export types for easier access
-export * from '../shared/types';
+export * from '@shared/types/index';
 
 // Initialize Express app
 const app = express();

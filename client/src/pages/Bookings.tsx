@@ -1,6 +1,6 @@
 import BookingWorkflow from "@/components/BookingWorkflow";
 import { TripTeamManagement } from "@/components/TripTeamManagement";
-import { useAuth } from "@/contexts/SecureJWTAuthContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,7 +115,7 @@ export default function Bookings() {
                   <span className="text-white/80">Group coordination</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                  <div className="w-2 h-2 bg-electric-400 rounded-full" />
                   <span className="text-white/80">Instant booking</span>
                 </div>
               </div>

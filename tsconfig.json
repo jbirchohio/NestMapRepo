@@ -15,6 +15,7 @@
     "incremental": true,
     "baseUrl": ".",
     "outDir": "./dist",
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./client/src/*"],
       "@shared/*": ["./shared/*"],
@@ -24,7 +25,7 @@
       "./node_modules/@types",
       "./server/types"
     ],
-    "types": ["node", "express"],
+    "types": ["node", "express", "jest"],
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -35,5 +36,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["client/src/**/*", "shared/**/*", "server/**/*", "src/types/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "vite.config.ts"]
+  "exclude": ["node_modules", "build", "dist", "vite.config.ts"]
 }
