@@ -7,6 +7,9 @@ import { db } from "../db";
 import { trips, activities } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import { findLocation } from "../aiLocations";
+import { fetchEarthquakeAlerts } from "../disasterMonitor.js";
+import { forecastBudget } from "../budgetForecast.js";
+import { reconcilePreferences, type TravelerPreference } from "../groupReconciler.js";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -44,6 +47,29 @@ const findLocationSchema = z.object({
     .object({ latitude: z.number(), longitude: z.number() })
     .optional(),
   tripId: z.string().optional(),
+});
+
+const disasterMonitorSchema = z.object({
+  city: z.string(),
+  start_date: z.string(),
+  end_date: z.string(),
+  radius_km: z.number().min(10).max(1000).optional()
+});
+
+const budgetForecastSchema = z.object({
+  city: z.string(),
+  start_date: z.string(),
+  end_date: z.string(),
+  travelers: z.number().min(1).default(1)
+});
+
+const groupPreferenceSchema = z.object({
+  preferences: z.array(
+    z.object({
+      userId: z.string(),
+      preferences: z.array(z.string())
+    })
+  )
 });
 
 // POST /api/ai/summarize-day - Summarize a day's activities
@@ -434,6 +460,42 @@ Provide the translation in JSON format:
       success: false, 
       error: "Failed to translate content" 
     });
+  }
+});
+
+router.post('/disaster-monitor', async (req, res) => {
+  try {
+    const { city, start_date, end_date, radius_km } = disasterMonitorSchema.parse(req.body);
+    const alerts = await fetchEarthquakeAlerts(city, start_date, end_date, radius_km);
+    res.json({ success: true, city, alerts });
+  } catch (error) {
+    console.error('Disaster monitor error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch disaster alerts' });
+  }
+});
+
+router.post('/predict-budget', async (req, res) => {
+  try {
+    if (!req.user || !req.user.organizationId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    const { city, start_date, end_date, travelers } = budgetForecastSchema.parse(req.body);
+    const result = await forecastBudget(req.user.organizationId, city, start_date, end_date, travelers);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Budget forecast error:', error);
+    res.status(500).json({ success: false, error: 'Failed to forecast budget' });
+  }
+});
+
+router.post('/reconcile-preferences', async (req, res) => {
+  try {
+    const { preferences } = groupPreferenceSchema.parse(req.body);
+    const result = reconcilePreferences(preferences as TravelerPreference[]);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Preference reconciliation error:', error);
+    res.status(500).json({ success: false, error: 'Failed to reconcile preferences' });
   }
 });
 
