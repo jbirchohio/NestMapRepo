@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import { db } from "../db";
 import { trips, activities } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
+import { findLocation } from "../aiLocations";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -35,6 +36,14 @@ const optimizeItinerarySchema = z.object({
     travel_style: z.enum(['relaxed', 'packed', 'balanced']).optional(),
     interests: z.array(z.string()).optional()
   }).optional()
+});
+
+const findLocationSchema = z.object({
+  description: z.string(),
+  currentLocation: z
+    .object({ latitude: z.number(), longitude: z.number() })
+    .optional(),
+  tripId: z.string().optional(),
 });
 
 // POST /api/ai/summarize-day - Summarize a day's activities
@@ -178,6 +187,21 @@ Format as JSON with this structure:
       success: false, 
       error: "Failed to generate food recommendations" 
     });
+  }
+});
+
+// POST /api/ai/find-location - fuzzy search for locations
+router.post("/find-location", async (req, res) => {
+  try {
+    const { description, currentLocation } = findLocationSchema.parse(req.body);
+    const context = currentLocation
+      ? `${currentLocation.latitude},${currentLocation.longitude}`
+      : undefined;
+    const result = await findLocation(description, context);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error("AI find-location error:", error);
+    res.status(500).json({ success: false, error: "Failed to find location" });
   }
 });
 

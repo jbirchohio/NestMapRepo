@@ -124,12 +124,15 @@ export class QueryBuilder<T> {
           .where(inArray(table[foreignKey], ids));
 
         // Group related items by foreign key
-        const grouped = related.reduce((acc, item) => {
-          const key = item[foreignKey];
-          if (!acc[key]) acc[key] = [];
-          acc[key].push(item);
-          return acc;
-        }, {});
+        const grouped = related.reduce<Record<string, any[]>>(
+          (acc, item: Record<string, any>) => {
+            const key = item[foreignKey];
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(item);
+            return acc;
+          },
+          {},
+        );
 
         return { [relation]: grouped };
       })

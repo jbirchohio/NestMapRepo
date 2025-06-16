@@ -1,4 +1,4 @@
-import { sign, verify, decode, JwtPayload as BaseJwtPayload } from 'jsonwebtoken';
+import { sign, verify, decode, SignOptions } from 'jsonwebtoken';
 import { redis } from '../db/redis';
 import { logger } from './logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,16 +11,7 @@ import {
   PasswordResetTokenResult
 } from '../types/jwt';
 
-// Extend JWT payload to include our custom claims
-declare module 'jsonwebtoken' {
-  interface JwtPayload extends BaseJwtPayload {
-    jti: string;
-    type: TokenType;
-    userId: string;
-    email: string;
-    role: UserRole;
-  }
-}
+// The JwtPayload interface is extended in jwtService.ts to avoid duplication
 
 // Token secret keys from environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-256-bit-secret';
@@ -64,9 +55,11 @@ export const generateToken = async (
     exp,
   };
 
-  const token = sign(payload, JWT_SECRET, { 
-    expiresIn: typeof expiresIn === 'string' ? expiresIn : `${expiresIn}s`
-  });
+  const token = sign(
+    payload,
+    JWT_SECRET,
+    { expiresIn: typeof expiresIn === 'string' ? expiresIn : `${expiresIn}s` } as SignOptions
+  );
   
   // Store the token in Redis if it's a refresh token
   if (type === 'refresh') {
