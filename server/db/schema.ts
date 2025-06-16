@@ -361,6 +361,7 @@ export const cardTransactions = pgTable('card_transactions', {
 // Expenses Table
 export const expenseCategoryEnum = pgEnum('expense_category', ['travel', 'meals', 'accommodation', 'software', 'office_supplies', 'other']);
 export const expenseStatusEnum = pgEnum('expense_status', ['pending', 'approved', 'rejected', 'reimbursed']);
+export const calendarProviderEnum = pgEnum('calendar_provider', ['google', 'outlook', 'apple', 'other']);
 
 export const expenses = pgTable("expenses", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -522,6 +523,32 @@ export const whiteLabelRequests = pgTable("white_label_requests", {
   reviewNotes: text("review_notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Calendar Integrations Table
+export const calendarIntegrations = pgTable("calendar_integrations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  provider: calendarProviderEnum("provider").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  tokenExpiry: timestamp("token_expiry"),
+  calendarId: text("calendar_id"),
+  syncEnabled: boolean("sync_enabled").default(true),
+  lastSyncAt: timestamp("last_sync_at"),
+  settings: jsonb("settings").$type<{
+    defaultReminders?: boolean;
+    reminderMinutes?: number[];
+    syncHistorical?: boolean;
+    syncFuture?: boolean;
+    syncDays?: number;
+  }>().default(sql`'{}'::jsonb`),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userProviderIdx: index('calendar_integrations_user_provider_idx').on(table.userId, table.provider),
+  orgUserIdx: index('calendar_integrations_org_user_idx').on(table.organizationId, table.userId),
+}));
 
 export const whiteLabelFeatures = pgTable("white_label_features", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -780,6 +807,8 @@ export type Todo = typeof todos.$inferSelect;
 export type NewTodo = typeof todos.$inferInsert;
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
+export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
+export type NewCalendarIntegration = typeof calendarIntegrations.$inferInsert;
 export type TripCollaborator = typeof tripCollaborators.$inferSelect;
 export type NewTripCollaborator = typeof tripCollaborators.$inferInsert;
 export type OrganizationRole = typeof organizationRoles.$inferSelect;

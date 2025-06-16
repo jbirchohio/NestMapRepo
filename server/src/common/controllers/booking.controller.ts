@@ -8,6 +8,7 @@ import { requireAuth, requireOrgContext, enforceOrganizationSecurity } from '../
 import { validateBookingRequest } from '../middleware/validation.middleware';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces';
 import { ErrorService } from '../services/error.service';
+import { trips, activities, calendarIntegrations } from '@shared/schema';
 
 /**
  * Controller for booking endpoints
