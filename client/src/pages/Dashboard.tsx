@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Calendar, BarChart3, Settings, Building2, DollarSign, Users, Clock, FileText, Target, User } from 'lucide-react';
 import NewTripModal from "@/components/NewTripModal";
-import { useAuth } from '@/contexts/SecureJWTAuthContext';
+import { useAuth } from '@/contexts/auth/AuthContext';
 import { useTrips } from '@/hooks/useTrips';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { TripStatus, UserRole } from '@/types/dtos/common';

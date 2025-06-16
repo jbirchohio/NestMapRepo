@@ -106,18 +106,14 @@ describe("Comprehensive API Endpoint Check", () => {
 
   // AI Features
   describe("AI Feature Endpoints", () => {
-    test("POST /api/ai/suggest-locations - Should return suggestions", async () => {
+    test("POST /api/ai/find-location - Should return location data", async () => {
       const response = await request
-        .post("/api/ai/suggest-locations")
+        .post("/api/ai/find-location")
         .set("Authorization", `Bearer ${authToken}`)
-        .send({
-          city: "Paris",
-          interests: ["culture", "food"],
-          duration: 3
-        });
-      
+        .send({ description: "Eiffel Tower" });
+
       expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveProperty("name");
     });
 
     test("POST /api/ai/optimize-itinerary - Should return optimized schedule", async () => {
@@ -140,9 +136,9 @@ describe("Comprehensive API Endpoint Check", () => {
 
   // Team & Organization
   describe("Team Management Endpoints", () => {
-    test("GET /api/organization/members - Should list organization members", async () => {
+    test("GET /api/organizations/members - Should list organization members", async () => {
       const response = await request
-        .get("/api/organization/members")
+        .get("/api/organizations/members")
         .set("Authorization", `Bearer ${authToken}`);
       
       expect(response.status).toBe(200);

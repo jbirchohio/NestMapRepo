@@ -92,7 +92,7 @@ describe('White Label Integration', () => {
       };
 
       const saveRes = await request(app)
-        .post('/api/white-label/config')
+        .post('/api/white-label/configure')
         .set('Authorization', `Bearer ${authToken}`)
         .send(configData);
 
@@ -126,7 +126,7 @@ describe('White Label Integration', () => {
       };
 
       const res = await request(app)
-        .post('/api/white-label/domains')
+        .post(`/api/organizations/${orgId}/domains`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(domainData);
 
@@ -138,7 +138,7 @@ describe('White Label Integration', () => {
 
     it('should list registered domains', async () => {
       const res = await request(app)
-        .get('/api/white-label/domains')
+        .get(`/api/organizations/${orgId}/domains`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
@@ -183,7 +183,7 @@ describe('White Label Integration', () => {
       };
 
       await request(app)
-        .post('/api/white-label/config')
+        .post('/api/white-label/configure')
         .set('Authorization', `Bearer ${authToken}`)
         .send(configData);
 
@@ -194,7 +194,7 @@ describe('White Label Integration', () => {
       };
 
       await request(app)
-        .post('/api/white-label/domains')
+        .post(`/api/organizations/${orgId}/domains`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(domainData);
 

@@ -82,10 +82,10 @@ describe('Analytics API', () => {
     });
   });
 
-  describe('GET /api/analytics/export', () => {
+  describe('GET /api/analytics/export/csv', () => {
     it('should export analytics data as CSV', async () => {
       const response = await request(app)
-        .get('/api/analytics/export')
+        .get('/api/analytics/export/csv')
         .set('Cookie', authCookies)
         .expect(200);
 
@@ -95,7 +95,7 @@ describe('Analytics API', () => {
 
     it('should require authentication for analytics export', async () => {
       await request(app)
-        .get('/api/analytics/export')
+        .get('/api/analytics/export/csv')
         .expect(401);
     });
   });
