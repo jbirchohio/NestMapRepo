@@ -13,10 +13,11 @@ export default function ActivityModal({
   date, 
   activity, 
   onClose, 
-  onSave 
+  onSave
 }: ActivityModalProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(date);
 
   const activityMutation = useMutation({
     mutationFn: async (data: ActivityFormValues) => {
@@ -59,11 +60,11 @@ export default function ActivityModal({
           <div>
             <Label htmlFor="date">Date</Label>
             <TripDatePicker
-              startDate={date}
-              endDate={date}
-              selectedDate={date.toISOString().split('T')[0]}
-              onDateSelect={(selectedDate: string) => {
-                // TODO: Implement date change handler
+              startDate={selectedDate}
+              endDate={selectedDate}
+              selectedDate={selectedDate.toISOString().split('T')[0]}
+              onDateSelect={(sel: string) => {
+                setSelectedDate(new Date(sel));
               }}
             />
           </div>
@@ -71,7 +72,7 @@ export default function ActivityModal({
           <ActivityForm
             activity={activity ? {
               title: activity.title,
-              date: new Date(activity.date),
+              date: selectedDate,
               time: activity.time,
               locationName: activity.locationName,
               travelMode: activity.travelMode,
@@ -80,7 +81,7 @@ export default function ActivityModal({
               latitude: activity.latitude,
               longitude: activity.longitude,
               assignedTo: activity.assignedTo
-            } : undefined}
+            } : { date: selectedDate } as any}
             tripId={tripId.toString()}
             onSubmit={handleSubmit}
           />

@@ -116,17 +116,20 @@ export function useNotifications(): UseNotificationsReturn {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // For now, just fetch notifications on mount and when authentication changes
     fetchNotifications();
 
-    // In a real app, you might set up WebSocket here
-    // const ws = new WebSocket('wss://api.example.com/notifications');
-    // ws.onmessage = (event) => {
-    //   const notification = JSON.parse(event.data);
-    //   addNotification(notification);
-    // };
-    // return () => ws.close();
-  }, [fetchNotifications, isAuthenticated]);
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/notifications`);
+    ws.onmessage = (event) => {
+      try {
+        const notification = JSON.parse(event.data);
+        addNotification(notification);
+      } catch {
+        console.error('Invalid notification message');
+      }
+    };
+    return () => ws.close();
+  }, [fetchNotifications, isAuthenticated, addNotification]);
 
   return {
     notifications,

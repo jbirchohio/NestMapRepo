@@ -632,16 +632,38 @@ export default function SequentialBooking() {
                 Back to Traveler Info
               </Button>
               
-              <Button 
-                onClick={() => {
+              <Button
+                onClick={async () => {
                   if (selectedFlight) {
-                    // TODO: Implement actual booking
-                    toast({
-                      title: "Flight selected",
-                      description: `Selected ${selectedFlight.currency} $${selectedFlight.price} flight for ${currentTraveler.name}`,
-                    });
-                    setCurrentStep(0);
-                    handleNextTraveler();
+                    setIsBooking(true);
+                    try {
+                      const response = await apiRequest('POST', `/api/trips/${bookingData.tripId}/bookings`, {
+                        type: 'flight',
+                        passengers: 1,
+                        origin: selectedFlight.departure.airport,
+                        destination: selectedFlight.arrival.airport,
+                        departureDate: selectedFlight.departure.date,
+                        returnDate: bookingData.returnDate,
+                        price: selectedFlight.price,
+                        currency: selectedFlight.currency,
+                        flightNumber: selectedFlight.flightNumber,
+                        airline: selectedFlight.airline,
+                      });
+                      if (!response.ok) {
+                        throw new Error('Booking failed');
+                      }
+                      const booking = await response.json();
+                      toast({
+                        title: 'Flight booked',
+                        description: `Booking reference ${booking.bookingReference || booking.id} for ${currentTraveler.name}`,
+                      });
+                      setCurrentStep(0);
+                      handleNextTraveler();
+                    } catch (err) {
+                      toast({ title: 'Booking failed', description: 'Unable to book flight', variant: 'destructive' });
+                    } finally {
+                      setIsBooking(false);
+                    }
                   }
                 }}
                 disabled={!selectedFlight}

@@ -144,12 +144,15 @@ export default function TeamManagement() {
   const onInviteSubmit = async (values: InviteFormValues) => {
     try {
       setIsInviting(true);
-      
-      // TODO: Replace with actual API call
-      console.log("Sending invitation:", values);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const response = await apiRequest('POST', '/api/organizations/members/invite', {
+        email: values.email,
+        orgRole: values.role,
+        customPermissions: values.permissions,
+      });
+      if (!response.ok) {
+        throw new Error('Failed to send invitation');
+      }
       
       toast({
         title: "Invitation Sent!",

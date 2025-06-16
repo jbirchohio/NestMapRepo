@@ -446,16 +446,22 @@ router.delete('/users/:id', requireSuperadminRole, async (req, res) => {
 // System activity and monitoring
 router.get('/activity', requireSuperadminRole, async (req, res) => {
   try {
-    // Use direct SQL to avoid schema mismatches
-    const activities = await db.execute(` // TODO: parameterize query
-      SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type,
-             target_id as entity_id, details, risk_level, created_at
-      FROM superadmin_audit_logs
-      ORDER BY created_at DESC
-      LIMIT 100
-    `);
+    const activities = await db
+      .select({
+        id: superadminAuditLogs.id,
+        admin_user_id: superadminAuditLogs.adminUserId,
+        action: superadminAuditLogs.action,
+        entity_type: superadminAuditLogs.entityType,
+        entity_id: superadminAuditLogs.entityId,
+        details: superadminAuditLogs.details,
+        risk_level: superadminAuditLogs.severity,
+        created_at: superadminAuditLogs.createdAt,
+      })
+      .from(superadminAuditLogs)
+      .orderBy(desc(superadminAuditLogs.createdAt))
+      .limit(100);
 
-    res.json(activities.rows);
+    res.json(activities);
   } catch (error) {
     console.error('Error fetching activity:', error);
     res.status(500).json({ error: 'Failed to fetch activity' });
@@ -964,12 +970,20 @@ router.get('/dashboard', requireSuperadminRole, async (req, res) => {
       `),
       
       // Activity logs
-      db.execute(` // TODO: parameterize query
-        SELECT id, superadmin_user_id as admin_user_id, action, target_type as entity_type, target_id as entity_id, details, risk_level, created_at
-        FROM superadmin_audit_logs
-        ORDER BY created_at DESC
-        LIMIT 100
-      `),
+      db
+        .select({
+          id: superadminAuditLogs.id,
+          admin_user_id: superadminAuditLogs.adminUserId,
+          action: superadminAuditLogs.action,
+          entity_type: superadminAuditLogs.entityType,
+          entity_id: superadminAuditLogs.entityId,
+          details: superadminAuditLogs.details,
+          risk_level: superadminAuditLogs.severity,
+          created_at: superadminAuditLogs.createdAt,
+        })
+        .from(superadminAuditLogs)
+        .orderBy(desc(superadminAuditLogs.createdAt))
+        .limit(100),
       
       // Billing data
       db.execute(`
