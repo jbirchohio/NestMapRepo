@@ -89,3 +89,12 @@ This document contains technical notes, reasoning behind fixes, edge case handli
 - Marked `SuperadminFixed.tsx` and `SuperadminSimple.tsx` as `// UNUSED` for potential deletion.
 - Fixed some minor type issues in `Dashboard` and `FlightSearch`.
 - Updated JWT middleware logging and flagged raw SQL queries for review.
+
+## Import Fixes Notes
+- Replaced the unused `@mui/material` components in `AsyncComponent.tsx` with simple UI elements and existing button/spinner components.
+- Created `dnd-stub.tsx` to stub drag-and-drop functionality used by `CustomSectionBuilder` since `@hello-pangea/dnd` was not installed.
+- Added a lightweight `time-picker.tsx` using a native `<input type="time">`.
+- Added placeholder `ClientInfoStep.tsx` to satisfy the booking workflow.
+- Introduced `apiClientV2.ts` as an alias to the existing API client for code that expected this module.
+- Updated `SecureStorage` to use `window.localStorage` instead of the missing `secure-web-storage` package.
+- Extended `client/tsconfig.json` paths to resolve `@shared/*` imports from the client.

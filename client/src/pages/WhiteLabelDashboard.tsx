@@ -12,7 +12,7 @@ import WhiteLabelPreview from '@/components/WhiteLabelPreview';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { useAuth } from '@/contexts/auth/AuthContext';
 import { CheckCircle, AlertCircle, ChevronRight, Globe, Palette, Settings, Shield } from 'lucide-react';
-import api from '@/services/api';
+import api from '@/services/api/apiClient';
 
 interface WhiteLabelStatus {
   organization: {

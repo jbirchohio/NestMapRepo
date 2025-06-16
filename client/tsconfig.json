@@ -25,7 +25,8 @@
     "checkJs": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
     },
     "forceConsistentCasingInFileNames": true,
     "types": ["vite/client", "node"],
