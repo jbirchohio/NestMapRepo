@@ -51,19 +51,15 @@ router.use('/analytics', analyticsRoutes);
 
 // Mount admin and feature routes
 router.use('/admin', adminRoutes);
-import collaborationRoutes from './collaborationRoutes.js';
-import customDomainsRoutes from './customDomainsRoutes.js';
-import whiteLabelRoutes from './whiteLabelRoutes.js';
+import customDomainsRoutes from './customDomains.js';
 
 router.use('/calendar', calendarRoutes);
-router.use('/collaboration', collaborationRoutes); // Now defined
 router.use('/approvals', approvalRoutes);
 router.use('/expenses', expenseRoutes);
 router.use('/reporting', reportingRoutes);
 router.use('/organization-funding', organizationFundingRoutes);
 router.use('/stripe', stripeOAuthRoutes);
-router.use('/custom-domains', customDomainsRoutes); // Now defined
-router.use('/white-label', whiteLabelRoutes); // Now defined
+router.use('/custom-domains', customDomainsRoutes);
 
 
 // Mount test routes in development only
