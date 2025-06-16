@@ -73,6 +73,7 @@ export const superadminBackgroundJobs = pgTable('superadmin_background_jobs', {
   errorMessage: text('error_message'),
   progress: integer('progress').default(0).notNull(),
   total: integer('total').default(100).notNull(),
+  attempts: integer('attempts').default(0).notNull(),
   startedAt: timestamp('started_at'),
   completedAt: timestamp('completed_at'),
   createdBy: uuid('created_by').references(() => users.id),

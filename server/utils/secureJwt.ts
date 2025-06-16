@@ -1,6 +1,6 @@
 import { sign, verify, decode, SignOptions } from 'jsonwebtoken';
-import { redis } from '../db/redis';
-import { logger } from './logger';
+import { redis } from '../db/redis.js';
+import { logger } from './logger.js';
 import { v4 as uuidv4 } from 'uuid';
 import { 
   TokenPayload, 
@@ -9,7 +9,7 @@ import {
   VerifyTokenResult,
   AuthTokens,
   PasswordResetTokenResult
-} from '../types/jwt';
+} from '../types/jwt.js';
 
 // The JwtPayload interface is extended in jwtService.ts to avoid duplication
 

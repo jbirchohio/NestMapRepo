@@ -1,6 +1,6 @@
 import jwt, { SignOptions, Algorithm, JwtPayload as JwtBasePayload } from 'jsonwebtoken';
-import { logger } from './logger';
-import { redis } from '../db/redis'; // Make sure to set up Redis client
+import { logger } from './logger.js';
+import { redis } from '../db/redis.js'; // Make sure to set up Redis client
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 
 // Rate limiting for token endpoints
