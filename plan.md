@@ -13,6 +13,10 @@
 
 ## 🔧 Fixes Applied
 <!-- Add fixes as they're implemented -->
+- Removed unused CalendarDays import in `FlightSearch`.
+- Fixed role check in `Dashboard` to use `user.role`.
+- Marked legacy `SuperadminFixed` and `SuperadminSimple` pages as unused.
+- Added root node type path in `client/tsconfig.json` for tsc.
 
 ## 🔮 Suggested Enhancements
 - [ ] Add sample orgs and proposals for demo [optional]
@@ -33,3 +37,10 @@ The following pages were identified as unused but represent important B2B functi
 4. **Testing** – verify the new routes render properly and navigation works when logged in.
 
 ## 🧠 See notes.md for full technical notes
+
+## Frontend Audit
+
+- [ ] Remove unused legacy superadmin pages.
+- [ ] Resolve remaining TypeScript errors in client.
+- [ ] Audit accessibility of all forms (labels, aria).
+- [ ] Deduplicate Tailwind styles in `index.css`.

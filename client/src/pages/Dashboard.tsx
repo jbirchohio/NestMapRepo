@@ -20,7 +20,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const isCorporate = useMemo(() => user?.roles.includes(UserRole.CORPORATE), [user]);
+  const isCorporate = useMemo(() => user?.role === UserRole.CORPORATE, [user]); // FIX: use single role property
 
   const { 
     data: tripsData, 
