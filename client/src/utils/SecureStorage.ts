@@ -1,4 +1,4 @@
-import { localStorage as secureStorage } from 'secure-web-storage';
+const secureStorage = window.localStorage;
 
 export class SecureStorage {
   private storage = secureStorage;

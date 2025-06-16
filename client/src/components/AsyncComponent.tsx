@@ -1,5 +1,6 @@
 import React, { ComponentType, Suspense, lazy, Component, ErrorInfo } from 'react';
-import { CircularProgress, Box, Typography, Button } from '@mui/material';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Button } from '@/components/ui/button';
 
 /**
  * Error boundary component to catch JavaScript errors in child components
@@ -22,21 +23,13 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         this.props.fallback || (
-          <Box p={4} textAlign="center">
-            <Typography color="error" variant="h6" gutterBottom>
-              Something went wrong
-            </Typography>
-            <Typography variant="body1" paragraph>
-              {this.state.error?.message}
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => this.setState({ hasError: false, error: undefined })}
-            >
+          <div className="p-4 text-center space-y-2">
+            <h6 className="text-red-600 font-semibold">Something went wrong</h6>
+            <p className="text-sm">{this.state.error?.message}</p>
+            <Button onClick={() => this.setState({ hasError: false, error: undefined })}>
               Try Again
             </Button>
-          </Box>
+          </div>
         )
       );
     }
@@ -51,18 +44,10 @@ class ErrorBoundary extends Component<
 const LoadingFallback: React.FC<{ message?: string }> = ({
   message = 'Loading...',
 }) => (
-  <Box
-    display="flex"
-    flexDirection="column"
-    alignItems="center"
-    justifyContent="center"
-    minHeight="200px"
-  >
-    <CircularProgress />
-    <Box mt={2}>
-      <Typography variant="body1">{message}</Typography>
-    </Box>
-  </Box>
+  <div className="flex flex-col items-center justify-center min-h-[200px] space-y-2">
+    <LoadingSpinner />
+    <p className="text-sm">{message}</p>
+  </div>
 );
 
 type ImportFunc<T = any> = () => Promise<{ default: ComponentType<T> }>;
