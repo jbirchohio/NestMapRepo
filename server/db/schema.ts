@@ -423,6 +423,150 @@ export const customDomains = pgTable("custom_domains", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Spend Policies Table
+export const spendPolicies = pgTable("spend_policies", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  appliesTo: text("applies_to").default("all"),
+  targetDepartments: jsonb("target_departments").$type<Record<string, any>>(),
+  targetUsers: jsonb("target_users").$type<Record<string, any>>(),
+  targetRoles: jsonb("target_roles").$type<Record<string, any>>(),
+  dailyLimit: integer("daily_limit"),
+  weeklyLimit: integer("weekly_limit"),
+  monthlyLimit: integer("monthly_limit"),
+  annualLimit: integer("annual_limit"),
+  categoryLimits: jsonb("category_limits").$type<Record<string, any>>(),
+  merchantRestrictions: jsonb("merchant_restrictions").$type<Record<string, any>>(),
+  requiresApprovalOver: integer("requires_approval_over"),
+  autoApproveUnder: integer("auto_approve_under"),
+  approvalChain: jsonb("approval_chain").$type<Record<string, any>>(),
+  receiptRequiredOver: integer("receipt_required_over"),
+  businessPurposeRequired: boolean("business_purpose_required").default(false),
+  allowedDays: jsonb("allowed_days").$type<Record<string, any>>(),
+  allowedHours: jsonb("allowed_hours").$type<Record<string, any>>(),
+  allowedCountries: jsonb("allowed_countries").$type<Record<string, any>>(),
+  blockedCountries: jsonb("blocked_countries").$type<Record<string, any>>(),
+  createdBy: uuid("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const expenseApprovals = pgTable("expense_approvals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  expenseId: uuid("expense_id").references(() => expenses.id).notNull(),
+  organizationId: uuid("organization_id").references(() => organizations.id).notNull(),
+  approverId: uuid("approver_id").references(() => users.id).notNull(),
+  approvalLevel: integer("approval_level").default(1),
+  status: text("status").default("pending"),
+  comments: text("comments"),
+  approvedAmount: integer("approved_amount"),
+  policyOverride: boolean("policy_override").default(false),
+  overrideReason: text("override_reason"),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const reimbursements = pgTable("reimbursements", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id).notNull(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  batchId: text("batch_id"),
+  totalAmount: integer("total_amount").notNull(),
+  currency: text("currency").default("USD"),
+  expenseIds: jsonb("expense_ids").$type<string[]>(),
+  paymentMethod: text("payment_method"),
+  paymentStatus: text("payment_status").default("pending"),
+  paymentReference: text("payment_reference"),
+  paymentDate: timestamp("payment_date"),
+  bankAccountId: text("bank_account_id"),
+  routingNumber: text("routing_number"),
+  accountNumberMasked: text("account_number_masked"),
+  processedBy: uuid("processed_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const whiteLabelSettings = pgTable("white_label_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id).notNull(),
+  companyName: text("company_name").notNull(),
+  companyLogo: text("company_logo"),
+  tagline: text("tagline"),
+  primaryColor: text("primary_color").default("#3B82F6"),
+  secondaryColor: text("secondary_color").default("#64748B"),
+  accentColor: text("accent_color").default("#10B981"),
+  customDomain: text("custom_domain"),
+  supportEmail: text("support_email"),
+  helpUrl: text("help_url"),
+  footerText: text("footer_text"),
+  status: text("status").default("draft"),
+  approvedBy: uuid("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const whiteLabelRequests = pgTable("white_label_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id).notNull(),
+  requestedBy: uuid("requested_by").references(() => users.id).notNull(),
+  requestType: text("request_type").notNull(),
+  requestData: jsonb("request_data").$type<Record<string, any>>(),
+  status: text("status").default("pending"),
+  reviewedBy: uuid("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const whiteLabelFeatures = pgTable("white_label_features", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  plan: text("plan").notNull(),
+  customLogo: boolean("custom_logo").default(false),
+  customColors: boolean("custom_colors").default(false),
+  customDomain: boolean("custom_domain").default(false),
+  removeBranding: boolean("remove_branding").default(false),
+  customEmailTemplates: boolean("custom_email_templates").default(false),
+  apiAccess: boolean("api_access").default(false),
+  maxUsers: integer("max_users").default(5),
+  monthlyPrice: integer("monthly_price").default(0),
+});
+
+export const userSessions = pgTable("user_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  organizationId: uuid("organization_id").references(() => organizations.id),
+  sessionToken: text("session_token").notNull().unique(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  lastActivity: timestamp("last_activity").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
+export const adminSettings = pgTable("admin_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const userActivityLogs = pgTable("user_activity_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  organizationId: uuid("organization_id").references(() => organizations.id),
+  action: text("action").notNull(),
+  details: jsonb("details").$type<Record<string, any>>(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Trip Comments Table
 export const tripComments = pgTable("trip_comments", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -573,6 +717,33 @@ export const insertCustomDomainSchema = createInsertSchema(customDomains, {
 });
 export const selectCustomDomainSchema = createSelectSchema(customDomains);
 
+export const insertSpendPolicySchema = createInsertSchema(spendPolicies);
+export const selectSpendPolicySchema = createSelectSchema(spendPolicies);
+
+export const insertExpenseApprovalSchema = createInsertSchema(expenseApprovals);
+export const selectExpenseApprovalSchema = createSelectSchema(expenseApprovals);
+
+export const insertReimbursementSchema = createInsertSchema(reimbursements);
+export const selectReimbursementSchema = createSelectSchema(reimbursements);
+
+export const insertWhiteLabelSettingsSchema = createInsertSchema(whiteLabelSettings);
+export const selectWhiteLabelSettingsSchema = createSelectSchema(whiteLabelSettings);
+
+export const insertWhiteLabelRequestSchema = createInsertSchema(whiteLabelRequests);
+export const selectWhiteLabelRequestSchema = createSelectSchema(whiteLabelRequests);
+
+export const insertWhiteLabelFeatureSchema = createInsertSchema(whiteLabelFeatures);
+export const selectWhiteLabelFeatureSchema = createSelectSchema(whiteLabelFeatures);
+
+export const insertUserSessionSchema = createInsertSchema(userSessions);
+export const selectUserSessionSchema = createSelectSchema(userSessions);
+
+export const insertAdminSettingSchema = createInsertSchema(adminSettings);
+export const selectAdminSettingSchema = createSelectSchema(adminSettings);
+
+export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs);
+export const selectUserActivityLogSchema = createSelectSchema(userActivityLogs);
+
 // Zod schemas for TripComments, ApprovalRequests
 export const insertTripCommentSchema = createInsertSchema(tripComments, {
   mentionedUserIds: z.array(z.string().uuid()).optional().nullable(),
@@ -638,6 +809,24 @@ export type Budget = typeof budgets.$inferSelect;
 export type NewBudget = typeof budgets.$inferInsert;
 export type CustomDomain = typeof customDomains.$inferSelect;
 export type NewCustomDomain = typeof customDomains.$inferInsert;
+export type SpendPolicy = typeof spendPolicies.$inferSelect;
+export type NewSpendPolicy = typeof spendPolicies.$inferInsert;
+export type ExpenseApproval = typeof expenseApprovals.$inferSelect;
+export type NewExpenseApproval = typeof expenseApprovals.$inferInsert;
+export type Reimbursement = typeof reimbursements.$inferSelect;
+export type NewReimbursement = typeof reimbursements.$inferInsert;
+export type WhiteLabelSetting = typeof whiteLabelSettings.$inferSelect;
+export type NewWhiteLabelSetting = typeof whiteLabelSettings.$inferInsert;
+export type WhiteLabelRequest = typeof whiteLabelRequests.$inferSelect;
+export type NewWhiteLabelRequest = typeof whiteLabelRequests.$inferInsert;
+export type WhiteLabelFeature = typeof whiteLabelFeatures.$inferSelect;
+export type NewWhiteLabelFeature = typeof whiteLabelFeatures.$inferInsert;
+export type UserSession = typeof userSessions.$inferSelect;
+export type NewUserSession = typeof userSessions.$inferInsert;
+export type AdminSetting = typeof adminSettings.$inferSelect;
+export type NewAdminSetting = typeof adminSettings.$inferInsert;
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;
+export type NewUserActivityLog = typeof userActivityLogs.$inferInsert;
 
 // Types for TripComments, ApprovalRequests
 export type TripComment = typeof tripComments.$inferSelect;
