@@ -7,7 +7,7 @@ The following initiatives build on the existing platform to deliver smarter plan
 ### Broaden AI Capabilities
 - [ ] Build ML models for price forecasting and budget optimization using booking history.
 - [ ] Add real-time disruption monitoring to reroute trips when flights or destinations are impacted.
-- [ ] Support group-travel planning by merging traveler preferences into a consensus itinerary.
+- [x] Support group-travel planning by merging traveler preferences into a consensus itinerary.
 
 ### Expand Integrations
 - [ ] Integrate additional booking providers and GDS systems for broader inventory.
