@@ -83,7 +83,7 @@ export function ItineraryOptimizationModal({
       <DialogContent className="max-w-4xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-600" />
+            <Sparkles className="h-5 w-5 text-electric-600" />
             AI Itinerary Optimization
           </DialogTitle>
           <DialogDescription>
@@ -95,7 +95,7 @@ export function ItineraryOptimizationModal({
           {!optimizationResult ? (
             <div className="text-center py-8">
               <div className="mb-4">
-                <Sparkles className="h-12 w-12 text-purple-600 mx-auto mb-2" />
+                <Sparkles className="h-12 w-12 text-electric-600 mx-auto mb-2" />
                 <h3 className="text-lg font-semibold">Ready to Optimize</h3>
                 <p className="text-muted-foreground">
                   Analyze {activities.length} activities across {Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} days
@@ -105,7 +105,7 @@ export function ItineraryOptimizationModal({
               <Button
                 onClick={handleOptimize}
                 disabled={optimizeItinerary.isPending || activities.length === 0}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-electric-600 hover:bg-electric-700"
               >
                 {optimizeItinerary.isPending ? (
                   <>
@@ -182,7 +182,7 @@ export function ItineraryOptimizationModal({
                                 </div>
                               </div>
                               {(hasTimeChange || hasDayChange) && (
-                                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                                <Badge variant="secondary" className="bg-electric-100 text-electric-700">
                                   Changes suggested
                                 </Badge>
                               )}

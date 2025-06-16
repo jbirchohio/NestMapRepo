@@ -169,7 +169,7 @@ export default function AdminRoles() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-electric-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
         </div>
@@ -178,7 +178,7 @@ export default function AdminRoles() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-electric-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div

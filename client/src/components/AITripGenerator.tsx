@@ -362,7 +362,7 @@ export default function AITripGenerator() {
         
         <Card className="p-4">
           <div className="flex items-center space-x-3">
-            <DollarSign className="w-5 h-5 text-purple-600" />
+            <DollarSign className="w-5 h-5 text-electric-600" />
             <div>
               <h3 className="font-medium">Budget Planning</h3>
               <p className="text-sm text-gray-600">Detailed cost breakdown and optimization</p>
@@ -416,8 +416,8 @@ function TripResultsView({ trip, onBack }: { trip: GeneratedTrip; onBack: () => 
               <div className="text-sm font-medium">Total Cost</div>
               <div className="text-lg font-bold">${trip.tripSummary?.totalCost || 0}</div>
             </div>
-            <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-purple-600 mx-auto mb-1" />
+            <div className="text-center p-3 bg-electric-50 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-electric-600 mx-auto mb-1" />
               <div className="text-sm font-medium">Activities</div>
               <div className="text-lg font-bold">{trip.activities?.length || 0}</div>
             </div>
@@ -451,7 +451,7 @@ function TripResultsView({ trip, onBack }: { trip: GeneratedTrip; onBack: () => 
               ))}
 
               <h3 className="text-lg font-semibold flex items-center space-x-2">
-                <Bed className="w-5 h-5 text-purple-600" />
+                <Bed className="w-5 h-5 text-electric-600" />
                 <span>Accommodation</span>
               </h3>
               {trip.accommodation?.map((hotel: Accommodation, index: number) => (

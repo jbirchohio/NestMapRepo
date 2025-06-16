@@ -137,13 +137,13 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-300">vs Average Trip</p>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-2xl font-bold text-electric-600">
                   {carbonData?.comparison?.reductionPotential ? '-' : '+'}
                   {Math.abs(carbonData?.comparison?.reductionPotential || 0)}%
                 </p>
                 <p className="text-xs text-gray-500">Carbon impact</p>
               </div>
-              <Target className="w-8 h-8 text-purple-600" />
+              <Target className="w-8 h-8 text-electric-600" />
             </div>
           </CardContent>
         </Card>
@@ -605,8 +605,8 @@ function ReportsTab({ carbonData, expenseData }: any) {
               <div className="font-medium">Receipts Complete</div>
               <div className="text-sm text-gray-600 dark:text-gray-300">100% documentation</div>
             </div>
-            <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <Leaf className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+            <div className="text-center p-4 bg-electric-50 dark:bg-electric-900/20 rounded-lg">
+              <Leaf className="w-8 h-8 text-electric-600 mx-auto mb-2" />
               <div className="font-medium">Sustainability Goals</div>
               <div className="text-sm text-gray-600 dark:text-gray-300">On track for carbon targets</div>
             </div>

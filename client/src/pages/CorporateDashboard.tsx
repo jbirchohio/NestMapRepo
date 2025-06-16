@@ -249,7 +249,7 @@ export default function CorporateDashboard() {
                     <span className="text-electric-100">Team collaboration</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                    <div className="w-2 h-2 bg-electric-400 rounded-full" />
                     <span className="text-electric-100">Smart analytics</span>
                   </div>
                 </div>
@@ -486,7 +486,7 @@ export default function CorporateDashboard() {
                     onClick={() => setSelectedCard(card)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
+                      <div className="w-10 h-6 bg-gradient-to-r from-blue-500 to-electric-600 rounded flex items-center justify-center">
                         <CreditCard className="h-3 w-3 text-white" />
                       </div>
                       <div>

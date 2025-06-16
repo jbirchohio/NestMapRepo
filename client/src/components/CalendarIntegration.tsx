@@ -208,7 +208,7 @@ export default function CalendarIntegration() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Settings className="h-8 w-8 text-purple-600" />
+                <Settings className="h-8 w-8 text-electric-600" />
                 <div>
                   <div className="font-medium">Quick Sync</div>
                   <div className="text-sm text-slate-600 dark:text-slate-400">

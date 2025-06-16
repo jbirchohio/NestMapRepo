@@ -414,12 +414,12 @@ function OptimizationInsights({ data }: { data: any }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-purple-600" />
+              <TrendingUp className="w-5 h-5 text-electric-600" />
               Experience Score
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-electric-600">
               {experienceOptimization?.satisfactionScore || 0}/10
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -457,8 +457,8 @@ function OptimizationInsights({ data }: { data: any }) {
           <CardContent>
             <div className="space-y-2">
               {experienceOptimization?.personalizedSuggestions?.map((suggestion: string, index: number) => (
-                <div key={index} className="flex items-start gap-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded">
-                  <Lightbulb className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                <div key={index} className="flex items-start gap-2 p-2 bg-electric-50 dark:bg-electric-900/20 rounded">
+                  <Lightbulb className="w-4 h-4 text-electric-600 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">{suggestion}</span>
                 </div>
               ))}

@@ -50,7 +50,7 @@ export function OrganizationsList({ organizations, onOrganizationSelect, isLoadi
   const getPlanColor = (plan: string) => {
     switch (plan) {
       case 'enterprise':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
+        return 'bg-electric-100 text-electric-800 dark:bg-electric-900/20 dark:text-electric-300';
       case 'team':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
       case 'basic':
