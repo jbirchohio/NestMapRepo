@@ -1,4 +1,4 @@
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer, WebSocket, type RawData } from 'ws';
 import { Server } from 'http';
 import { parse } from 'url';
 import jwt from 'jsonwebtoken';
@@ -44,10 +44,10 @@ export class CollaborationWebSocketServer {
 
       // Verify JWT token
       const decoded = jwt.verify(token, process.env.SESSION_SECRET || 'dev-secret') as any;
-      ws.user_id = decoded.user_id;
-      ws.organization_id = decoded.organization_id;
+      ws.userId = decoded.user_id;
+      ws.organizationId = decoded.organization_id;
 
-      console.log(`WebSocket connected: User ${ws.user_id} from org ${ws.organization_id}`);
+      console.log(`WebSocket connected: User ${ws.userId} from org ${ws.organizationId}`);
 
       ws.on('message', (data) => this.handleMessage(ws, data));
       ws.on('close', () => this.handleDisconnect(ws));
@@ -56,8 +56,8 @@ export class CollaborationWebSocketServer {
       // Send welcome message
       ws.send(JSON.stringify({
         type: 'connected',
-        userId: ws.user_id,
-        organizationId: ws.organization_id
+        userId: ws.userId,
+        organizationId: ws.organizationId
       }));
 
     } catch (error) {
@@ -66,40 +66,40 @@ export class CollaborationWebSocketServer {
     }
   }
 
-  private handleMessage(ws: AuthenticatedWebSocket, data: Buffer) {
+  private handleMessage(ws: AuthenticatedWebSocket, data: RawData) {
     try {
       const message: WebSocketMessage = JSON.parse(data.toString());
       
       switch (message.type) {
         case 'join_trip':
-          this.handleJoinTrip(ws, message.trip_id!);
+          this.handleJoinTrip(ws, message.tripId!);
           break;
         case 'leave_trip':
-          this.handleLeaveTrip(ws, message.trip_id!);
+          this.handleLeaveTrip(ws, message.tripId!);
           break;
         case 'trip_update':
-          this.broadcastToTrip(message.trip_id!, {
+          this.broadcastToTrip(message.tripId!, {
             type: 'trip_updated',
-            userId: ws.user_id,
+            userId: ws.userId,
             data: message.data
           }, ws);
           break;
         case 'comment_added':
-          this.broadcastToTrip(message.trip_id!, {
+          this.broadcastToTrip(message.tripId!, {
             type: 'comment_added',
-            userId: ws.user_id,
+            userId: ws.userId,
             data: message.data
           }, ws);
           break;
         case 'activity_changed':
-          this.broadcastToTrip(message.trip_id!, {
+          this.broadcastToTrip(message.tripId!, {
             type: 'activity_changed',
-            userId: ws.user_id,
+            userId: ws.userId,
             data: message.data
           }, ws);
           break;
         case 'user_presence':
-          this.updateUserPresence(ws, message.trip_id!);
+          this.updateUserPresence(ws, message.tripId!);
           break;
       }
     } catch (error) {
@@ -113,22 +113,22 @@ export class CollaborationWebSocketServer {
     }
     
     this.tripRooms.get(tripId)!.add(ws);
-    ws.trip_id = tripId;
+    ws.tripId = tripId;
     
     // Update user presence
-    this.userPresence.set(ws.user_id!, {
-      userId: ws.user_id!,
+    this.userPresence.set(ws.userId!, {
+      userId: ws.userId!,
       lastSeen: new Date()
     });
 
     // Notify other users in the trip
     this.broadcastToTrip(tripId, {
       type: 'user_joined',
-      userId: ws.user_id,
-      organizationId: ws.organization_id
+      userId: ws.userId,
+      organizationId: ws.organizationId
     }, ws);
 
-    console.log(`User ${ws.user_id} joined trip ${tripId}`);
+    console.log(`User ${ws.userId} joined trip ${tripId}`);
   }
 
   private handleLeaveTrip(ws: AuthenticatedWebSocket, tripId: number) {
@@ -143,35 +143,35 @@ export class CollaborationWebSocketServer {
     // Notify other users
     this.broadcastToTrip(tripId, {
       type: 'user_left',
-      userId: ws.user_id
+      userId: ws.userId
     }, ws);
 
-    ws.trip_id = undefined;
-    console.log(`User ${ws.user_id} left trip ${tripId}`);
+    ws.tripId = undefined;
+    console.log(`User ${ws.userId} left trip ${tripId}`);
   }
 
   private handleDisconnect(ws: AuthenticatedWebSocket) {
-    if (ws.trip_id) {
-      this.handleLeaveTrip(ws, ws.trip_id);
+    if (ws.tripId) {
+      this.handleLeaveTrip(ws, ws.tripId);
     }
-    
-    if (ws.user_id) {
-      this.userPresence.delete(ws.user_id);
+
+    if (ws.userId) {
+      this.userPresence.delete(ws.userId);
     }
-    
-    console.log(`User ${ws.user_id} disconnected`);
+
+    console.log(`User ${ws.userId} disconnected`);
   }
 
   private updateUserPresence(ws: AuthenticatedWebSocket, tripId: number) {
-    this.userPresence.set(ws.user_id!, {
-      userId: ws.user_id!,
+    this.userPresence.set(ws.userId!, {
+      userId: ws.userId!,
       lastSeen: new Date()
     });
 
     // Broadcast presence update to trip members
     this.broadcastToTrip(tripId, {
       type: 'presence_update',
-      userId: ws.user_id,
+      userId: ws.userId,
       lastSeen: new Date()
     });
   }
@@ -185,7 +185,7 @@ export class CollaborationWebSocketServer {
     room.forEach(client => {
       if (client !== sender && client.readyState === WebSocket.OPEN) {
         // Verify client still belongs to same organization
-        if (sender?.organization_id && client.organization_id !== sender.organization_id) {
+        if (sender?.organizationId && client.organizationId !== sender.organizationId) {
           return; // Skip cross-organization broadcasts
         }
         
@@ -239,7 +239,7 @@ export class CollaborationWebSocketServer {
     
     return Array.from(room)
       .filter(client => client.readyState === WebSocket.OPEN)
-      .map(client => client.user_id!)
+      .map(client => client.userId!)
       .filter(userId => userId !== undefined);
   }
 }

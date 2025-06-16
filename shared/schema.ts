@@ -17,12 +17,6 @@ import {
   // Explicitly import Trip and Activity types for transform functions
   type Trip, 
   type Activity,
-  // cardTransactions and related items
-  cardTransactions,
-  insertCardTransactionSchema,
-  selectCardTransactionSchema,
-  type CardTransaction,
-  type NewCardTransaction,
   // TripComments and related items
   tripComments,
   insertTripCommentSchema,
@@ -379,8 +373,6 @@ export type InsertCorporateCard = z.infer<typeof insertCorporateCardSchema>;
 export type Cardholder = typeof cardholders.$inferSelect;
 export type InsertCardholder = z.infer<typeof insertCardholderSchema>;
 
-export type { CardTransaction, NewCardTransaction }; 
-export { insertCardTransactionSchema, selectCardTransactionSchema }; 
 
 // Expenses table will be moved to server/db/schema.ts and imported.
 /*

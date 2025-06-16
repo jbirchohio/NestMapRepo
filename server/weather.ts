@@ -86,7 +86,7 @@ export async function getCurrentWeather(location: string): Promise<WeatherData |
       return null;
     }
 
-    const data: OpenWeatherResponse = await response.json();
+    const data = (await response.json()) as OpenWeatherResponse;
     
     return {
       date: new Date().toISOString().split('T')[0],
@@ -125,7 +125,7 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
       return [];
     }
 
-    const data: ForecastResponse = await response.json();
+    const data = (await response.json()) as ForecastResponse;
     
     // Group forecast data by date and get daily summaries
     const dailyForecasts = new Map<string, OpenWeatherResponse[]>();
@@ -139,8 +139,11 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
     });
 
     const weatherData: WeatherData[] = [];
-    
-    for (const [date, forecasts] of Array.from(dailyForecasts.entries())) {
+    const targetDates = dates.map(d => new Date(d).toISOString().split('T')[0]);
+
+    for (const date of targetDates) {
+      const forecasts = dailyForecasts.get(date);
+      if (!forecasts) continue;
       // Take the forecast closest to midday for daily summary
       const middayForecast = forecasts.reduce((closest: any, current: any) => {
         const currentHour = new Date(current.dt * 1000).getHours();
