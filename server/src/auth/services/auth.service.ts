@@ -844,71 +844,6 @@ export class AuthServiceImpl {
       role: user.role || 'user',
     };
   }
-
-  public async verifyToken(token: string, type: string): Promise<{ userId: string; email: string; role: string }> {
-    if (!token) {
-      throw new UnauthorizedException('No token provided');
-    }
-
-    try {
-      const secret = type === TokenType.ACCESS
-        ? this.configService.get<string>('JWT_SECRET')
-        : this.configService.get<string>('JWT_REFRESH_SECRET');
-      
-      if (!secret) {
-        throw new Error('JWT secret not configured');
-      }
-
-      const payload = await this.jwtService.verifyAsync<JwtPayloadWithClaims>(token, { secret });
-      
-      // Verify token type matches if provided
-      if (type && payload.type !== type) {
-        throw new UnauthorizedException('Invalid token type');
-      }
-
-      // Return the minimal required user information
-      return {
-        userId: payload.sub || payload.userId || '',
-        email: payload.email || '',
-        role: payload.role || 'USER'
-      };
-    } catch (error) {
-      this.logger.error(`Token verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      
-      if (error.name === 'TokenExpiredError') {
-        throw new UnauthorizedException('Token has expired');
-      }
-      if (error.name === 'JsonWebTokenError') {
-        throw new UnauthorizedException('Invalid token');
-      }
-      
-      // Re-throw any other errors
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Failed to verify token');
-
-  private parseJwtExpiration(expiration: string): number {
-    const match = expiration.match(/^(\d+)([smhd])$/);
-    if (!match) {
-      throw new Error(`Invalid JWT expiration format: ${expiration}`);
-    }
-    const value = parseInt(match[1], 10);
-    const unit = match[2];
-    switch (unit) {
-      case 's':
-        return value;
-      case 'm':
-        return value * 60;
-      case 'h':
-        return value * 60 * 60;
-      case 'd':
-        return value * 60 * 60 * 24;
-      default:
-        throw new Error(`Unsupported JWT expiration unit: ${unit}`);
-    }
-  }
-
   async generateTokens(
     user: UserResponse,
     ipAddress: string,
@@ -1009,53 +944,43 @@ export class AuthServiceImpl {
         accessTokenExpiresAt: accessTokenExpiresAt * 1000, // Convert to milliseconds
         refreshTokenExpiresAt: refreshTokenExpiresAt * 1000 // Convert to milliseconds
       };
-    } catch (error) {
-}
-
-// Check if account is locked
-if (user.lockedUntil && user.lockedUntil > new Date()) {
-  return null;
-}
-
-const isPasswordValid = await compare(password, user.passwordHash);
-if (!isPasswordValid) {
-  return null;
-}
-
-return {
-  id: user.id,
-  email: user.email,
-  role: user.role || 'user',
-};
-}
-
-private async verifyToken(token: string, type: TokenType): Promise<JwtPayloadWithClaims> {
-this.logger.debug(`Verifying ${type} token`);
-  
-if (!token) {
-  throw new UnauthorizedError('No token provided');
-}
-  
-try {
-  const secret = type === TokenType.ACCESS 
-    ? this.configService?.get<string>('JWT_SECRET') || env.JWT_SECRET
-    : this.configService?.get<string>('JWT_REFRESH_SECRET') || env.JWT_REFRESH_SECRET;
-  
-  if (!secret) {
-    throw new Error('JWT secret is not configured');
-        `Failed to send password reset confirmation email to ${user.email}:`,
-        emailError
-      );
-      // Don't fail the reset if email sending fails
+      } catch (error) {
+        this.logger.error('Error generating tokens:', error);
+        throw new InternalServerError('Failed to generate tokens');
+      }
     }
-  } catch (error) {
-    this.logger.error('Error in resetPassword:', error);
-    if (error instanceof BadRequestError) {
-      throw error;
+
+    private async verifyToken(token: string, type: TokenType): Promise<JwtPayloadWithClaims> {
+      if (!token) {
+        throw new UnauthorizedError('No token provided');
+      }
+
+      try {
+        const secret = type === TokenType.ACCESS
+          ? this.configService.get<string>('JWT_SECRET')
+          : this.configService.get<string>('JWT_REFRESH_SECRET');
+
+        if (!secret) {
+          throw new Error('JWT secret not configured');
+        }
+
+        const payload = await this.jwtService.verifyAsync<JwtPayloadWithClaims>(token, { secret });
+
+        if (payload.type !== type) {
+          throw new UnauthorizedError('Invalid token type');
+        }
+
+        return payload;
+      } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+          throw new UnauthorizedError('Token has expired');
+        }
+        if (error.name === 'JsonWebTokenError') {
+          throw new UnauthorizedError('Invalid token');
+        }
+        throw error;
+      }
     }
-    throw new InternalServerError('Failed to reset password');
-  }
-}
 
 async generateTokens(
   user: UserResponse,
@@ -1131,4 +1056,5 @@ async revokeAllSessions(userId: string): Promise<void> {
     this.logger.error(`Failed to revoke sessions for user ${userId}:`, error);
     throw new InternalServerError('Failed to revoke sessions');
   }
+}
 }

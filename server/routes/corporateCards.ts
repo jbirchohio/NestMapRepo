@@ -329,33 +329,6 @@ export function registerCorporateCardRoutes(app: Express) {
       return res.status(500).json({ error: "Failed to fetch users" });
     }
   });
-}
-      const cardId = parseInt(req.params.cardId);
-            const organizationId = req.user!.organizationId;
-
-      // Verify card belongs to organization
-      const [card] = await db
-        .select()
-        .from(corporateCards)
-        .where(and(
-          eq(corporateCards.id, cardId),
-          eq(corporateCards.organization_id, organizationId)
-        ));
-
-      if (!card) {
-        return res.status(404).json({ error: "Card not found" });
-      }
-
-      await db
-        .delete(corporateCards)
-        .where(eq(corporateCards.id, cardId));
-
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting card:", error);
-      res.status(500).json({ error: "Failed to delete card" });
-    }
-  });
 
   // Get card transactions
   app.get("/api/corporate-cards/cards/:cardId/transactions", validateJWT, async (req, res) => {
