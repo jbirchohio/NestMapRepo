@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { User } from '../../shared/types/auth';
+import type { AuthUser } from '../middleware/auth';
 
 /**
  * Interface for authenticated requests with user information
  */
 export interface AuthenticatedRequest extends Request {
-  user?: User & { id: string | number };
+  user?: AuthUser;
   auth?: any;
   organizationId?: string | number;
   requestId?: string;

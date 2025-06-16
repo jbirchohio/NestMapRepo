@@ -2,25 +2,11 @@ import winston from 'winston';
 import path from 'path';
 import fs from 'fs';
 
-// Extend the Winston Logger type to include our custom stream
-declare module 'winston' {
-  interface Logger {
-    stream: {
-      write: (message: string) => void;
-    };
-  }
-  
-  // This is needed to avoid the TypeScript error about stream type
-  interface LoggerOptions {
-    stream?: {
-      write: (message: string) => void;
-    };
-  }
-  
-  // Add type for the transport stream
-  interface TransportStream {
-    write?: (message: string) => void;
-  }
+// Morgan uses a writable stream for logging HTTP requests. Define a simple
+// type for that stream rather than augmenting the existing Winston types,
+// which already declare a `stream` property with a different signature.
+export interface MorganStream {
+  write: (message: string) => void;
 }
 
 // Create logs directory if it doesn't exist
@@ -101,7 +87,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Create a stream for morgan
-const stream = {
+const morganStream: MorganStream = {
   write: (message: string) => {
     const logMessage = message.trim();
     if (!logMessage) return;
@@ -119,19 +105,6 @@ const stream = {
   },
 };
 
-// Create a logger with stream using a type assertion
-type LoggerWithStream = winston.Logger & { stream: { write: (message: string) => void } };
+export { logger, morganStream as stream };
 
-const loggerWithStream = logger as LoggerWithStream;
-
-// Add the stream to the logger instance
-Object.defineProperty(loggerWithStream, 'stream', {
-  value: stream,
-  writable: false,
-  enumerable: true,
-  configurable: false
-});
-
-export { loggerWithStream as logger, stream };
-
-export default loggerWithStream;
+export default logger;
