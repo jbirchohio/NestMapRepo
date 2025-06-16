@@ -8,7 +8,7 @@ import {
   ResetPasswordDto
 } from '../dtos/auth.dto';
 import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware';
-import { isErrorWithMessage } from '../../utils/error-utils';
+import { isErrorWithMessage } from '../../../utils/error-utils';
 import { Logger } from '@nestjs/common';
 
 // Response type that excludes the refresh token when sending to client

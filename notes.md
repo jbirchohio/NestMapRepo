@@ -35,6 +35,7 @@ This document contains technical notes, reasoning behind fixes, edge case handli
 - Marking uncertain cases for manual review
 - Prioritizing type safety and consistent naming conventions
 - Refactoring duplicated logic into shared modules
+- Fixed several relative import paths in backend that pointed to wrong parent directories (e.g. auth routes, secureAuth middleware, JWT utilities).
 
 ## Feature Verification Notes
 
