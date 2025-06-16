@@ -151,4 +151,27 @@ describe('AI Integration API', () => {
         .expect(401);
     });
   });
+
+  describe('POST /api/ai/group-itinerary', () => {
+    it('should generate a consensus itinerary', async () => {
+      const requestData = {
+        destination: 'Rome',
+        start_date: '2025-06-01',
+        end_date: '2025-06-05',
+        preferences: [
+          { userId: 'u1', preferences: ['museums', 'pizza'] },
+          { userId: 'u2', preferences: ['pizza', 'shopping'] }
+        ]
+      };
+
+      const response = await request(app)
+        .post('/api/ai/group-itinerary')
+        .set('Cookie', authCookies)
+        .send(requestData)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('itinerary');
+      expect(response.body).toHaveProperty('priorityList');
+    });
+  });
 });

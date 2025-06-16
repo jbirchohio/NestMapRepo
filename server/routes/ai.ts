@@ -9,7 +9,7 @@ import { eq, and } from "drizzle-orm";
 import { findLocation } from "../aiLocations";
 import { fetchEarthquakeAlerts } from "../disasterMonitor.js";
 import { forecastBudget } from "../budgetForecast.js";
-import { reconcilePreferences, type TravelerPreference } from "../groupReconciler.js";
+import { reconcilePreferences, type TravelerPreference, generateConsensusItinerary } from "../groupReconciler.js";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -64,6 +64,18 @@ const budgetForecastSchema = z.object({
 });
 
 const groupPreferenceSchema = z.object({
+  preferences: z.array(
+    z.object({
+      userId: z.string(),
+      preferences: z.array(z.string())
+    })
+  )
+});
+
+const groupItinerarySchema = z.object({
+  destination: z.string(),
+  start_date: z.string(),
+  end_date: z.string(),
   preferences: z.array(
     z.object({
       userId: z.string(),
@@ -496,6 +508,18 @@ router.post('/reconcile-preferences', async (req, res) => {
   } catch (error) {
     console.error('Preference reconciliation error:', error);
     res.status(500).json({ success: false, error: 'Failed to reconcile preferences' });
+  }
+});
+
+router.post('/group-itinerary', async (req, res) => {
+  try {
+    const { destination, start_date, end_date, preferences } = groupItinerarySchema.parse(req.body);
+    const { priorityList, conflicts } = reconcilePreferences(preferences as TravelerPreference[]);
+    const itinerary = await generateConsensusItinerary(destination, start_date, end_date, priorityList);
+    res.json({ success: true, priorityList, conflicts, itinerary });
+  } catch (error) {
+    console.error('Group itinerary generation error:', error);
+    res.status(500).json({ success: false, error: 'Failed to generate group itinerary' });
   }
 });
 
