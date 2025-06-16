@@ -1,9 +1,9 @@
 import { hash, compare } from 'bcrypt';
 import { randomBytes, createHash } from 'crypto';
-import { SALT_ROUNDS } from '../config/constants';
-import { logger } from './logger';
+import { SALT_ROUNDS } from '../config/constants.js';
+import { logger } from './logger.js';
 import { users } from '@shared/schema';
-import { dbService } from '../services/database.service';
+import { dbService } from '../services/database.service.js';
 import { eq, and, sql } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 
