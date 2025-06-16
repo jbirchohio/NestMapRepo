@@ -1,6 +1,6 @@
-import { Response } from 'express';
-import { BaseModel, PaginatedResponse } from './base';
-import { User } from './auth';
+// Express types
+import type { Request, Response, NextFunction } from 'express';
+import type { User } from './auth';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -59,9 +59,9 @@ export interface ValidationErrorResponse extends ApiResponse {
 export interface AuthResponse extends ApiResponse<{ user: User; tokens: { accessToken: string; refreshToken: string } }> {}
 
 export type ApiHandler<T = unknown> = (
-  req: Express.Request,
+  req: Request,
   res: Response,
-  next: Express.NextFunction
+  next: NextFunction
 ) => Promise<ApiResponse<T> | void> | ApiResponse<T> | void;
 
 export interface ControllerResponse<T = unknown> {

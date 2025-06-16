@@ -1,7 +1,8 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { users, organizations } from "./schema";
+// Use the canonical table definitions from the server DB schema
+import { users, organizations } from "../server/db/schema";
 
 // Superadmin audit logs for tracking all administrative actions
 export const superadminAuditLogs = pgTable('superadmin_audit_logs', {

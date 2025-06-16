@@ -1,5 +1,6 @@
 import 'express';
 import { UserRole } from '../src/auth/types';
+export { UserRole } from '../src/auth/types';
 
 export interface JWTUser {
   userId: number;

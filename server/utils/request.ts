@@ -5,7 +5,7 @@ import { User } from '../../shared/types/auth';
  * Interface for authenticated requests with user information
  */
 export interface AuthenticatedRequest extends Request {
-  user: User;
+  user?: User & { id: string | number };
   auth?: any;
   organizationId?: string | number;
   requestId?: string;
