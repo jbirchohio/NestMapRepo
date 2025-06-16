@@ -3,6 +3,7 @@ import { db } from "../db";
 import { customDomains, organizations, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
+import { promises as dns } from 'dns';
 import { validateJWT } from '../middleware/jwtAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
@@ -153,9 +154,16 @@ export function registerDomainRoutes(app: Express) {
         return res.status(404).json({ error: "Domain not found" });
       }
 
-      // TODO: Implement actual DNS verification logic
-      // For now, we'll simulate verification
-      const isVerified = true; // Replace with actual DNS check
+      let isVerified = false;
+      try {
+        const records = await dns.resolveTxt(domain.verification_record_name || domain.domain);
+        const flat = records.flat().join('');
+        if (flat.includes(domain.verification_record_value || domain.verification_token)) {
+          isVerified = true;
+        }
+      } catch {
+        isVerified = false;
+      }
 
       if (isVerified) {
         await db

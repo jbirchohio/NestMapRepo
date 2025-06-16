@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import nodemailer from 'nodemailer';
 import { Invoice } from '../db/invoiceSchema';
 import { format } from 'date-fns';
 
@@ -176,10 +177,28 @@ export async function sendInvoiceByEmail(
     // Generate the PDF
     const pdfBuffer = await generateInvoicePdf(invoice, options);
     
-    // TODO: Implement email sending logic using your preferred email service
-    // This is a placeholder for the email sending logic
-    // You would typically use Nodemailer, SendGrid, or another email service
-    
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'localhost',
+      port: parseInt(process.env.SMTP_PORT || '25'),
+      secure: false,
+      auth: process.env.SMTP_USER
+        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+        : undefined,
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || 'noreply@example.com',
+      to: recipientEmail,
+      subject: options.subject || `Invoice #${invoice.id}`,
+      text: 'Please find your invoice attached.',
+      attachments: [
+        {
+          filename: `invoice-${invoice.id}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
+    });
+
     return {
       success: true,
       message: 'Invoice sent successfully',
