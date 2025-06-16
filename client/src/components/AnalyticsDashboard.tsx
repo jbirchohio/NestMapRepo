@@ -106,7 +106,7 @@ export default function AnalyticsDashboard() {
   });
 
   const handleExportCSV = () => {
-    window.open("/api/analytics/export", "_blank");
+    window.open("/api/analytics/export/csv", "_blank");
   };
 
   if (isLoading) {

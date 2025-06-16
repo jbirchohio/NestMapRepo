@@ -34,82 +34,68 @@ describe('AI Integration API', () => {
     testUserId = loginResponse.body.user.id;
   });
 
-  describe('POST /api/ai/trip-suggestions', () => {
-    it('should generate AI trip suggestions', async () => {
+  describe('POST /api/ai/suggest-activities', () => {
+    it('should generate AI activity suggestions', async () => {
       const requestData = {
-        destination: 'Paris, France',
+        city: 'Paris',
         duration: 5,
-        budget: 3000,
-        interests: ['culture', 'food', 'history'],
-        travelStyle: 'leisure'
+        interests: ['culture', 'food', 'history']
       };
 
       const response = await request(app)
-        .post('/api/ai/trip-suggestions')
+        .post('/api/ai/suggest-activities')
         .set('Cookie', authCookies)
         .send(requestData)
         .expect(200);
 
-      expect(response.body).toHaveProperty('suggestions');
-      expect(Array.isArray(response.body.suggestions)).toBe(true);
-      expect(response.body).toHaveProperty('itinerary');
-      expect(response.body).toHaveProperty('estimatedCost');
+      expect(response.body).toHaveProperty('activities');
+      expect(Array.isArray(response.body.activities)).toBe(true);
     });
 
     it('should require authentication for AI suggestions', async () => {
       const requestData = {
-        destination: 'London, UK',
-        duration: 3,
-        budget: 2000
+        city: 'London',
+        duration: 3
       };
 
       await request(app)
-        .post('/api/ai/trip-suggestions')
+        .post('/api/ai/suggest-activities')
         .send(requestData)
         .expect(401);
     });
 
     it('should validate request parameters', async () => {
-      const invalidData = {
-        destination: '',
-        duration: 0
-      };
+      const invalidData = { city: '' };
 
       await request(app)
-        .post('/api/ai/trip-suggestions')
+        .post('/api/ai/suggest-activities')
         .set('Cookie', authCookies)
         .send(invalidData)
         .expect(400);
     });
   });
 
-  describe('POST /api/ai/location-search', () => {
+  describe('POST /api/ai/find-location', () => {
     it('should search locations with AI enhancement', async () => {
       const searchData = {
-        query: 'romantic restaurants near Eiffel Tower',
-        city: 'Paris',
-        category: 'restaurant'
+        description: 'romantic restaurants near Eiffel Tower'
       };
 
       const response = await request(app)
-        .post('/api/ai/location-search')
+        .post('/api/ai/find-location')
         .set('Cookie', authCookies)
         .send(searchData)
         .expect(200);
 
-      expect(response.body).toHaveProperty('locations');
-      expect(Array.isArray(response.body.locations)).toBe(true);
-      expect(response.body).toHaveProperty('searchContext');
+      expect(response.body).toHaveProperty('name');
+      expect(response.body).toHaveProperty('address');
     });
 
     it('should require authentication for location search', async () => {
-      const searchData = {
-        query: 'museums in Rome',
-        city: 'Rome'
-      };
+      const searchData = { description: 'museums in Rome' };
 
       await request(app)
-        .post('/api/ai/location-search')
+        .post('/api/ai/find-location')
         .send(searchData)
         .expect(401);
     });
