@@ -8,7 +8,7 @@ import {
   apiRateLimit, 
   authRateLimit, 
   organizationRateLimit 
-} from './comprehensive-rate-limiting';
+} from './comprehensive-rate-limiting.js';
 import { 
   apiVersioning, 
   authenticateApiKey 

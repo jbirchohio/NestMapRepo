@@ -741,6 +741,9 @@ export const selectUserSessionSchema = createSelectSchema(userSessions);
 export const insertAdminSettingSchema = createInsertSchema(adminSettings);
 export const selectAdminSettingSchema = createSelectSchema(adminSettings);
 
+export const insertCardTransactionSchema = createInsertSchema(cardTransactions);
+export const selectCardTransactionSchema = createSelectSchema(cardTransactions);
+
 export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs);
 export const selectUserActivityLogSchema = createSelectSchema(userActivityLogs);
 

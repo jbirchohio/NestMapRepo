@@ -1,4 +1,4 @@
-export * from '../server/db/schema';
+export * from '../server/db/schema.js';
 
 import type { Trip, Activity } from '../server/db/schema';
 

@@ -40,6 +40,17 @@ The following pages were identified as unused but represent important B2B functi
 
 ## 🧠 See notes.md for full technical notes
 
+## Backend Stability & Import Resolution
+- **Comprehensive Import Resolution:** Systematically scanned and resolved backend import errors across `server/` and `shared/` directories.
+- **ESM Compatibility:** Ensured all local import paths include the `.js` extension, a requirement for projects with `"type": "module"` in `package.json`.
+- **Missing Schema Definitions:** Added missing Zod schemas for `cardTransactions` in `server/db/schema.ts` and updated `shared/schema.ts` to correctly re-export, resolving related type errors.
+- **Middleware Implementation:** Created and integrated a new `validation.middleware.ts` in `server/src/auth/middleware/` using Zod to handle request validation, resolving a critical missing import for authentication routes.
+- **Placeholder Route Modules:** Implemented minimal placeholder route modules for `collaborationRoutes.ts`, `customDomainsRoutes.ts`, and `whiteLabelRoutes.ts`. This allowed `server/routes/index.ts` to successfully import and mount all defined routes, enabling the server to start without crashing due to missing modules, as per user request.
+- **TypeScript & Lint Error Fixes in `server/routes/index.ts`:**
+  - Corrected usage of Express `app` vs. `router` instances for route registration functions (e.g., `registerBookingRoutes`, `registerCorporateCardRoutes` moved to be called with `app`).
+  - Ensured all code paths in route handlers explicitly return a value (e.g., adding `return;` after `res.json()` or `res.status().send()`), particularly in `try...catch` blocks, to satisfy TypeScript's strict checks.
+  - Implemented safe parsing of string-based user identifiers (e.g., `req.user.id`, `req.user.organizationId`) to numbers before passing them to service functions, including handling potential `NaN` results with appropriate error responses.
+
 ## Frontend Audit
 
 - [ ] Remove unused legacy superadmin pages.

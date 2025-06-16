@@ -12,8 +12,8 @@ import {
 } from '../src/auth/dtos/auth.dto';
 
 // Import middleware
-import { authRateLimit } from '../../middleware/comprehensive-rate-limiting';
-import { validateRequest } from '../src/auth/middleware/validation.middleware';
+import { authRateLimit } from '../middleware/comprehensive-rate-limiting.js';
+import { validateRequest } from '../src/auth/middleware/validation.middleware.js';
 
 export const createAuthRouter = (configService: ConfigService): Router => {
   const router = Router();
