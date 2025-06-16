@@ -44,7 +44,7 @@ export const refreshTokenSchema = z.object({
 
 // Validation middleware
 export const validate = (schema: z.ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void | Response => {
     try {
       // Validate request body, query, and params
       const result = schema.safeParse({
