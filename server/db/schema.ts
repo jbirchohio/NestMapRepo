@@ -5,8 +5,19 @@ import { z } from 'zod';
 import { auditLogs as auditLogsTableDefinition } from "./auditLog"; // Assuming auditLog.ts is in the same directory
 
 // Enums
-const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
+export const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
 const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
+
+// User role constants for authorization
+export const USER_ROLES = {
+  SUPERADMIN_OWNER: 'super_admin',
+  SUPERADMIN_STAFF: 'admin',
+  SUPERADMIN_AUDITOR: 'admin',
+  ADMIN: 'admin',
+  MANAGER: 'manager',
+  MEMBER: 'member',
+  GUEST: 'guest'
+};
 
 // Tables
 export const tripTravelers = pgTable('trip_travelers', {
@@ -490,6 +501,8 @@ export const reimbursements = pgTable("reimbursements", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Approval Rules Table
+
 export const whiteLabelSettings = pgTable("white_label_settings", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id").references(() => organizations.id).notNull(),
@@ -523,6 +536,40 @@ export const whiteLabelRequests = pgTable("white_label_requests", {
   reviewNotes: text("review_notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Bookings Table
+export const bookingTypeEnum = pgEnum('booking_type', ['flight', 'hotel', 'car', 'train', 'activity', 'other']);
+export const bookingStatusEnum = pgEnum('booking_status', ['pending', 'confirmed', 'cancelled', 'completed', 'failed']);
+
+export const bookings = pgTable("bookings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tripId: uuid("trip_id").references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'set null' }),
+  type: bookingTypeEnum("type").notNull(),
+  provider: text("provider").notNull(), // e.g., 'duffel', 'amadeus', 'expedia'
+  providerBookingId: text("provider_booking_id"),
+  status: bookingStatusEnum("status").default('pending'),
+  bookingData: jsonb("booking_data").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  totalAmount: integer("total_amount"), // in cents
+  currency: text("currency").default('USD'),
+  passengerDetails: jsonb("passenger_details").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  bookingReference: text("booking_reference"),
+  cancellationPolicy: jsonb("cancellation_policy").$type<Record<string, any>>(),
+  departureDate: timestamp("departure_date"),
+  returnDate: timestamp("return_date"),
+  checkInDate: timestamp("check_in_date"),
+  checkOutDate: timestamp("check_out_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  tripIdIdx: index('bookings_trip_id_idx').on(table.tripId),
+  userIdIdx: index('bookings_user_id_idx').on(table.userId),
+  orgIdIdx: index('bookings_org_id_idx').on(table.organizationId),
+  statusIdx: index('bookings_status_idx').on(table.status),
+  typeIdx: index('bookings_type_idx').on(table.type),
+  bookingRefIdx: index('bookings_reference_idx').on(table.bookingReference),
+}));
 
 // Calendar Integrations Table
 export const calendarIntegrations = pgTable("calendar_integrations", {
@@ -583,16 +630,60 @@ export const adminSettings = pgTable("admin_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Feature Flags Table
+export const featureFlags = pgTable("feature_flags", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  enabled: boolean("enabled").default(false),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }),
+  scope: text("scope").default('global'), // global, organization, user
+  conditions: jsonb("conditions").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  metadata: jsonb("metadata").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  expiresAt: timestamp("expires_at"),
+  createdBy: uuid("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  nameIdx: index('feature_flags_name_idx').on(table.name),
+  orgIdx: index('feature_flags_org_idx').on(table.organizationId),
+  enabledIdx: index('feature_flags_enabled_idx').on(table.enabled),
+}));
+
 export const userActivityLogs = pgTable("user_activity_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").references(() => users.id).notNull(),
-  organizationId: uuid("organization_id").references(() => organizations.id),
   action: text("action").notNull(),
-  details: jsonb("details").$type<Record<string, any>>(),
-  ipAddress: text("ip_address"),
+  details: jsonb("details").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  ip: text("ip"),
   userAgent: text("user_agent"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index('user_activity_logs_user_id_idx').on(table.userId),
+  createdAtIdx: index('user_activity_logs_created_at_idx').on(table.createdAt),
+}));
+
+// Notifications Table
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  user_id: uuid("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  organization_id: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }),
+  type: text("type").notNull(), // 'trip_update', 'expense_approval', 'mention', etc.
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  read: boolean("read").default(false),
+  action_url: text("action_url"),
+  entity_type: text("entity_type"), // 'trip', 'expense', 'comment', etc.
+  entity_id: uuid("entity_id"),
+  metadata: jsonb("metadata").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index('notifications_user_id_idx').on(table.user_id),
+  orgIdIdx: index('notifications_org_id_idx').on(table.organization_id),
+  readIdx: index('notifications_read_idx').on(table.read),
+  createdAtIdx: index('notifications_created_at_idx').on(table.created_at),
+}));
 
 // Trip Comments Table
 export const tripComments = pgTable("trip_comments", {
@@ -609,27 +700,61 @@ export const tripComments = pgTable("trip_comments", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Approval Requests Table
-export const approvalRequestTypeEnum = pgEnum('approval_request_type', ['trip_booking', 'expense_report', 'budget_change', 'leave_request']);
-export const approvalRequestStatusEnum = pgEnum('approval_request_status', ['pending', 'approved', 'rejected', 'cancelled']);
+// Approval Rules and Requests Tables
+export const approvalRequestTypeEnum = pgEnum('approval_request_type', ['create', 'modify', 'delete', 'approve', 'other']);
+export const approvalStatusEnum = pgEnum('approval_status', ['pending', 'approved', 'rejected', 'cancelled']);
+
+export const approvalRules = pgTable("approval_rules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  entityType: text("entity_type").notNull(), // 'trip', 'expense', 'budget', 'booking', etc.
+  conditions: jsonb("conditions").$type<{
+    budgetThreshold?: number;
+    tripDuration?: number;
+    destinationCountries?: string[];
+    expenseCategories?: string[];
+    [key: string]: any;
+  }>().default(sql`'{}'::jsonb`),
+  priority: integer("priority").default(10),
+  autoApprove: boolean("auto_approve").default(false),
+  approverRoles: jsonb("approver_roles").$type<string[]>().default(sql`'["manager"]'::jsonb`),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  orgEntityTypeIdx: index('approval_rules_org_entity_idx').on(table.organizationId, table.entityType),
+  activeIdx: index('approval_rules_active_idx').on(table.active),
+}));
 
 export const approvalRequests = pgTable("approval_requests", {
   id: uuid("id").defaultRandom().primaryKey(),
   organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  entityType: text("entity_type").notNull(), // 'trip', 'expense', 'budget', etc.
+  entityId: uuid("entity_id"),
+  requestType: approvalRequestTypeEnum("request_type").notNull(),
   requesterId: uuid("requester_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  approverId: uuid("approver_id").references(() => users.id, { onDelete: 'set null' }), // Can be a specific user or a role (handled by logic)
-  type: approvalRequestTypeEnum("type").notNull(),
-  status: approvalRequestStatusEnum("status").default('pending'),
-  resourceId: uuid("resource_id"), // ID of the resource needing approval (e.g., tripId, expenseId)
-  details: jsonb("details").$type<Record<string, any>>(), // Specific details about the request
-  comments: text("comments"), // Comments from requester or approver
+  approverId: uuid("approver_id").references(() => users.id, { onDelete: 'set null' }),
+  ruleId: uuid("rule_id").references(() => approvalRules.id, { onDelete: 'set null' }),
+  proposedData: jsonb("proposed_data").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  reason: text("reason"),
+  businessJustification: text("business_justification"),
+  status: approvalStatusEnum("status").default('pending'),
+  priority: text("priority").default('normal'),
+  dueDate: timestamp("due_date"),
+  escalationLevel: integer("escalation_level").default(0),
   approvedAt: timestamp("approved_at"),
   rejectedAt: timestamp("rejected_at"),
-  cancelledAt: timestamp("cancelled_at"),
-  dueDate: timestamp("due_date"),
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  orgStatusIdx: index('approval_requests_org_status_idx').on(table.organizationId, table.status),
+  requesterIdx: index('approval_requests_requester_idx').on(table.requesterId),
+  approverIdx: index('approval_requests_approver_idx').on(table.approverId),
+  entityIdx: index('approval_requests_entity_idx').on(table.entityType, table.entityId),
+}));
 
 // Admin Audit Log (alias to the main auditLogs table)
 export const adminAuditLog = auditLogsTableDefinition;
@@ -676,6 +801,17 @@ export const insertActivitySchema = createInsertSchema(activities, {
   date: z.coerce.date(),
 });
 export const selectActivitySchema = createSelectSchema(activities);
+
+export const insertApprovalRuleSchema = createInsertSchema(approvalRules, {
+  conditions: z.record(z.any()).optional(),
+  approverRoles: z.array(z.string()).optional(),
+});
+export const selectApprovalRuleSchema = createSelectSchema(approvalRules);
+
+export const insertApprovalRequestSchema = createInsertSchema(approvalRequests, {
+  proposedData: z.record(z.any()).optional(),
+});
+export const selectApprovalRequestSchema = createSelectSchema(approvalRequests);
 
 export const insertTodoSchema = createInsertSchema(todos, {
   dueDate: z.coerce.date().optional().nullable(),
@@ -777,11 +913,7 @@ export const insertTripCommentSchema = createInsertSchema(tripComments, {
 });
 export const selectTripCommentSchema = createSelectSchema(tripComments);
 
-export const insertApprovalRequestSchema = createInsertSchema(approvalRequests, {
-  details: z.record(z.any()).optional().nullable(),
-  resourceId: z.string().uuid().optional().nullable(),
-});
-export const selectApprovalRequestSchema = createSelectSchema(approvalRequests);
+// Approval request schemas are defined earlier in the file
 
 // Zod schemas for aliased audit logs (reuse existing auditLog schemas if compatible or define specific ones if needed)
 // Assuming the structure of adminAuditLog and superadminAuditLogs is identical to the main auditLogs table
@@ -809,6 +941,8 @@ export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
 export type CalendarIntegration = typeof calendarIntegrations.$inferSelect;
 export type NewCalendarIntegration = typeof calendarIntegrations.$inferInsert;
+export type Booking = typeof bookings.$inferSelect;
+export type NewBooking = typeof bookings.$inferInsert;
 export type TripCollaborator = typeof tripCollaborators.$inferSelect;
 export type NewTripCollaborator = typeof tripCollaborators.$inferInsert;
 export type OrganizationRole = typeof organizationRoles.$inferSelect;
@@ -861,6 +995,8 @@ export type TripComment = typeof tripComments.$inferSelect;
 export type NewTripComment = typeof tripComments.$inferInsert;
 export type ApprovalRequest = typeof approvalRequests.$inferSelect;
 export type NewApprovalRequest = typeof approvalRequests.$inferInsert;
+export type ApprovalRule = typeof approvalRules.$inferSelect;
+export type NewApprovalRule = typeof approvalRules.$inferInsert;
 
 // Types for aliased audit logs
 export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
