@@ -256,7 +256,7 @@ export default function HelpCenter() {
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <Brain className="h-8 w-8 text-purple-600" />
+                    <Brain className="h-8 w-8 text-electric-600" />
                     <Badge variant="secondary">Intermediate</Badge>
                   </div>
                   <CardTitle>AI Trip Generator</CardTitle>
@@ -332,7 +332,7 @@ export default function HelpCenter() {
               <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <Shield className="h-8 w-8 text-indigo-600" />
+                    <Shield className="h-8 w-8 text-electric-600" />
                     <Badge variant="secondary">Security</Badge>
                   </div>
                   <CardTitle>Security & Privacy</CardTitle>
@@ -390,7 +390,7 @@ export default function HelpCenter() {
                     </div>
 
                     <div className="flex items-center gap-3 p-3 rounded-lg border">
-                      <Phone className="h-5 w-5 text-purple-600" />
+                      <Phone className="h-5 w-5 text-electric-600" />
                       <div>
                         <div className="font-medium">Phone Support</div>
                         <div className="text-sm text-slate-600 dark:text-slate-400">

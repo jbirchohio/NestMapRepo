@@ -28,7 +28,7 @@ const pricingTiers = [
     period: '/month',
     description: 'Everything in Basic plus professional features',
     icon: Crown,
-    color: 'from-purple-500 to-purple-600',
+    color: 'from-electric-500 to-electric-600',
     features: [
       'Everything in Basic',
       'White label branding',
@@ -85,7 +85,7 @@ export default function Pricing() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-electric-600 to-blue-600 bg-clip-text text-transparent mb-6">
             Choose Your Plan
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
@@ -107,7 +107,7 @@ export default function Pricing() {
               >
                 {tier.recommended && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className="bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 px-4 py-1">
+                    <Badge className="bg-gradient-to-r from-electric-500 to-blue-500 text-white border-0 px-4 py-1">
                       Most Popular
                     </Badge>
                   </div>
@@ -115,7 +115,7 @@ export default function Pricing() {
                 
                 <Card className={`h-full relative overflow-hidden ${
                   tier.recommended 
-                    ? 'border-purple-200 shadow-xl ring-2 ring-purple-100 dark:border-purple-700 dark:ring-purple-800' 
+                    ? 'border-electric-200 shadow-xl ring-2 ring-electric-100 dark:border-electric-700 dark:ring-electric-800' 
                     : 'border-slate-200 dark:border-slate-700'
                 }`}>
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${tier.color}`} />
@@ -157,7 +157,7 @@ export default function Pricing() {
                     <Button 
                       className={`w-full mt-6 ${
                         tier.recommended
-                          ? 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600'
+                          ? 'bg-gradient-to-r from-electric-500 to-blue-500 hover:from-electric-600 hover:to-blue-600'
                           : 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200'
                       }`}
                     >
@@ -176,7 +176,7 @@ export default function Pricing() {
           transition={{ delay: 0.5 }}
           className="mt-16 text-center"
         >
-          <Card className="max-w-4xl mx-auto bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-700">
+          <Card className="max-w-4xl mx-auto bg-gradient-to-r from-electric-50 to-blue-50 dark:from-electric-900/20 dark:to-blue-900/20 border-electric-200 dark:border-electric-700">
             <CardContent className="p-8">
               <h3 className="text-2xl font-bold mb-4 text-slate-900 dark:text-slate-100">
                 Tier Inheritance Benefits
@@ -196,7 +196,7 @@ export default function Pricing() {
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 mx-auto rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center mb-3">
+                  <div className="w-12 h-12 mx-auto rounded-lg bg-gradient-to-r from-electric-500 to-electric-600 flex items-center justify-center mb-3">
                     <Crown className="w-6 h-6 text-white" />
                   </div>
                   <h4 className="font-semibold mb-2">Keep Everything</h4>

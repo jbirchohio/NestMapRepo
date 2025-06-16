@@ -73,7 +73,7 @@ export function OptimizationSummary({
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-purple-500" />
+              <TrendingUp className="h-5 w-5 text-electric-500" />
               <div>
                 <p className="text-2xl font-bold">{performanceImprovements.memoryUsageReduction}%</p>
                 <p className="text-sm text-muted-foreground">Memory Usage</p>

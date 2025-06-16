@@ -86,7 +86,7 @@ export function CardsList({ cards, onCardAction, isLoading }: CardsListProps) {
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <div className="h-10 w-16 bg-gradient-to-r from-blue-500 to-electric-600 rounded-lg flex items-center justify-center">
                     <CreditCard className="h-5 w-5 text-white" />
                   </div>
                   <div>

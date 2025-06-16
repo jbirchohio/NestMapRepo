@@ -126,7 +126,7 @@ export default function BillingDashboard() {
 
   const getPlanColor = (plan: string) => {
     switch (plan) {
-      case 'enterprise': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+      case 'enterprise': return 'bg-electric-100 text-electric-800 dark:bg-electric-900 dark:text-electric-300';
       case 'team': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
@@ -290,7 +290,7 @@ export default function BillingDashboard() {
           </Card>
 
           {/* Enterprise Plan */}
-          <Card className={billingInfo?.plan === 'enterprise' ? 'ring-2 ring-purple-500' : ''}>
+          <Card className={billingInfo?.plan === 'enterprise' ? 'ring-2 ring-electric-500' : ''}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Enterprise

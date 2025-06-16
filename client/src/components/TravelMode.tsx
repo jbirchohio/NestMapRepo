@@ -332,7 +332,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-purple-600" />
+              <MapPin className="w-5 h-5 text-electric-600" />
               Nearby Activities
             </CardTitle>
           </CardHeader>

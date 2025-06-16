@@ -108,7 +108,7 @@ export default function Analytics() {
                   <span className="text-white/80">Custom reports</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                  <div className="w-2 h-2 bg-electric-400 rounded-full" />
                   <span className="text-white/80">Export capabilities</span>
                 </div>
               </div>

@@ -126,7 +126,7 @@ export default function EnterpriseDashboard() {
                   <span className="text-white/80">Revenue analytics</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full" />
+                  <div className="w-2 h-2 bg-electric-400 rounded-full" />
                   <span className="text-white/80">Performance metrics</span>
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default function EnterpriseDashboard() {
                   <p className="text-sm font-medium text-muted-foreground">Completion Rate</p>
                   <p className="text-2xl font-bold text-foreground">{displayStats?.completionRate || 0}%</p>
                 </div>
-                <Target className="w-8 h-8 text-purple-600" />
+                <Target className="w-8 h-8 text-electric-600" />
               </div>
             </CardContent>
           </Card>

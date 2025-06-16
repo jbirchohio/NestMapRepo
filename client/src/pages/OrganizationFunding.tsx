@@ -193,7 +193,7 @@ export default function OrganizationFunding() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
         <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin text-violet-600" />
+          <Loader2 className="h-6 w-6 animate-spin text-electric-600" />
           <span className="text-slate-600 dark:text-slate-300">Loading funding status...</span>
         </div>
       </div>
@@ -210,7 +210,7 @@ export default function OrganizationFunding() {
         >
           {/* Header */}
           <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-electric-600 to-electric-600 bg-clip-text text-transparent">
               Organization Funding
             </h1>
             <p className="text-slate-600 dark:text-slate-300">
@@ -219,10 +219,10 @@ export default function OrganizationFunding() {
           </div>
 
           {/* Status Overview */}
-          <Card className="border-violet-200 dark:border-violet-800 shadow-lg">
+          <Card className="border-electric-200 dark:border-electric-800 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-violet-600" />
+                <Building2 className="h-5 w-5 text-electric-600" />
                 Funding Status Overview
               </CardTitle>
             </CardHeader>
@@ -500,7 +500,7 @@ export default function OrganizationFunding() {
                       <Button 
                         onClick={() => createAccountMutation.mutate()}
                         disabled={createAccountMutation.isPending}
-                        className="w-full bg-violet-600 hover:bg-violet-700"
+                        className="w-full bg-electric-600 hover:bg-electric-700"
                       >
                         {createAccountMutation.isPending ? (
                           <>
@@ -551,7 +551,7 @@ export default function OrganizationFunding() {
                       <Button 
                         onClick={() => onboardingMutation.mutate()}
                         disabled={onboardingMutation.isPending}
-                        className="w-full bg-violet-600 hover:bg-violet-700"
+                        className="w-full bg-electric-600 hover:bg-electric-700"
                       >
                         {onboardingMutation.isPending ? (
                           <>
@@ -714,7 +714,7 @@ export default function OrganizationFunding() {
                       <Button 
                         onClick={() => setupFundingMutation.mutate(fundingSource)}
                         disabled={setupFundingMutation.isPending}
-                        className="w-full bg-violet-600 hover:bg-violet-700"
+                        className="w-full bg-electric-600 hover:bg-electric-700"
                       >
                         {setupFundingMutation.isPending ? (
                           <>

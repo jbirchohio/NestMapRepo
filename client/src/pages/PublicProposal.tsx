@@ -274,7 +274,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         <Card onMouseEnter={() => handleSectionView("itinerary")}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-purple-600" />
+              <Calendar className="w-5 h-5 text-electric-600" />
               Detailed Itinerary
             </CardTitle>
             <CardDescription>Day-by-day breakdown of your travel experience</CardDescription>

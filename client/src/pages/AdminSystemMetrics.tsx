@@ -314,7 +314,7 @@ export default function AdminSystemMetrics() {
                     {metrics?.performance.throughput.toFixed(1) || '0'} req/s
                   </p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-purple-500" />
+                <TrendingUp className="h-8 w-8 text-electric-500" />
               </div>
             </CardContent>
           </AnimatedCard>
