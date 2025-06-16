@@ -1,5 +1,5 @@
 import { MailService } from '@sendgrid/mail';
-import { getBrandingConfig } from '../config/branding';
+import { getBrandingConfig } from '../branding.js';
 
 let mailService: MailService | null = null;
 

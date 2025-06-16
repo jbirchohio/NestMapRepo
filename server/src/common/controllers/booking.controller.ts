@@ -41,7 +41,7 @@ export class BookingController {
         
         return ResponseFormatter.success(res, booking, 'Booking retrieved successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
@@ -56,7 +56,7 @@ export class BookingController {
         const bookings = await this.bookingService.getBookingsByUserId(userId);
         return ResponseFormatter.success(res, bookings, 'User bookings retrieved successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
@@ -71,7 +71,7 @@ export class BookingController {
         const bookings = await this.bookingService.getBookingsByTripId(tripId);
         return ResponseFormatter.success(res, bookings, 'Trip bookings retrieved successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
@@ -87,7 +87,7 @@ export class BookingController {
         const booking = await this.bookingService.createBooking(bookingData);
         return ResponseFormatter.created(res, booking, 'Booking created successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
@@ -146,7 +146,7 @@ export class BookingController {
         
         return ResponseFormatter.success(res, booking, 'Booking confirmed successfully');
       }, this.logger)
-    ](req, res, next);
+    ];
   }
 
   /**
