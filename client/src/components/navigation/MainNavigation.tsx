@@ -1,17 +1,30 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useState, useRef, useEffect, useCallback, ReactNode } from 'react';
+import { useLocation, useNavigate, Link } from 'wouter';
 import { MenuIcon, XIcon, BarChartIcon, CheckIcon, FileTextIcon, HomeIcon } from '../icons';
-import { useAuth } from '../../contexts/auth/AuthContext';
-import { useNotifications } from '../../hooks/useNotifications';
 import { MobileMenu } from './MobileMenu';
 import { DesktopNavigation } from './DesktopNavigation';
-import { NavigationItem } from './types';
+import type { NavigationItem, User } from './types';
+import type { Notification as AppNotification } from '@/types/notification';
 
-export const MainNavigation: React.FC = () => {
-  const { user, isAuthenticated, signOut } = useAuth();
+interface MainNavigationProps {
+  isAuthenticated: boolean;
+  user: User | null;
+  notifications: AppNotification[];
+  onSignOut: () => Promise<void>;
+  onNotificationClick: (id: string) => Promise<void>;
+  onMarkAllAsRead: () => Promise<void>;
+}
+
+export const MainNavigation: React.FC<MainNavigationProps> = ({
+  isAuthenticated,
+  user,
+  notifications = [],
+  onSignOut,
+  onNotificationClick,
+  onMarkAllAsRead,
+}) => {
   const [location] = useLocation();
   const navigate = useNavigate();
-  const { notifications = [], markAsRead, markAllAsRead } = useNotifications();
   
   // State for mobile menu and dropdowns
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -28,35 +41,35 @@ export const MainNavigation: React.FC = () => {
     {
       name: 'Home',
       href: '/',
-      icon: <HomeIcon className="h-5 w-5" aria-hidden="true" />,
+      icon: <HomeIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Home',
       requiresAuth: false
     },
     {
       name: 'Dashboard',
       href: '/dashboard',
-      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" />,
+      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Dashboard',
       requiresAuth: true
     },
     {
       name: 'Analytics',
       href: '/analytics',
-      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" />,
+      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Analytics',
       requiresAuth: true
     },
     {
       name: 'Approvals',
       href: '/approvals',
-      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" />,
+      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Approvals',
       requiresAuth: true
     },
     {
       name: 'Invoices',
       href: '/invoice-center',
-      icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" />,
+      icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Invoices',
       requiresAuth: true
     },
@@ -83,7 +96,7 @@ export const MainNavigation: React.FC = () => {
   }, []);
 
   // Close all menus
-  const closeAllMenus = useCallback(() => {
+  const closeAllMenus = useCallback((): void => {
     setIsMobileMenuOpen(false);
     setIsProfileMenuOpen(false);
     setIsNotificationsOpen(false);
@@ -94,50 +107,52 @@ export const MainNavigation: React.FC = () => {
     closeAllMenus();
   }, [location, closeAllMenus]);
 
-  // Toggle functions
-  const toggleMobileMenu = useCallback(() => {
+  // Toggle mobile menu
+  const toggleMobileMenu = useCallback((): void => {
     setIsMobileMenuOpen(prev => !prev);
+    setIsProfileMenuOpen(false);
+    setIsNotificationsOpen(false);
   }, []);
 
-  const toggleProfileMenu = useCallback(() => {
+  // Toggle profile menu
+  const toggleProfileMenu = useCallback((): void => {
     setIsProfileMenuOpen(prev => !prev);
+    setIsNotificationsOpen(false);
   }, []);
 
-  const toggleNotifications = useCallback(() => {
+  // Toggle notifications menu
+  const toggleNotificationsMenu = useCallback((): void => {
     setIsNotificationsOpen(prev => !prev);
-  }, []);  
+    setIsProfileMenuOpen(false);
+  }, []);
 
   // Handle notification click
-  const handleNotificationClick = useCallback(async (notificationId: string) => {
+  const handleNotificationClick = useCallback(async (id: string) => {
     try {
-      await markAsRead(notificationId);
-      setIsNotificationsOpen(false);
+      await onNotificationClick(id);
     } catch (error) {
-      console.error('Error marking notification as read:', error);
-      toast.error('Failed to mark notification as read');
+      console.error('Error handling notification click:', error);
     }
-  }, [markAsRead]);
+  }, [onNotificationClick]);
 
   // Handle mark all as read
   const handleMarkAllAsRead = useCallback(async () => {
     try {
-      await markAllAsRead();
+      await onMarkAllAsRead();
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
-      toast.error('Failed to mark all notifications as read');
     }
-  }, [markAllAsRead]);
+  }, [onMarkAllAsRead]);
 
   // Handle sign out
   const handleSignOut = useCallback(async () => {
     try {
-      await signOut();
+      await onSignOut();
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
-      toast.error('Failed to sign out');
     }
-  }, [signOut, navigate]);
+  }, [onSignOut, navigate]);
 
   return (
     <header className="bg-white shadow-sm">
@@ -177,7 +192,7 @@ export const MainNavigation: React.FC = () => {
             isProfileMenuOpen={isProfileMenuOpen}
             isNotificationsOpen={isNotificationsOpen}
             onProfileClick={toggleProfileMenu}
-            onNotificationsClick={toggleNotifications}
+            onNotificationsClick={toggleNotificationsMenu}
             onNotificationClick={handleNotificationClick}
             onMarkAllAsRead={handleMarkAllAsRead}
             onSignOut={handleSignOut}

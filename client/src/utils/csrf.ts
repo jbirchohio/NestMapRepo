@@ -44,8 +44,8 @@ export const clearCSRFToken = (): void => {
 
 // Validate CSRF token
 export const validateCSRFToken = (token: string): boolean => {
-  const storedToken = getCSRFToken();
-  return token === storedToken;
+  const dToken = getCSRFToken();
+  return token === dToken;
 };
 
 // Initialize CSRF token when app starts

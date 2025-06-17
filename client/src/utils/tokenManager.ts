@@ -3,6 +3,17 @@ import { NavigateFunction } from 'react-router-dom';
 import { SecureCookie } from './cookies';
 import config from '@/config/env';
 
+// Constants
+const TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
+
+// Extend Window interface to include __tokenManager
+declare global {
+  interface Window {
+    __tokenManager?: TokenManager;
+  }
+}
+
 // JWT Payload type
 export interface JwtPayload {
   exp: number;
@@ -10,13 +21,6 @@ export interface JwtPayload {
   sub: string;
   [key: string]: unknown;
 }
-
-// Default token rotation config
-const DEFAULT_TOKEN_CONFIG: TokenRotationConfig = {
-  enabled: true,
-  interval: config.TOKEN_REFRESH_INTERVAL,
-  threshold: 300000, // 5 minutes
-};
 
 export interface DecodedToken {
   exp: number;
@@ -26,7 +30,20 @@ export interface DecodedToken {
   scope?: string;
 }
 
+// Show toast notification function
+const showToast = (options: { 
+  title: string; 
+  description: string; 
+  variant?: 'default' | 'destructive' 
+}) => {
+  // This is a placeholder - the actual implementation should be imported from your UI library
+  console.log(`[Toast] ${options.title}: ${options.description}`);
+};
+
 export class TokenManager {
+  private static instance: TokenManager | null = null;
+  private accessToken: string | null = null;
+  private tokenRefreshTimeout: NodeJS.Timeout | null = null;
   private refreshToken: string | null = null;
   private tokenRotationTimeout: NodeJS.Timeout | null = null;
   private refreshPromise: Promise<string | null> | null = null;
@@ -34,6 +51,24 @@ export class TokenManager {
   private navigate: NavigateFunction | null = null;
 
   private constructor(navigate: NavigateFunction | null) {
+    // Initialize instance variables
+    this.navigate = navigate;
+    this.refreshToken = SecureCookie.get(REFRESH_TOKEN_KEY) || null;
+    this.accessToken = SecureCookie.get(TOKEN_KEY) || null;
+    
+    // Start token rotation if we have a refresh token
+    if (this.refreshToken) {
+      const decoded = this.getDecodedToken();
+      if (decoded?.exp) {
+        const expiresIn = (decoded.exp * 1000) - Date.now();
+        this.startTokenRotation(expiresIn);
+      }
+    }
+    
+    // Store the instance in window for debugging
+    if (typeof window !== 'undefined') {
+      window.__tokenManager = this;
+    }
     this.navigate = navigate;
     // Initialize with tokens from storage if available
     this.refreshToken = SecureCookie.get(REFRESH_TOKEN_KEY);
@@ -64,19 +99,6 @@ export class TokenManager {
 
   public static clearInstance(): void {
     TokenManager.instance = null;
-  }
-
-  private loadTokens(): void {
-    try {
-      const storedTokens = SecureCookie.get('tokens');
-      if (storedTokens) {
-        const tokens = JSON.parse(storedTokens);
-        this.accessToken = tokens.accessToken;
-        this.refreshToken = tokens.refreshToken;
-      }
-    } catch (error) {
-      handleError(error);
-    }
   }
 
   public hasValidToken(): boolean {
@@ -159,28 +181,6 @@ export class TokenManager {
     this.clearStoredTokens();
   }
 
-  private storeTokens(): void {
-    if (this.accessToken) {
-      SecureCookie.set(TOKEN_KEY, this.accessToken, {
-        secure: config.SECURE_COOKIE_OPTIONS.secure,
-        sameSite: config.SECURE_COOKIE_OPTIONS.sameSite,
-        httpOnly: true,
-        path: '/',
-        maxAge: Math.floor(config.SESSION_TIMEOUT / 1000), // Convert to seconds
-      });
-    }
-    
-    if (this.refreshToken) {
-      SecureCookie.set(REFRESH_TOKEN_KEY, this.refreshToken, {
-        secure: config.SECURE_COOKIE_OPTIONS.secure,
-        sameSite: config.SECURE_COOKIE_OPTIONS.sameSite,
-        httpOnly: true,
-        path: '/auth/refresh',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
-    }
-  }
-
   public async refreshTokens(): Promise<string | null> {
     if (!this.refreshToken) {
       return null;
@@ -198,13 +198,13 @@ export class TokenManager {
       const { default: apiClient } = await import('@/services/api/apiClient');
       
       this.refreshPromise = apiClient
-        .post<{ accessToken: string; refreshToken: string }>('/auth/refresh', {
-          refreshToken: this.refreshToken,
-        })
-        .then((response) => {
-          this.setTokens(response.data.accessToken, response.data.refreshToken);
-          return response.data.accessToken;
-        })
+      .post<{ accessToken: string; refreshToken: string }>('/auth/refresh', {
+        refreshToken: this.refreshToken,
+      })
+      .then((response) => {
+        this.setTokens(response.accessToken, response.refreshToken);
+        return response.accessToken;
+      })
         .catch((error) => {
           this.handleTokenError(error, 'Failed to refresh token');
           throw error;
@@ -287,7 +287,12 @@ export class TokenManager {
     }
   }
 
-  public getTokenState() {
+  public getTokenState(): {
+    accessToken: string | null;
+    refreshToken: string | null;
+    isValid: boolean;
+    expiresIn: number;
+  } {
     const expiresIn = this.getTokenExpiration() ? this.getTokenExpiration()! - Date.now() : 0;
     
     return {
@@ -372,8 +377,8 @@ export class TokenManager {
         { refreshToken: this.refreshToken }
       );
       
-      if (response.data?.accessToken) {
-        this.setTokens(response.data.accessToken, this.refreshToken);
+      if (response?.accessToken) {
+        this.setTokens(response.accessToken, this.refreshToken);
       } else {
         throw new Error('Invalid token response');
       }
@@ -382,33 +387,6 @@ export class TokenManager {
       this.handleTokenError(error, 'Session expired');
     } finally {
       this.isRefreshing = false;
-    }
-  }
-
-  private async refreshAccessToken(): Promise<string | null> {
-    if (!this.refreshToken) {
-      this.handleTokenError(new Error('No refresh token available'), 'Token refresh failed');
-      return null;
-    }
-
-    try {
-      // Import the API client dynamically to avoid circular dependencies
-      const api = (await import('@/services/api/apiClient')).default;
-      
-      const response = await api.post<{ accessToken: string }>(
-        '/auth/refresh',
-        { refreshToken: this.refreshToken }
-      );
-      
-      if (response.data?.accessToken) {
-        this.setTokens(response.data.accessToken, this.refreshToken!);
-        return response.data.accessToken;
-      } else {
-        throw new Error('Invalid token response from server');
-      }
-    } catch (error) {
-      this.handleTokenError(error as Error, 'Token refresh failed');
-      return null;
     }
   }
 

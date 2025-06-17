@@ -1,4 +1,8 @@
 import { ReactNode } from 'react';
+import { User as ApiUser } from '@/types/api';
+import type { Notification as AppNotification } from '@/types/notification';
+
+export type { AppNotification };
 
 export interface NavigationItem {
   name: string;
@@ -15,25 +19,13 @@ export interface UserNavigationItem {
   onClick?: () => void | Promise<void>;
 }
 
-export interface Notification {
-  id: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-  action?: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatarUrl?: string;
-}
+// Extend the API User type to handle both string and number IDs
+export type User = Omit<ApiUser, 'id'> & { id: string | number };
 
 export interface NavigationProps {
   isAuthenticated: boolean;
   user?: User | null;
-  notifications: Notification[];
+  notifications: AppNotification[];
   onSignOut: () => Promise<void>;
   onNotificationClick: (id: string) => Promise<void>;
   onMarkAllAsRead: () => Promise<void>;

@@ -1,17 +1,29 @@
-import { lazy } from 'react';
+import { lazy, LazyExoticComponent, ComponentType, ReactNode } from 'react';
 import { RouteObject } from 'react-router-dom';
+
+// Extend the LazyExoticComponent type to include preload
+type PreloadableComponent<T extends ComponentType> = LazyExoticComponent<T> & {
+  preload: () => Promise<{ default: T }>;
+};
+
+// Type for our route elements
+type RouteElement = {
+  preload: () => Promise<{ default: ComponentType }>;
+} & LazyExoticComponent<ComponentType> & ReactNode;
 
 /**
  * Higher-order function for lazy loading components with error boundaries and loading states
  */
-const lazyLoad = (importFn: () => Promise<{ default: React.ComponentType }>) => {
-  const LazyComponent = lazy(importFn);
+function lazyLoad<T extends ComponentType>(
+  importFn: () => Promise<{ default: T }>
+): ReactNode {
+  const LazyComponent = lazy(importFn) as unknown as PreloadableComponent<T> & ReactNode;
   
   // Add preloading capability
   (LazyComponent as any).preload = importFn;
   
-  return LazyComponent;
-};
+  return LazyComponent as unknown as ReactNode;
+}
 
 // Public routes (no authentication required)
 export const publicRoutes: RouteObject[] = [
@@ -183,27 +195,39 @@ export const notFoundRoute: RouteObject = {
   element: lazyLoad(() => import('@/pages/not-found')),
 };
 
-// Helper function to preload route components
-export const preloadRoute = async (pathname: string) => {
-  const allRoutes = [...publicRoutes, ...protectedRoutes, ...adminRoutes, ...superadminRoutes];
-  
-  const findMatchingRoute = (routes: RouteObject[], path: string): RouteObject | undefined => {
-    for (const route of routes) {
-      if (route.path === path) {
-        return route;
-      }
-      
-      if (route.children) {
-        const childMatch = findMatchingRoute(route.children, path);
-        if (childMatch) return childMatch;
-      }
+// Helper function to find a route by path
+const findMatchingRoute = (
+  routes: RouteObject[],
+  path: string
+): RouteObject | undefined => {
+  for (const route of routes) {
+    if (route.path === path) {
+      return route;
     }
-    return undefined;
-  };
+    
+    if (route.children) {
+      const childMatch = findMatchingRoute(route.children, path);
+      if (childMatch) return childMatch;
+    }
+  }
+  return undefined;
+};
+
+// Helper function to preload route components
+export const preloadRoute = async (pathname: string): Promise<void> => {
+  const allRoutes = [
+    ...publicRoutes,
+    ...protectedRoutes,
+    ...adminRoutes,
+    ...superadminRoutes,
+  ];
   
   const route = findMatchingRoute(allRoutes, pathname);
   
-  if (route?.element && typeof (route.element as any).preload === 'function') {
-    await (route.element as any).preload();
+  if (route?.element) {
+    const element = route.element as unknown as RouteElement;
+    if (typeof element.preload === 'function') {
+      await element.preload();
+    }
   }
 };

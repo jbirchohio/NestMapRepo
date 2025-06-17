@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Notification } from '../types/notification';
-import { useAuth } from './useAuth';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { Notification } from '@/types/notification';
+import { useAuth } from '@/contexts/auth/AuthContext';
 
 interface UseNotificationsReturn {
   notifications: Notification[];
@@ -21,7 +21,7 @@ export function useNotifications(): UseNotificationsReturn {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = useCallback(async (): Promise<void> => {
     if (!isAuthenticated || !user) return;
 
     setIsLoading(true);
@@ -39,17 +39,18 @@ export function useNotifications(): UseNotificationsReturn {
         throw new Error('Failed to fetch notifications');
       }
 
-      const data = await response.json();
+      const data: Notification[] = await response.json();
       setNotifications(data);
     } catch (err) {
-      console.error('Error fetching notifications:', err);
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      console.error('Error fetching notifications:', error);
       setError('Failed to load notifications');
     } finally {
       setIsLoading(false);
     }
   }, [isAuthenticated, user]);
 
-  const markAsRead = useCallback(async (id: string) => {
+  const markAsRead = useCallback(async (id: string): Promise<void> => {
     if (!isAuthenticated) return;
 
     try {
@@ -61,21 +62,26 @@ export function useNotifications(): UseNotificationsReturn {
       );
 
       // API call
-      await fetch(`/api/notifications/${id}/read`, {
+      const response = await fetch(`/api/notifications/${id}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to mark notification as read');
+      }
     } catch (err) {
-      console.error('Error marking notification as read:', err);
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      console.error('Error marking notification as read:', error);
       // Revert optimistic update on error
-      fetchNotifications();
+      await fetchNotifications();
     }
   }, [isAuthenticated, fetchNotifications]);
 
-  const markAllAsRead = useCallback(async () => {
+  const markAllAsRead = useCallback(async (): Promise<void> => {
     if (!isAuthenticated) return;
 
     try {
@@ -88,31 +94,34 @@ export function useNotifications(): UseNotificationsReturn {
       );
 
       // API call
-      await fetch('/api/notifications/read-all', {
+      const response = await fetch('/api/notifications/read-all', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to mark all notifications as read');
+      }
     } catch (err) {
-      console.error('Error marking all notifications as read:', err);
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      console.error('Error marking all notifications as read:', error);
       // Revert optimistic update on error
-      fetchNotifications();
+      await fetchNotifications();
     }
   }, [isAuthenticated, fetchNotifications]);
 
-  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'read'>): void => {
     const newNotification: Notification = {
       ...notification,
       id: Math.random().toString(36).substr(2, 9),
-      createdAt: new Date().toISOString(),
       read: false,
+      createdAt: new Date().toISOString(),
     };
-
     setNotifications(prev => [newNotification, ...prev]);
   }, []);
 
-  // Set up WebSocket or polling for real-time updates
   useEffect(() => {
     if (!isAuthenticated) return;
 

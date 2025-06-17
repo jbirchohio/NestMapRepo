@@ -1,607 +1,552 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+
+import { ArrowLeft } from 'lucide-react';
+import { tripService } from '@/services/tripService';
+import { useCallback, useState, FC, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+// Define the ClientAccess interface with all required fields
+interface ClientAccess {
+  tracking_code: string;
+  share_url: string;
+  last_accessed?: string;
+  access_count?: number;
+  is_active?: boolean;
+  notifications_enabled?: boolean;
+  permissions?: string[];
+  created_at?: string;
+  updated_at: string;
+  role?: string;
+  client_email?: string;
+}
+
+// Define shared types aligned with Duffel API
+interface Airline {
+  name: string;
+  iata_code: string;
+  logo_lockup_url?: string;
+  logo_symbol_url?: string;
+}
+
+interface Airport {
+  iata_code: string;
+  name: string;
+  city?: string;
+  country?: string;
+  city_code?: string;
+  country_code?: string;
+  time_zone?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+interface Segment {
+  id: string;
+  origin: Airport;
+  destination: Airport;
+  departing_at: string;
+  arriving_at: string;
+  departure_time?: string;
+  arrival_time?: string;
+  airline: Airline;
+  flight_number: string;
+  operating_flight_number?: string;
+  aircraft: {
+    name: string;
+    id: string;
+    iata_code: string;
+  } | string;
+  operating_carrier: Airline | string;
+  marketing_carrier?: Airline;
+  cabin_class: string;
+  available_services?: {
+    baggages: Array<{
+      type: 'carry_on' | 'checked';
+      quantity: number;
+    }>;
+  };
+  duration: string;
+}
+
+interface Offer {
+  id: string;
+  total_amount: string;
+  total_currency: string;
+  total_emissions_kg: string;
+  owner?: {
+    iata_code: string;
+    name: string;
+  };
+  expires_at: string;
+  passenger_identity_documents_required?: boolean;
+  conditions?: {
+    change_before_departure?: {
+      penalty_amount?: string;
+      penalty_currency?: string;
+      allowed: boolean;
+    };
+    refund_before_departure?: {
+      penalty_amount?: string;
+      penalty_currency?: string;
+      allowed: boolean;
+    };
+  };
+  change_before_departure?: {
+    allowed: boolean;
+    penalty_amount?: string;
+    penalty_currency?: string;
+  };
+  refund_before_departure?: {
+    allowed: boolean;
+    penalty_amount?: string;
+    penalty_currency?: string;
+  };
+  total_tax_amount?: string;
+  tax_currency?: string;
+  base_amount?: string;
+  base_currency?: string;
+}
+
+interface Flight {
+  id: string;
+  origin: Airport;
+  destination: Airport;
+  departing_at: string;
+  arriving_at: string;
+  departure_time?: string;
+  arrival_time?: string;
+  airline: Airline;
+  flight_number: string;
+  segments: Segment[];
+  offer?: Offer;
+  booking_reference?: string;
+  status?: 'scheduled' | 'active' | 'landed' | 'cancelled' | 'incident' | 'diverted' | 'redirected' | string;
+  duration: string;
+  aircraft?: {
+    name: string;
+    id: string;
+    iata_code: string;
+  } | string;
+  operating_carrier?: Airline | string;
+  marketing_carrier?: Airline;
+  cabin_class?: string;
+  available_services?: {
+    baggages: Array<{
+      type: 'carry_on' | 'checked';
+      quantity: number;
+    }>;
+  };
+  operating_flight_number?: string;
+}
 
 interface TripActivity {
-  id?: number;
+  id: string;
+  type: 'meeting' | 'sightseeing' | 'dining' | 'transport' | 'other';
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  address?: string;
+  cost?: number;
+  currency?: string;
+  notes?: string;
+  booking_reference?: string;
+  status?: 'confirmed' | 'pending' | 'cancelled';
+  category?: string;
+}
+
+interface Accommodation {
+  id: string;
+  name: string;
+  check_in: string;
+  check_out: string;
+  location: string;
+  address: string;
+  room_type: string;
+  cost_per_night: number;
+  currency: string;
+  booking_reference?: string;
+  amenities?: string[];
+  status?: 'confirmed' | 'pending' | 'cancelled';
+  stars?: number;
+  pricePerNight?: number;
+}
+
+interface Meal {
+  id: string;
+  type: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'other';
   name: string;
   description: string;
+  time: string;
   location: string;
-  startTime: string;
-  endTime: string;
+  address?: string;
   cost?: number;
-  category: string;
-  tags?: string[];
-  imageUrl?: string;
-  bookingUrl?: string;
+  currency?: string;
+  notes?: string;
+  booking_reference?: string;
+  status?: 'confirmed' | 'pending' | 'cancelled';
+  restaurant?: string;
+  cuisine?: string;
+  estimatedCost?: number;
+}
+
+interface TripSummary {
+  total_cost: number;
+  currency: string;
+  flights_cost: number;
+  accommodation_cost: number;
+  activities_cost: number;
+  meals_cost: number;
+  other_expenses: number;
+  savings?: number;
+  currency_conversion_rates?: Record<string, number>;
+  budget_status: 'under_budget' | 'on_budget' | 'over_budget';
+  recommendations?: string[];
+  conflicts?: string[];
+  warnings?: string[];
   notes?: string;
 }
 
 interface TripDay {
   date: string;
   activities: TripActivity[];
-}
-
-interface Flight {
-  id?: number;
-  airline: string;
-  flightNumber: string;
-  departureAirport: string;
-  arrivalAirport: string;
-  departureTime: string;
-  arrivalTime: string;
-  price?: number;
-  bookingReference?: string;
-}
-
-interface Accommodation {
-  id?: number;
-  name: string;
-  location: string;
-  checkIn: string;
-  checkOut: string;
-  price?: number;
-  bookingReference?: string;
-  amenities?: string[];
-  imageUrl?: string;
-}
-
-interface Meal {
-  id?: number;
-  name: string;
-  restaurant: string;
-  location: string;
-  time: string;
-  price?: number;
-  cuisine: string;
-  reservationDetails?: string;
+  meals: Meal[];
+  accommodation?: Accommodation;
+  notes?: string;
 }
 
 interface GeneratedTrip {
-  id?: number;
+  id: string;
   title: string;
   destination: string;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
   budget: number;
   travelers: number;
   summary: string;
   days: TripDay[];
-  highlights?: string[];
+  flights: Flight[];
+  accommodations: Accommodation[];
+  activities: TripActivity[];
+  meals: Meal[];
+  trip_summary: TripSummary;
+  client_access?: ClientAccess;
+  created_at: string;
+  updated_at: string;
+  status: 'draft' | 'confirmed' | 'cancelled' | 'completed' | string;
+  tags?: string[];
+  created_by: string;
+  updated_by: string;
   recommendations?: string[];
-  totalCost?: number;
-  flights?: Flight[];
-  accommodation?: Accommodation[];
-  activities?: TripActivity[];
-  meals?: Meal[];
+  conflicts?: string[];
+  notes?: string;
+  city: string;
+  country: string;
 }
 
-interface ConversationMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
+// Client component for creating and sharing itineraries
+interface AITripGeneratorProps {
+  // Add any props if needed
 }
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Sparkles, 
-  MapPin, 
-  Calendar, 
-  DollarSign, 
-  Users, 
-  Briefcase,
-  Clock,
-  Utensils,
-  Bed,
-  Plane,
-  Car,
-  AlertTriangle,
-  CheckCircle,
-  TrendingUp,
-  Download,
-  Share,
-  Send,
-  ArrowLeft
-} from 'lucide-react';
 
-export default function AITripGenerator() {
-  const [prompt, setPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedTrip, setGeneratedTrip] = useState<GeneratedTrip | null>(null);
-  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
-  const [showQuestions, setShowQuestions] = useState(false);
-  const [assistantMessage, setAssistantMessage] = useState('');
-  const [clientEmail, setClientEmail] = useState('');
-  const [showClientForm, setShowClientForm] = useState(false);
+
+
+const AITripGenerator: FC<AITripGeneratorProps> = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
-
-  const createItineraryMutation = useMutation({
-    mutationFn: async (data: { tripData: GeneratedTrip; clientEmail: string }) => {
-      const response = await apiRequest('POST', '/api/create-client-itinerary', data);
-      if (!response.ok) {
-        throw new Error('Failed to create itinerary');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Itinerary Created",
-        description: `Client tracking link sent to ${clientEmail}`,
+  const [shareUrl, setShareUrl] = useState('');
+  // Trip state with proper typing and update handlers
+  const [trip, setTrip] = useState<GeneratedTrip | null>(null);
+  
+  // Update trip status (e.g., when booking is confirmed)
+  const updateTripStatus = useCallback((status: string) => {
+    if (trip) {
+      setTrip({
+        ...trip,
+        status,
+        updated_at: new Date().toISOString()
       });
+    }
+  }, [trip]);
+  
+  // Track loading states for mutations
+  const [isCreating, setIsCreating] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [newStatus, setNewStatus] = useState<string>('planned');
+  const [clientName, setClientName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [trackingCode, setTrackingCode] = useState('');
+  const [showClientForm, setShowClientForm] = useState(true);
+
+  // Handle back navigation
+  const handleBack = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
+
+  // Initialize tracking code and share URL from trip if available
+  useEffect(() => {
+    const trackingCode = trip?.client_access?.tracking_code;
+    if (trackingCode) {
+      setTrackingCode(trackingCode);
+      setShareUrl(trip?.client_access?.share_url || '');
+    }
+  }, [trip?.client_access]);
+
+  // Toast wrapper for consistent usage
+  const showToast = useCallback((title: string, message?: string, variant: 'default' | 'destructive' = 'default') => {
+    const toastConfig = {
+      title,
+      variant,
+      ...(message && { description: message })
+    };
+    toast(toastConfig);
+  }, [toast]);
+  
+  // Initialize tracking code if it exists in trip
+  useEffect(() => {
+    const tripTrackingCode = trip?.client_access?.tracking_code;
+    if (tripTrackingCode && !trackingCode) {
+      setTrackingCode(tripTrackingCode);
+    }
+  }, [trip?.client_access, trackingCode]);
+
+  // Create client itinerary mutation
+  const createClientItinerary = useCallback(async (data: { tripId: string; clientName: string; clientEmail: string }) => {
+    try {
+      if (!trip) return; // Ensure trip exists
+      
+      setIsCreating(true);
+      const response = await tripService.createClientItinerary({
+        tripData: trip, // Pass the full trip data
+        clientEmail: data.clientEmail
+      });
+      
+      // Handle the response based on the expected structure
+      const responseData = response as { trackingCode: string; shareUrl?: string };
+      setTrackingCode(responseData.trackingCode);
+      if (responseData.shareUrl) {
+        setShareUrl(responseData.shareUrl);
+      }
       setShowClientForm(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create client itinerary",
-        variant: "destructive",
-      });
+      showToast('Success', 'Client itinerary created successfully');
+      return responseData;
+    } catch (error) {
+      console.error('Error creating client itinerary:', error);
+      showToast('Error', 'Failed to create client itinerary', 'destructive');
+      throw error;
+    } finally {
+      setIsCreating(false);
     }
-  });
+  }, [showToast]);
 
-  const shareItineraryMutation = useMutation({
-    mutationFn: async (trackingCode: string) => {
-      const response = await apiRequest('GET', `/api/track/${trackingCode}`);
-      if (!response.ok) {
-        throw new Error('Failed to get sharing info');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      navigator.clipboard.writeText(data.shareUrl);
-      toast({
-        title: "Share Link Copied",
-        description: "Mobile tracking link copied to clipboard",
-      });
+  // Share itinerary mutation
+  const shareItinerary = useCallback(async (code: string) => {
+    try {
+      setIsSharing(true);
+      const { share_url: shareUrl } = await tripService.shareTripWithClient(code);
+      setShareUrl(shareUrl);
+      navigator.clipboard.writeText(shareUrl);
+      showToast('Success', 'Shareable link copied to clipboard!');
+      return shareUrl;
+    } catch (error) {
+      console.error('Error sharing itinerary:', error);
+      showToast('Error', 'Failed to generate shareable link', 'destructive');
+      throw error;
+    } finally {
+      setIsSharing(false);
     }
-  });
+  }, [showToast, tripService]);
 
-  const handleCreateItinerary = () => {
-    setShowClientForm(true);
-  };
-
-  const handleSubmitClientForm = () => {
-    if (!clientEmail) {
-      toast({
-        title: "Email Required",
-        description: "Please enter client email address",
-        variant: "destructive",
-      });
+  const handleCreateItinerary = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trip?.id) {
+      showToast('Error', 'No trip selected', 'destructive');
       return;
     }
-    
-    createItineraryMutation.mutate({
-      tripData: generatedTrip,
-      clientEmail
-    });
-  };
+    if (!clientName.trim() || !clientEmail.trim()) {
+      showToast('Error', 'Please fill in all required fields', 'destructive');
+      return;
+    }
 
-  const handleShareItinerary = (trackingCode: string) => {
-    shareItineraryMutation.mutate(trackingCode);
-  };
-
-  const generateTripMutation = useMutation({
-    mutationFn: async (userPrompt: string) => {
-      const response = await apiRequest('POST', '/api/generate-ai-trip', { 
-        prompt: userPrompt,
-        conversation 
+    try {
+      await createClientItinerary({
+        tripId: trip.id,
+        clientName: clientName.trim(),
+        clientEmail: clientEmail.trim()
       });
-      if (!response.ok) {
-        throw new Error('Failed to generate trip');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data.type === 'questions') {
-        // Assistant needs more information
-        setShowQuestions(true);
-        setAssistantMessage(data.message);
-        setConversation(data.conversation);
-        setIsGenerating(false);
-      } else {
-        // Complete trip generated
-        setGeneratedTrip(data);
-        setShowQuestions(false);
-        setIsGenerating(false);
-      }
-    },
-    onError: () => {
-      setIsGenerating(false);
+    } catch (error) {
+      // Error is already handled in createClientItinerary
     }
-  });
+  }, [trip?.id, clientName, clientEmail, createClientItinerary, showToast]);
 
-  const handleGenerateTrip = () => {
-    if (!prompt.trim()) return;
-    setIsGenerating(true);
-    generateTripMutation.mutate(prompt);
-  };
+  const handleShareItinerary = useCallback(async () => {
+    const codeToShare = trackingCode || trip?.client_access?.tracking_code;
+    if (codeToShare) {
+      try {
+        await shareItinerary(codeToShare);
+      } catch (error) {
+        // Error is already handled in shareItinerary
+      }
+    } else {
+      showToast('Sharing Error', 'No tracking code available to share', 'destructive');
+    }
+  }, [trackingCode, trip?.client_access?.tracking_code, shareItinerary, showToast]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleGenerateTrip();
+  // --- Trip status update mutation ---
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const handleStatusUpdate = async () => {
+    if (!trip) return;
+    try {
+      setIsUpdatingStatus(true);
+      // TODO: integrate real API call once backend ready
+      updateTripStatus(newStatus);
+      showToast('Success', 'Trip status updated');
+    } catch (error) {
+      console.error('Error updating trip status:', error);
+      showToast('Error', 'Failed to update trip status', 'destructive');
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
-  if (generatedTrip) {
-    return <TripResultsView trip={generatedTrip} onBack={() => {
-      setGeneratedTrip(null);
-      setShowQuestions(false);
-      setConversation([]);
-      setPrompt('');
-    }} />;
+  // Handle form submission
+  const handleSubmitClientForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleCreateItinerary(e);
+  };
+
+  // Handle copying the share link
+  const handleCopyLink = useCallback(() => {
+    if (shareUrl) {
+      navigator.clipboard.writeText(shareUrl);
+      showToast('Success', 'Link copied to clipboard!');
+    } else {
+      showToast('Error', 'No shareable link available', 'destructive');
+    }
+  }, [shareUrl, showToast]);
+
+  // Update tracking code when it changes
+  useEffect(() => {
+    if (trip?.client_access?.tracking_code && !trackingCode) {
+      setTrackingCode(trip.client_access.tracking_code);
+    }
+  }, [trip?.client_access?.tracking_code, trackingCode]);
+
+  // Only render the component if we have a valid trip
+  if (!trip) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">No trip data available</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center space-x-2">
-          <Sparkles className="w-8 h-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">AI Trip Assistant</h1>
-        </div>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          {showQuestions ? 
-            "Let me gather a few more details to find the best flights and hotels for your trip!" :
-            "Describe your business trip and I'll help plan everything with real pricing and availability."
-          }
-        </p>
-      </div>
-
-      {/* Show conversation when assistant asks questions */}
-      {showQuestions && conversation.length > 0 && (
-        <Card className="w-full border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Sparkles className="w-5 h-5 text-blue-600" />
-              <span>Travel Assistant</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-white rounded-lg p-4 border">
-              <p className="text-gray-800 mb-3">{assistantMessage}</p>
-              {conversation.length > 0 && conversation[conversation.length - 1].content && (
-                <div className="space-y-2">
-                  {conversation[conversation.length - 1].content.split('\n').filter(line => line.includes('?')).map((question, index) => (
-                    <div key={index} className="flex items-start space-x-2">
-                      <span className="text-blue-600 font-medium">{index + 1}.</span>
-                      <span className="text-gray-700">{question.trim()}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="text-sm text-blue-600 font-medium">
-              Please provide these details below to continue:
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Briefcase className="w-5 h-5 text-blue-600" />
-            <span>Describe Your Business Trip</span>
-          </CardTitle>
-          <CardDescription>
-            Tell us about your destination, dates, budget, business requirements, and preferences. Be as detailed as you'd like!
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Example: I need a 3-day business trip to New York City from March 15-17, 2024. Budget around $2500. I have client meetings on March 16th from 2-4pm. I prefer business hotels near Manhattan, enjoy fine dining, and would like some cultural activities in the evenings. I have dietary restrictions for vegetarian food..."
-              className="min-h-[120px] resize-none"
-              disabled={isGenerating}
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              Press Shift + Enter for new line, Enter to generate
-            </div>
-            <Button
-              onClick={handleGenerateTrip}
-              disabled={!prompt.trim() || isGenerating}
-              className="flex items-center space-x-2"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>Generate Trip</span>
-                </>
-              )}
-            </Button>
-          </div>
-
-          {generateTripMutation.error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Failed to generate trip. Please try again or refine your request.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center space-x-3">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            <div>
-              <h3 className="font-medium">Smart Destinations</h3>
-              <p className="text-sm text-gray-600">AI finds the best locations and venues</p>
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center space-x-3">
-            <Calendar className="w-5 h-5 text-green-600" />
-            <div>
-              <h3 className="font-medium">Schedule Optimization</h3>
-              <p className="text-sm text-gray-600">Conflicts avoided, time maximized</p>
-            </div>
-          </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center space-x-3">
-            <DollarSign className="w-5 h-5 text-electric-600" />
-            <div>
-              <h3 className="font-medium">Budget Planning</h3>
-              <p className="text-sm text-gray-600">Detailed cost breakdown and optimization</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-function TripResultsView({ trip, onBack }: { trip: GeneratedTrip; onBack: () => void }) {
-  return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="outline" onClick={onBack} className="flex items-center space-x-2">
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Generator</span>
-        </Button>
-        <div className="flex space-x-2">
-          <Button variant="outline" className="flex items-center space-x-2">
-            <Download className="w-4 h-4" />
-            <span>Export PDF</span>
-          </Button>
-          <Button variant="outline" className="flex items-center space-x-2">
-            <Share className="w-4 h-4" />
-            <span>Share Trip</span>
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <Button variant="outline" onClick={handleBack} className="mb-4">
+        <ArrowLeft className="w-4 h-4 mr-2" /> Back to Trip
+      </Button>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <CheckCircle className="w-6 h-6 text-green-600" />
-            <span>{trip.tripSummary?.title || "Generated Business Trip"}</span>
-          </CardTitle>
+          <CardTitle>Share Itinerary</CardTitle>
           <CardDescription>
-            {trip.tripSummary?.description || "Your AI-generated business trip itinerary"}
+            Share this itinerary with clients or team members
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-4 gap-4 mb-6">
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-1" />
-              <div className="text-sm font-medium">Duration</div>
-              <div className="text-lg font-bold">{trip.tripSummary?.duration || 0} days</div>
-            </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600 mx-auto mb-1" />
-              <div className="text-sm font-medium">Total Cost</div>
-              <div className="text-lg font-bold">${trip.tripSummary?.totalCost || 0}</div>
-            </div>
-            <div className="text-center p-3 bg-electric-50 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-electric-600 mx-auto mb-1" />
-              <div className="text-sm font-medium">Activities</div>
-              <div className="text-lg font-bold">{trip.activities?.length || 0}</div>
-            </div>
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <Plane className="w-6 h-6 text-orange-600 mx-auto mb-1" />
-              <div className="text-sm font-medium">Carbon</div>
-              <div className="text-lg font-bold">{trip.tripSummary?.carbonFootprint || 0} kg</div>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center space-x-2">
-                <Plane className="w-5 h-5 text-blue-600" />
-                <span>Flights</span>
-              </h3>
-              {trip.flights?.map((flight: Flight, index: number) => (
-                <Card key={index} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium">{flight.airline} {flight.flightNumber}</div>
-                      <div className="text-sm text-gray-600">{flight.route}</div>
-                      <div className="text-sm text-gray-500">{flight.departure} - {flight.arrival}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-green-600">${flight.price}</div>
-                      <Badge variant="secondary">{flight.cabin}</Badge>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-
-              <h3 className="text-lg font-semibold flex items-center space-x-2">
-                <Bed className="w-5 h-5 text-electric-600" />
-                <span>Accommodation</span>
-              </h3>
-              {trip.accommodation?.map((hotel: Accommodation, index: number) => (
-                <Card key={index} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium">{hotel.name}</div>
-                      <div className="text-sm text-gray-600">{hotel.address}</div>
-                      <div className="flex items-center space-x-2 mt-1">
-                        {[...Array(hotel.stars)].map((_, i) => (
-                          <span key={i} className="text-yellow-400">★</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-green-600">${hotel.pricePerNight}/night</div>
-                      <div className="text-sm text-gray-500">{hotel.checkIn} - {hotel.checkOut}</div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center space-x-2">
-                <MapPin className="w-5 h-5 text-red-600" />
-                <span>Activities & Schedule</span>
-              </h3>
-              {trip.activities?.map((activity: TripActivity, index: number) => (
-                <Card key={index} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="font-medium">{activity.title}</div>
-                      <div className="text-sm text-gray-600">{activity.description}</div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        {activity.startTime} - {activity.endTime}
-                      </div>
-                    </div>
-                    <Badge variant="outline">{activity.category}</Badge>
-                  </div>
-                </Card>
-              ))}
-
-              <h3 className="text-lg font-semibold flex items-center space-x-2">
-                <Utensils className="w-5 h-5 text-orange-600" />
-                <span>Dining</span>
-              </h3>
-              {trip.meals?.map((meal: Meal, index: number) => (
-                <Card key={index} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium">{meal.restaurant}</div>
-                      <div className="text-sm text-gray-600">{meal.cuisine} • {meal.location}</div>
-                      <div className="text-sm text-gray-500">{meal.time}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-green-600">${meal.estimatedCost}</div>
-                      <Badge variant="secondary">{meal.type}</Badge>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {trip.recommendations && trip.recommendations.length > 0 && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-blue-900 mb-2">AI Recommendations</h3>
-              <ul className="space-y-1">
-                {trip.recommendations.map((rec: string, index: number) => (
-                  <li key={index} className="text-sm text-blue-800">• {rec}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {trip.conflicts && trip.conflicts.length > 0 && (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Potential Conflicts:</strong> {trip.conflicts.join(', ')}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Mobile Client Tracking */}
-          <div className="mt-6 space-y-4 border-t pt-4">
-            <h3 className="font-semibold text-gray-900">Client Tracking</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button 
-                onClick={handleCreateItinerary}
-                className="bg-blue-600 hover:bg-blue-700"
-                disabled={createItineraryMutation.isPending}
-              >
-                <Send className="w-4 h-4 mr-2" />
-                {createItineraryMutation.isPending ? "Creating..." : "Send Mobile Tracking Link"}
-              </Button>
-              
-              {generatedTrip?.clientAccess?.trackingCode && (
-                <Button 
-                  onClick={() => handleShareItinerary(generatedTrip.clientAccess.trackingCode)}
-                  variant="outline"
-                  disabled={shareItineraryMutation.isPending}
-                >
-                  <Share className="w-4 h-4 mr-2" />
-                  {shareItineraryMutation.isPending ? "Copying..." : "Copy Tracking Link"}
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Client Form Modal */}
-          {showClientForm && (
-            <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-              <h4 className="font-medium mb-3">Send Itinerary to Client</h4>
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="clientEmail">Client Email Address</Label>
-                  <Input
-                    id="clientEmail"
-                    type="email"
-                    placeholder="client@company.com"
-                    value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleSubmitClientForm}
-                    disabled={createItineraryMutation.isPending}
-                    className="flex-1"
-                  >
-                    Send Tracking Link
-                  </Button>
-                  <Button 
-                    onClick={() => setShowClientForm(false)}
-                    variant="outline"
-                  >
-                    Cancel
-                  </Button>
-                </div>
+          {showClientForm ? (
+            <form onSubmit={handleSubmitClientForm} className="space-y-4">
+              <input type="hidden" name="tripId" value={trip.id} />
+              <div className="space-y-2">
+                <Label htmlFor="client-name">Client Name</Label>
+                <Input
+                  id="client-name"
+                  type="text"
+                  placeholder="Enter client's name"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  required
+                />
               </div>
-              <p className="text-xs text-gray-600 mt-2">
-                Client will receive a mobile-friendly tracking link and email notifications for any updates.
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="client-email">Client Email</Label>
+                <Input
+                  id="client-email"
+                  type="email"
+                  placeholder="Enter client's email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex space-x-2">
+                <Button type="submit" disabled={isCreating} className="w-full">
+                  {isCreating ? 'Creating...' : 'Create Itinerary'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowClientForm(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <Button onClick={handleShareItinerary} disabled={isSharing} className="w-full">
+                {isSharing ? 'Sharing...' : 'Share Itinerary'}
+              </Button>
+
+              {trip?.client_access && (
+                <div className="space-y-4">
+                  {/* Status update */}
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="status-select">Status</Label>
+                    <select
+                      id="status-select"
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value)}
+                      className="border rounded px-2 py-1"
+                    >
+                      <option value="planned">Planned</option>
+                      <option value="booked">Booked</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <Button onClick={handleStatusUpdate} disabled={isUpdatingStatus}>
+                      {isUpdatingStatus ? 'Updating...' : 'Update Status'}
+                    </Button>
+                  </div>
+
+                  <div className="p-4 bg-muted rounded-md space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Shared with: {trip.client_access?.client_email ?? 'N/A'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Tracking Code: {trip.client_access?.tracking_code ?? ''}
+                    </p>
+                    <div className="flex space-x-2">
+                      <Button size="sm" onClick={() => navigator.clipboard.writeText(trip.client_access?.tracking_code ?? '')}>
+                        Copy Tracking Code
+                      </Button>
+                      {shareUrl && (
+                        <Button size="sm" onClick={handleCopyLink}>
+                          Copy Share Link
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default AITripGenerator;

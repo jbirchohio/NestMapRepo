@@ -103,8 +103,8 @@ export class ErrorLogger {
         this.sendErrorToBackend(errorLog);
       }
 
-      // Store in secure cookie for offline access
-      this.storeErrorLocally(errorLog);
+      //  in secure cookie for offline access
+      this.ErrorLocally(errorLog);
     } catch (error) {
       console.error('Failed to log error:', error);
     }
@@ -114,7 +114,7 @@ export class ErrorLogger {
     try {
       await apiClient.post('/errors', errorLog);
     } catch (error) {
-      // Store failed logs for retry
+      //  failed logs for retry
       SecureCookie.set('pending_errors', JSON.stringify(this.errorLogs), {
         httpOnly: true,
         secure: true,
@@ -125,10 +125,10 @@ export class ErrorLogger {
     }
   }
 
-  private storeErrorLocally(errorLog: ErrorLog): void {
+  private ErrorLocally(errorLog: ErrorLog): void {
     try {
-      const storedLogs = SecureCookie.get('error_logs') || '[]';
-      const logs = JSON.parse(storedLogs);
+      const dLogs = SecureCookie.get('error_logs') || '[]';
+      const logs = JSON.parse(dLogs);
       logs.push(errorLog);
       SecureCookie.set('error_logs', JSON.stringify(logs), {
         httpOnly: true,
@@ -138,7 +138,7 @@ export class ErrorLogger {
         maxAge: 86400 // 24 hours
       });
     } catch (error) {
-      console.error('Failed to store error locally:', error);
+      console.error('Failed to  error locally:', error);
     }
   }
 
