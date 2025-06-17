@@ -1,7 +1,17 @@
 import { SecureCookie } from './SecureCookie';
 
 // Token revocation list
+// Load revoked tokens from secure cookie storage
 const revokedTokens = new Set<string>();
+const storedRevoked = SecureCookie.get('revoked_tokens');
+if (storedRevoked) {
+  try {
+    const tokens: string[] = JSON.parse(storedRevoked);
+    tokens.forEach(token => revokedTokens.add(token));
+  } catch {
+    SecureCookie.remove('revoked_tokens');
+  }
+}
 
 /**
  * Adds a token to the revocation list
@@ -9,6 +19,7 @@ const revokedTokens = new Set<string>();
  */
 export const revokeToken = (token: string): void => {
   revokedTokens.add(token);
+  SecureCookie.set('revoked_tokens', JSON.stringify(Array.from(revokedTokens)));
 };
 
 /**
@@ -35,6 +46,8 @@ export const cleanupRevokedTokens = (): void => {
   });
   
   tokensToRemove.forEach(token => revokedTokens.delete(token));
+
+  SecureCookie.set('revoked_tokens', JSON.stringify(Array.from(revokedTokens)));
 };
 
 // Start cleanup interval
