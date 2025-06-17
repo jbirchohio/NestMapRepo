@@ -6,23 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { motion } from 'framer-motion';
 import { 
-  Settings, 
-  Shield, 
-  Database, 
-  Mail, 
-  Globe, 
-  Lock, 
+  Settings,
+  Shield,
+  Mail,
+  Globe,
   Server,
-  AlertTriangle,
-  CheckCircle,
-  Save,
   RefreshCw
 } from 'lucide-react';
 
@@ -65,17 +58,13 @@ export default function AdminSettings() {
 
   const { data: settings, isLoading } = useQuery<SystemSettings>({
     queryKey: ['/api/admin/settings'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/settings');
-      return response.json();
-    },
+    queryFn: async () =>
+      (await apiRequest('GET', '/api/admin/settings')) as SystemSettings,
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: async (updatedSettings: Partial<SystemSettings>) => {
-      const response = await apiRequest('PUT', '/api/admin/settings', updatedSettings);
-      return response.json();
-    },
+    mutationFn: async (updatedSettings: Partial<SystemSettings>) =>
+      (await apiRequest('PUT', '/api/admin/settings', updatedSettings)) as SystemSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
       toast({
@@ -93,10 +82,8 @@ export default function AdminSettings() {
   });
 
   const testEmailMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/admin/settings/test-email');
-      return response.json();
-    },
+    mutationFn: async () =>
+      (await apiRequest('POST', '/api/admin/settings/test-email')) as unknown,
     onSuccess: () => {
       toast({
         title: "Email Test Successful",
