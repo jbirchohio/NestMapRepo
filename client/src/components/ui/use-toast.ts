@@ -56,8 +56,8 @@ const ToastAction = React.forwardRef<HTMLButtonElement, ToastActionProps>(
       ),
       ...props as React.ButtonHTMLAttributes<HTMLButtonElement>
     })
-  )
 )
+
 ToastAction.displayName = "ToastAction"
 
 const ToastClose = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
@@ -72,8 +72,8 @@ const ToastClose = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttribute
     }, [
       React.createElement('span', { className: 'h-4 w-4', key: 'close-icon' }, '×')
     ])
-  )
 )
+
 ToastClose.displayName = "ToastClose"
 
 const ToastTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
