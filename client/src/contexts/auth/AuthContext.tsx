@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import api from '@/services/api/apiClient';
-import { User, JwtPayload, AuthTokens, ApiResponse } from '@/types/api';
+import { User, JwtPayload, AuthTokens } from '@/types/api';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionLockout } from '@/utils/sessionLockout';
 import jwtDecode from 'jwt-decode';
@@ -25,14 +25,10 @@ interface SecurityContext {
   sensitiveData: boolean;
 }
 
-interface DecodedJwt {
-  sub: string;
-  email: string;
+interface DecodedJwt extends JwtPayload {
   name: string;
-  role: string;
   organization_id: string;
   permissions: string[];
-  exp: number;
 }
 
 // Context type
@@ -59,22 +55,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Utility functions
-const decodeToken = useCallback((token: string | null): DecodedJwt | null => {
+function decodeToken(token: string | null): DecodedJwt | null {
   if (!token) return null;
   try {
-    return jwtDecode(token) as DecodedJwt;
+    return jwtDecode<DecodedJwt>(token);
   } catch (error) {
     console.error('Error decoding token:', error);
     return null;
   }
-}, []);
+}
 
-const isTokenExpired = useCallback((token: string | null): boolean => {
+function isTokenExpired(token: string | null): boolean {
   const decoded = decodeToken(token);
   if (!decoded) return true;
   const now = Date.now() / 1000;
   return decoded.exp < now;
-}, [decodeToken]);
+}
 
 // Provider component
 const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactElement => {
@@ -94,7 +90,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
       try {
         const accessToken = tokenManager.getAccessToken();
         if (accessToken) {
-          const decoded = decodeJWT(accessToken);
+          const decoded = decodeToken(accessToken);
           if (!isTokenExpired(accessToken)) {
             setUser({
               id: parseInt(decoded.sub),
@@ -182,8 +178,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
   // Authentication methods
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const response = await api.post<ApiResponse<AuthTokens & { user: User }>>('/auth/login', { email, password });
-      const { accessToken, refreshToken, user } = response.data;
+      const response = await api.post<AuthTokens & { user: User }>('/auth/login', { email, password });
+      const { accessToken, refreshToken, user } = response;
       tokenManager.setTokens(accessToken, refreshToken);
       setUser(user);
       incrementLoginAttempts(email);
@@ -195,8 +191,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
 
   const signUp = useCallback(async (email: string, password: string, username: string) => {
     try {
-      const response = await api.post<ApiResponse<AuthTokens & { user: User }>>('/auth/signup', { email, password, username });
-      const { accessToken, refreshToken, user } = response.data;
+      const response = await api.post<AuthTokens & { user: User }>('/auth/signup', { email, password, username });
+      const { accessToken, refreshToken, user } = response;
       tokenManager.setTokens(accessToken, refreshToken);
       setUser(user);
     } catch (error) {
@@ -206,7 +202,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
 
   const signOut = useCallback(async () => {
     try {
-      await api.post<ApiResponse<void>>('/auth/logout');
+      await api.post<void>('/auth/logout');
       tokenManager.destroy();
       setUser(null);
       navigate('/login');
@@ -217,9 +213,8 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
 
   const signInWithProvider = useCallback(async (provider: string) => {
     try {
-      const response = await api.post<ApiResponse<AuthTokens & { user: User }>>(`/auth/${provider}`);
-      const data = response.data;
-      const { accessToken, refreshToken, user } = data.data;
+      const response = await api.post<AuthTokens & { user: User }>(`/auth/${provider}`);
+      const { accessToken, refreshToken, user } = response;
       tokenManager.setTokens(accessToken, refreshToken);
       setUser(user);
     } catch (error) {
@@ -234,11 +229,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
         return false;
       }
       
-      const response = await api.post<ApiResponse<{ accessToken: string }>>('/auth/refresh', {
+      const response = await api.post<{ accessToken: string }>('/auth/refresh', {
         refreshToken: tokenManager.getRefreshToken()
       });
-      
-      const { accessToken: newAccessToken } = response.data;
+
+      const { accessToken: newAccessToken } = response;
       tokenManager.setTokens(newAccessToken, tokenManager.getRefreshToken()!);
       return true;
     } catch (error) {
