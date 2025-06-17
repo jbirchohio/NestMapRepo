@@ -52,6 +52,7 @@ export interface UserMenuProps {
   user?: User | null;
   onSignOut: () => Promise<void>;
   items: UserNavigationItem[];
+  onProfileClick: () => void;
 }
 
 export interface NotificationsMenuProps {
@@ -60,4 +61,5 @@ export interface NotificationsMenuProps {
   notifications: Notification[];
   onNotificationClick: (id: string) => Promise<void>;
   onMarkAllAsRead: () => Promise<void>;
+  onNotificationsClick: () => void;
 }

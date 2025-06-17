@@ -1,3 +1,4 @@
+import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon } from '../icons';
 import { UserMenuProps } from './types';
@@ -8,7 +9,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   user,
   onSignOut,
   items,
+  onProfileClick,
 }) => {
+  const ref = useRef<HTMLDivElement>(null);
   return (
     <div className="relative ml-3" ref={ref}>
       <button
