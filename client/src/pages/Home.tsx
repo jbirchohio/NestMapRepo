@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
-import { format } from "date-fns";
 import NewTripModal from "@/components/NewTripModal";
 import SwipeableTrip from "@/components/SwipeableTrip";
 import RenameTripDialog from "@/components/RenameTripDialog";
@@ -17,8 +16,7 @@ import RoleBasedRedirect from "@/components/RoleBasedRedirect";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { motion } from "framer-motion";
-import { UserRound, LogOut, BarChart3, CheckCircle, Clock, Plus, Users, Plane, Brain, Sparkles } from "lucide-react";
-import { useEffect } from "react";
+import { UserRound, LogOut, BarChart3, CheckCircle, Plus, Users, Plane, Brain, Sparkles } from "lucide-react";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -28,7 +26,8 @@ export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("login");
   
-  const { user, userId, roleType, authReady, signOut } = useAuth();
+  const { user, authReady, signOut } = useAuth();
+  const userId = user?.id ?? null;
   const queryClient = useQueryClient();
   
   // Routing is now handled by RoleBasedRedirect component
@@ -384,10 +383,13 @@ export default function Home() {
 
         {!user && (
           <div className="mt-16 bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-8">
-            <TripTemplates onSelectTemplate={() => {
-              setAuthView("signup");
-              setIsAuthModalOpen(true);
-            }} />
+            <TripTemplates
+              userId={effectiveUserId}
+              onTripCreated={() => {
+                setAuthView("signup");
+                setIsAuthModalOpen(true);
+              }}
+            />
           </div>
         )}
       </div>
@@ -397,10 +399,6 @@ export default function Home() {
           isOpen={isRenameModalOpen}
           onClose={handleCloseRenameDialog}
           trip={tripToRename}
-          onRename={(tripId, newName) => {
-            // Handle rename logic here
-            handleCloseRenameDialog();
-          }}
         />
       )}
     </div>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Calendar, Clock, MapPin, Plane, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, Plane, Users, Check, X } from 'lucide-react';
 import { Flight } from '../types';
 
 interface FlightCardProps {
@@ -41,10 +41,10 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
           </div>
           <div>
             <div className="font-medium">
-              {flight.airline} {flight.flightNumber}
+              {flight.airline ?? flight.segments[0]?.carrier.name} {flight.flightNumber ?? flight.segments[0]?.flightNumber}
             </div>
             <div className="text-sm text-muted-foreground">
-              {flight.departure.airport} → {flight.arrival.airport}
+              {flight.segments[0]?.departure.airport} → {flight.segments[flight.segments.length - 1]?.arrival.airport}
             </div>
           </div>
         </div>
@@ -105,10 +105,10 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
         </div>
         <div className="flex items-center gap-1">
           <Users className="h-4 w-4" />
-          <span>{flight.seatsAvailable} seat{flight.seatsAvailable !== 1 ? 's' : ''} left</span>
+          <span>{flight.availableSeats} seat{flight.availableSeats !== 1 ? 's' : ''} left</span>
         </div>
         <Badge variant="outline" className="ml-auto capitalize">
-          {flight.cabin}
+          {flight.cabin ?? flight.bookingClass}
         </Badge>
       </div>
 
@@ -135,7 +135,7 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span>Seats Available: {flight.seatsAvailable}</span>
+              <span>Seats Available: {flight.availableSeats}</span>
             </div>
             {flight.stops > 0 && (
               <div className="flex items-center gap-2">

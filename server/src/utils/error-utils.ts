@@ -32,3 +32,38 @@ export function toErrorWithMessage(error: unknown): Error {
     return new Error(String(error));
   }
 }
+
+export interface FormattedError {
+  message: string;
+  code: string;
+  stack?: string;
+}
+
+export function classifyError(error: Error): string {
+  switch (error.name) {
+    case 'ValidationError':
+      return 'VALIDATION';
+    case 'DatabaseError':
+      return 'DATABASE';
+    case 'UnauthorizedError':
+      return 'AUTH';
+    default:
+      return 'UNKNOWN';
+  }
+}
+
+export function formatErrorResponse(error: Error): FormattedError {
+  return {
+    message: error.message,
+    code: classifyError(error),
+    stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+  };
+}
+
+import logger from './logger';
+
+export function logAndFormatError(error: unknown): FormattedError {
+  const err = toErrorWithMessage(error);
+  logger.error(err.message, err);
+  return formatErrorResponse(err);
+}

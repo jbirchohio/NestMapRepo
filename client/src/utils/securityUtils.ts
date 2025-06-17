@@ -131,6 +131,28 @@ export class SecurityUtils {
       return false;
     }
   }
+
+  public async performSecurityAudit(): Promise<{ success: boolean; details: string[] }> {
+    const details: string[] = [];
+
+    // Validate session and token
+    if (!this.sessionSecurity.isSessionValid()) {
+      details.push('Invalid session');
+    }
+    if (!this.tokenManager.hasValidToken()) {
+      details.push('Invalid token');
+    }
+
+    // Validate security headers
+    const headers = this.getSecurityHeaders();
+    Object.entries(headers).forEach(([header, value]) => {
+      if (!value) {
+        details.push(`Missing header: ${header}`);
+      }
+    });
+
+    return { success: details.length === 0, details };
+  }
   public auditSecurity(): void {
     // Check security headers
     const headers = this.getSecurityHeaders();
@@ -161,5 +183,13 @@ export class SecurityUtils {
       sessionAge: this.sessionSecurity.getSessionAge(),
       sessionTimeout: this.sessionSecurity.getSessionTimeoutRemaining()
     };
+  }
+
+  public reportSecurityContext(context: SessionDetails): void {
+    try {
+      console.log('Security context report', context);
+    } catch (error) {
+      console.error('Failed to report security context', error);
+    }
   }
 }

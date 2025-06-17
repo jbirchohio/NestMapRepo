@@ -118,6 +118,16 @@ export interface Hotel {
     duration?: number; // in minutes
   }>;
   metadata?: Record<string, unknown>;
+  // Optional fields used by simplified UI components
+  rating?: number;
+  price?: {
+    amount: number;
+    currency: string;
+    formatted?: string;
+  };
+  distanceFromCenter?: number;
+  maxOccupancy?: number;
+  freeCancellation?: boolean;
 }
 
 export interface HotelSearchParams {

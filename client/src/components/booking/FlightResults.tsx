@@ -91,11 +91,15 @@ export function FlightResults({
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 <div className="space-y-1">
-                  <div className="font-medium">{formatTime(flight.departureTime)}</div>
+                  <div className="font-medium flex items-center gap-1">
+                    <Calendar className="h-4 w-4" /> {formatTime(flight.departureTime)}
+                  </div>
                   <div className="text-muted-foreground">{formatDate(flight.departureTime)}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-medium">{formatTime(flight.arrivalTime)}</div>
+                  <div className="font-medium flex items-center gap-1">
+                    <Calendar className="h-4 w-4" /> {formatTime(flight.arrivalTime)}
+                  </div>
                   <div className="text-muted-foreground">{formatDate(flight.arrivalTime)}</div>
                 </div>
                 <div className="space-y-1">
