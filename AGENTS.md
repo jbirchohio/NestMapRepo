@@ -1,242 +1,210 @@
-# NestMap Platform Analysis & Documentation
+# NestleIn AI Agent Guide
 
-## Executive Summary
+## Application Overview
 
-NestMap is an enterprise-grade AI-powered travel planning platform built with Vite (React frontend) and Express (Node backend). It enables travel agents and users to collaboratively plan trips, generate AI-enhanced proposals, manage subscriptions via Stripe, and export itineraries to PDF or Google Calendar. The platform supports white-labeling, real-time collaboration (WebSockets), organization-based multi-tenancy, and responsive mobile UI.
-
-This document provides a comprehensive analysis of the platform's architecture, features, implementation status, and recommendations for improvement.
+NestleIn (NestMap) is a B2B SaaS application for travel planning and itinerary generation using AI. The platform enables travel agents and businesses to create, manage, and optimize travel itineraries for their clients with the help of AI-powered recommendations and integrations with external services.
 
 ## Architecture Overview
 
 ### Technology Stack
 - **Frontend**: React (Vite), Tailwind CSS, React Router, React Query
-- **Backend**: Express.js (Node.js), TypeScript
+- **Backend**: Express.js (Node.js), TypeScript, NestJS
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: JWT, Supabase Auth
 - **State Management**: React Context, React Query
-- **Mobile Support**: Capacitor for Android/iOS
 - **Real-time**: WebSockets
 - **Payment Processing**: Stripe
 - **AI Integration**: OpenAI GPT-4o
 
-### Core Components
-1. **Client Application**: React-based frontend with responsive design
-2. **Server API**: Express.js REST API with TypeScript
-3. **Database Layer**: PostgreSQL with Drizzle ORM for type-safe queries
-4. **Authentication System**: JWT-based auth with role-based access control
-5. **AI Services**: OpenAI integration for intelligent travel planning
-6. **Booking Engine**: Integration with Duffel API for flights and hotels
-7. **Collaboration Tools**: Real-time updates via WebSockets
-8. **White-labeling System**: Custom domain and branding support
-9. **Export Tools**: PDF generation and Google Calendar integration
-10. **Mobile Apps**: Capacitor-based mobile applications
+### Project Structure
 
-## Feature Implementation Status
+```
+NestMapRepo/
+├── client/                  # Frontend React application
+│   ├── public/              # Static assets
+│   ├── src/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── contexts/        # React contexts for state management
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── pages/           # Page components
+│   │   ├── services/        # API service integrations
+│   │   ├── styles/          # Global styles and Tailwind config
+│   │   └── utils/           # Utility functions
+│   ├── package.json
+│   └── vite.config.js
+│
+├── server/                  # Backend Express/NestJS application
+│   ├── src/
+│   │   ├── auth/            # Authentication modules
+│   │   ├── ai/              # AI service integrations
+│   │   ├── bookings/        # Booking management
+│   │   ├── calendar/        # Calendar integration
+│   │   ├── db/              # Database configuration and models
+│   │   ├── organizations/   # Organization management
+│   │   ├── payments/        # Payment processing
+│   │   ├── trips/           # Trip and itinerary management
+│   │   ├── users/           # User management
+│   │   └── main.ts          # Application entry point
+│   ├── package.json
+│   └── tsconfig.json
+│
+└── shared/                  # Shared code between client and server
+    ├── types/               # TypeScript type definitions
+    ├── constants/           # Shared constants
+    └── utils/               # Shared utility functions
+```
 
-### AI Capabilities
+## Core Features and Endpoints
 
-#### Itinerary Optimization
-- **Status**: Implemented
-- **Endpoint**: `/api/ai/optimize-itinerary`
-- **Features**: Analyzes trip itineraries and provides optimization suggestions based on travel style preferences, user interests, geographic efficiency, and time management.
-- **Integration**: Connected to trip management system and activity database.
+### Authentication System
 
-#### Activity Recommendations
-- **Status**: Implemented
-- **Endpoint**: `/api/ai/suggest-activities`
-- **Features**: Suggests relevant activities and attractions based on destination city, user interests, trip duration, and activity types.
+**Key Files:**
+- `server/src/auth/services/auth.service.ts` - Main authentication service
+- `server/src/auth/interfaces/user.interface.ts` - User interface definitions
+- `client/src/services/api/userService.ts` - Frontend authentication service
 
-#### Food & Restaurant Recommendations
-- **Status**: Implemented
-- **Endpoint**: `/api/ai/suggest-food`
-- **Features**: Provides personalized dining suggestions with location-specific restaurant recommendations, cuisine type filtering, budget range options, and signature dishes.
+**Endpoints:**
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/refresh` - Refresh JWT token
+- `GET /api/auth/me` - Get current user information
 
-#### Day Summarization
-- **Status**: Implemented
-- **Endpoint**: `/api/ai/summarize-day`
-- **Features**: Generates concise, professional summaries of daily itineraries, highlighting key experiences and creating engaging narratives.
+### AI Services
 
-#### Content Translation
-- **Status**: Implemented
-- **Endpoint**: `/api/ai/translate-content`
-- **Features**: Translates trip content to different languages while maintaining tone and context.
+**Key Files:**
+- `server/src/ai/services/ai.service.ts` - Main AI service
+- `server/src/ai/controllers/ai.controller.ts` - AI endpoints
 
-### Booking Management
+**Endpoints:**
+- `/api/ai/optimize-itinerary` - Optimize existing itineraries
+- `/api/ai/suggest-activities` - Get activity recommendations
+- `/api/ai/suggest-food` - Get restaurant recommendations
+- `/api/ai/summarize-day` - Generate daily summaries
+- `/api/ai/translate-content` - Translate itinerary content
 
-#### Flight Booking
-- **Status**: Implemented
-- **Endpoints**: 
-  - `/api/trips/:tripId/bookings`
-  - `/api/bookings/:bookingId`
-  - `/api/flights/search`
-- **Integration**: Duffel API for flight search and booking
-- **Features**: Multi-passenger booking, cancellation management, booking status tracking
+### Trip Management
 
-#### Hotel Booking
-- **Status**: Implemented
-- **Endpoints**: 
-  - `/api/trips/:tripId/bookings`
-  - `/api/bookings/:bookingId`
-  - `/api/hotels/search`
-- **Integration**: Duffel API for hotel search and booking
+**Key Files:**
+- `server/src/trips/services/trips.service.ts` - Trip management service
+- `server/src/trips/controllers/trips.controller.ts` - Trip endpoints
 
-### Subscription & Billing
+**Endpoints:**
+- `GET /api/trips` - List all trips
+- `POST /api/trips` - Create a new trip
+- `GET /api/trips/:id` - Get trip details
+- `PUT /api/trips/:id` - Update trip
+- `DELETE /api/trips/:id` - Delete trip
 
-#### Stripe Integration
-- **Status**: Implemented
-- **Endpoints**: 
-  - `/api/billing`
-  - `/api/payments`
-  - `/api/stripe`
-- **Features**: Subscription management, payment processing, invoicing
+### External API Integrations
 
-#### Organization Plans
-- **Status**: Implemented
-- **Plans**: Free, Team, Enterprise
-- **Features**: Plan-specific feature access, user limits, and capabilities
+#### Google Maps/Places API
+- Used for location data, maps rendering, and place information
+- Integration files in `server/src/integrations/google`
 
-### Multi-tenancy & Access Control
+#### Duffel API
+- Used for flight and hotel booking
+- Integration files in `server/src/integrations/duffel`
 
-#### Organization Management
-- **Status**: Implemented
-- **Endpoints**: `/api/organizations`
-- **Features**: Organization creation, member management, settings
+#### OpenAI API
+- Used for AI-powered recommendations and content generation
+- Integration files in `server/src/ai/services`
 
-#### Role-Based Access Control
-- **Status**: Implemented
-- **Roles**: Owner, Admin, Member, Viewer
-- **Features**: Permission-based access to features and data
+#### Stripe API
+- Used for payment processing and subscription management
+- Integration files in `server/src/payments`
 
-### White-labeling & Branding
+## Database Schema
 
-#### Custom Domain Support
-- **Status**: Implemented
-- **Endpoints**: `/api/custom-domains`
-- **Features**: Domain verification, SSL management, DNS configuration
+Key tables and relationships:
+- `users` - User accounts
+- `organizations` - Business organizations
+- `trips` - Travel itineraries
+- `activities` - Trip activities
+- `bookings` - Flight and hotel bookings
+- `subscriptions` - Organization subscription plans
 
-#### Branding Customization
-- **Status**: Implemented
-- **Features**: Logo, colors, typography, email templates
+## Common Issues and Troubleshooting
 
-### Export & Integration
+### Authentication Issues
 
-#### PDF Export
-- **Status**: Implemented
-- **Features**: Itinerary export to PDF with customizable templates
+**Problem**: JWT token validation failures
+**Solution**: Check token expiration and refresh logic in `auth.service.ts`
 
-#### Calendar Integration
-- **Status**: Implemented
-- **Endpoints**: `/api/calendar`
-- **Features**: Google Calendar export and synchronization
+**Problem**: User session persistence issues
+**Solution**: Verify localStorage/sessionStorage handling in `client/src/contexts/AuthContext.tsx`
 
-## Architectural Issues & Recommendations
+### API Integration Issues
 
-### Identified Issues
+**Problem**: External API rate limiting
+**Solution**: Implement proper request throttling and caching in API service files
 
-1. **Redundant Files**:
-   - `server/routes/analytics-broken.ts` - Not referenced anywhere in the codebase
-   - `server/routes/bookings-broken.ts` - Not referenced anywhere in the codebase
-   - `tests/test-ai-location.js` and `tests/test-ai-location.mjs` - Duplicate files
+**Problem**: API key management
+**Solution**: Check environment variables and secure storage in `.env` files
 
-2. **Domain Management Inconsistency**:
-   - `domains.ts` and `customDomains.ts` have overlapping functionality
-   - `customDomains.ts` is currently active but `domains.ts` has more comprehensive features
+### Performance Issues
 
-3. **Schema Migration Issues**:
-   - Several tables in `shared/schema.ts` need to be migrated to `server/db/schema.ts`
-   - Inconsistent use of UUID vs. serial IDs across tables
+**Problem**: Slow itinerary loading
+**Solution**: Optimize database queries in trip service, implement pagination
 
-4. **Unused Functions**:
-   - `prepareV2Routes` in `server/routes/v1/index.ts`
-   - `setupLegacyRedirects` in `server/routes/v1/index.ts`
+**Problem**: Frontend rendering performance
+**Solution**: Check React component re-rendering, implement memoization and virtualization for large lists
 
-### Recommendations
+## Development Workflow
 
-1. **Code Cleanup**:
-   - Remove identified dead code and unused files
-   - Consolidate domain management functionality into a single module
-   - Standardize on ESM modules for test files
+### Adding New Features
 
-2. **Schema Standardization**:
-   - Complete migration of remaining tables to `server/db/schema.ts`
-   - Standardize on UUID for all ID fields
-   - Ensure consistent naming conventions (camelCase in frontend, snake_case in DB)
+1. Create feature branch from `main`
+2. Implement backend endpoints in appropriate module
+3. Create corresponding frontend services and components
+4. Write tests for new functionality
+5. Submit PR for review
 
-3. **API Consistency**:
-   - Implement consistent error handling across all endpoints
-   - Standardize response formats for all API endpoints
-   - Add comprehensive input validation using Zod schemas
+### Debugging Tips
 
-4. **Performance Optimization**:
-   - Implement caching for frequently accessed data
-   - Optimize database queries with proper indexing
-   - Add pagination for large data sets
+- Use server logs in `server/logs` directory
+- Check browser console for frontend errors
+- Verify network requests in browser developer tools
+- Use TypeScript type checking to catch errors early
 
-5. **Security Enhancements**:
-   - Implement rate limiting for all API endpoints
-   - Add comprehensive input sanitization
-   - Enhance JWT security with proper expiration and refresh mechanisms
+## Deployment
 
-## Testing & Quality Assurance
+- Frontend deployed to Vercel
+- Backend deployed to Railway
+- Database hosted on managed PostgreSQL provider
+- CI/CD via GitHub Actions
 
-### Test Coverage
-- Unit tests implemented for core functionality
-- Integration tests for API endpoints
-- End-to-end tests for critical user flows
+## Security Considerations
 
-### Quality Metrics
-- TypeScript strict mode enabled
-- ESLint configuration for code quality
-- Jest for test automation
+- JWT tokens should be stored securely
+- API keys should never be exposed in frontend code
+- Input validation should be performed on all endpoints
+- Rate limiting should be implemented for public endpoints
 
-## Deployment & DevOps
+## AI Agent Tasks
 
-### Deployment Options
-- Vercel configuration for frontend deployment
-- Railway.json for backend deployment
-- Docker support for containerized deployment
+As an AI agent, you may be asked to:
 
-### CI/CD
-- GitHub Actions workflows for continuous integration
-- Automated testing on pull requests
-- Deployment automation
+1. Debug authentication flows
+2. Optimize AI recommendation algorithms
+3. Improve database queries and schema
+4. Enhance external API integrations
+5. Fix UI/UX issues in the React frontend
+6. Implement new features across the stack
+7. Optimize performance bottlenecks
 
-## Mobile Support
+When working on these tasks, always consider:
+- The B2B SaaS nature of the application
+- Integration with external travel APIs
+- Security of user and organization data
+- Performance implications of changes
+- TypeScript type safety across the codebase
 
-### Capacitor Integration
-- Android and iOS app configurations
-- Native device feature access
-- Responsive UI adaptations
+## Recommended Approach for Code Changes
 
-## Future Enhancements
-
-1. **AI Capabilities**:
-   - Real-time natural disaster monitoring and rerouting
-   - Predictive budget forecasting with machine learning
-   - Group preference reconciliation for multi-traveler trips
-
-2. **Booking Enhancements**:
-   - Expanded booking provider integrations
-   - Advanced carbon offset purchase integration
-   - Loyalty program integration
-
-3. **Collaboration Features**:
-   - Real-time collaborative editing of itineraries
-   - In-app messaging and notifications
-   - Team activity dashboard
-
-4. **Mobile Experience**:
-   - Offline mode for mobile apps
-   - Push notifications for trip updates
-   - Location-based recommendations
-
-5. **Enterprise Features**:
-   - Advanced analytics and reporting
-   - Custom workflow automation
-   - SSO integration for enterprise customers
-
-## Conclusion
-
-NestMap is a comprehensive, enterprise-ready travel planning platform with strong AI integration, booking capabilities, and collaboration features. The platform demonstrates good architectural decisions with a modern tech stack, but requires some cleanup of redundant code and standardization of database schema.
-
-With the recommended improvements, NestMap will be well-positioned as a scalable, maintainable, and feature-rich solution for travel agencies and enterprise clients.
+1. Understand the issue or feature request thoroughly
+2. Locate relevant files using codebase search
+3. Review existing implementation patterns
+4. Make minimal, focused changes that follow existing patterns
+5. Ensure type safety with TypeScript
+6. Test changes thoroughly before submitting
+7. Document any API changes or new dependencies
