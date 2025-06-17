@@ -1,7 +1,10 @@
+import React from 'react';
+import { Link } from 'wouter';
 import { NavigationLink } from './NavigationLink';
 import { NotificationsMenu } from './NotificationsMenu';
 import { UserMenu } from './UserMenu';
 import { DesktopNavigationProps } from './types';
+import { UserIcon, CogIcon, LogoutIcon } from '../icons';
 
 export const DesktopNavigation: React.FC<DesktopNavigationProps> = ({
   isAuthenticated,
@@ -61,6 +64,7 @@ export const DesktopNavigation: React.FC<DesktopNavigationProps> = ({
               notifications={notifications}
               onNotificationClick={onNotificationClick}
               onMarkAllAsRead={onMarkAllAsRead}
+              onNotificationsClick={onNotificationsClick}
             />
 
             <UserMenu
@@ -69,6 +73,7 @@ export const DesktopNavigation: React.FC<DesktopNavigationProps> = ({
               user={user}
               onSignOut={onSignOut}
               items={userMenuItems}
+              onProfileClick={onProfileClick}
             />
           </>
         )}

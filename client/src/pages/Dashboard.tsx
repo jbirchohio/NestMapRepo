@@ -33,11 +33,11 @@ export default function Dashboard() {
     sortDirection: 'asc' as const
   });
 
-  const { 
-    data: analyticsData, 
-    isLoading: isLoadingAnalytics, 
-    error: analyticsError 
-  } = useAnalytics({ isCorporate });
+  const {
+    data: analyticsData,
+    isLoading: isLoadingAnalytics,
+    error: analyticsError
+  } = useAnalytics();
 
   const isLoading = isLoadingTrips || isLoadingAnalytics;
   const error = tripsError || analyticsError;
@@ -173,7 +173,7 @@ export default function Dashboard() {
                     {upcomingTrips.map((trip: TripDTO) => (
                       <li key={trip.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div>
-                          <Link to={`/trips/${trip.id}`} className="font-semibold text-blue-600 hover:underline">
+                          <Link href={`/trips/${trip.id}`} className="font-semibold text-blue-600 hover:underline">
                             {trip.name}
                           </Link>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{trip.destination}</p>

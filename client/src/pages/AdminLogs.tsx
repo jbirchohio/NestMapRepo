@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -55,9 +55,9 @@ export default function AdminLogs() {
     isFetchingNextPage,
     isLoading,
     refetch
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<LogsResponse>({
     queryKey: ['/api/admin/logs', filterAction, searchTerm],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 1 }): Promise<LogsResponse> => {
       const params = new URLSearchParams({
         page: pageParam.toString(),
         limit: '20' // Smaller page size for smoother scrolling
@@ -72,9 +72,9 @@ export default function AdminLogs() {
       }
 
       const response = await apiRequest('GET', `/api/admin/logs?${params.toString()}`);
-      return response.json();
+      return (await response.json()) as LogsResponse;
     },
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: (lastPage: LogsResponse) => {
       // Return undefined when there are no more pages
       if (lastPage.pagination.page >= lastPage.pagination.pages) {
         return undefined;
@@ -119,7 +119,7 @@ export default function AdminLogs() {
     return actionType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const handleExport = async () => {
+  const handleExport = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         export: 'true',
@@ -141,7 +141,7 @@ export default function AdminLogs() {
     } catch (error) {
       console.error('Export failed:', error);
     }
-  };
+  }, [filterAction, searchTerm]);
 
   return (
     <div className="min-h-screen bg-soft-100 dark:bg-navy-900">
@@ -261,7 +261,7 @@ export default function AdminLogs() {
                       loadMore={fetchNextPage}
                       hasMore={!!hasNextPage}
                       isLoading={isFetchingNextPage}
-                      loadingIndicator={
+                      loadingMessage={
                         <div className="flex justify-center items-center py-4">
                           <RefreshCw className="w-5 h-5 animate-spin text-electric-600 mr-2" />
                           <span className="text-sm text-muted-foreground">Loading more logs...</span>
