@@ -53,9 +53,9 @@ export class ApiError extends Error {
   /**
    * Create an ApiError from an AxiosError
    */
-  static fromAxiosError(error: AxiosError<ApiErrorResponse>, config?: RequestConfig): ApiError {
+  static fromAxiosError(error: AxiosError<ApiErrorResponse>): ApiError {
     const response = error.response;
-    const responseData = response?.data || {};
+    const responseData = (response?.data || {}) as Partial<ApiErrorResponse>;
     
     return new ApiError(
       responseData.message || error.message,

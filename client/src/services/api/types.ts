@@ -16,8 +16,14 @@ export interface RequestConfig<D = any> extends Omit<AxiosRequestConfig<D>, 'can
   cacheTTL?: number;
   /** Enable request deduplication (default: true) */
   dedupe?: boolean;
-  /** Cancel token or boolean to auto-generate one */
-  cancelToken?: CancelToken | boolean;
+  /** Abort controller signal for request cancellation */
+  signal?: AbortSignal;
+  /** Unique ID for request cancellation */
+  requestId?: string;
+  /** Number of retry attempts */
+  retry?: number;
+  /** Delay in milliseconds between retries */
+  retryDelay?: number;
 }
 
 /**

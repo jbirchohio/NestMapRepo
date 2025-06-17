@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -104,20 +103,25 @@ export default function AdminRoles() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: roles = mockRoles, isLoading } = useQuery({
+  const { data: roles = mockRoles, isLoading } = useQuery<Role[]>({
     queryKey: ['/api/admin/roles'],
-    queryFn: () => mockRoles // Replace with actual API call
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/roles');
+      return (response as Role[]) || mockRoles;
+    }
   });
 
-  const { data: permissions = mockPermissions } = useQuery({
+  const { data: permissions = mockPermissions } = useQuery<Permission[]>({
     queryKey: ['/api/admin/permissions'],
-    queryFn: () => mockPermissions // Replace with actual API call
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/permissions');
+      return (response as Permission[]) || mockPermissions;
+    }
   });
 
   const createRoleMutation = useMutation({
-    mutationFn: (roleData: Partial<Role>) => {
-      // Replace with actual API call
-      return Promise.resolve({ ...roleData, id: `role_${Date.now()}` });
+    mutationFn: async (roleData: Partial<Role>) => {
+      return (await apiRequest('POST', '/api/admin/roles', roleData)) as Role;
     },
     onSuccess: () => {
       toast({ title: "Role created successfully" });
@@ -128,9 +132,8 @@ export default function AdminRoles() {
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: ({ id, ...roleData }: Partial<Role> & { id: string }) => {
-      // Replace with actual API call
-      return Promise.resolve({ id, ...roleData });
+    mutationFn: async ({ id, ...roleData }: Partial<Role> & { id: string }) => {
+      return (await apiRequest('PUT', `/api/admin/roles/${id}`, roleData)) as Role;
     },
     onSuccess: () => {
       toast({ title: "Role updated successfully" });
@@ -140,9 +143,8 @@ export default function AdminRoles() {
   });
 
   const deleteRoleMutation = useMutation({
-    mutationFn: (roleId: string) => {
-      // Replace with actual API call
-      return Promise.resolve();
+    mutationFn: async (roleId: string) => {
+      await apiRequest('DELETE', `/api/admin/roles/${roleId}`);
     },
     onSuccess: () => {
       toast({ title: "Role deleted successfully" });
@@ -243,12 +245,17 @@ export default function AdminRoles() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-electric-100 dark:bg-electric-900/20 rounded-lg">
-                        <Shield className="w-5 h-5 text-electric-600" />
+                        {role.isSystemRole ? (
+                          <Shield className="w-5 h-5 text-electric-600" />
+                        ) : (
+                          <User className="w-5 h-5 text-electric-600" />
+                        )}
                       </div>
                       <div>
                         <CardTitle className="text-lg">{role.name}</CardTitle>
                         {role.isSystemRole && (
-                          <Badge variant="secondary" className="mt-1">
+                          <Badge variant="secondary" className="mt-1 flex items-center gap-1">
+                            <Lock className="w-3 h-3" />
                             System Role
                           </Badge>
                         )}
@@ -293,7 +300,10 @@ export default function AdminRoles() {
                     </div>
                     
                     <div>
-                      <span className="text-sm font-medium mb-2 block">Permissions</span>
+                      <span className="text-sm font-medium mb-2 flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        Permissions
+                      </span>
                       <div className="flex flex-wrap gap-1">
                         {role.permissions.slice(0, 3).map(permissionId => {
                           const permission = permissions.find(p => p.id === permissionId);
@@ -321,7 +331,12 @@ export default function AdminRoles() {
         <Dialog open={!!selectedRole} onOpenChange={() => setSelectedRole(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Edit Role: {selectedRole?.name}</DialogTitle>
+              <DialogTitle>
+                <span className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Edit Role: {selectedRole?.name}
+                </span>
+              </DialogTitle>
             </DialogHeader>
             {selectedRole && (
               <RoleEditor 

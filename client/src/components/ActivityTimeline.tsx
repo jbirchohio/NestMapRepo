@@ -7,7 +7,7 @@ import ActivityModal from "./ActivityModal";
 interface ActivityTimelineProps {
   activities: ClientActivity[];
   date: Date;
-  tripId: number;
+  tripId: string;
   onActivityUpdated: () => void;
 }
 
@@ -18,10 +18,10 @@ export default function ActivityTimeline({
   onActivityUpdated 
 }: ActivityTimelineProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<ClientActivity | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<ClientActivity | undefined>(undefined);
   
   const handleAddActivity = () => {
-    setSelectedActivity(null);
+    setSelectedActivity(undefined);
     setIsModalOpen(true);
   };
   
@@ -32,7 +32,7 @@ export default function ActivityTimeline({
   
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setSelectedActivity(null);
+    setSelectedActivity(undefined);
   };
   
   const handleActivitySaved = () => {
@@ -41,7 +41,7 @@ export default function ActivityTimeline({
   };
   
   // Handle toggling activity completion status
-  const handleToggleComplete = (activityId: number, completed: boolean) => {
+  const handleToggleComplete = (activityId: string, completed: boolean) => {
     console.log(`Toggling activity ${activityId} completion to ${completed}`);
     // The API request is handled in the ActivityItem component
     // We just need to refresh the list when completed
@@ -50,7 +50,9 @@ export default function ActivityTimeline({
   
   // Sort activities by time
   const sortedActivities = [...activities].sort((a, b) => {
-    return a.time.localeCompare(b.time);
+    const timeA = a.time ?? '';
+    const timeB = b.time ?? '';
+    return timeA.localeCompare(timeB);
   });
   
   return (

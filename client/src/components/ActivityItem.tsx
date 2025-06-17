@@ -10,7 +10,7 @@ interface ActivityItemProps {
   activity: ClientActivity;
   onClick: (activity: ClientActivity) => void;
   onDelete?: () => void;
-  onToggleComplete?: (activityId: number, completed: boolean) => void;
+  onToggleComplete?: (activityId: string, completed: boolean) => void;
 }
 
 export default function ActivityItem({ activity, onClick, onDelete, onToggleComplete }: ActivityItemProps) {
@@ -43,36 +43,6 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
     },
   });
   
-  // Toggle activity completion
-  const toggleCompleteMutation = useMutation({
-    mutationFn: async (completed: boolean) => {
-      return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}/toggle-complete`, {
-        completed: completed
-      });
-    },
-    onSuccess: (_, completed) => {
-      // Invalidate activities query to refresh the list
-      queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] });
-      
-      toast({
-        title: completed ? "Activity Completed" : "Activity Marked Incomplete",
-        description: completed 
-          ? "The activity has been marked as completed and will be hidden from the map." 
-          : "The activity has been marked as incomplete and will appear on the map.",
-      });
-      
-      // Call parent component's onToggleComplete if provided
-      if (onToggleComplete) onToggleComplete(activity.id, completed);
-    },
-    onError: (error) => {
-      console.error("Error updating activity completion status:", error);
-      toast({
-        title: "Error",
-        description: "Could not update the activity status. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Convert 24-hour time to 12-hour format
   const formatTime = (time: string) => {
@@ -85,10 +55,6 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
   };
 
   // Handle completion toggle
-  const handleToggleComplete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the activity click
-    toggleCompleteMutation.mutate(!activity.completed);
-  };
 
   // Handle delete action
   const handleDelete = (e: React.MouseEvent) => {
@@ -143,9 +109,9 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
         `}
       >
         {/* Time header */}
-        <div className="bg-[hsl(var(--primary))] text-white p-2 text-center font-medium">
-          {formatTime(activity.time)}
-        </div>
+          <div className="bg-[hsl(var(--primary))] text-white p-2 text-center font-medium">
+            {formatTime(activity.time ?? '')}
+          </div>
         
         <div className="p-3 pt-6 relative">
           {/* Auto-completion status indicator - read-only */}

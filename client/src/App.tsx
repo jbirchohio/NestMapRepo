@@ -1,17 +1,9 @@
-import * as React from 'react';
-import { 
-  Suspense, 
-  useEffect, 
-  lazy, 
-  ComponentType, 
-  LazyExoticComponent 
-} from 'react';
+import { Suspense, useEffect } from 'react';
 import { 
   BrowserRouter as Router, 
   Routes, 
   Route, 
-  useLocation, 
-  useNavigate 
+  useLocation
 } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -38,7 +30,6 @@ import {
   notFoundRoute 
 } from '@/config/routes';
 
-type LazyComponent = LazyExoticComponent<ComponentType<unknown>>;
 
 // Create a client
 const queryClient = new QueryClient({
@@ -62,22 +53,17 @@ const PageLoading = () => (
 const PublicRoutes = () => (
   <MainLayout hideNav hideFooter>
     <Routes>
-      {publicRoutes.map((route) => {
-        const Element = route.element as LazyComponent;
-        return (
-          <Route
-            key={route.path as string}
-            path={route.path}
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<PageLoading />}>
-                  <Element />
-                </Suspense>
-              </ErrorBoundary>
-            }
-          />
-        );
-      })}
+      {publicRoutes.map((route) => (
+        <Route
+          key={route.path as string}
+          path={route.path}
+          element={
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoading />}>{route.element}</Suspense>
+            </ErrorBoundary>
+          }
+        />
+      ))}
     </Routes>
   </MainLayout>
 );
@@ -106,24 +92,18 @@ const SuperadminRoutes = () => (
   </SuperadminRoute>
 );
 
-const NotFound = () => {
-  const Element = notFoundRoute.element as LazyComponent;
-  return (
-    <MainLayout hideNav={false} hideFooter={false}>
-      <ErrorBoundary>
-        <Suspense fallback={<PageLoading />}>
-          <Element />
-        </Suspense>
-      </ErrorBoundary>
-    </MainLayout>
-  );
-};
+const NotFound = () => (
+  <MainLayout hideNav={false} hideFooter={false}>
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoading />}>{notFoundRoute.element}</Suspense>
+    </ErrorBoundary>
+  </MainLayout>
+);
 
 const AppRouter = () => {
   useRoutePreloading();
   const { isLoading } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Scroll to top on route change
