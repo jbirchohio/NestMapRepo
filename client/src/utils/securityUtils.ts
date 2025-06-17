@@ -184,4 +184,12 @@ export class SecurityUtils {
       sessionTimeout: this.sessionSecurity.getSessionTimeoutRemaining()
     };
   }
+
+  public reportSecurityContext(context: SessionDetails): void {
+    try {
+      console.log('Security context report', context);
+    } catch (error) {
+      console.error('Failed to report security context', error);
+    }
+  }
 }

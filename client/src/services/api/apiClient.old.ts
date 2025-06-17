@@ -131,7 +131,7 @@ export class ApiClient {
         try {
           // Start performance monitoring
           const metrics = this.performanceMonitor.startRequest(config);
-          config.metrics = metrics;
+          (config as InternalAxiosRequestConfig & { metrics?: PerformanceMetrics }).metrics = metrics;
 
           // Add security headers
           const securityHeaders = this.securityUtils.getSecurityHeaders(); // Type is inferred
@@ -222,7 +222,7 @@ export class ApiClient {
           }
 
           // Audit security context
-          const securityContext = this.securityUtils.getSecurityContext(error);
+          const securityContext = this.securityUtils.getSecurityContext();
           if (securityContext) {
             this.securityUtils.reportSecurityContext(securityContext);
           }
@@ -241,7 +241,7 @@ export class ApiClient {
 
   private async handleTokenError(error: AxiosError<ApiResponse>): Promise<void> {
     try {
-      await this.tokenManager.handleTokenError(error);
+      this.tokenManager.destroyTokens();
     } catch (error) {
       this.errorLogger.logError(error as Error, {
         type: 'TokenError',

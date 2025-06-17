@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { ClientTrip } from '@/lib/types';
 import { Users, UserPlus, MapPin, Plane, DollarSign, X } from 'lucide-react';
 
 interface ArrivalPreferences {
@@ -80,6 +81,22 @@ interface TripTraveler {
   updated_at?: string;
 }
 
+interface NewTraveler {
+  name: string;
+  email: string;
+  phone: string;
+  dateOfBirth: string;
+  departure_city: string;
+  departure_country: string;
+  travel_class: string;
+  budget_allocation: string;
+  dietary_requirements: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelationship: string;
+  notes: string;
+}
+
 interface TripTeamManagementProps {
   tripId: number;
   userRole: string;
@@ -94,7 +111,7 @@ const TRAVEL_CLASSES = {
 
 export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newTraveler, setNewTraveler] = useState({
+  const [newTraveler, setNewTraveler] = useState<NewTraveler>({
     name: '',
     email: '',
     phone: '',
@@ -119,13 +136,13 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
   });
 
   // Fetch trip details to get destination information
-  const { data: tripData } = useQuery({
+  const { data: tripData } = useQuery<ClientTrip>({
     queryKey: [`/api/trips/${tripId}`],
     enabled: !!tripId
   });
 
   const addTravelerMutation = useMutation({
-    mutationFn: (data: any) =>
+    mutationFn: (data: NewTraveler) =>
       apiRequest("POST", `/api/trips/${tripId}/travelers`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/trips/${tripId}/travelers`] });
@@ -150,7 +167,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         description: "The traveler has been added to the trip.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: "Failed to add team member",
         description: error.message || "Please try again.",
@@ -295,7 +312,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     });
 
     // Create sequential booking workflow data using existing tripData
-    const formatDateForBooking = (date: any): string => {
+    const formatDateForBooking = (date: unknown): string => {
       if (!date) return '';
       if (typeof date === 'string' && date.length > 0) return date;
       if (date instanceof Date) return date.toISOString().split('T')[0];
@@ -572,8 +589,15 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                       {traveler.is_trip_organizer && (
                         <Badge variant="default" className="text-xs">Organizer</Badge>
                       )}
-                      <Badge 
-                        variant={TRAVEL_CLASSES[traveler.travel_class as keyof typeof TRAVEL_CLASSES]?.color as any || 'secondary'} 
+                      <Badge
+                        variant={
+                          TRAVEL_CLASSES[traveler.travel_class as keyof typeof TRAVEL_CLASSES]?.color as
+                            | 'default'
+                            | 'secondary'
+                            | 'destructive'
+                            | 'outline'
+                            | undefined
+                        }
                         className="text-xs"
                       >
                         {TRAVEL_CLASSES[traveler.travel_class as keyof typeof TRAVEL_CLASSES]?.label || traveler.travel_class}
