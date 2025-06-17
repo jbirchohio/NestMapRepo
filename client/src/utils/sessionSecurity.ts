@@ -1,6 +1,6 @@
 import { TokenManager } from './tokenManager';
 import { SecureCookie } from './SecureCookie';
-import { handleError } from './errorHandler';
+import { handleError, SessionError } from './errorHandler';
 
 interface SessionState {
   sessionId: string;
@@ -190,6 +190,17 @@ export class SessionSecurity {
       this.storeSession();
       this.startSessionRefresh();
     }
+  }
+
+  public async handleSessionError(error: unknown): Promise<void> {
+    const err = error instanceof Error ? error : new SessionError(String(error));
+    handleError(err);
+    try {
+      TokenManager.getInstance().destroyTokens();
+    } catch (tmError) {
+      console.error('TokenManager not initialized', tmError);
+    }
+    this.destroySession();
   }
 
   public clearSession(): void {

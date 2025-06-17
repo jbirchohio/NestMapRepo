@@ -404,17 +404,17 @@ export default function BookingWorkflow() {
         <Progress value={getProgress()} className="h-2" />
         
         <div className="flex justify-between mt-4 text-sm">
-          <span className={currentStep === 'client-info' ? 'text-blue-600 font-medium' : 'text-gray-500'}>
-            Trip Details
+          <span className={currentStep === 'client-info' ? 'text-blue-600 font-medium flex items-center gap-1' : 'text-gray-500 flex items-center gap-1'}>
+            <MapPin className="w-4 h-4" /> Trip Details
           </span>
-          <span className={currentStep === 'flights' ? 'text-blue-600 font-medium' : 'text-gray-500'}>
-            Select Flights
+          <span className={currentStep === 'flights' ? 'text-blue-600 font-medium flex items-center gap-1' : 'text-gray-500 flex items-center gap-1'}>
+            <Plane className="w-4 h-4" /> Select Flights
           </span>
-          <span className={currentStep === 'hotels' ? 'text-blue-600 font-medium' : 'text-gray-500'}>
-            Choose Hotel
+          <span className={currentStep === 'hotels' ? 'text-blue-600 font-medium flex items-center gap-1' : 'text-gray-500 flex items-center gap-1'}>
+            <Hotel className="w-4 h-4" /> Choose Hotel
           </span>
-          <span className={currentStep === 'confirmation' ? 'text-blue-600 font-medium' : 'text-gray-500'}>
-            Confirmation
+          <span className={currentStep === 'confirmation' ? 'text-blue-600 font-medium flex items-center gap-1' : 'text-gray-500 flex items-center gap-1'}>
+            <Briefcase className="w-4 h-4" /> Confirmation
           </span>
         </div>
       </div>
@@ -430,6 +430,7 @@ export default function BookingWorkflow() {
               formData={formData}
               setFormData={setFormData}
               onSubmit={handleClientInfoSubmit}
+              isSearching={isSearching}
             />
           </CardContent>
         </Card>
@@ -503,7 +504,8 @@ export default function BookingWorkflow() {
                     <span className="text-gray-600">Route:</span>
                     <span className="ml-2 font-medium">{clientInfo.origin} → {clientInfo.destination}</span>
                   </div>
-                  <div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4 text-gray-600" />
                     <span className="text-gray-600">Dates:</span>
                     <span className="ml-2 font-medium">
                       {formatTripDate(clientInfo.departureDate)}
@@ -511,7 +513,9 @@ export default function BookingWorkflow() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Travelers:</span>
+                    <span className="text-gray-600 flex items-center gap-1">
+                      <Users className="w-4 h-4" /> Travelers:
+                    </span>
                     <span className="ml-2 font-medium">{clientInfo.passengers}</span>
                   </div>
                   <div>
@@ -534,6 +538,10 @@ export default function BookingWorkflow() {
                           <span>Departure: {booking.departureFlight.airline} {booking.departureFlight.flightNumber}</span>
                           <span className="font-medium">${booking.departureFlight.price.amount}</span>
                         </div>
+                        <div className="flex items-center text-muted-foreground gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDuration(booking.departureFlight.duration)}
+                        </div>
                       </div>
                     )}
                     
@@ -542,6 +550,10 @@ export default function BookingWorkflow() {
                         <div className="flex justify-between">
                           <span>Return: {booking.returnFlight.airline} {booking.returnFlight.flightNumber}</span>
                           <span className="font-medium">${booking.returnFlight.price.amount}</span>
+                        </div>
+                        <div className="flex items-center text-muted-foreground gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDuration(booking.returnFlight.duration)}
                         </div>
                       </div>
                     )}
@@ -558,18 +570,23 @@ export default function BookingWorkflow() {
                       <div className="font-medium">{selectedHotel.name}</div>
                       <div className="text-sm text-gray-600">{selectedHotel.address}</div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-medium">${selectedHotel.price.amount}</div>
-                      <div className="text-sm text-gray-500">per night</div>
+                  <div className="text-right">
+                    <div className="font-medium">${selectedHotel.price.amount}</div>
+                    <div className="text-sm text-gray-500 flex items-center gap-1">
+                      <Star className="w-3 h-3 text-yellow-500" />
+                      {selectedHotel.rating}
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
               {/* Total Cost */}
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium">Total Trip Cost</span>
+                  <span className="text-lg font-medium flex items-center gap-1">
+                    <DollarSign className="w-4 h-4" /> Total Trip Cost
+                  </span>
                   <span className="text-2xl font-bold text-blue-600">
                     ${calculateTotalCost()}
                   </span>
@@ -585,12 +602,13 @@ export default function BookingWorkflow() {
                   <ChevronLeft className="w-4 h-4 mr-2" />
                   Back to Hotels
                 </Button>
-                <Button 
+                <Button
                   onClick={handleCreateTrip}
                   disabled={isBooking}
                   size="lg"
                 >
                   {isBooking ? 'Creating Trip...' : 'Create Complete Trip'}
+                  <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
             </div>

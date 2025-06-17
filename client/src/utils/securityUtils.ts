@@ -1,24 +1,20 @@
 import { handleError } from './errorHandler';
 import { TokenManager } from './tokenManager';
 import { SessionSecurity } from './sessionSecurity';
-import { SecurityContext, SecurityHeaders, SanitizedError, SessionDetails } from './types';
-import { TokenError, CSRFError, SessionError, AccountLockoutError, ValidationError } from './errors';
-import { AxiosRequestConfig } from 'axios';
-
-interface SecurityHeaders {
-  'Content-Security-Policy': string;
-  'X-Content-Type-Options': string;
-  'X-Frame-Options': string;
-  'X-XSS-Protection': string;
-  'Referrer-Policy': string;
-  'Strict-Transport-Security': string;
-}
-
-interface SanitizedError {
-  message: string;
-  code: string;
-  type: string;
-}
+import {
+  SecurityContext,
+  SecurityHeaders,
+  SanitizedError,
+  SessionDetails
+} from './types';
+import {
+  TokenError,
+  CSRFError,
+  SessionError,
+  AccountLockoutError,
+  ValidationError
+} from './errors';
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export class SecurityUtils {
   private static instance: SecurityUtils;
@@ -89,15 +85,17 @@ export class SecurityUtils {
       .replace(/[\u007F-\u009F]/g, '');
   }
 
-  public sanitizeError(error: Error): Error {
-    const sanitizedError = new Error('An error occurred');
-    sanitizedError.name = 'Error';
-    return sanitizedError;
+  public sanitizeError(error: Error): SanitizedError {
+    return {
+      message: 'An error occurred',
+      code: (error as any).code || 'UNKNOWN',
+      type: error.name || 'Error'
+    };
   }
 
   public sanitizeResponse<T>(response: AxiosResponse<T>): AxiosResponse<T> {
-    if (response.data) {
-      response.data = this.sanitizeOutput(JSON.stringify(response.data));
+    if (response.data && typeof response.data === 'string') {
+      response.data = this.sanitizeOutput(response.data) as unknown as T;
     }
     return response;
   }
@@ -132,6 +130,28 @@ export class SecurityUtils {
       console.error('Request validation failed:', error);
       return false;
     }
+  }
+
+  public async performSecurityAudit(): Promise<{ success: boolean; details: string[] }> {
+    const details: string[] = [];
+
+    // Validate session and token
+    if (!this.sessionSecurity.isSessionValid()) {
+      details.push('Invalid session');
+    }
+    if (!this.tokenManager.hasValidToken()) {
+      details.push('Invalid token');
+    }
+
+    // Validate security headers
+    const headers = this.getSecurityHeaders();
+    Object.entries(headers).forEach(([header, value]) => {
+      if (!value) {
+        details.push(`Missing header: ${header}`);
+      }
+    });
+
+    return { success: details.length === 0, details };
   }
   public auditSecurity(): void {
     // Check security headers

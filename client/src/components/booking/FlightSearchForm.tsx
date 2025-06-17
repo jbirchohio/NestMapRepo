@@ -1,3 +1,4 @@
+import React from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,45 +7,74 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 
-interface FlightSearchFormProps {
+interface FlightSearchData {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate: string;
   tripType: 'one-way' | 'round-trip';
-  dateRange: { from: Date | undefined; to: Date | undefined };
-  onTripTypeChange: (type: 'one-way' | 'round-trip') => void;
-  onDateRangeChange: (range: { from: Date | undefined; to: Date | undefined }) => void;
+  passengers: number;
+  cabin: 'economy' | 'premium-economy' | 'business' | 'first';
+}
+
+interface FlightSearchFormProps {
+  formData: FlightSearchData;
+  setFormData: React.Dispatch<React.SetStateAction<FlightSearchData>>;
   onSubmit: (e: React.FormEvent) => void;
   isSearching: boolean;
 }
 
 export function FlightSearchForm({
-  tripType,
-  dateRange,
-  onTripTypeChange,
-  onDateRangeChange,
+  formData,
+  setFormData,
   onSubmit,
   isSearching,
 }: FlightSearchFormProps) {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'passengers' ? Number(value) : value
+    }));
+  };
+
+  const handleTripTypeChange = (type: 'one-way' | 'round-trip') => {
+    setFormData((prev) => ({ ...prev, tripType: type }));
+  };
+
+  const handleDateChange = (
+    key: 'departureDate' | 'returnDate',
+    date: Date | undefined
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [key]: date ? date.toISOString().slice(0, 10) : ''
+    }));
+  };
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="flex space-x-2 mb-4">
         <button
           type="button"
           className={`px-4 py-2 rounded-md ${
-            tripType === 'round-trip' 
+            formData.tripType === 'round-trip'
               ? 'bg-blue-600 text-white' 
               : 'bg-gray-200 dark:bg-gray-700'
           }`}
-          onClick={() => onTripTypeChange('round-trip')}
+          onClick={() => handleTripTypeChange('round-trip')}
         >
           Round Trip
         </button>
         <button
           type="button"
           className={`px-4 py-2 rounded-md ${
-            tripType === 'one-way' 
+            formData.tripType === 'one-way'
               ? 'bg-blue-600 text-white' 
               : 'bg-gray-200 dark:bg-gray-700'
           }`}
-          onClick={() => onTripTypeChange('one-way')}
+          onClick={() => handleTripTypeChange('one-way')}
         >
           One Way
         </button>
@@ -57,6 +87,8 @@ export function FlightSearchForm({
             id="origin"
             name="origin"
             placeholder="City or airport"
+            value={formData.origin}
+            onChange={handleInputChange}
             required
           />
         </div>
@@ -66,6 +98,8 @@ export function FlightSearchForm({
             id="destination"
             name="destination"
             placeholder="City or airport"
+            value={formData.destination}
+            onChange={handleInputChange}
             required
           />
         </div>
@@ -81,8 +115,8 @@ export function FlightSearchForm({
                 className="w-full justify-start text-left font-normal"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  format(dateRange.from, 'PPP')
+                {formData.departureDate ? (
+                  format(new Date(formData.departureDate), 'PPP')
                 ) : (
                   <span>Pick a date</span>
                 )}
@@ -91,15 +125,15 @@ export function FlightSearchForm({
             <PopoverContent className="w-auto p-0">
               <Calendar
                 mode="single"
-                selected={dateRange?.from}
-                onSelect={(date) => onDateRangeChange({ ...dateRange, from: date || undefined })}
+                selected={formData.departureDate ? new Date(formData.departureDate) : undefined}
+                onSelect={(date) => handleDateChange('departureDate', date || undefined)}
                 initialFocus
               />
             </PopoverContent>
           </Popover>
         </div>
 
-        {tripType === 'round-trip' && (
+        {formData.tripType === 'round-trip' && (
           <div className="space-y-2">
             <Label>Return Date</Label>
             <Popover>
@@ -107,11 +141,11 @@ export function FlightSearchForm({
                 <Button
                   variant="outline"
                   className="w-full justify-start text-left font-normal"
-                  disabled={!dateRange.from}
+                  disabled={!formData.departureDate}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange?.to ? (
-                    format(dateRange.to, 'PPP')
+                  {formData.returnDate ? (
+                    format(new Date(formData.returnDate), 'PPP')
                   ) : (
                     <span>Pick a date</span>
                   )}
@@ -120,11 +154,12 @@ export function FlightSearchForm({
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={dateRange?.to}
-                  onSelect={(date) => onDateRangeChange({ ...dateRange, to: date || undefined })}
+                  selected={formData.returnDate ? new Date(formData.returnDate) : undefined}
+                  onSelect={(date) => handleDateChange('returnDate', date || undefined)}
                   initialFocus
                   disabled={(date) =>
-                    date < (dateRange?.from || new Date()) || date < new Date()
+                    date < (formData.departureDate ? new Date(formData.departureDate) : new Date()) ||
+                    date < new Date()
                   }
                 />
               </PopoverContent>
@@ -142,7 +177,8 @@ export function FlightSearchForm({
             type="number"
             min="1"
             max="10"
-            defaultValue={1}
+            value={formData.passengers}
+            onChange={handleInputChange}
           />
         </div>
         <div className="space-y-2">
@@ -151,7 +187,8 @@ export function FlightSearchForm({
             id="cabin"
             name="cabin"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-            defaultValue="economy"
+            value={formData.cabin}
+            onChange={handleInputChange}
           >
             <option value="economy">Economy</option>
             <option value="premium">Premium Economy</option>
