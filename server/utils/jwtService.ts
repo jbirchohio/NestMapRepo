@@ -1,5 +1,4 @@
-import jwt from 'jsonwebtoken';
-const { sign, verify, decode } = jwt;
+import { sign, verify, decode, type JwtPayload, type SignOptions } from 'jsonwebtoken';
 import { redisClient } from './redis.js';
 import { logger } from './logger.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -43,10 +42,10 @@ export interface PasswordResetTokenResult {
 // Define our custom JWT payload interface
 declare module 'jsonwebtoken' {
   interface JwtPayload {
-    jti: string;
-    type: TokenType;
-    userId: string;
-    email: string;
+    jti?: string;
+    type?: TokenType;
+    userId?: string;
+    email?: string;
     role?: UserRole;
     organization_id?: number;
     // Standard JWT fields
@@ -76,7 +75,7 @@ export class JwtService {
   private readonly passwordResetTokenExpiresIn: string;
 
   private constructor() {
-    this.jwtSecret = config.jwtSecret;
+    this.jwtSecret = config.security.jwt.secret;
     this.accessTokenExpiresIn = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
     this.refreshTokenExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
     this.passwordResetTokenExpiresIn = process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h';
@@ -203,7 +202,7 @@ export class JwtService {
       algorithm: 'HS256',
       audience: 'nestmap-app',
       issuer: 'nestmap-auth'
-    });
+    } as SignOptions);
     
     // For refresh tokens, add to whitelist
     if (type === 'refresh') {
@@ -260,9 +259,9 @@ export class JwtService {
       
       return {
         payload: {
-          jti: verified.jti,
-          userId: verified.userId,
-          email: verified.email,
+          jti: verified.jti ?? '',
+          userId: verified.userId ?? '',
+          email: verified.email ?? '',
           role: verified.role,
           organization_id: verified.organization_id,
           type: verified.type,
@@ -280,9 +279,9 @@ export class JwtService {
           
           return {
             payload: {
-              jti: decoded.jti,
-              userId: decoded.userId,
-              email: decoded.email,
+              jti: decoded.jti ?? '',
+              userId: decoded.userId ?? '',
+              email: decoded.email ?? '',
               role: decoded.role,
               organization_id: decoded.organization_id,
               type: decoded.type || type,
