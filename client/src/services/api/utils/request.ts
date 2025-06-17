@@ -1,4 +1,4 @@
-import { AxiosRequestConfig, AxiosResponse, CancelTokenSource, CancelToken } from 'axios';
+import { AxiosResponse } from 'axios';
 import { RequestConfig, ApiResponse } from '../types';
 
 // Request cache entry
@@ -48,7 +48,6 @@ export const getCachedResponse = <T>(config: RequestConfig): T | null => {
   
   if (!cached) return null;
   
-  const cacheTTL = config.cacheTTL ?? DEFAULT_CACHE_TTL;
   const isExpired = Date.now() > cached.expiresAt;
   
   if (isExpired) {
@@ -103,18 +102,18 @@ export const getCacheStats = () => ({
 /**
  * Create a cancel token for a request
  */
-const cancelTokens = new Map<string, CancelTokenSource>();
+const cancelTokens = new Map<string, AbortController>();
 
 export const createCancelToken = (requestId: string) => {
   // Cancel any existing request with the same ID
   cancelRequest(requestId);
-  
-  const source = new AbortController();
-  
+
+  const controller = new AbortController();
+  cancelTokens.set(requestId, controller);
   return {
-    signal: source.signal,
+    signal: controller.signal,
     cancel: (message = 'Request cancelled') => {
-      source.abort(message);
+      controller.abort(message);
       cancelTokens.delete(requestId);
     }
   };
@@ -124,9 +123,9 @@ export const createCancelToken = (requestId: string) => {
  * Cancel an ongoing request
  */
 export const cancelRequest = (requestId: string, message?: string): void => {
-  const source = cancelTokens.get(requestId);
-  if (source) {
-    source.abort(message);
+  const controller = cancelTokens.get(requestId);
+  if (controller) {
+    controller.abort(message);
     cancelTokens.delete(requestId);
   }
 };
@@ -135,8 +134,8 @@ export const cancelRequest = (requestId: string, message?: string): void => {
  * Clear all pending requests
  */
 export const clearPendingRequests = (message?: string): void => {
-  cancelTokens.forEach((source, requestId) => {
-    source.abort(message);
+  cancelTokens.forEach((controller, requestId) => {
+    controller.abort(message);
     cancelTokens.delete(requestId);
   });
 };

@@ -68,7 +68,7 @@ export class RetryInterceptor {
 
     // Check if we should retry the request
     if (!this.shouldRetry(error, config)) {
-      return Promise.reject(error);
+      return Promise.reject(ApiError.fromAxiosError(error, config));
     }
 
     // Calculate delay with exponential backoff

@@ -399,7 +399,7 @@ export class TokenManager {
       delete window.__tokenManager;
     }
     
-    TokenManager.instance = null as unknown as TokenManager;
+    TokenManager.instance = null;
   }
   
   private decodeToken(token: string): { exp: number } | null {

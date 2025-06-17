@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["es2017", "esnext"],
+    "lib": ["es2017", "esnext", "dom", "dom.iterable"],
     "module": "commonjs",
     "moduleResolution": "node",
     "experimentalDecorators": true,

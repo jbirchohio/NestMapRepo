@@ -1,3 +1,4 @@
+import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellIcon } from '../icons';
 import { NotificationsMenuProps } from './types';
@@ -8,8 +9,10 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
   notifications,
   onNotificationClick,
   onMarkAllAsRead,
+  onNotificationsClick,
 }) => {
   const unreadCount = notifications.filter(n => !n.read).length;
+  const ref = useRef<HTMLDivElement>(null);
 
   return (
     <div className="relative ml-3" ref={ref}>

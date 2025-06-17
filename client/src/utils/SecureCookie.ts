@@ -41,6 +41,14 @@ export class SecureCookie {
     Object.keys(cookies).forEach((name) => this.remove(name));
   }
 
+  /**
+   * Serialize a cookie for server-side usage
+   */
+  static serializeCookie(name: string, value: string, options: CookieOptions = {}): string {
+    const finalOptions = { ...this.DEFAULT_OPTIONS, ...options };
+    return serialize(name, value, finalOptions);
+  }
+
   static setAccessToken(token: string, options?: CookieOptions): void {
     this.set('access_token', token, options);
   }

@@ -7,11 +7,10 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import WhiteLabelPreview from '@/components/WhiteLabelPreview';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
-import { useAuth } from '@/contexts/auth/AuthContext';
-import { CheckCircle, AlertCircle, ChevronRight, Globe, Palette, Settings, Shield } from 'lucide-react';
+import { CheckCircle, AlertCircle, ChevronRight, Globe, Palette, Settings } from 'lucide-react';
 import api from '@/services/api/apiClient';
 
 interface WhiteLabelStatus {
@@ -51,19 +50,18 @@ interface WhiteLabelStatus {
 export default function WhiteLabelDashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { whiteLabelConfig, isWhiteLabelActive, updateWhiteLabelConfig } = useWhiteLabel();
+  const { whiteLabelConfig, isWhiteLabelActive } = useWhiteLabel();
   
   const [status, setStatus] = useState<WhiteLabelStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('overview');
   
   // Fetch white label status
-  const fetchStatus = async () => {
+  const fetchStatus = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await api.get('/api/white-label/status');
-      setStatus(response.data);
+      const response = await api.get<WhiteLabelStatus>('/api/white-label/status');
+      setStatus(response);
     } catch (error) {
       console.error('Error fetching white label status:', error);
       toast({
@@ -79,7 +77,7 @@ export default function WhiteLabelDashboard() {
   // Activate white label
   const activateWhiteLabel = async () => {
     try {
-      await api.post('/api/white-label/activate');
+      await api.post<void>('/api/white-label/activate');
       toast({
         title: 'Success',
         description: 'White label features have been activated!',

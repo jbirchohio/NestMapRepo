@@ -1,4 +1,9 @@
-import { lazy, LazyExoticComponent, ComponentType, ReactNode } from 'react';
+import {
+  lazy,
+  LazyExoticComponent,
+  ComponentType,
+  ReactElement
+} from 'react';
 import { RouteObject } from 'react-router-dom';
 
 // Extend the LazyExoticComponent type to include preload
@@ -7,22 +12,24 @@ type PreloadableComponent<T extends ComponentType> = LazyExoticComponent<T> & {
 };
 
 // Type for our route elements
-type RouteElement = {
+type RouteElement = ReactElement & {
   preload: () => Promise<{ default: ComponentType }>;
-} & LazyExoticComponent<ComponentType> & ReactNode;
+};
 
 /**
  * Higher-order function for lazy loading components with error boundaries and loading states
  */
 function lazyLoad<T extends ComponentType>(
   importFn: () => Promise<{ default: T }>
-): ReactNode {
-  const LazyComponent = lazy(importFn) as unknown as PreloadableComponent<T> & ReactNode;
-  
+): ReactElement {
+  const LazyComponent = lazy(importFn) as PreloadableComponent<T>;
+
   // Add preloading capability
-  (LazyComponent as any).preload = importFn;
-  
-  return LazyComponent as unknown as ReactNode;
+  LazyComponent.preload = importFn;
+
+  const element = <LazyComponent />;
+  (element as unknown as RouteElement).preload = importFn;
+  return element;
 }
 
 // Public routes (no authentication required)
