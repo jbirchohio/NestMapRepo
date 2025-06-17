@@ -2,6 +2,7 @@ import { jwtDecode } from 'jwt-decode';
 import { NavigateFunction } from 'react-router-dom';
 import { SecureCookie } from './cookies';
 import config from '@/config/env';
+import type { ApiClient } from '@/services/api/apiClient';
 
 // Constants
 const TOKEN_KEY = 'access_token';
@@ -50,35 +51,48 @@ export class TokenManager {
   private isRefreshing = false;
   private navigate: NavigateFunction | null = null;
 
+  // Load tokens from secure cookie storage
+  private loadTokens(): void {
+    try {
+      this.accessToken = SecureCookie.get(TOKEN_KEY) || null;
+      this.refreshToken = SecureCookie.get(REFRESH_TOKEN_KEY) || null;
+    } catch (error) {
+      console.error('Failed to load tokens:', error);
+      this.accessToken = null;
+      this.refreshToken = null;
+    }
+  }
+
+  // Persist tokens to secure cookie storage
+  private storeTokens(): void {
+    if (this.accessToken) {
+      SecureCookie.set(TOKEN_KEY, this.accessToken, {
+        secure: config.SECURE_COOKIE_OPTIONS.secure,
+        sameSite: config.SECURE_COOKIE_OPTIONS.sameSite,
+        maxAge: config.SESSION_TIMEOUT / 1000,
+      });
+    }
+    if (this.refreshToken) {
+      SecureCookie.set(REFRESH_TOKEN_KEY, this.refreshToken, {
+        secure: config.SECURE_COOKIE_OPTIONS.secure,
+        sameSite: config.SECURE_COOKIE_OPTIONS.sameSite,
+        maxAge: config.SESSION_TIMEOUT / 1000,
+      });
+    }
+  }
+
   private constructor(navigate: NavigateFunction | null) {
-    // Initialize instance variables
     this.navigate = navigate;
-    this.refreshToken = SecureCookie.get(REFRESH_TOKEN_KEY) || null;
-    this.accessToken = SecureCookie.get(TOKEN_KEY) || null;
-    
-    // Start token rotation if we have a refresh token
+    this.loadTokens();
+
     if (this.refreshToken) {
       const decoded = this.getDecodedToken();
       if (decoded?.exp) {
-        const expiresIn = (decoded.exp * 1000) - Date.now();
+        const expiresIn = decoded.exp * 1000 - Date.now();
         this.startTokenRotation(expiresIn);
       }
     }
-    
-    // Store the instance in window for debugging
-    if (typeof window !== 'undefined') {
-      window.__tokenManager = this;
-    }
-    this.navigate = navigate;
-    // Initialize with tokens from storage if available
-    this.refreshToken = SecureCookie.get(REFRESH_TOKEN_KEY);
-    
-    // Start token rotation if we have a refresh token
-    if (this.refreshToken) {
-      this.startTokenRotation(config.TOKEN_ROTATION_INTERVAL);
-    }
-    
-    // Store the instance in window for debugging
+
     if (typeof window !== 'undefined') {
       window.__tokenManager = this;
     }
@@ -142,19 +156,8 @@ export class TokenManager {
       // Store tokens in memory
       this.accessToken = accessToken;
       this.refreshToken = refreshToken;
-      
-      // Store tokens in cookies
-      SecureCookie.set(TOKEN_KEY, accessToken, {
-        secure: config.SECURE_COOKIE_OPTIONS.secure,
-        sameSite: config.SECURE_COOKIE_OPTIONS.sameSite,
-        maxAge: config.SESSION_TIMEOUT / 1000, // Convert to seconds
-      });
-      
-      SecureCookie.set(REFRESH_TOKEN_KEY, refreshToken, {
-        secure: config.SECURE_COOKIE_OPTIONS.secure,
-        sameSite: config.SECURE_COOKIE_OPTIONS.sameSite,
-        maxAge: config.SESSION_TIMEOUT / 1000, // Convert to seconds
-      });
+
+      this.storeTokens();
       
       // Start token rotation
       const decoded = jwtDecode<JwtPayload>(accessToken);
@@ -195,12 +198,13 @@ export class TokenManager {
     
     try {
       // Import api dynamically to avoid circular dependency
-      const { default: apiClient } = await import('@/services/api/apiClient');
-      
+      const { default: imported } = await import('@/services/api/apiClient');
+      const apiClient = imported as ApiClient;
+
       this.refreshPromise = apiClient
-      .post<{ accessToken: string; refreshToken: string }>('/auth/refresh', {
-        refreshToken: this.refreshToken,
-      })
+        .post<{ accessToken: string; refreshToken: string }>('/auth/refresh', {
+          refreshToken: this.refreshToken,
+        })
       .then((response) => {
         this.setTokens(response.accessToken, response.refreshToken);
         return response.accessToken;
@@ -250,27 +254,7 @@ export class TokenManager {
   public clearTokens(): void {
     this.refreshToken = null;
     this.stopTokenRotation();
-    
-    // Clear tokens from storage
-    SecureCookie.remove(TOKEN_KEY, {
-      path: '/',
-      secure: config.SECURE_COOKIE_OPTIONS.secure,
-      sameSite: config.SECURE_COOKIE_OPTIONS.sameSite
-    });
-    
-    SecureCookie.remove(REFRESH_TOKEN_KEY, {
-      path: '/',
-      secure: config.SECURE_COOKIE_OPTIONS.secure,
-      sameSite: config.SECURE_COOKIE_OPTIONS.sameSite
-    });
-    
-    // Clear from localStorage/sessionStorage if they were used as fallback
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(TOKEN_KEY);
-      window.sessionStorage.removeItem(TOKEN_KEY);
-      window.localStorage.removeItem(REFRESH_TOKEN_KEY);
-      window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
-    }
+    this.clearStoredTokens();
   }
 
   private clearStoredTokens(): void {
@@ -370,8 +354,9 @@ export class TokenManager {
     
     try {
       // Import the API client dynamically to avoid circular dependencies
-      const { default: api } = await import('@/services/api/apiClient');
-      
+      const { default: imported } = await import('@/services/api/apiClient');
+      const api = imported as ApiClient;
+
       const response = await api.post<{ accessToken: string }>(
         '/auth/refresh',
         { refreshToken: this.refreshToken }
