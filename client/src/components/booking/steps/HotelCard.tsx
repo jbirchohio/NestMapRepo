@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Star, Clock, MapPin, Home, Users } from 'lucide-react';
+import { Star, Clock, MapPin, Home, Users, X, Check } from 'lucide-react';
 import { Hotel } from '../types';
 
 interface HotelCardProps {
@@ -54,7 +54,8 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
           <div>
             <div className="font-medium">{hotel.name}</div>
             <div className="text-sm text-muted-foreground">
-              {hotel.address.street}, {hotel.address.city}, {hotel.address.state}
+              {hotel.address.line1}, {hotel.address.city}
+              {hotel.address.state ? `, ${hotel.address.state}` : ''}
             </div>
           </div>
         </div>
@@ -62,9 +63,11 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
         {/* Hotel Rating and Price */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
-            {formatStars(hotel.rating)}
+            {formatStars(hotel.rating ?? hotel.starRating)}
           </div>
-          <div className="font-medium">Starting from {formatPrice(hotel.price.amount)}</div>
+          <div className="font-medium">
+            Starting from {formatPrice(hotel.price?.amount ?? hotel.rooms[0]?.price.total)}
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -101,14 +104,24 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
         </div>
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4" />
-          <span>{hotel.distanceFromCenter} km from city center</span>
+          <span>
+            {hotel.distanceFromCenter ?? hotel.distanceFrom?.[0]?.distance} km from city center
+          </span>
         </div>
         <div className="flex items-center gap-1">
           <Users className="h-4 w-4" />
-          <span>{hotel.maxOccupancy} guest{hotel.maxOccupancy !== 1 ? 's' : ''}</span>
+          <span>
+            {hotel.maxOccupancy ?? hotel.rooms?.[0]?.maxOccupancy} guest
+            {(hotel.maxOccupancy ?? hotel.rooms?.[0]?.maxOccupancy) !== 1 ? 's' : ''}
+          </span>
         </div>
         <Badge variant="outline" className="ml-auto">
-          {hotel.freeCancellation ? 'Free cancellation' : 'Prepayment required'}
+          {(
+            hotel.freeCancellation ??
+            hotel.rooms?.[0]?.cancellationPolicy?.type === 'FREE_CANCELLATION'
+          )
+            ? 'Free cancellation'
+            : 'Prepayment required'}
         </Badge>
       </div>
 
@@ -127,7 +140,7 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
           <div className="mt-2 space-y-2">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4" />
-              <span>Rating: {hotel.rating} stars</span>
+              <span>Rating: {hotel.rating ?? hotel.starRating} stars</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -139,12 +152,18 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              <span>Distance: {hotel.distanceFromCenter} km from city center</span>
+              <span>
+                Distance: {hotel.distanceFromCenter ?? hotel.distanceFrom?.[0]?.distance} km from city center
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {hotel.amenities.map((amenity) => (
-                <Badge key={amenity} variant="outline" className="capitalize">
-                  {amenity}
+                <Badge
+                  key={typeof amenity === 'string' ? amenity : amenity.code}
+                  variant="outline"
+                  className="capitalize"
+                >
+                  {typeof amenity === 'string' ? amenity : amenity.name}
                 </Badge>
               ))}
             </div>

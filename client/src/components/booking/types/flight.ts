@@ -75,6 +75,10 @@ export interface Flight {
   availableSeats: number;
   amenities: string[];
   metadata?: Record<string, unknown>;
+  // Optional fields used by simplified UI components
+  airline?: string;
+  flightNumber?: string;
+  cabin?: string;
 }
 
 export interface FlightSearchParams {
