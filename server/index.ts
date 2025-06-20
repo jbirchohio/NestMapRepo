@@ -1,64 +1,76 @@
 import 'dotenv/config';
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import http from 'http';
 import { logger } from './utils/logger.js';
 
-// Import routes
-import apiRoutes from './routes/index.js';
+// Import SecureAuth middleware as JWT source of truth
+import { authenticate } from './middleware/secureAuth.js';
 
-// Import middleware
-import { caseConverterMiddleware } from './middleware/caseConverter.js';
-import { globalErrorHandler } from './utils/errorHandler.js';
+// Create Express app
+const app = express();
 
-// Initialize Express app with proper typing
-const app: express.Express = express();
-
-// Simple configuration without complex dependencies
+// Configuration
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const HOST = process.env.HOST || '0.0.0.0';
 
 // Basic middleware
-app.use(express.json({ limit: '10mb' }) as express.RequestHandler);
-app.use(express.urlencoded({ extended: true }) as express.RequestHandler);
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// Simple CORS middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
+// CORS middleware
+app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
-  } else {
-    next();
+    return;
   }
+  next();
 });
 
-// Case converter middleware
-app.use(caseConverterMiddleware);
-
-// Health check endpoint
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
+// Health check route
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: NODE_ENV
+    environment: NODE_ENV 
   });
 });
 
-// API routes
-app.use('/api', apiRoutes);
+// Protected route example using SecureAuth
+app.get('/api/auth/me', authenticate, (req, res) => {
+  res.json({ 
+    success: true,
+    user: req.user,
+    message: 'Authenticated successfully via SecureAuth'
+  });
+});
 
-// Global error handler
-app.use(globalErrorHandler);
+// Basic API routes
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API is working',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error:', err);
+  res.status(500).json({ 
+    success: false, 
+    error: 'Internal server error' 
+  });
+});
 
 // 404 handler
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: 'The requested endpoint does not exist'
+app.use((req, res) => {
+  res.status(404).json({ 
+    success: false, 
+    error: 'Route not found' 
   });
 });
 
@@ -70,22 +82,21 @@ server.listen(Number(PORT), HOST, () => {
   logger.info(`Server running on ${HOST}:${PORT}`);
   logger.info(`Environment: ${NODE_ENV}`);
   logger.info(`Health check: http://${HOST}:${PORT}/health`);
+  logger.info('Using SecureAuth as JWT authentication source of truth');
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
+  logger.info('SIGTERM signal received: closing HTTP server');
   server.close(() => {
-    logger.info('Process terminated');
-    process.exit(0);
+    logger.info('HTTP server closed');
   });
 });
 
 process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
+  logger.info('SIGINT signal received: closing HTTP server');
   server.close(() => {
-    logger.info('Process terminated');
-    process.exit(0);
+    logger.info('HTTP server closed');
   });
 });
 
