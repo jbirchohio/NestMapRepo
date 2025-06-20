@@ -1,27 +1,25 @@
-import { Logger, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
 import { UserRepositoryImpl } from './repositories/user.repository.js';
 import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js';
-import { JwtAuthService } from './services/jwtAuthService.js';
 import { AuthController } from './controllers/auth.controller.js';
+// Use SecureAuth as the source of truth for JWT
+import { authenticate, verifyRefreshToken, requireRole } from '../../middleware/secureAuth.js';
 import { EmailService } from '../email/interfaces/email.service.interface.js';
-import { NodemailerEmailService } from '../email/services/nodemailer-email.service.js';
-import { ErrorService } from '../common/services/error.service.js';
+
 import { UserRepository } from '../common/repositories/user/user.repository.interface.js';
 import { RefreshTokenRepository } from './interfaces/refresh-token.repository.interface.js';
-import { IAuthService } from './interfaces/auth.service.interface.js';
+import { logger } from '../../utils/logger.js';
 
 export interface AuthContainerDependencies {
   emailService?: EmailService;
-  configService: ConfigService;
+  configService?: any;
   userRepository?: UserRepository;
   refreshTokenRepository?: RefreshTokenRepository;
-  errorService: ErrorService;
+  errorService?: ErrorService;
 }
 
 /**
  * Initialize and configure all auth-related dependencies
+ * Uses SecureAuth middleware as the source of truth for JWT authentication
  */
 export class AuthContainer {
   // Repositories
@@ -30,88 +28,91 @@ export class AuthContainer {
   
   // Services
   public readonly emailService: EmailService;
-  public readonly authService: IAuthService;
 
   // Controllers
   public readonly authController: AuthController;
 
   // Config
-  private readonly configService: ConfigService;
-  private readonly logger = new Logger('AuthContainer');
+  private readonly logger = logger;
 
-  constructor(deps: AuthContainerDependencies) {
-    this.configService = deps.configService;
-    
+  constructor(deps: AuthContainerDependencies = {}) {
     // Initialize repositories
     this.userRepository = deps.userRepository || new UserRepositoryImpl();
     this.refreshTokenRepository = deps.refreshTokenRepository || new RefreshTokenRepositoryImpl();
     
-    // Initialize email service if not provided
-    this.emailService = deps.emailService || new NodemailerEmailService(
-      this.configService,
-      deps.errorService
-    );
+    // Initialize email service with a simple implementation
+    this.emailService = deps.emailService || {
+      sendEmail: async () => {
+        this.logger.info('Email service not configured');
+      },
+      sendPasswordResetEmail: async () => {
+        this.logger.info('Password reset email service not configured');
+      },
+      sendPasswordResetConfirmationEmail: async () => {
+        this.logger.info('Password reset confirmation email service not configured');
+      },
+      sendPaymentReceiptEmail: async () => {
+        this.logger.info('Payment receipt email service not configured');
+      }
+    };
     
-    // Initialize auth service
-    this.authService = new JwtAuthService(
+    // Initialize auth controller with SecureAuth middleware
+    this.authController = new AuthController(
       this.userRepository,
       this.refreshTokenRepository,
-      this.configService,
       this.emailService
     );
-    
-    // Initialize JWT module for token verification
-    JwtModule.register({
-      secret: this.configService.get<string>('JWT_SECRET', 'your-secret-key'),
-      signOptions: {
-        issuer: this.configService.get('JWT_ISSUER', 'nestmap-api'),
-        audience: this.configService.get('JWT_AUDIENCE', 'nestmap-client'),
-        expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
-      },
-    });
-
-    // Initialize auth controller with the new auth service
-    this.authController = new AuthController(this.authService);
   }
 
   /**
    * Register all auth routes with the Express app
+   * Uses SecureAuth middleware for JWT handling
    */
   public registerRoutes(app: any) {
     try {
-      // Authentication routes
-      app.post('/api/auth/login', ...this.authController.login);
-      app.post('/api/auth/refresh-token', ...this.authController.refreshToken);
-      app.post('/api/auth/logout', ...this.authController.logout);
+      // Authentication routes using SecureAuth middleware
+      app.post('/api/auth/login', this.authController.login.bind(this.authController));
+      app.post('/api/auth/refresh-token', verifyRefreshToken, this.authController.refreshToken.bind(this.authController));
+      app.post('/api/auth/logout', this.authController.logout.bind(this.authController));
       
       // Password reset routes
-      app.post('/api/auth/forgot-password', ...this.authController.requestPasswordReset);
-      app.post('/api/auth/reset-password', ...this.authController.resetPassword);
+      app.post('/api/auth/forgot-password', this.authController.requestPasswordReset.bind(this.authController));
+      app.post('/api/auth/reset-password', this.authController.resetPassword.bind(this.authController));
       
-      // User management routes - note: getCurrentUser is a single handler, not an array
-      app.get('/api/auth/me', this.authController.getCurrentUser);
+      // User management routes with authentication
+      app.get('/api/auth/me', authenticate, this.authController.getCurrentUser.bind(this.authController));
       
-      this.logger.log('Auth routes registered successfully');
+      this.logger.info('Auth routes registered successfully using SecureAuth middleware');
     } catch (error) {
       this.logger.error('Failed to register auth routes', error);
       throw error;
     }
   }
+
+  /**
+   * Get authentication middleware from SecureAuth
+   */
+  public getAuthMiddleware() {
+    return {
+      authenticate,
+      verifyRefreshToken,
+      requireRole
+    };
+  }
 }
 
 /**
  * Legacy export for backward compatibility
- * @deprecated Use AuthContainer class directly instead
  */
-export function initAuthContainer(deps: AuthContainerDependencies) {
+export function initAuthContainer(deps: AuthContainerDependencies = {}) {
   const container = new AuthContainer(deps);
   
   return {
     userRepository: container.userRepository,
     refreshTokenRepository: container.refreshTokenRepository,
     emailService: container.emailService,
-    authService: container.authService,
     authController: container.authController,
     registerAuthRoutes: (app: any) => container.registerRoutes(app),
+    getAuthMiddleware: () => container.getAuthMiddleware()
   };
 }

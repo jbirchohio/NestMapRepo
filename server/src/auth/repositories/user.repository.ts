@@ -267,7 +267,7 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
 
   // Note: The users table doesn't have a preferences field in the schema
   // This method is a placeholder to satisfy the interface
-  async updatePreferences(id: string, preferences: UserBookingPreferences): Promise<User | null> {
+  async updatePreferences(id: string, _preferences: UserBookingPreferences): Promise<User | null> {
     // Since there's no preferences field in the schema, just return the user
     return this.findById(id);
   }
