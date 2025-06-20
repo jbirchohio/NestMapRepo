@@ -1,9 +1,37 @@
+/**
+ * SINGLE SOURCE OF TRUTH: Rate Limiting Middleware
+ * 
+ * This is the canonical implementation for all rate limiting functionality in the application.
+ * All rate limiting should be handled through this module to ensure consistency.
+ * 
+ * Features:
+ * - Multi-layered protection with organization-aware limits
+ * - Burst protection and violation tracking
+ * - Support for different rate limits by endpoint and organization tier
+ * 
+ * DO NOT create duplicate rate limiting implementations - extend this one if needed.
+ */
+
 import { Request, Response, NextFunction } from 'express';
 
-/**
- * Comprehensive API Rate Limiting Implementation
- * Provides multi-layered protection with organization-aware limits
- */
+interface CustomRequest extends Request {
+  user?: {
+    id?: string | number;
+    [key: string]: any;
+  };
+  ip?: string;
+  path: string;
+  headers: {
+    [key: string]: string | string[] | undefined;
+    'user-agent'?: string;
+  };
+  connection?: {
+    remoteAddress?: string;
+  };
+  socket?: {
+    remoteAddress?: string | null;
+  };
+}
 
 interface RateLimitConfig {
   requests: number;
@@ -11,6 +39,11 @@ interface RateLimitConfig {
   burstLimit: number;
   skipSuccessfulRequests?: boolean;
   skipFailedRequests?: boolean;
+  violationTimeouts?: {
+    standard: number;  // ms to block for normal violations (50+)
+    severe: number;    // ms to block for severe violations (100+)
+    critical: number;  // ms to block for critical violations (200+)
+  };
 }
 
 interface RateLimitBucket {
@@ -25,6 +58,13 @@ class ComprehensiveRateLimit {
   private buckets = new Map<string, RateLimitBucket>();
   private blockedIPs = new Set<string>();
   
+  // Default violation timeouts (in milliseconds)
+  private readonly DEFAULT_VIOLATION_TIMEOUTS = {
+    standard: 10 * 60 * 1000,    // 10 minutes
+    severe: 60 * 60 * 1000,      // 1 hour
+    critical: 24 * 60 * 60 * 1000 // 24 hours
+  };
+
   // Tiered rate limiting configurations
   private readonly configs: Record<string, RateLimitConfig> = {
     // Global limits per IP
@@ -32,6 +72,11 @@ class ComprehensiveRateLimit {
       requests: 1000,
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 50, // 50 requests in 1 minute burst
+      violationTimeouts: {
+        standard: 10 * 60 * 1000,    // 10 minutes
+        severe: 60 * 60 * 1000,      // 1 hour
+        critical: 24 * 60 * 60 * 1000 // 24 hours
+      }
     },
     
     // Authentication endpoints - stricter limits
@@ -39,6 +84,11 @@ class ComprehensiveRateLimit {
       requests: 20,
       windowMs: 15 * 60 * 1000, // 15 minutes
       burstLimit: 5, // 5 attempts in 1 minute
+      violationTimeouts: {
+        standard: 15 * 60 * 1000,    // 15 minutes
+        severe: 2 * 60 * 60 * 1000,  // 2 hours
+        critical: 24 * 60 * 60 * 1000 // 24 hours
+      }
     },
     
     // API endpoints by organization tier
@@ -46,16 +96,31 @@ class ComprehensiveRateLimit {
       requests: 500,
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 100,
+      violationTimeouts: {
+        standard: 5 * 60 * 1000,     // 5 minutes
+        severe: 30 * 60 * 1000,      // 30 minutes
+        critical: 12 * 60 * 60 * 1000 // 12 hours
+      }
     },
     'team': {
       requests: 1000,
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 100,
+      violationTimeouts: {
+        standard: 10 * 60 * 1000,    // 10 minutes
+        severe: 60 * 60 * 1000,      // 1 hour
+        critical: 24 * 60 * 60 * 1000 // 24 hours
+      }
     },
     'enterprise': {
       requests: 10000,
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 500,
+      violationTimeouts: {
+        standard: 15 * 60 * 1000,    // 15 minutes
+        severe: 2 * 60 * 60 * 1000,  // 2 hours
+        critical: 24 * 60 * 60 * 1000 // 24 hours
+      }
     },
     
     // Special endpoints with custom limits
@@ -63,16 +128,31 @@ class ComprehensiveRateLimit {
       requests: 50,
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 10,
+      violationTimeouts: {
+        standard: 5 * 60 * 1000,     // 5 minutes
+        severe: 30 * 60 * 1000,      // 30 minutes
+        critical: 12 * 60 * 60 * 1000 // 12 hours
+      }
     },
     'export': {
       requests: 10,
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 3,
+      violationTimeouts: {
+        standard: 15 * 60 * 1000,    // 15 minutes
+        severe: 60 * 60 * 1000,      // 1 hour
+        critical: 12 * 60 * 60 * 1000 // 12 hours
+      }
     },
     'search': {
       requests: 200,
       windowMs: 60 * 60 * 1000, // 1 hour
       burstLimit: 30,
+      violationTimeouts: {
+        standard: 5 * 60 * 1000,     // 5 minutes
+        severe: 30 * 60 * 1000,      // 30 minutes
+        critical: 12 * 60 * 60 * 1000 // 12 hours
+      }
     }
   };
 
@@ -171,18 +251,25 @@ class ComprehensiveRateLimit {
   private handleViolation(key: string, bucket: RateLimitBucket, config: RateLimitConfig) {
     const now = Date.now();
     const ipAddress = key.split(':')[0];
+    
+    // Use configured timeouts or fall back to defaults
+    const timeouts = config.violationTimeouts || this.DEFAULT_VIOLATION_TIMEOUTS;
 
-    // Progressive blocking based on violations - less aggressive thresholds
-    if (bucket.violations >= 50) {
-      // Block for 10 minutes after 50 violations
-      bucket.blockedUntil = now + (10 * 60 * 1000);
-    } else if (bucket.violations >= 100) {
-      // Block for 1 hour after 100 violations
-      bucket.blockedUntil = now + (60 * 60 * 1000);
-    } else if (bucket.violations >= 200) {
-      // Block IP globally for 24 hours after 200 violations
+    // Progressive blocking based on violations
+    if (bucket.violations >= 200) {
+      // Block IP globally for critical violations
       this.blockedIPs.add(ipAddress);
-      setTimeout(() => this.blockedIPs.delete(ipAddress), 24 * 60 * 60 * 1000);
+      setTimeout(() => this.blockedIPs.delete(ipAddress), timeouts.critical);
+      
+      console.warn(`IP ${ipAddress} blocked globally for ${timeouts.critical / (60 * 1000)} minutes due to critical violation threshold`);
+    } else if (bucket.violations >= 100) {
+      // Block for severe violations
+      bucket.blockedUntil = now + timeouts.severe;
+      console.warn(`Rate limit violation (severe): ${ipAddress} blocked for ${timeouts.severe / (60 * 1000)} minutes`);
+    } else if (bucket.violations >= 50) {
+      // Block for standard violations
+      bucket.blockedUntil = now + timeouts.standard;
+      console.warn(`Rate limit violation (standard): ${ipAddress} blocked for ${timeouts.standard / (60 * 1000)} minutes`);
     }
 
     // Log security violation
@@ -229,8 +316,8 @@ const comprehensiveRateLimit = new ComprehensiveRateLimit();
 /**
  * General API rate limiting middleware
  */
-export function apiRateLimit(req: Request, res: Response, next: NextFunction) {
-  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+export function apiRateLimit(req: CustomRequest, res: Response, next: NextFunction) {
+  const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
   const userId = req.user?.id || 'anonymous';
   const key = `global:${ip}:${userId}`;
   
@@ -250,14 +337,14 @@ export function apiRateLimit(req: Request, res: Response, next: NextFunction) {
     });
   }
   
-  next();
+  return next();
 }
 
 /**
  * Authentication-specific rate limiting
  */
-export function authRateLimit(req: Request, res: Response, next: NextFunction) {
-  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+export function authRateLimit(req: CustomRequest, res: Response, next: NextFunction) {
+  const ip = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown';
   const key = `auth:${ip}`;
   
   const result = comprehensiveRateLimit.checkLimit(key, 'auth');
@@ -279,18 +366,18 @@ export function authRateLimit(req: Request, res: Response, next: NextFunction) {
     
     return res.status(429).json({
       error: 'Authentication rate limit exceeded',
-      message: 'Too many authentication attempts. Please try again later.',
+      message: 'Too many login attempts. Please try again later.',
       retryAfter: result.retryAfter
     });
   }
   
-  next();
+  return next();
 }
 
 /**
  * Organization-tier based rate limiting
  */
-export function organizationRateLimit(req: Request, res: Response, next: NextFunction) {
+export function organizationRateLimit(req: CustomRequest, res: Response, next: NextFunction) {
   if (!req.user?.organization_id) {
     // No organization context, apply free tier limits
     return tieredRateLimit('free')(req, res, next);
@@ -305,8 +392,8 @@ export function organizationRateLimit(req: Request, res: Response, next: NextFun
  * Tiered rate limiting factory
  */
 export function tieredRateLimit(tier: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     const orgId = req.user?.organization_id || 'none';
     const key = `tier:${tier}:${orgId}:${ip}`;
     
@@ -328,7 +415,7 @@ export function tieredRateLimit(tier: string) {
       });
     }
     
-    next();
+    return next();
   };
 }
 
@@ -336,8 +423,8 @@ export function tieredRateLimit(tier: string) {
  * Endpoint-specific rate limiting
  */
 export function endpointRateLimit(endpointType: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     const userId = req.user?.id || 'anonymous';
     const key = `endpoint:${endpointType}:${ip}:${userId}`;
     
@@ -359,7 +446,7 @@ export function endpointRateLimit(endpointType: string) {
       });
     }
     
-    next();
+    return next();
   };
 }
 

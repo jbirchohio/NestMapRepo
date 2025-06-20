@@ -1,15 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
+import { and, eq, count } from 'drizzle-orm';
 import { db } from '../db';
-import { organizations, users, trips } from '../../shared/schema';
-import { eq, and, count } from 'drizzle-orm';
+import { organizations, users, trips } from '../db/schema';
+import { logger } from '../utils/logger';
+import type { User } from '../types/user';
 
 // Import JWTUser type from jwtAuth
 interface JWTUser {
-  id: number;
+  id: string;
   email: string;
-  organization_id: number;
+  organizationId: string;
   role: string;
   username: string;
+}
+
+// Import the AuthUser type from auth middleware
+import type { AuthUser } from './auth';
+
+// Extend the AuthUser interface with additional JWT properties
+interface JwtUser extends AuthUser {
+  iat?: number;
+  exp?: number;
 }
 
 // Subscription tier limits configuration
@@ -61,12 +72,22 @@ export const TIER_LIMITS = {
   },
 };
 
+// Extend the Express Request type with our authenticated user
 interface AuthenticatedRequest extends Request {
-  user?: JWTUser;
+  user?: JwtUser;
+}
+
+// Helper to get organization ID from user object, handling both camelCase and snake_case
+function getOrganizationId(user: { organizationId?: string | number; organization_id?: string | number }): string {
+  const orgId = user.organizationId ?? user.organization_id;
+  if (!orgId) {
+    throw new Error('Organization ID is required');
+  }
+  return String(orgId);
 }
 
 // Get organization tier and limits
-export async function getOrganizationLimits(organizationId: number) {
+export async function getOrganizationLimits(organizationId: string) {
   const [org] = await db
     .select({ plan: organizations.plan })
     .from(organizations)
@@ -80,7 +101,7 @@ export async function getOrganizationLimits(organizationId: number) {
 }
 
 // Check if organization can create more trips
-export async function checkTripLimit(organizationId: number): Promise<{
+export async function checkTripLimit(organizationId: string): Promise<{
   allowed: boolean;
   current: number;
   limit: number;
@@ -95,7 +116,7 @@ export async function checkTripLimit(organizationId: number): Promise<{
   const [result] = await db
     .select({ count: count() })
     .from(trips)
-    .where(eq(trips.organization_id, organizationId));
+    .where(eq(trips.organizationId, organizationId));
 
   const currentTrips = result.count;
   const allowed = currentTrips < limits.maxTrips;
@@ -109,7 +130,7 @@ export async function checkTripLimit(organizationId: number): Promise<{
 }
 
 // Check if organization can invite more users
-export async function checkUserLimit(organizationId: number): Promise<{
+export async function checkUserLimit(organizationId: string): Promise<{
   allowed: boolean;
   current: number;
   limit: number;
@@ -124,7 +145,7 @@ export async function checkUserLimit(organizationId: number): Promise<{
   const [result] = await db
     .select({ count: count() })
     .from(users)
-    .where(eq(users.organization_id, organizationId));
+    .where(eq(users.organizationId, organizationId));
 
   const currentUsers = result.count;
   const allowed = currentUsers < limits.maxUsers;
@@ -140,12 +161,13 @@ export async function checkUserLimit(organizationId: number): Promise<{
 // Middleware to enforce trip creation limits
 export function enforceTripLimit() {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ error: 'Organization required' });
+    if (!req.user) {
+      return res.status(400).json({ error: 'User not authenticated' });
     }
 
     try {
-      const limitCheck = await checkTripLimit(req.user.organization_id);
+      const orgId = getOrganizationId(req.user);
+      const limitCheck = await checkTripLimit(orgId);
       
       if (!limitCheck.allowed) {
         return res.status(403).json({
@@ -169,12 +191,13 @@ export function enforceTripLimit() {
 // Middleware to enforce user invitation limits
 export function enforceUserLimit() {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ error: 'Organization required' });
+    if (!req.user) {
+      return res.status(400).json({ error: 'User not authenticated' });
     }
 
     try {
-      const limitCheck = await checkUserLimit(req.user.organization_id);
+      const orgId = getOrganizationId(req.user);
+      const limitCheck = await checkUserLimit(orgId);
       
       if (!limitCheck.allowed) {
         return res.status(403).json({
@@ -198,12 +221,13 @@ export function enforceUserLimit() {
 // Middleware to enforce white label access
 export function enforceWhiteLabelAccess() {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ error: 'Organization required' });
+    if (!req.user) {
+      return res.status(400).json({ error: 'User not authenticated' });
     }
 
     try {
-      const { tier, limits } = await getOrganizationLimits(req.user.organization_id);
+      const orgId = getOrganizationId(req.user);
+      const { tier, limits } = await getOrganizationLimits(orgId);
       
       if (!limits.whiteLabelAccess) {
         return res.status(403).json({
@@ -225,12 +249,13 @@ export function enforceWhiteLabelAccess() {
 // Middleware to enforce analytics access
 export function enforceAnalyticsAccess() {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    if (!req.user?.organization_id) {
-      return res.status(400).json({ error: 'Organization membership required' });
+    if (!req.user) {
+      return res.status(400).json({ error: 'User not authenticated' });
     }
 
     try {
-      const { tier, limits } = await getOrganizationLimits(req.user.organization_id);
+      const orgId = getOrganizationId(req.user);
+      const { tier, limits } = await getOrganizationLimits(orgId);
       
       if (!limits.analyticsAccess) {
         return res.status(403).json({
@@ -250,19 +275,22 @@ export function enforceAnalyticsAccess() {
 }
 
 // Get subscription status for organization
-export async function getSubscriptionStatus(organizationId: number) {
+export async function getSubscriptionStatus(organizationId: string) {
   const { tier, limits } = await getOrganizationLimits(organizationId);
   
   const [tripCount] = await db
     .select({ count: count() })
     .from(trips)
-    .where(eq(trips.organization_id, organizationId));
+    .where(eq(trips.organizationId, organizationId));
 
   const [userCount] = await db
     .select({ count: count() })
     .from(users)
-    .where(eq(users.organization_id, organizationId));
+    .where(eq(users.organizationId, organizationId));
 
+  // Define the tiers that should be recommended for upgrade
+  const upgradeRecommendedTiers = ['free', 'basic'] as const;
+  
   return {
     tier,
     limits,
@@ -270,6 +298,7 @@ export async function getSubscriptionStatus(organizationId: number) {
       trips: tripCount.count,
       users: userCount.count,
     },
-    upgradeRecommended: tier === 'free' || tier === 'basic',
+    // Recommend upgrade for free and basic tiers, but not for pro/enterprise
+    upgradeRecommended: upgradeRecommendedTiers.includes(tier as typeof upgradeRecommendedTiers[number]),
   };
 }

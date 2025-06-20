@@ -1,5 +1,45 @@
 import { Request, Response, NextFunction } from 'express';
-import { eq } from 'drizzle-orm';
+import { eq, SQL, Column } from 'drizzle-orm';
+import { AuthUser, UserRole } from '../src/types/auth-user';
+
+interface Headers {
+  [key: string]: string | string[] | undefined;
+}
+
+// Extend Express types
+declare global {
+  namespace Express {
+    // Define the User interface that will be available on the Request object
+    interface User extends AuthUser {}
+    
+    // Extend the Request interface
+    interface Request {
+      user?: User;
+      organizationId: string;
+      organizationFilter: (orgId: string | null) => boolean;
+      domainOrganizationId?: string;
+      isWhiteLabelDomain?: boolean;
+      analyticsScope?: {
+        organizationId: string;
+        startDate?: Date;
+        endDate?: Date;
+      };
+    }
+  }
+}
+
+type AuthenticatedRequest = Request & {
+  user: Express.User;  // Using the extended Express User type
+  organizationId: string;
+  organizationFilter: (orgId: string | null) => boolean;
+  domainOrganizationId?: string;
+  isWhiteLabelDomain?: boolean;
+  analyticsScope?: {
+    organizationId: string;
+    startDate?: Date;
+    endDate?: Date;
+  };
+};
 
 /**
  * Enhanced organization context middleware for enterprise-grade multi-tenant isolation
@@ -8,28 +48,6 @@ import { eq } from 'drizzle-orm';
  * all routes and services. It ensures proper data isolation between organizations
  * and prevents cross-organization access attempts.
  */
-
-// Extend Express Request interface for organization context
-declare global {
-  namespace Express {
-    interface Request {
-      // Organization context
-      organizationId: number;
-      organizationFilter: (orgId: number | null) => boolean;
-      
-      // White label context
-      domainOrganizationId?: number;
-      isWhiteLabelDomain?: boolean;
-      
-      // Analytics context
-      analyticsScope?: {
-        organizationId: number;
-        startDate?: Date;
-        endDate?: Date;
-      };
-    }
-  }
-}
 
 /**
  * Core organization context middleware
@@ -57,7 +75,7 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
   }
 
   // Ensure user has organization context
-  if (!req.user.organization_id) {
+  if (!req.user.organizationId) {
     return res.status(403).json({ 
       message: 'Organization context required. Please contact your administrator.' 
     });
@@ -66,10 +84,10 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
   // CRITICAL: Enforce domain-based organization isolation for white-label domains
   if (req.isWhiteLabelDomain && req.domainOrganizationId) {
     // For white-label domains, ensure user's organization matches the domain's organization
-    if (req.user.organization_id !== req.domainOrganizationId) {
+    if (req.user.organizationId !== req.domainOrganizationId) {
       console.warn('SECURITY_VIOLATION: Cross-organization access attempt via white-label domain', {
         user_id: req.user.id,
-        userOrgId: req.user.organization_id,
+        userOrgId: req.user.organizationId,
         domainOrgId: req.domainOrganizationId,
         domain: req.headers.host,
         endpoint: req.path,
@@ -87,11 +105,11 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
     req.organizationId = req.domainOrganizationId;
   } else {
     // For main domain, use user's organization
-    req.organizationId = req.user.organization_id;
+    req.organizationId = req.user.organizationId;
   }
   
   // Create organization filter function for queries
-  req.organizationFilter = (orgId: number | null) => {
+  req.organizationFilter = (orgId: string | null) => {
     return orgId === req.organizationId;
   };
 
@@ -103,7 +121,7 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
  * Used for routes that accept organization ID as parameter
  */
 export function validateOrganizationAccess(req: Request, res: Response, next: NextFunction) {
-  const requestedOrgId = parseInt(req.params.organization_id || req.body.organization_id);
+  const requestedOrgId = req.params.organization_id || req.body.organization_id;
   
   if (requestedOrgId && requestedOrgId !== req.organizationId) {
     console.warn('SECURITY_VIOLATION: Cross-organization access attempt', {
@@ -127,13 +145,17 @@ export function validateOrganizationAccess(req: Request, res: Response, next: Ne
  * Query helper to automatically add organization scoping to database queries
  * This ensures all database operations are properly scoped to the user's organization
  */
-export function addOrganizationScope(baseQuery: any, req: Request, tableName: string) {
+export function addOrganizationScope<T extends { organizationId: Column<any> }>(
+  baseQuery: any,
+  req: Request,
+  table: T
+) {
   if (!req.organizationId) {
     throw new Error('Organization context required for scoped queries');
   }
 
-  // Add organization_id filter to all queries
-  return baseQuery.where(eq(`${tableName}.organization_id`, req.organizationId));
+  // Add organization filter using the table's organizationId column
+  return baseQuery.where(eq(table.organizationId, req.organizationId));
 }
 
 /**
@@ -148,7 +170,7 @@ export function validateOrganizationData(data: any, req: Request) {
   // Automatically inject organization ID into create operations
   return {
     ...data,
-    organization_id: req.organizationId
+    organizationId: req.organizationId
   };
 }
 
@@ -161,10 +183,13 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
     return res.status(401).json({ message: 'Authentication required' });
   }
 
+  // Type assertion for req.user to ensure it's treated as AuthUser
+  const user = req.user as AuthUser;
+  
   // Check if user has analytics permissions for their organization
-  const hasAnalyticsAccess = req.user.role === 'admin' || 
-                            req.user.role === 'manager' ||
-                            (req.user.permissions && req.user.permissions.includes('ACCESS_ANALYTICS'));
+  const hasAnalyticsAccess = user.role === UserRole.ADMIN || 
+                            user.role === UserRole.SUPER_ADMIN ||
+                            (user.permissions && Array.isArray(user.permissions) && user.permissions.includes('ACCESS_ANALYTICS'));
 
   if (!hasAnalyticsAccess) {
     console.warn('ANALYTICS_ACCESS_DENIED:', {
@@ -193,7 +218,7 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
  * Resolves organization context from custom domains for white-label routing
  */
 export async function resolveDomainOrganization(req: Request, res: Response, next: NextFunction) {
-  const host = req.headers.host;
+  const host = req.headers.host as string | undefined;
   if (!host) {
     return next();
   }
@@ -212,12 +237,12 @@ export async function resolveDomainOrganization(req: Request, res: Response, nex
     // Look up organization by custom domain
     const [domainConfig] = await db
       .select({
-        organizationId: customDomains.organization_id,
+        organizationId: customDomains.organizationId,
         status: customDomains.status,
-        domain: customDomains.domain
+        domain: customDomains.domainName
       })
       .from(customDomains)
-      .where(eq(customDomains.domain, host))
+      .where(eq(customDomains.domainName, host))
       .limit(1);
 
     if (domainConfig) {

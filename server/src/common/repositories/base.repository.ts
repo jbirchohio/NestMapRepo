@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
-import { BaseRepository } from './base.repository.interface';
+import { BaseRepository } from './base.repository.interface.js';
 import { PgTable } from 'drizzle-orm/pg-core';
-import { db } from '../../../db';
+import { db } from '../../../db/db.js';
 import { eq, inArray } from 'drizzle-orm';
 
 /**
@@ -29,7 +29,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateDTO, UpdateDTO> implements
         .where(eq(this.idColumn, id))
         .limit(1);
       
-      return result || null;
+      return result as T || null;
     } catch (error) {
       this.logger.error(`Error finding ${this.tableName} by ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
@@ -38,9 +38,10 @@ export abstract class BaseRepositoryImpl<T, ID, CreateDTO, UpdateDTO> implements
 
   async findAll(): Promise<T[]> {
     try {
-      return await db
+      const results = await db
         .select()
         .from(this.table);
+      return results as T[];
     } catch (error) {
       this.logger.error(`Error finding all ${this.tableName}s: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
@@ -54,7 +55,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateDTO, UpdateDTO> implements
         .values(data as any)
         .returning();
       
-      return result;
+      return result as T;
     } catch (error) {
       this.logger.error(`Error creating ${this.tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
@@ -72,7 +73,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateDTO, UpdateDTO> implements
         .where(eq(this.idColumn, id))
         .returning();
       
-      return result || null;
+      return result as T || null;
     } catch (error) {
       this.logger.error(`Error updating ${this.tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
@@ -85,7 +86,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateDTO, UpdateDTO> implements
         .delete(this.table)
         .where(eq(this.idColumn, id));
       
-      return result.rowCount > 0;
+      return (result.rowCount ?? 0) > 0;
     } catch (error) {
       this.logger.error(`Error deleting ${this.tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
@@ -94,10 +95,11 @@ export abstract class BaseRepositoryImpl<T, ID, CreateDTO, UpdateDTO> implements
 
   async findByIds(ids: ID[]): Promise<T[]> {
     try {
-      return await db
+      const results = await db
         .select()
         .from(this.table)
         .where(inArray(this.idColumn, ids));
+      return results as T[];
     } catch (error) {
       this.logger.error(`Error finding ${this.tableName}s by IDs: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;
@@ -108,11 +110,11 @@ export abstract class BaseRepositoryImpl<T, ID, CreateDTO, UpdateDTO> implements
     try {
       // If filter is provided, we would need to build a dynamic query
       // For simplicity, this implementation just counts all records
-      const result = await db
-        .select({ count: db.fn.count() })
+      const results = await db
+        .select()
         .from(this.table);
       
-      return Number(result[0].count) || 0;
+      return results.length;
     } catch (error) {
       this.logger.error(`Error counting ${this.tableName}s: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw error;

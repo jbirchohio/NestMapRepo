@@ -2,7 +2,7 @@ import { Trip, User } from '../../../db/schema.js';
 
 // A DTO for the transformed corporate trip data
 export interface CorporateTripDto {
-  id: number;
+  id: string; // Changed from number to string to match UUID
   title: string;
   startDate: string;
   endDate: string;
@@ -19,7 +19,7 @@ export interface CorporateTripDto {
 }
 
 export interface TripService {
-  getTripsByUserId(userId: string, orgId: number): Promise<Trip[]>;
-  getCorporateTrips(orgId: number): Promise<CorporateTripDto[]>;
-  getTripById(tripId: number, user: User): Promise<Trip | null>;
+  getTripsByUserId(userId: string, orgId: string): Promise<Trip[]>;
+  getCorporateTrips(orgId: string): Promise<CorporateTripDto[]>;
+  getTripById(tripId: string, user: User): Promise<Trip | null>;
 }

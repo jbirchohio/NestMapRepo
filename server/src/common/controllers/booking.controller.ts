@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { BookingService } from '../services/booking.service';
 import { Booking } from '../../../db/bookingSchema.js';
 import { ResponseFormatter } from '../utils/response-formatter.util';
-import { asyncHandler } from '../middleware/error-handler.middleware';
+import { withStandardizedErrorHandling } from '../middleware/standardized-error-handler.middleware';
 import { requireAuth, requireOrgContext, enforceOrganizationSecurity } from '../middleware/auth.middleware';
 import { validateBookingRequest } from '../middleware/validation.middleware';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces';

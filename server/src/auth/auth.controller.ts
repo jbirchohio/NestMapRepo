@@ -1,35 +1,21 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import type { Request as ExpressRequest } from 'express-serve-static-core';
+import type { ParamsDictionary } from 'express-serve-static-core';
+import type { ParsedQs } from 'qs';
 import { decode } from 'jsonwebtoken';
-import { IAuthService } from './interfaces/auth.service.interface';
+import { IAuthService } from './interfaces/auth.service.interface.js';
 import { 
   LoginDto, 
   RequestPasswordResetDto, 
   ResetPasswordDto,
   RefreshTokenDto
-} from './dtos/auth.dto';
-import { rateLimiterMiddleware } from './middleware/rate-limiter.middleware';
-import { isErrorWithMessage } from '../utils/error-utils';
+} from './dtos/auth.dto.js';
+import { rateLimiterMiddleware } from './middleware/rate-limiter.middleware.js';
+import { isErrorWithMessage } from '../utils/error-utils.js';
 import { Logger } from '@nestjs/common';
-import { UserRole } from './types';
+import { UserRole } from './jwt/types.js';
 
-// DTOs
-interface LoginDto {
-  email: string;
-  password: string;
-}
-
-interface RequestPasswordResetDto {
-  email: string;
-}
-
-interface ResetPasswordDto {
-  token: string;
-  newPassword: string;
-}
-
-interface RefreshTokenDto {
-  refreshToken: string;
-}
+// DTOs are imported from './dtos/auth.dto.js'
 
 // Response types
 interface AuthResponse {
@@ -51,7 +37,7 @@ interface AuthResponseWithoutRefreshToken {
     id: string;
     email: string;
     role: string | null;
-    organizationId: string | null;
+    organizationId?: string | null;
   };
 }
 
@@ -61,23 +47,6 @@ interface ErrorResponse {
   message?: string;
   expired?: boolean;
 }
-
-// Utility function to check if an error has a message property
-function isErrorWithMessage(error: unknown): error is { message: string; stack?: string } {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'message' in error &&
-    typeof (error as Record<string, unknown>).message === 'string'
-  );
-}
-
-// Rate limiter middleware for sensitive endpoints
-const rateLimiterMiddleware: RequestHandler = (req, res, next) => {
-  // In a real implementation, this would check against a rate limiter
-  // For now, we'll just pass through
-  next();
-};
 
 /**
  * Modern class-based Auth Controller implementation
@@ -116,11 +85,11 @@ export class AuthController {
   /**
    * Login user
    */
-  login: RequestHandler[] = [
+  login = [
     rateLimiterMiddleware,
-    async (req: Request, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, next: NextFunction): Promise<void> => {
+    async (req: ExpressRequest, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, _next: NextFunction): Promise<void> => {
       try {
-        const ip = req.ip || req.socket.remoteAddress || 'unknown';
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown';
         const userAgent = req.headers['user-agent'] || '';
         
         const loginData: LoginDto = req.body;
@@ -147,12 +116,12 @@ export class AuthController {
   /**
    * Refresh access token
    */
-  refreshToken: RequestHandler[] = [
-    async (req: Request, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, next: NextFunction): Promise<void> => {
+  refreshToken = [
+    async (req: ExpressRequest, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, _next: NextFunction): Promise<void> => {
       try {
         // Try to get refresh token from cookie first, then from body
         const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
-        const ip = req.ip || req.socket.remoteAddress || 'unknown';
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown';
         const userAgent = req.headers['user-agent'] || '';
         
         if (!refreshToken) {
@@ -190,8 +159,8 @@ export class AuthController {
   /**
    * Logout user
    */
-  logout: RequestHandler[] = [
-    async (req: Request, res: Response<{ success: boolean } | ErrorResponse>, next: NextFunction): Promise<void> => {
+  logout = [
+    async (req: ExpressRequest, res: Response<{ success: boolean } | ErrorResponse>, _next: NextFunction): Promise<void> => {
       try {
         const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
         const authHeader = req.headers.authorization;
@@ -221,8 +190,8 @@ export class AuthController {
   /**
    * Logout from all devices
    */
-  logoutAllDevices: RequestHandler[] = [
-    async (req: Request, res: Response<{ success: boolean } | ErrorResponse>, next: NextFunction): Promise<void> => {
+  logoutAllDevices = [
+    async (req: ExpressRequest, res: Response<{ success: boolean } | ErrorResponse>): Promise<void> => {
       try {
         const user = (req as any).user;
         
@@ -255,9 +224,9 @@ export class AuthController {
   /**
    * Request password reset
    */
-  requestPasswordReset: RequestHandler[] = [
+  requestPasswordReset = [
     rateLimiterMiddleware, // Apply rate limiting
-    async (req: Request, res: Response<{ success: boolean; message: string } | ErrorResponse>, next: NextFunction): Promise<void> => {
+    async (req: ExpressRequest, res: Response<{ success: boolean; message: string } | ErrorResponse>): Promise<void> => {
       try {
         const { email } = req.body as RequestPasswordResetDto;
         await this.authService.requestPasswordReset(email);
@@ -275,8 +244,8 @@ export class AuthController {
   /**
    * Reset password with token
    */
-  resetPassword: RequestHandler[] = [
-    async (req: Request, res: Response<{ success: boolean; message?: string } | ErrorResponse>, next: NextFunction): Promise<void> => {
+  resetPassword = [
+    async (req: ExpressRequest, res: Response<{ success: boolean; message?: string } | ErrorResponse>): Promise<void> => {
       try {
         const { token, newPassword } = req.body as ResetPasswordDto;
         await this.authService.resetPassword(token, newPassword);

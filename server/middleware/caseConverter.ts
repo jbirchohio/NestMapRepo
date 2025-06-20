@@ -1,4 +1,18 @@
-import { Request, Response, NextFunction } from 'express';
+/**
+ * SINGLE SOURCE OF TRUTH: Case Conversion Middleware
+ * 
+ * This is the canonical implementation for all case conversion functionality in the application.
+ * All case conversion logic should be centralized through this module to ensure consistency.
+ * 
+ * Features:
+ * - Converts between camelCase and snake_case
+ * - Handles nested objects and arrays
+ * - Preserves non-object values
+ * 
+ * DO NOT create duplicate case conversion implementations - extend this one if needed.
+ */
+
+import { RequestHandler } from 'express';
 
 // Converts a string from camelCase to snake_case
 const toSnakeCase = (str: string): string =>
@@ -23,7 +37,7 @@ const convertKeys = (obj: any, converter: (key: string) => string): any => {
   return obj;
 };
 
-export const caseConverterMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const caseConverterMiddleware: RequestHandler = (req, res, next) => {
   // Convert incoming request body from camelCase to snake_case
   if (req.body && Object.keys(req.body).length > 0) {
     req.body = convertKeys(req.body, toSnakeCase);

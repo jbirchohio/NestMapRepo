@@ -2,7 +2,7 @@ import { User } from '../../../db/schema.js';
 import { BaseRepository } from '../base.repository.interface';
 import { UserBookingPreferences } from '../../interfaces/booking.interfaces';
 
-export interface UserRepository extends BaseRepository {
+export interface UserRepository extends BaseRepository<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> {
   // User retrieval
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;

@@ -1,23 +1,24 @@
-import { eq, sql, and, isNull, gte } from 'drizzle-orm';
-import { db } from '../../../db';
+import { eq, sql, and, isNull, gte, inArray } from 'drizzle-orm';
+import { db } from '../../../db/db.js';
 import { users } from '../../../db/schema.js';
-import { UserRepository } from '../interfaces/user.repository.interface';
+import { UserRepository as CommonUserRepository } from '../../common/repositories/user/user.repository.interface.js';
 import { User } from '../../../db/schema.js';
 import { hash, compare } from 'bcryptjs';
-import { BadRequestError } from '../../common/errors';
-import { BaseRepositoryImpl } from '../../common/repositories/base.repository';
-import { Injectable } from '@nestjs/common';
+import { BaseRepositoryImpl } from '../../common/repositories/base.repository.js';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserBookingPreferences } from '../../common/interfaces/booking.interfaces.js';
 
 /**
  * User repository implementation that extends the base repository implementation
  * Implements user-specific operations in addition to common CRUD operations
  */
 @Injectable()
-export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'emailVerified' | 'isActive' | 'failedLoginAttempts' | 'lockedUntil'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> implements UserRepository {  
+export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> implements CommonUserRepository {
   constructor() {
     super('User', users, users.id);
   }
-  async findByEmail(email: string): Promise<User | undefined> {
+  async findByEmail(email: string): Promise<User | null> {
+    if (!email) return null;
     const [user] = await db
       .select()
       .from(users)
@@ -27,7 +28,20 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
     return user;
   }
 
-  async findById(id: string): Promise<User | undefined> {
+  // Implement common interface methods
+  async findAll(): Promise<User[]> {
+    return db.select().from(users).all();
+  }
+
+  async findByOrganizationId(organizationId: string): Promise<User[]> {
+    return db
+      .select()
+      .from(users)
+      .where(eq(users.organizationId, organizationId));
+  }
+
+  async findById(id: string): Promise<User | null> {
+    if (!id) return null;
     const [user] = await db
       .select()
       .from(users)
@@ -124,16 +138,15 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
       .where(eq(users.id, userId));
   }
 
-  async createUser(
-    userData: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'emailVerified' | 'isActive' | 'failedLoginAttempts' | 'lockedUntil'>, 
-    password: string
-  ): Promise<User> {
-    const hashedPassword = await hash(password, 10);
+  // Create method that matches the common interface
+  async create(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
+    const hashedPassword = userData.password ? await hash(userData.password, 10) : '';
     const [user] = await db
       .insert(users)
       .values({
         ...userData,
-        passwordHash: hashedPassword,
+        password: hashedPassword,
+        email: userData.email.toLowerCase().trim(),
         emailVerified: false,
         isActive: true,
         failedLoginAttempts: 0,
@@ -143,30 +156,34 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
       })
       .returning();
     
-    return user;
-  }
-
-  async updateUser(
-    userId: string, 
-    userData: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>
-  ): Promise<User | undefined> {
-    const [user] = await db
-      .update(users)
-      .set({
-        ...userData,
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, userId))
-      .returning();
+    if (!user) {
+      throw new Error('Failed to create user');
+    }
     
     return user;
   }
 
-  async deleteUser(userId: string): Promise<boolean> {
+  async update(id: string, userData: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...userData,
+        updatedAt: new Date(),
+        // Ensure email is always lowercased if being updated
+        ...(userData.email ? { email: userData.email.toLowerCase().trim() } : {})
+      })
+      .where(eq(users.id, id))
+      .returning();
+    
+    return user || null;
+  }
+
+  // Alias deleteUser to delete to match the common interface
+  async delete(id: string): Promise<boolean> {
     const [user] = await db
       .delete(users)
-      .where(eq(users.id, userId))
-      .returning({ id: users.id });
+      .where(eq(users.id, id))
+      .returning();
     
     return !!user;
   }
@@ -184,6 +201,81 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
     return user?.emailVerified ?? false;
   }
 
+  // Additional required methods
+  async findAll(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async findByIds(ids: string[]): Promise<User[]> {
+    if (ids.length === 0) return [];
+    return await db
+      .select()
+      .from(users)
+      .where(inArray(users.id, ids));
+  }
+
+  async count(filter?: Partial<User>): Promise<number> {
+    const query = db.select({ count: sql<number>`count(*)` }).from(users);
+    
+    if (filter) {
+      // Add where conditions based on filter
+      // This is a simplified version - you might need to adjust based on your needs
+      const conditions = Object.entries(filter)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) => eq(users[key as keyof User], value));
+      
+      if (conditions.length > 0) {
+        query.where(and(...conditions));
+      }
+    }
+    
+    const result = await query;
+    return result[0]?.count ?? 0;
+  }
+
+  async exists(id: string): Promise<boolean> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.id, id));
+    
+    return (result[0]?.count ?? 0) > 0;
+  }
+
+  async findByOrganizationId(organizationId: string): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.organizationId, organizationId));
+  }
+
+  async create(data: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'emailVerified' | 'isActive' | 'failedLoginAttempts' | 'lockedUntil'>): Promise<User> {
+    const passwordHash = data.passwordHash || ''; // You might want to handle this differently
+    return this.createUser(data, passwordHash);
+  }
+
+  async update(id: string, data: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    
+    return user || null;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const [user] = await db
+      .delete(users)
+      .where(eq(users.id, id))
+      .returning({ id: users.id });
+    
+    return !!user;
+  }
+
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
     const user = await this.findById(userId);
     if (!user) {
@@ -198,17 +290,130 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
     return this.setPassword(userId, newPassword);
   }
 
-  async setPassword(userId: string, newPassword: string): Promise<boolean> {
-    const hashedPassword = await hash(newPassword, 10);
-    await db
+  // Add missing method from common interface
+  async updatePassword(id: string, passwordHash: string): Promise<boolean> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          password: passwordHash, 
+          updatedAt: new Date(),
+          // Reset security-related fields when password is updated
+          failedLoginAttempts: 0,
+          lockedUntil: null
+        })
+        .where(eq(users.id, id))
+        .returning();
+      
+      return !!updatedUser;
+    } catch (error) {
+      this.logger.error(`Failed to update password for user ${id}`, error);
+      return false;
+    }
+  }
+
+  // Add missing method from common interface
+  async updateLastLogin(id: string): Promise<boolean> {
+    const [updatedUser] = await db
       .update(users)
-      .set({ 
-        passwordHash: hashedPassword,
-        // Clear any password reset tokens when password is changed
-        resetToken: null,
-        resetTokenExpires: null
-      })
-      .where(eq(users.id, userId));
-    return true;
+      .set({ lastLogin: new Date(), updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    
+    return !!updatedUser;
+  }
+
+  // Add missing method from common interface
+  async updatePreferences(id: string, preferences: UserBookingPreferences): Promise<User | null> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ preferences, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    
+    return updatedUser || null;
+  }
+
+  // Keep the original setPassword as an alias for backward compatibility
+  async setPassword(userId: string, newPassword: string): Promise<boolean> {
+    try {
+      const hashedPassword = await hash(newPassword, 10);
+      await db
+        .update(users)
+        .set({
+          passwordHash: hashedPassword,
+          passwordChangedAt: new Date(),
+          updatedAt: new Date(),
+          // Clear any password reset tokens when password is changed
+          resetToken: null,
+          resetTokenExpires: null,
+          passwordResetToken: null,
+          passwordResetExpires: null
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to set password for user ${userId}`, error);
+      return false;
+    }
+  }
+
+  async updatePassword(userId: string, newPassword: string): Promise<boolean> {
+    try {
+      const hashedPassword = await hash(newPassword, 10);
+      await db
+        .update(users)
+        .set({
+          passwordHash: hashedPassword,
+          passwordChangedAt: new Date(),
+          updatedAt: new Date(),
+          // Clear any password reset tokens when password is updated
+          resetToken: null,
+          resetTokenExpires: null,
+          passwordResetToken: null,
+          passwordResetExpires: null
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to update password for user ${userId}`, error);
+      return false;
+    }
+  }
+
+  async updatePreferences(userId: string, preferences: Record<string, any>): Promise<boolean> {
+    try {
+      // Get current preferences
+      const [user] = await db
+        .select({ currentPreferences: users.preferences })
+        .from(users)
+        .where(eq(users.id, userId));
+      
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      // Merge new preferences with existing ones
+      const updatedPreferences = {
+        ...(user.currentPreferences || {}),
+        ...preferences
+      };
+      
+      // Update user with merged preferences
+      await db
+        .update(users)
+        .set({
+          preferences: updatedPreferences,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to update preferences for user ${userId}`, error);
+      return false;
+    }
   }
 }

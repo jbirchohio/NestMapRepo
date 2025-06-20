@@ -1,4 +1,5 @@
-import { BaseModel, PaginationParams, PaginatedResponse } from './base';
+import { BaseModel, PaginationParams, PaginatedResponse } from './base.js';
+import { User } from './users.js';
 
 export type OrganizationPlan = 'free' | 'starter' | 'professional' | 'enterprise' | 'custom';
 export type OrganizationStatus = 'active' | 'suspended' | 'deleted' | 'pending';

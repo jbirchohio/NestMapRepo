@@ -1,5 +1,5 @@
-import { BaseModel, PaginationParams, PaginatedResponse } from './base';
-import { Organization, OrganizationMember } from './organizations';
+import { BaseModel, PaginationParams, PaginatedResponse } from './base.js';
+import { Organization, OrganizationMember } from './organizations.js';
 
 export type UserRole = 'superadmin' | 'admin' | 'manager' | 'user' | 'guest';
 

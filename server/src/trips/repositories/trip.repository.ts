@@ -9,12 +9,12 @@ import { UnauthorizedError } from '../../common/errors';
 import { BaseRepositoryImpl } from '../../common/repositories/base.repository';
 
 @Injectable()
-export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, number, Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {
+export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {
   constructor() {
     super('Trip', tripsTable, tripsTable.id);
   }
 
-  async getTripsByUserId(userId: string, orgId: number): Promise<Trip[]> {
+  async getTripsByUserId(userId: string, orgId: string): Promise<Trip[]> {
     this.logger.log(`Fetching trips for user ${userId} in organization ${orgId}`);
     
     return db
@@ -28,7 +28,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, number, Omit<Tr
       );
   }
 
-  async getTripsByOrganizationId(orgId: number): Promise<Trip[]> {
+  async getTripsByOrganizationId(orgId: string): Promise<Trip[]> {
     this.logger.log(`Fetching all trips for organization ${orgId}`);
     
     return db
@@ -37,7 +37,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, number, Omit<Tr
       .where(eq(tripsTable.organizationId, orgId));
   }
 
-  async getTripById(tripId: number): Promise<Trip | null> {
+  async getTripById(tripId: string): Promise<Trip | null> {
     this.logger.log(`Fetching trip ${tripId}`);
     return super.findById(tripId);
   }
@@ -47,17 +47,17 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, number, Omit<Tr
     return super.create(tripData);
   }
 
-  async updateTrip(tripId: number, tripData: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Trip | null> {
+  async updateTrip(tripId: string, tripData: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Trip | null> {
     this.logger.log(`Updating trip ${tripId}`);
     return super.update(tripId, tripData);
   }
 
-  async deleteTrip(tripId: number): Promise<boolean> {
+  async deleteTrip(tripId: string): Promise<boolean> {
     this.logger.log(`Deleting trip ${tripId}`);
     return super.delete(tripId);
   }
 
-  async getCorporateTrips(orgId: number): Promise<CorporateTripDto[]> {
+  async getCorporateTrips(orgId: string): Promise<CorporateTripDto[]> {
     this.logger.log(`Fetching corporate trips for organization ${orgId}`);
     
     const trips = await this.getTripsByOrganizationId(orgId);
@@ -71,7 +71,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, number, Omit<Tr
           .limit(1);
 
         return {
-          id: trip.id,
+          id: trip.id, // Now using string ID directly
           title: trip.title,
           startDate: trip.startDate.toISOString(),
           endDate: trip.endDate.toISOString(),
@@ -94,7 +94,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, number, Omit<Tr
     return tripsWithUserDetails;
   }
 
-  async checkTripAccess(tripId: number, user: User): Promise<boolean> {
+  async checkTripAccess(tripId: string, user: User): Promise<boolean> {
     const trip = await this.getTripById(tripId);
     
     if (!trip) {

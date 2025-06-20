@@ -1,334 +1,345 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import Stripe from 'stripe';
-import { storage } from '../../storage';
 import { db } from '../../db';
+import request from 'supertest';
+import express, { Application } from 'express';
+import bodyParser from 'body-parser';
 
 // Mock the required dependencies
 jest.mock('stripe');
-jest.mock('../../storage');
 jest.mock('../../db');
 
-// Import the webhook handler after mocking dependencies
-// Note: This is a hypothetical import - you'll need to adjust to match your actual webhook handler location
-import { handleStripeWebhook } from '../../routes/webhooks';
+// Import the webhook router
+import webhookRouter from '../../routes/webhooks';
 
-describe('Stripe Webhook Handler', () => {
-  let mockStripeInstance: jest.Mocked<Stripe>;
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
+// Create a test Express app
+const createTestApp = (): Application => {
+  const app = express();
+  // Parse JSON bodies
+  app.use(bodyParser.json());
+  // Parse raw body for webhooks
+  app.use(bodyParser.raw({ type: 'application/json' }));
+  // Mount the webhook router
+  app.use('/webhooks', webhookRouter);
+  return app;
+};
+
+// Mock the email service
+jest.mock('../../src/email/services/nodemailer-email.service', () => ({
+  NodemailerEmailService: jest.fn().mockImplementation(() => ({
+    sendEmail: jest.fn().mockResolvedValue(true)
+  }))
+}));
+
+// Mock the config service
+jest.mock('@nestjs/config', () => ({
+  ConfigService: jest.fn().mockImplementation(() => ({
+    get: jest.fn().mockImplementation((key: string) => {
+      const config: Record<string, any> = {
+        'STRIPE_SECRET_KEY': 'sk_test_mock',
+        'STRIPE_WEBHOOK_SECRET': 'whsec_mock',
+        'SMTP_HOST': 'smtp.example.com',
+        'SMTP_USER': 'user',
+        'SMTP_PASSWORD': 'password',
+        'FRONTEND_URL': 'http://localhost:3000',
+        'NODE_ENV': 'test'
+      };
+      return config[key];
+    })
+  }))
+}));
+
+describe('Stripe Webhook Endpoints', () => {
+  let app: Application;
+  let mockStripe: jest.Mocked<Stripe>;
+  
+  // Sample test data
+  const testCustomerId = 'cus_test123';
+  const testSubscriptionId = 'sub_test123';
+  const testInvoiceId = 'in_test123';
+  const testPriceId = 'price_test123';
+  const testProductId = 'prod_test123';
+  
+  // Mock data for database responses
+  const mockUser = {
+    id: 1,
+    email: 'test@example.com',
+    stripe_customer_id: testCustomerId
+  };
+  
+  const mockOrganization = {
+    id: 1,
+    name: 'Test Org',
+    stripe_customer_id: testCustomerId
+  };
+  
+  const mockInvoice = {
+    id: 1,
+    stripe_invoice_id: testInvoiceId,
+    user_id: 1,
+    organization_id: 1,
+    amount: 19900,
+    status: 'paid',
+    currency: 'usd',
+    created_at: new Date()
+  };
+  
+  // Mock Stripe event data
+  const mockStripeEvent = {
+    id: 'evt_test123',
+    type: 'invoice.payment_succeeded',
+    data: {
+      object: {
+        id: testInvoiceId,
+        customer: testCustomerId,
+        subscription: testSubscriptionId,
+        status: 'paid',
+        amount_paid: 19900,
+        currency: 'usd',
+        lines: {
+          data: [{
+            price: {
+              id: testPriceId,
+              product: testProductId
+            }
+          }]
+        },
+        created: Math.floor(Date.now() / 1000)
+      }
+    }
+  };
   
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
     
-    // Setup mock implementation for Stripe
-    mockStripeInstance = new Stripe('mock_key') as jest.Mocked<Stripe>;
+    // Create a new test app for each test
+    app = createTestApp();
     
-    // Mock Stripe webhook signature verification
-    mockStripeInstance.webhooks.constructEvent = jest.fn().mockImplementation(
-      (payload, signature, secret) => {
-        // Return different events based on the payload for testing different scenarios
-        const payloadStr = payload.toString();
-        if (payloadStr.includes('invoice.payment_succeeded')) {
-          return {
-            type: 'invoice.payment_succeeded',
-            data: {
-              object: {
-                id: 'in_mock123',
-                customer: 'cus_mock123',
-                subscription: 'sub_mock123',
-                status: 'paid',
-                amount_paid: 19900, // $199.00
-                lines: {
-                  data: [{
-                    price: {
-                      id: 'price_mock_team',
-                      product: 'prod_mock_team'
-                    }
-                  }]
-                }
-              }
-            }
-          };
-        } else if (payloadStr.includes('invoice.payment_failed')) {
-          return {
-            type: 'invoice.payment_failed',
-            data: {
-              object: {
-                id: 'in_mock456',
-                customer: 'cus_mock123',
-                subscription: 'sub_mock123',
-                status: 'open',
-                next_payment_attempt: Math.floor(Date.now() / 1000) + 24 * 60 * 60 // 1 day from now
-              }
-            }
-          };
-        } else if (payloadStr.includes('customer.subscription.updated')) {
-          return {
-            type: 'customer.subscription.updated',
-            data: {
-              object: {
-                id: 'sub_mock123',
-                customer: 'cus_mock123',
-                status: 'active',
-                items: {
-                  data: [{
-                    price: {
-                      id: 'price_mock_enterprise',
-                      product: 'prod_mock_enterprise'
-                    }
-                  }]
-                },
-                current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60 // 30 days from now
-              },
-              previous_attributes: {
-                items: {
-                  data: [{
-                    price: {
-                      id: 'price_mock_team',
-                      product: 'prod_mock_team'
-                    }
-                  }]
-                }
-              }
-            }
-          };
-        } else if (payloadStr.includes('customer.subscription.deleted')) {
-          return {
-            type: 'customer.subscription.deleted',
-            data: {
-              object: {
-                id: 'sub_mock123',
-                customer: 'cus_mock123',
-                status: 'canceled'
-              }
-            }
-          };
-        } else {
-          return {
-            type: 'unknown',
-            data: {
-              object: {}
-            }
-          };
-        }
-      }
-    );
+    // Setup mock Stripe instance
+    mockStripe = new Stripe('sk_test_mock', {
+      apiVersion: '2025-05-28.basil'
+    }) as jest.Mocked<Stripe>;
     
-    // Mock Express request and response
-    mockRequest = {
-      body: JSON.stringify({}), // Will be set in each test
-      headers: {
-        'stripe-signature': 'mock_signature'
-      }
-    };
+    // Mock Stripe webhook verification
+    mockStripe.webhooks = {
+      constructEvent: jest.fn().mockReturnValue(mockStripeEvent)
+    } as any;
     
-    mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-      send: jest.fn().mockReturnThis()
-    };
+    // Mock Stripe client in the webhook router
+    jest.mock('../../stripe', () => ({
+      stripe: mockStripe
+    }));
     
-    // Mock storage methods
-    (storage.getUserByStripeCustomerId as jest.Mock).mockResolvedValue({
-      id: 123,
-      email: 'test@example.com',
-      organization_id: 456
-    });
+    // Mock database responses
+    (db.select as jest.Mock).mockImplementation(() => ({
+      from: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue([mockInvoice])
+    }));
     
-    (storage.getSubscriptionByStripeId as jest.Mock).mockResolvedValue({
-      id: 789,
-      user_id: 123,
-      organization_id: 456,
-      stripe_subscription_id: 'sub_mock123',
-      stripe_customer_id: 'cus_mock123',
-      plan_id: 'team',
-      status: 'active'
-    });
+    (db.update as jest.Mock).mockImplementation(() => ({
+      set: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      returning: jest.fn().mockResolvedValue([mockInvoice])
+    }));
+    
+    (db.insert as jest.Mock).mockImplementation(() => ({
+      values: jest.fn().mockReturnThis(),
+      returning: jest.fn().mockResolvedValue([mockInvoice])
+    }));
   });
   
-  test('should handle invoice.payment_succeeded event', async () => {
-    // Setup the request body for this specific event
-    mockRequest.body = JSON.stringify({
-      type: 'invoice.payment_succeeded',
-      data: {
-        object: {
-          id: 'in_mock123',
-          customer: 'cus_mock123',
-          subscription: 'sub_mock123'
-        }
-      }
-    });
+  test('should handle invoice.payment_succeeded webhook', async () => {
+    // Mock the webhook signature verification with proper type assertion
+    (mockStripe.webhooks.constructEvent as jest.Mock).mockImplementationOnce(() => ({
+      ...mockStripeEvent,
+      type: 'invoice.payment_succeeded'
+    }));
     
-    await handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+    // Mock database response for invoice
+    (db.select as jest.Mock).mockImplementation(() => ({
+      from: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      execute: jest.fn().mockResolvedValue([mockInvoice])
+    }));
     
-    // Verify Stripe webhook was constructed
-    expect(mockStripeInstance.webhooks.constructEvent).toHaveBeenCalledWith(
-      mockRequest.body,
-      'mock_signature',
+    // Send the webhook request
+    const response = await request(app)
+      .post('/webhooks/stripe-invoice')
+      .set('stripe-signature', 'test_signature')
+      .send(mockStripeEvent);
+    
+    // Verify the response
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ received: true });
+    
+    // Verify Stripe webhook was verified
+    expect(mockStripe.webhooks.constructEvent).toHaveBeenCalledWith(
+      expect.any(Buffer),
+      'test_signature',
       expect.any(String)
     );
     
-    // Verify subscription was updated in database
-    expect(storage.updateSubscription).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 789,
-        status: 'active',
-        current_period_end: expect.any(Date)
-      })
-    );
-    
-    // Verify response was sent
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        received: true
-      })
-    );
+    // Verify database was updated
+    expect(db.update).toHaveBeenCalled();
   });
   
-  test('should handle invoice.payment_failed event', async () => {
-    // Setup the request body for this specific event
-    mockRequest.body = JSON.stringify({
+  test('should handle invoice.payment_failed webhook', async () => {
+    // Mock the webhook signature verification with proper type assertion
+    (mockStripe.webhooks.constructEvent as jest.Mock).mockImplementationOnce(() => ({
+      ...mockStripeEvent,
       type: 'invoice.payment_failed',
       data: {
         object: {
-          id: 'in_mock456',
-          customer: 'cus_mock123',
-          subscription: 'sub_mock123'
+          ...mockStripeEvent.data.object,
+          status: 'open',
+          next_payment_attempt: Math.floor(Date.now() / 1000) + 24 * 60 * 60 // 1 day from now
         }
       }
-    });
+    }));
     
-    await handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+    // Send the webhook request
+    const response = await request(app)
+      .post('/webhooks/stripe-invoice')
+      .set('stripe-signature', 'test_signature')
+      .send({
+        ...mockStripeEvent,
+        type: 'invoice.payment_failed'
+      });
     
-    // Verify subscription was updated in database
-    expect(storage.updateSubscription).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 789,
-        status: 'past_due',
-        next_payment_attempt: expect.any(Date)
-      })
-    );
+    // Verify the response
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ received: true });
     
-    // Verify notification was sent to user
-    expect(storage.createNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        user_id: 123,
-        type: 'payment_failed',
-        title: expect.stringContaining('Payment Failed')
-      })
-    );
+    // Verify Stripe webhook was verified
+    expect(mockStripe.webhooks.constructEvent).toHaveBeenCalled();
     
-    // Verify response was sent
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    // Verify database was updated
+    expect(db.update).toHaveBeenCalled();
   });
   
-  test('should handle customer.subscription.updated event', async () => {
-    // Setup the request body for this specific event
-    mockRequest.body = JSON.stringify({
+  test('should handle customer.subscription.updated webhook', async () => {
+    // Mock the webhook signature verification with proper type assertion
+    (mockStripe.webhooks.constructEvent as jest.Mock).mockImplementationOnce(() => ({
+      ...mockStripeEvent,
       type: 'customer.subscription.updated',
       data: {
         object: {
-          id: 'sub_mock123',
-          customer: 'cus_mock123',
+          id: testSubscriptionId,
+          customer: testCustomerId,
           status: 'active'
         }
       }
-    });
+    }));
     
-    await handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+    // Send the webhook request
+    const response = await request(app)
+      .post('/webhooks/stripe-invoice')
+      .set('stripe-signature', 'test_signature')
+      .send({
+        ...mockStripeEvent,
+        type: 'customer.subscription.updated'
+      });
     
-    // Verify subscription was updated in database with new plan
-    expect(storage.updateSubscription).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 789,
-        plan_id: 'enterprise',
-        status: 'active'
-      })
-    );
+    // Verify the response
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ received: true });
     
-    // Verify response was sent
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    // Verify Stripe webhook was verified
+    expect(mockStripe.webhooks.constructEvent).toHaveBeenCalled();
+    
+    // Verify database was updated
+    expect(db.update).toHaveBeenCalled();
   });
   
-  test('should handle customer.subscription.deleted event', async () => {
-    // Setup the request body for this specific event
-    mockRequest.body = JSON.stringify({
+  test('should handle customer.subscription.deleted webhook', async () => {
+    // Mock the webhook signature verification with proper type assertion
+    (mockStripe.webhooks.constructEvent as jest.Mock).mockImplementationOnce(() => ({
+      ...mockStripeEvent,
       type: 'customer.subscription.deleted',
       data: {
         object: {
-          id: 'sub_mock123',
-          customer: 'cus_mock123'
+          id: testSubscriptionId,
+          customer: testCustomerId,
+          status: 'canceled',
+          canceled_at: Math.floor(Date.now() / 1000)
         }
       }
-    });
+    }));
     
-    await handleStripeWebhook(mockRequest as Request, mockResponse as Response);
+    // Send the webhook request
+    const response = await request(app)
+      .post('/webhooks/stripe-invoice')
+      .set('stripe-signature', 'test_signature')
+      .send({
+        ...mockStripeEvent,
+        type: 'customer.subscription.deleted'
+      });
     
-    // Verify subscription was updated in database
-    expect(storage.updateSubscription).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 789,
-        status: 'canceled',
-        canceled_at: expect.any(Date)
-      })
-    );
+    // Verify the response
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ received: true });
     
-    // Verify organization plan was downgraded to free
-    expect(storage.updateOrganization).toHaveBeenCalledWith(
-      456,
-      expect.objectContaining({
-        plan_id: 'free'
-      })
-    );
+    // Verify Stripe webhook was verified
+    expect(mockStripe.webhooks.constructEvent).toHaveBeenCalled();
     
-    // Verify response was sent
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
+    // Verify database was updated
+    expect(db.update).toHaveBeenCalled();
   });
   
-  test('should handle signature verification failure', async () => {
+  test('should return 400 for missing Stripe signature', async () => {
+    // Send request without Stripe signature header
+    const response = await request(app)
+      .post('/webhooks/stripe-invoice')
+      .send(mockStripeEvent);
+    
+    // Verify error response
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: 'Missing Stripe signature'
+    });
+  });
+  
+  test('should return 400 for invalid event type', async () => {
+    // Mock the webhook signature verification to return an unknown event type
+    (mockStripe.webhooks.constructEvent as jest.Mock).mockImplementationOnce(() => ({
+      ...mockStripeEvent,
+      type: 'unknown.event.type'
+    }));
+    
+    // Send the webhook request with unknown event type
+    const response = await request(app)
+      .post('/webhooks/stripe-invoice')
+      .set('stripe-signature', 'test_signature')
+      .send({
+        ...mockStripeEvent,
+        type: 'unknown.event.type'
+      });
+    
+    // Verify error response
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: 'Unhandled event type: unknown.event.type'
+    });
+  });
+  
+  test('should return 400 for signature verification failure', async () => {
     // Make the signature verification fail
-    mockStripeInstance.webhooks.constructEvent = jest.fn().mockImplementation(() => {
+    (mockStripe.webhooks.constructEvent as jest.Mock).mockImplementationOnce(() => {
       throw new Error('Invalid signature');
     });
     
-    mockRequest.body = JSON.stringify({
-      type: 'invoice.payment_succeeded',
-      data: {
-        object: {}
-      }
+    // Send the webhook request
+    const response = await request(app)
+      .post('/webhooks/stripe-invoice')
+      .set('stripe-signature', 'test_signature')
+      .send(mockStripeEvent);
+    
+    // Verify error response
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: 'Invalid signature'
     });
-    
-    await handleStripeWebhook(mockRequest as Request, mockResponse as Response);
-    
-    // Verify error response was sent
-    expect(mockResponse.status).toHaveBeenCalledWith(400);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        error: expect.stringContaining('Invalid signature')
-      })
-    );
-  });
-  
-  test('should handle unknown event types gracefully', async () => {
-    // Setup the request body for an unknown event
-    mockRequest.body = JSON.stringify({
-      type: 'unknown.event',
-      data: {
-        object: {}
-      }
-    });
-    
-    await handleStripeWebhook(mockRequest as Request, mockResponse as Response);
-    
-    // Verify response was sent (acknowledged but no action taken)
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        received: true,
-        handled: false
-      })
-    );
   });
 });

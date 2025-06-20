@@ -1,4 +1,4 @@
-import { BaseModel } from './base';
+import { BaseModel } from './base.js';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'refunded';
 export type BookingType = 'flight' | 'hotel' | 'car_rental' | 'activity' | 'other';

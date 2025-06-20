@@ -1,21 +1,85 @@
-import type { Express } from "express";
-import { db } from "../db";
-import { trips, bookings, activities } from "@shared/schema";
+import { Express, Router, Request, Response, NextFunction, RequestHandler, RequestHandlerParams } from "express";
+import { db } from "../db.js";
+import { trips, bookings, activities } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
-import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { duffelProvider } from "../duffelProvider";
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { duffelProvider } from "../duffelProvider.js";
+import { AuthUser } from '../src/types/auth-user';
+import { asyncHandler } from '../utils/routeHelpers.js';
+
+// Extend Express types to include our custom properties
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthUser & { organizationId: string; role?: string };
+      organizationId: string;
+      organizationFilter: (orgId: string | null) => boolean;
+    }
+  }
+}
+
+// Type for authenticated request with specific params
+type AuthenticatedRequest<Params = any, ResBody = any, ReqBody = any, ReqQuery = any> = 
+  Request<Params, ResBody, ReqBody, ReqQuery> & {
+    user: NonNullable<Express.Request['user']>;
+    organizationId: string;
+  };
+
+// Type for route handler with authenticated request
+type AuthenticatedHandler<Params = any, ResBody = any, ReqBody = any, ReqQuery = any> = (
+  req: AuthenticatedRequest<Params, ResBody, ReqBody, ReqQuery>,
+  res: Response<ResBody>,
+  next: NextFunction
+) => Promise<void> | void;
 
 export function registerBookingRoutes(app: Express) {
-  // Apply middleware to all booking routes
-  app.use('/api/trips', validateJWT);
-  app.use('/api/trips', injectOrganizationContext);
-  app.use('/api/trips', validateOrganizationAccess);
+  // Create a router for trip-related booking routes with proper typing
+  const bookingRouter = Router();
+  
+  // Apply middleware to the booking router
+  bookingRouter.use(validateJWT);
+  bookingRouter.use(injectOrganizationContext);
+  bookingRouter.use(validateOrganizationAccess);
+  
+  // Mount the booking router under /api/trips
+  app.use('/api/trips', bookingRouter);
   
   // Get all bookings for a trip
-  app.get("/api/trips/:tripId/bookings", async (req, res) => {
+  bookingRouter.get(
+    "/:tripId/bookings",
+    route<{ tripId: string }>(async (req, res) => {
+      const tripId = req.params.tripId;
+      const organizationId = req.user.organizationId;
+
+      // Verify trip belongs to user's organization
+      const [trip] = await db
+        .select()
+        .from(trips)
+        .where(and(
+          eq(trips.id, tripId),
+          eq(trips.organizationId, organizationId)
+        ));
+
+      if (!trip) {
+        return res.status(404).json({ error: "Trip not found" });
+      }
+
+      // Get bookings for this trip
+      const tripBookings = await db
+        .select()
+        .from(bookings)
+        .where(and(
+          eq(bookings.tripId, tripId),
+          eq(bookings.organizationId, organizationId)
+        ))
+        .orderBy(desc(bookings.createdAt));
+
+      res.json(tripBookings);
+    })
+  );
     try {
-      const tripId = parseInt(req.params.tripId);
+      const tripId = req.params.tripId;
       const organizationId = req.user!.organizationId;
 
       // Verify trip belongs to user's organization
@@ -24,7 +88,7 @@ export function registerBookingRoutes(app: Express) {
         .from(trips)
         .where(and(
           eq(trips.id, tripId),
-          eq(trips.organization_id, organizationId)
+          eq(trips.organizationId, organizationId)
         ));
 
       if (!trip) {
@@ -49,10 +113,11 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Create new booking for a trip
-  app.post("/api/trips/:tripId/bookings", async (req, res) => {
-    try {
-      const tripId = parseInt(req.params.tripId);
-      const organizationId = req.user!.organizationId;
+  bookingRouter.post(
+    "/:tripId/bookings",
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
+      const tripId = req.params.tripId;
+      const organizationId = req.user.organizationId;
       const { type, passengers, ...bookingData } = req.body;
 
       // Verify trip belongs to user's organization
@@ -61,7 +126,7 @@ export function registerBookingRoutes(app: Express) {
         .from(trips)
         .where(and(
           eq(trips.id, tripId),
-          eq(trips.organization_id, organizationId)
+          eq(trips.organizationId, organizationId)
         ));
 
       if (!trip) {
@@ -144,10 +209,11 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Get booking by ID
-  app.get("/api/bookings/:bookingId", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.bookingId);
-      const organizationId = req.user!.organizationId;
+  bookingRouter.get(
+    "/bookings/:bookingId",
+    route<{ bookingId: string }>(async (req, res) => {
+      const bookingId = req.params.bookingId;
+      const organizationId = req.user.organizationId;
 
       const [booking] = await db
         .select()
@@ -162,6 +228,14 @@ export function registerBookingRoutes(app: Express) {
       }
 
       res.json(booking);
+    })
+  );
+
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      res.json(booking);
     } catch (error) {
       console.error("Error fetching booking:", error);
       res.status(500).json({ error: "Failed to fetch booking" });
@@ -169,10 +243,11 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Update booking
-  app.patch("/api/bookings/:bookingId", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.bookingId);
-      const organizationId = req.user!.organizationId;
+  bookingRouter.patch(
+    "/bookings/:bookingId",
+    route<{ bookingId: string }>(async (req, res) => {
+      const bookingId = req.params.bookingId;
+      const organizationId = req.user.organizationId;
       const updates = req.body;
 
       // Verify booking exists and belongs to organization
@@ -198,17 +273,15 @@ export function registerBookingRoutes(app: Express) {
         .returning();
 
       res.json(updatedBooking);
-    } catch (error) {
-      console.error("Error updating booking:", error);
-      res.status(500).json({ error: "Failed to update booking" });
-    }
-  });
+    })
+  );
 
   // Cancel booking
-  app.delete("/api/bookings/:bookingId", validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {
-    try {
-      const bookingId = parseInt(req.params.bookingId);
-      const organizationId = req.user!.organizationId;
+  bookingRouter.delete(
+    "/bookings/:bookingId",
+    route<{ bookingId: string }>(async (req, res) => {
+      const bookingId = req.params.bookingId;
+      const organizationId = req.user.organizationId;
 
       // Verify booking exists and belongs to organization
       const [booking] = await db
@@ -254,40 +327,45 @@ export function registerBookingRoutes(app: Express) {
       console.error("Error cancelling booking:", error);
       res.status(500).json({ error: "Failed to cancel booking" });
     }
-  });
 
-  // Search flights (both endpoints for compatibility)
-  app.post("/api/flights/search", validateJWT, async (req, res) => {
-    try {
-      if (!process.env.DUFFEL_API_KEY) {
-        return res.status(400).json({ 
-          error: "Flight search requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
-        });
-      }
+    const [updatedBooking] = await db
+      .update(bookings)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
 
-      const searchParams = req.body;
-      
-      try {
-        const results = await duffelProvider.searchFlights(searchParams);
-        res.json(results);
-      } catch (apiError) {
-        console.error("Duffel flight search error:", apiError);
-        return res.status(400).json({ 
-          error: "Flight search failed. Please verify your Duffel API credentials." 
-        });
-      }
-    } catch (error) {
-      console.error("Error searching flights:", error);
-      res.status(500).json({ error: "Failed to search flights" });
+    res.json(updatedBooking);
+  })
+);
+
+// Cancel booking
+bookingRouter.delete(
+  "/bookings/:bookingId",
+  route<{ bookingId: string }>(async (req, res) => {
+    const bookingId = req.params.bookingId;
+    const organizationId = req.user.organizationId;
+
+    // Verify booking exists and belongs to organization
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(and(
+        eq(bookings.id, bookingId),
+        eq(bookings.organizationId, organizationId)
+      ));
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
     }
-  });
 
-  // Alternative flight search endpoint for compatibility
-  app.post("/api/bookings/flights/search", validateJWT, async (req, res) => {
-    try {
+    // Cancel with provider if needed
+    if (booking.provider === 'duffel' && booking.providerBookingId) {
       if (!process.env.DUFFEL_API_KEY) {
         return res.status(400).json({ 
-          error: "Flight search requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
+          error: "Cancellation requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
         });
       }
 
@@ -323,8 +401,9 @@ export function registerBookingRoutes(app: Express) {
   });
 
   // Search hotels
-  app.post("/api/hotels/search", validateJWT, async (req, res) => {
-    try {
+  bookingRouter.post(
+    "/hotels/search",
+    route<any, any, any, any>(async (req, res) => {
       if (!process.env.DUFFEL_API_KEY) {
         return res.status(400).json({ 
           error: "Hotel search requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
@@ -332,27 +411,17 @@ export function registerBookingRoutes(app: Express) {
       }
 
       const searchParams = req.body;
-      
-      try {
-        const results = await duffelProvider.searchHotels(searchParams);
-        res.json(results);
-      } catch (apiError) {
-        console.error("Duffel hotel search error:", apiError);
-        return res.status(400).json({ 
-          error: "Hotel search failed. Please verify your Duffel API credentials." 
-        });
-      }
-    } catch (error) {
-      console.error("Error searching hotels:", error);
-      res.status(500).json({ error: "Failed to search hotels" });
-    }
-  });
+      const results = await duffelProvider.searchHotels(searchParams);
+      res.json(results);
+    })
+  );
 
   // Get trip activities
-  app.get("/api/trips/:tripId/activities", validateJWT, async (req, res) => {
-    try {
-      const tripId = parseInt(req.params.tripId);
-      const organizationId = req.user!.organizationId;
+  bookingRouter.get(
+    "/:tripId/activities",
+    route<{ tripId: string }>(async (req, res) => {
+      const tripId = req.params.tripId;
+      const organizationId = req.user.organizationId;
 
       // Verify trip belongs to user's organization
       const [trip] = await db
@@ -360,7 +429,7 @@ export function registerBookingRoutes(app: Express) {
         .from(trips)
         .where(and(
           eq(trips.id, tripId),
-          eq(trips.organization_id, organizationId)
+          eq(trips.organizationId, organizationId)
         ));
 
       if (!trip) {
@@ -371,24 +440,61 @@ export function registerBookingRoutes(app: Express) {
         .select()
         .from(activities)
         .where(and(
-          eq(activities.trip_id, tripId),
-          eq(activities.organization_id, organizationId)
+          eq(activities.tripId, tripId),
+          eq(activities.organizationId, organizationId)
         ))
-        .orderBy(activities.date);
+        .orderBy(activities.startDate);
 
       res.json(tripActivities);
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-      res.status(500).json({ error: "Failed to fetch activities" });
-    }
-  });
+    })
+  );
+
+  // Create new booking for a trip
+  bookingRouter.post(
+    "/:tripId/bookings",
+    asyncHandler(async (req: AuthenticatedRequest, res) => {
+      const tripId = req.params.tripId;
+      const organizationId = req.user.organizationId;
+      const userId = req.user.id;
+
+      // Verify trip exists and belongs to user's organization
+      const [trip] = await db
+        .select()
+        .from(trips)
+        .where(and(
+          eq(trips.id, tripId),
+          eq(trips.organizationId, organizationId)
+        ));
+
+      if (!trip) {
+        return res.status(404).json({ error: "Trip not found" });
+      }
+
+      // Create booking
+      const bookingData = {
+        ...req.body,
+        tripId,
+        userId,
+        organizationId,
+        status: 'pending', // Default status
+      };
+
+      const [newBooking] = await db
+        .insert(bookings)
+        .values(bookingData)
+        .returning();
+
+      res.status(201).json(newBooking);
+    })
+  );
 
   // Add activity to trip
-  app.post("/api/trips/:tripId/activities", validateJWT, async (req, res) => {
-    try {
-      const tripId = parseInt(req.params.tripId);
-      const organizationId = req.user!.organizationId;
-      const activityData = req.body;
+  bookingRouter.post(
+    "/:tripId/activities",
+    route<{ tripId: string }>(async (req, res) => {
+      const tripId = req.params.tripId;
+      const organizationId = req.user.organizationId;
+      const userId = req.user.id;
 
       // Verify trip belongs to user's organization
       const [trip] = await db
@@ -396,7 +502,7 @@ export function registerBookingRoutes(app: Express) {
         .from(trips)
         .where(and(
           eq(trips.id, tripId),
-          eq(trips.organization_id, organizationId)
+          eq(trips.organizationId, organizationId)
         ));
 
       if (!trip) {
@@ -407,9 +513,9 @@ export function registerBookingRoutes(app: Express) {
         .insert(activities)
         .values({
           ...activityData,
-          trip_id: tripId,
-          organization_id: organizationId,
-          user_id: req.user!.id
+          tripId,
+          organizationId,
+          userId: req.user!.id
         })
         .returning();
 

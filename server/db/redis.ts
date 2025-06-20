@@ -1,13 +1,9 @@
 import { createClient, RedisClientType } from 'redis';
 import { logger } from '../utils/logger';
 
-// Extend the Redis client type to include all required methods
-interface ExtendedRedisClient extends RedisClientType {
-  incr(key: string): Promise<number>;
-  expire(key: string, seconds: number): Promise<boolean>;
-  keys(pattern: string): Promise<string[]>;
-  // Add other methods as needed
-}
+// Use the standard Redis client type without extending it
+// This avoids type conflicts with the built-in methods
+type ExtendedRedisClient = RedisClientType;
 
 let redisClient: ExtendedRedisClient;
 
@@ -127,7 +123,7 @@ export const redis = {
     return client.setEx(key, seconds, value);
   },
   
-  async expire(key: string, seconds: number): Promise<boolean> {
+  async expire(key: string, seconds: number): Promise<number> {
     const client = getRedisClient();
     return client.expire(key, seconds);
   },

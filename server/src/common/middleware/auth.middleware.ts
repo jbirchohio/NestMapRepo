@@ -1,6 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
-import { createApiError, ErrorType } from './error-handler.middleware';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
+import { createApiError, ErrorType } from '../types/index.js';
 import { Logger } from '@nestjs/common';
+
+// Extend the Express Request type to include the user property
+interface AuthenticatedRequest extends ExpressRequest {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    organizationId: string | null;
+    [key: string]: any;
+  };
+}
 
 /**
  * Middleware to ensure user is authenticated
@@ -8,7 +19,7 @@ import { Logger } from '@nestjs/common';
  * @returns Express middleware function
  */
 export const requireAuth = (logger: Logger) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       logger.warn('Authentication required but no user found in request');
       next(createApiError(ErrorType.UNAUTHORIZED, 'Authentication required'));
@@ -24,7 +35,7 @@ export const requireAuth = (logger: Logger) => {
  * @returns Express middleware function
  */
 export const requireOrgContext = (logger: Logger) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user?.organizationId) {
       logger.warn('Organization context required but not found in user context');
       next(createApiError(ErrorType.BAD_REQUEST, 'Organization context required'));
@@ -40,7 +51,7 @@ export const requireOrgContext = (logger: Logger) => {
  * @returns Express middleware function
  */
 export const requireAdmin = (logger: Logger) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       logger.warn('Authentication required but no user found in request');
       next(createApiError(ErrorType.UNAUTHORIZED, 'Authentication required'));
@@ -63,7 +74,7 @@ export const requireAdmin = (logger: Logger) => {
  * @returns Express middleware function
  */
 export const requireSuperAdmin = (logger: Logger) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       logger.warn('Authentication required but no user found in request');
       next(createApiError(ErrorType.UNAUTHORIZED, 'Authentication required'));
@@ -87,10 +98,10 @@ export const requireSuperAdmin = (logger: Logger) => {
  * @returns Express middleware function
  */
 export const requireOwnership = (
-  getResourceOwnerId: (req: Request) => Promise<string | undefined>,
+  getResourceOwnerId: (req: AuthenticatedRequest) => Promise<string | undefined>,
   logger: Logger
 ) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
         logger.warn('Authentication required but no user found in request');

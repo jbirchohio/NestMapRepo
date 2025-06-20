@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { eq, and, desc, or, isNull } from 'drizzle-orm';
-import { db } from '../db';
+import { db } from '../db/db.js';
 import { 
   approvalRequests, 
   approvalRules, 
@@ -9,10 +9,10 @@ import {
   users,
   insertApprovalRequestSchema,
   insertApprovalRuleSchema 
-} from '@shared/schema';
+} from '../db/schema.js';
 import { z } from 'zod';
-import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { validateJWT } from '../middleware/jwtAuth.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 
 const router = Router();
 

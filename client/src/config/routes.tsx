@@ -7,19 +7,19 @@ import {
 import { RouteObject } from 'react-router-dom';
 
 // Extend the LazyExoticComponent type to include preload
-type PreloadableComponent<T extends ComponentType> = LazyExoticComponent<T> & {
+type PreloadableComponent<T extends ComponentType<any>> = LazyExoticComponent<T> & {
   preload: () => Promise<{ default: T }>;
 };
 
 // Type for our route elements
 type RouteElement = ReactElement & {
-  preload: () => Promise<{ default: ComponentType }>;
+  preload: () => Promise<{ default: ComponentType<any> }>;
 };
 
 /**
  * Higher-order function for lazy loading components with error boundaries and loading states
  */
-function lazyLoad<T extends ComponentType>(
+function lazyLoad<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>
 ): ReactElement {
   const LazyComponent = lazy(importFn) as PreloadableComponent<T>;
@@ -28,6 +28,7 @@ function lazyLoad<T extends ComponentType>(
   LazyComponent.preload = importFn;
 
   const element = <LazyComponent />;
+  // Safe cast since we know this element has the preload function
   (element as unknown as RouteElement).preload = importFn;
   return element;
 }
@@ -232,9 +233,14 @@ export const preloadRoute = async (pathname: string): Promise<void> => {
   const route = findMatchingRoute(allRoutes, pathname);
   
   if (route?.element) {
-    const element = route.element as unknown as RouteElement;
-    if (typeof element.preload === 'function') {
-      await element.preload();
+    try {
+      // Safe cast since we expect route elements to have preload function
+      const element = route.element as unknown as RouteElement;
+      if (typeof element.preload === 'function') {
+        await element.preload();
+      }
+    } catch (error) {
+      console.error(`Failed to preload route for ${pathname}:`, error);
     }
   }
 };

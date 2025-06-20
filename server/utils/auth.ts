@@ -2,17 +2,18 @@ import { hash, compare } from 'bcrypt';
 import { randomBytes, createHash } from 'crypto';
 import { SALT_ROUNDS } from '../config/constants.js';
 import { logger } from './logger.js';
-import { users } from '@shared/schema';
-import { dbService } from '../services/database.service.js';
+import { users } from '../db/schema.js';  
+import type { User } from '../../shared/src/schema.js';  
 import { eq, and, sql } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
+import { dbService } from '../services/database.service.js';
 
 // Constants
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 30;
 
 // Types
-export type AuthUser = Omit<InferSelectModel<typeof users>, 'password_hash' | 'auth_id' | 'organization_id'> & {
+export type AuthUser = Omit<User, 'password_hash' | 'auth_id' | 'organization_id'> & {
   password_hash: string | null;
   auth_id: string;
   organization_id: number | null;
@@ -117,11 +118,33 @@ export async function findUserByEmail(email: string): Promise<AuthUser | null> {
  * Map database user to AuthUser type
  */
 function mapDbUserToAuthUser(dbUser: InferSelectModel<typeof users>): AuthUser {
-  return {
-    ...dbUser,
-    email_verified: 'email_verified' in dbUser ? Boolean(dbUser.email_verified) : false,
-    is_active: 'is_active' in dbUser ? Boolean(dbUser.is_active) : true,
+  // Convert Date objects to ISO strings for fields that expect strings
+  const convertDateFields = (obj: any) => {
+    const result: Record<string, any> = { ...obj };
+    const dateFields = ['createdAt', 'updatedAt', 'lastLogin', 'emailVerificationExpires', 'passwordResetExpires'];
+    
+    dateFields.forEach(field => {
+      if (result[field] instanceof Date) {
+        result[field] = result[field].toISOString();
+      }
+    });
+    
+    return result;
   };
+
+  const processedUser = convertDateFields(dbUser);
+  const user = processedUser as Record<string, unknown>;
+
+  return {
+    ...processedUser,
+    email_verified: 'email_verified' in user ? Boolean(user.email_verified) : false,
+    is_active: 'is_active' in user ? Boolean(user.is_active) : true,
+    password_hash: 'password_hash' in user ? user.password_hash as string | null : null,
+    auth_id: 'auth_id' in user ? String(user.auth_id) : '',
+    organization_id: 'organization_id' in user ? user.organization_id as number | null : null,
+    failed_login_attempts: 'failed_login_attempts' in user ? Number(user.failed_login_attempts) || 0 : 0,
+    last_failed_login: user.last_failed_login instanceof Date ? user.last_failed_login.toISOString() : null
+  } as AuthUser;
 }
 
 /**
@@ -170,7 +193,7 @@ export function getRemainingLockoutTime(lastFailedLogin?: Date | null): number {
  * Update user's failed login attempts
  */
 export async function updateFailedLoginAttempts(
-  userId: number,
+  userId: string,  // Changed from number to string
   attempts: number,
   lastAttempt: Date
 ): Promise<void> {
@@ -191,7 +214,7 @@ export async function updateFailedLoginAttempts(
 /**
  * Reset user's failed login attempts
  */
-export async function resetFailedLoginAttempts(userId: number): Promise<void> {
+export async function resetFailedLoginAttempts(userId: string): Promise<void> {
   try {
     await dbService.getDrizzle()
       .update(users)

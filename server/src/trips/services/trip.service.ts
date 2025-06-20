@@ -13,17 +13,17 @@ export class TripServiceImpl implements TripService {
     @Inject('TripRepository') private readonly tripRepository: TripRepository
   ) {}
 
-  async getTripsByUserId(userId: string, orgId: number): Promise<Trip[]> {
+  async getTripsByUserId(userId: string, orgId: string): Promise<Trip[]> {
     this.logger.log(`Fetching trips for user ${userId} in organization ${orgId}`);
     return this.tripRepository.getTripsByUserId(userId, orgId);
   }
 
-  async getCorporateTrips(orgId: number): Promise<CorporateTripDto[]> {
+  async getCorporateTrips(orgId: string): Promise<CorporateTripDto[]> {
     this.logger.log(`Fetching corporate trips for organization ${orgId}`);
     return this.tripRepository.getCorporateTrips(orgId);
   }
 
-  async getTripById(tripId: number, user: User): Promise<Trip | null> {
+  async getTripById(tripId: string, user: User): Promise<Trip | null> {
     this.logger.log(`Fetching trip ${tripId} for user ${user.id}`);
     
     const trip = await this.tripRepository.getTripById(tripId);

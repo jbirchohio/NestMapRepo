@@ -1,19 +1,13 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "outDir": "../dist/client",
+    "rootDir": "src",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
@@ -26,22 +20,20 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/src/*"]
     },
-    "forceConsistentCasingInFileNames": true,
     "types": ["vite/client", "node"],
     "typeRoots": [
       "./node_modules/@types",
-      "../node_modules/@types",
-      "./src/types"
-    ]
+      "../node_modules/@types"
+    ],
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/client.tsbuildinfo"
   },
-  "include": [
-    "src",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.d.ts",
-    "vite.config.ts"
-  ],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }

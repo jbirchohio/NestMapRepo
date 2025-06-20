@@ -46,9 +46,11 @@ export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
 
 // User roles as const for type safety
 export const UserRoles = {
-  USER: 'user',
+  SUPER_ADMIN: 'super_admin',
   ADMIN: 'admin',
-  SUPER_ADMIN: 'superadmin'
+  MANAGER: 'manager',
+  MEMBER: 'member',
+  GUEST: 'guest'
 } as const;
 
 export type UserRole = typeof UserRoles[keyof typeof UserRoles];

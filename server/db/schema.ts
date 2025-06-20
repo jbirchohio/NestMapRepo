@@ -2,13 +2,43 @@ import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index,
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { auditLogs as auditLogsTableDefinition } from "./auditLog"; // Assuming auditLog.ts is in the same directory
 
+// Import types to avoid circular dependencies
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+
+declare global {
+  // This allows us to use the types before they're defined
+  // by declaring them in the global scope
+  // eslint-disable-next-line no-var
+  var __dbSchemaInitialized: boolean | undefined;
+}
+
+// Export base table types to avoid circular dependencies
+export type BaseTable = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type WithTimestamps<T> = T & {
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+// ======================
 // Enums
-export const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
-const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
+// ======================
 
-// User role constants for authorization
+export const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
+export const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
+
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
+export type OrganizationPlan = 'free' | 'pro' | 'enterprise';
+
+// ======================
+// Constants
+// ======================
+
 export const USER_ROLES = {
   SUPERADMIN_OWNER: 'super_admin',
   SUPERADMIN_STAFF: 'admin',
@@ -17,38 +47,15 @@ export const USER_ROLES = {
   MANAGER: 'manager',
   MEMBER: 'member',
   GUEST: 'guest'
-};
+} as const;
 
-// Tables
-export const tripTravelers = pgTable('trip_travelers', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+export type UserRoleType = typeof USER_ROLES[keyof typeof USER_ROLES];
 
-export const corporateCards = pgTable('corporate_cards', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
-  lastFourDigits: text('last_four_digits').notNull(),
-  expiryMonth: integer('expiry_month').notNull(),
-  expiryYear: integer('expiry_year').notNull(),
-  isActive: boolean('is_active').notNull().default(true),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+// ======================
+// Table Definitions
+// ======================
 
-export const cardholders = pgTable('cardholders', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
-  cardId: uuid('card_id').references(() => corporateCards.id, { onDelete: 'cascade' }).notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
-
-// Tables
+// Users table
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
@@ -73,18 +80,13 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow()
 }, (table) => ({
-  // Single column indexes
   lockedUntilIdx: index('users_locked_until_idx').on(table.lockedUntil),
   isActiveIdx: index('users_is_active_idx').on(table.isActive),
-  
-  // Composite index for common query patterns
   userActiveIdx: index('users_active_composite_idx').on(
     table.isActive, 
     table.lockedUntil, 
     table.emailVerified
   ),
-  
-  // Index for organization lookups
   orgUserIdx: index('users_org_composite_idx').on(
     table.organizationId, 
     table.isActive, 
@@ -92,14 +94,7 @@ export const users = pgTable('users', {
   )
 }));
 
-// Password history table
-export const passwordHistory = pgTable('password_history', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  passwordHash: text('password_hash').notNull(),
-  changedAt: timestamp('changed_at').notNull().defaultNow(),
-});
-
+// Organizations table
 export const organizations = pgTable('organizations', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
@@ -140,19 +135,52 @@ export const organizations = pgTable('organizations', {
   subscriptionStatus: text('subscription_status').$type<
     'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete' | 'incomplete_expired' | null
   >(),
-  // Metadata
-  metadata: jsonb('metadata').$type<Record<string, any>>(),
-  
-  timezone: text('timezone').notNull().default('UTC'),
-  locale: text('locale').notNull().default('en-US'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-  // Indexes for Stripe fields
-  stripeCustomerIdIdx: index('organizations_stripe_customer_id_idx').on(table.stripeCustomerId),
-  stripeSubscriptionIdIdx: index('organizations_stripe_subscription_id_idx').on(table.stripeSubscriptionId),
-  subscriptionStatusIdx: index('organizations_subscription_status_idx').on(table.subscriptionStatus),
-}));
+});
+
+
+
+// Trip Travelers junction table
+export const tripTravelers = pgTable('trip_travelers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tripId: uuid('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const corporateCards = pgTable('corporate_cards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  lastFourDigits: text('last_four_digits').notNull(),
+  expiryMonth: integer('expiry_month').notNull(),
+  expiryYear: integer('expiry_year').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const cardholders = pgTable('cardholders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  cardId: uuid('card_id').references(() => corporateCards.id, { onDelete: 'cascade' }).notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+
+
+// Password history table
+export const passwordHistory = pgTable('password_history', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  passwordHash: text('password_hash').notNull(),
+  changedAt: timestamp('changed_at').notNull().defaultNow(),
+});
+
+
 
 // Refresh tokens
 export const refreshTokens = pgTable('refresh_tokens', {
@@ -653,6 +681,7 @@ export const featureFlags = pgTable("feature_flags", {
 export const userActivityLogs = pgTable("user_activity_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").references(() => users.id).notNull(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
   action: text("action").notNull(),
   details: jsonb("details").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
   ip: text("ip"),
@@ -660,6 +689,7 @@ export const userActivityLogs = pgTable("user_activity_logs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   userIdIdx: index('user_activity_logs_user_id_idx').on(table.userId),
+  orgIdIdx: index('user_activity_logs_organization_id_idx').on(table.organizationId),
   createdAtIdx: index('user_activity_logs_created_at_idx').on(table.createdAt),
 }));
 
@@ -754,6 +784,25 @@ export const approvalRequests = pgTable("approval_requests", {
   requesterIdx: index('approval_requests_requester_idx').on(table.requesterId),
   approverIdx: index('approval_requests_approver_idx').on(table.approverId),
   entityIdx: index('approval_requests_entity_idx').on(table.entityType, table.entityId),
+}));
+
+// Audit Logs Table
+export const auditLogsTableDefinition = pgTable('audit_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  action: text('action').notNull(),
+  entityType: text('entity_type'),
+  entityId: uuid('entity_id'),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  metadata: jsonb('metadata').$type<Record<string, any>>(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  userIdIdx: index('audit_logs_user_id_idx').on(table.userId),
+  orgIdx: index('audit_logs_organization_id_idx').on(table.organizationId),
+  entityIdx: index('audit_logs_entity_idx').on(table.entityType, table.entityId),
+  createdAtIdx: index('audit_logs_created_at_idx').on(table.createdAt),
 }));
 
 // Admin Audit Log (alias to the main auditLogs table)

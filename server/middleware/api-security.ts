@@ -1,5 +1,40 @@
+/**
+ * SINGLE SOURCE OF TRUTH: API Security Middleware
+ * 
+ * This is the canonical implementation for all API security-related middleware in the application.
+ * All security-related functionality should be centralized through this module to ensure consistency.
+ * 
+ * Features:
+ * - API versioning and deprecation handling
+ * - Request/response encryption for sensitive data
+ * - API key management and validation
+ * - Webhook signature verification
+ * - Advanced rate limiting with tiered access
+ * - Endpoint monitoring and anomaly detection
+ * 
+ * DO NOT create duplicate security implementations - extend this one if needed.
+ */
+
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+
+// Extend Express Request type
+declare namespace Express {
+  export interface Request {
+    apiVersion?: string;
+    apiKeyAuth?: {
+      organizationId: number;
+      permissions: string[];
+      rateLimit: number;
+    };
+    user?: {
+      id: string | number;
+      role: string;
+      organization_id?: number;
+      subscription_tier?: 'free' | 'premium' | 'enterprise';
+    };
+  }
+}
 
 /**
  * API versioning and deprecation middleware
@@ -122,7 +157,7 @@ class ApiKeyManager {
 
     return {
       valid: true,
-      organizationId: keyData.organization_id,
+      organizationId: keyData.organizationId,
       permissions: keyData.permissions,
       rateLimit: keyData.rateLimit
     };
@@ -149,7 +184,7 @@ export function authenticateApiKey(req: Request, res: Response, next: NextFuncti
   }
 
   req.apiKeyAuth = {
-    organizationId: validation.organization_id!,
+    organizationId: validation.organizationId!,
     permissions: validation.permissions!,
     rateLimit: validation.rateLimit!
   };
@@ -207,13 +242,13 @@ class AdvancedRateLimit {
     violations: number;
   }>();
 
-  private readonly limits = {
+  private readonly limits: Record<string, { requests: number, window: number }> = {
     free: { requests: 100, window: 3600 }, // 100/hour
     premium: { requests: 1000, window: 3600 }, // 1000/hour
     enterprise: { requests: 10000, window: 3600 } // 10000/hour
   };
 
-  checkLimit(key: string, tier: 'free' | 'premium' | 'enterprise'): {
+  checkLimit(key: string, tier: string): {
     allowed: boolean;
     remaining: number;
     resetTime: number;
@@ -332,7 +367,12 @@ class EndpointMonitor {
     this.checkAnomalies(endpoint, metric);
   }
 
-  private checkAnomalies(endpoint: string, metric: any) {
+  private checkAnomalies(endpoint: string, metric: {
+    requests: number;
+    errors: number;
+    totalResponseTime: number;
+    lastHour: { requests: number; errors: number; timestamp: number }[];
+  }) {
     const hourlyRequests = metric.lastHour.reduce((sum: number, m: any) => sum + m.requests, 0);
     const hourlyErrors = metric.lastHour.reduce((sum: number, m: any) => sum + m.errors, 0);
     const errorRate = hourlyErrors / hourlyRequests;
@@ -352,7 +392,7 @@ class EndpointMonitor {
     }
   }
 
-  getMetrics(endpoint?: string) {
+  getMetrics(endpoint?: string): any {
     if (endpoint) {
       return this.metrics.get(endpoint);
     }

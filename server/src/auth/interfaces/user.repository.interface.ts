@@ -28,6 +28,10 @@ export interface UserRepository extends BaseRepository<User, string, Omit<User, 
   // Password management
   changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean>;
   setPassword(userId: string, newPassword: string): Promise<boolean>;
+  updatePassword(userId: string, newPassword: string): Promise<boolean>;
+  
+  // Preferences
+  updatePreferences(userId: string, preferences: Record<string, any>): Promise<boolean>;
   
   // Password reset
   findByResetToken(token: string): Promise<User | null>;

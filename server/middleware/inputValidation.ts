@@ -1,5 +1,39 @@
+/**
+ * SINGLE SOURCE OF TRUTH: Input Validation Middleware
+ * 
+ * This is the canonical implementation for all input validation and sanitization in the application.
+ * All request validation and sanitization logic should be centralized through this module to ensure consistency.
+ * 
+ * Features:
+ * - Request body, query, and parameter validation using Zod schemas
+ * - Input sanitization to prevent XSS and injection attacks
+ * - Common validation patterns (email, phone, URLs, etc.)
+ * - File upload validation
+ * - Rate limiting for content creation
+ * - Request size validation
+ * 
+ * DO NOT create duplicate validation implementations - extend this one if needed.
+ */
+
 import { Request, Response, NextFunction } from 'express';
+import { Multer } from 'multer';
 import { z } from 'zod';
+
+// Extend the Express Request type to include common properties
+// Extend Express Request with custom properties
+interface CustomRequest extends Request {
+  body: any; // Consider replacing 'any' with a more specific type
+  query: {
+    [key: string]: string | string[] | undefined;
+  };
+  params: {
+    [key: string]: string | undefined;
+  };
+  file?: Express.Multer.File;
+  files?: { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
+  ip?: string;
+  [key: string]: any; // Allow additional properties
+}
 import DOMPurify from 'isomorphic-dompurify';
 
 // Common validation patterns
@@ -175,7 +209,7 @@ export const commentValidationSchema = z.object({
 
 // Middleware for request body validation and sanitization
 export function validateAndSanitizeBody(schema: z.ZodSchema) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
     try {
       // Sanitize the request body first
       if (req.body && typeof req.body === 'object') {
@@ -197,10 +231,10 @@ export function validateAndSanitizeBody(schema: z.ZodSchema) {
 
       // Replace request body with validated data
       req.body = validationResult.data;
-      next();
+      return next();
     } catch (error) {
       console.error('Validation middleware error:', error);
-      res.status(500).json({ error: 'Internal validation error' });
+      return res.status(500).json({ error: 'Internal validation error' });
     }
   };
 }
@@ -241,7 +275,7 @@ function sanitizeObject(obj: any): any {
 
 // Middleware for query parameter validation
 export function validateQueryParams(allowedParams: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
     try {
       const sanitizedQuery: any = {};
       
@@ -280,7 +314,7 @@ export function contentCreationRateLimit() {
   const LIMIT = 10; // 10 content creations per hour
   const WINDOW = 60 * 60 * 1000; // 1 hour
 
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
     const identifier = req.ip || 'unknown';
     const now = Date.now();
     
@@ -288,6 +322,7 @@ export function contentCreationRateLimit() {
     
     if (!userAttempts || now > userAttempts.resetTime) {
       userAttempts = { count: 0, resetTime: now + WINDOW };
+      attempts.set(identifier, userAttempts);
     }
     
     if (userAttempts.count >= LIMIT) {
@@ -300,13 +335,13 @@ export function contentCreationRateLimit() {
     userAttempts.count++;
     attempts.set(identifier, userAttempts);
     
-    next();
+    return next();
   };
 }
 
 // Content length validation middleware
 export function validateContentLength(maxSize: number = 1024 * 1024) { // 1MB default
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
     const contentLength = req.get('content-length');
     
     if (contentLength && parseInt(contentLength) > maxSize) {
@@ -316,13 +351,13 @@ export function validateContentLength(maxSize: number = 1024 * 1024) { // 1MB de
       });
     }
     
-    next();
+    return next();
   };
 }
 
 // File upload validation for images and documents  
 export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 * 1024 * 1024) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
     if (!req.file) {
       return next();
     }
@@ -356,7 +391,7 @@ export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 *
       }
     }
     
-    next();
+    return next();
   };
 }
 
@@ -366,7 +401,7 @@ export function validateAndSanitizeRequest(schemas: {
   query?: z.ZodSchema;
   params?: z.ZodSchema;
 }) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: CustomRequest, res: Response, next: NextFunction) => {
     try {
       // Sanitize and Validate Body
       if (schemas.body && req.body && typeof req.body === 'object') {
@@ -442,7 +477,7 @@ export function validateAndSanitizeRequest(schemas: {
         req.params = paramsResult.data; // Use validated (and casted) data
       }
 
-      next();
+      return next();
     } catch (error) {
       // If ZodError, it's already handled by the errorHandler. 
       // For other errors, pass to generic error handler.
@@ -457,7 +492,7 @@ export function validateAndSanitizeRequest(schemas: {
           });
       }
       console.error('Comprehensive validation middleware error:', error);
-      next(error); // Pass to global error handler
+      return next(error); // Pass to global error handler
     }
   };
 }

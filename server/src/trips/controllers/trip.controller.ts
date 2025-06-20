@@ -1,10 +1,56 @@
-import { Request, Response } from 'express';
-import { TripService } from '../interfaces/trip.service.interface';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { User } from '../../../db/schema.js';
-import { ResponseFormatter } from '../../common/utils/response-formatter.util';
-import { asyncHandler } from '../../common/middleware/error-handler.middleware';
-import { requireAuth, requireOrgContext } from '../../common/middleware/auth.middleware';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { TripService } from '../interfaces/trip.service.interface.js';
+import { ResponseFormatter } from '../../common/utils/response-formatter.util.js';
+import { requireAuth, requireOrgContext } from '../../common/middleware/auth.middleware.js';
+
+// Define the AuthUser interface to match the expected User type from the service
+interface AuthUser {
+  id: string;
+  email: string;
+  username: string;
+  passwordHash: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: 'admin' | 'super_admin' | 'manager' | 'member' | 'guest';
+  emailVerified: boolean;
+  emailVerificationToken: string | null;
+  emailVerificationExpires: Date | null;
+  passwordResetToken: string | null;
+  passwordResetExpires: Date | null;
+  resetToken: string | null;
+  resetTokenExpires: Date | null;
+  failedLoginAttempts: number;
+  lockedUntil: Date | null;
+  lastLogin: Date | null;
+  lastLoginAt: Date | null;
+  lastLoginIp: string | null;
+  mfaSecret: string | null;
+  organizationId: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  passwordChangedAt: Date | null;
+  // For backward compatibility
+  [key: string]: any;
+}
+
+// Define the AuthenticatedRequest type
+type AuthenticatedRequest = Request & {
+  user: AuthUser;
+  params: {
+    id?: string;
+    [key: string]: string | undefined;
+  };
+};
+
+// Define the expected structure of the trip object from the service
+interface Trip {
+  id: string;
+  userId: string;
+  organizationId?: string;
+  [key: string]: any;
+}
 
 @Injectable()
 export class TripController {
@@ -12,44 +58,93 @@ export class TripController {
 
   constructor(@Inject('TripService') private readonly tripService: TripService) {}
 
-  getTrips = [
-    requireAuth(this.logger),
-    requireOrgContext(this.logger),
-    asyncHandler(async (req: Request, res: Response) => {
-      const userId = req.user!.id;
-      const orgId = req.user!.organizationId;
-      
-      const trips = await this.tripService.getTripsByUserId(userId, orgId);
-      return ResponseFormatter.success(res, trips, 'Trips retrieved successfully');
-    }, this.logger)
-  ];
-
-  getCorporateTrips = [
-    requireAuth(this.logger),
-    requireOrgContext(this.logger),
-    asyncHandler(async (req: Request, res: Response) => {
-      const orgId = req.user!.organizationId;
-      
-      const trips = await this.tripService.getCorporateTrips(orgId);
-      return ResponseFormatter.success(res, trips, 'Corporate trips retrieved successfully');
-    }, this.logger)
-  ];
-
-  getTripById = [
-    requireAuth(this.logger),
-    asyncHandler(async (req: Request, res: Response) => {
-      const tripId = parseInt(req.params.id, 10);
-      if (isNaN(tripId)) {
-        return ResponseFormatter.badRequest(res, 'Invalid trip ID');
+  /**
+   * Get all trips for the authenticated user
+   * @param logger Logger instance
+   * @returns Array of Express middleware/handlers
+   */
+  public getTrips(logger: Logger): RequestHandler[] {
+    return [
+      requireAuth(logger),
+      requireOrgContext(logger),
+      async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+          const authReq = req as unknown as AuthenticatedRequest;
+          const { id: userId, organizationId: orgId } = authReq.user;
+          
+          if (!orgId) {
+            throw new UnauthorizedException('Organization context required');
+          }
+          
+          const trips = await this.tripService.getTripsByUserId(userId, orgId);
+          ResponseFormatter.success(res, trips, 'Trips retrieved successfully');
+        } catch (error) {
+          next(error);
+        }
       }
+    ];
+  }
 
-      const trip = await this.tripService.getTripById(tripId, req.user as User);
-
-      if (!trip) {
-        return ResponseFormatter.notFound(res, 'Trip not found');
+  /**
+   * Get all corporate trips for the organization
+   * @param logger Logger instance
+   * @returns Array of Express middleware/handlers
+   */
+  public getCorporateTrips(logger: Logger): RequestHandler[] {
+    return [
+      requireAuth(logger),
+      requireOrgContext(logger),
+      async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+          const authReq = req as unknown as AuthenticatedRequest;
+          const { organizationId: orgId } = authReq.user;
+          
+          if (!orgId) {
+            throw new UnauthorizedException('Organization context required');
+          }
+          
+          const trips = await this.tripService.getCorporateTrips(orgId);
+          ResponseFormatter.success(res, trips, 'Corporate trips retrieved successfully');
+        } catch (error) {
+          next(error);
+        }
       }
+    ];
+  }
 
-      return ResponseFormatter.success(res, trip, 'Trip retrieved successfully');
-    }, this.logger)
-  ];
+  /**
+   * Get a trip by ID
+   * @param logger Logger instance
+   * @returns Array of Express middleware/handlers
+   */
+  public getTripById(logger: Logger): RequestHandler[] {
+    return [
+      requireAuth(logger),
+      async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+          const authReq = req as unknown as AuthenticatedRequest;
+          const tripId = authReq.params?.id;
+          
+          if (!tripId) {
+            throw new NotFoundException('Trip ID is required');
+          }
+
+          // Call the service method with proper typing and user context
+          const trip = await this.tripService.getTripById(tripId, authReq.user);
+          if (!trip) {
+            throw new NotFoundException('Trip not found');
+          }
+
+          // Check if user has permission to view this trip
+          if (trip.userId !== authReq.user.id && authReq.user.role !== 'admin') {
+            throw new UnauthorizedException('Not authorized to view this trip');
+          }
+
+          ResponseFormatter.success(res, trip, 'Trip retrieved successfully');
+        } catch (error) {
+          next(error);
+        }
+      }
+    ];
+  }
 }

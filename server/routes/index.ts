@@ -21,7 +21,8 @@ import reportingRoutes from './reporting.js';
 import { registerCorporateCardRoutes } from './corporateCards.js';
 import organizationFundingRoutes from './organizationFunding.js';
 import stripeOAuthRoutes from './stripeOAuth.js';
-import superadminRoutes from './superadmin.js';
+// Import modular superadmin routes
+import superadminRoutes from './superadmin/index.js';
 import webhookRoutes from './webhooks.js';
 import subscriptionStatusRoutes from './subscription-status.js';
 import { registerAdminSettingsRoutes } from './admin-settings.js';
@@ -68,6 +69,7 @@ if (process.env.NODE_ENV === 'development') {
   console.log(' Mounting Test routes at /test');
 }
 
+// Mount superadmin routes with proper middleware
 router.use('/superadmin', superadminRoutes);
 router.use('/webhooks', webhookRoutes);
 router.use('/subscription-status', subscriptionStatusRoutes);
@@ -88,7 +90,7 @@ router.use('/invoices', invoicesRoutes);
 router.use('/payments', paymentsRoutes);
 
 // Templates endpoint
-router.get('/templates', async (req, res) => {
+router.get('/templates', async (_req, res) => {
   try {
     const { getAllTemplates } = await import('../tripTemplates.js');
     const templates = getAllTemplates();
@@ -193,7 +195,7 @@ router.get('/dashboard-stats', (req, res) => {
 
 
 // Team members endpoint for JonasCo
-router.get('/organizations/members', async (req, res) => {
+router.get('/organizations/members', async (_req, res) => {
   try {
     // Return JonasCo team members data
     const teamMembers = [
@@ -372,7 +374,7 @@ function getAirportCode(cityName: string): string {
 }
 
 // Health check endpoint
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),

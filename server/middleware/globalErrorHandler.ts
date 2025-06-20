@@ -1,9 +1,19 @@
-import { Request, Response, NextFunction } from 'express';
-
 /**
- * Global error handling middleware
- * Replaces duplicated try/catch blocks with centralized error handling
+ * SINGLE SOURCE OF TRUTH: Global Error Handling
+ * 
+ * This is the canonical implementation for all error handling in the application.
+ * All error handling should be centralized through this module to ensure consistency.
+ * 
+ * Features:
+ * - Centralized error logging with contextual information
+ * - Standardized error responses
+ * - Custom error types for different scenarios
+ * - Async/await error handling wrapper
+ * 
+ * DO NOT create duplicate error handling implementations - extend this one if needed.
  */
+
+import { Request, Response, NextFunction } from 'express';
 export function globalErrorHandler(err: any, req: Request, res: Response, next: NextFunction) {
   // Log error with context
   console.error('Global Error:', {

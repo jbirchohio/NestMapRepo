@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { Request, Response, NextFunction } from 'express';
+import type { Response, NextFunction } from 'express';
+import type { AuthenticatedRequest } from '../types/custom-request.js';
 
 // Common validation schemas
 export const paginationSchema = z.object({
@@ -44,7 +45,7 @@ export const refreshTokenSchema = z.object({
 
 // Validation middleware
 export const validate = (schema: z.ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction): void | Response => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void | Response => {
     try {
       // Validate request body, query, and params
       const result = schema.safeParse({
@@ -57,7 +58,7 @@ export const validate = (schema: z.ZodSchema) => {
         return res.status(400).json({
           error: 'Validation Error',
           details: result.error.errors,
-          requestId: req.id,
+          requestId: req.requestId,
         });
       }
 

@@ -27,7 +27,7 @@ describe('Stripe Issuing Service', () => {
     mockStripeInstance = new Stripe('mock_key') as jest.Mocked<Stripe>;
     
     // Mock storage methods
-    (storage.getUserById as jest.Mock).mockResolvedValue({
+    (storage.getUser as jest.Mock).mockResolvedValue({
       id: mockUserId,
       email: mockEmail,
       phone: mockPhone,
@@ -35,14 +35,14 @@ describe('Stripe Issuing Service', () => {
       last_name: 'Doe'
     });
     
-    (storage.getOrganizationById as jest.Mock).mockResolvedValue({
+    (storage.getOrganization as jest.Mock).mockResolvedValue({
       id: mockOrgId,
       name: 'Test Organization',
       stripe_connect_account_id: 'acct_mock123',
       stripe_issuing_enabled: true
     });
     
-    (storage.saveCardRecord as jest.Mock).mockResolvedValue({
+    (storage.createCorporateCard as jest.Mock).mockResolvedValue({
       id: 1,
       user_id: mockUserId,
       organization_id: mockOrgId,
@@ -51,7 +51,25 @@ describe('Stripe Issuing Service', () => {
       status: 'active'
     });
     
-    // Mock Stripe issuing methods
+    // Mock Stripe methods
+    mockStripeInstance.paymentIntents = {
+      create: jest.fn().mockResolvedValue({
+        id: 'pi_mock123',
+        amount: 5000,
+        currency: 'usd',
+        status: 'requires_capture',
+        client_secret: 'pi_mock123_secret_xyz',
+        metadata: {}
+      }),
+      capture: jest.fn().mockResolvedValue({
+        id: 'pi_mock123',
+        amount: 5000,
+        currency: 'usd',
+        status: 'succeeded',
+        metadata: {}
+      })
+    } as any;
+
     mockStripeInstance.issuing = {
       cardholders: {
         create: jest.fn().mockResolvedValue({
@@ -81,14 +99,6 @@ describe('Stripe Issuing Service', () => {
           id: mockCardId,
           last4: '4242',
           status: 'active'
-        })
-      },
-      transactions: {
-        create: jest.fn().mockResolvedValue({
-          id: 'ipi_mock123',
-          amount: 5000,
-          card: mockCardId,
-          status: 'pending'
         })
       }
     } as any;
@@ -140,7 +150,7 @@ describe('Stripe Issuing Service', () => {
     );
     
     // Verify card was saved to database
-    expect(storage.saveCardRecord).toHaveBeenCalledWith(
+    expect(storage.createCorporateCard).toHaveBeenCalledWith(
       expect.objectContaining({
         user_id: mockUserId,
         organization_id: mockOrgId,
@@ -167,8 +177,8 @@ describe('Stripe Issuing Service', () => {
       allowed_categories: ['travel', 'food_and_drink']
     };
     
-    // Mock getCardById
-    (storage.getCardById as jest.Mock).mockResolvedValue({
+    // Mock getCorporateCard
+    (storage.getCorporateCard as jest.Mock).mockResolvedValue({
       id: 1,
       user_id: mockUserId,
       organization_id: mockOrgId,
@@ -196,18 +206,72 @@ describe('Stripe Issuing Service', () => {
     );
     
     // Verify card was updated in database
-    expect(storage.updateCardRecord).toHaveBeenCalledWith(
+    expect(storage.updateCorporateCard).toHaveBeenCalledWith(
       1,
       expect.objectContaining({
         spend_limit: 20000,
-        status: 'active'
+        card_status: 'active'
       })
     );
   });
   
-  test('should handle card suspension', async () => {
-    // Mock getCardById
-    (storage.getCardById as jest.Mock).mockResolvedValue({
+  test('should create payment intent for authorization', async () => {
+    const authParams = {
+      amount: 5000, // $50.00
+      currency: 'usd',
+      card: mockCardId,
+      merchant_data: {
+        name: 'Test Merchant',
+        category: 'travel'
+      }
+    };
+
+    // Mock the stripe.paymentIntents.create method
+    (mockStripeInstance.paymentIntents.create as jest.Mock).mockResolvedValueOnce({
+      id: 'pi_mock123',
+      status: 'requires_capture',
+      amount: 5000,
+      currency: 'usd',
+      // Add other required fields
+    });
+
+    // Import the stripe module
+    const { authorizeTransaction } = await import('../../stripe');
+    
+    // Call the authorizeTransaction function
+    const result = await authorizeTransaction({
+      ...authParams,
+      merchant_data: {
+        ...authParams.merchant_data,
+        city: undefined,
+        state: undefined,
+        country: undefined
+      }
+    });
+
+    // Verify payment intent was created with correct parameters
+    expect(mockStripeInstance.paymentIntents.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: 5000,
+        currency: 'usd',
+        payment_method_types: ['card_present'],
+        capture_method: 'manual',
+        metadata: {
+          merchant_name: 'Test Merchant',
+          merchant_category: 'travel',
+          is_authorization: 'true'
+        }
+      })
+    );
+
+    // Verify the result contains the expected fields
+    expect(result).toHaveProperty('id', 'pi_mock123');
+    expect(result).toHaveProperty('status', 'requires_capture');
+  });
+
+  test('should handle card freezing', async () => {
+    // Mock getCorporateCard
+    (storage.getCorporateCard as jest.Mock).mockResolvedValue({
       id: 1,
       user_id: mockUserId,
       organization_id: mockOrgId,
@@ -216,7 +280,7 @@ describe('Stripe Issuing Service', () => {
       status: 'active'
     });
     
-    await issuingService.suspendCard(1);
+    await issuingService.freezeCard(1, true);
     
     // Verify card was updated in Stripe
     expect(mockStripeInstance.issuing.cards.update).toHaveBeenCalledWith(
@@ -227,7 +291,7 @@ describe('Stripe Issuing Service', () => {
     );
     
     // Verify card was updated in database
-    expect(storage.updateCardRecord).toHaveBeenCalledWith(
+    expect(storage.updateCorporateCard).toHaveBeenCalledWith(
       1,
       expect.objectContaining({
         status: 'inactive'
@@ -235,9 +299,9 @@ describe('Stripe Issuing Service', () => {
     );
   });
   
-  test('should handle card reactivation', async () => {
-    // Mock getCardById
-    (storage.getCardById as jest.Mock).mockResolvedValue({
+  test('should handle card unfreezing', async () => {
+    // Mock getCorporateCard
+    (storage.getCorporateCard as jest.Mock).mockResolvedValue({
       id: 1,
       user_id: mockUserId,
       organization_id: mockOrgId,
@@ -246,7 +310,7 @@ describe('Stripe Issuing Service', () => {
       status: 'inactive'
     });
     
-    await issuingService.reactivateCard(1);
+    await issuingService.freezeCard(1, false);
     
     // Verify card was updated in Stripe
     expect(mockStripeInstance.issuing.cards.update).toHaveBeenCalledWith(
@@ -257,7 +321,7 @@ describe('Stripe Issuing Service', () => {
     );
     
     // Verify card was updated in database
-    expect(storage.updateCardRecord).toHaveBeenCalledWith(
+    expect(storage.updateCorporateCard).toHaveBeenCalledWith(
       1,
       expect.objectContaining({
         status: 'active'
@@ -284,7 +348,7 @@ describe('Stripe Issuing Service', () => {
   
   test('should throw error when organization is not Stripe Connect enabled', async () => {
     // Mock organization without Stripe Connect
-    (storage.getOrganizationById as jest.Mock).mockResolvedValue({
+    (storage.getOrganization as jest.Mock).mockResolvedValue({
       id: mockOrgId,
       name: 'Test Organization',
       stripe_connect_account_id: null,

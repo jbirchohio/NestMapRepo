@@ -1,26 +1,15 @@
-import { Request, Response, NextFunction } from 'express';
-import type { AuthUser } from '../middleware/auth';
+import { Response, NextFunction } from 'express';
+import { UserRole } from '../src/types/auth-user.js';
+import { AuthenticatedRequest } from '../types/custom-request.js';
 
-/**
- * Interface for authenticated requests with user information
- */
-export interface AuthenticatedRequest extends Request {
-  user?: AuthUser;
-  auth?: any;
-  organizationId?: string | number;
-  requestId?: string;
-  startTime?: [number, number];
-  token?: string;
-  isAuthenticated(): boolean;
-  hasRole(role: string | string[]): boolean;
-  hasPermission(permission: string | string[]): boolean;
-}
+// Re-export the types for convenience
+export { AuthenticatedRequest } from '../types/custom-request.js';
 
 /**
  * Middleware to extend the Request object with custom methods
  */
 export const extendRequest = (
-  req: Request,
+  req: AuthenticatedRequest,
   _res: Response,
   next: NextFunction
 ): void => {
@@ -38,11 +27,17 @@ export const extendRequest = (
   };
 
   // Add hasPermission method
-  req.hasPermission = function (_permission: string | string[]): boolean {
+  req.hasPermission = function (permission: string | string[]): boolean {
     if (!this.user) return false;
     
-    // If user is admin, they have all permissions
-    if (this.user.role === 'admin' || this.user.role === 'superadmin') {
+    // If no specific permission is required, just check if user is authenticated
+    if (!permission || (Array.isArray(permission) && permission.length === 0)) {
+      return true;
+    }
+    if (!this.user) return false;
+    
+    // If user is admin or super_admin, they have all permissions
+    if (this.user.role === UserRole.ADMIN || this.user.role === UserRole.SUPER_ADMIN) {
       return true;
     }
 

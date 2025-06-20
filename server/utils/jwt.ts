@@ -1,30 +1,27 @@
-import jwt, { SignOptions, Algorithm, JwtPayload as JwtBasePayload } from 'jsonwebtoken';
+import jwt, { SignOptions, Algorithm, JwtPayload as BaseJwtPayload, TokenExpiredError, JsonWebTokenError } from 'jsonwebtoken';
 import { logger } from './logger.js';
-import { redis } from '../db/redis.js'; // Make sure to set up Redis client
+import { redis } from '../db/redis.js';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 
-// Rate limiting for token endpoints
-const tokenRateLimiter = new RateLimiterMemory({
-  points: 5, // 5 requests
-  duration: 60 * 15, // Per 15 minutes by IP
-});
+// Token types
+export type TokenType = 'access' | 'refresh' | 'password_reset' | 'api_key';
 
-declare module 'jsonwebtoken' {
-  interface JwtPayload extends JwtBasePayload {
-    jti?: string;
-    type: TokenType;
-    userId: string;
-    email: string;
-    role?: string;
-  }
+// Define our custom JWT payload type
+export interface CustomJwtPayload {
+  jti?: string;
+  type: TokenType;
+  userId: string;
+  email: string;
+  role?: string;
+  iat?: number;
+  exp?: number;
+  [key: string]: any; // Allow additional properties
 }
 
-// Token blacklist management
-const TOKEN_BLACKLIST_KEY_PREFIX = 'jwt_blacklist:';
-const TOKEN_WHITELIST_KEY_PREFIX = 'jwt_whitelist:';
-
-// Token types
-type TokenType = 'access' | 'refresh' | 'password_reset' | 'api_key';
+// Extend the base JWT payload with our custom fields
+declare module 'jsonwebtoken' {
+  interface JwtPayload extends CustomJwtPayload {}
+}
 
 // Token interfaces
 export interface TokenPair {
@@ -33,7 +30,7 @@ export interface TokenPair {
   expiresIn: number;
 }
 
-export interface TokenPayload {
+export interface TokenPayload extends CustomJwtPayload {
   jti: string;
   userId: string;
   email: string;
@@ -49,22 +46,34 @@ const JWT_CONFIG = {
   secrets: {
     access: process.env.JWT_SECRET || 'your-256-bit-secret-access-key-must-be-32-bytes',
     refresh: process.env.JWT_REFRESH_SECRET || 'your-256-bit-secret-refresh-key-must-be-32-bytes',
-    passwordReset: process.env.JWT_PASSWORD_RESET_SECRET || 'your-password-reset-secret-key',
-    apiKey: process.env.API_KEY_SECRET || 'your-api-key-secret',
+    password_reset: process.env.JWT_PASSWORD_RESET_SECRET || 'your-256-bit-secret-password-reset-key',
+    api_key: process.env.JWT_API_KEY_SECRET || 'your-256-bit-secret-api-key',
   },
   // Token expiration times in seconds
   expiresIn: {
     access: 15 * 60, // 15 minutes
     refresh: 7 * 24 * 60 * 60, // 7 days
-    passwordReset: 3600, // 1 hour
-    apiKey: 365 * 24 * 60 * 60, // 1 year
+    password_reset: 3600, // 1 hour
+    api_key: 365 * 24 * 60 * 60, // 1 year
   },
-  issuer: process.env.JWT_ISSUER || 'your-app-name',
-  audience: process.env.JWT_AUDIENCE || 'your-app-client',
+  issuer: process.env.JWT_ISSUER || 'nestmap-api',
+  audience: process.env.JWT_AUDIENCE || 'nestmap-client',
   algorithm: 'HS256' as Algorithm,
 } as const;
 
 // Token blacklist management
+const TOKEN_BLACKLIST_KEY_PREFIX = 'jwt_blacklist:';
+const TOKEN_WHITELIST_KEY_PREFIX = 'jwt_whitelist:';
+
+// Rate limiting for token endpoints
+const tokenRateLimiter = new RateLimiterMemory({
+  points: 5, // 5 requests
+  duration: 60 * 15, // Per 15 minutes by IP
+});
+
+/**
+ * Add a token to the blacklist
+ */
 async function addToBlacklist(tokenId: string, expiresAt: number): Promise<void> {
   const ttl = Math.ceil((expiresAt - Date.now()) / 1000);
   if (ttl > 0) {
@@ -72,12 +81,17 @@ async function addToBlacklist(tokenId: string, expiresAt: number): Promise<void>
   }
 }
 
+/**
+ * Check if a token is blacklisted
+ */
 async function isTokenBlacklisted(tokenId: string): Promise<boolean> {
   const result = await redis.exists(`${TOKEN_BLACKLIST_KEY_PREFIX}${tokenId}`);
   return result === 1;
 }
 
-// Whitelist management for refresh tokens
+/**
+ * Add a token to the whitelist
+ */
 async function addToWhitelist(tokenId: string, userId: string, expiresIn: number): Promise<void> {
   await redis.setex(
     `${TOKEN_WHITELIST_KEY_PREFIX}${userId}:${tokenId}`,
@@ -86,27 +100,25 @@ async function addToWhitelist(tokenId: string, userId: string, expiresIn: number
   );
 }
 
+/**
+ * Check if a token is whitelisted
+ */
 async function isTokenWhitelisted(tokenId: string, userId: string): Promise<boolean> {
   const result = await redis.exists(`${TOKEN_WHITELIST_KEY_PREFIX}${userId}:${tokenId}`);
   return result === 1;
 }
 
-async function revokeTokenFamily(userId: string, tokenId: string): Promise<void> {
-  // Find all refresh tokens for this user and delete them
-  const keys = await redis.keys(`${TOKEN_WHITELIST_KEY_PREFIX}${userId}:*`);
-  const pipeline = redis.pipeline();
-  keys.forEach(key => pipeline.del(key));
-  await pipeline.exec();
-  
-  // Add the current token to blacklist
-  await addToBlacklist(tokenId, Math.floor(Date.now() / 1000) + JWT_CONFIG.expiresIn.refresh);
-}
-
-// Token generation utilities
+/**
+ * Generate a unique token ID
+ */
 function generateTokenId(): string {
-  return crypto.randomBytes(16).toString('hex');
+  return Math.random().toString(36).substring(2, 15) + 
+         Math.random().toString(36).substring(2, 15);
 }
 
+/**
+ * Get the JWT secret for a specific token type
+ */
 function getSecret(type: TokenType): string {
   switch (type) {
     case 'access':
@@ -114,137 +126,90 @@ function getSecret(type: TokenType): string {
     case 'refresh':
       return JWT_CONFIG.secrets.refresh;
     case 'password_reset':
-      return JWT_CONFIG.secrets.passwordReset;
+      return JWT_CONFIG.secrets.password_reset;
     case 'api_key':
-      return JWT_CONFIG.secrets.apiKey;
+      return JWT_CONFIG.secrets.api_key;
     default:
-      throw new Error(`Invalid token type: ${type}`);
+      throw new Error(`Unknown token type: ${type}`);
   }
 }
-
-// Rate limiting for token operations
-export async function checkRateLimit(ip: string, type: 'login' | 'refresh' | 'password_reset'): Promise<{ allowed: boolean; headers: any }> {
-  try {
-    const rateLimiter = new RateLimiterMemory({
-      points: type === 'login' ? 5 : type === 'refresh' ? 10 : 3,
-      duration: type === 'login' || type === 'password_reset' ? 3600 : 60, // 1 hour or 1 minute
-    });
-
-    const result = await rateLimiter.consume(ip);
-    
-    return {
-      allowed: true,
-      headers: {
-        'Retry-After': result.msBeforeNext / 1000,
-        'X-RateLimit-Limit': rateLimiter.points,
-        'X-RateLimit-Remaining': result.remainingPoints,
-        'X-RateLimit-Reset': new Date(Date.now() + result.msBeforeNext).toISOString(),
-      },
-    };
-  } catch (error) {
-    return {
-      allowed: false,
-      headers: {
-        'Retry-After': error.msBeforeNext / 1000,
-        'X-RateLimit-Limit': error.points,
-        'X-RateLimit-Remaining': 0,
-        'X-RateLimit-Reset': new Date(Date.now() + error.msBeforeNext).toISOString(),
-      },
-    };
-  }
-}
-
-// Token generation and validation functions
 
 /**
- * Generate a new JWT token with enhanced security
+ * Generate a new JWT token
  */
 export async function generateToken(
-  payload: Omit<TokenPayload, 'jti' | 'iat' | 'exp' | 'type'>,
+  payload: Omit<TokenPayload, 'jti' | 'iat' | 'exp' | 'type'> & {
+    userId: string;
+    email: string;
+  },
   type: TokenType = 'access',
   options: { expiresIn?: number } = {}
 ): Promise<{ token: string; jti: string; expiresAt: number }> {
   const jti = generateTokenId();
-  const now = Math.floor(Date.now() / 1000);
   const expiresIn = options.expiresIn || JWT_CONFIG.expiresIn[type];
-  const expiresAt = now + expiresIn;
+  const expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
 
   const tokenPayload: TokenPayload = {
     ...payload,
-    jti,
     type,
-    iat: now,
+    jti,
+    iat: Math.floor(Date.now() / 1000),
     exp: expiresAt,
   };
 
   const token = jwt.sign(tokenPayload, getSecret(type), {
     algorithm: JWT_CONFIG.algorithm,
-    expiresIn,
     issuer: JWT_CONFIG.issuer,
     audience: JWT_CONFIG.audience,
+    expiresIn,
   });
 
-  // Add refresh tokens to whitelist
-  if (type === 'refresh') {
-    await addToWhitelist(jti, payload.userId, expiresIn);
-  }
-
-  return { token, jti, expiresAt };
+  return { token, jti, expiresAt: expiresAt * 1000 };
 }
 
 /**
- * Verify and decode a JWT token with enhanced security checks
+ * Verify and decode a JWT token
  */
 export async function verifyToken(
   token: string,
   type: TokenType
 ): Promise<{ payload: TokenPayload; expired: boolean } | null> {
   try {
-    // Check if token is blacklisted
-    const decoded = jwt.decode(token) as TokenPayload | null;
-    if (!decoded || !decoded.jti) {
-      throw new Error('Invalid token format');
-    }
-
-    // Check token blacklist
-    if (await isTokenBlacklisted(decoded.jti)) {
-      throw new Error('Token has been revoked');
-    }
-
-    // For refresh tokens, check whitelist
-    if (type === 'refresh' && !(await isTokenWhitelisted(decoded.jti, decoded.userId))) {
-      throw new Error('Refresh token not found in whitelist');
-    }
-
-    // Verify token signature and expiration
-    const payload = jwt.verify(token, getSecret(type), {
-      algorithms: [JWT_CONFIG.algorithm],
+    const secret = getSecret(type);
+    const payload = jwt.verify(token, secret, {
       issuer: JWT_CONFIG.issuer,
       audience: JWT_CONFIG.audience,
-      ignoreExpiration: true, // We'll handle expiration manually
+      algorithms: [JWT_CONFIG.algorithm],
     }) as TokenPayload;
 
-    // Verify token type matches
+    // Additional verification for token type
     if (payload.type !== type) {
-      throw new Error(`Invalid token type: expected ${type}, got ${payload.type}`);
+      logger.warn(`Token type mismatch: expected ${type}, got ${payload.type}`);
+      return null;
     }
 
-    // Check expiration manually
-    const now = Math.floor(Date.now() / 1000);
-    const expired = payload.exp ? payload.exp <= now : true;
+    // Check if token is blacklisted
+    if (payload.jti && (await isTokenBlacklisted(payload.jti))) {
+      logger.warn('Token is blacklisted');
+      return null;
+    }
 
-    return { payload, expired };
+    return { payload, expired: false };
   } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      return { payload: error.payload as TokenPayload, expired: true };
+    if (error instanceof TokenExpiredError) {
+      logger.warn('Token has expired');
+      return { payload: (error as any).payload, expired: true };
+    } else if (error instanceof JsonWebTokenError) {
+      logger.warn('Invalid token:', error.message);
+    } else {
+      logger.error('Token verification failed:', error);
     }
-    logger.error('Token verification failed:', error);
     return null;
   }
 }
 
 /**
- * Generate a new access/refresh token pair
+ * Generate access and refresh tokens
  */
 export async function generateAuthTokens(
   userId: string,
@@ -258,35 +223,30 @@ export async function generateAuthTokens(
   refreshTokenExpiresAt: number;
   tokenType: string;
 }> {
-  // Generate refresh token first
-  const refreshToken = await generateToken(
-    {
-      userId,
-      email,
-      role,
-      type: 'refresh',
-    },
-    'refresh',
-    { expiresIn: options.refreshExpiresIn || JWT_CONFIG.expiresIn.refresh }
-  );
-
-  // Then generate access token
-  const accessToken = await generateToken(
-    {
-      userId,
-      email,
-      role,
-      type: 'access',
-    },
+  const accessTokenResult = await generateToken(
+    { userId, email, role },
     'access',
     { expiresIn: JWT_CONFIG.expiresIn.access }
   );
 
+  const refreshTokenResult = await generateToken(
+    { userId, email, role },
+    'refresh',
+    { expiresIn: options.refreshExpiresIn || JWT_CONFIG.expiresIn.refresh }
+  );
+
+  // Add refresh token to whitelist
+  await addToWhitelist(
+    refreshTokenResult.jti,
+    userId,
+    refreshTokenResult.expiresAt - Date.now()
+  );
+
   return {
-    accessToken: accessToken.token,
-    refreshToken: refreshToken.token,
-    accessTokenExpiresAt: accessToken.expiresAt,
-    refreshTokenExpiresAt: refreshToken.expiresAt,
+    accessToken: accessTokenResult.token,
+    refreshToken: refreshTokenResult.token,
+    accessTokenExpiresAt: accessTokenResult.expiresAt,
+    refreshTokenExpiresAt: refreshTokenResult.expiresAt,
     tokenType: 'Bearer',
   };
 }
@@ -303,57 +263,68 @@ export async function refreshAccessToken(
   refreshTokenExpiresAt: number;
   tokenType: string;
 } | null> {
-  // Verify the refresh token
-  const verified = await verifyToken(refreshToken, 'refresh');
-  if (!verified || verified.expired) {
-    throw new Error('Invalid or expired refresh token');
+  const result = await verifyToken(refreshToken, 'refresh');
+  
+  if (!result || !result.payload.jti) {
+    return null;
   }
 
-  const { payload } = verified;
+  const { payload } = result;
+  
+  // Verify refresh token is whitelisted
+  if (!(await isTokenWhitelisted(payload.jti, payload.userId))) {
+    logger.warn('Refresh token is not whitelisted');
+    return null;
+  }
+
+  // Generate new tokens
+  const tokens = await generateAuthTokens(
+    payload.userId,
+    payload.email,
+    payload.role,
+    { refreshExpiresIn: JWT_CONFIG.expiresIn.refresh }
+  );
 
   // Revoke the old refresh token
   await revokeToken(payload.userId, payload.jti);
 
-  // Generate new tokens
-  return generateAuthTokens(payload.userId, payload.email, payload.role);
+  return tokens;
 }
 
 /**
  * Revoke a token
  */
 export async function revokeToken(userId: string, tokenId: string): Promise<void> {
-  // Add token to blacklist
-  await addToBlacklist(tokenId, Math.floor(Date.now() / 1000) + JWT_CONFIG.expiresIn.refresh);
+  // Add to blacklist with 24h TTL to handle clock skew
+  await addToBlacklist(tokenId, Date.now() + 24 * 60 * 60 * 1000);
   
   // Remove from whitelist if it's a refresh token
   await redis.del(`${TOKEN_WHITELIST_KEY_PREFIX}${userId}:${tokenId}`);
 }
 
 /**
- * Revoke all tokens for a user (on password change, logout everywhere, etc.)
+ * Revoke all tokens for a user
  */
 export async function revokeAllUserTokens(userId: string): Promise<void> {
-  // Find all refresh tokens for this user
+  // Get all refresh tokens for the user
   const keys = await redis.keys(`${TOKEN_WHITELIST_KEY_PREFIX}${userId}:*`);
-  const pipeline = redis.pipeline();
   
-  // Add all refresh tokens to blacklist
-  const now = Math.floor(Date.now() / 1000);
-  keys.forEach(key => {
-    const tokenId = key.split(':').pop();
-    if (tokenId) {
-      pipeline.setex(
-        `${TOKEN_BLACKLIST_KEY_PREFIX}${tokenId}`,
-        JWT_CONFIG.expiresIn.refresh,
-        '1'
-      );
-    }
-  });
+  // Add all to blacklist
+  await Promise.all(
+    keys.map(async (key) => {
+      const tokenId = key.split(':').pop();
+      if (tokenId) {
+        await addToBlacklist(tokenId, Date.now() + 24 * 60 * 60 * 1000);
+      }
+    })
+  );
   
-  // Delete all whitelist entries
-  keys.forEach(key => pipeline.del(key));
-  
-  await pipeline.exec();
+  // Delete all refresh tokens using a pipeline
+  if (keys.length > 0) {
+    const pipeline = redis.pipeline();
+    keys.forEach(key => pipeline.del(key));
+    await pipeline.exec();
+  }
 }
 
 /**
@@ -364,157 +335,31 @@ export async function generatePasswordResetToken(
   email: string
 ): Promise<{ token: string; expiresAt: number }> {
   const { token, expiresAt } = await generateToken(
-    {
-      userId,
-      email,
-      type: 'password_reset',
-    },
+    { userId, email },
     'password_reset',
-    { expiresIn: JWT_CONFIG.expiresIn.passwordReset }
+    { expiresIn: JWT_CONFIG.expiresIn.password_reset }
   );
-
+  
   return { token, expiresAt };
 }
 
 /**
  * Verify a password reset token
  */
-export async function verifyPasswordResetToken(token: string): Promise<{
-  userId: string;
-  email: string;
-  jti: string;
-} | null> {
-  const verified = await verifyToken(token, 'password_reset');
-  if (!verified || verified.expired) {
+export async function verifyPasswordResetToken(
+  token: string
+): Promise<{ userId: string; email: string; jti: string } | null> {
+  const result = await verifyToken(token, 'password_reset');
+  
+  if (!result || !result.payload.jti) {
     return null;
   }
-
-  const { payload } = verified;
+  
+  const { payload } = result;
+  
   return {
     userId: payload.userId,
     email: payload.email,
     jti: payload.jti,
   };
 }
-
-/**
- * Create a new JWT access token
- */
-export function createJWT(payload: Omit<JwtPayload, 'exp' | 'iat'>): string {
-  const signOptions: SignOptions = {
-    expiresIn: Number(ACCESS_TOKEN_EXPIRY) || 900, // 15 minutes in seconds
-    algorithm: 'HS256' as Algorithm
-  };
-  
-  return jwt.sign(
-    { ...payload, iat: Math.floor(Date.now() / 1000) },
-    JWT_SECRET,
-    signOptions
-  );
-}
-
-/**
- * Generate a JWT token
- */
-export function generateToken(
-  payload: Omit<JwtPayload, 'type' | 'iat' | 'exp'>,
-  type: TokenType,
-  expiresIn: string | number = type === 'access' ? '15m' : type === 'refresh' ? '7d' : '1h'
-): string {
-  const secret = type === 'access' 
-    ? JWT_SECRET
-    : type === 'refresh' 
-      ? JWT_REFRESH_SECRET 
-      : JWT_PASSWORD_RESET_SECRET;
-
-  const expiresInSeconds = typeof expiresIn === 'string' 
-    ? (parseInt(expiresIn, 10) || 900) // Default to 15 minutes if parsing fails
-    : expiresIn;
-
-  const signOptions: SignOptions = {
-    expiresIn: expiresInSeconds,
-    algorithm: 'HS256' as Algorithm
-  };
-
-  return jwt.sign(
-    { ...payload, type, iat: Math.floor(Date.now() / 1000) },
-    secret,
-    signOptions
-  );
-}
-
-/**
- * Verify a JWT token
- */
-export function verifyToken(token: string, type: TokenType): JwtPayload | null {
-  const secret = type === 'access' 
-    ? JWT_SECRET 
-    : type === 'refresh' 
-      ? JWT_REFRESH_SECRET 
-      : JWT_PASSWORD_RESET_SECRET;
-
-  try {
-    const decoded = jwt.verify(token, secret) as JwtPayload;
-    
-    // Verify token type matches expected type
-    if (decoded.type !== type) {
-      logger.warn(`Token type mismatch: expected ${type}, got ${decoded.type}`);
-      return null;
-    }
-    
-    return decoded;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(`Token verification failed: ${errorMessage}`);
-    return null;
-  }
-}
-
-/**
- * Generate both access and refresh tokens
- */
-export function generateAuthTokens(userId: string, email: string, role: string): TokenPair {
-  const accessToken = generateToken(
-    { userId, email, role },
-    'access',
-    ACCESS_TOKEN_EXPIRY
-  );
-
-  const refreshToken = generateToken(
-    { userId, email, role },
-    'refresh',
-    REFRESH_TOKEN_EXPIRY
-  );
-
-  return { accessToken, refreshToken };
-}
-
-/**
- * Verify a refresh token
- */
-export function verifyRefreshToken(token: string): JwtPayload | null {
-  return verifyToken(token, 'refresh');
-}
-
-/**
- * Generate a password reset token
- */
-export function generatePasswordResetToken(userId: string, email: string): string {
-  const signOptions: SignOptions = {
-    expiresIn: 3600, // 1 hour in seconds
-    algorithm: 'HS256' as Algorithm
-  };
-
-  return jwt.sign(
-    { 
-      userId, 
-      email,
-      type: 'password_reset' as const,
-      iat: Math.floor(Date.now() / 1000) 
-    },
-    JWT_PASSWORD_RESET_SECRET,
-    signOptions
-  );
-}
-
-// The async verifyPasswordResetToken is already defined above

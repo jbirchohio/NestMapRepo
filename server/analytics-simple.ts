@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { trips, users, activities } from "@shared/schema";
+import { trips, users, activities } from "./db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 
 export interface SimpleAnalyticsData {
@@ -53,15 +53,15 @@ export interface SimpleAnalyticsData {
   };
 }
 
-export async function getSimpleAnalytics(organizationId?: number): Promise<SimpleAnalyticsData> {
+export async function getSimpleAnalytics(organizationId?: string): Promise<SimpleAnalyticsData> {
   try {
     // Build filters based on organization
     const tripFilter = organizationId 
-      ? eq(trips.organization_id, organizationId)
+      ? eq(trips.organizationId, organizationId)
       : sql`1=1`;
     
     const userFilter = organizationId 
-      ? eq(users.organization_id, organizationId)
+      ? eq(users.organizationId, organizationId)
       : sql`1=1`;
 
     // Get basic counts
@@ -78,7 +78,7 @@ export async function getSimpleAnalytics(organizationId?: number): Promise<Simpl
     const [activityCountResult] = await db
       .select({ count: count() })
       .from(activities)
-      .innerJoin(trips, eq(activities.trip_id, trips.id))
+      .innerJoin(trips, eq(activities.tripId, trips.id))
       .where(tripFilter);
 
     // Get destination data

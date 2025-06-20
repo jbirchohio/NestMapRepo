@@ -1,12 +1,16 @@
 import { JwtPayload as BaseJwtPayload } from 'jsonwebtoken';
 
-export type UserRole = 'admin' | 'user' | 'guest';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 export type TokenType = 'access' | 'refresh' | 'password_reset';
 
-export interface TokenPayload extends BaseJwtPayload {
+// Extend JwtPayload but override the role to be required
+interface CustomJwtPayload extends Omit<BaseJwtPayload, 'role'> {
+  role: UserRole;
+}
+
+export interface TokenPayload extends CustomJwtPayload {
   sub: string;
   email: string;
-  role: UserRole;
   jti: string;
   type: TokenType;
   organizationId?: string;

@@ -1,6 +1,20 @@
 import { z } from "zod";
 import { Request, Response, NextFunction } from "express";
 
+// Define the user type
+interface UserType {
+  id: string | number;
+  role: string;
+  organization_id?: number;
+}
+
+// Use module augmentation to extend Express types
+declare namespace Express {
+  export interface Request {
+    user?: UserType;
+  }
+}
+
 /**
  * Admin Input Validation Middleware
  * Provides strict validation for administrative endpoints

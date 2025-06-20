@@ -1,32 +1,44 @@
 import { Request, Response, NextFunction } from 'express';
-import { USER_ROLES } from '../db/schema.js';
+import { USER_ROLES } from '../db/schema';
+import { AuthUser } from '../src/types/auth-user';
 
-// Extended request interface for authenticated users
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    role: string;
-    organization_id?: number;
-    displayName?: string;
-  };
+// Create a type that represents the custom properties we're adding to the request
+type CustomRequestProps = {
+  user?: AuthUser;
+  organizationId?: string | null;
+  organization_id?: string | null;
+};
+
+// Define a custom request type that includes our AuthUser
+export type AuthenticatedRequest = Request & {
+  user: AuthUser; // Make user required in AuthenticatedRequest
+  organizationId?: string | null;
+  organization_id?: string | null;
+};
+
+// Extend the Express Request type to include our custom properties
+declare module 'express-serve-static-core' {
+  interface Request extends CustomRequestProps {}
 }
 
 // Middleware to check superadmin permissions
-export const requireSuperadmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const requireSuperadmin = (req: Request, res: Response, next: NextFunction) => {
+  // Type assertion to access user property
+  const user = (req as any).user as AuthUser | undefined;
+  
   // Check if user is authenticated first
-  if (!req.user) {
+  if (!user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
   // Check if user has valid superadmin role
   const validSuperadminRoles = [
-    USER_ROLES.SUPERADMIN_OWNER,
-    USER_ROLES.SUPERADMIN_STAFF,
-    USER_ROLES.SUPERADMIN_AUDITOR
+    'superadmin_owner',
+    'superadmin_staff',
+    'superadmin_auditor'
   ];
   
-  if (!req.user.role || !validSuperadminRoles.includes(req.user.role as any)) {
+  if (!user.role || !validSuperadminRoles.includes(user.role.toLowerCase())) {
     return res.status(403).json({ error: 'Superadmin access required' });
   }
   
@@ -34,14 +46,17 @@ export const requireSuperadmin = (req: AuthenticatedRequest, res: Response, next
 };
 
 // Middleware for superadmin owner level permissions
-export const requireSuperadminOwner = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const requireSuperadminOwner = (req: Request, res: Response, next: NextFunction) => {
+  // Type assertion to access user property
+  const user = (req as any).user as AuthUser | undefined;
+  
   // Check if user is authenticated first
-  if (!req.user) {
+  if (!user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
   // Check if user has superadmin owner role
-  if (req.user.role !== USER_ROLES.SUPERADMIN_OWNER) {
+  if (user.role.toLowerCase() !== 'superadmin_owner') {
     return res.status(403).json({ error: 'Superadmin owner access required' });
   }
   
@@ -50,24 +65,52 @@ export const requireSuperadminOwner = (req: AuthenticatedRequest, res: Response,
 
 // Audit logging function for superadmin actions
 export const logSuperadminAction = async (
-  adminUserId: number,
+  adminUserId: string,
   action: string,
   targetType: string,
-  targetId?: number,
-  details?: any
+  targetId?: string,
+  details?: any,
+  targetUserId?: string,
+  targetOrganizationId?: string,
+  request?: Request
 ) => {
   try {
     const { db } = await import('../db');
-    const { superadminAuditLogs } = await import('@shared/schema');
+    const { superadminAuditLogs } = await import('../db/superadminSchema');
+    
+    // Extract IP and user agent from request if available
+    let ipAddress = '';
+    let userAgent = '';
+    
+    if (request) {
+      // Handle x-forwarded-for header
+      const forwardedFor = request.headers['x-forwarded-for'];
+      if (Array.isArray(forwardedFor)) {
+        ipAddress = forwardedFor[0] || '';
+      } else if (typeof forwardedFor === 'string') {
+        ipAddress = forwardedFor;
+      }
+      
+      // Handle user-agent header
+      const userAgentHeader = request.headers['user-agent'];
+      if (Array.isArray(userAgentHeader)) {
+        userAgent = userAgentHeader[0] || '';
+      } else if (typeof userAgentHeader === 'string') {
+        userAgent = userAgentHeader;
+      }
+    }
     
     await db.insert(superadminAuditLogs).values({
-      superadmin_user_id: adminUserId,
-      action,
-      target_type: targetType,
-      target_id: targetId?.toString() || '',
-      details,
-      ip_address: null, // Could be extracted from request if needed
-      user_agent: null, // Could be extracted from request if needed
+      adminUserId,
+      action: `superadmin_${action}`,
+      entityType: targetType,
+      entityId: targetId,
+      targetUserId,
+      targetOrganizationId,
+      details: details ? JSON.parse(JSON.stringify(details)) : undefined,
+      ipAddress,
+      userAgent,
+      severity: 'info'
     });
   } catch (error) {
     console.error('Failed to log superadmin action:', error);

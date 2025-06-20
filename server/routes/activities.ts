@@ -1,229 +1,427 @@
-import { Router, Request, Response } from 'express';
+import { Router, type Response, type NextFunction, type RequestHandler, type Request } from 'express';
+import { ParamsDictionary } from 'express-serve-static-core';
+import { getAuthContext, requireAuth } from '../utils/authContext';
+import { logUserActivity } from '../utils/activityLogger';
+
+// Re-export types for backward compatibility
+export type { AuthUser, JWTUser } from '../utils/authContext';
 import { z } from 'zod';
-import { insertActivitySchema, transformActivityToFrontend } from '@shared/schema';
-import { transformActivityToDatabase } from '@shared/fieldTransforms';
-import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext';
-import { storage } from '../storage';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation';
+import { v4 as uuidv4 } from 'uuid';
+
+// Import types and schemas
+import type { Activity, ActivityStatus, ActivityType } from '../types/activity';
+import { activitySchema, createActivitySchema, updateActivitySchema } from '../types/activity';
+import { User } from '../db/schema';
+
+// Import services
+import activityService from '../services/activity.service';
+import { validateOrganizationAccess } from '../middleware/organization';
+
+// Define JWTUser interface for this file
+interface JWTUser {
+  id: string;
+  userId?: string; // For backward compatibility
+  email: string;
+  role: string;
+  organizationId?: string;
+}
+
+// Type for authenticated user (either JWTUser or DB User)
+type AuthenticatedUser = JWTUser | User;
+
+// Type guard to check if user is JWTUser
+function isJWTUser(user: unknown): user is JWTUser {
+  return typeof user === 'object' && user !== null && 
+    'id' in user && typeof (user as JWTUser).id === 'string' && 
+    'email' in user && typeof (user as JWTUser).email === 'string' && 
+    'role' in user && typeof (user as JWTUser).role === 'string';
+}
+
+// Define types for request parameters, body, and query
+type ActivityIdParam = { activityId: string };
+type TripIdParam = { tripId: string };
+
+// Field transforms
+function transformActivityToFrontend(activity: Activity): any {
+  return {
+    ...activity,
+    // Convert any fields as needed for frontend
+    latitude: activity.latitude !== undefined ? Number(activity.latitude) : null,
+    longitude: activity.longitude !== undefined ? Number(activity.longitude) : null
+  };
+}
+
+// Validation schemas
+const activityIdParamSchema = z.object({
+  activityId: z.string().uuid()
+});
+
+const tripIdParamSchema = z.object({
+  tripId: z.string().uuid()
+});
+
+// Authentication and user ID retrieval is now handled by getAuthContext utility
+
+// Helper function to ensure user has access to the activity
+async function ensureActivityAccess(
+  req: Request, 
+  activityId: string
+): Promise<Activity | null> {
+  try {
+    const activity = await activityService.findById(activityId);
+    if (!activity) return null;
+    
+    // Get organization ID from auth context
+    const { organizationId } = getAuthContext(req);
+    
+    // Check if activity belongs to the user's organization
+    if (!organizationId || activity.organizationId !== organizationId) {
+      return null;
+    }
+    
+    return activity;
+  } catch (error) {
+    console.error('Error ensuring activity access:', error);
+    return null;
+  }
+}
 
 const router = Router();
 
-// Apply authentication and organization context to all activity routes
-router.use(validateJWT);
-router.use(injectOrganizationContext);
+// Apply organization context to all routes
+router.use(validateOrganizationAccess());
 
-// Zod schemas for route parameters
-const tripIdParamSchema = z.object({
-  trip_id: z.coerce.number().int().positive("Invalid Trip ID"),
-});
-
-const activityIdParamSchema = z.object({
-  id: z.coerce.number().int().positive("Invalid Activity ID"),
-});
-
-const activityOrderSchema = z.object({
-  order: z.number().int(),
-});
-
-// Get activities for a specific trip
-router.get("/trip/:trip_id", validateAndSanitizeRequest({ params: tripIdParamSchema }), async (req: Request, res: Response) => {
+// Apply authentication to all routes
+router.use((req, res, next) => {
   try {
-    const tripId = req.params.trip_id as number;
-
-    // Verify trip exists and user has access
-    const trip = await storage.getTrip(tripId);
-    if (!trip) {
-      return res.status(404).json({ message: "Trip not found" });
-    }
-
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this trip's activities" });
-    }
-
-    const activities = await storage.getActivitiesByTripId(tripId);
-    res.json(activities);
+    requireAuth(req);
+    next();
   } catch (error) {
-    console.error("Error fetching activities:", error);
-    res.status(500).json({ message: "Could not fetch activities" });
+    res.status(401).json({ message: 'Authentication required' });
   }
 });
 
-// Create new activity
-router.post("/", validateAndSanitizeRequest({ body: insertActivitySchema }), async (req: Request, res: Response) => {
+// Extend the Express Request type to include ip and other common properties
+type ExtendedRequest<P = {}, ResBody = any, ReqBody = any> = Request<P, ResBody, ReqBody> & {
+  ip?: string;
+  get(header: string): string | undefined;
+}
+
+// Get all activities for a trip
+router.get<{ tripId: string }>(
+  '/trip/:tripId',
+  async (req: ExtendedRequest<{ tripId: string }> & { params: { tripId: string } }, res: Response, next: NextFunction) => {
+    try {
+      const result = tripIdParamSchema.safeParse({ tripId: req.params.tripId });
+      if (!result.success) {
+        return res.status(400).json({
+          message: 'Validation error',
+          errors: result.error.format()
+        });
+      }
+
+      // Get auth context
+      const { userId, organizationId } = getAuthContext(req);
+      if (!organizationId || !userId) {
+        return res.status(403).json({ message: 'Organization access denied' });
+      }
+
+      // Log the activity
+      await logUserActivity(
+        userId.toString(),
+        organizationId.toString(),
+        'view_trip_activities',
+        { tripId: req.params.tripId },
+        req.ip || 'unknown',
+        req.get('user-agent') || 'unknown'
+      );
+
+      const activities = await activityService.findByTripId(req.params.tripId);
+      
+      // Filter activities by organization for multi-tenant security
+      const filteredActivities = activities.filter(
+        activity => activity.organizationId === organizationId
+      );
+      
+      return res.json({
+        success: true,
+        data: filteredActivities.map(transformActivityToFrontend)
+      });
+    } catch (error) {
+      console.error('Error fetching activities by trip:', error);
+      return next(error);
+    }
+  }
+);
+
+// Create activity
+router.post<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>(
+  '/create', 
+  async (req: ExtendedRequest<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>> & { 
+    body: Omit<Activity, 'id' | 'createdAt' | 'updatedAt'> 
+  }, res: Response, next: NextFunction) => {
   try {
-    const validatedBody = req.body as z.infer<typeof insertActivitySchema>;
+    const result = createActivitySchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: result.error.format()
+      });
+    }
+
+    // Get auth context
+    const { userId, organizationId } = getAuthContext(req);
+    if (!userId || !organizationId) {
+      return res.status(403).json({ message: 'Authentication required' });
+    }
+
+    // Ensure the trip belongs to the user's organization
+    // Note: You might want to add a separate check here if needed
+
     const activityData = {
-      ...validatedBody,
-      organizationId: req.user?.organizationId === null ? undefined : req.user?.organizationId
+      ...req.body,
+      createdBy: userId,
+      organizationId,
+      status: req.body.status || 'pending',
+      ...(result.data.description ? { description: result.data.description } : { description: null }),
+      ...(result.data.notes ? { notes: result.data.notes } : { notes: null }),
+      locationName: result.data.locationName || null,
+      // Convert coordinates
+      latitude: result.data.latitude !== undefined ? String(result.data.latitude) : null,
+      longitude: result.data.longitude !== undefined ? String(result.data.longitude) : null,
+      // Required fields with defaults
+      date: result.data.startDate ? new Date(result.data.startDate) : new Date(),
+      completed: false,
+      time: null,
+      tag: null,
+      location: null,
+      travelMode: null,
+      assignedTo: null,
+      order: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
+      
+    const activity = await activityService.create(activityData);
+    
+    // Log the activity creation
+    await logUserActivity(
+      userId.toString(),
+      organizationId.toString(),
+      'create_activity',
+      { 
+        activityId: activity.id.toString(),
+        tripId: activity.tripId.toString(),
+        title: activity.title
+      },
+      req.ip || 'unknown',
+      req.get('user-agent') || 'unknown'
+    );
 
-    // Verify trip exists and user has access
-    const trip = await storage.getTrip(activityData.tripId);
-    if (!trip) {
-      return res.status(404).json({ message: "Trip not found" });
-    }
-
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot add activities to this trip" });
-    }
-
-    const activity = await storage.createActivity(activityData);
-    res.status(201).json(activity);
+    return res.status(201).json({
+      success: true,
+      data: transformActivityToFrontend(activity)
+    });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
+    console.error('Error creating activity:', error);
+    return next(error);
+  }
+});
+
+// Get activity by ID
+router.get<{ activityId: string }>(
+  '/:activityId', 
+  async (req: ExtendedRequest<{ activityId: string }> & { params: { activityId: string } }, res: Response, next: NextFunction) => {
+  try {
+    const result = activityIdParamSchema.safeParse({ activityId: req.params.activityId });
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: result.error.format()
+      });
     }
-    console.error("Error creating activity:", error);
-    res.status(500).json({ message: "Could not create activity" });
+
+    const activity = await ensureActivityAccess(req, req.params.activityId);
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
+    }
+
+    // Log the activity view
+    const { userId, organizationId } = getAuthContext(req);
+    if (userId && organizationId) {
+      await logUserActivity(
+        userId.toString(),
+        organizationId.toString(),
+        'view_activity',
+        { 
+          activityId: activity.id.toString(),
+          tripId: activity.tripId.toString(),
+          title: activity.title
+        },
+        req.ip || 'unknown',
+        req.get('user-agent') || 'unknown'
+      );
+    }
+
+    return res.json({
+      success: true,
+      data: transformActivityToFrontend(activity)
+    });
+  } catch (error) {
+    console.error('Error fetching activity:', error);
+    return next(error);
   }
 });
 
 // Update activity
-router.put("/:id", validateAndSanitizeRequest({ params: activityIdParamSchema, body: insertActivitySchema.partial() }), async (req: Request, res: Response) => {
+type UpdateActivityBody = {
+  name?: string;
+  description?: string;
+  status?: string;
+  type?: ActivityType;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
+  cost?: number;
+  currency?: string;
+  notes?: string;
+  tripId?: string;
+};
+
+router.put<{ activityId: string }, any, UpdateActivityBody>(
+  '/:activityId', 
+  async (req: ExtendedRequest<{ activityId: string }, any, UpdateActivityBody> & { 
+    params: { activityId: string };
+    body: UpdateActivityBody;
+  }, res: Response, next: NextFunction) => {
   try {
-    const activityId = req.params.id as number;
-
-    // Verify activity exists
-    const existingActivity = await storage.getActivity(activityId);
-    if (!existingActivity) {
-      return res.status(404).json({ message: "Activity not found" });
+    const paramResult = activityIdParamSchema.safeParse({ activityId: req.params.activityId });
+    if (!paramResult.success) {
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: paramResult.error.format()
+      });
     }
 
-    // Verify trip access
-    const trip = await storage.getTrip(existingActivity.trip_id);
-    if (!trip) {
-      return res.status(404).json({ message: "Associated trip not found" });
+    const bodyResult = updateActivitySchema.safeParse(req.body);
+    if (!bodyResult.success) {
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: bodyResult.error.format()
+      });
     }
 
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot modify this activity" });
+    const activity = await ensureActivityAccess(req, req.params.activityId);
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
     }
 
-    const updateData = req.body as Partial<z.infer<typeof insertActivitySchema>>;
-    const updatedActivity = await storage.updateActivity(activityId, updateData);
+    // Prepare update data with proper types
+    const updateData: Partial<Activity> = {
+      ...bodyResult.data,
+      updatedAt: new Date()
+    };
+      
+    // Convert latitude and longitude to numbers for the Activity type
+    if ('latitude' in bodyResult.data) {
+      updateData.latitude = bodyResult.data.latitude !== undefined && bodyResult.data.latitude !== null
+        ? parseFloat(String(bodyResult.data.latitude))
+        : undefined;
+    }
     
+    if ('longitude' in bodyResult.data) {
+      updateData.longitude = bodyResult.data.longitude !== undefined && bodyResult.data.longitude !== null
+        ? parseFloat(String(bodyResult.data.longitude))
+        : undefined;
+    }
+
+    const { userId, organizationId } = getAuthContext(req);
+    if (!userId || !organizationId) {
+      return res.status(403).json({ message: 'Authentication required' });
+    }
+
+    const updatedActivity = await activityService.update(
+      req.params.activityId,
+      updateData as unknown as Partial<Omit<{ date: Date; id: string; createdAt: Date; updatedAt: Date; organizationId: string | null; tripId: string; title: string; completed: boolean | null; time: string | null; location: string | null; latitude: string | null; longitude: string | null; description: string | null; notes: string | null; travelMode: string | null; }, 'id' | 'createdAt' | 'updatedAt'>> & { updatedAt: Date }
+    );
+
     if (!updatedActivity) {
-      return res.status(404).json({ message: "Activity not found" });
+      return res.status(404).json({ message: 'Failed to update activity' });
     }
 
-    res.json(updatedActivity);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
-    }
-    console.error("Error updating activity:", error);
-    res.status(500).json({ message: "Could not update activity" });
-  }
-});
+    // Log the activity update
+    await logUserActivity(
+      userId.toString(),
+      organizationId.toString(),
+      'update_activity',
+      { 
+        activityId: updatedActivity.id.toString(),
+        tripId: updatedActivity.tripId.toString(),
+        title: updatedActivity.title,
+        updatedFields: Object.keys(updateData)
+      },
+      req.ip || 'unknown',
+      req.get('user-agent') || 'unknown'
+    );
 
-// Delete activity
-router.delete("/:id", validateAndSanitizeRequest({ params: activityIdParamSchema }), async (req: Request, res: Response) => {
-  try {
-    const activityId = req.params.id as number;
-
-    // Verify activity exists
-    const existingActivity = await storage.getActivity(activityId);
-    if (!existingActivity) {
-      return res.status(404).json({ message: "Activity not found" });
-    }
-
-    // Verify trip access
-    const trip = await storage.getTrip(existingActivity.trip_id);
-    if (!trip) {
-      return res.status(404).json({ message: "Associated trip not found" });
-    }
-
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot delete this activity" });
-    }
-
-    const success = await storage.deleteActivity(activityId);
-    if (!success) {
-      return res.status(404).json({ message: "Activity not found" });
-    }
-
-    res.json({ message: "Activity deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting activity:", error);
-    res.status(500).json({ message: "Could not delete activity" });
-  }
-});
-
-// Update activity order (for drag-and-drop reordering)
-router.put("/:id/order", validateAndSanitizeRequest({ params: activityIdParamSchema, body: activityOrderSchema }), async (req: Request, res: Response) => {
-  try {
-    const activityId = req.params.id as number;
-    const { order } = req.body as { order: number };
-
-    // Verify activity exists
-    const existingActivity = await storage.getActivity(activityId);
-    if (!existingActivity) {
-      return res.status(404).json({ message: "Activity not found" });
-    }
-
-    // Verify trip access
-    const trip = await storage.getTrip(existingActivity.trip_id);
-    if (!trip) {
-      return res.status(404).json({ message: "Associated trip not found" });
-    }
-
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot reorder this activity" });
-    }
-
-    const updatedActivity = await storage.updateActivity(activityId, { order });
-    
-    if (!updatedActivity) {
-      return res.status(404).json({ message: "Activity not found" });
-    }
-
-    res.json(updatedActivity);
-  } catch (error) {
-    console.error("Error updating activity order:", error);
-    res.status(500).json({ message: "Could not update activity order" });
-  }
-});
-
-// Toggle activity completion status
-router.patch("/:id/complete", validateAndSanitizeRequest({ params: activityIdParamSchema }), async (req: Request, res: Response) => {
-  try {
-    const activityId = Number(req.params.id);
-
-    // Verify activity exists
-    const existingActivity = await storage.getActivity(activityId);
-    if (!existingActivity) {
-      return res.status(404).json({ message: "Activity not found" });
-    }
-
-    // Verify trip access
-    const trip = await storage.getTrip(existingActivity.trip_id);
-    if (!trip) {
-      return res.status(404).json({ message: "Associated trip not found" });
-    }
-
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
-      return res.status(403).json({ message: "Access denied: Cannot modify this activity" });
-    }
-
-    const updatedActivity = await storage.updateActivity(activityId, { 
-      completed: !existingActivity.completed 
+    return res.json({
+      success: true,
+      data: transformActivityToFrontend(updatedActivity)
     });
-    
-    if (!updatedActivity) {
-      return res.status(404).json({ message: "Activity not found" });
+  } catch (error) {
+    console.error('Error updating activity:', error);
+    return next(error);
+  }
+});
+
+// Delete activity by ID
+router.delete<{ activityId: string }>(
+  '/:activityId', 
+  async (req: ExtendedRequest<{ activityId: string }> & { params: { activityId: string } }, res: Response, next: NextFunction) => {
+  try {
+    const result = activityIdParamSchema.safeParse({ activityId: req.params.activityId });
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: result.error.format()
+      });
     }
 
-    res.json(updatedActivity);
+    const activity = await ensureActivityAccess(req, req.params.activityId);
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
+    }
+
+    const { userId, organizationId } = getAuthContext(req);
+    if (!userId || !organizationId) {
+      return res.status(403).json({ message: 'Authentication required' });
+    }
+
+    await activityService.delete(req.params.activityId);
+    
+    // Log the activity deletion
+    await logUserActivity(
+      userId.toString(),
+      organizationId.toString(),
+      'delete_activity',
+      { 
+        activityId: activity.id.toString(),
+        tripId: activity.tripId.toString(),
+        title: activity.title
+      },
+      req.ip || 'unknown',
+      req.get('user-agent') || 'unknown'
+    );
+      
+    return res.json({
+      success: true,
+      message: 'Activity deleted successfully'
+    });
   } catch (error) {
-    console.error("Error toggling activity completion:", error);
-    res.status(500).json({ message: "Could not update activity completion status" });
+    console.error('Error deleting activity:', error);
+    return next(error);
   }
 });
 

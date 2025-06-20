@@ -1,156 +1,228 @@
 import 'dotenv/config';
-import express, { type Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+import http from 'http';
+import cors, { type CorsOptions } from 'cors';
+import helmet, { type HelmetOptions } from 'helmet';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
-import cors from 'cors';
-import helmet from 'helmet';
-
 import crypto from 'crypto';
-import http from 'http';
 import { ConfigService } from '@nestjs/config';
-
-// Local imports
 import { logger } from './utils/logger.js';
-import config from './config.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { standardizedErrorAdapter } from './middleware/standardized-error-adapter.js';
-import { extendRequest } from './utils/request.js';
-import { extendResponse } from './utils/response.js';
-import { preventSQLInjection, enforceOrganizationSecurity } from './middleware/security.js';
-import { performanceMonitor, memoryMonitor } from './middleware/performance.js';
-import { authenticate } from './src/auth/middleware/index.js';
-import { caseConverterMiddleware } from './middleware/caseConverter.js';
-import { cspMiddleware } from './middleware/csp.js';
-import { auditLogMiddleware } from './middleware/auditLog.js';
-import { apiRateLimit as comprehensiveApiRateLimit } from './middleware/comprehensive-rate-limiting.js';
 
-// Import route factories
-import { createAuthRouter } from './routes/auth.js';
+// Import routes
 import apiRoutes from './routes/index.js';
-import customDomainRoutes from './routes/customDomains.js';
+import { router as customDomainRoutes } from './routes/customDomains.js';
 
-// Re-export types for easier access
-export * from '@shared/types/index';
+// Import middleware
+import { caseConverterMiddleware } from './middleware/caseConverter.js';
+import { globalErrorHandler } from './utils/errorHandler.js';
 
-// Initialize Express app
-const app = express();
-const PORT = config.server.port;
-const HOST = config.server.host;
+// Import the centralized type definitions
+import './src/types/express-extensions';
+
+// The Express Request type is now properly extended via the express-extensions.d.ts file
+
+// Initialize Express app with proper typing
+const app: express.Express = express();
+const configService = new ConfigService();
+
+type ExpressMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => void;
 
 // ======================
-// Core Middleware
+// Configuration
 // ======================
-app.use(extendRequest);
-app.use(extendResponse);
-app.use(performanceMonitor);
-app.use(memoryMonitor);
-app.use(compression());
-app.use(cookieParser());
+const PORT = configService.get<number>('PORT') || 3000;
+const NODE_ENV = configService.get<string>('NODE_ENV') || 'development';
+const CORS_ORIGIN = configService.get<string>('CORS_ORIGIN') || '*';
+const HOST = configService.get<string>('HOST') || '0.0.0.0';
 
 // ======================
 // Security Middleware
 // ======================
-app.use(cspMiddleware);
-app.use(helmet());
-app.use((_req, res, next) => {
-  res.removeHeader('X-Powered-By');
-  next();
+// Configure CSP for Helmet with all necessary directives
+const cspDirectives = {
+  defaultSrc: ["'self'"],
+  scriptSrc: [
+    "'self'",
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "https://maps.googleapis.com",
+    "https://*.duffel.com"
+  ],
+  styleSrc: [
+    "'self'",
+    "'unsafe-inline'",
+    "https://fonts.googleapis.com"
+  ],
+  imgSrc: [
+    "'self'",
+    "data:",
+    "https://*.googleapis.com",
+    "https://*.duffel.com",
+    "https://*.openstreetmap.org"
+  ],
+  connectSrc: [
+    "'self'",
+    "https://api.duffel.com",
+    "https://maps.googleapis.com",
+    "wss://your-app.duffel.tech"
+  ],
+  fontSrc: [
+    "'self'"
+  ],
+  frameSrc: ["'self'"],
+  formAction: ["'self'"],
+  ...(NODE_ENV === 'production' ? { upgradeInsecureRequests: [] } : {})
+};
+
+// Apply helmet security headers with proper typing
+const helmetConfig: HelmetOptions = {
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: cspDirectives
+  },
+  crossOriginEmbedderPolicy: true,
+  crossOriginOpenerPolicy: true,
+  crossOriginResourcePolicy: { policy: "same-site" },
+  dnsPrefetchControl: { allow: true },
+  frameguard: { action: 'deny' },
+  hidePoweredBy: true,
+  hsts: { maxAge: 15552000, includeSubDomains: true },
+  ieNoOpen: true,
+  noSniff: true,
+  permittedCrossDomainPolicies: { permittedPolicies: 'none' },
+  referrerPolicy: { policy: 'same-origin' },
+  xssFilter: true
+};
+
+// Apply helmet middleware with proper typing
+app.use((req, res, next) => {
+  const helmetMiddleware = helmet(helmetConfig);
+  return helmetMiddleware(req as any, res as any, next);
 });
-app.use(cors({
-  origin: config.server.corsOrigin,
+
+// Configure and apply CORS with proper typing
+const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = CORS_ORIGIN.split(',').map(o => o.trim());
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true,
   maxAge: 600,
-  optionsSuccessStatus: 200,
-}));
+  optionsSuccessStatus: 200
+};
 
-// Apply comprehensive API rate limiting globally
-// Skip for health check and dev environment
-app.use('/api', (req: Request, res: Response, next: NextFunction) => {
-  const skipPaths = ['/health', '/api/health'];
-  if (process.env.NODE_ENV === 'development' || skipPaths.some(path => req.path.startsWith(path))) {
-    return next();
-  }
-  return comprehensiveApiRateLimit(req, res, next);
-});
-app.use(preventSQLInjection);
-app.use(auditLogMiddleware);
+// Apply CORS middleware with type assertion
+app.use(cors(corsOptions) as express.RequestHandler);
+
+// Remove X-Powered-By header
+app.disable('x-powered-by');
 
 // ======================
-// Body Parsers & Validation
+// Standard Middleware
 // ======================
-app.use(express.json({ limit: '10kb', strict: true }));
-app.use(express.urlencoded({ extended: true, limit: '10kb', parameterLimit: 50 }));
+// Helper function to safely apply middleware with proper types
+const safeMiddleware = <T>(middleware: T): express.RequestHandler => {
+  return (req, res, next) => {
+    return (middleware as unknown as express.RequestHandler)(req, res, next);
+  };
+};
 
-// Convert request and response bodies between camelCase and snake_case
+// Apply middleware with proper type handling
+app.use(safeMiddleware(express.json({ limit: '10mb' })));
+app.use(safeMiddleware(express.urlencoded({ extended: true, limit: '10kb' })));
+app.use(safeMiddleware(cookieParser()));
+app.use(safeMiddleware(compression()));
+
+// Import the extended Request type from our declaration file
+import { Request as ExpressRequest } from 'express';
+
+// Type for request with our custom fields
+type CustomRequest = ExpressRequest;
+
+// Request ID and timing middleware
+const requestLogger: express.RequestHandler = (req, res, next) => {
+  const start = Date.now();
+  
+  // Add custom properties to request object with type assertion
+  const customReq = req as any; // Use any to bypass type checking for custom properties
+  customReq.requestId = crypto.randomUUID();
+  customReq.startTime = process.hrtime();
+  
+  const { method, originalUrl, ip } = req;
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const { statusCode } = res;
+    const contentLength = res.get('content-length') || 0;
+    logger.info(`${method} ${originalUrl} ${statusCode} ${duration}ms ${contentLength}b - ${ip}`);
+  });
+  
+  next();
+};
+
+app.use(requestLogger);
+
+// Case conversion middleware
 app.use(caseConverterMiddleware);
 
 // ======================
-// Request Logging & Tracing
+// Application Routes
 // ======================
-app.use((req: Request, res: Response, next: NextFunction) => {
-  req.requestId = crypto.randomUUID();
-  req.startTime = process.hrtime();
+// Health check endpoint (must be before auth middleware)
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() });
+}) as express.RequestHandler;
 
-  const { method, originalUrl, ip } = req;
-  res.on('finish', () => {
-    const durationInMs = process.hrtime(req.startTime)[1] / 1e6;
-    const { statusCode } = res;
-    const contentLength = res.get('content-length');
-    logger.info(`${method} ${originalUrl} ${statusCode} ${durationInMs.toFixed(2)}ms ${contentLength || 0}b - ${ip}`);
-  });
-  next();
-});
-
-// ======================
-// API Routes
-// ======================
-// Initialize config service for auth
-const configService = new ConfigService();
-
-// Auth routes are public and mounted first
-const authRouter = createAuthRouter(configService);
-app.use('/api/auth', authRouter);
-
-// All other API routes are authenticated
-app.use('/api', authenticate);
-app.use('/api', enforceOrganizationSecurity);
+// API routes
 app.use('/api', apiRoutes);
 app.use('/api', customDomainRoutes);
 
-// ======================
-// Error Handling & Final Handlers
-// ======================
-// Use the standardized error adapter first (for new error handling)
-// and fall back to legacy error handler for backward compatibility
-app.use(standardizedErrorAdapter());
-app.use(errorHandler);
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() });
-});
-app.use((_req: Request, res: Response) => {
+// 404 Handler (must be after all routes but before error handlers)
+app.all('*', (req, res) => {
   res.status(404).json({
     success: false,
-    error: { code: 'NOT_FOUND', message: 'The requested resource was not found on this server.' },
+    error: { 
+      code: 'NOT_FOUND', 
+      message: 'The requested resource was not found on this server.',
+      path: req.originalUrl
+    }
   });
-});
+}) as express.RequestHandler;
 
 // ======================
-// Server Startup and Shutdown
+// Error Handling
 // ======================
-let server: http.Server;
+// Apply global error handling middleware
+app.use(globalErrorHandler);
+
+// ======================
+// Server Initialization
+// ======================
+const server = http.createServer(app);
 
 const startServer = async (): Promise<void> => {
   try {
-    if (process.env.NODE_ENV === 'production') {
+    if (NODE_ENV === 'production') {
       app.set('trust proxy', 1);
     }
 
-    server = app.listen(PORT, HOST, () => {
-      logger.info(`✅ Server is running at http://${HOST}:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    await new Promise<void>((resolve) => {
+      server.listen(PORT, HOST, () => {
+        logger.info(`🚀 Server is running at http://${HOST}:${PORT} in ${NODE_ENV} mode`);
+        resolve();
+      });
     });
-
   } catch (error) {
     logger.error('❌ Failed to start server:', error);
     process.exit(1);
@@ -159,35 +231,34 @@ const startServer = async (): Promise<void> => {
 
 const gracefulShutdown = (signal: string) => {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
-  if (server) {
-    server.close(() => {
-      logger.info('HTTP server closed.');
-      // Add any other cleanup logic here (e.g., close database connections)
-      process.exit(0);
-    });
-
-    setTimeout(() => {
-      logger.error('Could not close connections in time, forcefully shutting down');
-      process.exit(1);
-    }, 10000); // 10 seconds
-  } else {
+  
+  server.close(() => {
+    logger.info('HTTP server closed');
     process.exit(0);
-  }
+  });
+
+  // Force close server after 10 seconds
+  setTimeout(() => {
+    logger.error('❌ Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
 };
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
+// Start the server
 if (require.main === module) {
   logger.info('🚀 Starting server...');
   const requiredEnv = ['DATABASE_URL', 'JWT_SECRET', 'REDIS_URL'];
   const missingEnv = requiredEnv.filter(v => !process.env[v]);
+  
   if (missingEnv.length > 0) {
     logger.error(`❌ Missing required environment variables: ${missingEnv.join(', ')}`);
     process.exit(1);
   }
-  startServer();
+  
+  startServer().catch((error) => {
+    logger.error('❌ Unhandled error during server startup:', error);
+    process.exit(1);
+  });
 }
 
-export { app };
+export { app, server };

@@ -1,22 +1,23 @@
-import { Logger } from '@nestjs/common';
+import { Logger, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { UserRepositoryImpl } from './repositories/user.repository';
-import { RefreshTokenRepositoryImpl } from './repositories/refresh-token';
-import { JwtAuthService } from './services/jwtAuthService';
-import { AuthController } from './controllers/auth.controller';
-import { EmailService } from '../email/interfaces/email.service.interface';
-import { NodemailerEmailService } from '../email/services/nodemailer-email.service';
-import { UserRepository } from './interfaces/user.repository.interface';
-import { RefreshTokenRepository } from './interfaces/refresh-token.repository.interface';
-import { IAuthService } from './interfaces/auth.service.interface';
+import { JwtModule } from '@nestjs/jwt';
+import { UserRepositoryImpl } from './repositories/user.repository.js';
+import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js';
+import { JwtAuthService } from './services/jwtAuthService.js';
+import { AuthController } from './controllers/auth.controller.js';
+import { EmailService } from '../email/interfaces/email.service.interface.js';
+import { NodemailerEmailService } from '../email/services/nodemailer-email.service.js';
+import { ErrorService } from '../common/services/error.service.js';
+import { UserRepository } from '../common/repositories/user/user.repository.interface.js';
+import { RefreshTokenRepository } from './interfaces/refresh-token.repository.interface.js';
+import { IAuthService } from './interfaces/auth.service.interface.js';
 
 export interface AuthContainerDependencies {
   emailService?: EmailService;
   configService: ConfigService;
-  jwtService?: JwtService;
   userRepository?: UserRepository;
   refreshTokenRepository?: RefreshTokenRepository;
+  errorService: ErrorService;
 }
 
 /**
@@ -29,7 +30,6 @@ export class AuthContainer {
   
   // Services
   public readonly emailService: EmailService;
-  public readonly jwtService: JwtService;
   public readonly authService: IAuthService;
 
   // Controllers
@@ -46,20 +46,13 @@ export class AuthContainer {
     this.userRepository = deps.userRepository || new UserRepositoryImpl();
     this.refreshTokenRepository = deps.refreshTokenRepository || new RefreshTokenRepositoryImpl();
     
-    // Initialize JWT service with proper configuration
-    this.jwtService = deps.jwtService || new JwtService({
-      secret: this.configService.get<string>('JWT_SECRET', 'your-secret-key'),
-      signOptions: {
-        issuer: this.configService.get('JWT_ISSUER', 'nestmap-api'),
-        audience: this.configService.get('JWT_AUDIENCE', 'nestmap-client'),
-        expiresIn: this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
-      },
-    });
-    
     // Initialize email service if not provided
-    this.emailService = deps.emailService || new NodemailerEmailService(this.configService);
+    this.emailService = deps.emailService || new NodemailerEmailService(
+      this.configService,
+      deps.errorService
+    );
     
-    // Initialize auth service with all required dependencies
+    // Initialize auth service
     this.authService = new JwtAuthService(
       this.userRepository,
       this.refreshTokenRepository,
@@ -95,8 +88,8 @@ export class AuthContainer {
       app.post('/api/auth/forgot-password', ...this.authController.requestPasswordReset);
       app.post('/api/auth/reset-password', ...this.authController.resetPassword);
       
-      // User management routes
-      app.get('/api/auth/me', ...this.authController.getCurrentUser);
+      // User management routes - note: getCurrentUser is a single handler, not an array
+      app.get('/api/auth/me', this.authController.getCurrentUser);
       
       this.logger.log('Auth routes registered successfully');
     } catch (error) {
@@ -110,26 +103,15 @@ export class AuthContainer {
  * Legacy export for backward compatibility
  * @deprecated Use AuthContainer class directly instead
  */
-export const initAuthContainer = (deps: AuthContainerDependencies) => {
-  const container = new AuthContainer({
-    ...deps,
-    // Ensure required services are provided or use defaults
-    emailService: deps.emailService || new NodemailerEmailService(deps.configService),
-    jwtService: deps.jwtService || new JwtService({
-      secret: deps.configService.get<string>('JWT_SECRET', 'your-secret-key'),
-      signOptions: {
-        issuer: deps.configService.get('JWT_ISSUER', 'nestmap-api'),
-        audience: deps.configService.get('JWT_AUDIENCE', 'nestmap-client'),
-        expiresIn: deps.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m'),
-      },
-    }),
-  });
+export function initAuthContainer(deps: AuthContainerDependencies) {
+  const container = new AuthContainer(deps);
   
   return {
     userRepository: container.userRepository,
     refreshTokenRepository: container.refreshTokenRepository,
+    emailService: container.emailService,
     authService: container.authService,
     authController: container.authController,
     registerAuthRoutes: (app: any) => container.registerRoutes(app),
   };
-};
+}

@@ -1,42 +1,76 @@
-import { Router, Request, Response } from 'express';
-import { db } from '../db';
-import { organizations, customDomains } from '../db/schema';
-import { whiteLabelSettings } from '../../shared/schema';
+// Import types from our custom type definitions
+import { Router, type Request as ExpressRequest, type Response, type NextFunction } from 'express';
+import type { CustomRequest, RequestHandler } from '../types/custom-express.js'; // Added .js extension for ES modules
+import { db } from '../db/db.js';
+import { organizations, customDomains } from '../db/schema.js';
+import { whiteLabelSettings } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
-import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
+import { authenticate } from '../src/middleware/authenticate.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { promises as dns } from 'dns';
 
+// Type assertion for request handlers with CustomRequest
+type CustomRequestHandler = (req: CustomRequest, res: Response, next: NextFunction) => Promise<void> | void;
+
 const router = Router();
 
 // Apply middleware to all routes in this file
-router.use(validateJWT);
-router.use(injectOrganizationContext);
-router.use(validateOrganizationAccess);
+router.use(authenticate as unknown as RequestHandler);
+router.use(injectOrganizationContext as unknown as RequestHandler);
+router.use(validateOrganizationAccess as unknown as RequestHandler);
+
+// Helper function to create typed request handlers with proper type safety
+function createHandler(
+  handler: (req: CustomRequest, res: Response, next: NextFunction) => Promise<void> | void
+): RequestHandler {
+  return (async (req: ExpressRequest, res: Response, next: NextFunction) => {
+    try {
+      await handler(req as unknown as CustomRequest, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler;
+}
+
+// Helper function to send JSON responses without returning them
+const sendJsonResponse = <T>(res: Response, status: number, data: T): void => {
+  res.status(status).json(data);
+};
+
+// Custom types are now imported from custom-express.d.ts
 
 // GET /api/organizations/:orgId/domains - List custom domains for an organization
-router.get('/organizations/:orgId/domains', requireOrgPermission('manage_domains'), async (req: Request, res: Response) => {
-  const orgId = req.params.orgId;
-  if (!orgId) {
-    return res.status(400).json({ error: 'Invalid organization ID' });
-  }
-
-  try {
-    // Security check: Ensure the user is part of the organization or a super_admin
-    if (req.user?.organizationId !== orgId && req.user?.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Access denied' });
+router.get('/organizations/:orgId/domains', 
+  requireOrgPermission('view_domains') as unknown as RequestHandler,
+  createHandler(async (req: CustomRequest, res: Response) => {
+    const orgId = req.params.orgId;
+    if (!orgId) {
+      sendJsonResponse(res, 400, { error: 'Invalid organization ID' });
+      return;
     }
 
-    const domains = await db.select().from(customDomains).where(eq(customDomains.organizationId, orgId));
-    return res.json(domains);
-  } catch (error) {
-    console.error('Error fetching custom domains:', error);
-    return res.status(500).json({ error: 'Failed to fetch custom domains' });
-  }
-});
+    try {
+      // Security check: Ensure the user is part of the organization or a super_admin
+      if (req.user?.organizationId !== orgId && req.user?.role !== 'super_admin') {
+        sendJsonResponse(res, 403, { error: 'Access denied' });
+        return;
+      }
+
+      const domains = await db
+        .select()
+        .from(customDomains)
+        .where(eq(customDomains.organizationId, orgId));
+      
+      sendJsonResponse(res, 200, domains);
+    } catch (error) {
+      console.error('Error fetching custom domains:', error);
+      sendJsonResponse(res, 500, { error: 'Failed to fetch custom domains' });
+    }
+  })
+);
 
 // Validation schema for adding a domain
 const addDomainSchema = z.object({
@@ -44,28 +78,37 @@ const addDomainSchema = z.object({
 });
 
 // POST /api/organizations/:orgId/domains - Add a new custom domain
-router.post('/organizations/:orgId/domains', requireOrgPermission('manage_domains'), async (req: Request, res: Response) => {
+router.post('/organizations/:orgId/domains', 
+  requireOrgPermission('manage_domains') as unknown as RequestHandler, 
+  createHandler(async (req: CustomRequest, res: Response) => {
   const orgId = req.params.orgId; // Keep as string to match schema
   if (!orgId) {
-    return res.status(400).json({ error: 'Invalid organization ID' });
+    sendJsonResponse(res, 400, { error: 'Invalid organization ID' });
+    return;
   }
 
   try {
     // Security check
     if (req.user?.organizationId !== orgId && req.user?.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Access denied' });
+      sendJsonResponse(res, 403, { error: 'Access denied' });
+      return;
     }
 
     const validation = addDomainSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({ error: 'Invalid domain name', details: validation.error.issues });
+      sendJsonResponse(res, 400, { 
+        error: 'Invalid domain name', 
+        details: validation.error.issues 
+      });
+      return;
     }
     const { domain } = validation.data;
 
     // Check if domain is already registered by any organization
     const existingDomain = await db.select().from(customDomains).where(eq(customDomains.domainName, domain)).limit(1);
     if (existingDomain.length > 0) {
-      return res.status(409).json({ error: 'Domain is already in use' });
+      sendJsonResponse(res, 409, { error: 'Domain is already in use' });
+      return;
     }
 
     // Generate a verification token
@@ -81,38 +124,45 @@ router.post('/organizations/:orgId/domains', requireOrgPermission('manage_domain
       updatedAt: new Date()
     }).returning();
 
-    return res.status(201).json({
+    sendJsonResponse(res, 201, {
       message: 'Domain added successfully. Please add the provided TXT record to your DNS settings to verify ownership.',
       domain: newDomain
     });
   } catch (error) {
     console.error('Error adding custom domain:', error);
-    return res.status(500).json({ error: 'Failed to add custom domain' });
+    sendJsonResponse(res, 500, { error: 'Failed to add custom domain' });
   }
-});
+})
+);
 
 // POST /api/organizations/:orgId/domains/:domainId/verify - Verify a custom domain
-router.post('/organizations/:orgId/domains/:domainId/verify', requireOrgPermission('manage_domains'), async (req: Request, res: Response) => {
+router.post('/organizations/:orgId/domains/:domainId/verify', 
+  requireOrgPermission('manage_domains') as unknown as RequestHandler,
+  createHandler(async (req: CustomRequest, res: Response) => {
   const orgId = req.params.orgId;
   const domainId = req.params.domainId;
   if (!orgId || !domainId) {
-    return res.status(400).json({ error: 'Invalid organization or domain ID' });
+    sendJsonResponse(res, 400, { error: 'Invalid organization or domain ID' });
+    return;
   }
 
   try {
     // Security check
     if (req.user?.organizationId !== orgId && req.user?.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Access denied' });
+      sendJsonResponse(res, 403, { error: 'Access denied' });
+      return;
     }
 
     const [domainToVerify] = await db.select().from(customDomains).where(and(eq(customDomains.id, domainId), eq(customDomains.organizationId, orgId)));
 
     if (!domainToVerify) {
-      return res.status(404).json({ error: 'Domain not found or does not belong to this organization' });
+      sendJsonResponse(res, 404, { error: 'Domain not found or does not belong to this organization' });
+      return;
     }
 
     if (domainToVerify.status === 'active') {
-      return res.status(400).json({ message: 'Domain is already verified' });
+      sendJsonResponse(res, 400, { message: 'Domain is already verified' });
+      return;
     }
 
     // Perform DNS TXT record lookup
@@ -122,72 +172,137 @@ router.post('/organizations/:orgId/domains/:domainId/verify', requireOrgPermissi
     if (verificationRecord) {
       // Verification successful
       await db.update(customDomains).set({ status: 'active', verifiedAt: new Date() }).where(eq(customDomains.id, domainId));
-      return res.json({ success: true, message: 'Domain verified successfully!' });
+      sendJsonResponse(res, 200, { success: true, message: 'Domain verified successfully!' });
     } else {
       // Verification failed
       await db.update(customDomains).set({ status: 'failed' }).where(eq(customDomains.id, domainId));
-      return res.status(400).json({ success: false, message: 'Verification failed. TXT record not found or does not match.' });
+      sendJsonResponse(res, 400, { success: false, message: 'Verification failed. TXT record not found or does not match.' });
     }
   } catch (error: any) {
     console.error('Error verifying domain:', error);
     if (error.code === 'ENOTFOUND' || error.code === 'ENODATA') {
-      return res.status(400).json({ success: false, message: 'Could not find DNS records for this domain.' });
+      sendJsonResponse(res, 400, { success: false, message: 'Could not find DNS records for this domain.' });
+    } else {
+      sendJsonResponse(res, 500, { error: 'Failed to verify domain' });
     }
-    return res.status(500).json({ error: 'Failed to verify domain' });
   }
-});
+})
+);
+
+// GET /api/organizations/:orgId/domains/:domainId - Get a specific domain
+router.get('/organizations/:orgId/domains/:domainId', 
+  requireOrgPermission('view_domains') as unknown as RequestHandler,
+  createHandler(async (req: CustomRequest, res: Response) => {
+    const orgId = req.params.orgId;
+    const domainId = req.params.domainId;
+    if (!orgId || !domainId) {
+      sendJsonResponse(res, 400, { error: 'Invalid organization or domain ID' });
+      return;
+    }
+
+    try {
+      // Security check
+      if (req.user?.organizationId !== orgId && req.user?.role !== 'super_admin') {
+        sendJsonResponse(res, 403, { error: 'Access denied' });
+        return;
+      }
+
+      const [domain] = await db.select().from(customDomains).where(
+        and(
+          eq(customDomains.id, domainId), 
+          eq(customDomains.organizationId, orgId)
+        )
+      );
+
+      if (!domain) {
+        sendJsonResponse(res, 404, { error: 'Domain not found or does not belong to this organization' });
+        return;
+      }
+
+      sendJsonResponse(res, 200, domain);
+    } catch (error) {
+      console.error('Error fetching domain:', error);
+      sendJsonResponse(res, 500, { error: 'Failed to fetch domain' });
+    }
+  })
+);
 
 // DELETE /api/organizations/:orgId/domains/:domainId - Delete a custom domain
-router.delete('/organizations/:orgId/domains/:domainId', requireOrgPermission('manage_domains'), async (req: Request, res: Response) => {
-  const orgId = req.params.orgId;
-  const domainId = req.params.domainId;
-  if (!orgId || !domainId) {
-    return res.status(400).json({ error: 'Invalid organization or domain ID' });
-  }
-
-  try {
-    // Security check
-    if (req.user?.organizationId !== orgId && req.user?.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Access denied' });
+router.delete('/organizations/:orgId/domains/:domainId', 
+  requireOrgPermission('manage_domains') as unknown as RequestHandler,
+  createHandler(async (req: CustomRequest, res: Response) => {
+    const orgId = req.params.orgId;
+    const domainId = req.params.domainId;
+    
+    if (!orgId || !domainId) {
+      sendJsonResponse(res, 400, { error: 'Invalid organization or domain ID' });
+      return;
     }
 
-    // Check if domain exists and belongs to the organization
-    const [domainToDelete] = await db.select().from(customDomains).where(and(eq(customDomains.id, domainId), eq(customDomains.organizationId, orgId)));
+    try {
+      // Security check
+      if (req.user?.organizationId !== orgId && req.user?.role !== 'super_admin') {
+        sendJsonResponse(res, 403, { error: 'Access denied' });
+        return;
+      }
 
-    if (!domainToDelete) {
-      return res.status(404).json({ error: 'Domain not found or does not belong to this organization' });
+      // Check if domain exists and belongs to the organization
+      const [domainToDelete] = await db
+        .select()
+        .from(customDomains)
+        .where(and(
+          eq(customDomains.id, domainId), 
+          eq(customDomains.organizationId, orgId)
+        ));
+
+      if (!domainToDelete) {
+        sendJsonResponse(res, 404, { 
+          error: 'Domain not found or does not belong to this organization' 
+        });
+        return;
+      }
+
+      // Delete the domain
+      await db
+        .delete(customDomains)
+        .where(eq(customDomains.id, domainId));
+
+      sendJsonResponse(res, 204, {});
+    } catch (error) {
+      console.error('Error deleting domain:', error);
+      sendJsonResponse(res, 500, { 
+        error: 'Failed to delete domain',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
-
-    await db.delete(customDomains).where(eq(customDomains.id, domainId));
-
-    return res.json({ success: true, message: 'Domain deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting domain:', error);
-    return res.status(500).json({ error: 'Failed to delete domain' });
-  }
-});
+  })
+);
 
 // Get domain branding configuration for public access
-router.get('/domains/:domain/branding', async (req: Request, res: Response) => {
+// Export the router
+export { router };
+
+// GET /domains/:domain/branding - Get branding for a domain (public endpoint)
+router.get('/domains/:domain/branding', createHandler(async (req: CustomRequest, res: Response, _next: NextFunction) => {
   const { domain } = req.params;
 
   try {
     const result = await db
       .select({
-        companyName: whiteLabelSettings.company_name,
-        companyLogo: whiteLabelSettings.company_logo,
-        primaryColor: whiteLabelSettings.primary_color,
-        secondaryColor: whiteLabelSettings.secondary_color,
-        accentColor: whiteLabelSettings.accent_color,
+        companyName: whiteLabelSettings.companyName,
+        companyLogo: whiteLabelSettings.companyLogo,
+        primaryColor: whiteLabelSettings.primaryColor,
+        secondaryColor: whiteLabelSettings.secondaryColor,
+        accentColor: whiteLabelSettings.accentColor,
         tagline: whiteLabelSettings.tagline,
-        supportEmail: whiteLabelSettings.support_email,
-        helpUrl: whiteLabelSettings.help_url,
-        footerText: whiteLabelSettings.footer_text
+        supportEmail: whiteLabelSettings.supportEmail,
+        helpUrl: whiteLabelSettings.helpUrl,
+        footerText: whiteLabelSettings.footerText
       })
       .from(customDomains)
       .leftJoin(
         whiteLabelSettings,
-        eq(customDomains.organizationId, whiteLabelSettings.organization_id)
+        eq(customDomains.organizationId, whiteLabelSettings.organizationId)
       )
       .where(and(
         eq(customDomains.domainName, domain),
@@ -197,11 +312,12 @@ router.get('/domains/:domain/branding', async (req: Request, res: Response) => {
       .limit(1);
 
     if (!result.length || !result[0].companyName) {
-      return res.status(404).json({ error: "Domain not found or not configured" });
+      res.status(404).json({ error: "Domain not found or not configured" });
+      return;
     }
 
     const branding = result[0];
-    return res.json({
+    res.json({
       companyName: branding.companyName,
       companyLogo: branding.companyLogo,
       primaryColor: branding.primaryColor || '#6D5DFB',
@@ -214,12 +330,15 @@ router.get('/domains/:domain/branding', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Get domain branding error:', error);
-    return res.status(500).json({ error: "Failed to get branding configuration" });
+    res.status(500).json({ error: "Failed to get branding configuration" });
   }
-});
+}));
 
 // Domain configuration dashboard
-router.get('/domains/dashboard', validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req: Request, res: Response) => {
+router.get('/domains/dashboard', 
+  authenticate as unknown as RequestHandler, 
+  validateOrganizationAccess as unknown as RequestHandler, 
+  (async (req: CustomRequest, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ error: "Authentication required" });
   }
@@ -249,7 +368,7 @@ router.get('/domains/dashboard', validateJWT, injectOrganizationContext, validat
     const [whiteLabelConfig] = await db
       .select()
       .from(whiteLabelSettings)
-      .where(eq(whiteLabelSettings.organization_id, organizationId))
+      .where(eq(whiteLabelSettings.organizationId, organizationId))
       .limit(1);
 
     const plan = organization?.plan || 'basic';
@@ -272,6 +391,6 @@ router.get('/domains/dashboard', validateJWT, injectOrganizationContext, validat
     console.error('Domain dashboard error:', error);
     return res.status(500).json({ error: "Failed to get domain dashboard" });
   }
-});
+}) as unknown as RequestHandler);
 
 export default router;

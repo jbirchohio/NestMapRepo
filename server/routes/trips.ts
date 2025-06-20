@@ -1,24 +1,39 @@
 import { Router, Request, Response } from 'express';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
 import { z } from 'zod';
-import { insertTripSchema } from '@shared/schema';
-import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext';
-import { fieldTransformMiddleware } from '../middleware/fieldTransform';
-import { enforceTripLimit } from '../middleware/subscription-limits';
-import { storage } from '../storage';
-import { generatePdfBuffer } from '../utils/pdfHelper';
-import { generateAIProposal } from '../proposalGenerator';
-import { logUserActivity } from '../utils/activityLogger';
-import { tripController } from '../src/trips/trip.container';
+import { insertTripSchema } from '../db/schema.js';
+import { validateJWT } from '../middleware/jwtAuth.js';
+import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext.js';
+import { fieldTransformMiddleware } from '../middleware/fieldTransform.js';
+import { enforceTripLimit } from '../middleware/subscription-limits.js';
+import { storage } from '../storage.js';
+import { generatePdfBuffer } from '../utils/pdfHelper.js';
+import { generateAIProposal } from '../proposalGenerator.js';
+import { logUserActivity } from '../utils/activityLogger.js';
+import { tripController } from '../src/trips/trip.container.js';
+
+// Extend the Express Request type to include the user property
+declare global {
+  namespace Express {
+    interface Request {
+      user: {
+        userId: string;
+        organizationId: string;
+        role: string;
+        email: string;
+        displayName?: string;
+      };
+    }
+  }
+}
 
 // Zod schema for validating numeric ID parameters
 const idParamSchema = z.object({
-  id: z.coerce.number().int().positive({ message: "Trip ID must be a positive integer" }),
+  id: z.string().uuid({ message: "Trip ID must be a valid UUID" }),
 });
 
 const tripIdParamSchema = z.object({
-  tripId: z.coerce.number().int().positive({ message: "Trip ID must be a positive integer" }),
+  tripId: z.string().uuid({ message: "Trip ID must be a valid UUID" }),
 });
 
 const proposalBodySchema = z.object({
@@ -30,7 +45,7 @@ const proposalBodySchema = z.object({
 });
 
 const tripIdSnakeParamSchema = z.object({
-  trip_id: z.coerce.number().int().positive({ message: "Trip ID must be a positive integer" }),
+  trip_id: z.string().uuid({ message: "Trip ID must be a valid UUID" }),
 });
 
 const shareBodySchema = z.object({
@@ -39,13 +54,13 @@ const shareBodySchema = z.object({
 });
 
 const travelerBodySchema = z.object({
-  userId: z.number().int().positive({ message: "User ID must be a positive integer" }),
+  userId: z.string().uuid({ message: "User ID must be a valid UUID" }),
   role: z.string().min(1, { message: "Traveler role is required" }), // e.g., 'organizer', 'participant'
 });
 
 const tripAndTravelerIdParamsSchema = z.object({
-  id: z.coerce.number().int().positive({ message: "Trip ID must be a positive integer" }),
-  travelerId: z.coerce.number().int().positive({ message: "Traveler ID must be a positive integer" }),
+  id: z.string().uuid({ message: "Trip ID must be a valid UUID" }),
+  travelerId: z.string().uuid({ message: "Traveler ID must be a valid UUID" }),
 });
 
 const router = Router();
@@ -56,17 +71,17 @@ router.use(injectOrganizationContext);
 router.use(fieldTransformMiddleware);
 
 // Get all trips for authenticated user with organization filtering
-router.get('/', (req, res) => tripController.getTrips(req, res));
+router.get('/', (req: Request, res: Response) => tripController.getTrips(req as Request, res));
 
 // Add organization-scoped trips endpoint for corporate features
-router.get('/corporate', (req, res) => tripController.getCorporateTrips(req, res));
+router.get('/corporate', (req: Request, res: Response) => tripController.getCorporateTrips(req as Request, res));
 
 // Get todos for a specific trip
 router.get("/:id/todos", validateAndSanitizeRequest({ params: idParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.id as number;
-    const userId = req.user?.userId;
-    const orgId = req.user?.organizationId;
+    const tripId = req.params.id;
+    const userId = req.user.userId;
+    const orgId = req.user.organizationId;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
@@ -79,7 +94,7 @@ router.get("/:id/todos", validateAndSanitizeRequest({ params: idParamSchema }), 
     }
 
     // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
+    if (req.user.role !== 'super_admin' && trip.organization_id !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
@@ -94,9 +109,9 @@ router.get("/:id/todos", validateAndSanitizeRequest({ params: idParamSchema }), 
 // Get notes for a specific trip
 router.get("/:id/notes", validateAndSanitizeRequest({ params: idParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.id as number;
-    const userId = req.user?.userId;
-    const orgId = req.user?.organizationId;
+    const tripId = req.params.id;
+    const userId = req.user.userId;
+    const orgId = req.user.organizationId;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
@@ -109,7 +124,7 @@ router.get("/:id/notes", validateAndSanitizeRequest({ params: idParamSchema }), 
     }
 
     // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
+    if (req.user.role !== 'super_admin' && trip.organization_id !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
@@ -124,9 +139,9 @@ router.get("/:id/notes", validateAndSanitizeRequest({ params: idParamSchema }), 
 // Get activities for a specific trip
 router.get("/:id/activities", validateAndSanitizeRequest({ params: idParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.id as number;
-    const userId = req.user?.userId;
-    const orgId = req.user?.organizationId;
+    const tripId = req.params.id;
+    const userId = req.user.userId;
+    const orgId = req.user.organizationId;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
@@ -139,7 +154,7 @@ router.get("/:id/activities", validateAndSanitizeRequest({ params: idParamSchema
     }
 
     // Verify organization access
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== orgId) {
+    if (req.user.role !== 'super_admin' && trip.organization_id !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
@@ -152,24 +167,24 @@ router.get("/:id/activities", validateAndSanitizeRequest({ params: idParamSchema
 });
 
 // Get specific trip by ID with organization access control
-router.get('/:id', (req, res) => tripController.getTripById(req, res));
+router.get('/:id', (req: Request, res: Response) => tripController.getTripById(req, res));
 
 // Create new trip with organization context and subscription limits
 router.post("/", enforceTripLimit(), validateAndSanitizeRequest({ body: insertTripSchema }), async (req: Request, res: Response) => {
   try {
     const tripData = {
       ...req.body,
-      user_id: req.user?.userId,
-      organization_id: req.user?.organizationId
+      user_id: req.user.userId,
+      organization_id: req.user.organizationId
     };
 
     const newTrip = await storage.createTrip(tripData);
 
     // Log this activity
     await logUserActivity(
-      req.user!.userId,
+      req.user.userId,
       'create_trip',
-      req.user?.organizationId,
+      req.user.organizationId,
       { tripId: newTrip.id, tripTitle: newTrip.title },
       req.ip,
       req.headers['user-agent']
@@ -188,7 +203,7 @@ router.post("/", enforceTripLimit(), validateAndSanitizeRequest({ body: insertTr
 // Update trip with organization access control
 router.put("/:id", validateAndSanitizeRequest({ params: idParamSchema, body: insertTripSchema.partial() }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.id as number;
+    const tripId = req.params.id;
 
     // Verify trip exists and user has access
     const existingTrip = await storage.getTrip(tripId);
@@ -196,8 +211,8 @@ router.put("/:id", validateAndSanitizeRequest({ params: idParamSchema, body: ins
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
+    const userOrgId = req.user.organizationId;
+    if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
 
@@ -210,9 +225,9 @@ router.put("/:id", validateAndSanitizeRequest({ params: idParamSchema, body: ins
 
     // Log this activity
     await logUserActivity(
-      req.user!.userId,
+      req.user.userId,
       'update_trip',
-      req.user?.organizationId,
+      req.user.organizationId,
       { tripId: updatedTrip.id, tripTitle: updatedTrip.title, changes: updateData },
       req.ip,
       req.headers['user-agent']
@@ -231,7 +246,7 @@ router.put("/:id", validateAndSanitizeRequest({ params: idParamSchema, body: ins
 // Delete trip with organization access control
 router.delete("/:id", validateAndSanitizeRequest({ params: idParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.id as number;
+    const tripId = req.params.id;
 
     // Verify trip exists and user has access
     const existingTrip = await storage.getTrip(tripId);
@@ -239,8 +254,8 @@ router.delete("/:id", validateAndSanitizeRequest({ params: idParamSchema }), asy
       return res.status(404).json({ message: "Trip not found" });
     }
 
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
+    const userOrgId = req.user.organizationId;
+    if (req.user.role !== 'super_admin' && existingTrip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot delete this trip" });
     }
 
@@ -251,9 +266,9 @@ router.delete("/:id", validateAndSanitizeRequest({ params: idParamSchema }), asy
 
     // Log this activity
     await logUserActivity(
-      req.user!.userId,
+      req.user.userId,
       'delete_trip',
-      req.user?.organizationId,
+      req.user.organizationId,
       { tripId: existingTrip.id, tripTitle: existingTrip.title },
       req.ip,
       req.headers['user-agent']
@@ -269,7 +284,7 @@ router.delete("/:id", validateAndSanitizeRequest({ params: idParamSchema }), asy
 // Export trip as PDF
 router.get("/:id/export/pdf", validateAndSanitizeRequest({ params: idParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.id as number;
+    const tripId = req.params.id;
 
     const trip = await storage.getTrip(tripId);
     if (!trip) {
@@ -277,8 +292,8 @@ router.get("/:id/export/pdf", validateAndSanitizeRequest({ params: idParamSchema
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    const userOrgId = req.user.organizationId;
+    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot export this trip" });
     }
 
@@ -307,7 +322,7 @@ router.get("/:id/export/pdf", validateAndSanitizeRequest({ params: idParamSchema
 // Generate AI-powered trip proposal
 router.post("/:tripId/proposal", validateAndSanitizeRequest({ params: tripIdParamSchema, body: proposalBodySchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.tripId as number; // Validated and coerced by middleware
+    const tripId = req.params.tripId; // Validated and coerced by middleware
     const { clientName, contactEmail, contactPhone, contactWebsite, message } = req.body; // Validated and sanitized by middleware
 
     const trip = await storage.getTrip(tripId);
@@ -316,8 +331,8 @@ router.post("/:tripId/proposal", validateAndSanitizeRequest({ params: tripIdPara
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    const userOrgId = req.user.organizationId;
+    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot generate proposal for this trip" });
     }
 
@@ -327,8 +342,8 @@ router.post("/:tripId/proposal", validateAndSanitizeRequest({ params: tripIdPara
       trip,
       activities,
       clientName,
-      user: { name: req.user?.displayName || 'N/A', email: req.user?.email || 'N/A' },
-      agentName: req.user?.displayName || "Travel Agent",
+      user: { name: req.user.displayName || 'N/A', email: req.user.email || 'N/A' },
+      agentName: req.user.displayName || "Travel Agent",
       companyName: "NestMap Travel Services",
       estimatedCost: trip.budget || 0,
       costBreakdown: {
@@ -362,7 +377,7 @@ router.post("/:tripId/proposal", validateAndSanitizeRequest({ params: tripIdPara
 // Trip sharing endpoints
 router.get("/:tripId/share", validateAndSanitizeRequest({ params: tripIdSnakeParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.trip_id as number; // Validated and coerced by middleware
+    const tripId = req.params.trip_id; // Validated and coerced by middleware
 
     const trip = await storage.getTrip(tripId);
     if (!trip) {
@@ -370,8 +385,8 @@ router.get("/:tripId/share", validateAndSanitizeRequest({ params: tripIdSnakePar
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    const userOrgId = req.user.organizationId;
+    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
@@ -388,15 +403,15 @@ router.get("/:tripId/share", validateAndSanitizeRequest({ params: tripIdSnakePar
 
 router.put("/:tripId/share", validateAndSanitizeRequest({ params: tripIdSnakeParamSchema, body: shareBodySchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.trip_id as number; // Validated and coerced by middleware
+    const tripId = req.params.trip_id; // Validated and coerced by middleware
     const trip = await storage.getTrip(tripId);
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }
 
     // Verify organization access
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    const userOrgId = req.user.organizationId;
+    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot modify this trip" });
     }
 
@@ -431,7 +446,7 @@ router.put("/:tripId/share", validateAndSanitizeRequest({ params: tripIdSnakePar
 // Get all travelers for a specific trip
 router.get("/:id/travelers", validateAndSanitizeRequest({ params: idParamSchema }), async (req: Request, res: Response) => {
 try {
-const tripId = req.params.id as number; // Validated and coerced by middleware
+const tripId = req.params.id; // Validated and coerced by middleware
 
 const travelers = await storage.getTripTravelers(tripId);
 return res.json(travelers);
@@ -444,7 +459,7 @@ return res.status(500).json({ message: "Could not fetch trip travelers" });
 // Add a traveler to a trip
 router.post("/:id/travelers", validateAndSanitizeRequest({ params: idParamSchema, body: travelerBodySchema }), async (req: Request, res: Response) => {
 try {
-const tripId = req.params.id as number; // Validated and coerced by middleware
+const tripId = req.params.id; // Validated and coerced by middleware
 const travelerData = {
   trip_id: tripId,
   ...req.body // Body is validated and sanitized by middleware
@@ -461,7 +476,7 @@ return res.status(500).json({ message: "Could not add trip traveler" });
 // Update a traveler's information
 router.put("/:id/travelers/:travelerId", validateAndSanitizeRequest({ params: tripAndTravelerIdParamsSchema, body: travelerBodySchema.partial() }), async (req: Request, res: Response) => {
 try {
-const { id: tripId, travelerId } = req.params as { id: number; travelerId: number }; // Validated and coerced by middleware
+const { id: tripId, travelerId } = req.params as { id: string; travelerId: string }; // Validated and coerced by middleware
 
 const updatedTraveler = await storage.updateTripTraveler(travelerId, req.body);
 if (!updatedTraveler) {
@@ -477,7 +492,7 @@ return res.status(500).json({ message: "Could not update trip traveler" });
 // Remove a traveler from a trip
 router.delete("/:id/travelers/:travelerId", validateAndSanitizeRequest({ params: tripAndTravelerIdParamsSchema }), async (req: Request, res: Response) => {
 try {
-const { id: tripId, travelerId } = req.params as { id: number; travelerId: number }; // Validated and coerced by middleware
+const { id: tripId, travelerId } = req.params as { id: string; travelerId: string }; // Validated and coerced by middleware
 
 await storage.removeTripTraveler(travelerId);
 return res.status(204).send();

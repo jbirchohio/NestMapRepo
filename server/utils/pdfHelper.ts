@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-import { Trip, Activity } from '@shared/schema';
+import { Trip, Activity } from '../db/schema.js';
 
 /**
  * Enterprise-ready PDF generation utility
@@ -223,10 +223,10 @@ function generatePdfHtml(data: PdfGenerationData): string {
         ${activitiesByDay.map(day => `
             <div class="day-section">
                 <div class="day-header">
-                    ${day.dayName} - ${day.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    ${String(day.dayName)} - ${day.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
                 
-                ${day.activities.map(activity => `
+                ${day.activities.map((activity: Activity) => `
                     <div class="activity">
                         <div class="activity-header">
                             <div class="activity-title">${activity.title}</div>
@@ -270,7 +270,7 @@ function groupActivitiesByDay(activities: Activity[]) {
   
   // Sort activities within each day by time
   Object.values(grouped).forEach(day => {
-    day.activities.sort((a, b) => {
+    day.activities.sort((a: Activity, b: Activity) => {
       const timeA = a.time || '00:00';
       const timeB = b.time || '00:00';
       return timeA.localeCompare(timeB);
@@ -278,7 +278,7 @@ function groupActivitiesByDay(activities: Activity[]) {
   });
   
   // Return sorted days
-  return Object.values(grouped).sort((a, b) => a.date.getTime() - b.date.getTime());
+  return Object.values(grouped).sort((a: {date: Date}, b: {date: Date}) => a.date.getTime() - b.date.getTime());
 }
 
 function getDayName(date: Date): string {

@@ -25,8 +25,8 @@ export async function generateTripProposal(req: Request, res: Response) {
     }
 
     // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organization_id || null;
-    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    const userOrgId = req.user.organizationId || null;
+    if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 
@@ -77,8 +77,8 @@ export async function generateItinerary(req: Request, res: Response) {
     }
 
     // CRITICAL: Verify user can access this trip's organization
-    const userOrgId = req.user.organization_id || null;
-    if (req.user.role !== 'super_admin' && trip.organization_id !== userOrgId) {
+    const userOrgId = req.user.organizationId || null;
+    if (req.user.role !== 'super_admin' && trip.organizationId !== userOrgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 

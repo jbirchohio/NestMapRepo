@@ -1,40 +1,8 @@
 {
-  "compilerOptions": {
-    "target": "es2017",
-    "lib": ["es2017", "esnext", "dom", "dom.iterable"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "incremental": true,
-    "baseUrl": ".",
-    "outDir": "./dist",
-    "jsx": "react-jsx",
-    "paths": {
-      "@/*": ["./client/src/*"],
-      "@shared/*": ["./shared/*"],
-      "@server/*": ["./server/*"]
-    },
-    "typeRoots": [
-      "./node_modules/@types",
-      "./server/types"
-    ],
-    "types": ["node", "express", "jest"],
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
-  },
-  "include": ["client/src/**/*", "shared/**/*", "server/**/*", "src/types/**/*"],
-  "exclude": ["node_modules", "build", "dist", "vite.config.ts"]
+  "files": [],
+  "references": [
+    { "path": "./client" },
+    { "path": "./server" },
+    { "path": "./shared" }
+  ]
 }

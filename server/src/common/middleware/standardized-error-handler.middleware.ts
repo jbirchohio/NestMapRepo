@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { Logger } from '@nestjs/common';
-import { ApiError, ErrorType } from './error-handler.middleware';
+import { ApiError, ErrorType, createApiError } from '../types/index.js';
 
-// Define the mapping locally if it's not exported from the module
+/**
+ * Maps error types to HTTP status codes
+ */
 const errorTypeToStatusCode: Record<ErrorType, number> = {
   [ErrorType.UNAUTHORIZED]: 401,
   [ErrorType.FORBIDDEN]: 403,

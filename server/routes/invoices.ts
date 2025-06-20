@@ -1,94 +1,195 @@
-import { Router, Request, Response } from 'express';
-import { db } from '../db';
-import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { invoices } from '../db/invoiceSchema';
-import { stripe } from '../stripe';
-import { eq } from 'drizzle-orm';
-import { InvoiceItem } from '../types/invoice';
+import express, { Request, Response, NextFunction, RequestHandler, Router } from 'express';
+import type { ParamsDictionary } from 'express-serve-static-core';
+import type { ParsedQs } from 'qs';
 
-const router = Router();
+// Alias for Express Request type to avoid conflicts
+type ExpressRequest = Request;
 
-// Apply middleware to all routes
-router.use(validateJWT);
-router.use(injectOrganizationContext);
-router.use(validateOrganizationAccess);
+import { db } from '../db/db.js';
+import { organizations } from '../db/schema.js';
+import { invoices } from '../db/invoiceSchema.js';
+import secureAuth from '../middleware/secureAuth.js';
+import { requireOrganizationContext } from '../middleware/organization.js';
+import { eq, and } from 'drizzle-orm';
+import type { User } from '../types/user.js';
+import { stripe } from '../stripe.js';
+
+// Type for authenticated user
+interface AuthUser {
+  id: string;
+  email: string;
+  role: string;
+  organizationId?: string | null;
+}
+
+type AsyncRequestHandler<T = express.Request> = (req: T, res: Response, next: NextFunction) => Promise<void>;
+
+// Define invoice schema types
+interface Invoice {
+  id: string;
+  organizationId: string;
+  status: string;
+  amount: number;
+  // Add other invoice fields as needed
+}
+
+interface InvoiceItem {
+  id: string;
+  invoiceId: string;
+  description: string;
+  amount: number;
+}
+
+// Custom authenticated request type
+export interface AuthenticatedRequest extends Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>> {
+  user?: AuthUser;
+  token?: string;
+  organizationId?: string;
+  organization?: any;
+}
+
+const router = express.Router();
+
+// Type guard to check if request is authenticated
+function isAuthenticatedRequest(req: ExpressRequest): req is AuthenticatedRequest {
+  const authReq = req as unknown as AuthenticatedRequest;
+  return !!(authReq.user || authReq.token || authReq.organizationId);
+}
+
+// Helper function to wrap async route handlers
+const asyncHandler = <T extends Request>(
+  fn: (req: T, res: Response, next: NextFunction) => Promise<void> | void
+): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = fn(req as T, res, next);
+      if (result && typeof result.catch === 'function') {
+        result.catch(next);
+      }
+    } catch (err) {
+      next(err);
+    }
+  };
+};
+
+// Apply JWT authentication middleware
+router.use((req: ExpressRequest, res: Response, next: NextFunction) => {
+  return secureAuth.authenticate(req, res, next);
+});
+
+// Apply organization context middleware
+router.use((req: ExpressRequest, res: Response, next: NextFunction) => {
+  return requireOrganizationContext(req, res, next);
+});
+
+// Helper function to handle database queries
+async function getOrganization(organizationId: string) {
+  const [org] = await db
+    .select()
+    .from(organizations)
+    .where(eq(organizations.id, organizationId));
+  
+  if (!org) {
+    throw new Error('Organization not found');
+  }
+  
+  return org;
+}
 
 // Get invoice by ID
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: ExpressRequest, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const authReq = req as AuthenticatedRequest;
+    if (!authReq.organizationId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
+
+    const { id } = authReq.params;
+    
     const [invoice] = await db
       .select()
       .from(invoices)
-      .where(eq(invoices.id, id))
+      .where(
+        and(
+          eq(invoices.id, id),
+          eq(invoices.organizationId, authReq.organizationId)
+        )
+      )
       .limit(1);
 
-    if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
-    res.json(invoice);
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    // Items are stored as JSONB in the invoice record
+    res.json({ ...invoice });
   } catch (error) {
-    const err = error as Error;
-    res.status(500).json({ error: 'Failed to fetch invoice', details: err.message });
+    console.error('Error fetching invoice:', error);
+    next(error);
   }
 });
 
 // Pay invoice (Stripe Checkout Session)
-router.post('/:id/pay', async (req: Request, res: Response) => {
+router.post('/:id/pay', async (req: ExpressRequest, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const authReq = req as AuthenticatedRequest;
+    
+    if (!authReq.organizationId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
+
+    const { id } = authReq.params;
+    
+    // Verify invoice exists and belongs to the organization
     const [invoice] = await db
       .select()
       .from(invoices)
-      .where(eq(invoices.id, id))
+      .where(
+        and(
+          eq(invoices.id, id),
+          eq(invoices.organizationId, authReq.organizationId)
+        )
+      )
       .limit(1);
 
-    if (!invoice) return res.status(404).json({ error: 'Invoice not found' });
-    if (invoice.status === 'paid') return res.status(400).json({ error: 'Invoice already paid' });
+    if (!invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    if (invoice.status === 'paid') {
+      return res.status(400).json({ error: 'Invoice already paid' });
+    }
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      customer: invoice.stripeCustomerId, // Ensure this is present
-      line_items: (invoice.items as InvoiceItem[])?.map(item => ({
-        price_data: {
-          currency: invoice.currency || 'usd',
-          product_data: {
-            name: item.description || `Item from Invoice #${invoice.number}`,
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Invoice #${invoice.invoiceNumber}`,
+              description: invoice.description || 'NestMap Pro Subscription',
+            },
+            unit_amount: invoice.amount,
           },
-          unit_amount: item.unitPrice,
+          quantity: 1,
         },
-        quantity: item.quantity,
-      })) || [{
-        price_data: {
-          currency: invoice.currency || 'usd',
-          product_data: {
-            name: invoice.description || `Invoice #${invoice.number}`,
-          },
-          unit_amount: invoice.amountDue,
-        },
-        quantity: 1,
-      }],
+      ],
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/invoice/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/invoice/failure?invoice_id=${invoice.id}`,
+      success_url: `${process.env.FRONTEND_URL}/invoices/${invoice.id}?payment=success`,
+      cancel_url: `${process.env.FRONTEND_URL}/invoices/${invoice.id}?payment=cancelled`,
+      client_reference_id: invoice.id,
       metadata: {
-        invoiceId: invoice.id,
+        invoice_id: invoice.id,
+        organization_id: authReq.organizationId,
       },
     });
 
-    // Update invoice payment URL
-    await db
-      .update(invoices)
-      .set({
-        paymentUrl: session.url,
-        updatedAt: new Date(),
-      })
-      .where(eq(invoices.id, id));
-
     res.json({ url: session.url });
   } catch (error) {
-    const err = error as Error;
-    res.status(500).json({ error: 'Failed to initiate payment', details: err.message });
+    console.error('Error creating payment session:', error);
+    next(error);
   }
 });
 

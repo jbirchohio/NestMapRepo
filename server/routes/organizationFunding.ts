@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { validateJWT } from "../middleware/jwtAuth";
-import { organizationFundingService } from "../services/organizationFundingService";
+import { validateJWT } from "../middleware/jwtAuth.js";
+import { organizationFundingService } from "../services/organizationFundingService.js";
 import { z } from "zod";
 
 const router = Router();

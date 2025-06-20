@@ -43,9 +43,9 @@ const showToast = (options: {
 export class TokenManager {
   private static instance: TokenManager | null = null;
   private accessToken: string | null = null;
-  private tokenRefreshTimeout: NodeJS.Timeout | null = null;
+  private tokenRefreshTimeout: ReturnType<typeof setTimeout> | null = null;
   private refreshToken: string | null = null;
-  private tokenRotationTimeout: NodeJS.Timeout | null = null;
+  private tokenRotationTimeout: ReturnType<typeof setTimeout> | null = null;
   private refreshPromise: Promise<string | null> | null = null;
   private isRefreshing = false;
   private navigate: NavigateFunction | null = null;
@@ -62,20 +62,10 @@ export class TokenManager {
       if (decoded?.exp) {
         const expiresIn = (decoded.exp * 1000) - Date.now();
         this.startTokenRotation(expiresIn);
+      } else if (config.TOKEN_ROTATION_INTERVAL) {
+        // Fallback to config interval if we can't decode the token
+        this.startTokenRotation(config.TOKEN_ROTATION_INTERVAL);
       }
-    }
-    
-    // Store the instance in window for debugging
-    if (typeof window !== 'undefined') {
-      window.__tokenManager = this;
-    }
-    this.navigate = navigate;
-    // Initialize with tokens from storage if available
-    this.refreshToken = SecureCookie.get(REFRESH_TOKEN_KEY);
-    
-    // Start token rotation if we have a refresh token
-    if (this.refreshToken) {
-      this.startTokenRotation(config.TOKEN_ROTATION_INTERVAL);
     }
     
     // Store the instance in window for debugging
@@ -131,6 +121,15 @@ export class TokenManager {
     }
   }
   
+  private decodeToken(token: string): DecodedToken | null {
+    try {
+      return jwtDecode<DecodedToken>(token);
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  }
+
   public getTokenExpiration(): number | null {
     if (!this.accessToken) return null;
     const decoded = this.decodeToken(this.accessToken);
@@ -370,15 +369,18 @@ export class TokenManager {
     
     try {
       // Import the API client dynamically to avoid circular dependencies
-      const { default: api } = await import('@/services/api/apiClient');
+      const apiModule = await import('@/services/api/apiClient');
+      const api = apiModule.default;
       
-      const response = await api.post<{ accessToken: string }>(
+      const response = await api.post<{ accessToken: string; refreshToken?: string }>(
         '/auth/refresh',
         { refreshToken: this.refreshToken }
       );
       
       if (response?.accessToken) {
-        this.setTokens(response.accessToken, this.refreshToken);
+        // Use the new refresh token if provided, otherwise keep the current one
+        const newRefreshToken = response.refreshToken || this.refreshToken;
+        this.setTokens(response.accessToken, newRefreshToken);
       } else {
         throw new Error('Invalid token response');
       }
@@ -395,9 +397,10 @@ export class TokenManager {
     this.stopTokenRotation();
     this.clearTokens();
     
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof window !== 'undefined' && window.__tokenManager) {
       delete window.__tokenManager;
     }
+  }
     
     TokenManager.instance = null;
   }

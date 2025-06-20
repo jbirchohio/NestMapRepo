@@ -3,13 +3,39 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import apiRoutes from "./routes/index";
-import { preventSQLInjection, configureCORS } from "./middleware/security";
-import { apiVersioning, tieredRateLimit, monitorEndpoints, authenticateApiKey } from "./middleware/api-security";
-import { apiRateLimit, authRateLimit, organizationRateLimit, endpointRateLimit } from "./middleware/comprehensive-rate-limiting.js";
-import { injectOrganizationContext, resolveDomainOrganization, validateOrganizationAccess } from "./middleware/organizationScoping";
+
+// Security middleware imports
+import { preventSQLInjection, configureCORS } from "./middleware/secureAuth";
+import { 
+  apiVersioning, 
+  tieredRateLimit, 
+  monitorEndpoints, 
+  authenticateApiKey 
+} from "./middleware/api-security";
+
+// Rate limiting
+import { 
+  apiRateLimit, 
+  authRateLimit, 
+  organizationRateLimit, 
+  endpointRateLimit 
+} from "./middleware/comprehensive-rate-limiting.js";
+
+// Organization and authentication
+import { 
+  injectOrganizationContext, 
+  resolveDomainOrganization, 
+  validateOrganizationAccess 
+} from "./middleware/organizationScoping";
+
+// Error handling
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
-import { unifiedAuthMiddleware } from "./middleware/unifiedAuth";
-import { caseConversionMiddleware } from "./middleware/caseConversionMiddleware";
+
+// Authentication
+import { unifiedAuthMiddleware } from "./middleware/secureAuth";
+
+// Request/response processing
+import { caseConversionMiddleware } from "./middleware/caseConverter";
 
 const app = express();
 

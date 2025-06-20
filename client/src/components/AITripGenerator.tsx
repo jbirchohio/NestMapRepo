@@ -192,7 +192,7 @@ interface Meal {
   status?: 'confirmed' | 'pending' | 'cancelled';
   restaurant?: string;
   cuisine?: string;
-  estimatedCost?: number;
+  estimatedCost: number;  // Changed from optional to required as it's used in calculations
 }
 
 interface TripSummary {
@@ -234,7 +234,8 @@ interface GeneratedTrip {
   accommodations: Accommodation[];
   activities: TripActivity[];
   meals: Meal[];
-  trip_summary: TripSummary;
+  tripSummary: TripSummary;  // Changed from trip_summary to tripSummary for consistency with camelCase
+  trip_summary?: TripSummary; // Keep for backward compatibility
   client_access?: ClientAccess;
   created_at: string;
   updated_at: string;
@@ -345,7 +346,7 @@ const AITripGenerator: FC<AITripGeneratorProps> = () => {
   }, [showToast]);
 
   // Share itinerary mutation
-  const shareItinerary = useCallback(async (code: string) => {
+  const shareItineraryMutation = useCallback(async (code: string) => {
     try {
       setIsSharing(true);
       const { share_url: shareUrl } = await tripService.shareTripWithClient(code);
@@ -360,7 +361,7 @@ const AITripGenerator: FC<AITripGeneratorProps> = () => {
     } finally {
       setIsSharing(false);
     }
-  }, [showToast, tripService]);
+  }, [showToast]);  // Remove tripService from dependency array as it's not a state or prop
 
   const handleCreateItinerary = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,14 +389,14 @@ const AITripGenerator: FC<AITripGeneratorProps> = () => {
     const codeToShare = trackingCode || trip?.client_access?.tracking_code;
     if (codeToShare) {
       try {
-        await shareItinerary(codeToShare);
+        await shareItineraryMutation(codeToShare);
       } catch (error) {
-        // Error is already handled in shareItinerary
+        // Error is already handled in shareItineraryMutation
       }
     } else {
       showToast('Sharing Error', 'No tracking code available to share', 'destructive');
     }
-  }, [trackingCode, trip?.client_access?.tracking_code, shareItinerary, showToast]);
+  }, [trackingCode, trip?.client_access?.tracking_code, shareItineraryMutation, showToast]);
 
   // --- Trip status update mutation ---
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);

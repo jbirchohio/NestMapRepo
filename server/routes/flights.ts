@@ -1,7 +1,76 @@
-import { Router } from 'express';
-import { validateJWT } from '../middleware/jwtAuth';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { Router, Request, Response, NextFunction } from 'express';
+import { validateJWT } from '../middleware/jwtAuth.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';
+import { asyncHandler } from '../utils/routeHelpers.js';
+
+// Define types for Duffel API responses
+interface DuffelOffer {
+  id: string;
+  total_amount: string;
+  total_currency: string;
+  slices: DuffelSlice[];
+  passenger_identity_documents_required: boolean;
+  passengers: DuffelPassenger[];
+  tax_amount?: string;
+  base_amount?: string;
+}
+
+interface DuffelSlice {
+  origin: DuffelLocation | null;
+  destination: DuffelLocation | null;
+  segments: DuffelSegment[];
+  duration?: string;
+}
+
+interface DuffelLocation {
+  iata_code?: string;
+  name?: string;
+  city_name?: string;
+}
+
+interface DuffelSegment {
+  id: string;
+  departing_at: string;
+  arriving_at: string;
+  origin: DuffelLocation;
+  destination: DuffelLocation;
+  marketing_carrier?: {
+    name?: string;
+    iata_code?: string;
+  };
+  operating_carrier?: {
+    name?: string;
+    iata_code?: string;
+  };
+  operating_carrier_flight_number?: string;
+  aircraft?: {
+    name?: string;
+    iata_code?: string;
+  };
+  duration: string;
+}
+
+interface DuffelPassenger {
+  id: string;
+  given_name?: string;
+  family_name?: string;
+  type: 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat';
+}
+
+// Define types for search parameters
+interface FlightSearchParams {
+  origin: string;
+  destination: string;
+  departure_date: string;
+  return_date?: string;
+  passengers: {
+    adults: number;
+    children?: number;
+    infants?: number;
+  };
+  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first';
+}
 
 const router = Router();
 
@@ -42,19 +111,19 @@ const bookingRequestSchema = z.object({
 });
 
 // Flight search endpoint
-router.post('/search', async (req, res) => {
+router.post('/search', asyncHandler(async (req: Request, res: Response) => {
   try {
     // Validate request body
-    const searchParams = flightSearchSchema.parse(req.body);
+    const searchParams = flightSearchSchema.parse(req.body) as FlightSearchParams;
     
     console.log('Flight search request:', searchParams);
 
     // Use Duffel HTTP client for authentic flight data
     try {
-      const { duffelClient } = await import('../services/duffelHttpClient');
+      const { duffelClient } = await import('../services/duffelHttpClient.js');
       
       // Search flights using Duffel API
-      const duffelOffers = await duffelClient.searchFlights(searchParams);
+      const duffelOffers = await duffelClient.searchFlights(searchParams) as DuffelOffer[];
       
       // Transform Duffel response to our format
       const flights = duffelOffers.map(offer => ({
@@ -77,6 +146,9 @@ router.post('/search', async (req, res) => {
           departure_datetime: slice.segments[0].departing_at,
           arrival_datetime: slice.segments[slice.segments.length - 1].arriving_at,
           duration: slice.segments.reduce((total, seg) => {
+            // Handle case where duration might be undefined or not in expected format
+            if (!seg.duration) return total;
+            
             const match = seg.duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
             if (match) {
               const hours = parseInt(match[1] || '0');
@@ -89,7 +161,7 @@ router.post('/search', async (req, res) => {
             airline: {
               name: segment.operating_carrier?.name || 'Unknown Airline',
               iata_code: segment.operating_carrier?.iata_code || 'XX',
-              logo_url: segment.operating_carrier?.logo_symbol_url || ''
+              logo_url: ''
             },
             flight_number: segment.operating_carrier_flight_number || 'N/A',
             aircraft: segment.aircraft ? {
@@ -154,22 +226,22 @@ router.post('/search', async (req, res) => {
       });
     }
     
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Flight search failed',
       message: error.message
     });
   }
-});
+}));
 
 // Get specific offer details
-router.get('/offers/:offerId', async (req, res) => {
+router.get('/offers/:offerId', asyncHandler(async (req: Request, res: Response) => {
   try {
     const { offerId } = req.params;
     
-    let duffelService;
+    let duffelService: any;
     try {
-      const { duffelFlightService } = await import('../services/duffelFlightService');
+      const { duffelFlightService } = await import('../services/duffelFlightService.js');
       duffelService = duffelFlightService;
     } catch (importError) {
       return res.status(503).json({
@@ -181,29 +253,30 @@ router.get('/offers/:offerId', async (req, res) => {
 
     const offer = await duffelService.getOffer(offerId);
     
-    res.json({
+    return res.json({
       success: true,
       data: offer
     });
 
   } catch (error: any) {
     console.error('Get offer error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get offer details',
       message: error.message
     });
   }
-});
+}));
 
-// Create booking
-router.post('/bookings', async (req, res) => {
+// Book a flight
+router.post('/book', asyncHandler(async (req: Request, res: Response) => {
   try {
+    // Validate booking request
     const bookingData = bookingRequestSchema.parse(req.body);
     
-    let duffelService;
+    let duffelService: any;
     try {
-      const { duffelFlightService } = await import('../services/duffelFlightService');
+      const { duffelFlightService } = await import('../services/duffelFlightService.js');
       duffelService = duffelFlightService;
     } catch (importError) {
       return res.status(503).json({
@@ -213,14 +286,14 @@ router.post('/bookings', async (req, res) => {
       });
     }
 
-    const booking = await duffelService.createBooking({
+    const bookingResult = await duffelService.createBooking({
       ...bookingData,
       payment: bookingData.payment || { type: 'balance' }
     });
     
-    res.json({
+    return res.json({
       success: true,
-      data: booking
+      data: bookingResult
     });
 
   } catch (error: any) {
@@ -234,22 +307,22 @@ router.post('/bookings', async (req, res) => {
       });
     }
     
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Booking failed',
       message: error.message
     });
   }
-});
+}));
 
 // Get booking details
-router.get('/bookings/:bookingId', async (req, res) => {
+router.get('/bookings/:bookingId', asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     
     let duffelService;
     try {
-      const { duffelFlightService } = await import('../services/duffelFlightService');
+      const { duffelFlightService } = await import('../services/duffelFlightService.js');
       duffelService = duffelFlightService;
     } catch (importError) {
       return res.status(503).json({
@@ -261,29 +334,29 @@ router.get('/bookings/:bookingId', async (req, res) => {
 
     const booking = await duffelService.getBooking(bookingId);
     
-    res.json({
+    return res.json({
       success: true,
       data: booking
     });
 
   } catch (error: any) {
     console.error('Get booking error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to get booking details',
       message: error.message
     });
   }
-});
+}));
 
 // Cancel booking
-router.delete('/bookings/:bookingId', async (req, res) => {
+router.delete('/bookings/:bookingId', asyncHandler(async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     
     let duffelService;
     try {
-      const { duffelFlightService } = await import('../services/duffelFlightService');
+      const { duffelFlightService } = await import('../services/duffelFlightService.js');
       duffelService = duffelFlightService;
     } catch (importError) {
       return res.status(503).json({
@@ -295,23 +368,23 @@ router.delete('/bookings/:bookingId', async (req, res) => {
 
     const result = await duffelService.cancelBooking(bookingId);
     
-    res.json({
+    return res.json({
       success: true,
       data: result
     });
 
   } catch (error: any) {
     console.error('Booking cancellation error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Cancellation failed',
       message: error.message
     });
   }
-});
+}));
 
 // Airport search for autocomplete
-router.get('/airports/search', async (req, res) => {
+router.get('/airports/search', asyncHandler(async (req: Request, res: Response) => {
   try {
     const { q } = req.query;
     
@@ -324,7 +397,7 @@ router.get('/airports/search', async (req, res) => {
 
     let duffelService;
     try {
-      const { duffelFlightService } = await import('../services/duffelFlightService');
+      const { duffelFlightService } = await import('../services/duffelFlightService.js');
       duffelService = duffelFlightService;
     } catch (importError) {
       // Provide basic airport data as fallback
@@ -338,20 +411,20 @@ router.get('/airports/search', async (req, res) => {
 
     const airports = await duffelService.searchAirports(q);
     
-    res.json({
+    return res.json({
       success: true,
       data: airports
     });
 
   } catch (error: any) {
     console.error('Airport search error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Airport search failed',
       message: error.message
     });
   }
-});
+}));
 
 // Helper functions for fallback data
 function getAirportName(code: string): string {
@@ -386,7 +459,14 @@ function getCityName(code: string): string {
   return cities[code] || code;
 }
 
-function getBasicAirports(query: string) {
+interface Airport {
+  iata_code: string;
+  name: string;
+  city_name: string;
+  country_name: string;
+}
+
+function getBasicAirports(query: string): Airport[] {
   const airports = [
     { iata_code: 'JFK', name: 'John F. Kennedy International Airport', city_name: 'New York', country_name: 'United States' },
     { iata_code: 'LAX', name: 'Los Angeles International Airport', city_name: 'Los Angeles', country_name: 'United States' },

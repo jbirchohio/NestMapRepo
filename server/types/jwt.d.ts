@@ -3,10 +3,10 @@ import { UserRole } from '../src/auth/types';
 export { UserRole } from '../src/auth/types';
 
 export interface JWTUser {
-  userId: number;
+  userId: string;  // Changed from number to string for UUID consistency
   email: string;
   role: UserRole;
-  organizationId?: number;
+  organizationId: string;  // Changed from optional number to required string
   displayName?: string;
   jti: string;
   iat: number;

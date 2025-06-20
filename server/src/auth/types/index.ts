@@ -27,6 +27,7 @@ export interface AuthUser {
   role: UserRole;
   organizationId?: string | null;
   sessionId?: string;
+  permissions?: string[];
 }
 
 export interface TokenVerificationResult {

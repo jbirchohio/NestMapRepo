@@ -1,6 +1,6 @@
 // Express types
 import type { Request, Response, NextFunction } from 'express';
-import type { User } from './auth';
+import type { User } from './auth.js';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;

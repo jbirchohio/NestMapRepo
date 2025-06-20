@@ -1,11 +1,14 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express-serve-static-core';
+import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 
-const router = Router();
+// Type definitions
+type HealthStatus = 'healthy' | 'degraded' | 'unhealthy';
 
-// Store API health metrics in memory
 interface EndpointHealth {
   endpoint: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: HealthStatus;
   avgResponseTime: number;
   errorRate: number;
   lastError?: string;
@@ -14,13 +17,65 @@ interface EndpointHealth {
   lastChecked: Date;
 }
 
+interface HealthResponse {
+  status: HealthStatus;
+  uptime: number;
+  timestamp: string;
+  endpoints: {
+    total: number;
+    healthy: number;
+    degraded: number;
+    unhealthy: number;
+  };
+  performance: {
+    avgResponseTime: number;
+    errorRate: number;
+  };
+  details?: Array<{
+    endpoint: string;
+    status: HealthStatus;
+    avgResponseTime: number;
+    errorRate: number;
+    requestCount: number;
+    lastError?: string;
+    lastChecked: string;
+  }>;
+}
+
+// Request validation schema
+const healthQuerySchema = z.object({
+  detailed: z.enum(['true', 'false']).optional().default('false')
+});
+
+type HealthQuery = z.infer<typeof healthQuerySchema>;
+
+// In-memory store for health metrics
 const healthMetrics = new Map<string, EndpointHealth>();
 
-// Track endpoint performance
-export function trackEndpointHealth(endpoint: string, duration: number, statusCode: number, error?: string) {
+/**
+ * Track endpoint performance metrics
+ */
+export function trackEndpointHealth(
+  endpoint: string, 
+  duration: number, 
+  statusCode: number, 
+  error?: string
+): void {
+  if (!endpoint || typeof endpoint !== 'string') {
+    throw new Error('Endpoint must be a valid string');
+  }
+  
+  if (typeof duration !== 'number' || duration < 0) {
+    throw new Error('Duration must be a non-negative number');
+  }
+  
+  if (typeof statusCode !== 'number' || statusCode < 100 || statusCode >= 600) {
+    throw new Error('Invalid status code');
+  }
+
   const existing = healthMetrics.get(endpoint) || {
     endpoint,
-    status: 'healthy',
+    status: 'healthy' as const,
     avgResponseTime: 0,
     errorRate: 0,
     requestCount: 0,
@@ -28,52 +83,96 @@ export function trackEndpointHealth(endpoint: string, duration: number, statusCo
     lastChecked: new Date()
   };
 
-  existing.requestCount++;
-  existing.avgResponseTime = ((existing.avgResponseTime * (existing.requestCount - 1)) + duration) / existing.requestCount;
+  // Create updated metrics object
+  const updatedMetrics = { ...existing };
+  updatedMetrics.requestCount++;
+  updatedMetrics.avgResponseTime = 
+    ((updatedMetrics.avgResponseTime * (updatedMetrics.requestCount - 1)) + duration) / updatedMetrics.requestCount;
   
   if (statusCode >= 400 || error) {
-    existing.errorCount++;
-    existing.lastError = error || `HTTP ${statusCode}`;
+    updatedMetrics.errorCount++;
+    if (error) updatedMetrics.lastError = error;
   }
 
-  existing.errorRate = (existing.errorCount / existing.requestCount) * 100;
-  existing.lastChecked = new Date();
+  updatedMetrics.errorRate = (updatedMetrics.errorCount / updatedMetrics.requestCount) * 100;
+  updatedMetrics.lastChecked = new Date();
 
-  // Determine health status
-  if (existing.errorRate > 10 || existing.avgResponseTime > 5000) {
-    existing.status = 'unhealthy';
-  } else if (existing.errorRate > 5 || existing.avgResponseTime > 2000) {
-    existing.status = 'degraded';
+  // Update health status based on metrics
+  if (updatedMetrics.errorRate > 10 || updatedMetrics.avgResponseTime > 5000) {
+    updatedMetrics.status = 'unhealthy';
+  } else if (updatedMetrics.errorRate > 5 || updatedMetrics.avgResponseTime > 2000) {
+    updatedMetrics.status = 'degraded';
   } else {
-    existing.status = 'healthy';
+    updatedMetrics.status = 'healthy';
   }
 
-  healthMetrics.set(endpoint, existing);
+  healthMetrics.set(endpoint, updatedMetrics);
 }
 
-// GET /api/health - Get overall API health status
-router.get('/', async (req: Request, res: Response) => {
+// Initialize router
+const router = Router();
+
+// Rate limiting configuration
+const healthCheckLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: JSON.stringify({ error: 'Too many requests, please try again later' })
+});
+
+// Apply rate limiting
+router.use(healthCheckLimiter);
+
+// Error handling middleware
+const handleHealthError = (
+  error: Error,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+) => {
+  console.error('Health check error:', error);
+  res.status(500).json({ 
+    status: 'error',
+    message: 'Internal server error during health check',
+    timestamp: new Date().toISOString()
+  });
+};
+
+/**
+ * GET /api/health - Get overall API health status
+ */
+const getHealthHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
+    const { detailed } = req.query as { detailed?: 'true' | 'false' }; // Type assertion for query params
+    const shouldIncludeDetails = detailed === 'true';
+    
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
-    // Filter recent metrics
+    // Filter and process recent metrics
     const recentMetrics = Array.from(healthMetrics.values())
       .filter(metric => metric.lastChecked > fiveMinutesAgo)
-      .slice(0, 10); // Top 10 most recent endpoints
+      .slice(0, 10); // Limit to 10 most recent endpoints
 
     const totalEndpoints = recentMetrics.length;
     const healthyEndpoints = recentMetrics.filter(m => m.status === 'healthy').length;
     const degradedEndpoints = recentMetrics.filter(m => m.status === 'degraded').length;
     const unhealthyEndpoints = recentMetrics.filter(m => m.status === 'unhealthy').length;
 
-    let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+    // Determine overall status
+    let overallStatus: HealthStatus = 'healthy';
     if (unhealthyEndpoints > 0) {
       overallStatus = 'unhealthy';
     } else if (degradedEndpoints > 0) {
       overallStatus = 'degraded';
     }
 
+    // Calculate aggregate metrics
     const avgResponseTime = recentMetrics.length > 0 
       ? recentMetrics.reduce((sum, m) => sum + m.avgResponseTime, 0) / recentMetrics.length 
       : 0;
@@ -82,10 +181,11 @@ router.get('/', async (req: Request, res: Response) => {
       ? recentMetrics.reduce((sum, m) => sum + m.errorRate, 0) / recentMetrics.length
       : 0;
 
-    const response = {
+    // Build response
+    const response: HealthResponse = {
       status: overallStatus,
       uptime: process.uptime(),
-      timestamp: now,
+      timestamp: now.toISOString(),
       endpoints: {
         total: totalEndpoints,
         healthy: healthyEndpoints,
@@ -93,29 +193,60 @@ router.get('/', async (req: Request, res: Response) => {
         unhealthy: unhealthyEndpoints
       },
       performance: {
-        avgResponseTime: Math.round(avgResponseTime),
+        avgResponseTime: Math.round(avgResponseTime * 100) / 100, // Round to 2 decimal places
         errorRate: Math.round(overallErrorRate * 100) / 100
-      },
-      details: recentMetrics.map(metric => ({
+      }
+    };
+
+    // Add detailed metrics if requested
+    if (shouldIncludeDetails) {
+      response.details = recentMetrics.map(metric => ({
         endpoint: metric.endpoint,
         status: metric.status,
-        avgResponseTime: Math.round(metric.avgResponseTime),
+        avgResponseTime: Math.round(metric.avgResponseTime * 100) / 100,
         errorRate: Math.round(metric.errorRate * 100) / 100,
         requestCount: metric.requestCount,
-        lastError: metric.lastError,
-        lastChecked: metric.lastChecked
-      }))
-    };
+        ...(metric.lastError ? { lastError: metric.lastError } : {}),
+        lastChecked: metric.lastChecked.toISOString()
+      }));
+    }
+
+    // Set cache headers
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    });
 
     res.json(response);
   } catch (error) {
-    console.error('Error fetching API health:', error);
-    res.status(500).json({ 
-      status: 'unhealthy',
-      error: 'Health check failed',
-      timestamp: new Date()
-    });
+    next(error);
   }
+};
+
+// Register the route
+router.get('/', getHealthHandler);
+
+// Add error handling middleware with proper type
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  console.error('Health check error:', err);
+  res.status(500).json({ 
+    status: 'error',
+    message: 'Internal server error during health check',
+    timestamp: new Date().toISOString()
+  });
+};
+
+router.use(errorHandler);
+
+// Set cache headers middleware
+router.use((_req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
 });
 
 export default router;

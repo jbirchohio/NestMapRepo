@@ -70,6 +70,14 @@ export const BRANDING_CONFIG = {
   helpUrl: process.env.HELP_URL
 };
 
+// JWT configuration
+export const JWT_CONFIG = {
+  secret: process.env.JWT_SECRET || 'your_jwt_secret_key_here',
+  accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+  refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  passwordResetExpiresIn: process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h'
+};
+
 // External services configuration
 export const SERVICES_CONFIG = {
   openai: {
@@ -137,5 +145,6 @@ export default {
   db: DB_CONFIG,
   branding: BRANDING_CONFIG,
   services: SERVICES_CONFIG,
+  jwt: JWT_CONFIG,
   validate: validateConfig
 };

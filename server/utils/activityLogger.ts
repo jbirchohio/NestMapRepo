@@ -1,32 +1,32 @@
 import { db } from '../db/db.js';
-import { userActivityLogs } from '../../shared/schema.js';
+import { userActivityLogs } from '../db/schema';
 
 /**
  * Logs a user activity to the database.
  *
  * @param userId - The ID of the user performing the action.
+ * @param organizationId - The ID of the organization the action belongs to.
  * @param action - A string describing the action (e.g., 'create_trip').
- * @param organizationId - The ID of the organization, if applicable.
  * @param details - A JSON object containing any relevant details about the action.
  * @param ipAddress - The IP address of the user.
  * @param userAgent - The user agent string of the user's browser.
  */
 export const logUserActivity = async (
-  userId: string, // Changed to string for UUID
+  userId: string,
+  organizationId: string,
   action: string,
-  organizationId?: string, // Changed to string for UUID
-  details?: any,
+  details: Record<string, any> = {},
   ipAddress?: string,
   userAgent?: string
 ) => {
   try {
     await db.insert(userActivityLogs).values({
-      user_id: userId,
+      userId,
+      organizationId,
       action,
-      organization_id: organizationId,
       details,
-      ip_address: ipAddress,
-      user_agent: userAgent,
+      ip: ipAddress || null,
+      userAgent: userAgent || null,
     });
   } catch (error) {
     console.error('Failed to log user activity:', error);

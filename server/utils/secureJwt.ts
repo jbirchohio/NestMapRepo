@@ -50,7 +50,7 @@ export const generateToken = async (
     type,
     userId,
     email,
-    role: additionalPayload.role || 'user',
+    role: (additionalPayload.role || 'user') as UserRole,
     iat,
     exp,
   };
@@ -136,7 +136,7 @@ export const verifyToken = async (
 export const generateAuthTokens = async (
   userId: string,
   email: string,
-  role: UserRole = 'user'
+  role: UserRole = 'user' as UserRole
 ): Promise<AuthTokens> => {
   const accessToken = await generateToken(
     userId,

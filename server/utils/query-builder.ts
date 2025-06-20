@@ -116,22 +116,25 @@ export class QueryBuilder<T> {
         }
 
         const related = await dbService.getDrizzle()
-          .select(fields.reduce((acc, field) => ({
-            ...acc,
-            [field]: table[field]
-          }), {}))
+          .select(fields.reduce((acc: Record<string, any>, field: string) => {
+            const column = table[field as keyof typeof table];
+            return column ? { ...acc, [field]: column } : acc;
+          }, {} as Record<string, any>))
           .from(table)
           .where(inArray(table[foreignKey], ids));
 
         // Group related items by foreign key
-        const grouped = related.reduce<Record<string, any[]>>(
-          (acc, item: Record<string, any>) => {
-            const key = item[foreignKey];
-            if (!acc[key]) acc[key] = [];
+        type RelatedItem = typeof related[number];
+        const grouped = related.reduce<Record<string, RelatedItem[]>>(
+          (acc: Record<string, RelatedItem[]>, item: RelatedItem) => {
+            const key = item[foreignKey as keyof RelatedItem] as string;
+            if (!acc[key]) {
+              acc[key] = [];
+            }
             acc[key].push(item);
             return acc;
           },
-          {},
+          {} as Record<string, RelatedItem[]>
         );
 
         return { [relation]: grouped };

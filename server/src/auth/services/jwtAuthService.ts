@@ -1,5 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { IAuthService } from '../interfaces/auth.service.interface';
+import { v4 as uuidv4 } from 'uuid';
+import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { IAuthService, LoginResponse } from '../interfaces/auth.service.interface.js';
+import { TokenType } from '../jwt/types.js';
 import { 
   LoginDto, 
   RefreshTokenDto, 
@@ -7,13 +9,22 @@ import {
   ResetPasswordDto,
   AuthResponse,
   UserResponse
-} from '../dtos/auth.dto';
-import { UserRepository } from '../interfaces/user.repository.interface';
-import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface';
-import { EmailService } from '../../email/interfaces/email.service.interface';
+} from '../dtos/auth.dto.js';
+import { UserRepository } from '../../common/repositories/user/user.repository.interface.js';
+import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
+import { EmailService } from '../../email/interfaces/email.service.interface.js';
 import { compare, hash } from 'bcryptjs';
-import { jwtService, UserRole } from '../../../utils/jwtService';
+import { UserRole } from '../../../types/jwt.js';
+import { 
+  generateAuthTokens, 
+  verifyToken, 
+  revokeToken, 
+  generatePasswordResetToken, 
+  verifyPasswordResetToken,
+  revokeAllUserTokens 
+} from '../../../utils/secureJwt.js';
 import { ConfigService } from '@nestjs/config';
+import { User } from '../interfaces/user.interface.js';
 
 @Injectable()
 export class JwtAuthService implements IAuthService {
@@ -31,19 +42,125 @@ export class JwtAuthService implements IAuthService {
   }
 
   /**
+   * Verify a JWT token
+   * @param token The JWT token to verify
+   * @param type Optional token type (e.g., 'access', 'refresh')
+   * @returns User information if token is valid
+   */
+  async verifyToken(
+    token: string,
+    type: TokenType = 'access'
+  ): Promise<{ userId: string; email: string; role: string }> {
+    try {
+      const result = await verifyToken(token, type);
+      if (!result || !result.payload.userId) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+
+      // Get the user to verify they still exist and get their email and role
+      const user = await this.userRepository.findById(result.payload.userId);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      return {
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      };
+    } catch (error) {
+      this.logger.error(`Token verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+
+  /**
    * Handles user login
    */
-  async login(loginDto: LoginDto, ipAddress: string, userAgent: string = ''): Promise<AuthResponse> {
+  /**
+   * Validates a user's credentials
+   */
+  async validateUser(email: string, password: string) {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      return null;
+    }
+    
+    const isPasswordValid = await compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    // Omit sensitive data
+    const { passwordHash, refreshToken, ...result } = user;
+    return result;
+  }
+
+  /**
+   * Generates access and refresh tokens for a user
+   */
+  async generateTokens(
+    user: User,
+    ipAddress: string,
+    userAgent: string = ''
+  ): Promise<LoginResponse> {
+    // Generate tokens using secureJwt
+    const tokens = await generateAuthTokens(
+      user.id,
+      user.email,
+      user.role as UserRole
+    );
+
+    // Store refresh token in repository
+    await this.refreshTokenRepository.create({
+      token: tokens.refreshToken,
+      userId: user.id,
+      expiresAt: tokens.refreshTokenExpiresAt,
+      ipAddress,
+      userAgent,
+      revoked: false,
+      revokedAt: null
+    });
+
+    // Extract user info for the response
+    const userInfo = {
+      id: user.id,
+      email: user.email,
+      role: user.role as UserRole,
+      organizationId: user.organizationId,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null
+    };
+
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresIn: Math.floor((tokens.accessTokenExpiresAt.getTime() - Date.now()) / 1000),
+      tokenType: 'Bearer',
+      user: userInfo
+    };
+  }
+
+  /**
+   * Revokes all active sessions for a user
+   */
+  async revokeAllSessions(userId: string): Promise<void> {
+    await this.refreshTokenRepository.revokeAllForUser(userId);
+  }
+
+  // Note: Removed verifyToken method as it's now handled by secureJwt's verifyToken function
+
+  async login(loginDto: LoginDto, ipAddress: string, userAgent: string = ''): Promise<LoginResponse> {
     try {
       const user = await this.userRepository.findByEmail(loginDto.email);
       
       if (!user) {
-        throw new Error('Invalid credentials');
+        throw new UnauthorizedException('Invalid credentials');
       }
 
       // Check if account is locked
       if (user.lockedUntil && user.lockedUntil > new Date()) {
-        throw new Error('Account is temporarily locked');
+        throw new UnauthorizedException('Account is temporarily locked. Please try again later.');
       }
 
       // Verify password
@@ -51,173 +168,158 @@ export class JwtAuthService implements IAuthService {
       
       if (!isPasswordValid) {
         // Increment failed login attempts
-        await this.userRepository.incrementLoginAttempts(user.id);
-        throw new Error('Invalid credentials');
+        const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+        await this.userRepository.update(user.id, { failedLoginAttempts: failedAttempts });
+        
+        // Lock account after too many failed attempts
+        if (failedAttempts >= 5) {
+          const lockUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+          await this.userRepository.update(user.id, { lockedUntil: lockUntil });
+          this.logger.warn(`Account locked for user ${user.email} due to too many failed login attempts`);
+          throw new UnauthorizedException('Account locked due to too many failed attempts. Please try again in 30 minutes.');
+        }
+        
+        throw new UnauthorizedException('Invalid credentials');
       }
 
       // Reset failed login attempts on successful login
       if (user.failedLoginAttempts > 0) {
-        await this.userRepository.resetLoginAttempts(user.id);
+        await this.userRepository.update(user.id, { 
+          failedLoginAttempts: 0,
+          lastLoginAt: new Date(),
+          lastLoginIp: ipAddress
+        });
+      } else {
+        await this.userRepository.update(user.id, { 
+          lastLoginAt: new Date(),
+          lastLoginIp: ipAddress
+        });
       }
 
-      // Generate tokens using the consolidated JWT service
-      const role = user.role as UserRole || 'user';
-      const tokens = await jwtService.generateAuthTokens(
-        user.id,
-        user.email,
-        role,
-        user.organization_id
-      );
-
-      // Store refresh token
-      await this.refreshTokenRepository.create({
-        token: tokens.refreshToken,
-        userId: user.id,
-        expiresAt: tokens.refreshTokenExpiresAt,
-        ipAddress,
-        userAgent
-      });
+      // Generate tokens - this now returns a properly typed LoginResponse
+      const loginResponse = await this.generateTokens(user, ipAddress, userAgent);
 
       // Log successful login
       this.logger.log(`User ${user.email} logged in successfully from ${ipAddress}`);
 
-      // Return authentication response
-      return {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          organization_id: user.organization_id
-        },
-        expiresAt: tokens.accessTokenExpiresAt.getTime()
-      };
-    } catch (error) {
-      this.logger.error(`Login failed: ${error.message}`, error.stack);
-      throw error;
+      return loginResponse;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Login failed: ${errorMessage}`, errorStack);
+      
+      // Re-throw the error if it's already an HTTP exception
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      
+      // For other errors, throw a generic unauthorized error to avoid leaking information
+      throw new UnauthorizedException('Login failed. Please check your credentials and try again.');
     }
   }
 
   /**
    * Refresh access token using refresh token
    */
-  async refreshToken(
-    refreshTokenDto: RefreshTokenDto,
-    ipAddress: string,
-    userAgent: string = ''
-  ): Promise<AuthResponse> {
+  async refreshToken(refreshTokenDto: RefreshTokenDto, ipAddress: string, userAgent: string = ''): Promise<LoginResponse> {
     try {
-      const { refreshToken } = refreshTokenDto;
+      // Verify the refresh token using secureJwt
+      const result = await verifyToken(refreshTokenDto.refreshToken, 'refresh');
       
-      // Verify the refresh token exists in the database
-      const storedToken = await this.refreshTokenRepository.findByToken(refreshToken);
-      if (!storedToken) {
-        throw new Error('Invalid refresh token');
+      if (!result || !result.payload.userId) {  // Use userId from TokenPayload
+        throw new UnauthorizedException('Invalid refresh token');
       }
 
-      // Check if token is expired
-      if (storedToken.expiresAt < new Date()) {
-        await this.refreshTokenRepository.delete(storedToken.id);
-        throw new Error('Refresh token expired');
-      }
-
-      // Get user information
-      const user = await this.userRepository.findById(storedToken.userId);
+      // Find the user
+      const user = await this.userRepository.findById(result.payload.userId);
       if (!user) {
-        throw new Error('User not found');
+        throw new UnauthorizedException('User not found');
       }
 
-      // Generate new tokens using the consolidated JWT service
-      const role = user.role as UserRole || 'user';
-      const tokens = await jwtService.refreshAccessToken(refreshToken);
+      // Revoke the old refresh token if it has a JTI
+      if (result.payload.jti) {
+        await revokeToken(result.payload.jti);
+      }
+
+      // Generate new tokens
+      return this.generateTokens(user, ipAddress, userAgent);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Token refresh failed';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Token refresh failed: ${errorMessage}`, errorStack);
       
-      if (!tokens) {
-        throw new Error('Failed to refresh token');
+      // Re-throw the error if it's already an HTTP exception
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+        throw error;
       }
-
-      // Delete the old refresh token
-      await this.refreshTokenRepository.delete(storedToken.id);
-
-      // Store the new refresh token
-      await this.refreshTokenRepository.create({
-        token: tokens.refreshToken,
-        userId: user.id,
-        expiresAt: tokens.refreshTokenExpiresAt,
-        ipAddress,
-        userAgent
-      });
-
-      // Log successful token refresh
-      this.logger.log(`User ${user.email} refreshed their token from ${ipAddress}`);
-
-      // Return authentication response
-      return {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          organization_id: user.organization_id
-        },
-        expiresAt: tokens.accessTokenExpiresAt.getTime()
-      };
-    } catch (error) {
-      this.logger.error(`Token refresh failed: ${error.message}`, error.stack);
-      throw error;
+      
+      // For other errors, throw a generic unauthorized error
+      throw new UnauthorizedException('Failed to refresh token. Please log in again.');
     }
   }
 
   /**
    * Logout user by invalidating their refresh token
+   * @param refreshToken The refresh token to invalidate
+   * @param authHeader Optional authorization header containing the access token (format: 'Bearer <token>')
    */
-  async logout(refreshToken: string): Promise<{ success: boolean }> {
+  async logout(refreshToken: string, authHeader?: string): Promise<void> {
     try {
-      // Find the token in the database
-      const storedToken = await this.refreshTokenRepository.findByToken(refreshToken);
+      // Revoke the refresh token
+      const refreshTokenResult = await verifyToken(refreshToken, 'refresh');
       
-      if (storedToken) {
-        // Delete the token from the database
-        await this.refreshTokenRepository.delete(storedToken.id);
-        
-        // Revoke the token in the JWT service
-        const tokenResult = await jwtService.verifyToken(refreshToken, 'refresh');
-        if (tokenResult && tokenResult.payload.jti) {
-          await jwtService.revokeToken(tokenResult.payload.jti);
-        }
+      if (refreshTokenResult?.payload?.jti) {
+        await revokeToken(refreshTokenResult.payload.jti);
       }
       
-      return { success: true };
-    } catch (error) {
-      this.logger.error(`Logout failed: ${error.message}`, error.stack);
-      return { success: false };
+      // Also remove from the database if it exists
+      const storedToken = await this.refreshTokenRepository.findByToken(refreshToken);
+      if (storedToken) {
+        await this.refreshTokenRepository.revokeToken(storedToken.id);
+      }
+      
+      // Handle access token from auth header if provided
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const accessToken = authHeader.split(' ')[1];
+        try {
+          const accessTokenResult = await verifyToken(accessToken, 'access');
+          if (accessTokenResult?.payload?.jti) {
+            await revokeToken(accessTokenResult.payload.jti);
+          }
+        } catch (error: unknown) {
+          // Log but don't fail the logout if access token revocation fails
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          this.logger.debug(`Error revoking access token: ${errorMessage}`);
+        }
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        const errorStack = error.stack;
+        this.logger.error(`Logout failed: ${errorMessage}`, errorStack);
+      } else {
+        this.logger.error('Unknown error during logout');
+      }
+      // Don't throw error on logout failure to prevent revealing internal errors
     }
   }
 
   /**
    * Request password reset
+   * @param email The email address to send the password reset to
    */
-  async requestPasswordReset(dto: RequestPasswordResetDto): Promise<{ success: boolean; message: string }> {
+  async requestPasswordReset(email: string): Promise<{ success: boolean }> {
     try {
-      const { email } = dto;
       const user = await this.userRepository.findByEmail(email);
       
       // Always return success even if user not found (security best practice)
       if (!user) {
         this.logger.log(`Password reset requested for non-existent email: ${email}`);
-        return { 
-          success: true, 
-          message: 'If your email is registered, you will receive a password reset link' 
-        };
+        return { success: true };
       }
 
       // Generate password reset token
-      const { token, expiresAt } = await jwtService.generatePasswordResetToken(
+      const { token, expiresAt } = await generatePasswordResetToken(
         user.id,
         user.email
       );
@@ -228,50 +330,42 @@ export class JwtAuthService implements IAuthService {
       // Send email with reset link
       await this.emailService.sendPasswordResetEmail(
         user.email,
-        user.firstName || 'User',
-        resetUrl,
-        expiresAt
+        {
+          name: user.firstName || 'User',
+          resetUrl,
+          expiryHours: 24 // 24 hours expiry
+        }
       );
 
-      return { 
-        success: true, 
-        message: 'If your email is registered, you will receive a password reset link' 
-      };
-    } catch (error) {
-      this.logger.error(`Password reset request failed: ${error.message}`, error.stack);
-      return { 
-        success: false, 
-        message: 'An error occurred while processing your request' 
-      };
+      return { success: true };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Password reset request failed: ${errorMessage}`, errorStack);
+      return { success: false };
     }
   }
 
   /**
    * Reset password using token
+   * @param token The password reset token
+   * @param newPassword The new password to set
    */
-  async resetPassword(dto: ResetPasswordDto): Promise<{ success: boolean; message: string }> {
+  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
     try {
-      const { token, newPassword } = dto;
       
       // Verify the password reset token
-      const result = await jwtService.verifyPasswordResetToken(token);
-      
-      if (!result) {
-        return { 
-          success: false, 
-          message: 'Invalid or expired password reset token' 
-        };
+      const result = await verifyPasswordResetToken(token);
+      if (!result || !result.userId) {
+        throw new BadRequestException('Invalid or expired password reset token');
       }
-      
+
       const { userId, jti } = result;
       
       // Get the user
       const user = await this.userRepository.findById(userId);
       if (!user) {
-        return { 
-          success: false, 
-          message: 'User not found' 
-        };
+        throw new UnauthorizedException('User not found');
       }
       
       // Hash the new password
@@ -280,21 +374,23 @@ export class JwtAuthService implements IAuthService {
       // Update the user's password
       await this.userRepository.updatePassword(userId, passwordHash);
       
-      // Revoke the password reset token
+      // Revoke the token if it has a JTI
       if (jti) {
-        await jwtService.revokeToken(jti);
+        await revokeToken(jti);
       }
-      
-      // Revoke all existing refresh tokens for the user
-      await jwtService.revokeAllUserTokens(userId);
-      await this.refreshTokenRepository.deleteAllForUser(userId);
+
+      // Revoke all user's refresh tokens
+      await revokeAllUserTokens(userId);
+      await this.refreshTokenRepository.revokeAllForUser(userId);
       
       return { 
         success: true, 
         message: 'Password has been reset successfully' 
       };
-    } catch (error) {
-      this.logger.error(`Password reset failed: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Password reset failed: ${errorMessage}`, errorStack);
       return { 
         success: false, 
         message: 'An error occurred while resetting your password' 

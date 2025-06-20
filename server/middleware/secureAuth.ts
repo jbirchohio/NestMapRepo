@@ -1,13 +1,34 @@
-import { Request, Response, NextFunction } from 'express';
-import { verifyToken, TokenPayload, TokenType } from '../../utils/secureJwt';
-import { redis } from '../db/redis';
-import { logger } from '../utils/logger';
+/**
+ * SINGLE SOURCE OF TRUTH: Authentication Middleware
+ * 
+ * This is the canonical implementation for all authentication and authorization in the application.
+ * All authentication logic should be centralized through this module to ensure consistency.
+ * 
+ * Features:
+ * - JWT token verification and validation
+ * - Role-based access control (RBAC)
+ * - Token extraction from multiple sources (headers, cookies, query params)
+ * - Rate limiting for authentication endpoints
+ * - Refresh token handling
+ * 
+ * DO NOT create duplicate authentication implementations - extend this one if needed.
+ */
 
-// Extend Express Request type to include user information
+import { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/secureJwt.js';
+import { redis } from '../db/redis.js';
+import { logger } from '../utils/logger.js';
+import type { TokenPayload, TokenType, VerifyTokenResult } from '../types/jwt.d.js';
+
+// Import the AuthUser type from the project's types
+import type { AuthUser } from '../src/types/auth-user';
+
+// Extend Express Request type to include our custom properties
 declare global {
   namespace Express {
-    interface Request {
-      user?: TokenPayload;
+    // This merges with the existing Request interface
+    export interface Request {
+      user?: AuthUser;
       token?: string;
     }
   }

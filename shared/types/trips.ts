@@ -1,4 +1,4 @@
-import { BaseModel, PaginationParams, PaginatedResponse } from './base';
+import { BaseModel, PaginationParams, PaginatedResponse } from './base.js';
 
 export type TripStatus = 'draft' | 'planned' | 'in_progress' | 'completed' | 'cancelled';
 export type TripVisibility = 'private' | 'team' | 'public';

@@ -1,7 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
-import { BookingRepository } from '../repositories/booking/booking.repository.interface';
+import { BookingRepository } from '../repositories/booking/booking.repository.interface.js';
 import { Booking } from '../../../db/bookingSchema.js';
-import { BookingConfirmationDetails } from '../interfaces/booking.interfaces';
+import { BookingConfirmationDetails } from '../interfaces/booking.interfaces.js';
 
 /**
  * Service for managing bookings
