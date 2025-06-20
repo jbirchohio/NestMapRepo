@@ -60,8 +60,9 @@ const getCount = (result: Array<{ count: number }>): number => {
 };
 
 // Helper function to safely extract average from query results
-const getAverage = (result: Array<{ avg: number | null }>): number => {
-  return result[0]?.avg ? Number(result[0].avg) : 0;
+const getAverage = (result: Array<{ avg: number | string | null }>): number => {
+  const value = result[0]?.avg;
+  return value !== undefined && value !== null ? Number(value) : 0;
 };
 
 export async function getAnalytics(): Promise<AnalyticsData> {
@@ -84,19 +85,19 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     // Get popular destinations
     const popularDestinations = await db
       .select({
-        city: trips.destinationCity,
-        country: trips.destinationCountry,
+        city: trips.city,
+        country: trips.country,
         tripCount: count(),
       })
       .from(trips)
-      .groupBy(trips.destinationCity, trips.destinationCountry)
+      .groupBy(trips.city, trips.country)
       .orderBy(desc(count()));
 
     // Calculate completion rates
     const completedTripsResult = await db
       .select({ count: count() })
       .from(trips)
-      .where(eq(trips.status, 'completed'));
+      .where(eq(trips.completed, true));
 
     const tripsWithActivitiesResult = await db
       .select({ count: countDistinct(activities.tripId) })
@@ -111,7 +112,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
       .select({ count: countDistinct(trips.userId) })
       .from(trips)
       .groupBy(trips.userId)
-      .having(({ count: countFn }) => gte(countFn(), 1));
+      .having(({ count: countFn }) => gte(countFn, 1));
 
     // Recent activity (last 7 days)
     const sevenDaysAgo = new Date();
