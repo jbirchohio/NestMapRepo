@@ -1,10 +1,11 @@
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
-import cors, { type CorsOptions } from 'cors';
-import helmet, { type HelmetOptions } from 'helmet';
-import cookieParser from 'cookie-parser';
-import compression from 'compression';
+// Temporarily commenting out problematic imports to test TypeScript compilation
+// import cors, { type CorsOptions } from 'cors';
+// import helmet, { type HelmetOptions } from 'helmet';
+// import cookieParser from 'cookie-parser';
+// import compression from 'compression';
 import crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { logger } from './utils/logger.js';
