@@ -86,20 +86,17 @@ declare global {
 }
 
 // Export a type that can be used in our middleware
-export interface AuthenticatedRequest extends Express.Request {
-  user: AuthUser;
-  organizationId: string;
-  organizationFilter: (orgId: string | null) => boolean;
-  domainOrganizationId?: string;
-  isWhiteLabelDomain?: boolean;
-  analyticsScope?: {
-    organizationId: string;
-    startDate?: Date;
-    endDate?: Date;
-  };
-  startDate?: Date;
-  endDate?: Date;
-}
+export type AuthenticatedRequest<
+  Params = any,
+  ResBody = any,
+  ReqBody = any,
+  ReqQuery = any
+> = import('./auth-user').AuthenticatedRequest<
+  Params,
+  ResBody,
+  ReqBody,
+  ReqQuery
+>;
 
 // Export all types for easy importing
 export * from './auth-user';

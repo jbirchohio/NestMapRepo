@@ -1,15 +1,11 @@
 import 'express';
+import type { AuthUser } from '../../types/auth-user.js';
 
 declare global {
   namespace Express {
     // Extend the Express Request type with our custom properties
     interface Request {
-      user?: {
-        id: string;
-        email: string;
-        role: string;
-        organizationId?: string | null;
-      };
+      user?: AuthUser;
       cookies: {
         [key: string]: string | undefined;
       };

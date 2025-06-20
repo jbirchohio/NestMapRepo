@@ -26,7 +26,14 @@ export type RequestUser = Omit<AuthUser, 'organization_id'> & {
   organization_id?: string; // Keep for backward compatibility
 };
 
-export interface AuthenticatedRequest extends Request {
+import type { Request } from 'express';
+
+export interface AuthenticatedRequest<
+  Params = any,
+  ResBody = any,
+  ReqBody = any,
+  ReqQuery = any
+> extends Request<Params, ResBody, ReqBody, ReqQuery> {
   user: AuthUser;
   organizationId: string;
   organizationFilter: (orgId: string | null) => boolean;
