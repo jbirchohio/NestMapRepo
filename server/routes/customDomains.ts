@@ -5,7 +5,7 @@ import { db } from '../db/db.js';
 import { organizations, customDomains } from '../db/schema.js';
 import { whiteLabelSettings } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
-import { authenticate } from '../src/middleware/authenticate.js';
+import { authenticate } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
 import { z } from 'zod';

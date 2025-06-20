@@ -11,7 +11,7 @@ import { NodemailerEmailService } from '../email/services/nodemailer-email.servi
 import { ErrorService } from '../common/services/error.service.js';
 import { validateAndSanitizeRequest } from '../../middleware/inputValidation.js';
 import { loginSchema, requestPasswordResetSchema, resetPasswordSchema, refreshTokenSchema, logoutSchema } from './dtos/auth.dto.js';
-import { authenticate } from '../middleware/authenticate.js';
+import { authenticate } from '../../middleware/secureAuth.js';
 
 // Helper type to make certain properties required
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };

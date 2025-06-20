@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { db } from "../db";
 import { organizations, whiteLabelSettings, customDomains } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { enforceWhiteLabelAccess } from '../middleware/subscription-limits';
 

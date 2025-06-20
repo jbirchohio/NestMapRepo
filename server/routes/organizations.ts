@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { insertOrganizationSchema } from '@shared/schema';
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation';

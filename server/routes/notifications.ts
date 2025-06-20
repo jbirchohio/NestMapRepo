@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db } from '../db';
 import { notifications } from '../../shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 const router = Router();

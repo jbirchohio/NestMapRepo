@@ -1,7 +1,8 @@
 import type { Express } from "express";
-import { requireSuperadminRole } from "../middleware/auth";
-import { validateJWT } from "../middleware/jwtAuth";
+import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from "../middleware/organizationContext";
+
+const requireSuperadminRole = requireRole('superadmin');
 import { checkSystemHealthAndGenerateAlerts } from "./alerts";
 import os from "os";
 import process from "process";

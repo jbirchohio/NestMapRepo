@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
 import { z } from 'zod';
 import { insertTripSchema } from '../db/schema.js';
-import { validateJWT } from '../middleware/jwtAuth.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext.js';
 import { fieldTransformMiddleware } from '../middleware/fieldTransform.js';
 import { enforceTripLimit } from '../middleware/subscription-limits.js';

@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import { db } from '../db';
 import { auditLogs } from '../db/auditLog';
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin';
 import { injectOrganizationContext } from '../middleware/organizationContext';
 

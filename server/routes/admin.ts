@@ -5,7 +5,7 @@ import { pgTable, pgSchema, uuid, text, timestamp, boolean, jsonb } from 'drizzl
 import { sql, eq, and, or, desc, gte, lte } from 'drizzle-orm';
 import { db } from '../db/db';
 import { users, organizations, customDomains, userActivityLogs, OrganizationRole } from '../db/schema';
-import { authenticateJWT as validateJWT, requireRole } from '../middleware/auth';
+import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
 import { validateAndSanitizeRequest } from '../middleware/validation';
 import { auditLogger } from '../auditLogger';
 import { AuthenticatedRequest, AuthenticatedUser } from '../types/auth';
