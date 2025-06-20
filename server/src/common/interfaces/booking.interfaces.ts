@@ -1,107 +1,75 @@
 /**
- * Interface for booking confirmation details
+ * Booking-related interfaces for user preferences and booking data
  */
-export interface BookingConfirmationDetails {
-  /**
-   * Confirmation code or reference number
-   */
-  confirmationCode: string;
-  
-  /**
-   * Date when the booking was confirmed
-   */
-  confirmedAt: Date;
-  
-  /**
-   * Provider who confirmed the booking (e.g., hotel name, airline)
-   */
-  provider?: string;
-  
-  /**
-   * Any additional confirmation details
-   */
-  additionalDetails?: Record<string, unknown>;
-}
 
-/**
- * Interface for user preferences related to bookings
- */
 export interface UserBookingPreferences {
-  /**
-   * Preferred seat type (e.g., window, aisle)
-   */
-  seatPreference?: 'window' | 'aisle' | 'middle' | 'no-preference';
-  
-  /**
-   * Dietary restrictions or meal preferences
-   */
-  dietaryRestrictions?: string[];
-  
-  /**
-   * Preferred room type for accommodations
-   */
-  roomPreference?: 'single' | 'double' | 'suite' | 'no-preference';
-  
-  /**
-   * Special assistance requirements
-   */
-  specialAssistance?: string[];
-  
-  /**
-   * Loyalty program memberships
-   */
-  loyaltyPrograms?: Array<{
-    program: string;
-    membershipNumber: string;
-    tier?: string;
-  }>;
-  
-  /**
-   * Other custom preferences
-   */
-  customPreferences?: Record<string, unknown>;
+  preferredAirlines?: string[];
+  seatPreference?: 'window' | 'aisle' | 'middle';
+  mealPreference?: 'standard' | 'vegetarian' | 'vegan' | 'kosher' | 'halal';
+  frequentFlyerNumbers?: Record<string, string>;
+  hotelPreferences?: {
+    roomType?: 'standard' | 'deluxe' | 'suite';
+    amenities?: string[];
+  };
+  carRentalPreferences?: {
+    preferredVendors?: string[];
+    carType?: 'economy' | 'compact' | 'midsize' | 'fullsize' | 'luxury' | 'suv';
+  };
 }
 
-/**
- * Interface for organization settings related to bookings
- */
-export interface OrganizationBookingSettings {
-  /**
-   * Default approval policy
-   */
-  approvalPolicy?: 'automatic' | 'manager' | 'department-head';
-  
-  /**
-   * Budget constraints
-   */
-  budgetLimits?: {
-    flight?: number;
-    accommodation?: number;
-    transportation?: number;
-    meals?: number;
-    total?: number;
+export interface BookingDetails {
+  id: string;
+  type: 'flight' | 'hotel' | 'car' | 'activity';
+  status: 'pending' | 'confirmed' | 'cancelled';
+  confirmation?: string;
+  price?: number;
+  currency?: string;
+  bookingDate: Date;
+  travelDate?: Date;
+  metadata?: Record<string, any>;
+}
+
+export interface FlightBooking extends BookingDetails {
+  type: 'flight';
+  airline: string;
+  flightNumber: string;
+  departure: {
+    airport: string;
+    time: Date;
   };
-  
-  /**
-   * Preferred vendors
-   */
-  preferredVendors?: Array<{
-    type: 'airline' | 'hotel' | 'car-rental' | 'other';
-    name: string;
-    contractId?: string;
-  }>;
-  
-  /**
-   * Travel policy settings
-   */
-  travelPolicy?: {
-    allowBusinessClass?: boolean;
-    maxHotelStars?: number;
-    requireApprovalAboveAmount?: number;
+  arrival: {
+    airport: string;
+    time: Date;
   };
-  
-  /**
-   * Custom organization settings
-   */
-  customSettings?: Record<string, unknown>;
+  seatNumber?: string;
+  class: 'economy' | 'premium_economy' | 'business' | 'first';
+}
+
+export interface HotelBooking extends BookingDetails {
+  type: 'hotel';
+  hotelName: string;
+  checkIn: Date;
+  checkOut: Date;
+  roomType: string;
+  guests: number;
+  address?: string;
+}
+
+export interface CarRentalBooking extends BookingDetails {
+  type: 'car';
+  vendor: string;
+  carModel: string;
+  pickupLocation: string;
+  dropoffLocation?: string;
+  pickupDate: Date;
+  returnDate: Date;
+}
+
+export interface ActivityBooking extends BookingDetails {
+  type: 'activity';
+  activityName: string;
+  location: string;
+  duration?: number;
+  participants: number;
+  scheduledTime?: Date;
 }

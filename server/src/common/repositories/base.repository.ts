@@ -1,133 +1,23 @@
-import { Logger } from '@nestjs/common';
+import { logger } from '../../../utils/logger.js';
 import { BaseRepository } from './base.repository.interface.js';
-import { PgTable } from 'drizzle-orm/pg-core';
-import { db } from '../../../db/db.js';
-import { eq, inArray } from 'drizzle-orm';
 
 /**
- * Base repository implementation that provides common CRUD operations
- * This class can be extended by specific repository implementations
+ * Base repository implementation with common CRUD operations
  */
-export abstract class BaseRepositoryImpl<T, ID, CreateDTO, UpdateDTO> implements BaseRepository<T, ID, CreateDTO, UpdateDTO> {
-  protected readonly logger: Logger;
-  protected readonly tableName: string;
-  protected readonly table: PgTable;
-  protected readonly idColumn: any; // Column reference for the ID
+export abstract class BaseRepositoryImpl<T, ID, CreateData, UpdateData> implements BaseRepository<T, ID, CreateData, UpdateData> {
+  protected logger = logger;
+  
+  constructor(
+    protected entityName: string,
+    protected table: any,
+    protected idColumn: any
+  ) {}
 
-  constructor(tableName: string, table: PgTable, idColumn: any) {
-    this.tableName = tableName;
-    this.table = table;
-    this.idColumn = idColumn;
-    this.logger = new Logger(`${this.tableName}Repository`);
-  }
-
-  async findById(id: ID): Promise<T | null> {
-    try {
-      const [result] = await db
-        .select()
-        .from(this.table)
-        .where(eq(this.idColumn, id))
-        .limit(1);
-      
-      return result as T || null;
-    } catch (error) {
-      this.logger.error(`Error finding ${this.tableName} by ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
-
-  async findAll(): Promise<T[]> {
-    try {
-      const results = await db
-        .select()
-        .from(this.table);
-      return results as T[];
-    } catch (error) {
-      this.logger.error(`Error finding all ${this.tableName}s: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
-
-  async create(data: CreateDTO): Promise<T> {
-    try {
-      const [result] = await db
-        .insert(this.table)
-        .values(data as any)
-        .returning();
-      
-      return result as T;
-    } catch (error) {
-      this.logger.error(`Error creating ${this.tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
-
-  async update(id: ID, data: UpdateDTO): Promise<T | null> {
-    try {
-      const [result] = await db
-        .update(this.table)
-        .set({
-          ...data as any,
-          updatedAt: new Date()
-        })
-        .where(eq(this.idColumn, id))
-        .returning();
-      
-      return result as T || null;
-    } catch (error) {
-      this.logger.error(`Error updating ${this.tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
-
-  async delete(id: ID): Promise<boolean> {
-    try {
-      const result = await db
-        .delete(this.table)
-        .where(eq(this.idColumn, id));
-      
-      return (result.rowCount ?? 0) > 0;
-    } catch (error) {
-      this.logger.error(`Error deleting ${this.tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
-
-  async findByIds(ids: ID[]): Promise<T[]> {
-    try {
-      const results = await db
-        .select()
-        .from(this.table)
-        .where(inArray(this.idColumn, ids));
-      return results as T[];
-    } catch (error) {
-      this.logger.error(`Error finding ${this.tableName}s by IDs: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
-
-  async count(filter?: Partial<T>): Promise<number> {
-    try {
-      // If filter is provided, we would need to build a dynamic query
-      // For simplicity, this implementation just counts all records
-      const results = await db
-        .select()
-        .from(this.table);
-      
-      return results.length;
-    } catch (error) {
-      this.logger.error(`Error counting ${this.tableName}s: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
-
-  async exists(id: ID): Promise<boolean> {
-    try {
-      const result = await this.findById(id);
-      return result !== null;
-    } catch (error) {
-      this.logger.error(`Error checking if ${this.tableName} exists: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error;
-    }
-  }
+  abstract findById(id: ID): Promise<T | null>;
+  abstract findAll(): Promise<T[]>;
+  abstract create(data: CreateData): Promise<T>;
+  abstract update(id: ID, data: UpdateData): Promise<T | null>;
+  abstract delete(id: ID): Promise<boolean>;
+  abstract count(filter?: Partial<T>): Promise<number>;
+  abstract exists(id: ID): Promise<boolean>;
 }
