@@ -5,13 +5,13 @@ import connectPgSimple from "connect-pg-simple";
 import apiRoutes from "./routes/index";
 
 // Security middleware imports
-import { preventSQLInjection, configureCORS } from "./middleware/secureAuth";
+import { preventSQLInjection, configureCORS } from "./middleware/secureAuth.js";
 import { 
   apiVersioning, 
   tieredRateLimit, 
   monitorEndpoints, 
   authenticateApiKey 
-} from "./middleware/api-security";
+} from "./middleware/api-security.js";
 
 // Rate limiting
 import { 
@@ -26,16 +26,16 @@ import {
   injectOrganizationContext, 
   resolveDomainOrganization, 
   validateOrganizationAccess 
-} from "./middleware/organizationScoping";
+} from "./middleware/organizationScoping.js";
 
 // Error handling
-import { globalErrorHandler } from "./middleware/globalErrorHandler";
+import { globalErrorHandler } from "./middleware/globalErrorHandler.js";
 
 // Authentication
-import { unifiedAuthMiddleware } from "./middleware/secureAuth";
+import { unifiedAuthMiddleware } from "./middleware/secureAuth.js";
 
 // Request/response processing
-import { caseConversionMiddleware } from "./middleware/caseConverter";
+import { caseConversionMiddleware } from "./middleware/caseConverter.js";
 
 const app = express();
 
@@ -48,7 +48,7 @@ const sessionStore = new PgSession({
 });
 
 // Security headers middleware
-app.use((req, res, next) => {
+app.use((_req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
@@ -59,12 +59,12 @@ app.use((req, res, next) => {
 app.set('trust proxy', 1);
 
 // Essential middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }) as express.RequestHandler);
+app.use(express.urlencoded({ extended: true, limit: '50mb' }) as express.RequestHandler);
 
 // Security middleware
 app.use(preventSQLInjection);
-app.use((req, res, next) => {
+app.use((_req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -109,7 +109,7 @@ app.use(session({
 app.use('/api', apiRoutes);
 
 // Global error handling middleware
-app.use(((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use(((err: any, _req: Request, res: Response, next: NextFunction) => {
   console.error('Test app error:', err.message);
   
   if (res.headersSent) {
