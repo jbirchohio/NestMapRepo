@@ -12,7 +12,8 @@
     "./services/**/*.ts",
     "./types/**/*.ts",
     "./index.ts",
-    "./*.ts"
+    "./*.ts",
+    "../shared/src/**/*.ts"
   ],
   "exclude": ["node_modules"],
   "compilerOptions": {
@@ -30,7 +31,7 @@
     "baseUrl": ".",
     "paths": {
       "@server/*": ["src/*"],
-      "@shared/*": ["../shared/dist/shared/src/*"]
+      "@shared/*": ["../dist/shared/src/*.js"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,
