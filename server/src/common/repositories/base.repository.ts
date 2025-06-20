@@ -77,7 +77,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
     }
   }
 
-  async count(filter?: Partial<T>): Promise<number> {
+  async count(_filter?: Partial<T>): Promise<number> {
     try {
       // For now, return simple count - can be enhanced with filters
       const results = await db.select().from(this.table);
