@@ -11,19 +11,19 @@ import {
   insertApprovalRuleSchema 
 } from '../db/schema.js';
 import { z } from 'zod';
-import { validateJWT } from '../middleware/jwtAuth.js';
+import { authenticate } from '../middleware/secureAuth.js';
+import { asyncHandler } from '../utils/routeHelpers.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 
 const router = Router();
 
 // Apply middleware to all approval routes
-router.use(validateJWT);
+router.use(authenticate);
 router.use(injectOrganizationContext);
 router.use(validateOrganizationAccess);
 
 // Get pending approval requests for manager
-router.get('/pending', async (req, res) => {
-  try {
+router.get('/pending', asyncHandler(async (req, res) => {
     if (!req.user?.organization_id) {
       return res.status(401).json({ error: "Organization membership required" });
     }
@@ -71,15 +71,10 @@ router.get('/pending', async (req, res) => {
       .orderBy(desc(approvalRequests.priority), desc(approvalRequests.createdAt));
     
     res.json(pendingRequests);
-  } catch (error) {
-    console.error('Error fetching pending approvals:', error);
-    res.status(500).json({ error: "Failed to fetch pending approvals" });
-  }
-});
+}));
 
 // Approve or reject a request
-router.patch('/:requestId/decision', async (req, res) => {
-  try {
+router.patch('/:requestId/decision', asyncHandler(async (req, res) => {
     if (!req.user?.organization_id) {
       return res.status(401).json({ error: "Organization membership required" });
     }
@@ -144,15 +139,10 @@ router.patch('/:requestId/decision', async (req, res) => {
     }
     
     res.json(updatedRequest);
-  } catch (error) {
-    console.error('Error processing approval decision:', error);
-    res.status(500).json({ error: "Failed to process approval decision" });
-  }
-});
+}));
 
 // Create approval request
-router.post('/', async (req, res) => {
-  try {
+router.post('/', asyncHandler(async (req, res) => {
     if (!req.user?.organization_id) {
       return res.status(401).json({ error: "Organization membership required" });
     }
@@ -195,20 +185,17 @@ router.post('/', async (req, res) => {
     res.status(201).json(newRequest);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: "Invalid input", 
-        details: error.errors 
+      return res.status(400).json({
+        error: "Invalid input",
+        details: error.errors
       });
     }
-    
-    console.error('Error creating approval request:', error);
-    res.status(500).json({ error: "Failed to create approval request" });
+    throw error;
   }
-});
+}));
 
 // Get approval rules for organization
-router.get('/rules', async (req, res) => {
-  try {
+router.get('/rules', asyncHandler(async (req, res) => {
     if (!req.user?.organization_id) {
       return res.status(401).json({ error: "Organization membership required" });
     }
@@ -228,15 +215,10 @@ router.get('/rules', async (req, res) => {
       .orderBy(approvalRules.priority);
     
     res.json(rules);
-  } catch (error) {
-    console.error('Error fetching approval rules:', error);
-    res.status(500).json({ error: "Failed to fetch approval rules" });
-  }
-});
+}));
 
 // Create or update approval rule
-router.post('/rules', async (req, res) => {
-  try {
+router.post('/rules', asyncHandler(async (req, res) => {
     if (!req.user?.organization_id) {
       return res.status(401).json({ error: "Organization membership required" });
     }
@@ -262,16 +244,14 @@ router.post('/rules', async (req, res) => {
     res.status(201).json(newRule);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: "Invalid input", 
-        details: error.errors 
+      return res.status(400).json({
+        error: "Invalid input",
+        details: error.errors
       });
     }
-    
-    console.error('Error creating approval rule:', error);
-    res.status(500).json({ error: "Failed to create approval rule" });
+    throw error;
   }
-});
+}));
 
 // Helper function to check if approval is required
 async function checkApprovalRequired(

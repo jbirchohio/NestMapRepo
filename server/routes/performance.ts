@@ -5,7 +5,7 @@
 
 import type { Express } from "express";
 import { performanceMonitor } from "../performance-monitor";
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 export function registerPerformanceRoutes(app: Express): void {

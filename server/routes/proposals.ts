@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { proposals, insertProposalSchema, proposalStatusEnum } from '../db/proposalSchema';
 import { db } from '../db';
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation';
 import { z } from 'zod';

@@ -4,7 +4,7 @@ import { users, adminAuditLog, organizations, userSessions } from '../../shared/
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { getActiveUserCount } from '../middleware/sessionTracking';
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 const router = Router();

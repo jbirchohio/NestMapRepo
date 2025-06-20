@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { eq, and, desc, gte, lte, sql, count } from 'drizzle-orm';
 import { db } from '../db';
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { 
   trips, 

@@ -1,10 +1,9 @@
 // Import from auth.ts
-import { 
-  authenticateJWT,
-  requireRole as originalRequireRole,
-  type AuthRequest,
-  type AuthUser
-} from './auth';
+import {
+  authenticate as authenticateJWT,
+  requireRole as originalRequireRole
+} from './secureAuth.js';
+import type { AuthenticatedRequest as AuthRequest, AuthUser } from '../src/types/auth-user.js';
 
 // Re-export with new names
 export const unifiedAuthMiddleware = authenticateJWT;

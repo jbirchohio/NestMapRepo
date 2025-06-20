@@ -1,6 +1,7 @@
 import type { Express } from "express";
-import { requireSuperadminRole } from "../middleware/auth";
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
+
+const requireSuperadminRole = requireRole('superadmin');
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { db } from "../db";
 import { adminAuditLog } from "@shared/schema";

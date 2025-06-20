@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
 import { injectOrganizationContext, requireAnalyticsAccess } from '../middleware/organizationContext';
 import { enforceAnalyticsAccess } from '../middleware/subscription-limits';

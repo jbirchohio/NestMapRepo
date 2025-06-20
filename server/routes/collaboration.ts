@@ -3,7 +3,7 @@ import { eq, and, desc, isNull } from 'drizzle-orm';
 import { db } from '../db';
 import { tripComments, activityLog, trips, users, insertTripCommentSchema } from '@shared/schema';
 import { z } from 'zod';
-import { validateJWT } from '../middleware/jwtAuth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 const router = Router();

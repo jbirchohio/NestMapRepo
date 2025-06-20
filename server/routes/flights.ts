@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { validateJWT } from '../middleware/jwtAuth.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';
 import { asyncHandler } from '../utils/routeHelpers.js';

@@ -4,7 +4,7 @@ import { organizations, users, customDomains, whiteLabelRequests, organizationRo
 import { auditLogs } from '../db/auditLog';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { validateJWT } from '../middleware/auth';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { validateAndSanitizeRequest } from '../middleware/validation';
 
 // Placeholder for admin role check middleware - this would need to be implemented

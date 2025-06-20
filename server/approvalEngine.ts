@@ -1,5 +1,5 @@
-import { db } from './db';
-import { approvalRequests, approvalRules, users, organizations } from '@shared/schema';
+import { db } from './db.js';
+import { approvalRequests, approvalRules, users, organizations } from '../shared/src/schema.js';
 import { eq, and } from 'drizzle-orm';
 
 interface ApprovalWorkflowConfig {
