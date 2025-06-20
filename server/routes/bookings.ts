@@ -525,4 +525,4 @@ bookingRouter.delete(
       res.status(500).json({ error: "Failed to create activity" });
     }
   });
-}
+} 
