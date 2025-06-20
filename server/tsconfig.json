@@ -30,7 +30,7 @@
     "baseUrl": ".",
     "paths": {
       "@server/*": ["src/*"],
-      "@shared/*": ["../shared/dist/shared/src/*"]
+      "@shared/*": ["../dist/shared/src/*"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,
