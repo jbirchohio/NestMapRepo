@@ -109,7 +109,7 @@ app.use(session({
 app.use('/api', apiRoutes);
 
 // Global error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use(((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Test app error:', err.message);
   
   if (res.headersSent) {
@@ -119,6 +119,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({
     message: err.message || 'Internal server error'
   });
-});
+}) as express.ErrorRequestHandler);
 
 export { app };

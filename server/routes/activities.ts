@@ -1,21 +1,21 @@
 import { Router, type Response, type NextFunction, type RequestHandler, type Request } from 'express';
 import { ParamsDictionary } from 'express-serve-static-core';
-import { getAuthContext, requireAuth } from '../utils/authContext';
-import { logUserActivity } from '../utils/activityLogger';
+import { getAuthContext, requireAuth } from '../utils/authContext.js';
+import { logUserActivity } from '../utils/activityLogger.js';
 
 // Re-export types for backward compatibility
-export type { AuthUser, JWTUser } from '../utils/authContext';
+export type { AuthUser, JWTUser } from '../utils/authContext.js';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 
 // Import types and schemas
-import type { Activity, ActivityStatus, ActivityType } from '../types/activity';
-import { activitySchema, createActivitySchema, updateActivitySchema } from '../types/activity';
-import { User } from '../db/schema';
+import type { Activity, ActivityStatus, ActivityType } from '../types/activity.js';
+import { activitySchema, createActivitySchema, updateActivitySchema } from '../types/activity.js';
+import { User } from '../db/schema.js';
 
 // Import services
-import activityService from '../services/activity.service';
-import { validateOrganizationAccess } from '../middleware/organization';
+import activityService from '../services/activity.service.js';
+import { validateOrganizationAccess } from '../middleware/organization.js';
 
 // Define JWTUser interface for this file
 interface JWTUser {

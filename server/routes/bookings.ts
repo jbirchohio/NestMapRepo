@@ -78,47 +78,15 @@ export function registerBookingRoutes(app: Express) {
       res.json(tripBookings);
     })
   );
-    try {
-      const tripId = req.params.tripId;
-      const organizationId = req.user!.organizationId;
-
-      // Verify trip belongs to user's organization
-      const [trip] = await db
-        .select()
-        .from(trips)
-        .where(and(
-          eq(trips.id, tripId),
-          eq(trips.organizationId, organizationId)
-        ));
-
-      if (!trip) {
-        return res.status(404).json({ error: "Trip not found" });
-      }
-
-      // Get bookings for this trip
-      const tripBookings = await db
-        .select()
-        .from(bookings)
-        .where(and(
-          eq(bookings.tripId, tripId),
-          eq(bookings.organizationId, organizationId)
-        ))
-        .orderBy(desc(bookings.createdAt));
-
-      res.json(tripBookings);
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
-      res.status(500).json({ error: "Failed to fetch bookings" });
-    }
-  });
 
   // Create new booking for a trip
   bookingRouter.post(
     "/:tripId/bookings",
     asyncHandler(async (req: AuthenticatedRequest, res) => {
-      const tripId = req.params.tripId;
-      const organizationId = req.user.organizationId;
-      const { type, passengers, ...bookingData } = req.body;
+      try {
+        const tripId = req.params.tripId;
+        const organizationId = req.user.organizationId;
+        const { type, passengers, ...bookingData } = req.body;
 
       // Verify trip belongs to user's organization
       const [trip] = await db
@@ -201,12 +169,13 @@ export function registerBookingRoutes(app: Express) {
         })
         .returning();
 
-      res.json(booking);
-    } catch (error) {
-      console.error("Error creating booking:", error);
-      res.status(500).json({ error: "Failed to create booking" });
-    }
-  });
+        res.json(booking);
+      } catch (error) {
+        console.error("Error creating booking:", error);
+        res.status(500).json({ error: "Failed to create booking" });
+      }
+    })
+  );
 
   // Get booking by ID
   bookingRouter.get(
@@ -229,18 +198,7 @@ export function registerBookingRoutes(app: Express) {
 
       res.json(booking);
     })
-  );
-
-      if (!booking) {
-        return res.status(404).json({ error: "Booking not found" });
-      }
-
-      res.json(booking);
-    } catch (error) {
-      console.error("Error fetching booking:", error);
-      res.status(500).json({ error: "Failed to fetch booking" });
-    }
-  });
+    );
 
   // Update booking
   bookingRouter.patch(
@@ -267,7 +225,7 @@ export function registerBookingRoutes(app: Express) {
         .update(bookings)
         .set({
           ...updates,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(bookings.id, bookingId))
         .returning();
@@ -277,9 +235,10 @@ export function registerBookingRoutes(app: Express) {
   );
 
   // Cancel booking
-  bookingRouter.delete(
-    "/bookings/:bookingId",
-    route<{ bookingId: string }>(async (req, res) => {
+bookingRouter.delete(
+  "/bookings/:bookingId",
+  route<{ bookingId: string }>(async (req, res) => {
+    try {
       const bookingId = req.params.bookingId;
       const organizationId = req.user.organizationId;
 
@@ -327,78 +286,8 @@ export function registerBookingRoutes(app: Express) {
       console.error("Error cancelling booking:", error);
       res.status(500).json({ error: "Failed to cancel booking" });
     }
-
-    const [updatedBooking] = await db
-      .update(bookings)
-      .set({
-        ...updates,
-        updatedAt: new Date()
-      })
-      .where(eq(bookings.id, bookingId))
-      .returning();
-
-    res.json(updatedBooking);
   })
 );
-
-// Cancel booking
-bookingRouter.delete(
-  "/bookings/:bookingId",
-  route<{ bookingId: string }>(async (req, res) => {
-    const bookingId = req.params.bookingId;
-    const organizationId = req.user.organizationId;
-
-    // Verify booking exists and belongs to organization
-    const [booking] = await db
-      .select()
-      .from(bookings)
-      .where(and(
-        eq(bookings.id, bookingId),
-        eq(bookings.organizationId, organizationId)
-      ));
-
-    if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
-    }
-
-    // Cancel with provider if needed
-    if (booking.provider === 'duffel' && booking.providerBookingId) {
-      if (!process.env.DUFFEL_API_KEY) {
-        return res.status(400).json({ 
-          error: "Cancellation requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
-        });
-      }
-
-      const requestBody = req.body;
-      console.log('Flight search request body:', requestBody);
-      
-      // Map frontend parameters to DuffelProvider expected format
-      const searchParams = {
-        departure: requestBody.departure || requestBody.origin,
-        destination: requestBody.destination,
-        departureDate: requestBody.departureDate || requestBody.departure_date,
-        returnDate: requestBody.returnDate || requestBody.return_date,
-        passengers: requestBody.passengers || 1,
-        class: requestBody.class || 'economy'
-      };
-      
-      console.log(`Duffel flight search for: ${searchParams.departure} → ${searchParams.destination}`);
-      console.log('Mapped search params:', searchParams);
-      
-      try {
-        const results = await duffelProvider.searchFlights(searchParams);
-        res.json(results);
-      } catch (apiError) {
-        console.error("Duffel flight search error:", apiError);
-        return res.status(400).json({ 
-          error: "Flight search failed. Please verify your Duffel API credentials." 
-        });
-      }
-    } catch (error) {
-      console.error("Error searching flights:", error);
-      res.status(500).json({ error: "Failed to search flights" });
-    }
-  });
 
   // Search hotels
   bookingRouter.post(
@@ -492,9 +381,10 @@ bookingRouter.delete(
   bookingRouter.post(
     "/:tripId/activities",
     route<{ tripId: string }>(async (req, res) => {
-      const tripId = req.params.tripId;
-      const organizationId = req.user.organizationId;
-      const userId = req.user.id;
+      try {
+        const tripId = req.params.tripId;
+        const organizationId = req.user.organizationId;
+        const userId = req.user.id;
 
       // Verify trip belongs to user's organization
       const [trip] = await db
@@ -509,20 +399,23 @@ bookingRouter.delete(
         return res.status(404).json({ error: "Trip not found" });
       }
 
-      const [activity] = await db
-        .insert(activities)
-        .values({
-          ...activityData,
-          tripId,
-          organizationId,
-          userId: req.user!.id
-        })
-        .returning();
+        const activityData = req.body;
 
-      res.json(activity);
-    } catch (error) {
-      console.error("Error creating activity:", error);
-      res.status(500).json({ error: "Failed to create activity" });
-    }
-  });
+        const [activity] = await db
+          .insert(activities)
+          .values({
+            ...activityData,
+            tripId,
+            organizationId,
+            userId: req.user!.id
+          })
+          .returning();
+
+        res.json(activity);
+      } catch (error) {
+        console.error("Error creating activity:", error);
+        res.status(500).json({ error: "Failed to create activity" });
+      }
+    })
+  );
 } 

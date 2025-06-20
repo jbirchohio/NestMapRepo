@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
-import viteConfig from "../vite.config";
+import viteConfig from "../vite.config.js";
 import { nanoid } from "nanoid";
 // __dirname is available in the compiled CommonJS output
 const currentDir = __dirname;
@@ -42,7 +42,7 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
   });
 
-  app.use(vite.middlewares);
+  app.use(vite.middlewares as any);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
