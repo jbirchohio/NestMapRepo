@@ -18,28 +18,30 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 
-// Extend Express Request type
-declare namespace Express {
-  export interface Request {
-    apiVersion?: string;
-    apiKeyAuth?: {
-      organizationId: number;
-      permissions: string[];
-      rateLimit: number;
-    };
-    user?: {
-      id: string | number;
-      role: string;
-      organization_id?: number;
-      subscription_tier?: 'free' | 'premium' | 'enterprise';
-    };
-  }
-}
+type SecureRequest = Request & {
+  apiVersion?: string;
+  apiKeyAuth?: {
+    organizationId: number;
+    permissions: string[];
+    rateLimit: number;
+  };
+  user?: {
+    id: string | number;
+    role: string;
+    organization_id?: number;
+    subscription_tier?: 'free' | 'premium' | 'enterprise';
+  };
+  [key: string]: any;
+};
 
 /**
  * API versioning and deprecation middleware
  */
-export function apiVersioning(req: Request, res: Response, next: NextFunction) {
+export function apiVersioning(
+  req: SecureRequest,
+  res: Response,
+  next: NextFunction
+): Response | void {
   const version = req.headers['api-version'] || req.query.v || 'v1';
   const supportedVersions = ['v1', 'v2'];
   const deprecatedVersions = ['v1'];
@@ -59,13 +61,17 @@ export function apiVersioning(req: Request, res: Response, next: NextFunction) {
   }
 
   req.apiVersion = version as string;
-  next();
+  return next();
 }
 
 /**
  * Request/Response encryption middleware for sensitive data
  */
-export function encryptSensitiveData(req: Request, res: Response, next: NextFunction) {
+export function encryptSensitiveData(
+  req: SecureRequest,
+  res: Response,
+  next: NextFunction
+): Response | void {
   // Skip encryption for non-HTTPS in development
   if (process.env.NODE_ENV !== 'production' && !req.secure) {
     return next();
@@ -82,13 +88,13 @@ export function encryptSensitiveData(req: Request, res: Response, next: NextFunc
     return originalJson.call(this, body);
   };
 
-  next();
+  return next();
 }
 
 function encryptSensitiveFields(obj: any, fields: string[]): any {
   if (!obj || typeof obj !== 'object') return obj;
 
-  const result = Array.isArray(obj) ? [] : {};
+  const result: any = Array.isArray(obj) ? [] : {};
   
   for (const key in obj) {
     if (fields.includes(key.toLowerCase()) && typeof obj[key] === 'string') {
@@ -170,7 +176,11 @@ class ApiKeyManager {
 
 const apiKeyManager = new ApiKeyManager();
 
-export function authenticateApiKey(req: Request, res: Response, next: NextFunction) {
+export function authenticateApiKey(
+  req: SecureRequest,
+  res: Response,
+  next: NextFunction
+): Response | void {
   const apiKey = req.headers['x-api-key'] as string;
   
   if (!apiKey) {
@@ -189,14 +199,18 @@ export function authenticateApiKey(req: Request, res: Response, next: NextFuncti
     rateLimit: validation.rateLimit!
   };
 
-  next();
+  return next();
 }
 
 /**
  * Webhook signature verification
  */
 export function verifyWebhookSignature(secret: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (
+    req: SecureRequest,
+    res: Response,
+    next: NextFunction
+  ): Response | void => {
     const signature = req.headers['x-webhook-signature'] as string;
     const timestamp = req.headers['x-webhook-timestamp'] as string;
     
@@ -228,7 +242,7 @@ export function verifyWebhookSignature(secret: string) {
       return res.status(401).json({ error: 'Invalid webhook signature' });
     }
 
-    next();
+    return next();
   };
 }
 
@@ -297,7 +311,11 @@ class AdvancedRateLimit {
 
 const advancedRateLimit = new AdvancedRateLimit();
 
-export function tieredRateLimit(req: Request, res: Response, next: NextFunction) {
+export function tieredRateLimit(
+  req: SecureRequest,
+  res: Response,
+  next: NextFunction
+): Response | void {
   const key = req.ip || 'unknown';
   const tier = req.user?.subscription_tier || 'free';
   
@@ -322,7 +340,7 @@ export function tieredRateLimit(req: Request, res: Response, next: NextFunction)
     return;
   }
   
-  next();
+  return next();
 }
 
 /**
@@ -402,7 +420,11 @@ class EndpointMonitor {
 
 const endpointMonitor = new EndpointMonitor();
 
-export function monitorEndpoints(req: Request, res: Response, next: NextFunction) {
+export function monitorEndpoints(
+  req: SecureRequest,
+  res: Response,
+  next: NextFunction
+): Response | void {
   const start = process.hrtime.bigint();
   const endpoint = `${req.method} ${req.route?.path || req.path}`;
 
@@ -417,7 +439,9 @@ export function monitorEndpoints(req: Request, res: Response, next: NextFunction
     return originalEnd.call(this, chunk, encoding, cb);
   };
 
-  next();
+  return next();
 }
 
 export { apiKeyManager, advancedRateLimit, endpointMonitor };
+
+export {};

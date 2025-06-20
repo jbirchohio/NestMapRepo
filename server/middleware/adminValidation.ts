@@ -1,19 +1,14 @@
 import { z } from "zod";
 import { Request, Response, NextFunction } from "express";
 
-// Define the user type
-interface UserType {
-  id: string | number;
-  role: string;
-  organization_id?: number;
-}
-
-// Use module augmentation to extend Express types
-declare namespace Express {
-  export interface Request {
-    user?: UserType;
-  }
-}
+type CustomRequest = Request & {
+  user?: {
+    id: string | number;
+    role: string;
+    organization_id?: number;
+  };
+  [key: string]: any;
+};
 
 /**
  * Admin Input Validation Middleware
@@ -91,7 +86,7 @@ export const userRoleUpdateSchema = z.object({
  * Validation middleware factory
  */
 export function validateAdminInput(schema: z.ZodSchema) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: CustomRequest, res: Response, next: NextFunction): void | Response => {
     try {
       const validation = schema.safeParse(req.body);
       
@@ -109,11 +104,11 @@ export function validateAdminInput(schema: z.ZodSchema) {
           allowedFields: getSchemaFields(schema)
         });
       }
-      
+
       // Replace req.body with validated data (this removes any extra fields)
       req.body = validation.data;
-      next();
-      
+      return next();
+
     } catch (error) {
       console.error("Admin validation error:", error);
       return res.status(400).json({
@@ -141,7 +136,7 @@ function getSchemaFields(schema: z.ZodSchema): string[] {
 /**
  * Middleware to validate organization access
  */
-export function validateOrganizationAccess(req: Request, res: Response, next: NextFunction) {
+export function validateOrganizationAccess(req: CustomRequest, res: Response, next: NextFunction): Response | void {
   const orgId = parseInt(req.params.id);
   
   if (isNaN(orgId)) {
@@ -171,7 +166,7 @@ export function validateOrganizationAccess(req: Request, res: Response, next: Ne
  * Validate that only allowed operations are performed
  */
 export function validateAdminOperation(allowedOperations: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: CustomRequest, res: Response, next: NextFunction): Response | void => {
     const operation = req.method.toLowerCase();
     
     if (!allowedOperations.includes(operation)) {
@@ -181,8 +176,8 @@ export function validateAdminOperation(allowedOperations: string[]) {
         allowedMethods: allowedOperations.map(op => op.toUpperCase())
       });
     }
-    
-    next();
+
+    return next();
   };
 }
 
@@ -190,17 +185,17 @@ export function validateAdminOperation(allowedOperations: string[]) {
  * Audit logging for admin operations
  */
 export function auditAdminOperation(operationType: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: CustomRequest, res: Response, next: NextFunction): Response | void => {
     const originalSend = res.send;
     
     res.send = function(data) {
       // Log successful admin operations
       if (res.statusCode < 400) {
-        console.log('ADMIN_AUDIT:', {
-          operation: operationType,
-          userId: req.user?.id,
-          userRole: req.user?.role,
-          organizationId: req.user?.organization_id,
+          console.log('ADMIN_AUDIT:', {
+            operation: operationType,
+            userId: req.user?.id,
+            userRole: req.user?.role,
+            organizationId: req.user?.organization_id,
           targetResource: req.params.id || 'N/A',
           method: req.method,
           ip: req.ip,
@@ -212,7 +207,7 @@ export function auditAdminOperation(operationType: string) {
       
       return originalSend.call(this, data);
     };
-    
-    next();
+
+    return next();
   };
 }

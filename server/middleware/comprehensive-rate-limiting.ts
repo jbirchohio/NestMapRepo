@@ -12,7 +12,7 @@
  * DO NOT create duplicate rate limiting implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 
 interface CustomRequest extends Request {
   user?: {
@@ -316,7 +316,7 @@ const comprehensiveRateLimit = new ComprehensiveRateLimit();
 /**
  * General API rate limiting middleware
  */
-export function apiRateLimit(req: CustomRequest, res: Response, next: NextFunction) {
+export const apiRateLimit: express.RequestHandler = (req: CustomRequest, res: Response, next: NextFunction) => {
   const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
   const userId = req.user?.id || 'anonymous';
   const key = `global:${ip}:${userId}`;
@@ -343,7 +343,7 @@ export function apiRateLimit(req: CustomRequest, res: Response, next: NextFuncti
 /**
  * Authentication-specific rate limiting
  */
-export function authRateLimit(req: CustomRequest, res: Response, next: NextFunction) {
+export const authRateLimit: express.RequestHandler = (req: CustomRequest, res: Response, next: NextFunction) => {
   const ip = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown';
   const key = `auth:${ip}`;
   
@@ -364,20 +364,21 @@ export function authRateLimit(req: CustomRequest, res: Response, next: NextFunct
       timestamp: new Date().toISOString()
     });
     
-    return res.status(429).json({
+    res.status(429).json({
       error: 'Authentication rate limit exceeded',
       message: 'Too many login attempts. Please try again later.',
       retryAfter: result.retryAfter
     });
+    return;
   }
-  
+
   return next();
-}
+};
 
 /**
  * Organization-tier based rate limiting
  */
-export function organizationRateLimit(req: CustomRequest, res: Response, next: NextFunction) {
+export const organizationRateLimit: express.RequestHandler = (req: CustomRequest, res: Response, next: NextFunction) => {
   if (!req.user?.organization_id) {
     // No organization context, apply free tier limits
     return tieredRateLimit('free')(req, res, next);
@@ -386,12 +387,12 @@ export function organizationRateLimit(req: CustomRequest, res: Response, next: N
   // Determine organization tier (would typically come from database)
   const orgTier = req.user?.organization_tier || 'free';
   return tieredRateLimit(orgTier)(req, res, next);
-}
+};
 
 /**
  * Tiered rate limiting factory
  */
-export function tieredRateLimit(tier: string) {
+export function tieredRateLimit(tier: string): express.RequestHandler {
   return (req: CustomRequest, res: Response, next: NextFunction) => {
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     const orgId = req.user?.organization_id || 'none';
@@ -407,14 +408,15 @@ export function tieredRateLimit(tier: string) {
     
     if (!result.allowed) {
       res.setHeader('Retry-After', result.retryAfter?.toString() || '3600');
-      return res.status(429).json({
+      res.status(429).json({
         error: 'Organization rate limit exceeded',
         message: `${tier} tier limit reached. Please upgrade for higher limits.`,
         tier,
         retryAfter: result.retryAfter
       });
+      return;
     }
-    
+
     return next();
   };
 }
@@ -422,7 +424,7 @@ export function tieredRateLimit(tier: string) {
 /**
  * Endpoint-specific rate limiting
  */
-export function endpointRateLimit(endpointType: string) {
+export function endpointRateLimit(endpointType: string): express.RequestHandler {
   return (req: CustomRequest, res: Response, next: NextFunction) => {
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     const userId = req.user?.id || 'anonymous';
@@ -438,14 +440,15 @@ export function endpointRateLimit(endpointType: string) {
     
     if (!result.allowed) {
       res.setHeader('Retry-After', result.retryAfter?.toString() || '3600');
-      return res.status(429).json({
+      res.status(429).json({
         error: `${endpointType} rate limit exceeded`,
         message: 'This endpoint has specific rate limits. Please try again later.',
         endpoint: endpointType,
         retryAfter: result.retryAfter
       });
+      return;
     }
-    
+
     return next();
   };
 }

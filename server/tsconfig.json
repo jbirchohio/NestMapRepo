@@ -32,7 +32,7 @@
     "paths": {
       "@server/*": ["src/*"],
 
-      "@shared/*": ["../dist/shared/src/*.js"]
+      "@shared/*": ["../shared/src/*"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,

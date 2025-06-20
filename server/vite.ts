@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
-import viteConfig from "../vite.config.js";
 import { nanoid } from "nanoid";
 // __dirname is available in the compiled CommonJS output
 const currentDir = __dirname;
@@ -22,6 +21,7 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  const { default: viteConfig } = await import('../vite.config.js');
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
