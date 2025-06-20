@@ -5,9 +5,10 @@ import { AuthUser } from '../src/types/auth-user.js';
  * Gets the organization ID from the request user object
  */
 export function getOrganizationId(req: Request): string | undefined {
-  if (!req.user) return undefined;
-  
-  return (req.user as AuthUser).organization_id;
+  const user = (req as any).user as AuthUser | undefined;
+  if (!user) return undefined;
+
+  return user.organization_id;
 }
 
 /**

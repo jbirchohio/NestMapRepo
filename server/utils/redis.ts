@@ -1,4 +1,4 @@
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 
 // Create Redis client
 export const redisClient = new Redis({
@@ -8,7 +8,7 @@ export const redisClient = new Redis({
 });
 
 // Add error handling
-redisClient.on('error', (error) => {
+redisClient.on('error', (error: unknown) => {
   console.error('Redis error:', error);
 });
 
