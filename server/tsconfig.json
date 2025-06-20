@@ -31,6 +31,7 @@
     "baseUrl": ".",
     "paths": {
       "@server/*": ["src/*"],
+
       "@shared/*": ["../dist/shared/src/*.js"]
     },
     "resolveJsonModule": true,
