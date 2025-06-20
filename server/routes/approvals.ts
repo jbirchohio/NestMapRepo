@@ -143,6 +143,7 @@ router.patch('/:requestId/decision', asyncHandler(async (req, res) => {
 
 // Create approval request
 router.post('/', asyncHandler(async (req, res) => {
+  try {
     if (!req.user?.organization_id) {
       return res.status(401).json({ error: "Organization membership required" });
     }
@@ -219,6 +220,7 @@ router.get('/rules', asyncHandler(async (req, res) => {
 
 // Create or update approval rule
 router.post('/rules', asyncHandler(async (req, res) => {
+  try {
     if (!req.user?.organization_id) {
       return res.status(401).json({ error: "Organization membership required" });
     }

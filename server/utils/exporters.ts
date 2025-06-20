@@ -30,7 +30,7 @@ export function exportTripToICS(trip: any): string {
   }));
   const { error, value } = createEvents(events);
   if (error) throw error;
-  return value;
+  return value || "";
 }
 
 function parseDateTime(date: string, time?: string): number[] {

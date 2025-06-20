@@ -3,6 +3,20 @@ import { promisify } from 'util';
 import crypto from 'crypto';
 import https from 'https';
 
+/**
+ * Helper to wrap fetch with a timeout using AbortController.
+ */
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 const resolveTxt = promisify(dns.resolveTxt);
 
 export interface DomainVerificationResult {
@@ -159,10 +173,11 @@ export async function verifyACMEChallenge(
   try {
     const challengeUrl = `http://${domain}/.well-known/acme-challenge/${token}`;
     
-    const response = await fetch(challengeUrl, {
-      method: 'GET',
-      timeout: 10000
-    });
+    const response = await fetchWithTimeout(
+      challengeUrl,
+      { method: 'GET' },
+      10000
+    );
     
     if (!response.ok) {
       return false;
@@ -219,11 +234,14 @@ export async function checkDomainReachability(domain: string): Promise<{
   const startTime = Date.now();
   
   try {
-    const response = await fetch(`https://${domain}`, {
-      method: 'HEAD',
-      timeout: 15000,
-      redirect: 'manual'
-    });
+    const response = await fetchWithTimeout(
+      `https://${domain}`,
+      {
+        method: 'HEAD',
+        redirect: 'manual'
+      },
+      15000
+    );
     
     const responseTime = Date.now() - startTime;
     
