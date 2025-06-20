@@ -1,9 +1,7 @@
-import express, { Request, Response, NextFunction, RequestHandler, Router } from 'express';
-import type { ParamsDictionary } from 'express-serve-static-core';
+import express, { Response, NextFunction, RequestHandler, Router } from 'express';
+import type { ParamsDictionary, Request } from 'express-serve-static-core';
 import type { ParsedQs } from 'qs';
 
-// Alias for Express Request type to avoid conflicts
-type ExpressRequest = Request;
 
 import { db } from '../db/db.js';
 import { organizations } from '../db/schema.js';
@@ -12,17 +10,10 @@ import secureAuth from '../middleware/secureAuth.js';
 import { requireOrganizationContext } from '../middleware/organization.js';
 import { eq, and } from 'drizzle-orm';
 import type { User } from '../types/user.js';
+import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 import { stripe } from '../stripe.js';
 
-// Type for authenticated user
-interface AuthUser {
-  id: string;
-  email: string;
-  role: string;
-  organizationId?: string | null;
-}
-
-type AsyncRequestHandler<T = express.Request> = (req: T, res: Response, next: NextFunction) => Promise<void>;
+type AsyncRequestHandler<T = Request> = (req: T, res: Response, next: NextFunction) => Promise<void>;
 
 // Define invoice schema types
 interface Invoice {
@@ -40,19 +31,11 @@ interface InvoiceItem {
   amount: number;
 }
 
-// Custom authenticated request type
-export interface AuthenticatedRequest extends Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>> {
-  user?: AuthUser;
-  token?: string;
-  organizationId?: string;
-  organization?: any;
-}
-
 const router = express.Router();
 
 // Type guard to check if request is authenticated
-function isAuthenticatedRequest(req: ExpressRequest): req is AuthenticatedRequest {
-  const authReq = req as unknown as AuthenticatedRequest;
+function isAuthenticatedRequest(req: Request): req is AuthenticatedRequest {
+  const authReq = req as AuthenticatedRequest;
   return !!(authReq.user || authReq.token || authReq.organizationId);
 }
 
@@ -73,12 +56,12 @@ const asyncHandler = <T extends Request>(
 };
 
 // Apply JWT authentication middleware
-router.use((req: ExpressRequest, res: Response, next: NextFunction) => {
+router.use((req: Request, res: Response, next: NextFunction) => {
   return secureAuth.authenticate(req, res, next);
 });
 
 // Apply organization context middleware
-router.use((req: ExpressRequest, res: Response, next: NextFunction) => {
+router.use((req: Request, res: Response, next: NextFunction) => {
   return requireOrganizationContext(req, res, next);
 });
 
@@ -97,7 +80,9 @@ async function getOrganization(organizationId: string) {
 }
 
 // Get invoice by ID
-router.get('/:id', async (req: ExpressRequest, res: Response, next: NextFunction) => {
+router.get<{ id: string }>(
+  '/:id',
+  async (req: AuthenticatedRequest<{ id: string }>, res: Response, next: NextFunction) => {
   try {
     const authReq = req as AuthenticatedRequest;
     if (!authReq.organizationId) {
@@ -130,7 +115,7 @@ router.get('/:id', async (req: ExpressRequest, res: Response, next: NextFunction
 });
 
 // Pay invoice (Stripe Checkout Session)
-router.post('/:id/pay', async (req: ExpressRequest, res: Response, next: NextFunction) => {
+router.post<{ id: string }>('/:id/pay', async (req: AuthenticatedRequest<{ id: string }>, res: Response, next: NextFunction) => {
   try {
     const authReq = req as AuthenticatedRequest;
     

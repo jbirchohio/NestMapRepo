@@ -1,22 +1,11 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { db } from "../db";
 import { organizations, users, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 
-// Use the existing authentication interface
-interface AuthenticatedRequest extends Request {
-  isAuthenticated?(): boolean;
-  user?: {
-    id: number;
-    email: string;
-    username: string;
-    role: string;
-    organization_id?: number;
-    organizationId?: number;
-  };
-}
 
 export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   // Apply middleware to all white label routes
@@ -30,7 +19,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   app.use('/api/organization/plan', validateOrganizationAccess);
   
   // Auto-enable white label on plan upgrade
-  app.post("/api/white-label/auto-enable", async (req: any, res: Response) => {
+  app.post("/api/white-label/auto-enable", async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -87,7 +76,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Simplified permissions check
-  app.get("/api/white-label/permissions", async (req: any, res: Response) => {
+  app.get("/api/white-label/permissions", async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -133,7 +122,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Get organization plan info
-  app.get("/api/organization/plan", async (req: any, res: Response) => {
+  app.get("/api/organization/plan", async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -169,7 +158,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Instant branding configuration for Professional+ plans
-  app.post("/api/white-label/configure", async (req: any, res: Response) => {
+  app.post("/api/white-label/configure", async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -290,7 +279,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Check if user needs onboarding
-  app.get("/api/white-label/onboarding-status", async (req: any, res: Response) => {
+  app.get("/api/white-label/onboarding-status", async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -334,7 +323,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
   });
 
   // Get current branding configuration
-  app.get("/api/white-label/config", async (req: any, res: Response) => {
+  app.get("/api/white-label/config", async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }

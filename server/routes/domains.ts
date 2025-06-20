@@ -6,15 +6,17 @@ import crypto from "crypto";
 import { promises as dns } from 'dns';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: number;
-    email: string;
-    username: string;
-    organization_id?: number;
-    role: string;
-  };
+interface Domain {
+  id: number;
+  domain: string | null;
+  subdomain: string | null;
+  status: string;
+  dns_verified: boolean;
+  ssl_verified: boolean;
+  created_at: Date;
+  verified_at: Date | null;
 }
 
 export function registerDomainRoutes(app: Express) {
@@ -24,10 +26,12 @@ export function registerDomainRoutes(app: Express) {
   app.use('/api/domains', validateOrganizationAccess);
   
   // Get organization's custom domains
-  app.get("/api/domains", async (req: AuthenticatedRequest, res: Response) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "Authentication required" });
-    }
+  app.get<{}, { domains: Domain[] }>(
+    "/api/domains",
+    async (req: AuthenticatedRequest, res: Response<{ domains: Domain[] }>) => {
+      if (!req.user) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
 
     const organizationId = req.user.organization_id;
     if (!organizationId) {
@@ -57,7 +61,9 @@ export function registerDomainRoutes(app: Express) {
   });
 
   // Add custom domain
-  app.post("/api/domains", async (req: AuthenticatedRequest, res: Response) => {
+  app.post<{}, { success: boolean; domain: Domain }>(
+    "/api/domains",
+    async (req: AuthenticatedRequest, res: Response<{ success: boolean; domain: Domain }>) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -132,7 +138,9 @@ export function registerDomainRoutes(app: Express) {
   });
 
   // Verify domain DNS
-  app.post("/api/domains/:domainId/verify", async (req: AuthenticatedRequest, res: Response) => {
+  app.post<{ domainId: string }, { success: boolean; message: string }>(
+    "/api/domains/:domainId/verify",
+    async (req: AuthenticatedRequest, res: Response<{ success: boolean; message: string }>) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -196,7 +204,9 @@ export function registerDomainRoutes(app: Express) {
   });
 
   // Delete custom domain
-  app.delete("/api/domains/:domainId", async (req: AuthenticatedRequest, res: Response) => {
+  app.delete<{ domainId: string }, { success: boolean; message: string }>(
+    "/api/domains/:domainId",
+    async (req: AuthenticatedRequest, res: Response<{ success: boolean; message: string }>) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }
@@ -228,7 +238,9 @@ export function registerDomainRoutes(app: Express) {
   });
 
   // Get domain branding configuration for public access
-  app.get("/api/domains/:domain/branding", async (req: Request, res: Response) => {
+  app.get<{ domain: string }>(
+    "/api/domains/:domain/branding",
+    async (req: Request<{ domain: string }>, res: Response) => {
     const { domain } = req.params;
 
     try {
@@ -279,7 +291,9 @@ export function registerDomainRoutes(app: Express) {
   });
 
   // Domain configuration dashboard
-  app.get("/api/domains/dashboard", async (req: AuthenticatedRequest, res: Response) => {
+  app.get<{}, any>(
+    "/api/domains/dashboard",
+    async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
     }

@@ -1,23 +1,12 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Response } from "express";
 import { db } from "../db";
 import { organizations, whiteLabelSettings, customDomains } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { enforceWhiteLabelAccess } from '../middleware/subscription-limits';
+import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 
-// Use the existing authentication interface
-interface AuthenticatedRequest extends Request {
-  isAuthenticated?(): boolean;
-  user?: {
-    id: number;
-    email: string;
-    username: string;
-    role: string;
-    organization_id?: number;
-    organizationId?: number;
-  };
-}
 
 export function registerWhiteLabelStatusRoutes(app: Express) {
   // Apply middleware to all white label status routes

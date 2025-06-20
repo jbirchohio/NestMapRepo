@@ -3,7 +3,8 @@
  * Consolidated approach using users.organization_id directly
  */
 
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
+import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 import { db } from '../db';
 import { users, organizationMembers } from '@shared/schema';
 import { eq, sql, and } from 'drizzle-orm';
@@ -21,7 +22,7 @@ router.use(validateJWT);
 /**
  * Get organization members with their roles
  */
-router.get('/members', async (req: Request, res: Response) => {
+router.get('/members', async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Use authenticated user's organization ID
     const organizationId = req.user?.organization_id;
@@ -77,7 +78,7 @@ const inviteMemberSchema = z.object({
   customPermissions: z.object({}).optional(),
 });
 
-router.post('/members/invite', requireOrgPermission('inviteMembers'), async (req: Request, res: Response) => {
+router.post('/members/invite', requireOrgPermission('inviteMembers'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: 'Organization ID required' });
@@ -173,7 +174,7 @@ const updateMemberSchema = z.object({
   status: z.enum(['active', 'suspended', 'inactive']).optional(),
 });
 
-router.patch('/members/:memberId', requireOrgPermission('assignRoles'), async (req: Request, res: Response) => {
+router.patch('/members/:memberId', requireOrgPermission('assignRoles'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: 'Organization ID required' });
@@ -261,7 +262,7 @@ router.patch('/members/:memberId', requireOrgPermission('assignRoles'), async (r
 /**
  * Remove a member from the organization
  */
-router.delete('/members/:memberId', requireOrgPermission('manageMembers'), async (req: Request, res: Response) => {
+router.delete('/members/:memberId', requireOrgPermission('manageMembers'), async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user?.organization_id) {
       return res.status(400).json({ error: 'Organization ID required' });
@@ -311,7 +312,7 @@ router.delete('/members/:memberId', requireOrgPermission('manageMembers'), async
 /**
  * Get available roles and their descriptions
  */
-router.get('/roles', async (req: Request, res: Response) => {
+router.get('/roles', async (req: AuthenticatedRequest, res: Response) => {
   const roles = [
     { value: 'admin', label: 'Administrator', description: getRoleDescription('admin') },
     { value: 'manager', label: 'Manager', description: getRoleDescription('manager') },
