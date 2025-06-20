@@ -1,5 +1,5 @@
-import { db } from "./db";
-import { trips, users, activities } from "./db/schema";
+import { db } from "./db.js";
+import { trips, users, activities } from "./db/schema.js";
 import { eq, and, count, sql } from "drizzle-orm";
 
 export interface SimpleAnalyticsData {
@@ -99,7 +99,11 @@ export async function getSimpleAnalytics(organizationId?: string): Promise<Simpl
     const totalActivities = activityCountResult.count;
 
     // Calculate percentages for destinations
-    const destinations = destinationsData.map(dest => ({
+    const destinations = destinationsData.map((dest: {
+      city: string | null;
+      country: string | null;
+      count: number;
+    }) => ({
       city: dest.city || 'Unknown',
       country: dest.country || 'Unknown',
       tripCount: dest.count,

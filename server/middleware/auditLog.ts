@@ -1,12 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db';
-import { auditLogs } from '../db/auditLog';
+import { db } from '../db.js';
+import { auditLogs } from '../db/auditLog.js';
+import { AuthUser } from '../src/types/auth-user.js';
+
+type AuditRequest = Request & {
+  user?: AuthUser;
+};
 
 /**
  * Express middleware to log user actions for audit trail.
  * Logs action, resource, user, organization, and metadata to audit_logs table.
  */
-export async function auditLogMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function auditLogMiddleware(
+  req: AuditRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
   // Only log if user is authenticated and org is known
   if (!req.user || !req.user.id || !req.user.organizationId) {
     return next();
@@ -36,5 +45,5 @@ export async function auditLogMiddleware(req: Request, res: Response, next: Next
     }
   });
 
-  next();
+  return next();
 }

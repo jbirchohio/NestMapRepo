@@ -1,5 +1,5 @@
-import { db } from "./db-connection";
-import { trips, activities, users } from "../shared/schema";
+import { db } from "./db-connection.js";
+import { trips, activities, users } from "./db/schema.js";
 import { sql, count, avg, desc, eq, and, gte, countDistinct } from "drizzle-orm";
 
 // Type Definitions
@@ -151,7 +151,11 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     const activitiesAddedLast7Days = getCount(activitiesAddedLast7DaysResult);
 
     // Process destinations with percentages
-    const processedDestinations = popularDestinations.map(dest => ({
+    const processedDestinations = popularDestinations.map((dest: {
+      city: string | null;
+      country: string | null;
+      tripCount: number;
+    }) => ({
       city: dest.city || 'Unknown',
       country: dest.country || 'Unknown',
       tripCount: Number(dest.tripCount) || 0,
@@ -224,13 +228,13 @@ export async function getAnalytics(): Promise<AnalyticsData> {
 }
 
 // Export function for CSV generation
-export async function exportAnalyticsCSV(data: AnalyticsData): Promise<string> {
+export async function exportAnalyticsCSV(_data: AnalyticsData): Promise<string> {
   // Implementation for CSV export
   return '';
 }
 
 // Organization analytics function
-export async function getOrganizationAnalytics(organizationId: string): Promise<any> {
+export async function getOrganizationAnalytics(_organizationId: string): Promise<any> {
   // Implementation for organization analytics
   return {};
 }
