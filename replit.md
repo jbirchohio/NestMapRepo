@@ -122,6 +122,10 @@ NestMap is a comprehensive, enterprise-grade travel management platform built fo
 ## Changelog
 
 - June 20, 2025. Initial setup
+- June 20, 2025. Resolved TypeScript compilation errors in backend monorepo system
+- June 20, 2025. Implemented SecureAuth as the single source of truth for JWT authentication
+- June 20, 2025. Created authentication interfaces and repositories aligned with SecureAuth middleware
+- June 20, 2025. Fixed server configuration to use SecureAuth for all JWT token validation and user authentication
 
 ## User Preferences
 
