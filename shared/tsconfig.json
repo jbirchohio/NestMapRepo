@@ -5,6 +5,7 @@
     "rootDir": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "DOM", "ES2022.Object", "ES2022.String", "ES2015.Promise", "ES2015.Iterable"],
     "composite": true,
     "declaration": true,
     "declarationMap": true,

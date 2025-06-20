@@ -3,54 +3,62 @@ import { db } from '../../../db/db.js';
 import { users } from '../../../db/schema.js';
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
 import { logger } from '../../../utils/logger.js';
+import { randomUUID } from 'crypto';
 
-export interface RefreshToken {
-  id: string;
-  userId: string;
-  token: string;
-  expiresAt: Date;
-  createdAt: Date;
-  isRevoked: boolean;
-}
+import type { RefreshToken } from '../interfaces/refresh-token.repository.interface.js';
 
 export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
   private readonly logger = logger;
+  private tokens: Map<string, RefreshToken> = new Map();
 
-  async create(userId: string, token: string, expiresAt: Date): Promise<RefreshToken> {
-    // For now, store refresh tokens in memory or use a simple approach
-    // In production, you'd have a dedicated refresh_tokens table
+  async create(tokenData: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken> {
     const refreshToken: RefreshToken = {
-      id: crypto.randomUUID(),
-      userId,
-      token,
-      expiresAt,
+      id: globalThis.crypto.randomUUID(),
       createdAt: new Date(),
-      isRevoked: false
+      ...tokenData
     };
 
-    // Store in a simple in-memory cache for now
+    this.tokens.set(refreshToken.token, refreshToken);
     return refreshToken;
   }
 
-  async findByToken(token: string): Promise<RefreshToken | null> {
-    // In production, query the refresh_tokens table
-    // For now, return null as we don't have persistent storage
-    return null;
+  async findByToken(token: string): Promise<RefreshToken | undefined> {
+    const refreshToken = this.tokens.get(token);
+    return refreshToken || undefined;
   }
 
   async revokeByUserId(userId: string): Promise<void> {
-    // In production, mark all refresh tokens for user as revoked
-    this.logger.info(`Revoking refresh tokens for user: ${userId}`);
+    const now = new Date();
+    for (const [tokenKey, refreshToken] of this.tokens.entries()) {
+      if (refreshToken.userId === userId && !refreshToken.revoked) {
+        refreshToken.revoked = true;
+        refreshToken.revokedAt = now;
+      }
+    }
+    this.logger.info(`Revoked refresh tokens for user: ${userId}`);
   }
 
   async revokeByToken(token: string): Promise<void> {
-    // In production, mark specific refresh token as revoked
-    this.logger.info(`Revoking refresh token: ${token}`);
+    const refreshToken = this.tokens.get(token);
+    if (refreshToken && !refreshToken.revoked) {
+      refreshToken.revoked = true;
+      refreshToken.revokedAt = new Date();
+      this.logger.info(`Revoked refresh token: ${token}`);
+    }
   }
 
   async deleteExpired(): Promise<number> {
-    // In production, delete expired refresh tokens
-    // Return number of deleted tokens
-    return 0;
+    const now = new Date();
+    let deletedCount = 0;
+    
+    for (const [tokenKey, refreshToken] of this.tokens.entries()) {
+      if (refreshToken.expiresAt < now) {
+        this.tokens.delete(tokenKey);
+        deletedCount++;
+      }
+    }
+    
+    this.logger.info(`Deleted ${deletedCount} expired refresh tokens`);
+    return deletedCount;
   }
 }

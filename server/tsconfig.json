@@ -21,7 +21,7 @@
     "rootDir": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2022", "DOM", "ES2022.Object", "ES2022.String"],
+    "lib": ["ES2022", "DOM", "ES2022.Object", "ES2022.String", "ES2015.Promise", "ES2015.Iterable"],
     "types": ["node", "express", "express-serve-static-core", "jest"],
     "typeRoots": [
       "./node_modules/@types",
