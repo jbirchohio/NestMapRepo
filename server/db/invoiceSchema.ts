@@ -3,7 +3,7 @@ import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { organizations, users } from './schema.js';
-import type { InvoiceItem } from '../../shared/types/invoice.js';
+import type { InvoiceItem } from '@shared/types/invoice';
 
 // Proposals table definition
 const proposals = pgTable('proposals', {

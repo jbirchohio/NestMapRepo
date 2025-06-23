@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { db } from '../db.ts';
-import { organizations } from '../shared/src/schema.ts';
+import { organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');

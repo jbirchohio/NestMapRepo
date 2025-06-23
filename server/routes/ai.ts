@@ -3,7 +3,7 @@ import type { ParamsDictionary, Query as ParsedQs } from 'express-serve-static-c
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';
-import type { User } from '../../shared/types/auth.js';
+import type { User } from '@shared/types/auth';
 import OpenAI from 'openai';
 import { db } from '../db/db.js';
 import { trips, activities } from '../db/schema.js';

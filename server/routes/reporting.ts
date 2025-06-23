@@ -3,7 +3,7 @@ import { eq, and, desc, gte, lte, sql, count } from 'drizzle-orm';
 import { db } from '../db.ts';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
-import { trips, expenses, bookings, users, organizations, approvalRequests, activities } from '../shared/src/schema.ts';
+import { trips, expenses, bookings, users, organizations, approvalRequests, activities } from '@shared/schema';
 const router = Router();
 // Apply middleware to all routes
 router.use(validateJWT);

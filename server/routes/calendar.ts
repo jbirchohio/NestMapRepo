@@ -1,7 +1,7 @@
 import type { Router } from '../../express-augmentations.ts';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../db.ts';
-import { calendarIntegrations, trips, activities } from '../shared/src/schema.ts';
+import { calendarIntegrations, trips, activities } from '@shared/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
 import { z } from 'zod';

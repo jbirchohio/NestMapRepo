@@ -1,5 +1,5 @@
 import type { Response } from '../../express-augmentations.ts';
-import type { ApiResponse, PaginatedApiResponse } from '../../shared/types/api.js';
+import type { ApiResponse, PaginatedApiResponse } from '@shared/types/api';
 /**
  * Response utility for sending standardized API responses
  */

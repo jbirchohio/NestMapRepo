@@ -3,8 +3,8 @@ import { injectable, inject } from 'inversify';
 import { TYPES } from '../../types.js';
 import { Logger } from '@nestjs/common';
 import { createApiError, ErrorType } from '../types';
-import { PermissionManager, checkPermission } from '../../../shared/utils/permissions';
-import { UserRole, ResourceType, PermissionAction, PermissionLevel } from '../../../shared/types/auth/permissions';
+import { PermissionManager, checkPermission } from '@shared/utils/permissions';
+import { UserRole, ResourceType, PermissionAction, PermissionLevel } from '@shared/types/auth/permissions';
 
 declare global {
   namespace Express {

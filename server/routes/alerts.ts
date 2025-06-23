@@ -3,7 +3,7 @@ import { authenticate as validateJWT, requireRole } from '../middleware/secureAu
 const requireSuperadminRole = requireRole('superadmin');
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
 import { db } from "../db.ts";
-import { adminAuditLog } from "../shared/src/schema.ts";
+import { adminAuditLog } from "@shared/schema";
 import { desc, eq, and, gte } from "drizzle-orm";
 interface SystemAlert {
     id: string;

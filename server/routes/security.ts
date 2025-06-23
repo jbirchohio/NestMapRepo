@@ -1,6 +1,6 @@
 import type { Router, Request, Response } from '../../express-augmentations.ts';
 import { db } from '../db-connection.ts';
-import { users, adminAuditLog, organizations, userSessions } from '../../shared/schema.ts';
+import { users, adminAuditLog, organizations, userSessions } from '@shared/schema';
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { getActiveUserCount } from '../middleware/sessionTracking.ts';

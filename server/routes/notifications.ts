@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db.ts';
-import { notifications } from '../shared/src/schema.ts';
+import { notifications } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';

@@ -17,10 +17,10 @@ import {
   LoginDto, 
   RequestPasswordResetDto, 
   ResetPasswordDto 
-} from '../../../../shared/types/auth';
+} from '@shared/types/auth';
 import { logger } from '../../../../utils/logger.js';
 import { TYPES } from '../../../types.js';
-import { UserRole } from '../../../../shared/types/auth/permissions';
+import { UserRole } from '@shared/types/auth/permissions';
 
 @injectable()
 export class AuthService implements IAuthService {

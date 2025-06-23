@@ -1,6 +1,6 @@
 import type { Router } from '../../express-augmentations.ts';
 // Core routes
-import authRoutes from './auth.js';
+import { authRouter as authRoutes } from '../src/auth/auth.routes.js';
 import proposalsRoutes from './proposals.js';
 import tripRoutes from './trips.js';
 import activityRoutes from './activities.js';
