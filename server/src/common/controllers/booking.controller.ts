@@ -8,7 +8,7 @@ import { requireAuth, requireOrgContext, enforceOrganizationSecurity } from '../
 import { validateBookingRequest } from '../middleware/validation.middleware';
 import type { BookingConfirmationDetails } from '../interfaces/booking.interfaces.ts';
 import type { ErrorService } from '../services/error.service.ts';
-import { trips, activities, calendarIntegrations } from '../shared/src/schema.ts';
+import { trips, activities, calendarIntegrations } from '@shared/schema';
 /**
  * Controller for booking endpoints
  * Demonstrates how to use services and repositories through dependency injection

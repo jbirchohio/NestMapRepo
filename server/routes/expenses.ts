@@ -2,7 +2,7 @@ import type { Router } from '../../express-augmentations.ts';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { desc } from 'drizzle-orm';
 import { db } from '../db.ts';
-import { expenses, trips, users } from '../shared/src/schema.ts';
+import { expenses, trips, users } from '@shared/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
 import { z } from 'zod';

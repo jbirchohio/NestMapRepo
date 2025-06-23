@@ -9,8 +9,8 @@ import {
   TokenType,
   AuthError,
   AuthErrorCode
-} from '../../../shared/types/auth';
-import { UserRole } from '../../../shared/types/auth/permissions';
+} from '@shared/types/auth';
+import { UserRole } from '@shared/types/auth/permissions';
 import logger from '../../utils/logger';
 
 interface TokenConfig {

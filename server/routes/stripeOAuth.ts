@@ -1,7 +1,7 @@
 import type { Router } from '../../express-augmentations.ts';
 import Stripe from 'stripe';
 import { db } from '../db.ts';
-import { organizations } from '../shared/src/schema.ts';
+import { organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 const router = Router();
 if (!process.env.STRIPE_SECRET_KEY) {

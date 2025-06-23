@@ -3,7 +3,7 @@ import { randomBytes, createHash } from 'crypto';
 import { SALT_ROUNDS } from '../config/constants.js';
 import { logger } from './logger.js';
 import { users } from '../db/schema.js';
-import type { User } from '../../shared/src/schema.js';
+import type { User } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import type { InferSelectModel } from 'drizzle-orm';
 import { dbService } from '../services/database.service.js';

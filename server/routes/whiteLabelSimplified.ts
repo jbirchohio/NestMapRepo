@@ -1,6 +1,6 @@
 import type { Express, Response } from '../../express-augmentations.ts';
 import { db } from "../db.ts";
-import { organizations, users, whiteLabelSettings } from "../../shared/schema.ts";
+import { organizations, users, whiteLabelSettings } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';

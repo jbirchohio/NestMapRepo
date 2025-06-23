@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { insertOrganizationSchema } from '../shared/src/schema.ts';
+import { insertOrganizationSchema } from '@shared/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.ts';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
@@ -8,7 +8,7 @@ import { validateAndSanitizeRequest } from '../middleware/inputValidation.ts';
 import { storage } from '../storage.ts';
 import { getOrganizationAnalytics } from '../analytics.ts';
 import { db } from '../db.ts';
-import { users } from '../shared/src/schema.ts';
+import { users } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 const router = Router();
 // Apply authentication to all organization routes

@@ -5,7 +5,7 @@
 import { Router, Response } from '../../express-augmentations.ts';
 import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 import { db } from '../db.ts';
-import { users, organizationMembers } from '../shared/src/schema.ts';
+import { users, organizationMembers } from '@shared/schema';
 import { eq, sql, and } from 'drizzle-orm';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.ts';
 import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles.ts';

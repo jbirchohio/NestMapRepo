@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from '../../express-augmentations.ts';
 import { db } from "../db.ts";
-import { customDomains, organizations, whiteLabelSettings } from "../shared/schema.ts";
+import { customDomains, organizations, whiteLabelSettings } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import { promises as dns } from 'dns';
