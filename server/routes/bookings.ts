@@ -1,421 +1,350 @@
-import { Express, Router, Request, Response, NextFunction, RequestHandler, RequestHandlerParams } from "express";
+import type { Express, Request, Response, NextFunction, RequestHandler } from 'express';
+import { Router } from 'express';
 import { db } from "../db.js";
-import { trips, bookings, activities } from "../db/schema.js";
-import { eq, and, desc } from "drizzle-orm";
+import { trips } from "../db/schema.js";
+import { bookings, type Booking, bookingStatusEnum, bookingTypeEnum } from "../db/bookingSchema.js";
+import { eq, and, desc, sql, type SQL } from "drizzle-orm";
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { duffelProvider } from "../duffelProvider.js";
-import { AuthUser } from '../src/types/auth-user';
 import { asyncHandler } from '../utils/routeHelpers.js';
 
-// Extend Express types to include our custom properties
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthUser & { organizationId: string; role?: string };
-      organizationId: string;
-      organizationFilter: (orgId: string | null) => boolean;
+// Simple type for database operations
+type DBQuery = {
+  findFirst: (options: { where: any }) => Promise<any>;
+  findMany: (options: { where: any, orderBy?: any }) => Promise<any[]>;
+  update?: (options: { where: any; data: any }) => Promise<any[]>;
+  insert?: (options: { values: any }) => Promise<any[]>;
+};
+
+type DBTables = {
+  trips: DBQuery;
+  bookings: DBQuery & {
+    update: (options: { where: any; data: any }) => Promise<any[]>;
+    insert: (options: { values: any }) => Promise<any[]>;
+  };
+};
+
+type ExtendedDB = {
+  query: DBTables;
+};
+
+// Cast the db object to our extended type
+const dbWithTypes = db as unknown as ExtendedDB;
+
+// Delete a booking (soft delete)
+const deleteBookingHandler = async (req: AuthenticatedRequest<{ bookingId: string }>, res: Response) => {
+    const { bookingId } = req.params;
+    const organizationId = req.user.organizationId;
+    
+    try {
+        // First get the booking
+        const existingBooking = await dbWithTypes.query.bookings.findFirst({
+            where: { id: bookingId }
+        });
+
+        if (!existingBooking) {
+            res.status(404).json({ error: "Booking not found" });
+            return;
+        }
+
+        // Verify the booking's trip belongs to the organization
+        const trip = await dbWithTypes.query.trips.findFirst({
+            where: {
+                id: existingBooking.tripId,
+                organizationId: organizationId
+            }
+        });
+
+        if (!trip) {
+            res.status(404).json({ error: "Booking not found or access denied" });
+            return;
+        }
+
+        // Soft delete by marking as cancelled
+        const updatedBookings = await dbWithTypes.query.bookings.update({
+            where: { id: bookingId },
+            data: { 
+                status: 'cancelled',
+                cancelledAt: new Date(),
+                updatedAt: new Date()
+            }
+        });
+
+        if (updatedBookings.length === 0) {
+            throw new Error('Failed to delete booking');
+        }
+
+        res.json({ success: true, booking: updatedBookings[0] });
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+        res.status(500).json({ error: 'Failed to delete booking' });
     }
-  }
+};
+
+// Type for Drizzle query builder operators
+type DrizzleOperators = {
+    eq: <T>(column: T, value: any) => SQL<unknown>;
+    and: (...conditions: SQL<unknown>[]) => SQL<unknown>;
+    sql: typeof sql;
+    desc: (column: any) => SQL<unknown>;
+};
+
+// Type for Drizzle query builder with SQL template literal support
+type DrizzleSQL = typeof sql;
+
+type DB = typeof db;
+type BookingWithRelations = InferSelectModel<typeof bookings>;
+
+// Define AuthUser type locally since the module is missing
+type AuthUser = {
+    id: string;
+    email: string;
+    organizationId: string;
+    role?: string;
+};
+
+// Extend Express types to include our custom properties
+declare module 'express-serve-static-core' {
+    interface Request {
+        user?: {
+            id: string;
+            email: string;
+            organizationId: string;
+            role?: string;
+        } | null;
+        organizationFilter: (orgId: string | null) => boolean;
+    }
 }
 
 // Type for authenticated request with specific params
-type AuthenticatedRequest<Params = any, ResBody = any, ReqBody = any, ReqQuery = any> = 
-  Request<Params, ResBody, ReqBody, ReqQuery> & {
+type AuthenticatedRequest<Params = any, ResBody = any, ReqBody = any, ReqQuery = any> = Request<Params, ResBody, ReqBody, ReqQuery> & {
     user: NonNullable<Express.Request['user']>;
     organizationId: string;
-  };
+};
+
+// Route helper function with proper typing
+function route<Params = any, ResBody = any, ReqBody = any>(
+    handler: (req: AuthenticatedRequest<Params, ResBody, ReqBody>, res: Response<ResBody>) => Promise<void>
+): RequestHandler<Params, ResBody, ReqBody> {
+    return asyncHandler(async (req, res, next) => {
+        try {
+            await handler(req as AuthenticatedRequest<Params, ResBody, ReqBody>, res);
+        } catch (error) {
+            next(error);
+        }
+    });
+}
 
 // Type for route handler with authenticated request
 type AuthenticatedHandler<Params = any, ResBody = any, ReqBody = any, ReqQuery = any> = (
-  req: AuthenticatedRequest<Params, ResBody, ReqBody, ReqQuery>,
-  res: Response<ResBody>,
-  next: NextFunction
-) => Promise<void> | void;
+    req: AuthenticatedRequest<Params, ResBody, ReqBody, ReqQuery>,
+    res: Response<ResBody>,
+    next: NextFunction
+) => Promise<void>;
 
-export function registerBookingRoutes(app: Express) {
-  // Create a router for trip-related booking routes with proper typing
-  const bookingRouter = Router();
-  
-  // Apply middleware to the booking router
-  bookingRouter.use(validateJWT);
-  bookingRouter.use(injectOrganizationContext);
-  bookingRouter.use(validateOrganizationAccess);
-  
-  // Mount the booking router under /api/trips
-  app.use('/api/trips', bookingRouter);
-  
-  // Get all bookings for a trip
-  bookingRouter.get(
-    "/:tripId/bookings",
-    route<{ tripId: string }>(async (req, res) => {
-      const tripId = req.params.tripId;
-      const organizationId = req.user.organizationId;
+// Type for booking creation
+type CreateBookingInput = Omit<InferInsertModel<typeof bookings>, 'id' | 'createdAt' | 'updatedAt' | 'status'> & {
+    status?: InferSelectModel<typeof bookings>['status'];
+};
 
-      // Verify trip belongs to user's organization
-      const [trip] = await db
-        .select()
-        .from(trips)
-        .where(and(
-          eq(trips.id, tripId),
-          eq(trips.organizationId, organizationId)
-        ));
+// Get all bookings for a trip
+const getBookingsHandler = async (req: AuthenticatedRequest<{ tripId: string }>, res: Response) => {
+    const { tripId } = req.params;
+    const organizationId = req.user.organizationId;
+    
+    try {
+        // Verify trip belongs to user's organization
+        const trip = await dbWithTypes.query.trips.findFirst({
+            where: {
+                id: tripId,
+                organizationId: organizationId
+            }
+        });
 
-      if (!trip) {
-        return res.status(404).json({ error: "Trip not found" });
-      }
+        if (!trip) {
+            res.status(404).json({ error: "Trip not found or access denied" });
+            return;
+        }
+        
+        // Get bookings for this trip
+        const tripBookings = await dbWithTypes.query.bookings.findMany({
+            where: { tripId },
+            orderBy: { createdAt: 'desc' }
+        });
 
-      // Get bookings for this trip
-      const tripBookings = await db
-        .select()
-        .from(bookings)
-        .where(and(
-          eq(bookings.tripId, tripId),
-          eq(bookings.organizationId, organizationId)
-        ))
-        .orderBy(desc(bookings.createdAt));
+        res.json(tripBookings);
+    } catch (error) {
+        console.error('Error fetching bookings:', error);
+        res.status(500).json({ error: 'Failed to fetch bookings' });
+    }
+};
 
-      res.json(tripBookings);
-    })
-  );
+// Create a new booking
+const createBookingHandler = async (req: AuthenticatedRequest<{ tripId: string }>, res: Response) => {
+    const { tripId } = req.params;
+    const userId = req.user.id;
+    const organizationId = req.user.organizationId;
+    const bookingData = req.body as Omit<InferInsertModel<typeof bookings>, 'id' | 'createdAt' | 'updatedAt'>;
 
-  // Create new booking for a trip
-  bookingRouter.post(
-    "/:tripId/bookings",
-    asyncHandler(async (req: AuthenticatedRequest, res) => {
-      try {
-        const tripId = req.params.tripId;
-        const organizationId = req.user.organizationId;
-        const { type, passengers, ...bookingData } = req.body;
+    try {
+        // Verify trip exists and belongs to organization
+        const trip = await dbWithTypes.query.trips.findFirst({
+            where: {
+                id: tripId,
+                organizationId: organizationId
+            }
+        });
 
-      // Verify trip belongs to user's organization
-      const [trip] = await db
-        .select()
-        .from(trips)
-        .where(and(
-          eq(trips.id, tripId),
-          eq(trips.organizationId, organizationId)
-        ));
-
-      if (!trip) {
-        return res.status(404).json({ error: "Trip not found" });
-      }
-
-      let bookingResult;
-
-      if (type === 'flight') {
-        if (!process.env.DUFFEL_API_KEY) {
-          return res.status(400).json({ 
-            error: "Flight booking requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
-          });
+        if (!trip) {
+            res.status(404).json({ error: 'Trip not found or access denied' });
+            return;
         }
 
-        try {
-          bookingResult = await duffelProvider.createBooking({
-            type,
-            passengers,
-            ...bookingData
-          });
-        } catch (apiError) {
-          console.error("Duffel API error:", apiError);
-          return res.status(400).json({ 
-            error: "Flight booking failed. Please verify your Duffel API credentials." 
-          });
-        }
-      } else if (type === 'hotel') {
-        if (!process.env.DUFFEL_API_KEY) {
-          return res.status(400).json({ 
-            error: "Hotel booking requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
-          });
+        // Prepare booking data with proper types
+        const bookingValues = {
+            ...bookingData,
+            id: undefined, // Let DB generate the ID
+            tripId,
+            userId,
+            status: 'confirmed',
+            startDate: bookingData.startDate ? new Date(bookingData.startDate) : undefined,
+            endDate: bookingData.endDate ? new Date(bookingData.endDate) : undefined,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            metadata: bookingData.metadata || {}
+        } as const;
+
+        // Store booking in database
+        const booking = await dbWithTypes.query.bookings.insert({
+            values: bookingValues
+        });
+
+        res.status(201).json(booking[0]);
+    } catch (error) {
+        console.error('Error creating booking:', error);
+        res.status(500).json({ error: 'Failed to create booking' });
+    }
+};
+
+// Get booking by ID
+const getBookingByIdHandler = async (req: AuthenticatedRequest<{ bookingId: string }>, res: Response) => {
+    const { bookingId } = req.params;
+    const organizationId = req.user.organizationId;
+    
+    try {
+        // First get the booking
+        const booking = await dbWithTypes.query.bookings.findFirst({
+            where: { id: bookingId }
+        });
+
+        if (!booking) {
+            res.status(404).json({ error: "Booking not found" });
+            return;
         }
 
-        try {
-          bookingResult = await duffelProvider.createHotelBooking({
-            type,
-            passengers,
-            ...bookingData
-          });
-        } catch (apiError) {
-          console.error("Duffel API error:", apiError);
-          return res.status(400).json({ 
-            error: "Hotel booking failed. Please verify your Duffel API credentials." 
-          });
-        }
-      } else {
-        return res.status(400).json({ error: "Invalid booking type" });
-      }
+        // Verify the booking's trip belongs to the organization
+        const trip = await dbWithTypes.query.trips.findFirst({
+            where: {
+                id: booking.tripId,
+                organizationId: organizationId
+            }
+        });
 
-      // Store booking in database
-      const [booking] = await db
-        .insert(bookings)
-        .values({
-          type,
-          tripId: tripId,
-          userId: req.user!.id,
-          organizationId: organizationId,
-          provider: 'duffel',
-          providerBookingId: bookingResult.id,
-          status: bookingResult.status || 'confirmed',
-          bookingData: bookingResult,
-          totalAmount: bookingResult.total_amount ? Math.round(bookingResult.total_amount * 100) : 0,
-          currency: bookingResult.total_currency || 'USD',
-          passengerDetails: { passengers },
-          bookingReference: bookingResult.id,
-          cancellationPolicy: bookingResult.cancellation_policy,
-          departureDate: bookingData.departureDate ? new Date(bookingData.departureDate) : null,
-          returnDate: bookingData.returnDate ? new Date(bookingData.returnDate) : null,
-          checkInDate: bookingData.checkInDate ? new Date(bookingData.checkInDate) : null,
-          checkOutDate: bookingData.checkOutDate ? new Date(bookingData.checkOutDate) : null,
-        })
-        .returning();
+        if (!trip) {
+            res.status(404).json({ error: "Booking not found or access denied" });
+            return;
+        }
 
         res.json(booking);
-      } catch (error) {
-        console.error("Error creating booking:", error);
-        res.status(500).json({ error: "Failed to create booking" });
-      }
-    })
-  );
-
-  // Get booking by ID
-  bookingRouter.get(
-    "/bookings/:bookingId",
-    route<{ bookingId: string }>(async (req, res) => {
-      const bookingId = req.params.bookingId;
-      const organizationId = req.user.organizationId;
-
-      const [booking] = await db
-        .select()
-        .from(bookings)
-        .where(and(
-          eq(bookings.id, bookingId),
-          eq(bookings.organizationId, organizationId)
-        ));
-
-      if (!booking) {
-        return res.status(404).json({ error: "Booking not found" });
-      }
-
-      res.json(booking);
-    })
-    );
-
-  // Update booking
-  bookingRouter.patch(
-    "/bookings/:bookingId",
-    route<{ bookingId: string }>(async (req, res) => {
-      const bookingId = req.params.bookingId;
-      const organizationId = req.user.organizationId;
-      const updates = req.body;
-
-      // Verify booking exists and belongs to organization
-      const [existingBooking] = await db
-        .select()
-        .from(bookings)
-        .where(and(
-          eq(bookings.id, bookingId),
-          eq(bookings.organizationId, organizationId)
-        ));
-
-      if (!existingBooking) {
-        return res.status(404).json({ error: "Booking not found" });
-      }
-
-      const [updatedBooking] = await db
-        .update(bookings)
-        .set({
-          ...updates,
-          updatedAt: new Date(),
-        })
-        .where(eq(bookings.id, bookingId))
-        .returning();
-
-      res.json(updatedBooking);
-    })
-  );
-
-  // Cancel booking
-bookingRouter.delete(
-  "/bookings/:bookingId",
-  route<{ bookingId: string }>(async (req, res) => {
-    try {
-      const bookingId = req.params.bookingId;
-      const organizationId = req.user.organizationId;
-
-      // Verify booking exists and belongs to organization
-      const [booking] = await db
-        .select()
-        .from(bookings)
-        .where(and(
-          eq(bookings.id, bookingId),
-          eq(bookings.organizationId, organizationId)
-        ));
-
-      if (!booking) {
-        return res.status(404).json({ error: "Booking not found" });
-      }
-
-      // Cancel with provider if needed
-      if (booking.provider === 'duffel' && booking.providerBookingId) {
-        if (!process.env.DUFFEL_API_KEY) {
-          return res.status(400).json({ 
-            error: "Cancellation requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
-          });
-        }
-
-        try {
-          await duffelProvider.cancelBooking(booking.providerBookingId);
-        } catch (apiError) {
-          console.error("Provider cancellation error:", apiError);
-          // Continue with local cancellation even if provider fails
-        }
-      }
-
-      // Update booking status to cancelled
-      const [cancelledBooking] = await db
-        .update(bookings)
-        .set({
-          status: 'cancelled',
-          updatedAt: new Date()
-        })
-        .where(eq(bookings.id, bookingId))
-        .returning();
-
-      res.json(cancelledBooking);
     } catch (error) {
-      console.error("Error cancelling booking:", error);
-      res.status(500).json({ error: "Failed to cancel booking" });
+        console.error('Error fetching booking:', error);
+        res.status(500).json({ error: 'Failed to fetch booking' });
     }
-  })
-);
+};
 
-  // Search hotels
-  bookingRouter.post(
-    "/hotels/search",
-    route<any, any, any, any>(async (req, res) => {
-      if (!process.env.DUFFEL_API_KEY) {
-        return res.status(400).json({ 
-          error: "Hotel search requires Duffel API credentials. Please provide DUFFEL_API_KEY." 
+// Update a booking
+const updateBookingHandler = async (req: AuthenticatedRequest<{ bookingId: string }>, res: Response) => {
+    const { bookingId } = req.params;
+    const organizationId = req.user.organizationId;
+    const updates = req.body as Partial<InferSelectModel<typeof bookings>>;
+    
+    try {
+        // First get the booking
+        const existingBooking = await dbWithTypes.query.bookings.findFirst({
+            where: { id: bookingId }
         });
-      }
 
-      const searchParams = req.body;
-      const results = await duffelProvider.searchHotels(searchParams);
-      res.json(results);
-    })
-  );
+        if (!existingBooking) {
+            res.status(404).json({ error: "Booking not found" });
+            return;
+        }
 
-  // Get trip activities
-  bookingRouter.get(
-    "/:tripId/activities",
-    route<{ tripId: string }>(async (req, res) => {
-      const tripId = req.params.tripId;
-      const organizationId = req.user.organizationId;
+        // Verify the booking's trip belongs to the organization
+        const trip = await dbWithTypes.query.trips.findFirst({
+            where: {
+                id: existingBooking.tripId,
+                organizationId: organizationId
+            }
+        });
 
-      // Verify trip belongs to user's organization
-      const [trip] = await db
-        .select()
-        .from(trips)
-        .where(and(
-          eq(trips.id, tripId),
-          eq(trips.organizationId, organizationId)
-        ));
+        if (!trip) {
+            res.status(404).json({ error: "Booking not found or access denied" });
+            return;
+        }
 
-      if (!trip) {
-        return res.status(404).json({ error: "Trip not found" });
-      }
+        // Prepare update data
+        const updateData: Record<string, any> = {
+            ...updates,
+            updatedAt: new Date()
+        };
 
-      const tripActivities = await db
-        .select()
-        .from(activities)
-        .where(and(
-          eq(activities.tripId, tripId),
-          eq(activities.organizationId, organizationId)
-        ))
-        .orderBy(activities.startDate);
+        // Handle status transitions
+        if (updates.status === 'cancelled' && existingBooking.status !== 'cancelled') {
+            updateData.cancelledAt = new Date();
+        } else if (updates.status === 'confirmed' && existingBooking.status !== 'confirmed') {
+            updateData.confirmedAt = new Date();
+        }
 
-      res.json(tripActivities);
-    })
-  );
+        // Remove undefined values to avoid overwriting with null
+        Object.keys(updateData).forEach(key => 
+            updateData[key] === undefined && delete updateData[key]
+        );
 
-  // Create new booking for a trip
-  bookingRouter.post(
-    "/:tripId/bookings",
-    asyncHandler(async (req: AuthenticatedRequest, res) => {
-      const tripId = req.params.tripId;
-      const organizationId = req.user.organizationId;
-      const userId = req.user.id;
+        // Perform the update
+        const updatedBookings = await dbWithTypes.query.bookings.update({
+            where: { id: bookingId },
+            data: updateData
+        });
 
-      // Verify trip exists and belongs to user's organization
-      const [trip] = await db
-        .select()
-        .from(trips)
-        .where(and(
-          eq(trips.id, tripId),
-          eq(trips.organizationId, organizationId)
-        ));
+        if (updatedBookings.length === 0) {
+            throw new Error('Failed to update booking');
+        }
 
-      if (!trip) {
-        return res.status(404).json({ error: "Trip not found" });
-      }
+        res.json(updatedBookings[0]);
+    } catch (error) {
+        console.error('Error updating booking:', error);
+        res.status(500).json({ error: 'Failed to update booking' });
+    }
+};
 
-      // Create booking
-      const bookingData = {
-        ...req.body,
-        tripId,
-        userId,
-        organizationId,
-        status: 'pending', // Default status
-      };
-
-      const [newBooking] = await db
-        .insert(bookings)
-        .values(bookingData)
-        .returning();
-
-      res.status(201).json(newBooking);
-    })
-  );
-
-  // Add activity to trip
-  bookingRouter.post(
-    "/:tripId/activities",
-    route<{ tripId: string }>(async (req, res) => {
-      try {
-        const tripId = req.params.tripId;
-        const organizationId = req.user.organizationId;
-        const userId = req.user.id;
-
-      // Verify trip belongs to user's organization
-      const [trip] = await db
-        .select()
-        .from(trips)
-        .where(and(
-          eq(trips.id, tripId),
-          eq(trips.organizationId, organizationId)
-        ));
-
-      if (!trip) {
-        return res.status(404).json({ error: "Trip not found" });
-      }
-
-        const activityData = req.body;
-
-        const [activity] = await db
-          .insert(activities)
-          .values({
-            ...activityData,
-            tripId,
-            organizationId,
-            userId: req.user!.id
-          })
-          .returning();
-
-        res.json(activity);
-      } catch (error) {
-        console.error("Error creating activity:", error);
-        res.status(500).json({ error: "Failed to create activity" });
-      }
-    })
-  );
-} 
+export function registerBookingRoutes(app: Express) {
+    // Create a router for trip-related booking routes
+    const bookingRouter = Router();
+    
+    // Apply middleware to the booking router
+    bookingRouter.use(validateJWT);
+    bookingRouter.use(injectOrganizationContext);
+    bookingRouter.use(validateOrganizationAccess);
+    
+    // Register route handlers with proper types
+    bookingRouter.get("/:tripId/bookings", (req, res, next) => getBookingsHandler(req as any, res).catch(next));
+    bookingRouter.post("/:tripId/bookings", (req, res, next) => createBookingHandler(req as any, res).catch(next));
+    bookingRouter.get("/bookings/:bookingId", (req, res, next) => getBookingByIdHandler(req as any, res).catch(next));
+    bookingRouter.put("/bookings/:bookingId", (req, res, next) => updateBookingHandler(req as any, res).catch(next));
+    bookingRouter.delete("/bookings/:bookingId", (req, res, next) => deleteBookingHandler(req as any, res).catch(next));
+    
+    // Mount the booking router under /api/trips
+    app.use('/api/trips', bookingRouter);
+}

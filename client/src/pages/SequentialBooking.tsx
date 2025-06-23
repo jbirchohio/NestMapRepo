@@ -7,449 +7,406 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Plane, 
-  Hotel, 
-  CheckCircle, 
-  User, 
-  ArrowRight, 
-  ArrowLeft, 
-  Clock, 
-  MapPin,
-  CreditCard
-} from "lucide-react";
-
+import { Plane, Hotel, CheckCircle, User, ArrowRight, ArrowLeft, Clock, MapPin, CreditCard } from "lucide-react";
 interface SequentialBookingData {
-  tripId: string;
-  tripDestination: string;
-  departureDate: string | Date;
-  returnDate: string | Date;
-  currentTravelerIndex: number;
-  travelers: Array<{
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    dateOfBirth: string;
-    departureCity: string;
-    departureCountry: string;
-    travelClass: string;
-    dietaryRequirements: string;
-    emergencyContact: {
-      name: string;
-      phone: string;
-      relationship: string;
-    };
-  }>;
-  roomsNeeded: number;
-  roomConfiguration: 'shared' | 'separate' | null;
-  bookingStatus: 'flights' | 'hotels' | 'room-preferences' | 'payment' | 'complete';
-  selectedHotel?: any;
-  confirmationNumber?: string;
-  bookingDate?: string;
+    tripId: string;
+    tripDestination: string;
+    departureDate: string | Date;
+    returnDate: string | Date;
+    currentTravelerIndex: number;
+    travelers: Array<{
+        id: number;
+        name: string;
+        email: string;
+        phone: string;
+        dateOfBirth: string;
+        departureCity: string;
+        departureCountry: string;
+        travelClass: string;
+        dietaryRequirements: string;
+        emergencyContact: {
+            name: string;
+            phone: string;
+            relationship: string;
+        };
+    }>;
+    roomsNeeded: number;
+    roomConfiguration: 'shared' | 'separate' | null;
+    bookingStatus: 'flights' | 'hotels' | 'room-preferences' | 'payment' | 'complete';
+    selectedHotel?: any;
+    confirmationNumber?: string;
+    bookingDate?: string;
 }
-
 interface FlightOffer {
-  id: string;
-  airline: string;
-  flightNumber: string;
-  price: number;
-  currency: string;
-  departure: {
-    airport: string;
-    time: string;
-    date: string;
-  };
-  arrival: {
-    airport: string;
-    time: string;
-    date: string;
-  };
-  duration: string;
-  stops: number;
-  type: string;
-  validatingAirlineCodes: string[];
+    id: string;
+    airline: string;
+    flightNumber: string;
+    price: number;
+    currency: string;
+    departure: {
+        airport: string;
+        time: string;
+        date: string;
+    };
+    arrival: {
+        airport: string;
+        time: string;
+        date: string;
+    };
+    duration: string;
+    stops: number;
+    type: string;
+    validatingAirlineCodes: string[];
 }
-
 export default function SequentialBooking() {
-  const [, setLocation] = useLocation();
-  const [bookingData, setBookingData] = useState<SequentialBookingData | null>(null);
-  const [currentStep, setCurrentStep] = useState(0); // 0: traveler info, 1: flight selection, 2: booking confirmation
-  const [flightOffers, setFlightOffers] = useState<FlightOffer[]>([]);
-  const [selectedFlight, setSelectedFlight] = useState<FlightOffer | null>(null);
-  const [hotelResults, setHotelResults] = useState<any[]>([]);
-  const [selectedHotel, setSelectedHotel] = useState<any | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [isBooking, setIsBooking] = useState(false);
-
-  useEffect(() => {
-    try {
-      // Load sequential booking data from sessionStorage
-      const storedData = sessionStorage.getItem('sequentialBookingData');
-      console.log('Stored sequential booking data:', storedData);
-      
-      if (storedData) {
+    const [, setLocation] = useLocation();
+    const [bookingData, setBookingData] = useState<SequentialBookingData | null>(null);
+    const [currentStep, setCurrentStep] = useState(0); // 0: traveler info, 1: flight selection, 2: booking confirmation
+    const [flightOffers, setFlightOffers] = useState<FlightOffer[]>([]);
+    const [selectedFlight, setSelectedFlight] = useState<FlightOffer | null>(null);
+    const [hotelResults, setHotelResults] = useState<any[]>([]);
+    const [selectedHotel, setSelectedHotel] = useState<any | null>(null);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isBooking, setIsBooking] = useState(false);
+    useEffect(() => {
         try {
-          const data = JSON.parse(storedData);
-          console.log('Parsed sequential booking data:', data);
-          
-          // Validate that required data exists
-          if (data && data.travelers && Array.isArray(data.travelers) && data.travelers.length > 0) {
-            // Validate each traveler has required properties
-            const validTravelers = data.travelers.every(t => 
-              t && typeof t.name === 'string' && typeof t.email === 'string'
-            );
-            
-            if (validTravelers) {
-              setBookingData(data);
-            } else {
-              console.error('Invalid traveler data structure:', data.travelers);
-              toast({
-                title: "Invalid traveler data",
-                description: "Please restart the booking process from the team management page.",
-                variant: "destructive",
-              });
-              setLocation('/');
+            // Load sequential booking data from sessionStorage
+            const storedData = sessionStorage.getItem('sequentialBookingData');
+            console.log('Stored sequential booking data:', storedData);
+            if (storedData) {
+                try {
+                    const data = JSON.parse(storedData);
+                    console.log('Parsed sequential booking data:', data);
+                    // Validate that required data exists
+                    if (data && data.travelers && Array.isArray(data.travelers) && data.travelers.length > 0) {
+                        // Validate each traveler has required properties
+                        const validTravelers = data.travelers.every(t => t && typeof t.name === 'string' && typeof t.email === 'string');
+                        if (validTravelers) {
+                            setBookingData(data);
+                        }
+                        else {
+                            console.error('Invalid traveler data structure:', data.travelers);
+                            toast({
+                                title: "Invalid traveler data",
+                                description: "Please restart the booking process from the team management page.",
+                                variant: "destructive",
+                            });
+                            setLocation('/');
+                        }
+                    }
+                    else {
+                        console.error('Invalid booking data structure:', data);
+                        toast({
+                            title: "Invalid booking data",
+                            description: "Please restart the booking process from the team management page.",
+                            variant: "destructive",
+                        });
+                        setLocation('/');
+                    }
+                }
+                catch (parseError) {
+                    console.error('Error parsing booking data:', parseError);
+                    toast({
+                        title: "Error loading booking data",
+                        description: "Please restart the booking process from the team management page.",
+                        variant: "destructive",
+                    });
+                    setLocation('/');
+                }
             }
-          } else {
-            console.error('Invalid booking data structure:', data);
-            toast({
-              title: "Invalid booking data",
-              description: "Please restart the booking process from the team management page.",
-              variant: "destructive",
-            });
-            setLocation('/');
-          }
-        } catch (parseError) {
-          console.error('Error parsing booking data:', parseError);
-          toast({
-            title: "Error loading booking data",
-            description: "Please restart the booking process from the team management page.",
-            variant: "destructive",
-          });
-          setLocation('/');
+            else {
+                toast({
+                    title: "No booking data found",
+                    description: "Please start the booking process from the team management page.",
+                    variant: "destructive",
+                });
+                setLocation('/');
+            }
         }
-      } else {
-        toast({
-          title: "No booking data found",
-          description: "Please start the booking process from the team management page.",
-          variant: "destructive",
-        });
-        setLocation('/');
-      }
-    } catch (error) {
-      console.error('Critical error in SequentialBooking useEffect:', error);
-      setLocation('/');
-    }
-  }, [setLocation]);
-
-  if (!bookingData) {
-    return (
-      <div className="container mx-auto p-6">
+        catch (error) {
+            console.error('Critical error in SequentialBooking useEffect:', error);
+            setLocation('/');
+        }
+    }, [setLocation]);
+    if (!bookingData) {
+        return (<div className="container mx-auto p-6">
         <div className="text-center">Loading booking workflow...</div>
-      </div>
-    );
-  }
-
-  const currentTraveler = bookingData.travelers?.[bookingData.currentTravelerIndex];
-  const totalSteps = bookingData.travelers?.length + 1 || 1; // All travelers + payment
-  
-  let completedSteps = bookingData.currentTravelerIndex;
-  if (bookingData.bookingStatus === 'payment') {
-    completedSteps = bookingData.travelers?.length || 0;
-  } else if (bookingData.bookingStatus === 'complete') {
-    completedSteps = totalSteps;
-  }
-  
-  const progress = (completedSteps / totalSteps) * 100;
-
-  // Handle case where no current traveler is available
-  if (!currentTraveler && bookingData.bookingStatus !== 'payment' && bookingData.bookingStatus !== 'complete') {
-    return (
-      <div className="container mx-auto p-6">
+      </div>);
+    }
+    const currentTraveler = bookingData.travelers?.[bookingData.currentTravelerIndex];
+    const totalSteps = bookingData.travelers?.length + 1 || 1; // All travelers + payment
+    let completedSteps = bookingData.currentTravelerIndex;
+    if (bookingData.bookingStatus === 'payment') {
+        completedSteps = bookingData.travelers?.length || 0;
+    }
+    else if (bookingData.bookingStatus === 'complete') {
+        completedSteps = totalSteps;
+    }
+    const progress = (completedSteps / totalSteps) * 100;
+    // Handle case where no current traveler is available
+    if (!currentTraveler && bookingData.bookingStatus !== 'payment' && bookingData.bookingStatus !== 'complete') {
+        return (<div className="container mx-auto p-6">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">No traveler found</h2>
           <p className="text-gray-600 mb-4">Unable to find traveler information for booking.</p>
           <Button onClick={() => setLocation('/')}>Return to Dashboard</Button>
         </div>
-      </div>
-    );
-  }
-
-  const handleFlightBooking = async () => {
-    // Check if date of birth is missing and show form to collect it
-    if (!currentTraveler.dateOfBirth) {
-      toast({
-        title: "Missing Information",
-        description: "Date of birth is required for flight booking. Please add this information in the team management page first.",
-        variant: "destructive",
-      });
-      return;
+      </div>);
     }
-
-    setIsSearching(true);
-
-    // Convert city names to airport codes for Amadeus API (local function)
-    const convertCityToAirportCode = (cityName: string): string => {
-      const airportMap: { [key: string]: string } = {
-        'san francisco': 'SFO',
-        'san francisco, ca': 'SFO',
-        'san francisco, united states': 'SFO',
-        'san francisco, california': 'SFO',
-        'sf': 'SFO',
-        'new york': 'JFK',
-        'new york city': 'JFK',
-        'new york, united states': 'JFK',
-        'new york, ny': 'JFK',
-        'nyc': 'JFK',
-        'ny': 'JFK',
-        'chicago': 'ORD',
-        'chicago, il': 'ORD',
-        'los angeles': 'LAX',
-        'la': 'LAX',
-        'seattle': 'SEA',
-        'seattle, wa': 'SEA',
-        'seattle, washington': 'SEA',
-        'denver': 'DEN',
-        'denver, co': 'DEN',
-        'miami': 'MIA',
-        'miami, fl': 'MIA',
-        'austin': 'AUS',
-        'austin, tx': 'AUS',
-        'boston': 'BOS',
-        'boston, ma': 'BOS',
-        'atlanta': 'ATL',
-        'atlanta, ga': 'ATL',
-        'washington': 'DCA',
-        'washington dc': 'DCA',
-        'dc': 'DCA',
-        'philadelphia': 'PHL',
-        'phoenix': 'PHX',
-        'las vegas': 'LAS',
-        'vegas': 'LAS',
-        'orlando': 'MCO',
-        'dallas': 'DFW',
-        'houston': 'IAH',
-        'detroit': 'DTW',
-        'minneapolis': 'MSP',
-        'charlotte': 'CLT',
-        'portland': 'PDX',
-        'salt lake city': 'SLC',
-        'nashville': 'BNA',
-        'london': 'LHR',
-        'uk': 'LHR',
-        'england': 'LHR',
-        'paris': 'CDG',
-        'france': 'CDG',
-        'tokyo': 'NRT',
-        'japan': 'NRT',
-        'singapore': 'SIN',
-        'amsterdam': 'AMS',
-        'netherlands': 'AMS'
-      };
-      
-      const city = cityName?.toLowerCase().trim() || '';
-      
-      console.log(`Converting city "${cityName}" (normalized: "${city}") to airport code`);
-      
-      // Direct match
-      if (airportMap[city]) {
-        console.log(`Direct match found: ${airportMap[city]}`);
-        return airportMap[city];
-      }
-      
-      // Check if it's already a 3-letter code
-      if (city.length === 3 && /^[A-Za-z]{3}$/.test(city)) {
-        console.log(`Already airport code: ${city.toUpperCase()}`);
-        return city.toUpperCase();
-      }
-      
-      // Try partial matches for compound city names - check if city starts with any key
-      for (const [key, code] of Object.entries(airportMap)) {
-        if (city.startsWith(key) || key.startsWith(city)) {
-          console.log(`Partial match found: ${key} -> ${code}`);
-          return code;
+    const handleFlightBooking = async () => {
+        // Check if date of birth is missing and show form to collect it
+        if (!currentTraveler.dateOfBirth) {
+            toast({
+                title: "Missing Information",
+                description: "Date of birth is required for flight booking. Please add this information in the team management page first.",
+                variant: "destructive",
+            });
+            return;
         }
-      }
-      
-      // Try contains matches
-      for (const [key, code] of Object.entries(airportMap)) {
-        if (city.includes(key) || key.includes(city)) {
-          console.log(`Contains match found: ${key} -> ${code}`);
-          return code;
+        setIsSearching(true);
+        // Convert city names to airport codes for Amadeus API (local function)
+        const convertCityToAirportCode = (cityName: string): string => {
+            const airportMap: {
+                [key: string]: string;
+            } = {
+                'san francisco': 'SFO',
+                'san francisco, ca': 'SFO',
+                'san francisco, united states': 'SFO',
+                'san francisco, california': 'SFO',
+                'sf': 'SFO',
+                'new york': 'JFK',
+                'new york city': 'JFK',
+                'new york, united states': 'JFK',
+                'new york, ny': 'JFK',
+                'nyc': 'JFK',
+                'ny': 'JFK',
+                'chicago': 'ORD',
+                'chicago, il': 'ORD',
+                'los angeles': 'LAX',
+                'la': 'LAX',
+                'seattle': 'SEA',
+                'seattle, wa': 'SEA',
+                'seattle, washington': 'SEA',
+                'denver': 'DEN',
+                'denver, co': 'DEN',
+                'miami': 'MIA',
+                'miami, fl': 'MIA',
+                'austin': 'AUS',
+                'austin, tx': 'AUS',
+                'boston': 'BOS',
+                'boston, ma': 'BOS',
+                'atlanta': 'ATL',
+                'atlanta, ga': 'ATL',
+                'washington': 'DCA',
+                'washington dc': 'DCA',
+                'dc': 'DCA',
+                'philadelphia': 'PHL',
+                'phoenix': 'PHX',
+                'las vegas': 'LAS',
+                'vegas': 'LAS',
+                'orlando': 'MCO',
+                'dallas': 'DFW',
+                'houston': 'IAH',
+                'detroit': 'DTW',
+                'minneapolis': 'MSP',
+                'charlotte': 'CLT',
+                'portland': 'PDX',
+                'salt lake city': 'SLC',
+                'nashville': 'BNA',
+                'london': 'LHR',
+                'uk': 'LHR',
+                'england': 'LHR',
+                'paris': 'CDG',
+                'france': 'CDG',
+                'tokyo': 'NRT',
+                'japan': 'NRT',
+                'singapore': 'SIN',
+                'amsterdam': 'AMS',
+                'netherlands': 'AMS'
+            };
+            const city = cityName?.toLowerCase().trim() || '';
+            console.log(`Converting city "${cityName}" (normalized: "${city}") to airport code`);
+            // Direct match
+            if (airportMap[city]) {
+                console.log(`Direct match found: ${airportMap[city]}`);
+                return airportMap[city];
+            }
+            // Check if it's already a 3-letter code
+            if (city.length === 3 && /^[A-Za-z]{3}$/.test(city)) {
+                console.log(`Already airport code: ${city.toUpperCase()}`);
+                return city.toUpperCase();
+            }
+            // Try partial matches for compound city names - check if city starts with any key
+            for (const [key, code] of Object.entries(airportMap)) {
+                if (city.startsWith(key) || key.startsWith(city)) {
+                    console.log(`Partial match found: ${key} -> ${code}`);
+                    return code;
+                }
+            }
+            // Try contains matches
+            for (const [key, code] of Object.entries(airportMap)) {
+                if (city.includes(key) || key.includes(city)) {
+                    console.log(`Contains match found: ${key} -> ${code}`);
+                    return code;
+                }
+            }
+            console.log(`No match found for "${city}", defaulting to JFK`);
+            return 'JFK'; // Default fallback
+        };
+        const originCode = convertCityToAirportCode(currentTraveler.departureCity);
+        const destinationCode = convertCityToAirportCode(bookingData.tripDestination);
+        console.log(`Converting "${currentTraveler.departureCity}" to "${originCode}" and "${bookingData.tripDestination}" to "${destinationCode}"`);
+        // Format dates properly for API
+        const formatDate = (date: string | Date | any): string => {
+            if (!date)
+                return '';
+            if (typeof date === 'string' && date.includes('-'))
+                return date;
+            if (date instanceof Date)
+                return date.toISOString().split('T')[0];
+            if (typeof date === 'object' && Object.keys(date).length === 0)
+                return '';
+            return '';
+        };
+        const departureDateStr = formatDate(bookingData.departureDate);
+        const returnDateStr = formatDate(bookingData.returnDate);
+        if (!departureDateStr) {
+            toast({
+                title: "Missing Travel Dates",
+                description: "Please select departure date to search for flights.",
+                variant: "destructive",
+            });
+            setIsSearching(false);
+            return;
         }
-      }
-      
-      console.log(`No match found for "${city}", defaulting to JFK`);
-      return 'JFK'; // Default fallback
+        // Search for flights using authentic Duffel API with same format as BookingWorkflow
+        try {
+            const searchParams = {
+                origin: originCode, // Use 'origin' to match case conversion middleware expectations
+                destination: destinationCode,
+                departureDate: departureDateStr,
+                returnDate: returnDateStr || undefined,
+                passengers: 1,
+                class: 'economy'
+            };
+            console.log('Flight search params:', searchParams);
+            const flightData = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
+            console.log('Flight search response:', flightData);
+            if (flightData.flights && flightData.flights.length > 0) {
+                setFlightOffers(flightData.flights);
+                setCurrentStep(1);
+                toast({
+                    title: "Flights Found",
+                    description: `Found ${flightData.flights.length} flights for ${currentTraveler.name} from ${currentTraveler.departureCity} to ${bookingData.tripDestination}`,
+                });
+            }
+            else {
+                toast({
+                    title: "No Flights Found",
+                    description: `No flights available for the selected route and dates.`,
+                    variant: "destructive",
+                });
+            }
+        }
+        catch (error) {
+            console.error('Error searching flights:', error);
+            toast({
+                title: "Flight Search Error",
+                description: "Unable to search for flights. Please check your travel details and try again.",
+                variant: "destructive",
+            });
+        }
+        finally {
+            setIsSearching(false);
+        }
     };
-
-    const originCode = convertCityToAirportCode(currentTraveler.departureCity);
-    const destinationCode = convertCityToAirportCode(bookingData.tripDestination);
-
-    console.log(`Converting "${currentTraveler.departureCity}" to "${originCode}" and "${bookingData.tripDestination}" to "${destinationCode}"`);
-
-    // Format dates properly for API
-    const formatDate = (date: string | Date | any): string => {
-      if (!date) return '';
-      if (typeof date === 'string' && date.includes('-')) return date;
-      if (date instanceof Date) return date.toISOString().split('T')[0];
-      if (typeof date === 'object' && Object.keys(date).length === 0) return '';
-      return '';
+    const handleNextTraveler = () => {
+        const nextIndex = bookingData.currentTravelerIndex + 1;
+        if (nextIndex < bookingData.travelers.length) {
+            // Move to next traveler
+            const updatedData = {
+                ...bookingData,
+                currentTravelerIndex: nextIndex
+            };
+            setBookingData(updatedData);
+            sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
+        }
+        else {
+            // All travelers done, move to payment
+            const updatedData = {
+                ...bookingData,
+                bookingStatus: 'payment' as const
+            };
+            setBookingData(updatedData);
+            sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
+        }
     };
-
-    const departureDateStr = formatDate(bookingData.departureDate);
-    const returnDateStr = formatDate(bookingData.returnDate);
-
-    if (!departureDateStr) {
-      toast({
-        title: "Missing Travel Dates",
-        description: "Please select departure date to search for flights.",
-        variant: "destructive",
-      });
-      setIsSearching(false);
-      return;
-    }
-
-    // Search for flights using authentic Duffel API with same format as BookingWorkflow
-    try {
-      const searchParams = {
-        origin: originCode,  // Use 'origin' to match case conversion middleware expectations
-        destination: destinationCode,
-        departureDate: departureDateStr,
-        returnDate: returnDateStr || undefined,
-        passengers: 1,
-        class: 'economy'
-      };
-
-      console.log('Flight search params:', searchParams);
-
-      const flightData = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
-      console.log('Flight search response:', flightData);
-      
-      if (flightData.flights && flightData.flights.length > 0) {
-        setFlightOffers(flightData.flights);
-        setCurrentStep(1);
-        
+    const handleHotelBooking = async () => {
+        // Move to hotels step and search for hotels
+        const updatedData = {
+            ...bookingData,
+            bookingStatus: 'hotels' as const
+        };
+        setBookingData(updatedData);
+        sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
+        setIsSearching(true);
+        try {
+            const searchParams = {
+                destination: bookingData.tripDestination,
+                checkIn: bookingData.departureDate,
+                checkOut: bookingData.returnDate,
+                rooms: bookingData.roomsNeeded,
+                guests: bookingData.travelers.length,
+                roomConfiguration: bookingData.roomConfiguration
+            };
+            console.log('Hotel search params:', searchParams);
+            const response = await apiRequest('POST', '/api/bookings/hotels/search', searchParams);
+            if (response.ok) {
+                const hotelData = await response.json();
+                console.log('Hotel search response:', hotelData);
+                if (hotelData.hotels && hotelData.hotels.length > 0) {
+                    setHotelResults(hotelData.hotels);
+                    toast({
+                        title: "Hotels Found",
+                        description: `Found ${hotelData.hotels.length} hotels in ${bookingData.tripDestination}`,
+                    });
+                }
+                else {
+                    toast({
+                        title: "No Hotels Found",
+                        description: "No hotels available for the selected dates and location.",
+                        variant: "destructive",
+                    });
+                }
+            }
+            else {
+                throw new Error('Hotel search failed');
+            }
+        }
+        catch (error) {
+            console.error('Error searching hotels:', error);
+            toast({
+                title: "Hotel Search Error",
+                description: "Unable to search for hotels. Please try again.",
+                variant: "destructive",
+            });
+        }
+        finally {
+            setIsSearching(false);
+        }
+    };
+    const handleComplete = () => {
+        // Clear sequential booking data and return to trip
+        sessionStorage.removeItem('sequentialBookingData');
+        sessionStorage.removeItem('currentFlightBooking');
+        sessionStorage.removeItem('currentHotelBooking');
         toast({
-          title: "Flights Found",
-          description: `Found ${flightData.flights.length} flights for ${currentTraveler.name} from ${currentTraveler.departureCity} to ${bookingData.tripDestination}`,
+            title: "Booking workflow complete",
+            description: "All team members and accommodations have been processed.",
         });
-      } else {
-        toast({
-          title: "No Flights Found",
-          description: `No flights available for the selected route and dates.`,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error searching flights:', error);
-      toast({
-        title: "Flight Search Error",
-        description: "Unable to search for flights. Please check your travel details and try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleNextTraveler = () => {
-    const nextIndex = bookingData.currentTravelerIndex + 1;
-    
-    if (nextIndex < bookingData.travelers.length) {
-      // Move to next traveler
-      const updatedData = {
-        ...bookingData,
-        currentTravelerIndex: nextIndex
-      };
-      setBookingData(updatedData);
-      sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
-    } else {
-      // All travelers done, move to payment
-      const updatedData = {
-        ...bookingData,
-        bookingStatus: 'payment' as const
-      };
-      setBookingData(updatedData);
-      sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
-    }
-  };
-
-  const handleHotelBooking = async () => {
-    // Move to hotels step and search for hotels
-    const updatedData = {
-      ...bookingData,
-      bookingStatus: 'hotels' as const
+        setLocation(`/trips/${bookingData.tripId}`);
     };
-    setBookingData(updatedData);
-    sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
-    
-    setIsSearching(true);
-    
-    try {
-      const searchParams = {
-        destination: bookingData.tripDestination,
-        checkIn: bookingData.departureDate,
-        checkOut: bookingData.returnDate,
-        rooms: bookingData.roomsNeeded,
-        guests: bookingData.travelers.length,
-        roomConfiguration: bookingData.roomConfiguration
-      };
-
-      console.log('Hotel search params:', searchParams);
-
-      const response = await apiRequest('POST', '/api/bookings/hotels/search', searchParams);
-
-      if (response.ok) {
-        const hotelData = await response.json();
-        console.log('Hotel search response:', hotelData);
-        
-        if (hotelData.hotels && hotelData.hotels.length > 0) {
-          setHotelResults(hotelData.hotels);
-          
-          toast({
-            title: "Hotels Found",
-            description: `Found ${hotelData.hotels.length} hotels in ${bookingData.tripDestination}`,
-          });
-        } else {
-          toast({
-            title: "No Hotels Found",
-            description: "No hotels available for the selected dates and location.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        throw new Error('Hotel search failed');
-      }
-    } catch (error) {
-      console.error('Error searching hotels:', error);
-      toast({
-        title: "Hotel Search Error",
-        description: "Unable to search for hotels. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleComplete = () => {
-    // Clear sequential booking data and return to trip
-    sessionStorage.removeItem('sequentialBookingData');
-    sessionStorage.removeItem('currentFlightBooking');
-    sessionStorage.removeItem('currentHotelBooking');
-    
-    toast({
-      title: "Booking workflow complete",
-      description: "All team members and accommodations have been processed.",
-    });
-    
-    setLocation(`/trips/${bookingData.tripId}`);
-  };
-
-  return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    return (<div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Sequential Team Booking</h1>
         <p className="text-muted-foreground">
@@ -466,19 +423,19 @@ export default function SequentialBooking() {
               {Math.round(progress)}% Complete
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-2"/>
           
           <div className="flex items-center justify-between mt-4 text-sm">
             <div className="flex items-center gap-2">
-              <Plane className="h-4 w-4" />
+              <Plane className="h-4 w-4"/>
               <span>Individual Flights</span>
             </div>
             <div className="flex items-center gap-2">
-              <Hotel className="h-4 w-4" />
+              <Hotel className="h-4 w-4"/>
               <span>Team Hotels</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4" />
+              <CheckCircle className="h-4 w-4"/>
               <span>Complete</span>
             </div>
           </div>
@@ -486,11 +443,10 @@ export default function SequentialBooking() {
       </Card>
 
       {/* Current Step */}
-      {bookingData.bookingStatus === 'flights' && (
-        <Card>
+      {bookingData.bookingStatus === 'flights' && (<Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plane className="h-5 w-5" />
+              <Plane className="h-5 w-5"/>
               Flight Booking - {currentTraveler.name}
             </CardTitle>
           </CardHeader>
@@ -515,44 +471,32 @@ export default function SequentialBooking() {
             </div>
 
             {/* Show missing information warning if date of birth is missing */}
-            {!currentTraveler.dateOfBirth && (
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+            {!currentTraveler.dateOfBirth && (<div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-2 text-orange-800 mb-2">
-                  <User className="h-4 w-4" />
+                  <User className="h-4 w-4"/>
                   <span className="font-medium">Additional Information Required</span>
                 </div>
                 <p className="text-sm text-orange-700">
                   Date of birth is required for flight booking with Amadeus. This will be collected in the next step.
                 </p>
-              </div>
-            )}
+              </div>)}
 
             <div className="flex items-center gap-2 mb-4">
               <Badge variant="outline">
                 {currentTraveler.travelClass.charAt(0).toUpperCase() + currentTraveler.travelClass.slice(1)}
               </Badge>
-              {currentTraveler.dietaryRequirements && (
-                <Badge variant="secondary">
+              {currentTraveler.dietaryRequirements && (<Badge variant="secondary">
                   {currentTraveler.dietaryRequirements}
-                </Badge>
-              )}
+                </Badge>)}
             </div>
 
             <div className="flex gap-3">
-              <Button 
-                onClick={handleFlightBooking} 
-                className="flex-1"
-                disabled={isSearching}
-              >
+              <Button onClick={handleFlightBooking} className="flex-1" disabled={isSearching}>
                 {isSearching ? 'Searching Flights...' : (currentTraveler.dateOfBirth ? 'Search Flights' : 'Complete Info & Search Flights')} for {currentTraveler.name}
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4"/>
               </Button>
               
-              <Button 
-                variant="outline" 
-                onClick={handleNextTraveler}
-                className="flex-1"
-              >
+              <Button variant="outline" onClick={handleNextTraveler} className="flex-1">
                 Skip & Continue to Next Traveler
               </Button>
             </div>
@@ -561,15 +505,13 @@ export default function SequentialBooking() {
               Step {bookingData.currentTravelerIndex + 1} of {bookingData.travelers.length} travelers
             </p>
           </CardContent>
-        </Card>
-      )}
+        </Card>)}
 
       {/* Flight Selection Step */}
-      {currentStep === 1 && bookingData.bookingStatus === 'flights' && (
-        <Card>
+      {currentStep === 1 && bookingData.bookingStatus === 'flights' && (<Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plane className="h-5 w-5" />
+              <Plane className="h-5 w-5"/>
               Select Flight for {currentTraveler.name}
             </CardTitle>
           </CardHeader>
@@ -581,14 +523,7 @@ export default function SequentialBooking() {
             </div>
 
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              {flightOffers.map((offer, index) => (
-                <Card 
-                  key={offer.id} 
-                  className={`cursor-pointer transition-colors ${
-                    selectedFlight?.id === offer.id ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
-                  }`}
-                  onClick={() => setSelectedFlight(offer)}
-                >
+              {flightOffers.map((offer, index) => (<Card key={offer.id} className={`cursor-pointer transition-colors ${selectedFlight?.id === offer.id ? 'border-primary bg-primary/5' : 'hover:border-primary/50'}`} onClick={() => setSelectedFlight(offer)}>
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -603,7 +538,7 @@ export default function SequentialBooking() {
                         
                         <div className="flex items-center gap-6 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
+                            <Clock className="h-4 w-4"/>
                             {offer.departure?.time} - {offer.arrival?.time}
                           </div>
                           <div>Duration: {offer.duration}</div>
@@ -619,69 +554,61 @@ export default function SequentialBooking() {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>))}
             </div>
 
             <div className="flex gap-3 mt-6">
-              <Button 
-                variant="outline" 
-                onClick={() => setCurrentStep(0)}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
+              <Button variant="outline" onClick={() => setCurrentStep(0)}>
+                <ArrowLeft className="mr-2 h-4 w-4"/>
                 Back to Traveler Info
               </Button>
               
-              <Button
-                onClick={async () => {
-                  if (selectedFlight) {
+              <Button onClick={async () => {
+                if (selectedFlight) {
                     setIsBooking(true);
                     try {
-                      const response = await apiRequest('POST', `/api/trips/${bookingData.tripId}/bookings`, {
-                        type: 'flight',
-                        passengers: 1,
-                        origin: selectedFlight.departure.airport,
-                        destination: selectedFlight.arrival.airport,
-                        departureDate: selectedFlight.departure.date,
-                        returnDate: bookingData.returnDate,
-                        price: selectedFlight.price,
-                        currency: selectedFlight.currency,
-                        flightNumber: selectedFlight.flightNumber,
-                        airline: selectedFlight.airline,
-                      });
-                      if (!response.ok) {
-                        throw new Error('Booking failed');
-                      }
-                      const booking = await response.json();
-                      toast({
-                        title: 'Flight booked',
-                        description: `Booking reference ${booking.bookingReference || booking.id} for ${currentTraveler.name}`,
-                      });
-                      setCurrentStep(0);
-                      handleNextTraveler();
-                    } catch (err) {
-                      toast({ title: 'Booking failed', description: 'Unable to book flight', variant: 'destructive' });
-                    } finally {
-                      setIsBooking(false);
+                        const response = await apiRequest('POST', `/api/trips/${bookingData.tripId}/bookings`, {
+                            type: 'flight',
+                            passengers: 1,
+                            origin: selectedFlight.departure.airport,
+                            destination: selectedFlight.arrival.airport,
+                            departureDate: selectedFlight.departure.date,
+                            returnDate: bookingData.returnDate,
+                            price: selectedFlight.price,
+                            currency: selectedFlight.currency,
+                            flightNumber: selectedFlight.flightNumber,
+                            airline: selectedFlight.airline,
+                        });
+                        if (!response.ok) {
+                            throw new Error('Booking failed');
+                        }
+                        const booking = await response.json();
+                        toast({
+                            title: 'Flight booked',
+                            description: `Booking reference ${booking.bookingReference || booking.id} for ${currentTraveler.name}`,
+                        });
+                        setCurrentStep(0);
+                        handleNextTraveler();
                     }
-                  }
-                }}
-                disabled={!selectedFlight}
-                className="flex-1"
-              >
+                    catch (err) {
+                        toast({ title: 'Booking failed', description: 'Unable to book flight', variant: 'destructive' });
+                    }
+                    finally {
+                        setIsBooking(false);
+                    }
+                }
+            }} disabled={!selectedFlight} className="flex-1">
                 Confirm Flight Selection
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4"/>
               </Button>
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>)}
 
-      {bookingData.bookingStatus === 'room-preferences' && (
-        <Card>
+      {bookingData.bookingStatus === 'room-preferences' && (<Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Hotel className="h-5 w-5" />
+              <Hotel className="h-5 w-5"/>
               Room Configuration
             </CardTitle>
           </CardHeader>
@@ -694,21 +621,14 @@ export default function SequentialBooking() {
             </div>
 
             <div className="space-y-4">
-              <Card 
-                className={`cursor-pointer border-2 transition-colors ${
-                  bookingData.roomConfiguration === 'shared' 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border hover:border-primary/50'
-                }`}
-                onClick={() => setBookingData(prev => prev ? {...prev, roomConfiguration: 'shared', roomsNeeded: 1} : null)}
-              >
+              <Card className={`cursor-pointer border-2 transition-colors ${bookingData.roomConfiguration === 'shared'
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50'}`} onClick={() => setBookingData(prev => prev ? { ...prev, roomConfiguration: 'shared', roomsNeeded: 1 } : null)}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className={`w-4 h-4 rounded-full border-2 mt-1 ${
-                      bookingData.roomConfiguration === 'shared' 
-                        ? 'border-primary bg-primary' 
-                        : 'border-border'
-                    }`}></div>
+                    <div className={`w-4 h-4 rounded-full border-2 mt-1 ${bookingData.roomConfiguration === 'shared'
+                ? 'border-primary bg-primary'
+                : 'border-border'}`}></div>
                     <div>
                       <h4 className="font-semibold">Shared Room</h4>
                       <p className="text-sm text-muted-foreground">
@@ -720,21 +640,14 @@ export default function SequentialBooking() {
                 </CardContent>
               </Card>
 
-              <Card 
-                className={`cursor-pointer border-2 transition-colors ${
-                  bookingData.roomConfiguration === 'separate' 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border hover:border-primary/50'
-                }`}
-                onClick={() => setBookingData(prev => prev ? {...prev, roomConfiguration: 'separate', roomsNeeded: prev.travelers.length} : null)}
-              >
+              <Card className={`cursor-pointer border-2 transition-colors ${bookingData.roomConfiguration === 'separate'
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50'}`} onClick={() => setBookingData(prev => prev ? { ...prev, roomConfiguration: 'separate', roomsNeeded: prev.travelers.length } : null)}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className={`w-4 h-4 rounded-full border-2 mt-1 ${
-                      bookingData.roomConfiguration === 'separate' 
-                        ? 'border-primary bg-primary' 
-                        : 'border-border'
-                    }`}></div>
+                    <div className={`w-4 h-4 rounded-full border-2 mt-1 ${bookingData.roomConfiguration === 'separate'
+                ? 'border-primary bg-primary'
+                : 'border-border'}`}></div>
                     <div>
                       <h4 className="font-semibold">Separate Rooms</h4>
                       <p className="text-sm text-muted-foreground">
@@ -748,24 +661,18 @@ export default function SequentialBooking() {
             </div>
 
             <div className="flex gap-3 mt-6">
-              <Button 
-                onClick={() => setBookingData(prev => prev ? {...prev, bookingStatus: 'hotels'} : null)}
-                disabled={!bookingData.roomConfiguration}
-                className="flex-1"
-              >
+              <Button onClick={() => setBookingData(prev => prev ? { ...prev, bookingStatus: 'hotels' } : null)} disabled={!bookingData.roomConfiguration} className="flex-1">
                 Continue to Hotel Search
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4"/>
               </Button>
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>)}
 
-      {bookingData.bookingStatus === 'hotels' && (
-        <Card>
+      {bookingData.bookingStatus === 'hotels' && (<Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Hotel className="h-5 w-5" />
+              <Hotel className="h-5 w-5"/>
               Hotel Accommodation
             </CardTitle>
           </CardHeader>
@@ -792,14 +699,10 @@ export default function SequentialBooking() {
             <div className="flex gap-3">
               <Button onClick={handleHotelBooking} className="flex-1">
                 Book Hotels for Team
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4"/>
               </Button>
               
-              <Button 
-                variant="outline" 
-                onClick={handleComplete}
-                className="flex-1"
-              >
+              <Button variant="outline" onClick={handleComplete} className="flex-1">
                 Skip Hotels & Complete
               </Button>
             </div>
@@ -808,25 +711,20 @@ export default function SequentialBooking() {
               Final step: Accommodation for {bookingData.travelers.length} team members
             </p>
           </CardContent>
-        </Card>
-      )}
+        </Card>)}
 
-      {bookingData.bookingStatus === 'hotels' && (
-        <Card>
+      {bookingData.bookingStatus === 'hotels' && (<Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Hotel className="h-5 w-5" />
+              <Hotel className="h-5 w-5"/>
               Hotel Selection
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {isSearching ? (
-              <div className="text-center py-8">
+            {isSearching ? (<div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
                 <p>Searching for hotels in {bookingData.tripDestination}...</p>
-              </div>
-            ) : hotelResults.length > 0 ? (
-              <div>
+              </div>) : hotelResults.length > 0 ? (<div>
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold mb-2">Available Hotels</h3>
                   <p className="text-muted-foreground">
@@ -835,14 +733,7 @@ export default function SequentialBooking() {
                 </div>
 
                 <div className="space-y-3 mb-6">
-                  {hotelResults.map((hotel) => (
-                    <Card
-                      key={hotel.id}
-                      className={`cursor-pointer transition-colors ${
-                        selectedHotel?.id === hotel.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
-                      }`}
-                      onClick={() => setSelectedHotel(hotel)}
-                    >
+                  {hotelResults.map((hotel) => (<Card key={hotel.id} className={`cursor-pointer transition-colors ${selectedHotel?.id === hotel.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`} onClick={() => setSelectedHotel(hotel)}>
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
@@ -853,7 +744,7 @@ export default function SequentialBooking() {
                             
                             <div className="flex items-center gap-6 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
+                                <MapPin className="h-4 w-4"/>
                                 {hotel.address}
                               </div>
                               <div>Rooms: {bookingData.roomsNeeded}</div>
@@ -868,65 +759,48 @@ export default function SequentialBooking() {
                           </div>
                         </div>
                       </CardContent>
-                    </Card>
-                  ))}
+                    </Card>))}
                 </div>
 
                 <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setBookingData(prev => prev ? {...prev, bookingStatus: 'room-preferences'} : null)}
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                  <Button variant="outline" onClick={() => setBookingData(prev => prev ? { ...prev, bookingStatus: 'room-preferences' } : null)}>
+                    <ArrowLeft className="mr-2 h-4 w-4"/>
                     Back to Room Preferences
                   </Button>
                   
-                  <Button 
-                    onClick={() => {
-                      if (selectedHotel) {
+                  <Button onClick={() => {
+                    if (selectedHotel) {
                         const updatedData = {
-                          ...bookingData,
-                          bookingStatus: 'payment' as const,
-                          selectedHotel: selectedHotel
+                            ...bookingData,
+                            bookingStatus: 'payment' as const,
+                            selectedHotel: selectedHotel
                         };
                         setBookingData(updatedData);
                         sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
-                        
                         toast({
-                          title: "Hotel Selected",
-                          description: `Selected ${selectedHotel.name} for your team stay`,
+                            title: "Hotel Selected",
+                            description: `Selected ${selectedHotel.name} for your team stay`,
                         });
-                      }
-                    }}
-                    disabled={!selectedHotel}
-                    className="flex-1"
-                  >
+                    }
+                }} disabled={!selectedHotel} className="flex-1">
                     Continue to Payment
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-2 h-4 w-4"/>
                   </Button>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
+              </div>) : (<div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">No hotels found for your search criteria.</p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setBookingData(prev => prev ? {...prev, bookingStatus: 'room-preferences'} : null)}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                <Button variant="outline" onClick={() => setBookingData(prev => prev ? { ...prev, bookingStatus: 'room-preferences' } : null)}>
+                  <ArrowLeft className="mr-2 h-4 w-4"/>
                   Back to Room Preferences
                 </Button>
-              </div>
-            )}
+              </div>)}
           </CardContent>
-        </Card>
-      )}
+        </Card>)}
 
-      {bookingData.bookingStatus === 'payment' && (
-        <Card>
+      {bookingData.bookingStatus === 'payment' && (<Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
+              <CreditCard className="h-5 w-5"/>
               Payment & Booking Confirmation
             </CardTitle>
           </CardHeader>
@@ -940,11 +814,9 @@ export default function SequentialBooking() {
                 <div className="mb-4">
                   <h4 className="font-medium mb-2">Flights</h4>
                   {bookingData.travelers.map((traveler: any, index: number) => {
-                    const selectedFlights = traveler.selectedFlights || [];
-                    const totalFlightCost = selectedFlights.reduce((sum: number, flight: any) => sum + parseFloat(flight.price), 0);
-                    
-                    return (
-                      <div key={index} className="flex justify-between items-center py-2 border-b">
+                const selectedFlights = traveler.selectedFlights || [];
+                const totalFlightCost = selectedFlights.reduce((sum: number, flight: any) => sum + parseFloat(flight.price), 0);
+                return (<div key={index} className="flex justify-between items-center py-2 border-b">
                         <div>
                           <span className="font-medium">{traveler.name}</span>
                           <p className="text-sm text-muted-foreground">
@@ -954,14 +826,12 @@ export default function SequentialBooking() {
                         <div className="text-right">
                           <span className="font-semibold">${totalFlightCost.toFixed(2)}</span>
                         </div>
-                      </div>
-                    );
-                  })}
+                      </div>);
+            })}
                 </div>
 
                 {/* Hotel Booking */}
-                {bookingData.selectedHotel && (
-                  <div className="mb-4">
+                {bookingData.selectedHotel && (<div className="mb-4">
                     <h4 className="font-medium mb-2">Hotel</h4>
                     <div className="flex justify-between items-center py-2 border-b">
                       <div>
@@ -975,21 +845,20 @@ export default function SequentialBooking() {
                         <p className="text-xs text-muted-foreground">3 nights total</p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>)}
 
                 {/* Total */}
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center text-lg font-bold">
                     <span>Total Amount</span>
                     <span>${(() => {
-                      const flightTotal = bookingData.travelers.reduce((sum: number, traveler: any) => {
-                        const selectedFlights = traveler.selectedFlights || [];
-                        return sum + selectedFlights.reduce((flightSum: number, flight: any) => flightSum + parseFloat(flight.price), 0);
-                      }, 0);
-                      const hotelTotal = bookingData.selectedHotel ? (bookingData.selectedHotel.price.amount * 3) : 0;
-                      return (flightTotal + hotelTotal).toFixed(2);
-                    })()}</span>
+                const flightTotal = bookingData.travelers.reduce((sum: number, traveler: any) => {
+                    const selectedFlights = traveler.selectedFlights || [];
+                    return sum + selectedFlights.reduce((flightSum: number, flight: any) => flightSum + parseFloat(flight.price), 0);
+                }, 0);
+                const hotelTotal = bookingData.selectedHotel ? (bookingData.selectedHotel.price.amount * 3) : 0;
+                return (flightTotal + hotelTotal).toFixed(2);
+            })()}</span>
                   </div>
                 </div>
               </div>
@@ -1001,126 +870,88 @@ export default function SequentialBooking() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium">Card Number</label>
-                    <input 
-                      type="text" 
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full mt-1 p-2 border rounded-md"
-                    />
+                    <input type="text" placeholder="1234 5678 9012 3456" className="w-full mt-1 p-2 border rounded-md"/>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Cardholder Name</label>
-                    <input 
-                      type="text" 
-                      placeholder="John Doe"
-                      className="w-full mt-1 p-2 border rounded-md"
-                    />
+                    <input type="text" placeholder="John Doe" className="w-full mt-1 p-2 border rounded-md"/>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="text-sm font-medium">Expiry Month</label>
-                    <input 
-                      type="text" 
-                      placeholder="MM"
-                      className="w-full mt-1 p-2 border rounded-md"
-                    />
+                    <input type="text" placeholder="MM" className="w-full mt-1 p-2 border rounded-md"/>
                   </div>
                   <div>
                     <label className="text-sm font-medium">Expiry Year</label>
-                    <input 
-                      type="text" 
-                      placeholder="YYYY"
-                      className="w-full mt-1 p-2 border rounded-md"
-                    />
+                    <input type="text" placeholder="YYYY" className="w-full mt-1 p-2 border rounded-md"/>
                   </div>
                   <div>
                     <label className="text-sm font-medium">CVV</label>
-                    <input 
-                      type="text" 
-                      placeholder="123"
-                      className="w-full mt-1 p-2 border rounded-md"
-                    />
+                    <input type="text" placeholder="123" className="w-full mt-1 p-2 border rounded-md"/>
                   </div>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium">Billing Address</label>
-                  <input 
-                    type="text" 
-                    placeholder="123 Main Street, City, State, ZIP"
-                    className="w-full mt-1 p-2 border rounded-md"
-                  />
+                  <input type="text" placeholder="123 Main Street, City, State, ZIP" className="w-full mt-1 p-2 border rounded-md"/>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setBookingData(prev => prev ? {...prev, bookingStatus: 'hotels'} : null)}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                <Button variant="outline" onClick={() => setBookingData(prev => prev ? { ...prev, bookingStatus: 'hotels' } : null)}>
+                  <ArrowLeft className="mr-2 h-4 w-4"/>
                   Back to Hotels
                 </Button>
                 
-                <Button 
-                  onClick={async () => {
-                    setIsBooking(true);
-                    
-                    try {
-                      // Process actual bookings here
-                      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate processing
-                      
-                      const updatedData = {
+                <Button onClick={async () => {
+                setIsBooking(true);
+                try {
+                    // Process actual bookings here
+                    await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate processing
+                    const updatedData = {
                         ...bookingData,
                         bookingStatus: 'complete' as const,
                         confirmationNumber: `NM${Date.now()}`,
                         bookingDate: new Date().toISOString()
-                      };
-                      setBookingData(updatedData);
-                      sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
-                      
-                      toast({
+                    };
+                    setBookingData(updatedData);
+                    sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
+                    toast({
                         title: "Booking Confirmed",
                         description: "All reservations have been successfully processed!",
-                      });
-                    } catch (error) {
-                      toast({
+                    });
+                }
+                catch (error) {
+                    toast({
                         title: "Booking Error",
                         description: "Failed to process booking. Please try again.",
                         variant: "destructive",
-                      });
-                    } finally {
-                      setIsBooking(false);
-                    }
-                  }}
-                  disabled={isBooking}
-                  className="flex-1"
-                >
-                  {isBooking ? (
-                    <>
+                    });
+                }
+                finally {
+                    setIsBooking(false);
+                }
+            }} disabled={isBooking} className="flex-1">
+                  {isBooking ? (<>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       Processing Payment...
-                    </>
-                  ) : (
-                    <>
+                    </>) : (<>
                       Confirm & Pay
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
+                      <ArrowRight className="ml-2 h-4 w-4"/>
+                    </>)}
                 </Button>
               </div>
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>)}
 
-      {bookingData.bookingStatus === 'complete' && (
-        <Card>
+      {bookingData.bookingStatus === 'complete' && (<Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-green-600"/>
               Booking Confirmed
             </CardTitle>
           </CardHeader>
@@ -1129,7 +960,7 @@ export default function SequentialBooking() {
               {/* Confirmation Summary */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CheckCircle className="h-5 w-5 text-green-600"/>
                   <span className="font-semibold text-green-800">Payment Successful</span>
                 </div>
                 <p className="text-green-700">
@@ -1153,8 +984,7 @@ export default function SequentialBooking() {
                 {/* Flight Confirmations */}
                 <div>
                   <h3 className="font-semibold text-lg mb-3">Flight Confirmations</h3>
-                  {bookingData.travelers.map((traveler: any, index: number) => (
-                    <div key={index} className="border rounded-lg p-3 mb-3">
+                  {bookingData.travelers.map((traveler: any, index: number) => (<div key={index} className="border rounded-lg p-3 mb-3">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <span className="font-medium">{traveler.name}</span>
@@ -1171,13 +1001,11 @@ export default function SequentialBooking() {
                       <div className="text-sm text-muted-foreground">
                         Confirmation sent to: {traveler.email}
                       </div>
-                    </div>
-                  ))}
+                    </div>))}
                 </div>
 
                 {/* Hotel Confirmation */}
-                {bookingData.selectedHotel && (
-                  <div>
+                {bookingData.selectedHotel && (<div>
                     <h3 className="font-semibold text-lg mb-3">Hotel Confirmation</h3>
                     <div className="border rounded-lg p-3">
                       <div className="flex justify-between items-start mb-2">
@@ -1197,21 +1025,20 @@ export default function SequentialBooking() {
                         Check-in: {new Date(bookingData.departureDate).toLocaleDateString()}
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>)}
 
                 {/* Total Amount */}
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center text-lg">
                     <span className="font-medium">Total Paid</span>
                     <span className="font-bold">${(() => {
-                      const flightTotal = bookingData.travelers.reduce((sum: number, traveler: any) => {
-                        const selectedFlights = traveler.selectedFlights || [];
-                        return sum + selectedFlights.reduce((flightSum: number, flight: any) => flightSum + parseFloat(flight.price), 0);
-                      }, 0);
-                      const hotelTotal = bookingData.selectedHotel ? (bookingData.selectedHotel.price.amount * 3) : 0;
-                      return (flightTotal + hotelTotal).toFixed(2);
-                    })()}</span>
+                const flightTotal = bookingData.travelers.reduce((sum: number, traveler: any) => {
+                    const selectedFlights = traveler.selectedFlights || [];
+                    return sum + selectedFlights.reduce((flightSum: number, flight: any) => flightSum + parseFloat(flight.price), 0);
+                }, 0);
+                const hotelTotal = bookingData.selectedHotel ? (bookingData.selectedHotel.price.amount * 3) : 0;
+                return (flightTotal + hotelTotal).toFixed(2);
+            })()}</span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
                     Charged to card ending in ****1234
@@ -1241,8 +1068,6 @@ export default function SequentialBooking() {
               </div>
             </div>
           </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+        </Card>)}
+    </div>);
 }

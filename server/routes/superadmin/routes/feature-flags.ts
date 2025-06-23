@@ -1,25 +1,19 @@
-import express from 'express';
-
+import express from '../../express-augmentations.ts';
 const router = express.Router();
-
 // Get all feature flags
 router.get('/', (_req, res) => {
-  res.json({ message: 'List of all feature flags' });
+    res.json({ message: 'List of all feature flags' });
 });
-
 // Get feature flag by name
-router.get('/:name', ( _req, res) => {
-  res.json({ message: `Feature flag ${_req.params.name} details` });
+router.get('/:name', (_req, res) => {
+    res.json({ message: `Feature flag ${_req.params.name} details` });
 });
-
 // Create or update feature flag
 router.post('/', (_req, res) => {
-  res.status(201).json({ message: 'Feature flag created/updated' });
+    res.status(201).json({ message: 'Feature flag created/updated' });
 });
-
 // Delete feature flag
 router.delete('/:name', (_req, res) => {
-  res.status(204).send();
+    res.status(204).send();
 });
-
 export default router;

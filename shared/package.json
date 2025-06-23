@@ -15,7 +15,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "drizzle-orm": "^0.29.3"
+    "drizzle-orm": "^0.44.2"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

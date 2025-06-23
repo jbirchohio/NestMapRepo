@@ -1,5 +1,10 @@
 // Type definitions for auth module
 
+/**
+ * @deprecated This file is deprecated and will be removed in a future version.
+ * Please use the shared types from '@shared/types/auth' instead.
+ */
+
 export const AUTH_TOKEN_KEY: string;
 
 export function getAuthToken(): string | null;

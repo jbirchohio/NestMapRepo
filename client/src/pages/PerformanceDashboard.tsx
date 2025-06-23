@@ -2,7 +2,6 @@
  * Performance Dashboard - Phase 3 Optimization Complete
  * Real-time monitoring and optimization insights for administrators
  */
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,119 +13,102 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Activity, AlertTriangle, TrendingUp, Zap, Download, RefreshCw } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-
 interface PerformanceMetrics {
-  overview: {
-    totalRequests: number;
-    avgResponseTime: number;
-    errorRate: number;
-    topSlowEndpoints: Array<{
-      endpoint: string;
-      avgTime: number;
-      requests: number;
+    overview: {
+        totalRequests: number;
+        avgResponseTime: number;
+        errorRate: number;
+        topSlowEndpoints: Array<{
+            endpoint: string;
+            avgTime: number;
+            requests: number;
+        }>;
+    };
+    alerts: Array<{
+        type: string;
+        severity: string;
+        message: string;
+        timestamp: string;
     }>;
-  };
-  alerts: Array<{
-    type: string;
-    severity: string;
-    message: string;
-    timestamp: string;
-  }>;
-  memoryTrends: Array<{
-    timestamp: string;
-    usage: number;
-  }>;
+    memoryTrends: Array<{
+        timestamp: string;
+        usage: number;
+    }>;
 }
-
 interface OptimizationRecommendation {
-  type: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  title: string;
-  description: string;
-  action: string;
-  impact: string;
+    type: string;
+    priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    title: string;
+    description: string;
+    action: string;
+    impact: string;
 }
-
 export default function PerformanceDashboard() {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const { data: performanceData, isLoading: performanceLoading } = useQuery({
-    queryKey: ['/api/admin/performance', refreshKey],
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
-
-  const { data: realtimeData, isLoading: realtimeLoading } = useQuery({
-    queryKey: ['/api/admin/performance/realtime', refreshKey],
-    refetchInterval: 5000, // Refresh every 5 seconds
-  });
-
-  const { data: recommendationsData, isLoading: recommendationsLoading } = useQuery({
-    queryKey: ['/api/admin/performance/recommendations'],
-  });
-
-  const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
-  const handleExport = async () => {
-    try {
-      const response = await apiRequest('GET', '/api/admin/performance/export');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `performance-metrics-${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Export failed:', error);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const { data: performanceData, isLoading: performanceLoading } = useQuery({
+        queryKey: ['/api/admin/performance', refreshKey],
+        refetchInterval: 30000, // Refresh every 30 seconds
+    });
+    const { data: realtimeData, isLoading: realtimeLoading } = useQuery({
+        queryKey: ['/api/admin/performance/realtime', refreshKey],
+        refetchInterval: 5000, // Refresh every 5 seconds
+    });
+    const { data: recommendationsData, isLoading: recommendationsLoading } = useQuery({
+        queryKey: ['/api/admin/performance/recommendations'],
+    });
+    const handleRefresh = () => {
+        setRefreshKey(prev => prev + 1);
+    };
+    const handleExport = async () => {
+        try {
+            const response = await apiRequest('GET', '/api/admin/performance/export');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `performance-metrics-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+        catch (error) {
+            console.error('Export failed:', error);
+        }
+    };
+    const getPriorityColor = (priority: string) => {
+        switch (priority) {
+            case 'CRITICAL': return 'destructive';
+            case 'HIGH': return 'destructive';
+            case 'MEDIUM': return 'default';
+            case 'LOW': return 'secondary';
+            default: return 'default';
+        }
+    };
+    const getSeverityColor = (severity: string) => {
+        switch (severity) {
+            case 'CRITICAL': return 'destructive';
+            case 'HIGH': return 'destructive';
+            case 'MEDIUM': return 'default';
+            case 'LOW': return 'secondary';
+            default: return 'default';
+        }
+    };
+    const formatResponseTime = (time: number) => {
+        return `${Math.round(time)}ms`;
+    };
+    const formatPercentage = (rate: number) => {
+        return `${(rate * 100).toFixed(2)}%`;
+    };
+    if (performanceLoading) {
+        return (<div className="h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"/>
+      </div>);
     }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'CRITICAL': return 'destructive';
-      case 'HIGH': return 'destructive';
-      case 'MEDIUM': return 'default';
-      case 'LOW': return 'secondary';
-      default: return 'default';
-    }
-  };
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'CRITICAL': return 'destructive';
-      case 'HIGH': return 'destructive';
-      case 'MEDIUM': return 'default';
-      case 'LOW': return 'secondary';
-      default: return 'default';
-    }
-  };
-
-  const formatResponseTime = (time: number) => {
-    return `${Math.round(time)}ms`;
-  };
-
-  const formatPercentage = (rate: number) => {
-    return `${(rate * 100).toFixed(2)}%`;
-  };
-
-  if (performanceLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  const performance = (performanceData as any)?.data as PerformanceMetrics | undefined;
-  const realtime = (realtimeData as any)?.data;
-  const recommendations = (recommendationsData as any)?.data as OptimizationRecommendation[] | undefined;
-
-  return (
-    <div className="p-6 space-y-6">
+    const performance = (performanceData as any)?.data as PerformanceMetrics | undefined;
+    const realtime = (realtimeData as any)?.data;
+    const recommendations = (recommendationsData as any)?.data as OptimizationRecommendation[] | undefined;
+    return (<div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Performance Dashboard</h1>
@@ -134,11 +116,11 @@ export default function PerformanceDashboard() {
         </div>
         <div className="flex gap-2">
           <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <RefreshCw className="w-4 h-4 mr-2"/>
             Refresh
           </Button>
           <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4 mr-2"/>
             Export
           </Button>
         </div>
@@ -157,7 +139,7 @@ export default function PerformanceDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
+                <Activity className="h-4 w-4 text-muted-foreground"/>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{performance?.overview.totalRequests || 0}</div>
@@ -168,7 +150,7 @@ export default function PerformanceDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Avg Response Time</CardTitle>
-                <Zap className="h-4 w-4 text-muted-foreground" />
+                <Zap className="h-4 w-4 text-muted-foreground"/>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -181,7 +163,7 @@ export default function PerformanceDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Error Rate</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                <AlertTriangle className="h-4 w-4 text-muted-foreground"/>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -194,12 +176,12 @@ export default function PerformanceDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Performance Score</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <TrendingUp className="h-4 w-4 text-muted-foreground"/>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {performance?.overview.avgResponseTime ? 
-                    Math.max(0, 100 - Math.round(performance.overview.avgResponseTime / 10)) : 0}
+                  {performance?.overview.avgResponseTime ?
+            Math.max(0, 100 - Math.round(performance.overview.avgResponseTime / 10)) : 0}
                 </div>
                 <p className="text-xs text-muted-foreground">Based on response times</p>
               </CardContent>
@@ -213,33 +195,25 @@ export default function PerformanceDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {performance?.overview.topSlowEndpoints.slice(0, 5).map((endpoint, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                {performance?.overview.topSlowEndpoints.slice(0, 5).map((endpoint, index) => (<div key={index} className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="font-medium">{endpoint.endpoint}</p>
                       <p className="text-sm text-muted-foreground">{endpoint.requests} requests</p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium">{formatResponseTime(endpoint.avgTime)}</p>
-                      <Progress 
-                        value={Math.min(100, endpoint.avgTime / 20)} 
-                        className="w-20 h-2 mt-1"
-                      />
+                      <Progress value={Math.min(100, endpoint.avgTime / 20)} className="w-20 h-2 mt-1"/>
                     </div>
-                  </div>
-                ))}
+                  </div>))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="realtime" className="space-y-6">
-          {realtimeLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full" />
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+          {realtimeLoading ? (<div className="flex items-center justify-center h-32">
+              <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full"/>
+            </div>) : (<div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Current Load</CardTitle>
@@ -272,19 +246,16 @@ export default function PerformanceDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {realtime?.memoryTrend?.slice(-5).map((sample: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center">
+                    {realtime?.memoryTrend?.slice(-5).map((sample: any, index: number) => (<div key={index} className="flex justify-between items-center">
                         <span className="text-sm">
                           {new Date(sample.timestamp).toLocaleTimeString()}
                         </span>
                         <span className="font-medium">{Math.round(sample.usage)}MB</span>
-                      </div>
-                    ))}
+                      </div>))}
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
+            </div>)}
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-6">
@@ -295,10 +266,8 @@ export default function PerformanceDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {performance?.alerts && performance.alerts.length > 0 ? (
-                  performance.alerts.slice(0, 10).map((alert, index) => (
-                    <Alert key={index} variant={alert.severity === 'CRITICAL' || alert.severity === 'HIGH' ? 'destructive' : 'default'}>
-                      <AlertTriangle className="h-4 w-4" />
+                {performance?.alerts && performance.alerts.length > 0 ? (performance.alerts.slice(0, 10).map((alert, index) => (<Alert key={index} variant={alert.severity === 'CRITICAL' || alert.severity === 'HIGH' ? 'destructive' : 'default'}>
+                      <AlertTriangle className="h-4 w-4"/>
                       <AlertTitle className="flex items-center gap-2">
                         {alert.type}
                         <Badge variant={getSeverityColor(alert.severity)}>{alert.severity}</Badge>
@@ -309,11 +278,7 @@ export default function PerformanceDashboard() {
                           {new Date(alert.timestamp).toLocaleString()}
                         </div>
                       </AlertDescription>
-                    </Alert>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground">No active alerts</p>
-                )}
+                    </Alert>))) : (<p className="text-muted-foreground">No active alerts</p>)}
               </div>
             </CardContent>
           </Card>
@@ -327,9 +292,7 @@ export default function PerformanceDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {recommendations && recommendations.length > 0 ? (
-                  recommendations.map((rec, index) => (
-                    <div key={index} className="border rounded-lg p-4 space-y-3">
+                {recommendations && recommendations.length > 0 ? (recommendations.map((rec, index) => (<div key={index} className="border rounded-lg p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold">{rec.title}</h4>
                         <Badge variant={getPriorityColor(rec.priority)}>{rec.priority}</Badge>
@@ -344,16 +307,11 @@ export default function PerformanceDashboard() {
                         <p className="text-sm font-medium mb-1">Expected Impact:</p>
                         <p className="text-sm">{rec.impact}</p>
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground">No recommendations available</p>
-                )}
+                    </div>))) : (<p className="text-muted-foreground">No recommendations available</p>)}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
 }

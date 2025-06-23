@@ -2,7 +2,7 @@ import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index 
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { auditLogs as auditLogsTableDefinition } from "./auditLog"; // Assuming auditLog.ts is in the same directory
+import { auditLogs as auditLogsTableDefinition } from "./auditLog.js"; // Assuming auditLog.ts is in the same directory
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
 const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);

@@ -1,6 +1,5 @@
 import puppeteer from 'puppeteer';
-import { Trip, Activity } from '@shared/schema';
-
+import type { Trip, Activity } from '@shared/schema';
 export interface ProposalData {
     trip: Trip;
     activities: Activity[];
@@ -25,7 +24,6 @@ export interface ProposalData {
         website?: string;
     };
 }
-
 // AI-powered cost estimation based on trip data
 export function generateCostEstimate(trip: Trip, activities: Activity[]): {
     estimatedCost: number;
@@ -36,7 +34,6 @@ export function generateCostEstimate(trip: Trip, activities: Activity[]): {
         const startDate = new Date(trip.startDate);
         const endDate = new Date(trip.endDate);
         const tripDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        
         // Base estimates per day based on destination and trip type
         const baseRates = {
             domestic: { daily: 200, flights: 400, hotels: 120 },
@@ -44,17 +41,17 @@ export function generateCostEstimate(trip: Trip, activities: Activity[]): {
             luxury: { daily: 500, flights: 1200, hotels: 300 },
             budget: { daily: 100, flights: 250, hotels: 60 }
         };
-        
         // Determine trip category
         const isInternational = trip.country && trip.country.toLowerCase() !== 'usa' && trip.country.toLowerCase() !== 'united states';
         const isLuxury = activities.some(a => a.tag === 'luxury' || a.notes?.toLowerCase().includes('luxury'));
         const isBudget = activities.some(a => a.tag === 'budget' || a.notes?.toLowerCase().includes('budget'));
-        
         let rates = baseRates.domestic;
-        if (isLuxury) rates = baseRates.luxury;
-        else if (isBudget) rates = baseRates.budget;
-        else if (isInternational) rates = baseRates.international;
-        
+        if (isLuxury)
+            rates = baseRates.luxury;
+        else if (isBudget)
+            rates = baseRates.budget;
+        else if (isInternational)
+            rates = baseRates.international;
         // Calculate detailed breakdown
         const flights = rates.flights;
         const hotels = rates.hotels * tripDuration;
@@ -62,9 +59,7 @@ export function generateCostEstimate(trip: Trip, activities: Activity[]): {
         const meals = tripDuration * 60; // 3 meals per day estimate
         const transportation = tripDuration * 40; // Local transport
         const miscellaneous = Math.round((flights + hotels + activitiesCost + meals + transportation) * 0.1); // 10% buffer
-        
         const estimatedCost = flights + hotels + activitiesCost + meals + transportation + miscellaneous;
-        
         return {
             estimatedCost,
             costBreakdown: {
@@ -76,7 +71,8 @@ export function generateCostEstimate(trip: Trip, activities: Activity[]): {
                 miscellaneous
             }
         };
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error generating cost estimate:', error);
         // Fallback estimates
         return {
@@ -92,22 +88,20 @@ export function generateCostEstimate(trip: Trip, activities: Activity[]): {
         };
     }
 }
-
 // Generate professional HTML for the proposal
 function generateProposalHTML(data: ProposalData): string {
     const formatCurrency = (amount: number) => amount.toLocaleString('en-US');
-    const formatDate = (date: Date) => date.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+    const formatDate = (date: Date) => date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
     });
     const formatDateRange = (start: Date, end: Date) => {
         const startStr = start.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         const endStr = end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         return `${startStr} - ${endStr}`;
     };
-
     return `
 <!DOCTYPE html>
 <html>
@@ -198,20 +192,16 @@ function generateProposalHTML(data: ProposalData): string {
 </body>
 </html>`;
 }
-
 // Generate AI-powered branded proposal PDF
 export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
     const html = generateProposalHTML(data);
-    
     const browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    
     try {
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
-        
         const pdf = await page.pdf({
             format: 'A4',
             printBackground: true,
@@ -222,9 +212,9 @@ export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
                 left: '15mm'
             }
         });
-        
         return Buffer.from(pdf);
-    } finally {
+    }
+    finally {
         await browser.close();
     }
 }

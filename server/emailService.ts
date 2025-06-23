@@ -1,76 +1,66 @@
-import { MailService } from '@sendgrid/mail';
-import { getBrandingConfig } from '../branding.js';
-
+import type { MailService } from '@sendgrid/mail';
+import type { getBrandingConfig } from '../branding.js';
 let mailService: MailService | null = null;
-
 // Initialize SendGrid if API key is available
 if (process.env.SENDGRID_API_KEY) {
-  mailService = new MailService();
-  mailService.setApiKey(process.env.SENDGRID_API_KEY);
-  console.log('✓ SendGrid email service initialized');
-} else {
-  console.warn('⚠ SENDGRID_API_KEY not found - email features will be disabled');
+    mailService = new MailService();
+    mailService.setApiKey(process.env.SENDGRID_API_KEY);
+    console.log('✓ SendGrid email service initialized');
 }
-
+else {
+    console.warn('⚠ SENDGRID_API_KEY not found - email features will be disabled');
+}
 interface BrandingContext {
-  organizationId?: number;
-  domain?: string;
+    organizationId?: number;
+    domain?: string;
 }
-
 interface TeamInvitationEmailParams {
-  to: string;
-  inviterName: string;
-  organizationName: string;
-  invitationToken: string;
-  role: string;
+    to: string;
+    inviterName: string;
+    organizationName: string;
+    invitationToken: string;
+    role: string;
 }
-
 interface NotificationEmailParams {
-  to: string;
-  subject: string;
-  title: string;
-  message: string;
-  actionUrl?: string;
-  actionText?: string;
-  type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system';
+    to: string;
+    subject: string;
+    title: string;
+    message: string;
+    actionUrl?: string;
+    actionText?: string;
+    type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system';
 }
-
 export async function sendNotificationEmail(params: NotificationEmailParams): Promise<boolean> {
-  if (!process.env.SENDGRID_API_KEY) {
-    console.log('⚠ SendGrid not configured - email sending disabled');
-    return false;
-  }
-
-  try {
-    const sgMail = require('@sendgrid/mail');
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-    const msg = {
-      to: params.to,
-      from: process.env.FROM_EMAIL || 'noreply@nestmap.com',
-      subject: params.subject,
-      html: generateNotificationHTML(params),
-    };
-
-    await sgMail.send(msg);
-    console.log(`Notification email sent to ${params.to}: ${params.subject}`);
-    return true;
-  } catch (error) {
-    console.error('Error sending notification email:', error);
-    return false;
-  }
+    if (!process.env.SENDGRID_API_KEY) {
+        console.log('⚠ SendGrid not configured - email sending disabled');
+        return false;
+    }
+    try {
+        const sgMail = require('@sendgrid/mail');
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        const msg = {
+            to: params.to,
+            from: process.env.FROM_EMAIL || 'noreply@nestmap.com',
+            subject: params.subject,
+            html: generateNotificationHTML(params),
+        };
+        await sgMail.send(msg);
+        console.log(`Notification email sent to ${params.to}: ${params.subject}`);
+        return true;
+    }
+    catch (error) {
+        console.error('Error sending notification email:', error);
+        return false;
+    }
 }
-
 export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams): Promise<boolean> {
-  if (!mailService) {
-    console.log(`[EMAIL DISABLED] Would send invitation to ${params.to} for ${params.organizationName}`);
-    return false;
-  }
-
-  try {
-    const invitationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/invite/${params.invitationToken}`;
-    
-    const emailHTML = `
+    if (!mailService) {
+        console.log(`[EMAIL DISABLED] Would send invitation to ${params.to} for ${params.organizationName}`);
+        return false;
+    }
+    try {
+        const invitationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/invite/${params.invitationToken}`;
+        const emailHTML = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -121,37 +111,33 @@ export async function sendTeamInvitationEmail(params: TeamInvitationEmailParams)
         </body>
       </html>
     `;
-
-    await mailService.send({
-      to: params.to,
-      from: process.env.FROM_EMAIL || 'noreply@nestmap.app',
-      subject: `You're invited to join ${params.organizationName} on NestMap`,
-      html: emailHTML,
-      text: `${params.inviterName} has invited you to join ${params.organizationName} on NestMap as a ${params.role}. Accept your invitation: ${invitationUrl}`
-    });
-
-    console.log(`✓ Team invitation email sent to ${params.to}`);
-    return true;
-  } catch (error) {
-    console.error('✗ Failed to send team invitation email:', error);
-    return false;
-  }
+        await mailService.send({
+            to: params.to,
+            from: process.env.FROM_EMAIL || 'noreply@nestmap.app',
+            subject: `You're invited to join ${params.organizationName} on NestMap`,
+            html: emailHTML,
+            text: `${params.inviterName} has invited you to join ${params.organizationName} on NestMap as a ${params.role}. Accept your invitation: ${invitationUrl}`
+        });
+        console.log(`✓ Team invitation email sent to ${params.to}`);
+        return true;
+    }
+    catch (error) {
+        console.error('✗ Failed to send team invitation email:', error);
+        return false;
+    }
 }
-
 interface WelcomeEmailParams {
-  to: string;
-  name: string;
-  organizationName?: string;
+    to: string;
+    name: string;
+    organizationName?: string;
 }
-
 export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<boolean> {
-  if (!mailService) {
-    console.log(`[EMAIL DISABLED] Would send welcome email to ${params.to}`);
-    return false;
-  }
-
-  try {
-    const emailHTML = `
+    if (!mailService) {
+        console.log(`[EMAIL DISABLED] Would send welcome email to ${params.to}`);
+        return false;
+    }
+    try {
+        const emailHTML = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -176,10 +162,9 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
             <div class="content">
               <h2>Hello ${params.name}! 👋</h2>
               
-              ${params.organizationName ? 
-                `<p>You've successfully joined <strong>${params.organizationName}</strong> on NestMap!</p>` :
-                `<p>Welcome to NestMap! You're all set to start planning amazing trips.</p>`
-              }
+              ${params.organizationName ?
+            `<p>You've successfully joined <strong>${params.organizationName}</strong> on NestMap!</p>` :
+            `<p>Welcome to NestMap! You're all set to start planning amazing trips.</p>`}
               
               <p>Here's what you can do now:</p>
               <ul>
@@ -202,19 +187,18 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<bool
         </body>
       </html>
     `;
-
-    await mailService.send({
-      to: params.to,
-      from: process.env.FROM_EMAIL || 'noreply@nestmap.app',
-      subject: `Welcome to NestMap${params.organizationName ? ` - ${params.organizationName}` : ''}!`,
-      html: emailHTML,
-      text: `Welcome to NestMap! ${params.organizationName ? `You've joined ${params.organizationName}.` : ''} Start planning: ${process.env.FRONTEND_URL || 'http://localhost:5000'}`
-    });
-
-    console.log(`✓ Welcome email sent to ${params.to}`);
-    return true;
-  } catch (error) {
-    console.error('✗ Failed to send welcome email:', error);
-    return false;
-  }
+        await mailService.send({
+            to: params.to,
+            from: process.env.FROM_EMAIL || 'noreply@nestmap.app',
+            subject: `Welcome to NestMap${params.organizationName ? ` - ${params.organizationName}` : ''}!`,
+            html: emailHTML,
+            text: `Welcome to NestMap! ${params.organizationName ? `You've joined ${params.organizationName}.` : ''} Start planning: ${process.env.FRONTEND_URL || 'http://localhost:5000'}`
+        });
+        console.log(`✓ Welcome email sent to ${params.to}`);
+        return true;
+    }
+    catch (error) {
+        console.error('✗ Failed to send welcome email:', error);
+        return false;
+    }
 }

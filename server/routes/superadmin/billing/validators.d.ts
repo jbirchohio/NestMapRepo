@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { RequestHandler } from '../../express-augmentations';
 import type { z } from 'zod';
 
 export const organizationIdParamSchema: z.ZodObject<{

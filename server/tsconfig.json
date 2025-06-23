@@ -1,42 +1,27 @@
 {
   "extends": "../tsconfig.base.json",
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.d.ts",
-    "./storage/**/*.ts",
-    "./db/**/*.ts",
-    "./utils/**/*.ts",
-    "./config/**/*.ts",
-    "./middleware/**/*.ts",
-    "./routes/**/*.ts",
-    "./services/**/*.ts",
-    "./types/**/*.ts",
-    "./index.ts",
-    "./*.ts",
-    "../shared/src/**/*.ts"
-  ],
-  "exclude": ["node_modules"],
   "compilerOptions": {
-    "outDir": "../dist/server",
-    "rootDir": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2022", "DOM", "ES2022.Object", "ES2022.String", "ES2015.Promise", "ES2015.Iterable"],
-    "types": ["node", "express", "express-serve-static-core", "jest"],
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "../dist/server",
+    "rootDir": ".",
+    "lib": ["ES2022", "DOM"],
+    "types": ["jest", "node"],
     "typeRoots": [
       "./node_modules/@types",
-      "./src/@types",
-      "./types",
-      "../node_modules/@types"
+      "./src/types",
+      "./types"
     ],
     "baseUrl": ".",
     "paths": {
-      "@server/*": ["src/*"],
-
+      "@server/*": ["./src/*"],
       "@shared/*": ["../shared/src/*"]
     },
     "resolveJsonModule": true,
-    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "noUnusedParameters": true,
     "strictFunctionTypes": true,
@@ -45,9 +30,12 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "skipLibCheck": true,
     "target": "ES2022",
-    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/server.tsbuildinfo"
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/server.tsbuildinfo",
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "references": [{"path": "../shared"}]
 }

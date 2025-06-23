@@ -1,0 +1,70 @@
+import type { User } from '../../users/entities/user.entity.js';
+import type { ParamsDictionary, Query } from 'express-serve-static-core';
+
+interface ResponseMetrics {
+  startTime: number;
+  endTime?: number;
+  statusCode?: number;
+  method?: string;
+  path?: string;
+  duration?: number;
+}
+
+declare global {
+  namespace Express {
+    interface Request<ReqBody = any, ResBody = any, ReqQuery = Query> {
+      // User and Auth
+      user?: User;
+      isAuthenticated?: () => boolean;
+      isUnauthenticated?: () => boolean;
+      
+      // Organization
+      organizationFilter?: (orgId: string | null) => boolean;
+      organizationId?: string;
+      domainOrganizationId?: string;
+      isWhiteLabelDomain?: boolean;
+      
+      // Request Metadata
+      method: string;
+      originalUrl: string;
+      url: string;
+      path: string;
+      ip?: string;
+      socket: {
+        remoteAddress?: string;
+      };
+      cookies: {
+        [key: string]: string;
+      };
+      headers: {
+        [key: string]: string | string[] | undefined;
+        'user-agent'?: string;
+        'authorization'?: string;
+        [key: string]: any;
+      };
+      body: ReqBody;
+      params: ParamsDictionary;
+      query: ReqQuery;
+      
+      // Response Metrics
+      responseMetrics?: ResponseMetrics;
+      
+      // Analytics
+      analyticsScope?: Record<string, any>;
+      
+      // Other common properties
+      [key: string]: any;
+    }
+  }
+}
+
+// Export the augmented Request type
+export type Request<ReqBody = any, ResBody = any, ReqQuery = Query, P extends ParamsDictionary = ParamsDictionary> = 
+  Express.Request<ReqBody, ResBody, ReqQuery, P>;
+
+export interface AuthenticatedRequest<ReqBody = any, ResBody = any, ReqQuery = Query, P extends ParamsDictionary = ParamsDictionary> 
+  extends Request<ReqBody, ResBody, ReqQuery, P> {
+  user: User;
+}
+
+export {};

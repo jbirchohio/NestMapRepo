@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express';
+import type { RequestHandler } from '../../express-augmentations';
 
 declare module './controllers' {
   export const getBillingOverview: RequestHandler;

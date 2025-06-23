@@ -12,115 +12,106 @@ import WhiteLabelPreview from '@/components/WhiteLabelPreview';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { CheckCircle, AlertCircle, ChevronRight, Globe, Palette, Settings } from 'lucide-react';
 import api from '@/services/api/apiClient';
-
 interface WhiteLabelStatus {
-  organization: {
-    id: number;
-    name: string;
-    plan: string;
-  };
-  whiteLabelStatus: {
-    isEnabled: boolean;
-    isConfigured: boolean;
-    hasDomain: boolean;
-    hasVerifiedDomain: boolean;
-    isActive: boolean;
-  };
-  completionSteps: {
-    subscription: boolean;
-    branding: boolean;
-    domain: boolean;
-    domainVerification: boolean;
-    active: boolean;
-  };
-  completionPercentage: number;
-  settings: any | null;
-  domains: Array<{
-    id: number;
-    domain: string;
-    subdomain: string;
-    dns_verified: boolean;
-    ssl_verified: boolean;
-    verification_token: string;
-    created_at: string;
-  }>;
-  nextSteps: string[];
+    organization: {
+        id: number;
+        name: string;
+        plan: string;
+    };
+    whiteLabelStatus: {
+        isEnabled: boolean;
+        isConfigured: boolean;
+        hasDomain: boolean;
+        hasVerifiedDomain: boolean;
+        isActive: boolean;
+    };
+    completionSteps: {
+        subscription: boolean;
+        branding: boolean;
+        domain: boolean;
+        domainVerification: boolean;
+        active: boolean;
+    };
+    completionPercentage: number;
+    settings: any | null;
+    domains: Array<{
+        id: number;
+        domain: string;
+        subdomain: string;
+        dns_verified: boolean;
+        ssl_verified: boolean;
+        verification_token: string;
+        created_at: string;
+    }>;
+    nextSteps: string[];
 }
-
 export default function WhiteLabelDashboard() {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { whiteLabelConfig, isWhiteLabelActive } = useWhiteLabel();
-  
-  const [status, setStatus] = useState<WhiteLabelStatus | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<string>('overview');
-  
-  // Fetch white label status
-  const fetchStatus = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const response = await api.get<WhiteLabelStatus>('/api/white-label/status');
-      setStatus(response);
-    } catch (error) {
-      console.error('Error fetching white label status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load white label status. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Activate white label
-  const activateWhiteLabel = async () => {
-    try {
-      await api.post<void>('/api/white-label/activate');
-      toast({
-        title: 'Success',
-        description: 'White label features have been activated!',
-      });
-      fetchStatus();
-    } catch (error) {
-      console.error('Error activating white label:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to activate white label features. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Load status on component mount
-  useEffect(() => {
-    fetchStatus();
-  }, []);
-
-  // Navigate to settings pages
-  const navigateTo = (path: string) => {
-    navigate(path);
-  };
-
-  // Render loading state
-  if (loading) {
-    return (
-      <div className="container mx-auto py-8 px-4">
+    const { toast } = useToast();
+    const navigate = useNavigate();
+    const { whiteLabelConfig, isWhiteLabelActive } = useWhiteLabel();
+    const [status, setStatus] = useState<WhiteLabelStatus | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [activeTab, setActiveTab] = useState<string>('overview');
+    // Fetch white label status
+    const fetchStatus = async (): Promise<void> => {
+        setLoading(true);
+        try {
+            const response = await api.get<WhiteLabelStatus>('/api/white-label/status');
+            setStatus(response);
+        }
+        catch (error) {
+            console.error('Error fetching white label status:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to load white label status. Please try again.',
+                variant: 'destructive',
+            });
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+    // Activate white label
+    const activateWhiteLabel = async () => {
+        try {
+            await api.post<void>('/api/white-label/activate');
+            toast({
+                title: 'Success',
+                description: 'White label features have been activated!',
+            });
+            fetchStatus();
+        }
+        catch (error) {
+            console.error('Error activating white label:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to activate white label features. Please try again.',
+                variant: 'destructive',
+            });
+        }
+    };
+    // Load status on component mount
+    useEffect(() => {
+        fetchStatus();
+    }, []);
+    // Navigate to settings pages
+    const navigateTo = (path: string) => {
+        navigate(path);
+    };
+    // Render loading state
+    if (loading) {
+        return (<div className="container mx-auto py-8 px-4">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <p className="mt-4 text-muted-foreground">Loading white label dashboard...</p>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // Render subscription upgrade required
-  if (status && !status.completionSteps.subscription) {
-    return (
-      <div className="container mx-auto py-8 px-4 max-w-4xl">
+      </div>);
+    }
+    // Render subscription upgrade required
+    if (status && !status.completionSteps.subscription) {
+        return (<div className="container mx-auto py-8 px-4 max-w-4xl">
         <Card>
           <CardHeader>
             <CardTitle>White Label Features</CardTitle>
@@ -130,7 +121,7 @@ export default function WhiteLabelDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className="h-4 w-4"/>
               <AlertTitle>Subscription Upgrade Required</AlertTitle>
               <AlertDescription>
                 White label features are available on Pro plan and higher. Upgrade your subscription to access these features.
@@ -167,95 +158,66 @@ export default function WhiteLabelDashboard() {
             </Button>
           </CardFooter>
         </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto py-8 px-4">
+      </div>);
+    }
+    return (<div className="container mx-auto py-8 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">White Label Dashboard</h1>
           <p className="text-muted-foreground">Customize your travel management platform</p>
         </div>
         
-        {status && status.whiteLabelStatus.isActive ? (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
-            <CheckCircle className="h-3 w-3" />
+        {status && status.whiteLabelStatus.isActive ? (<Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+            <CheckCircle className="h-3 w-3"/>
             Active
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
-            <AlertCircle className="h-3 w-3" />
+          </Badge>) : (<Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+            <AlertCircle className="h-3 w-3"/>
             Setup in Progress
-          </Badge>
-        )}
+          </Badge>)}
       </div>
       
-      {status && (
-        <Card className="mb-8">
+      {status && (<Card className="mb-8">
           <CardHeader className="pb-2">
             <CardTitle>Setup Progress</CardTitle>
             <CardDescription>Complete all steps to activate white label features</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <Progress value={status.completionPercentage} className="h-2" />
+              <Progress value={status.completionPercentage} className="h-2"/>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
                 <div className="flex items-center gap-2">
-                  {status.completionSteps.subscription ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-amber-500" />
-                  )}
+                  {status.completionSteps.subscription ? (<CheckCircle className="h-5 w-5 text-green-500"/>) : (<AlertCircle className="h-5 w-5 text-amber-500"/>)}
                   <span>Subscription</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {status.completionSteps.branding ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-amber-500" />
-                  )}
+                  {status.completionSteps.branding ? (<CheckCircle className="h-5 w-5 text-green-500"/>) : (<AlertCircle className="h-5 w-5 text-amber-500"/>)}
                   <span>Branding</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {status.completionSteps.domain ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-amber-500" />
-                  )}
+                  {status.completionSteps.domain ? (<CheckCircle className="h-5 w-5 text-green-500"/>) : (<AlertCircle className="h-5 w-5 text-amber-500"/>)}
                   <span>Domain</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  {status.completionSteps.active ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-amber-500" />
-                  )}
+                  {status.completionSteps.active ? (<CheckCircle className="h-5 w-5 text-green-500"/>) : (<AlertCircle className="h-5 w-5 text-amber-500"/>)}
                   <span>Activation</span>
                 </div>
               </div>
               
-              {status.nextSteps.length > 0 && (
-                <Alert>
+              {status.nextSteps.length > 0 && (<Alert>
                   <AlertTitle>Next Steps</AlertTitle>
                   <AlertDescription>
                     <ul className="list-disc pl-5 space-y-1 mt-2">
-                      {status.nextSteps.map((step, index) => (
-                        <li key={index}>{step}</li>
-                      ))}
+                      {status.nextSteps.map((step, index) => (<li key={index}>{step}</li>))}
                     </ul>
                   </AlertDescription>
-                </Alert>
-              )}
+                </Alert>)}
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>)}
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3 mb-8">
@@ -274,12 +236,11 @@ export default function WhiteLabelDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="cursor-pointer hover:border-primary transition-colors" 
-                      onClick={() => setActiveTab('branding')}>
+                <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setActiveTab('branding')}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <Palette className="h-5 w-5 text-primary" />
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <Palette className="h-5 w-5 text-primary"/>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground"/>
                     </div>
                     <CardTitle className="text-base mt-2">Branding Settings</CardTitle>
                   </CardHeader>
@@ -290,12 +251,11 @@ export default function WhiteLabelDashboard() {
                   </CardContent>
                 </Card>
                 
-                <Card className="cursor-pointer hover:border-primary transition-colors"
-                      onClick={() => setActiveTab('domains')}>
+                <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => setActiveTab('domains')}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <Globe className="h-5 w-5 text-primary" />
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <Globe className="h-5 w-5 text-primary"/>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground"/>
                     </div>
                     <CardTitle className="text-base mt-2">Custom Domains</CardTitle>
                   </CardHeader>
@@ -306,12 +266,11 @@ export default function WhiteLabelDashboard() {
                   </CardContent>
                 </Card>
                 
-                <Card className="cursor-pointer hover:border-primary transition-colors"
-                      onClick={() => navigateTo('/settings/white-label')}>
+                <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigateTo('/settings/white-label')}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <Settings className="h-5 w-5 text-primary" />
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <Settings className="h-5 w-5 text-primary"/>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground"/>
                     </div>
                     <CardTitle className="text-base mt-2">Advanced Settings</CardTitle>
                   </CardHeader>
@@ -323,20 +282,15 @@ export default function WhiteLabelDashboard() {
                 </Card>
               </div>
               
-              {status && !status.whiteLabelStatus.isActive && status.completionSteps.branding && status.completionSteps.domain && (
-                <div className="mt-6">
+              {status && !status.whiteLabelStatus.isActive && status.completionSteps.branding && status.completionSteps.domain && (<div className="mt-6">
                   <Button onClick={activateWhiteLabel}>
                     Activate White Label
                   </Button>
-                </div>
-              )}
+                </div>)}
             </CardContent>
           </Card>
           
-          <WhiteLabelPreview 
-            config={whiteLabelConfig} 
-            isActive={isWhiteLabelActive} 
-          />
+          <WhiteLabelPreview config={whiteLabelConfig} isActive={isWhiteLabelActive}/>
         </TabsContent>
         
         <TabsContent value="branding">
@@ -364,10 +318,8 @@ export default function WhiteLabelDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {status && status.domains.length > 0 ? (
-                <div className="space-y-4">
-                  {status.domains.map((domain) => (
-                    <Card key={domain.id}>
+              {status && status.domains.length > 0 ? (<div className="space-y-4">
+                  {status.domains.map((domain) => (<Card key={domain.id}>
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base">{domain.subdomain}.{domain.domain}</CardTitle>
@@ -380,19 +332,11 @@ export default function WhiteLabelDashboard() {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">DNS Verification:</span>
-                            {domain.dns_verified ? (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Verified</Badge>
-                            ) : (
-                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>
-                            )}
+                            {domain.dns_verified ? (<Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Verified</Badge>) : (<Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>)}
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium">SSL Certificate:</span>
-                            {domain.ssl_verified ? (
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
-                            ) : (
-                              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>
-                            )}
+                            {domain.ssl_verified ? (<Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>) : (<Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>)}
                           </div>
                         </div>
                       </CardContent>
@@ -401,18 +345,14 @@ export default function WhiteLabelDashboard() {
                           Manage Domain
                         </Button>
                       </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    </Card>))}
+                </div>) : (<div className="text-center py-8">
+                  <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
                   <h3 className="text-lg font-medium mb-2">No Custom Domains</h3>
                   <p className="text-muted-foreground mb-4">
                     Add a custom domain to provide a seamless branded experience for your clients.
                   </p>
-                </div>
-              )}
+                </div>)}
               
               <Button onClick={() => navigateTo('/settings/white-label/domains/new')}>
                 Add Custom Domain
@@ -421,6 +361,5 @@ export default function WhiteLabelDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>);
 }

@@ -1,65 +1,58 @@
 import { ReactNode } from 'react';
 import { User as ApiUser } from '@/types/api';
 import type { Notification as AppNotification } from '@/types/notification';
-
 export type { AppNotification };
-
 export interface NavigationItem {
-  name: string;
-  href: string;
-  icon: ReactNode;
-  ariaLabel: string;
-  requiresAuth: boolean;
+    name: string;
+    href: string;
+    icon: ReactNode;
+    ariaLabel: string;
+    requiresAuth: boolean;
 }
-
 export interface UserNavigationItem {
-  name: string;
-  href: string;
-  icon: ReactNode;
-  onClick?: () => void | Promise<void>;
+    name: string;
+    href: string;
+    icon: ReactNode;
+    onClick?: () => void | Promise<void>;
 }
-
 // Extend the API User type to handle both string and number IDs
-export type User = Omit<ApiUser, 'id'> & { id: string | number };
-
+export type User = Omit<ApiUser, 'id'> & {
+    id: string | number;
+};
 export interface NavigationProps {
-  isAuthenticated: boolean;
-  user?: User | null;
-  notifications: AppNotification[];
-  onSignOut: () => Promise<void>;
-  onNotificationClick: (id: string) => Promise<void>;
-  onMarkAllAsRead: () => Promise<void>;
+    isAuthenticated: boolean;
+    user?: User | null;
+    notifications: AppNotification[];
+    onSignOut: () => Promise<void>;
+    onNotificationClick: (id: string) => Promise<void>;
+    onMarkAllAsRead: () => Promise<void>;
 }
-
 export interface MobileMenuProps extends NavigationProps {
-  isOpen: boolean;
-  onClose: () => void;
-  navigationItems: NavigationItem[];
+    isOpen: boolean;
+    onClose: () => void;
+    navigationItems: NavigationItem[];
 }
-
 export interface DesktopNavigationProps extends NavigationProps {
-  navigationItems: NavigationItem[];
-  isProfileMenuOpen: boolean;
-  isNotificationsOpen: boolean;
-  onProfileClick: () => void;
-  onNotificationsClick: () => void;
-  onCloseAllMenus: () => void;
+    navigationItems: NavigationItem[];
+    isProfileMenuOpen: boolean;
+    isNotificationsOpen: boolean;
+    onProfileClick: () => void;
+    onNotificationsClick: () => void;
+    onCloseAllMenus: () => void;
 }
-
 export interface UserMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-  user?: User | null;
-  onSignOut: () => Promise<void>;
-  items: UserNavigationItem[];
-  onProfileClick: () => void;
+    isOpen: boolean;
+    onClose: () => void;
+    user?: User | null;
+    onSignOut: () => Promise<void>;
+    items: UserNavigationItem[];
+    onProfileClick: () => void;
 }
-
 export interface NotificationsMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-  notifications: Notification[];
-  onNotificationClick: (id: string) => Promise<void>;
-  onMarkAllAsRead: () => Promise<void>;
-  onNotificationsClick: () => void;
+    isOpen: boolean;
+    onClose: () => void;
+    notifications: Notification[];
+    onNotificationClick: (id: string) => Promise<void>;
+    onMarkAllAsRead: () => Promise<void>;
+    onNotificationsClick: () => void;
 }

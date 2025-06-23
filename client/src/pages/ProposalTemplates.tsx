@@ -15,160 +15,145 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Edit, Copy, Trash2, Template, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 const templateSchema = z.object({
-  name: z.string().min(1, "Template name is required"),
-  description: z.string().optional(),
-  isShared: z.boolean().default(false),
-  branding: z.object({
-    companyName: z.string().min(1, "Company name is required"),
-    logo: z.string().optional(),
-    primaryColor: z.string().default("#2563eb"),
-    secondaryColor: z.string().default("#64748b"),
-    contactInfo: z.object({
-      email: z.string().email("Valid email required"),
-      phone: z.string().optional(),
-      website: z.string().optional(),
-      address: z.string().optional()
+    name: z.string().min(1, "Template name is required"),
+    description: z.string().optional(),
+    isShared: z.boolean().default(false),
+    branding: z.object({
+        companyName: z.string().min(1, "Company name is required"),
+        logo: z.string().optional(),
+        primaryColor: z.string().default("#2563eb"),
+        secondaryColor: z.string().default("#64748b"),
+        contactInfo: z.object({
+            email: z.string().email("Valid email required"),
+            phone: z.string().optional(),
+            website: z.string().optional(),
+            address: z.string().optional()
+        })
+    }),
+    sections: z.object({
+        includeCostBreakdown: z.boolean().default(true),
+        includeItinerary: z.boolean().default(true),
+        includeTerms: z.boolean().default(true),
+        includeAboutUs: z.boolean().default(false),
+        customSections: z.array(z.object({
+            title: z.string(),
+            content: z.string(),
+            order: z.number()
+        })).default([])
+    }),
+    pricingRules: z.object({
+        markup: z.number().min(0).max(100).default(10),
+        discounts: z.array(z.object({
+            condition: z.string(),
+            percentage: z.number()
+        })).default([]),
+        currency: z.string().default("USD")
     })
-  }),
-  sections: z.object({
-    includeCostBreakdown: z.boolean().default(true),
-    includeItinerary: z.boolean().default(true),
-    includeTerms: z.boolean().default(true),
-    includeAboutUs: z.boolean().default(false),
-    customSections: z.array(z.object({
-      title: z.string(),
-      content: z.string(),
-      order: z.number()
-    })).default([])
-  }),
-  pricingRules: z.object({
-    markup: z.number().min(0).max(100).default(10),
-    discounts: z.array(z.object({
-      condition: z.string(),
-      percentage: z.number()
-    })).default([]),
-    currency: z.string().default("USD")
-  })
 });
-
 type TemplateFormData = z.infer<typeof templateSchema>;
-
 export default function ProposalTemplates() {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<any>(null);
-  const { toast } = useToast();
-
-  const { data: templates, isLoading } = useQuery({
-    queryKey: ["/api/proposal-templates"],
-  });
-
-  const createTemplate = useMutation({
-    mutationFn: (data: TemplateFormData) => 
-      apiRequest("POST", "/api/proposal-templates", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
-      setIsCreateDialogOpen(false);
-      toast({
-        title: "Template Created",
-        description: "Your proposal template has been saved successfully.",
-      });
-    },
-  });
-
-  const updateTemplate = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: TemplateFormData }) =>
-      apiRequest("PUT", `/api/proposal-templates/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
-      setEditingTemplate(null);
-      toast({
-        title: "Template Updated",
-        description: "Your proposal template has been updated successfully.",
-      });
-    },
-  });
-
-  const deleteTemplate = useMutation({
-    mutationFn: (id: number) => apiRequest("DELETE", `/api/proposal-templates/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
-      toast({
-        title: "Template Deleted",
-        description: "The proposal template has been deleted.",
-      });
-    },
-  });
-
-  const duplicateTemplate = useMutation({
-    mutationFn: (id: number) => apiRequest("POST", `/api/proposal-templates/${id}/duplicate`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
-      toast({
-        title: "Template Duplicated",
-        description: "A copy of the template has been created.",
-      });
-    },
-  });
-
-  const form = useForm<TemplateFormData>({
-    resolver: zodResolver(templateSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      isShared: false,
-      branding: {
-        companyName: "",
-        primaryColor: "#2563eb",
-        secondaryColor: "#64748b",
-        contactInfo: {
-          email: "",
-          phone: "",
-          website: "",
-          address: ""
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [editingTemplate, setEditingTemplate] = useState<any>(null);
+    const { toast } = useToast();
+    const { data: templates, isLoading } = useQuery({
+        queryKey: ["/api/proposal-templates"],
+    });
+    const createTemplate = useMutation({
+        mutationFn: (data: TemplateFormData) => apiRequest("POST", "/api/proposal-templates", data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
+            setIsCreateDialogOpen(false);
+            toast({
+                title: "Template Created",
+                description: "Your proposal template has been saved successfully.",
+            });
+        },
+    });
+    const updateTemplate = useMutation({
+        mutationFn: ({ id, data }: {
+            id: number;
+            data: TemplateFormData;
+        }) => apiRequest("PUT", `/api/proposal-templates/${id}`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
+            setEditingTemplate(null);
+            toast({
+                title: "Template Updated",
+                description: "Your proposal template has been updated successfully.",
+            });
+        },
+    });
+    const deleteTemplate = useMutation({
+        mutationFn: (id: number) => apiRequest("DELETE", `/api/proposal-templates/${id}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
+            toast({
+                title: "Template Deleted",
+                description: "The proposal template has been deleted.",
+            });
+        },
+    });
+    const duplicateTemplate = useMutation({
+        mutationFn: (id: number) => apiRequest("POST", `/api/proposal-templates/${id}/duplicate`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
+            toast({
+                title: "Template Duplicated",
+                description: "A copy of the template has been created.",
+            });
+        },
+    });
+    const form = useForm<TemplateFormData>({
+        resolver: zodResolver(templateSchema),
+        defaultValues: {
+            name: "",
+            description: "",
+            isShared: false,
+            branding: {
+                companyName: "",
+                primaryColor: "#2563eb",
+                secondaryColor: "#64748b",
+                contactInfo: {
+                    email: "",
+                    phone: "",
+                    website: "",
+                    address: ""
+                }
+            },
+            sections: {
+                includeCostBreakdown: true,
+                includeItinerary: true,
+                includeTerms: true,
+                includeAboutUs: false,
+                customSections: []
+            },
+            pricingRules: {
+                markup: 10,
+                discounts: [],
+                currency: "USD"
+            }
         }
-      },
-      sections: {
-        includeCostBreakdown: true,
-        includeItinerary: true,
-        includeTerms: true,
-        includeAboutUs: false,
-        customSections: []
-      },
-      pricingRules: {
-        markup: 10,
-        discounts: [],
-        currency: "USD"
-      }
-    }
-  });
-
-  const onSubmit = (data: TemplateFormData) => {
-    if (editingTemplate) {
-      updateTemplate.mutate({ id: editingTemplate.id, data });
-    } else {
-      createTemplate.mutate(data);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="p-6">
+    });
+    const onSubmit = (data: TemplateFormData) => {
+        if (editingTemplate) {
+            updateTemplate.mutate({ id: editingTemplate.id, data });
+        }
+        else {
+            createTemplate.mutate(data);
+        }
+    };
+    if (isLoading) {
+        return (<div className="p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            ))}
+            {[...Array(6)].map((_, i) => (<div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded"></div>))}
           </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 space-y-6">
+      </div>);
+    }
+    return (<div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Proposal Templates</h1>
@@ -177,7 +162,7 @@ export default function ProposalTemplates() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2"/>
               New Template
             </Button>
           </DialogTrigger>
@@ -188,49 +173,35 @@ export default function ProposalTemplates() {
                 Set up a reusable template with your branding, sections, and pricing rules.
               </DialogDescription>
             </DialogHeader>
-            <TemplateForm form={form} onSubmit={onSubmit} isLoading={createTemplate.isPending} />
+            <TemplateForm form={form} onSubmit={onSubmit} isLoading={createTemplate.isPending}/>
           </DialogContent>
         </Dialog>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates?.map((template: any) => (
-          <Card key={template.id} className="hover:shadow-lg transition-shadow">
+        {templates?.map((template: any) => (<Card key={template.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Template className="w-5 h-5 text-blue-600" />
+                    <Template className="w-5 h-5 text-blue-600"/>
                     {template.name}
                   </CardTitle>
                   <CardDescription>{template.description}</CardDescription>
                 </div>
                 <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setEditingTemplate(template);
-                      form.reset(template);
-                      setIsCreateDialogOpen(true);
-                    }}
-                  >
-                    <Edit className="w-4 h-4" />
+                  <Button variant="ghost" size="sm" onClick={() => {
+                setEditingTemplate(template);
+                form.reset(template);
+                setIsCreateDialogOpen(true);
+            }}>
+                    <Edit className="w-4 h-4"/>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => duplicateTemplate.mutate(template.id)}
-                  >
-                    <Copy className="w-4 h-4" />
+                  <Button variant="ghost" size="sm" onClick={() => duplicateTemplate.mutate(template.id)}>
+                    <Copy className="w-4 h-4"/>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteTemplate.mutate(template.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
+                  <Button variant="ghost" size="sm" onClick={() => deleteTemplate.mutate(template.id)} className="text-red-600 hover:text-red-700">
+                    <Trash2 className="w-4 h-4"/>
                   </Button>
                 </div>
               </div>
@@ -252,13 +223,10 @@ export default function ProposalTemplates() {
                 {template.sections?.includeCostBreakdown && <span>Cost Breakdown</span>}
                 {template.sections?.includeItinerary && <span>Itinerary</span>}
                 {template.sections?.includeTerms && <span>Terms</span>}
-                {template.sections?.customSections?.length > 0 && (
-                  <span>+{template.sections.customSections.length} custom</span>
-                )}
+                {template.sections?.customSections?.length > 0 && (<span>+{template.sections.customSections.length} custom</span>)}
               </div>
             </CardContent>
-          </Card>
-        ))}
+          </Card>))}
       </div>
 
       {/* Edit Template Dialog */}
@@ -270,186 +238,109 @@ export default function ProposalTemplates() {
               Update your proposal template settings.
             </DialogDescription>
           </DialogHeader>
-          <TemplateForm 
-            form={form} 
-            onSubmit={onSubmit} 
-            isLoading={updateTemplate.isPending}
-            isEditing={true}
-          />
+          <TemplateForm form={form} onSubmit={onSubmit} isLoading={updateTemplate.isPending} isEditing={true}/>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
 }
-
 function TemplateForm({ form, onSubmit, isLoading, isEditing = false }: {
-  form: any;
-  onSubmit: (data: TemplateFormData) => void;
-  isLoading: boolean;
-  isEditing?: boolean;
+    form: any;
+    onSubmit: (data: TemplateFormData) => void;
+    isLoading: boolean;
+    isEditing?: boolean;
 }) {
-  const [customSections, setCustomSections] = useState<Array<{ title: string; content: string; order: number }>>([]);
-
-  return (
-    <Form {...form}>
+    const [customSections, setCustomSections] = useState<Array<{
+        title: string;
+        content: string;
+        order: number;
+    }>>([]);
+    return (<Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
+          <FormField control={form.control} name="name" render={({ field }) => (<FormItem>
                 <FormLabel>Template Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Corporate Travel Standard" {...field} />
+                  <Input placeholder="e.g., Corporate Travel Standard" {...field}/>
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
+              </FormItem>)}/>
+          <FormField control={form.control} name="description" render={({ field }) => (<FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Input placeholder="Brief description of template" {...field} />
+                  <Input placeholder="Brief description of template" {...field}/>
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
+              </FormItem>)}/>
         </div>
 
-        <FormField
-          control={form.control}
-          name="isShared"
-          render={({ field }) => (
-            <FormItem className="flex items-center space-x-2">
+        <FormField control={form.control} name="isShared" render={({ field }) => (<FormItem className="flex items-center space-x-2">
               <FormControl>
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                <Switch checked={field.value} onCheckedChange={field.onChange}/>
               </FormControl>
               <Label>Share with team</Label>
-            </FormItem>
-          )}
-        />
+            </FormItem>)}/>
 
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Branding</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="branding.companyName"
-              render={({ field }) => (
-                <FormItem>
+            <FormField control={form.control} name="branding.companyName" render={({ field }) => (<FormItem>
                   <FormLabel>Company Name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field}/>
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="branding.contactInfo.email"
-              render={({ field }) => (
-                <FormItem>
+                </FormItem>)}/>
+            <FormField control={form.control} name="branding.contactInfo.email" render={({ field }) => (<FormItem>
                   <FormLabel>Contact Email</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} />
+                    <Input type="email" {...field}/>
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="branding.primaryColor"
-              render={({ field }) => (
-                <FormItem>
+                </FormItem>)}/>
+            <FormField control={form.control} name="branding.primaryColor" render={({ field }) => (<FormItem>
                   <FormLabel>Primary Color</FormLabel>
                   <FormControl>
-                    <Input type="color" {...field} />
+                    <Input type="color" {...field}/>
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="pricingRules.markup"
-              render={({ field }) => (
-                <FormItem>
+                </FormItem>)}/>
+            <FormField control={form.control} name="pricingRules.markup" render={({ field }) => (<FormItem>
                   <FormLabel>Default Markup (%)</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      max="100" 
-                      {...field}
-                      onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                    />
+                    <Input type="number" min="0" max="100" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)}/>
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
+                </FormItem>)}/>
           </div>
         </div>
 
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Sections</h3>
           <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="sections.includeCostBreakdown"
-              render={({ field }) => (
-                <FormItem className="flex items-center space-x-2">
+            <FormField control={form.control} name="sections.includeCostBreakdown" render={({ field }) => (<FormItem className="flex items-center space-x-2">
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch checked={field.value} onCheckedChange={field.onChange}/>
                   </FormControl>
                   <Label>Cost Breakdown</Label>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="sections.includeItinerary"
-              render={({ field }) => (
-                <FormItem className="flex items-center space-x-2">
+                </FormItem>)}/>
+            <FormField control={form.control} name="sections.includeItinerary" render={({ field }) => (<FormItem className="flex items-center space-x-2">
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch checked={field.value} onCheckedChange={field.onChange}/>
                   </FormControl>
                   <Label>Detailed Itinerary</Label>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="sections.includeTerms"
-              render={({ field }) => (
-                <FormItem className="flex items-center space-x-2">
+                </FormItem>)}/>
+            <FormField control={form.control} name="sections.includeTerms" render={({ field }) => (<FormItem className="flex items-center space-x-2">
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch checked={field.value} onCheckedChange={field.onChange}/>
                   </FormControl>
                   <Label>Terms & Conditions</Label>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="sections.includeAboutUs"
-              render={({ field }) => (
-                <FormItem className="flex items-center space-x-2">
+                </FormItem>)}/>
+            <FormField control={form.control} name="sections.includeAboutUs" render={({ field }) => (<FormItem className="flex items-center space-x-2">
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch checked={field.value} onCheckedChange={field.onChange}/>
                   </FormControl>
                   <Label>About Us Section</Label>
-                </FormItem>
-              )}
-            />
+                </FormItem>)}/>
           </div>
         </div>
 
@@ -462,6 +353,5 @@ function TemplateForm({ form, onSubmit, isLoading, isEditing = false }: {
           </Button>
         </div>
       </form>
-    </Form>
-  );
+    </Form>);
 }

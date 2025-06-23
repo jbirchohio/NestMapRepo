@@ -3,41 +3,30 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Calendar, Clock, MapPin, Plane, Users, Check, X } from 'lucide-react';
-import { Flight } from '../types';
-
+import { Flight } from '../types.ts';
 interface FlightCardProps {
-  flight: Flight;
-  isSelected: boolean;
-  onSelect: (selected: boolean) => void;
-  onClear: () => void;
+    flight: Flight;
+    isSelected: boolean;
+    onSelect: (selected: boolean) => void;
+    onClear: () => void;
 }
-
 export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCardProps) => {
-  const [showDetails, setShowDetails] = useState(false);
-
-  const toggleDetails = () => setShowDetails(!showDetails);
-
-  const formatTime = (time: string) => {
-    return format(new Date(time), 'h:mm a');
-  };
-
-  const formatDate = (date: string) => {
-    return format(new Date(date), 'MMM d, yyyy');
-  };
-
-  return (
-    <div
-      className={`border rounded-lg p-4 transition-colors ${
-        isSelected
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-          : 'hover:border-blue-300'
-      }`}
-    >
+    const [showDetails, setShowDetails] = useState(false);
+    const toggleDetails = () => setShowDetails(!showDetails);
+    const formatTime = (time: string) => {
+        return format(new Date(time), 'h:mm a');
+    };
+    const formatDate = (date: string) => {
+        return format(new Date(date), 'MMM d, yyyy');
+    };
+    return (<div className={`border rounded-lg p-4 transition-colors ${isSelected
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+            : 'hover:border-blue-300'}`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Flight Information */}
         <div className="flex items-center gap-4">
           <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-            <Plane className="h-6 w-6 text-blue-600" />
+            <Plane className="h-6 w-6 text-blue-600"/>
           </div>
           <div>
             <div className="font-medium">
@@ -69,42 +58,28 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          {isSelected ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClear}
-              className="gap-2"
-            >
-              <X className="h-4 w-4" />
+          {isSelected ? (<Button variant="outline" size="sm" onClick={onClear} className="gap-2">
+              <X className="h-4 w-4"/>
               Clear Selection
-            </Button>
-          ) : (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => onSelect(true)}
-              className="gap-2"
-            >
-              <Check className="h-4 w-4" />
+            </Button>) : (<Button variant="default" size="sm" onClick={() => onSelect(true)} className="gap-2">
+              <Check className="h-4 w-4"/>
               Select Flight
-            </Button>
-          )}
+            </Button>)}
         </div>
       </div>
 
       {/* Flight Details */}
       <div className="mt-4 pt-4 border-t flex flex-wrap gap-2 text-sm">
         <div className="flex items-center gap-1">
-          <Clock className="h-4 w-4" />
+          <Clock className="h-4 w-4"/>
           <span>{flight.duration}</span>
         </div>
         <div className="flex items-center gap-1">
-          <MapPin className="h-4 w-4" />
+          <MapPin className="h-4 w-4"/>
           <span>{flight.stops === 0 ? 'Non-stop' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Users className="h-4 w-4" />
+          <Users className="h-4 w-4"/>
           <span>{flight.availableSeats} seat{flight.availableSeats !== 1 ? 's' : ''} left</span>
         </div>
         <Badge variant="outline" className="ml-auto capitalize">
@@ -114,38 +89,28 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
 
       {/* Flight Details Toggle */}
       <div className="mt-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleDetails}
-          className="w-full justify-start"
-        >
+        <Button variant="ghost" size="sm" onClick={toggleDetails} className="w-full justify-start">
           {showDetails ? 'Hide Details' : 'Show Details'}
         </Button>
 
-        {showDetails && (
-          <div className="mt-2 space-y-2">
+        {showDetails && (<div className="mt-2 space-y-2">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4"/>
               <span>Departure: {formatDate(flight.departureTime)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-4 w-4"/>
               <span>Duration: {flight.duration}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
+              <Users className="h-4 w-4"/>
               <span>Seats Available: {flight.availableSeats}</span>
             </div>
-            {flight.stops > 0 && (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
+            {flight.stops > 0 && (<div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4"/>
                 <span>Stops: {flight.stops} stop{flight.stops > 1 ? 's' : ''}</span>
-              </div>
-            )}
-          </div>
-        )}
+              </div>)}
+          </div>)}
       </div>
-    </div>
-  );
+    </div>);
 };

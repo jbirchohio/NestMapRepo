@@ -1,4 +1,14 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+  InternalAxiosRequestConfig,
+  RawAxiosRequestHeaders,
+  isAxiosError,
+  AxiosRequestHeaders
+} from 'axios';
+import { authInterceptor } from './interceptors/auth';
 import { AbortController } from 'abort-controller';
 import { SecurityUtils } from '@/utils/securityUtils';
 import { TokenManager } from '@/utils/tokenManager';
@@ -10,16 +20,46 @@ import { ErrorLogger } from '@/utils/errorLogger';
 import { PerformanceMonitor } from '@/utils/performanceMonitor';
 import { CSRFError, TokenError, SessionError } from '@/utils/errors';
 import { SecureCookie } from '@/utils/SecureCookie';
-import { ApiResponse, ApiErrorResponse, PerformanceMetrics } from '@/types/api';
+import type { ApiResponse, ApiErrorResponse } from '@/types/api';
+import type { AuthResponse, AuthError } from '@shared/types/auth/dto/index.js';
 
+// Extended error type that includes our custom AuthError
+type ApiClientError<T = unknown> = AxiosError<T> & {
+  isAuthError?: boolean;
+  authError?: AuthError;
+};
+
+// Base response type for all API responses
+interface BaseApiResponse<T = unknown> {
+  data: T;
+  error?: ApiErrorResponse | AuthError;
+  meta?: Record<string, unknown>;
+}
+
+// Type for paginated responses
+interface PaginatedResponse<T> extends BaseApiResponse<T[]> {
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
 interface ApiClientConfig {
   baseUrl: string;
   timeout?: number;
   headers?: Record<string, string>;
+  withCredentials?: boolean;
+  useAuthInterceptor?: boolean;
 }
 
-type RequestConfig = Omit<AxiosRequestConfig, 'method' | 'url'>;
-
+type RequestConfig<T = unknown> = Omit<AxiosRequestConfig<T>, 'method' | 'url'> & {
+  // Add any custom request config options here
+  skipAuth?: boolean;
+  skipCsrf?: boolean;
+  skipErrorHandling?: boolean;
+  skipRateLimit?: boolean;
+};
 export class ApiClient {
   private client: AxiosInstance;
   private securityUtils: SecurityUtils;
@@ -30,300 +70,438 @@ export class ApiClient {
   private errorLogger: ErrorLogger;
   private performanceMonitor: PerformanceMonitor;
   private securityAuditInterval: ReturnType<typeof setInterval> | null = null;
-
+  private abortControllers: Map<string, AbortController> = new Map();
   constructor(config: ApiClientConfig) {
     const defaultHeaders: RawAxiosRequestHeaders = {
       ...(config.headers || {}),
       'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json',
     };
+
     this.client = axios.create({
       baseURL: config.baseUrl,
       timeout: config.timeout || 30000,
-      headers: defaultHeaders
+      headers: defaultHeaders as AxiosRequestHeaders,
+      withCredentials: config.withCredentials ?? true,
     });
 
-    this.securityUtils = SecurityUtils.getInstance();
-    this.tokenManager = TokenManager.getInstance();
-    this.sessionSecurity = SessionSecurity.getInstance();
-    this.rateLimiter = RateLimiter.getInstance({
-      maxRequests: 100,
-      windowMs: 60000
-    });
-    this.csrfManager = CSRFTokenManager.getInstance();
-    this.errorLogger = ErrorLogger.getInstance();
-    this.performanceMonitor = PerformanceMonitor.getInstance();
-
-    this.setupInterceptors();
-    this.setupSecurityAudit();
-  }
-
-  // Typed HTTP methods
-  public async get<T = unknown>(
-    url: string,
-    config?: RequestConfig
-  ): Promise<T> {
-    return this.request<T>({ ...config, method: 'GET', url });
-  }
-
-  public async post<T = unknown>(
-    url: string,
-    data?: unknown,
-    config?: RequestConfig
-  ): Promise<T> {
-    return this.request<T>({ ...config, method: 'POST', url, data });
-  }
-
-  public async put<T = unknown>(
-    url: string,
-    data?: unknown,
-    config?: RequestConfig
-  ): Promise<T> {
-    return this.request<T>({ ...config, method: 'PUT', url, data });
-  }
-
-  public async delete<T = unknown>(
-    url: string,
-    config?: RequestConfig
-  ): Promise<T> {
-    return this.request<T>({ ...config, method: 'DELETE', url });
-  }
-
-  public async patch<T = unknown>(
-    url: string,
-    data?: unknown,
-    config?: RequestConfig
-  ): Promise<T> {
-    return this.request<T>({ ...config, method: 'PATCH', url, data });
-  }
-
-  // Core request method with proper typing
-  private async request<T>(config: AxiosRequestConfig): Promise<T> {
-    try {
-      const response = await this.client.request<ApiResponse<T>>(config);
-      const responseData = response.data;
-
-      if (!responseData.success) {
-        const error: ApiErrorResponse = {
-          success: false,
-          message: responseData.message || 'Request failed',
-          errors: responseData.errors,
-          status: response.status,
-          statusText: response.statusText
-        };
-        throw error;
-      }
-
-      return responseData.data;
-    } catch (error) {
-      return this.handleRequestError<T>(error as AxiosError<ApiResponse>);
-    }
-  }
-
-  private setupInterceptors(): void {
-    this.setupRequestInterceptor();
-    this.setupResponseInterceptor();
-  }
-
-  private setupRequestInterceptor(): void {
-    this.client.interceptors.request.use(
-      async (config: InternalAxiosRequestConfig) => {
-        try {
-          // Start performance monitoring
-          const metrics = this.performanceMonitor.startRequest(config);
-          (config as InternalAxiosRequestConfig & { metrics?: PerformanceMetrics }).metrics = metrics;
-
-          // Add security headers
-          const securityHeaders = this.securityUtils.getSecurityHeaders(); // Type is inferred
-          (Object.keys(securityHeaders) as Array<keyof typeof securityHeaders>).forEach(key => {
-            config.headers.set(key, securityHeaders[key]);
-          });
-
-          // Add CSRF token
-          const csrfHeader = this.csrfManager.getCSRFHeader(); // Returns { 'X-CSRF-Token': string } | null
-          if (csrfHeader) {
-            config.headers.set('X-CSRF-Token', csrfHeader['X-CSRF-Token']);
-          }
-
-          // Add Authorization token
-          const token = await this.tokenManager.getAccessToken();
-          if (token) {
-            config.headers.set('Authorization', `Bearer ${token}`);
-          }
-
-          // Validate request data
-          if (config.data && typeof config.data === 'object') {
-            try {
-              InputValidator.validateRequestData(config.data);
-            } catch (error) {
-              throw new Error('Request validation failed');
-            }
-          }
-
-          return config;
-        } catch (error) {
-          this.errorLogger.logError(error as Error, {
-            type: 'RequestInterceptorError',
-            config
-          });
-          return Promise.reject(error);
-        }
-      },
-      (error: AxiosError) => {
-        this.errorLogger.logError(error, {
-          type: 'RequestError',
-          config: error.config
+    // Set up interceptors
+    this.setupInterceptors(config.useAuthInterceptor ?? true);
+        this.securityUtils = SecurityUtils.getInstance();
+        this.tokenManager = TokenManager.getInstance();
+        this.sessionSecurity = SessionSecurity.getInstance();
+        this.rateLimiter = RateLimiter.getInstance({
+            maxRequests: 100,
+            windowMs: 60000
         });
-        return Promise.reject(error);
-      }
-    );
-  }
-
-  private setupResponseInterceptor(): void {
-    this.client.interceptors.response.use(
-      (response: AxiosResponse<ApiResponse>) => {
+        this.csrfManager = CSRFTokenManager.getInstance();
+        this.errorLogger = ErrorLogger.getInstance();
+        this.performanceMonitor = PerformanceMonitor.getInstance();
+        this.setupInterceptors();
+        this.setupSecurityAudit();
+    }
+    // Typed HTTP methods
+    public async get<T = unknown>(url: string, config?: RequestConfig): Promise<T> {
+        return this.request<T>({ ...config, method: 'GET', url });
+    }
+    public async post<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
+        return this.request<T>({ ...config, method: 'POST', url, data });
+    }
+    public async put<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
+        return this.request<T>({ ...config, method: 'PUT', url, data });
+    }
+    public async delete<T = unknown>(url: string, config?: RequestConfig): Promise<T> {
+        return this.request<T>({ ...config, method: 'DELETE', url });
+    }
+    public async patch<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
+        return this.request<T>({ ...config, method: 'PATCH', url, data });
+    }
+    // Core request method with proper typing
+    private async request<T>(config: AxiosRequestConfig): Promise<T> {
         try {
-          // End performance monitoring
-          if (response.config?.metrics) {
-            this.performanceMonitor.endRequest(response.config.metrics, response);
-          }
-
-          // Validate response
-          try {
-            InputValidator.validateResponse(response.data);
-          } catch (error) {
-            throw new Error('Response validation failed');
-          }
-
-          return response;
-        } catch (error) {
-          this.errorLogger.logError(error as Error, {
-            type: 'ResponseInterceptorError',
-            response
-          });
-          return Promise.reject(error);
+            const response = await this.client.request<ApiResponse<T>>(config);
+            const responseData = response.data;
+            if (!responseData.success) {
+                const error: ApiErrorResponse = {
+                    success: false,
+                    message: responseData.message || 'Request failed',
+                    errors: responseData.errors,
+                    status: response.status,
+                    statusText: response.statusText
+                };
+                throw error;
+            }
+            return responseData.data;
         }
-      },
-      async (error: AxiosError<ApiResponse>) => {
+        catch (error) {
+            return this.handleRequestError<T>(error as AxiosError<ApiResponse>);
+        }
+    }
+    private setupInterceptors(): void {
+        this.setupRequestInterceptor();
+        this.setupResponseInterceptor();
+    }
+    private setupRequestInterceptor(): void {
+        this.client.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+            try {
+                // Start performance monitoring
+                const metrics = this.performanceMonitor.startRequest(config);
+                (config as InternalAxiosRequestConfig & {
+                    metrics?: PerformanceMetrics;
+                }).metrics = metrics;
+                // Add security headers
+                const securityHeaders = this.securityUtils.getSecurityHeaders(); // Type is inferred
+                (Object.keys(securityHeaders) as Array<keyof typeof securityHeaders>).forEach(key => {
+                    config.headers.set(key, securityHeaders[key]);
+                });
+                // Add CSRF token
+                const csrfHeader = this.csrfManager.getCSRFHeader(); // Returns { 'X-CSRF-Token': string } | null
+                if (csrfHeader) {
+                    config.headers.set('X-CSRF-Token', csrfHeader['X-CSRF-Token']);
+                }
+                // Add Authorization token
+                const token = await this.tokenManager.getAccessToken();
+                if (token) {
+                    config.headers.set('Authorization', `Bearer ${token}`);
+                }
+                // Validate request data
+                if (config.data && typeof config.data === 'object') {
+                    try {
+                        InputValidator.validateRequestData(config.data);
+                    }
+                    catch (error) {
+                        throw new Error('Request validation failed');
+                    }
+                }
+                return config;
+            }
+            catch (error) {
+                this.errorLogger.logError(error as Error, {
+                    type: 'RequestInterceptorError',
+                    config
+                });
+                return Promise.reject(error);
+            }
+        }, (error: AxiosError) => {
+            this.errorLogger.logError(error, {
+                type: 'RequestError',
+                config: error.config
+            });
+            return Promise.reject(error);
+        });
+    }
+    private setupResponseInterceptor(): void {
+        this.client.interceptors.response.use((response: AxiosResponse<ApiResponse>) => {
+            try {
+                // End performance monitoring
+                if (response.config?.metrics) {
+                    this.performanceMonitor.endRequest(response.config.metrics, response);
+                }
+                // Validate response
+                try {
+                    InputValidator.validateResponse(response.data);
+                }
+                catch (error) {
+                    throw new Error('Response validation failed');
+                }
+                return response;
+            }
+            catch (error) {
+                this.errorLogger.logError(error as Error, {
+                    type: 'ResponseInterceptorError',
+                    response
+                });
+                return Promise.reject(error);
+            }
+        }, async (error: AxiosError<ApiResponse>) => {
+            try {
+                // End performance monitoring on error
+                if (error.config?.metrics) {
+                    this.performanceMonitor.endWithError(error.config.metrics, error);
+                }
+                // Handle token errors
+                if (error.response?.status === 401) {
+                    await this.handleTokenError(error);
+                }
+                // Handle session errors
+                if (error.response?.status === 403) {
+                    await this.handleSessionError(error);
+                }
+                // Audit security context
+                const securityContext = this.securityUtils.getSecurityContext();
+                if (securityContext) {
+                    this.securityUtils.reportSecurityContext(securityContext);
+                }
+                return Promise.reject(error);
+            }
+            catch (error) {
+                this.errorLogger.logError(error as Error, {
+                    type: 'ResponseError',
+                    error
+                });
+                return Promise.reject(error);
+            }
+        });
+    }
+    private async handleTokenError(error: AxiosError<ApiResponse>): Promise<void> {
         try {
-          // End performance monitoring on error
-          if (error.config?.metrics) {
-            this.performanceMonitor.endWithError(error.config.metrics, error);
-          }
-
-          // Handle token errors
-          if (error.response?.status === 401) {
-            await this.handleTokenError(error);
-          }
-
-          // Handle session errors
-          if (error.response?.status === 403) {
-            await this.handleSessionError(error);
-          }
-
-          // Audit security context
-          const securityContext = this.securityUtils.getSecurityContext();
-          if (securityContext) {
-            this.securityUtils.reportSecurityContext(securityContext);
-          }
-
-          return Promise.reject(error);
-        } catch (error) {
-          this.errorLogger.logError(error as Error, {
-            type: 'ResponseError',
-            error
-          });
-          return Promise.reject(error);
+            this.tokenManager.destroyTokens();
         }
-      }
-    );
-  }
-
-  private async handleTokenError(error: AxiosError<ApiResponse>): Promise<void> {
-    try {
-      this.tokenManager.destroyTokens();
-    } catch (error) {
-      this.errorLogger.logError(error as Error, {
-        type: 'TokenError',
-        context: {
-          token: this.tokenManager.getAccessToken(),
-          session: this.sessionSecurity.getSessionId()
+        catch (error) {
+            this.errorLogger.logError(error as Error, {
+                type: 'TokenError',
+                context: {
+                    token: this.tokenManager.getAccessToken(),
+                    session: this.sessionSecurity.getSessionId()
+                }
+            });
+            this.sessionSecurity.destroySession();
+            this.csrfManager.clearToken();
         }
-      });
-      this.sessionSecurity.destroySession();
-      this.csrfManager.clearToken();
     }
-  }
-
-  private async handleSessionError(error: AxiosError<ApiResponse>): Promise<void> {
-    try {
-      await this.sessionSecurity.handleSessionError(error);
-    } catch (error) {
-      this.errorLogger.logError(error as Error, {
-        type: 'SessionError',
-        context: {
-          session: this.sessionSecurity.getSessionId()
+    private async handleSessionError(error: AxiosError<ApiResponse>): Promise<void> {
+        try {
+            await this.sessionSecurity.handleSessionError(error);
         }
-      });
-      this.sessionSecurity.destroySession();
+        catch (error) {
+            this.errorLogger.logError(error as Error, {
+                type: 'SessionError',
+                context: {
+                    session: this.sessionSecurity.getSessionId()
+                }
+            });
+            this.sessionSecurity.destroySession();
+        }
     }
-  }
-
-  private async handleRequestError<T>(error: AxiosError<ApiResponse>): Promise<T> {
-    if (error.response?.data) {
-      const apiError: ApiErrorResponse = {
-        success: false,
-        message: error.response.data.message || error.message,
-        errors: error.response.data.errors || [error.message],
-        status: error.response.status,
-        statusText: error.response.statusText
-      };
-      throw apiError;
+    private async handleRequestError<T>(error: AxiosError<ApiResponse>): Promise<T> {
+        if (error.response?.data) {
+            const apiError: ApiErrorResponse = {
+                success: false,
+                message: error.response.data.message || error.message,
+                errors: error.response.data.errors || [error.message],
+                status: error.response.status,
+                statusText: error.response.statusText
+            };
+            throw apiError;
+        }
+        throw {
+            success: false,
+            message: error.message || 'Network Error',
+            errors: ['Unable to connect to the server'],
+            status: error.status || 0,
+            statusText: error.code || 'NETWORK_ERROR'
+        } as ApiErrorResponse;
     }
+    private setupSecurityAudit(): void {
+        // Run security audit every 5 minutes
+        this.securityAuditInterval = setInterval(() => {
+            this.performSecurityAudit();
+        }, 5 * 60 * 1000);
+    }
+    private async performSecurityAudit(): Promise<void> {
+        try {
+            const auditResult = await this.securityUtils.performSecurityAudit();
+            if (!auditResult.success) {
+                this.errorLogger.logError(new Error('Security audit failed'), {
+                    type: 'SecurityAudit',
+                    details: auditResult.details
+                });
+            }
+        }
+        catch (error) {
+            this.errorLogger.logError(error as Error, {
+                type: 'SecurityAuditError'
+            });
+        }
+    }
+    public destroy(): void {
+}
 
-    throw {
-      success: false,
-      message: error.message || 'Network Error',
-      errors: ['Unable to connect to the server'],
-      status: error.status || 0,
-      statusText: error.code || 'NETWORK_ERROR'
-    } as ApiErrorResponse;
-  }
-
-  private setupSecurityAudit(): void {
+private setupSecurityAudit(): void {
     // Run security audit every 5 minutes
     this.securityAuditInterval = setInterval(() => {
-      this.performSecurityAudit();
+        this.performSecurityAudit();
     }, 5 * 60 * 1000);
-  }
+}
 
-  private async performSecurityAudit(): Promise<void> {
+private async performSecurityAudit(): Promise<void> {
     try {
-      const auditResult = await this.securityUtils.performSecurityAudit();
-      if (!auditResult.success) {
-        this.errorLogger.logError(new Error('Security audit failed'), {
-          type: 'SecurityAudit',
-          details: auditResult.details
+        const auditResult = await this.securityUtils.performSecurityAudit();
+        if (!auditResult.success) {
+            this.errorLogger.logError(new Error('Security audit failed'), {
+                type: 'SecurityAudit',
+                details: auditResult.details
+            });
+        }
+    }
+    catch (error) {
+        this.errorLogger.logError(error as Error, {
+            type: 'SecurityAuditError'
         });
-      }
-    } catch (error) {
-      this.errorLogger.logError(error as Error, {
-        type: 'SecurityAuditError'
-      });
     }
-  }
+}
 
-  public destroy(): void {
+public destroy(): void {
     if (this.securityAuditInterval) {
-      clearInterval(this.securityAuditInterval);
+        clearInterval(this.securityAuditInterval);
     }
-  }
+}
+
+/**
+ * Make a GET request
+ */
+async get<T = unknown>(
+    url: string,
+    config: RequestConfig = {}
+): Promise<BaseApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'GET', url });
+}
+
+/**
+ * Make a POST request
+ */
+async post<T = unknown, D = unknown>(
+    url: string,
+    data?: D,
+    config: RequestConfig<D> = {}
+): Promise<BaseApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'POST', url, data });
+}
+
+/**
+ * Make a PUT request
+ */
+async put<T = unknown, D = unknown>(
+    url: string,
+    data?: D,
+    config: RequestConfig<D> = {}
+): Promise<BaseApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'PUT', url, data });
+}
+
+/**
+ * Make a PATCH request
+ */
+async patch<T = unknown, D = unknown>(
+    url: string,
+    data?: D,
+    config: RequestConfig<D> = {}
+): Promise<BaseApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'PATCH', url, data });
+}
+
+/**
+ * Make a DELETE request
+ */
+async delete<T = unknown>(
+    url: string,
+    config: RequestConfig = {}
+): Promise<BaseApiResponse<T>> {
+    return this.request<T>({ ...config, method: 'DELETE', url });
+}
+
+/**
+ * Make a request with a custom method
+ */
+async request<T = unknown>(
+    config: AxiosRequestConfig & { skipAuth?: boolean; skipCsrf?: boolean }
+): Promise<BaseApiResponse<T>> {
+    const controller = new AbortController();
+    const requestId = `${config.method}:${config.url}`;
+
+    // Cancel any existing request with the same ID
+    this.abortControllers.get(requestId)?.abort();
+    this.abortControllers.set(requestId, controller);
+
+    try {
+        const response = await this.client.request<BaseApiResponse<T>>({
+            ...config,
+            signal: controller.signal,
+            headers: {
+                ...config.headers,
+                'X-Request-ID': requestId,
+            },
+        });
+
+        return response.data;
+    } catch (error) {
+        if (isAxiosError<BaseApiResponse>(error)) {
+            // Handle API errors
+            if (error.response) {
+                const { status, data } = error.response;
+                const apiError: ApiClientError = new Error(data?.error?.message || error.message);
+                apiError.isAxiosError = true;
+                apiError.response = error.response;
+                apiError.request = error.request;
+
+                // Handle auth errors
+                if (status === 401 || status === 403) {
+                    apiError.isAuthError = true;
+                    apiError.authError = data?.error as AuthError;
+                }
+
+                throw apiError;
+            }
+        }
+
+        // Re-throw the original error if we can't handle it
+        throw error;
+    } finally {
+        // Clean up the abort controller
+        this.abortControllers.delete(requestId);
+    }
+}
+
+/**
+ * Set up request and response interceptors
+ */
+private setupInterceptors(useAuth: boolean): void {
+    // Request interceptor
+    this.client.interceptors.request.use(
+        (config: InternalAxiosRequestConfig) => {
+            // Apply auth interceptor if enabled
+            if (useAuth) {
+                return authInterceptor.onRequest(config);
+            }
+            return config;
+        },
+        (error) => Promise.reject(error)
+    );
+
+    // Response interceptor
+    this.client.interceptors.response.use(
+        (response: AxiosResponse) => response,
+        async (error: AxiosError) => {
+            if (useAuth && error.config) {
+                try {
+                    // Try to handle auth errors
+                    return await authInterceptor.onResponseError(error);
+                } catch (authError) {
+                    return Promise.reject(authError);
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+}
+
+/**
+ * Cancel all pending requests
+ */
+cancelAllRequests(): void {
+    this.abortControllers.forEach(controller => controller.abort());
+    this.abortControllers.clear();
+}
+
 }
 
 // Create and export a singleton instance
 const apiClient = new ApiClient({
-  baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 30000
+    baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
+    timeout: 30000,
+    withCredentials: true,
 });
 
-export default apiClient;
+export { apiClient };
+export type { ApiClientError, BaseApiResponse, PaginatedResponse };

@@ -1,28 +1,12 @@
 import { Link } from 'wouter';
-import { NavigationItem } from './types';
-
+import { NavigationItem } from './types.ts';
 interface NavigationLinkProps extends Omit<NavigationItem, 'requiresAuth'> {
-  className?: string;
-  onClick?: () => void;
+    className?: string;
+    onClick?: () => void;
 }
-
-export const NavigationLink: React.FC<NavigationLinkProps> = ({
-  name,
-  href,
-  icon,
-  ariaLabel,
-  className = '',
-  onClick,
-}) => (
-  <Link
-    href={href}
-    aria-label={ariaLabel}
-    className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${className}`}
-    onClick={onClick}
-  >
+export const NavigationLink: React.FC<NavigationLinkProps> = ({ name, href, icon, ariaLabel, className = '', onClick, }) => (<Link href={href} aria-label={ariaLabel} className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${className}`} onClick={onClick}>
     <span className="mr-3 text-gray-400" aria-hidden="true">
       {icon}
     </span>
     {name}
-  </Link>
-);
+  </Link>);

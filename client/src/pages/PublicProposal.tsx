@@ -8,119 +8,93 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Lock, Download, Eye, Calendar, Clock, CheckCircle, FileSignature } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 interface PublicProposalViewProps {
-  proposalId: string;
+    proposalId: string;
 }
-
 export default function PublicProposal({ proposalId }: PublicProposalViewProps) {
-  const [password, setPassword] = useState("");
-  const [isPasswordRequired, setIsPasswordRequired] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
-  const [viewStartTime] = useState(Date.now());
-  const { toast } = useToast();
-
-  const { data: proposal, isLoading, error } = useQuery({
-    queryKey: ["/api/public-proposals", proposalId, password],
-    enabled: !isPasswordRequired || password.length > 0,
-  });
-
-  // Track analytics when proposal is viewed
-  const trackView = useMutation({
-    mutationFn: (eventData: any) => 
-      apiRequest("POST", `/api/proposals/${proposalId}/analytics`, eventData),
-  });
-
-  const trackSectionView = useMutation({
-    mutationFn: (section: string) => 
-      apiRequest("POST", `/api/proposals/${proposalId}/analytics`, {
-        eventType: "section_viewed",
-        eventData: { section, timestamp: new Date().toISOString() }
-      }),
-  });
-
-  const downloadPDF = useMutation({
-    mutationFn: () => apiRequest("GET", `/api/proposals/${proposalId}/pdf`),
-    onSuccess: () => {
-      trackView.mutate({
-        eventType: "downloaded",
-        eventData: { timestamp: new Date().toISOString() }
-      });
-      toast({
-        title: "Download Started",
-        description: "Your proposal PDF is being downloaded.",
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (proposal) {
-      // Track initial view
-      trackView.mutate({
-        eventType: "opened",
-        eventData: { 
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent
+    const [password, setPassword] = useState("");
+    const [isPasswordRequired, setIsPasswordRequired] = useState(false);
+    const [isExpired, setIsExpired] = useState(false);
+    const [viewStartTime] = useState(Date.now());
+    const { toast } = useToast();
+    const { data: proposal, isLoading, error } = useQuery({
+        queryKey: ["/api/public-proposals", proposalId, password],
+        enabled: !isPasswordRequired || password.length > 0,
+    });
+    // Track analytics when proposal is viewed
+    const trackView = useMutation({
+        mutationFn: (eventData: any) => apiRequest("POST", `/api/proposals/${proposalId}/analytics`, eventData),
+    });
+    const trackSectionView = useMutation({
+        mutationFn: (section: string) => apiRequest("POST", `/api/proposals/${proposalId}/analytics`, {
+            eventType: "section_viewed",
+            eventData: { section, timestamp: new Date().toISOString() }
+        }),
+    });
+    const downloadPDF = useMutation({
+        mutationFn: () => apiRequest("GET", `/api/proposals/${proposalId}/pdf`),
+        onSuccess: () => {
+            trackView.mutate({
+                eventType: "downloaded",
+                eventData: { timestamp: new Date().toISOString() }
+            });
+            toast({
+                title: "Download Started",
+                description: "Your proposal PDF is being downloaded.",
+            });
+        },
+    });
+    useEffect(() => {
+        if (proposal) {
+            // Track initial view
+            trackView.mutate({
+                eventType: "opened",
+                eventData: {
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                }
+            });
+            // Track view duration when user leaves
+            const trackViewDuration = () => {
+                const duration = Math.round((Date.now() - viewStartTime) / 1000);
+                trackView.mutate({
+                    eventType: "view_duration",
+                    eventData: {
+                        duration,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            };
+            window.addEventListener('beforeunload', trackViewDuration);
+            return () => window.removeEventListener('beforeunload', trackViewDuration);
         }
-      });
-
-      // Track view duration when user leaves
-      const trackViewDuration = () => {
-        const duration = Math.round((Date.now() - viewStartTime) / 1000);
-        trackView.mutate({
-          eventType: "view_duration",
-          eventData: { 
-            duration,
-            timestamp: new Date().toISOString()
-          }
-        });
-      };
-
-      window.addEventListener('beforeunload', trackViewDuration);
-      return () => window.removeEventListener('beforeunload', trackViewDuration);
-    }
-  }, [proposal]);
-
-  // Handle password protection
-  if (error?.status === 401) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+    }, [proposal]);
+    // Handle password protection
+    if (error?.status === 401) {
+        return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <Lock className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+            <Lock className="w-12 h-12 text-blue-600 mx-auto mb-4"/>
             <CardTitle>Password Protected</CardTitle>
             <CardDescription>
               This proposal requires a password to view
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && window.location.reload()}
-            />
-            <Button 
-              className="w-full" 
-              onClick={() => window.location.reload()}
-              disabled={!password}
-            >
+            <Input type="password" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && window.location.reload()}/>
+            <Button className="w-full" onClick={() => window.location.reload()} disabled={!password}>
               Access Proposal
             </Button>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
-
-  // Handle expired proposals
-  if (error?.status === 410) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+      </div>);
+    }
+    // Handle expired proposals
+    if (error?.status === 410) {
+        return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <Calendar className="w-12 h-12 text-red-600 mx-auto mb-4" />
+            <Calendar className="w-12 h-12 text-red-600 mx-auto mb-4"/>
             <CardTitle>Proposal Expired</CardTitle>
             <CardDescription>
               This proposal link has expired and is no longer accessible
@@ -132,21 +106,15 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
             </p>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  if (!proposal) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+      </div>);
+    }
+    if (isLoading) {
+        return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"/>
+      </div>);
+    }
+    if (!proposal) {
+        return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle>Proposal Not Found</CardTitle>
@@ -155,27 +123,21 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
             </CardDescription>
           </CardHeader>
         </Card>
-      </div>
-    );
-  }
-
-  const handleSectionView = (section: string) => {
-    trackSectionView.mutate(section);
-  };
-
-  const costBreakdown = proposal.proposalData?.costBreakdown || {
-    flights: 2400,
-    hotels: 1800,
-    activities: 1200,
-    meals: 800,
-    transportation: 400,
-    miscellaneous: 200
-  };
-
-  const totalCost = Object.values(costBreakdown).reduce((sum: number, cost: any) => sum + cost, 0);
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      </div>);
+    }
+    const handleSectionView = (section: string) => {
+        trackSectionView.mutate(section);
+    };
+    const costBreakdown = proposal.proposalData?.costBreakdown || {
+        flights: 2400,
+        hotels: 1800,
+        activities: 1200,
+        meals: 800,
+        transportation: 400,
+        miscellaneous: 200
+    };
+    const totalCost = Object.values(costBreakdown).reduce((sum: number, cost: any) => sum + cost, 0);
+    return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
@@ -191,23 +153,17 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
                 <span>Prepared by {proposal.agentName}</span>
                 <span>•</span>
                 <span>{new Date(proposal.createdAt).toLocaleDateString()}</span>
-                {proposal.linkExpiration && (
-                  <>
+                {proposal.linkExpiration && (<>
                     <span>•</span>
                     <span className="text-orange-600">
                       Expires {new Date(proposal.linkExpiration).toLocaleDateString()}
                     </span>
-                  </>
-                )}
+                  </>)}
               </div>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => downloadPDF.mutate()}
-                disabled={downloadPDF.isPending}
-              >
-                <Download className="w-4 h-4 mr-2" />
+              <Button variant="outline" onClick={() => downloadPDF.mutate()} disabled={downloadPDF.isPending}>
+                <Download className="w-4 h-4 mr-2"/>
                 Download PDF
               </Button>
             </div>
@@ -221,7 +177,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         <Card onMouseEnter={() => handleSectionView("trip_overview")}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Eye className="w-5 h-5 text-blue-600" />
+              <Eye className="w-5 h-5 text-blue-600"/>
               Trip Overview
             </CardTitle>
           </CardHeader>
@@ -249,19 +205,17 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         <Card onMouseEnter={() => handleSectionView("cost_breakdown")}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-600" />
+              <DollarSign className="w-5 h-5 text-green-600"/>
               Cost Breakdown
             </CardTitle>
             <CardDescription>Detailed breakdown of all travel expenses</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Object.entries(costBreakdown).map(([category, amount]) => (
-                <div key={category} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+              {Object.entries(costBreakdown).map(([category, amount]) => (<div key={category} className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
                   <span className="capitalize font-medium">{category}</span>
                   <span className="font-bold">${(amount as number).toLocaleString()}</span>
-                </div>
-              ))}
+                </div>))}
               <div className="flex justify-between items-center py-2 text-lg font-bold border-t-2 border-blue-600">
                 <span>Total</span>
                 <span className="text-blue-600">${totalCost.toLocaleString()}</span>
@@ -274,15 +228,14 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         <Card onMouseEnter={() => handleSectionView("itinerary")}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-electric-600" />
+              <Calendar className="w-5 h-5 text-electric-600"/>
               Detailed Itinerary
             </CardTitle>
             <CardDescription>Day-by-day breakdown of your travel experience</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {proposal.activities?.map((activity: any, index: number) => (
-                <div key={index} className="flex gap-4">
+              {proposal.activities?.map((activity: any, index: number) => (<div key={index} className="flex gap-4">
                   <div className="flex-shrink-0 w-16 text-center">
                     <div className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg px-2 py-1 text-sm font-medium">
                       {activity.time}
@@ -291,15 +244,10 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 dark:text-white">{activity.title}</h4>
                     <p className="text-gray-600 dark:text-gray-300 text-sm">{activity.locationName}</p>
-                    {activity.notes && (
-                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{activity.notes}</p>
-                    )}
+                    {activity.notes && (<p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{activity.notes}</p>)}
                   </div>
-                  {activity.tag && (
-                    <Badge variant="secondary">{activity.tag}</Badge>
-                  )}
-                </div>
-              ))}
+                  {activity.tag && (<Badge variant="secondary">{activity.tag}</Badge>)}
+                </div>))}
             </div>
           </CardContent>
         </Card>
@@ -308,7 +256,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         <Card onMouseEnter={() => handleSectionView("terms")}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileSignature className="w-5 h-5 text-gray-600" />
+              <FileSignature className="w-5 h-5 text-gray-600"/>
               Terms & Conditions
             </CardTitle>
           </CardHeader>
@@ -339,19 +287,16 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         </Card>
 
         {/* Signature Section */}
-        {proposal.signatureData?.signed ? (
-          <Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
+        {proposal.signatureData?.signed ? (<Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
             <CardContent className="pt-6">
               <div className="flex items-center justify-center gap-3 text-green-700 dark:text-green-300">
-                <CheckCircle className="w-6 h-6" />
+                <CheckCircle className="w-6 h-6"/>
                 <span className="font-medium">
                   Signed by {proposal.signatureData.signerName} on {new Date(proposal.signatureData.signedAt).toLocaleDateString()}
                 </span>
               </div>
             </CardContent>
-          </Card>
-        ) : (
-          <Card>
+          </Card>) : (<Card>
             <CardHeader>
               <CardTitle>Ready to Book?</CardTitle>
               <CardDescription>
@@ -360,11 +305,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
             </CardHeader>
             <CardContent>
               <div className="flex gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => handleSectionView("contact_cta")}
-                >
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={() => handleSectionView("contact_cta")}>
                   Accept Proposal
                 </Button>
                 <Button variant="outline" size="lg">
@@ -375,17 +316,13 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
                 By accepting this proposal, you agree to the terms and conditions outlined above.
               </p>
             </CardContent>
-          </Card>
-        )}
+          </Card>)}
 
         {/* Footer */}
         <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
           <p>{proposal.companyName} • {proposal.contactInfo?.email} • {proposal.contactInfo?.phone}</p>
-          {proposal.contactInfo?.website && (
-            <p className="mt-1">{proposal.contactInfo.website}</p>
-          )}
+          {proposal.contactInfo?.website && (<p className="mt-1">{proposal.contactInfo.website}</p>)}
         </div>
       </div>
-    </div>
-  );
+    </div>);
 }

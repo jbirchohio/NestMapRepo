@@ -8,3 +8,7 @@ export * from './common.js';
 export * from './api.js';
 export * from './db.js';
 export * from './utils.js';
+
+// Auth module
+export * from './auth/dto/index.js';
+export * from './auth/permissions.js';

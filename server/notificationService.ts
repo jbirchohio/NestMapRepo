@@ -1,74 +1,68 @@
-import { sendEmail } from './emailService';
-
+import { sendEmail } from 'emailService.js';
 interface ProposalNotificationData {
-  proposalId: number;
-  clientName: string;
-  clientEmail: string;
-  agentName: string;
-  agentEmail: string;
-  companyName: string;
-  tripDestination: string;
-  estimatedValue: number;
-  proposalUrl: string;
-  expirationDate?: Date;
+    proposalId: number;
+    clientName: string;
+    clientEmail: string;
+    agentName: string;
+    agentEmail: string;
+    companyName: string;
+    tripDestination: string;
+    estimatedValue: number;
+    proposalUrl: string;
+    expirationDate?: Date;
 }
-
 interface ProposalViewData {
-  proposalId: number;
-  clientName: string;
-  agentName: string;
-  agentEmail: string;
-  viewedAt: Date;
-  timeSpent?: number;
-  sectionsViewed?: string[];
+    proposalId: number;
+    clientName: string;
+    agentName: string;
+    agentEmail: string;
+    viewedAt: Date;
+    timeSpent?: number;
+    sectionsViewed?: string[];
 }
-
 export async function sendProposalSentNotification(data: ProposalNotificationData): Promise<boolean> {
-  try {
-    // Email to client
-    const clientEmailSent = await sendEmail({
-      to: data.clientEmail,
-      from: `${data.agentName} <${data.agentEmail}>`,
-      subject: `Travel Proposal for ${data.tripDestination} - ${data.companyName}`,
-      html: generateProposalSentEmailHTML(data),
-      text: generateProposalSentEmailText(data)
-    });
-
-    // Email to agent (confirmation)
-    const agentEmailSent = await sendEmail({
-      to: data.agentEmail,
-      from: `NestMap Notifications <notifications@nestmap.app>`,
-      subject: `Proposal Sent Confirmation - ${data.clientName}`,
-      html: generateAgentConfirmationHTML(data),
-      text: generateAgentConfirmationText(data)
-    });
-
-    return clientEmailSent && agentEmailSent;
-  } catch (error) {
-    console.error('Error sending proposal notification:', error);
-    return false;
-  }
+    try {
+        // Email to client
+        const clientEmailSent = await sendEmail({
+            to: data.clientEmail,
+            from: `${data.agentName} <${data.agentEmail}>`,
+            subject: `Travel Proposal for ${data.tripDestination} - ${data.companyName}`,
+            html: generateProposalSentEmailHTML(data),
+            text: generateProposalSentEmailText(data)
+        });
+        // Email to agent (confirmation)
+        const agentEmailSent = await sendEmail({
+            to: data.agentEmail,
+            from: `NestMap Notifications <notifications@nestmap.app>`,
+            subject: `Proposal Sent Confirmation - ${data.clientName}`,
+            html: generateAgentConfirmationHTML(data),
+            text: generateAgentConfirmationText(data)
+        });
+        return clientEmailSent && agentEmailSent;
+    }
+    catch (error) {
+        console.error('Error sending proposal notification:', error);
+        return false;
+    }
 }
-
 export async function sendProposalViewedNotification(data: ProposalViewData): Promise<boolean> {
-  try {
-    const emailSent = await sendEmail({
-      to: data.agentEmail,
-      from: `NestMap Notifications <notifications@nestmap.app>`,
-      subject: `🎉 ${data.clientName} viewed your proposal!`,
-      html: generateProposalViewedHTML(data),
-      text: generateProposalViewedText(data)
-    });
-
-    return emailSent;
-  } catch (error) {
-    console.error('Error sending proposal viewed notification:', error);
-    return false;
-  }
+    try {
+        const emailSent = await sendEmail({
+            to: data.agentEmail,
+            from: `NestMap Notifications <notifications@nestmap.app>`,
+            subject: `🎉 ${data.clientName} viewed your proposal!`,
+            html: generateProposalViewedHTML(data),
+            text: generateProposalViewedText(data)
+        });
+        return emailSent;
+    }
+    catch (error) {
+        console.error('Error sending proposal viewed notification:', error);
+        return false;
+    }
 }
-
 function generateProposalSentEmailHTML(data: ProposalNotificationData): string {
-  return `
+    return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -137,9 +131,8 @@ function generateProposalSentEmailHTML(data: ProposalNotificationData): string {
     </html>
   `;
 }
-
 function generateProposalSentEmailText(data: ProposalNotificationData): string {
-  return `
+    return `
 Your Travel Proposal is Ready!
 
 Dear ${data.clientName},
@@ -168,9 +161,8 @@ ${data.agentName}
 ${data.companyName}
   `.trim();
 }
-
 function generateAgentConfirmationHTML(data: ProposalNotificationData): string {
-  return `
+    return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -232,9 +224,8 @@ function generateAgentConfirmationHTML(data: ProposalNotificationData): string {
     </html>
   `;
 }
-
 function generateAgentConfirmationText(data: ProposalNotificationData): string {
-  return `
+    return `
 Proposal Sent Successfully!
 
 Hi ${data.agentName},
@@ -261,17 +252,14 @@ Best regards,
 The NestMap Team
   `.trim();
 }
-
 function generateProposalViewedHTML(data: ProposalViewData): string {
-  const sectionsText = data.sectionsViewed?.length 
-    ? `<p><strong>Sections viewed:</strong> ${data.sectionsViewed.join(', ')}</p>`
-    : '';
-  
-  const timeText = data.timeSpent 
-    ? `<p><strong>Time spent:</strong> ${Math.round(data.timeSpent / 60)} minutes</p>`
-    : '';
-
-  return `
+    const sectionsText = data.sectionsViewed?.length
+        ? `<p><strong>Sections viewed:</strong> ${data.sectionsViewed.join(', ')}</p>`
+        : '';
+    const timeText = data.timeSpent
+        ? `<p><strong>Time spent:</strong> ${Math.round(data.timeSpent / 60)} minutes</p>`
+        : '';
+    return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -336,17 +324,14 @@ function generateProposalViewedHTML(data: ProposalViewData): string {
     </html>
   `;
 }
-
 function generateProposalViewedText(data: ProposalViewData): string {
-  const sectionsText = data.sectionsViewed?.length 
-    ? `Sections viewed: ${data.sectionsViewed.join(', ')}`
-    : '';
-  
-  const timeText = data.timeSpent 
-    ? `Time spent: ${Math.round(data.timeSpent / 60)} minutes`
-    : '';
-
-  return `
+    const sectionsText = data.sectionsViewed?.length
+        ? `Sections viewed: ${data.sectionsViewed.join(', ')}`
+        : '';
+    const timeText = data.timeSpent
+        ? `Time spent: ${Math.round(data.timeSpent / 60)} minutes`
+        : '';
+    return `
 Great News! ${data.clientName} viewed your proposal
 
 Hi ${data.agentName},

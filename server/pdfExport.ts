@@ -1,77 +1,71 @@
 import puppeteer from 'puppeteer';
 import Handlebars from 'handlebars';
-import { Buffer } from 'buffer';
-
+import type { Buffer } from 'buffer';
 // Define local types since we can't import from @shared/schema
 type Activity = {
-  id: string;
-  title: string;
-  description?: string;
-  date: string | Date;
-  time?: string;
-  duration?: number;
-  location?: string;
-  cost?: number;
-  notes?: string;
-  status?: string;
-  tag?: string;
+    id: string;
+    title: string;
+    description?: string;
+    date: string | Date;
+    time?: string;
+    duration?: number;
+    location?: string;
+    cost?: number;
+    notes?: string;
+    status?: string;
+    tag?: string;
 };
-
 type Todo = {
-  id: string;
-  title: string;
-  completed: boolean;
-  dueDate?: string | Date;
-  priority?: 'low' | 'medium' | 'high';
+    id: string;
+    title: string;
+    completed: boolean;
+    dueDate?: string | Date;
+    priority?: 'low' | 'medium' | 'high';
 };
-
 type Note = {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string | Date;
-  updatedAt: string | Date;
+    id: string;
+    title: string;
+    content: string;
+    createdAt: string | Date;
+    updatedAt: string | Date;
 };
-
 type Trip = {
-  id: string;
-  title: string;
-  description?: string;
-  startDate: string | Date;
-  endDate: string | Date;
-  destination: string;
-  country?: string;
-  budget?: number;
-  status?: 'draft' | 'planned' | 'in-progress' | 'completed' | 'cancelled';
-  tags?: string[];
+    id: string;
+    title: string;
+    description?: string;
+    startDate: string | Date;
+    endDate: string | Date;
+    destination: string;
+    country?: string;
+    budget?: number;
+    status?: 'draft' | 'planned' | 'in-progress' | 'completed' | 'cancelled';
+    tags?: string[];
 };
-
 // Import invoice schema
 type Invoice = {
-  id: string;
-  proposalId: string | null;
-  organizationId: string;
-  createdById: string | null;
-  clientName: string;
-  clientEmail: string;
-  clientAddress?: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'refunded' | null;
-  amount: number;
-  currency: string;
-  taxAmount?: number;
-  discountAmount?: number;
-  dueDate?: string | Date;
-  notes?: string;
-  items?: Array<{
-    description: string;
-    quantity: number;
-    unitPrice: number;
+    id: string;
+    proposalId: string | null;
+    organizationId: string;
+    createdById: string | null;
+    clientName: string;
+    clientEmail: string;
+    clientAddress?: string;
+    status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'refunded' | null;
     amount: number;
-  }>;
-  createdAt: string | Date;
-  updatedAt: string | Date;
+    currency: string;
+    taxAmount?: number;
+    discountAmount?: number;
+    dueDate?: string | Date;
+    notes?: string;
+    items?: Array<{
+        description: string;
+        quantity: number;
+        unitPrice: number;
+        amount: number;
+    }>;
+    createdAt: string | Date;
+    updatedAt: string | Date;
 };
-
 // Professional proposal template with branding and cost estimates
 const proposalTemplate = `
 <!DOCTYPE html>
@@ -473,7 +467,6 @@ const proposalTemplate = `
 </body>
 </html>
 `;
-
 // HTML template for the PDF export
 const htmlTemplate = `
 <!DOCTYPE html>
@@ -771,51 +764,43 @@ const htmlTemplate = `
 </body>
 </html>
 `;
-
 // Register Handlebars helpers
-Handlebars.registerHelper('formatDate', function(date: Date | string) {
+Handlebars.registerHelper('formatDate', function (date: Date | string) {
     const d = new Date(date);
-    return d.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+    return d.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
     });
 });
-
-Handlebars.registerHelper('formatDateRange', function(startDate: Date | string, endDate: Date | string) {
+Handlebars.registerHelper('formatDateRange', function (startDate: Date | string, endDate: Date | string) {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
-    const startStr = start.toLocaleDateString('en-US', { 
-        month: 'long', 
+    const startStr = start.toLocaleDateString('en-US', {
+        month: 'long',
         day: 'numeric',
         year: 'numeric'
     });
-    
-    const endStr = end.toLocaleDateString('en-US', { 
-        month: 'long', 
+    const endStr = end.toLocaleDateString('en-US', {
+        month: 'long',
         day: 'numeric',
         year: 'numeric'
     });
-    
     return `${startStr} - ${endStr}`;
 });
-
-Handlebars.registerHelper('formatCurrency', function(amount: number) {
+Handlebars.registerHelper('formatCurrency', function (amount: number) {
     return amount.toLocaleString('en-US', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
     });
 });
-
 export interface PdfExportData {
     trip: Trip;
     activities: Activity[];
     todos: Todo[];
     notes: Note[];
 }
-
 export interface ProposalData {
     trip: Trip;
     activities: Activity[];
@@ -840,35 +825,29 @@ export interface ProposalData {
         website?: string;
     };
 }
-
 export async function generateTripPdf(data: PdfExportData): Promise<Buffer> {
     const template = Handlebars.compile(htmlTemplate);
-    
     // Group activities by day
     const activitiesByDay = groupActivitiesByDay(data.activities);
-    
     const html = template({
         trip: data.trip,
         activities: data.activities,
         activitiesByDay,
         todos: data.todos,
         notes: data.notes,
-        currentDate: new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        currentDate: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         })
     });
-    
     const browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    
     try {
         const page = await browser.newPage();
         await page.setContent(html, { waitUntil: 'networkidle0' });
-        
         const pdf = await page.pdf({
             format: 'A4',
             printBackground: true,
@@ -879,18 +858,16 @@ export async function generateTripPdf(data: PdfExportData): Promise<Buffer> {
                 left: '15mm'
             }
         });
-        
         return Buffer.from(pdf);
-    } finally {
+    }
+    finally {
         await browser.close();
     }
 }
-
 function groupActivitiesByDay(activities: Activity[]) {
     const grouped = activities.reduce((acc, activity) => {
         const date = new Date(activity.date);
         const dateKey = date.toDateString();
-        
         if (!acc[dateKey]) {
             acc[dateKey] = {
                 date: date,
@@ -898,65 +875,62 @@ function groupActivitiesByDay(activities: Activity[]) {
                 activities: []
             };
         }
-        
         acc[dateKey].activities.push(activity);
         return acc;
-    }, {} as Record<string, { date: Date; dayName: string; activities: Activity[] }>);
-    
+    }, {} as Record<string, {
+        date: Date;
+        dayName: string;
+        activities: Activity[];
+    }>);
     // Sort activities within each day by time
-    Object.values(grouped).forEach((day: { date: Date; dayName: string; activities: Activity[] }) => {
+    Object.values(grouped).forEach((day: {
+        date: Date;
+        dayName: string;
+        activities: Activity[];
+    }) => {
         day.activities.sort((a: Activity, b: Activity) => {
             const timeA = a.time || '00:00';
             const timeB = b.time || '00:00';
             return timeA.localeCompare(timeB);
         });
     });
-    
     // Return sorted days
     return Object.values(grouped).sort((a, b) => a.date.getTime() - b.date.getTime());
 }
-
 function getDayName(date: Date): string {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];
 }
-
 // AI-powered proposal generation with intelligent cost estimates
 export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
     const template = Handlebars.compile(proposalTemplate);
-    
     // Group activities by day
     const activitiesByDay = groupActivitiesByDay(data.activities);
-    
     // Calculate trip duration
     const startDate = new Date(data.trip.startDate);
     const endDate = new Date(data.trip.endDate);
     const tripDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    
     // Generate HTML with template data
     const html = template({
         ...data,
         activitiesByDay,
-        currentDate: new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        currentDate: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         }),
         tripDuration
     });
-    
     const browser = await puppeteer.launch({
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    
     try {
         const page = await browser.newPage();
-        await page.setContent(html, { 
+        await page.setContent(html, {
             waitUntil: 'networkidle0',
             timeout: 30000
         });
-        
         const pdf = await page.pdf({
             format: 'A4',
             printBackground: true,
@@ -968,80 +942,76 @@ export async function generateAIProposal(data: ProposalData): Promise<Buffer> {
                 left: '15mm'
             }
         });
-        
         return Buffer.from(pdf);
-    } catch (error) {
+    }
+    catch (error) {
         console.error('Error generating PDF:', error);
         throw error;
-    } finally {
+    }
+    finally {
         await browser.close();
     }
 }
-
 // Add the missing InvoicePdfData interface
 interface InvoicePdfData {
-  invoice: Invoice;
-  companyInfo?: {
-    name: string;
-    address: string;
-    phone: string;
-    email: string;
-    logoUrl?: string;
-  };
-  includeWatermark?: boolean;
+    invoice: Invoice;
+    companyInfo?: {
+        name: string;
+        address: string;
+        phone: string;
+        email: string;
+        logoUrl?: string;
+    };
+    includeWatermark?: boolean;
 }
-
 // Add the invoice PDF generation function
 export async function generateInvoicePdf(data: InvoicePdfData): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-gpu',
-    ],
-  });
-
-  try {
-    const page = await browser.newPage();
-    
-    // Compile the invoice template
-    const template = Handlebars.compile(invoiceTemplate);
-    const html = template({
-      ...data,
-      includeWatermark: data.includeWatermark !== false,
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu',
+        ],
     });
-
-    await page.setContent(html, {
-      waitUntil: 'networkidle0',
-      timeout: 30000,
-    });
-
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm',
-      },
-    });
-    return Buffer.from(pdf);
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw error;
-  } finally {
-    await browser.close();
-  }
+    try {
+        const page = await browser.newPage();
+        // Compile the invoice template
+        const template = Handlebars.compile(invoiceTemplate);
+        const html = template({
+            ...data,
+            includeWatermark: data.includeWatermark !== false,
+        });
+        await page.setContent(html, {
+            waitUntil: 'networkidle0',
+            timeout: 30000,
+        });
+        const pdf = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            preferCSSPageSize: true,
+            margin: {
+                top: '20mm',
+                right: '15mm',
+                bottom: '20mm',
+                left: '15mm',
+            },
+        });
+        return Buffer.from(pdf);
+    }
+    catch (error) {
+        console.error('Error generating PDF:', error);
+        throw error;
+    }
+    finally {
+        await browser.close();
+    }
 }
-
 // Add the invoice template
 const invoiceTemplate = `
 <!DOCTYPE html>
@@ -1241,41 +1211,37 @@ const invoiceTemplate = `
 </body>
 </html>
 `;
-
 // Helper functions for Handlebars templates
-Handlebars.registerHelper('add', function(this: any, ...args: any[]) {
-  // The last argument is the Handlebars options object
-  const numbers = args.slice(0, -1) as number[];
-  return numbers.reduce((sum, num) => sum + (Number(num) || 0), 0);
+Handlebars.registerHelper('add', function (this: any, ...args: any[]) {
+    // The last argument is the Handlebars options object
+    const numbers = args.slice(0, -1) as number[];
+    return numbers.reduce((sum, num) => sum + (Number(num) || 0), 0);
 });
-
-Handlebars.registerHelper('negate', function(this: any, value: any) {
-  const num = Number(value);
-  return isNaN(num) ? 0 : -num;
+Handlebars.registerHelper('negate', function (this: any, value: any) {
+    const num = Number(value);
+    return isNaN(num) ? 0 : -num;
 });
-
-Handlebars.registerHelper('or', function(this: any, a: any, b: any) {
-  return a || b;
+Handlebars.registerHelper('or', function (this: any, a: any, b: any) {
+    return a || b;
 });
-
 // Register the formatDate helper
-Handlebars.registerHelper('formatDate', function(this: any, date: string | Date | undefined) {
-  if (!date) return '';
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
+Handlebars.registerHelper('formatDate', function (this: any, date: string | Date | undefined) {
+    if (!date)
+        return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 });
-
 // Register the formatCurrency helper
-Handlebars.registerHelper('formatCurrency', function(this: any, amount: any, currency = 'USD') {
-  const numAmount = Number(amount) || 0;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency || 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(numAmount / 100); // Convert from cents to dollars
+Handlebars.registerHelper('formatCurrency', function (this: any, amount: any, currency = 'USD') {
+    const numAmount = Number(amount) || 0;
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency || 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(numAmount / 100); // Convert from cents to dollars
 });

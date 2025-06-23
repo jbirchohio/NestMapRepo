@@ -1,59 +1,76 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
-import { useAuthContext as useAuth } from '@/contexts/auth/AuthContext';
+import { useEffect, useState, useCallback } from 'react';
+import { useLocation } from 'wouter';
+import useAuth from '@/contexts/auth/useAuth';
 import { userService } from '@/services/api/userService';
+import { UserRole } from '@/types/api';
+// Super admin role types for type safety
+const SUPER_ADMIN_ROLES: UserRole[] = [
+    'superadmin',
+    'superadmin_owner',
+    'superadmin_staff',
+    'superadmin_auditor',
+    'super_admin'
+] as const;
+
+// Admin permission requirements
+const ADMIN_PERMISSIONS = [
+    'ACCESS_ANALYTICS',
+    'BILLING_ACCESS',
+    'MANAGE_TEAM_ROLES'
+] as const;
 
 export default function RoleBasedRedirect() {
-  const { roleType, authReady, user } = useAuth();
-  const [, setLocation] = useLocation();
-  const [permissionsChecked, setPermissionsChecked] = useState(false);
+    const { authReady, user } = useAuth();
+    const [, setLocation] = useLocation();
+    const [permissionsChecked, setPermissionsChecked] = useState(false);
 
-  useEffect(() => {
-    // Only redirect if authentication is ready and user is logged in
-    if (!authReady || !user || permissionsChecked) return;
+    const checkUserPermissions = useCallback(async () => {
+        if (!user) return false;
 
-    // Check user's actual role from database, not organization permissions
-    const checkPermissions = async () => {
-      try {
-        // Get the user's actual role from the database
         try {
-          const userData = await userService.getUserById(user.id);
-          
-          // Only redirect to superadmin if user has actual superadmin role
-          if (userData.role === 'superadmin' || 
-              userData.role === 'superadmin_owner' || 
-              userData.role === 'superadmin_staff' || 
-              userData.role === 'superadmin_auditor' || 
-              userData.role === 'super_admin') {
-            setLocation('/superadmin');
-            setPermissionsChecked(true);
-            return;
-          }
-          
-          // Check for organization-level admin permissions (but not system superadmin)
-          const { permissions = [] } = await userService.getPermissions();
-          
-          if (permissions.includes('ACCESS_ANALYTICS') &&
-              permissions.includes('BILLING_ACCESS') &&
-              permissions.includes('MANAGE_TEAM_ROLES')) {
-            setLocation('/admin');
-            setPermissionsChecked(true);
-            return;
-          }
+            // Get the user's actual role from the database
+            const userData = await userService.getUserById(user.id);
+            
+            // Check for super admin role
+            if (userData.role && SUPER_ADMIN_ROLES.includes(userData.role as UserRole)) {
+                setLocation('/superadmin');
+                return true;
+            }
+
+            // Check for admin permissions
+            const { permissions = [] } = await userService.getPermissions();
+            const hasAdminPermissions = ADMIN_PERMISSIONS.every(permission => 
+                permissions.includes(permission)
+            );
+
+            if (hasAdminPermissions) {
+                setLocation('/admin');
+                return true;
+            }
         } catch (error) {
-          console.error('Error checking user permissions:', error);
+            console.error('Error checking user permissions:', error);
         }
-      } catch (err) {
-        // Could not check permissions, proceeding with role-based redirect
-      }
 
-      // Map role types to unified dashboard route
-      setLocation('/dashboard');
-      setPermissionsChecked(true);
-    };
+        return false;
+    }, [user, setLocation]);
 
-    checkPermissions();
-  }, [authReady, user, roleType, setLocation, permissionsChecked]);
+    useEffect(() => {
+        // Only redirect if authentication is ready, user is logged in, and we haven't checked permissions yet
+        if (!authReady || !user || permissionsChecked) return;
 
-  return null; // This component doesn't render anything
+        const handleRedirect = async () => {
+            const hasSpecialAccess = await checkUserPermissions();
+            
+            if (!hasSpecialAccess) {
+                // Default to dashboard for regular users
+                setLocation('/dashboard');
+            }
+            
+            setPermissionsChecked(true);
+        };
+
+        handleRedirect();
+    }, [authReady, user, permissionsChecked, checkUserPermissions]);
+
+    return null; // This component doesn't render anything
 }

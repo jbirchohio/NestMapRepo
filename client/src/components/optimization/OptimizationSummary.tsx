@@ -2,67 +2,60 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, DollarSign, Clock, Users, Zap } from 'lucide-react';
-
 interface OptimizationResult {
-  originalCost: number;
-  optimizedCost: number;
-  savings: number;
-  savingsPercentage: number;
-  timeReduction: number;
-  carbonReduction: number;
-  optimizations: Array<{
-    type: 'route' | 'timing' | 'accommodation' | 'transport';
-    description: string;
+    originalCost: number;
+    optimizedCost: number;
     savings: number;
-    impact: 'high' | 'medium' | 'low';
-  }>;
+    savingsPercentage: number;
+    timeReduction: number;
+    carbonReduction: number;
+    optimizations: Array<{
+        type: 'route' | 'timing' | 'accommodation' | 'transport';
+        description: string;
+        savings: number;
+        impact: 'high' | 'medium' | 'low';
+    }>;
 }
-
 interface OptimizationSummaryProps {
-  result: OptimizationResult;
-  onApplyChanges: () => void;
-  onReject: () => void;
-  isLoading?: boolean;
+    result: OptimizationResult;
+    onApplyChanges: () => void;
+    onReject: () => void;
+    isLoading?: boolean;
 }
-
 export function OptimizationSummary({ result, onApplyChanges, onReject, isLoading }: OptimizationSummaryProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  const getImpactColor = (impact: string) => {
-    switch (impact) {
-      case 'high':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
-      case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
-    }
-  };
-
-  const getOptimizationIcon = (type: string) => {
-    switch (type) {
-      case 'route':
-        return '🛣️';
-      case 'timing':
-        return '⏰';
-      case 'accommodation':
-        return '🏨';
-      case 'transport':
-        return '✈️';
-      default:
-        return '💡';
-    }
-  };
-
-  return (
-    <div className="space-y-6">
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        }).format(amount);
+    };
+    const getImpactColor = (impact: string) => {
+        switch (impact) {
+            case 'high':
+                return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+            case 'medium':
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
+            case 'low':
+                return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+        }
+    };
+    const getOptimizationIcon = (type: string) => {
+        switch (type) {
+            case 'route':
+                return '🛣️';
+            case 'timing':
+                return '⏰';
+            case 'accommodation':
+                return '🏨';
+            case 'transport':
+                return '✈️';
+            default:
+                return '💡';
+        }
+    };
+    return (<div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -78,7 +71,7 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
                 </p>
               </div>
               <div className="h-12 w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <TrendingDown className="h-6 w-6 text-green-600 dark:text-green-400"/>
               </div>
             </div>
           </CardContent>
@@ -97,7 +90,7 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
                 </p>
               </div>
               <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400"/>
               </div>
             </div>
           </CardContent>
@@ -116,7 +109,7 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
                 </p>
               </div>
               <div className="h-12 w-12 bg-electric-100 dark:bg-electric-900/20 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-electric-600 dark:text-electric-400" />
+                <TrendingUp className="h-6 w-6 text-electric-600 dark:text-electric-400"/>
               </div>
             </div>
           </CardContent>
@@ -127,7 +120,7 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+            <DollarSign className="h-5 w-5"/>
             Cost Comparison
           </CardTitle>
         </CardHeader>
@@ -159,14 +152,13 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
+            <Zap className="h-5 w-5"/>
             Optimization Details
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {result.optimizations.map((optimization, index) => (
-              <div key={index} className="flex items-start justify-between p-3 border rounded-lg dark:border-gray-700">
+            {result.optimizations.map((optimization, index) => (<div key={index} className="flex items-start justify-between p-3 border rounded-lg dark:border-gray-700">
                 <div className="flex items-start gap-3 flex-1">
                   <span className="text-xl">{getOptimizationIcon(optimization.type)}</span>
                   <div className="flex-1">
@@ -181,8 +173,7 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
                 <Badge className={getImpactColor(optimization.impact)}>
                   {optimization.impact} impact
                 </Badge>
-              </div>
-            ))}
+              </div>))}
           </div>
         </CardContent>
       </Card>
@@ -193,15 +184,10 @@ export function OptimizationSummary({ result, onApplyChanges, onReject, isLoadin
           Keep Original
         </Button>
         <div className="flex gap-3">
-          <Button 
-            onClick={onApplyChanges} 
-            disabled={isLoading}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
+          <Button onClick={onApplyChanges} disabled={isLoading} className="bg-green-600 hover:bg-green-700 text-white">
             {isLoading ? 'Applying...' : 'Apply Optimizations'}
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
 }

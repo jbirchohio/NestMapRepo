@@ -1,44 +1,39 @@
 import OpenAI from "openai";
-import { findLocation } from "./aiLocations";
-
+import { findLocation } from "aiLocations.js";
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
-
 /**
  * Summarizes a daily itinerary
  */
 export async function summarizeDay(activities: any[]): Promise<string> {
-  try {
-    if (!activities || activities.length === 0) {
-      return "No activities planned for this day.";
-    }
-
-    const prompt = `
+    try {
+        if (!activities || activities.length === 0) {
+            return "No activities planned for this day.";
+        }
+        const prompt = `
     Please summarize the following daily itinerary concisely while highlighting key activities, time allocations, and travel information:
     
     ${JSON.stringify(activities, null, 2)}
     
     Include a brief overview of what the day looks like, the main attractions/activities, meal plans if any, and overall travel distance if available.
     `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    return response.choices[0].message.content || "Unable to generate summary.";
-  } catch (error) {
-    console.error("Error in summarizeDay:", error);
-    return "Error generating summary. Please try again later.";
-  }
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+        });
+        return response.choices[0].message.content || "Unable to generate summary.";
+    }
+    catch (error) {
+        console.error("Error in summarizeDay:", error);
+        return "Error generating summary. Please try again later.";
+    }
 }
-
 /**
  * Suggests food or coffee places near a specific location
  */
 export async function suggestNearbyFood(location: string, foodType: string = "food"): Promise<any> {
-  try {
-    const prompt = `
+    try {
+        const prompt = `
     Please suggest 3-5 ${foodType} options near ${location}. Respond with JSON in this format:
     {
       "suggestions": [
@@ -52,31 +47,28 @@ export async function suggestNearbyFood(location: string, foodType: string = "fo
       ]
     }
     `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result;
-  } catch (error) {
-    console.error("Error in suggestNearbyFood:", error);
-    return { suggestions: [] };
-  }
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+        });
+        const result = JSON.parse(response.choices[0].message.content || "{}");
+        return result;
+    }
+    catch (error) {
+        console.error("Error in suggestNearbyFood:", error);
+        return { suggestions: [] };
+    }
 }
-
 /**
  * Detects time conflicts in a schedule
  */
 export async function detectTimeConflicts(activities: any[]): Promise<any> {
-  try {
-    if (!activities || activities.length <= 1) {
-      return { conflicts: [] };
-    }
-
-    const prompt = `
+    try {
+        if (!activities || activities.length <= 1) {
+            return { conflicts: [] };
+        }
+        const prompt = `
     Please analyze the following daily itinerary and identify any time conflicts, 
     tight connections, or logistical issues. Consider travel times between locations and the duration of activities:
     
@@ -97,31 +89,25 @@ export async function detectTimeConflicts(activities: any[]): Promise<any> {
     
     If there are no conflicts, return an empty array for "conflicts".
     `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result;
-  } catch (error) {
-    console.error("Error in detectTimeConflicts:", error);
-    return { conflicts: [] };
-  }
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+        });
+        const result = JSON.parse(response.choices[0].message.content || "{}");
+        return result;
+    }
+    catch (error) {
+        console.error("Error in detectTimeConflicts:", error);
+        return { conflicts: [] };
+    }
 }
-
 /**
  * Generates a themed itinerary suggestion
  */
-export async function generateThemedItinerary(
-  location: string, 
-  theme: string, 
-  duration: string
-): Promise<any> {
-  try {
-    const prompt = `
+export async function generateThemedItinerary(location: string, theme: string, duration: string): Promise<any> {
+    try {
+        const prompt = `
     Please create a ${duration} itinerary with the theme "${theme}" in ${location}.
     
     Respond with a JSON object with the following structure:
@@ -139,46 +125,45 @@ export async function generateThemedItinerary(
       ]
     }
     `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result;
-  } catch (error) {
-    console.error("Error in generateThemedItinerary:", error);
-    return { 
-      title: "Error generating itinerary",
-      description: "Could not generate themed itinerary",
-      activities: [] 
-    };
-  }
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+        });
+        const result = JSON.parse(response.choices[0].message.content || "{}");
+        return result;
+    }
+    catch (error) {
+        console.error("Error in generateThemedItinerary:", error);
+        return {
+            title: "Error generating itinerary",
+            description: "Could not generate themed itinerary",
+            activities: []
+        };
+    }
 }
-
 /**
  * Handles general trip planning questions
  */
 /**
  * Optimizes itinerary order to minimize travel time and avoid conflicts
  */
-export async function optimizeItinerary(activities: any[], tripContext: any): Promise<{ optimizedActivities: any[], recommendations: string[] }> {
-  try {
-    if (!activities || activities.length === 0) {
-      return { optimizedActivities: [], recommendations: ["No activities to optimize."] };
-    }
-
-    // Debug: Activities count for optimization
-    // console.log("DEBUG: Activities being sent to AI for optimization:", JSON.stringify(activities.map(a => ({
-    //   id: a.id,
-    //   title: a.title,
-    //   time: a.time,
-    //   locationName: a.locationName
-    // })), null, 2));
-
-    const prompt = `CRITICAL SCHEDULING CONFLICT RESOLVER
+export async function optimizeItinerary(activities: any[], tripContext: any): Promise<{
+    optimizedActivities: any[];
+    recommendations: string[];
+}> {
+    try {
+        if (!activities || activities.length === 0) {
+            return { optimizedActivities: [], recommendations: ["No activities to optimize."] };
+        }
+        // Debug: Activities count for optimization
+        // console.log("DEBUG: Activities being sent to AI for optimization:", JSON.stringify(activities.map(a => ({
+        //   id: a.id,
+        //   title: a.title,
+        //   time: a.time,
+        //   locationName: a.locationName
+        // })), null, 2));
+        const prompt = `CRITICAL SCHEDULING CONFLICT RESOLVER
 
 TASK: Fix time conflicts in this itinerary. Multiple activities are scheduled at THE SAME TIME.
 
@@ -229,131 +214,117 @@ ${activities.map(a => `    {
     "Note any meal timing optimizations"
   ]
 }`;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" }
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || '{}');
-    
-    // Debug: Log the AI's optimization response
-    // AI optimization completed successfully
-    
-    return {
-      optimizedActivities: result.optimizedActivities || [],
-      recommendations: result.recommendations || ["Unable to generate optimization recommendations."]
-    };
-  } catch (error) {
-    console.error("Error optimizing itinerary:", error);
-    return {
-      optimizedActivities: [],
-      recommendations: ["Unable to optimize itinerary at this time. Please try again later."]
-    };
-  }
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" }
+        });
+        const result = JSON.parse(response.choices[0].message.content || '{}');
+        // Debug: Log the AI's optimization response
+        // AI optimization completed successfully
+        return {
+            optimizedActivities: result.optimizedActivities || [],
+            recommendations: result.recommendations || ["Unable to generate optimization recommendations."]
+        };
+    }
+    catch (error) {
+        console.error("Error optimizing itinerary:", error);
+        return {
+            optimizedActivities: [],
+            recommendations: ["Unable to optimize itinerary at this time. Please try again later."]
+        };
+    }
 }
-
 /**
  * Corporate trip optimization with budget simulation and conflict detection
  */
 export async function optimizeCorporateTrips(trips: any[]): Promise<{
-  optimizedTrips: any[];
-  savings: {
-    totalMoneySaved: number;
-    totalTimeSaved: number;
-    conflictsResolved: number;
-  };
-  recommendations: string[];
+    optimizedTrips: any[];
+    savings: {
+        totalMoneySaved: number;
+        totalTimeSaved: number;
+        conflictsResolved: number;
+    };
+    recommendations: string[];
 }> {
-  try {
-    // Pricing constants (mock logic for now)
-    const PRICING = {
-      flight: 300,
-      hotel: 150,
-      weekendSurcharge: 0.1,
-      groupDiscount: 0.15,
-      lastMinuteUpcharge: 0.25,
-      advanceBookingDiscount: 0.1
-    };
-
-    // Budget simulation function
-    const calculateTripCost = (trip: any, adjustments: any = {}) => {
-      const baseFlight = PRICING.flight;
-      const startDate = new Date(trip.startDate);
-      const endDate = new Date(trip.endDate);
-      const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const baseHotel = PRICING.hotel * nights;
-      
-      let cost = baseFlight + baseHotel;
-      
-      // Weekend surcharge
-      const startDay = startDate.getDay();
-      if (startDay === 5 || startDay === 6) cost *= (1 + PRICING.weekendSurcharge);
-      
-      // Group discount for overlapping trips
-      if (adjustments.hasGroupBooking) cost *= (1 - PRICING.groupDiscount);
-      
-      // Advance booking discount
-      const now = new Date();
-      const daysFromNow = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-      if (daysFromNow > 30) cost *= (1 - PRICING.advanceBookingDiscount);
-      
-      return Math.round(cost);
-    };
-
-    // Detect conflicts and opportunities
-    const detectConflicts = (trips: any[]) => {
-      const conflicts = [];
-      const opportunities = [];
-      
-      for (let i = 0; i < trips.length; i++) {
-        for (let j = i + 1; j < trips.length; j++) {
-          const trip1 = trips[i];
-          const trip2 = trips[j];
-          
-          // Date overlap check
-          const start1 = new Date(trip1.startDate);
-          const end1 = new Date(trip1.endDate);
-          const start2 = new Date(trip2.startDate);
-          const end2 = new Date(trip2.endDate);
-          
-          if (start1 <= end2 && start2 <= end1) {
-            conflicts.push({
-              trips: [trip1.id, trip2.id],
-              type: 'date_overlap',
-              users: [trip1.user_id, trip2.user_id],
-              departments: [trip1.department, trip2.department]
-            });
-          }
-          
-          // Geo-clustering opportunity
-          if (trip1.city === trip2.city && Math.abs(start1.getTime() - start2.getTime()) <= 7 * 24 * 60 * 60 * 1000) {
-            opportunities.push({
-              trips: [trip1.id, trip2.id],
-              type: 'geo_clustering',
-              city: trip1.city,
-              potentialSavings: calculateTripCost(trip1) * PRICING.groupDiscount
-            });
-          }
-        }
-      }
-      
-      return { conflicts, opportunities };
-    };
-
-    // AI analysis prompt
-    const prompt = `
+    try {
+        // Pricing constants (mock logic for now)
+        const PRICING = {
+            flight: 300,
+            hotel: 150,
+            weekendSurcharge: 0.1,
+            groupDiscount: 0.15,
+            lastMinuteUpcharge: 0.25,
+            advanceBookingDiscount: 0.1
+        };
+        // Budget simulation function
+        const calculateTripCost = (trip: any, adjustments: any = {}) => {
+            const baseFlight = PRICING.flight;
+            const startDate = new Date(trip.startDate);
+            const endDate = new Date(trip.endDate);
+            const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            const baseHotel = PRICING.hotel * nights;
+            let cost = baseFlight + baseHotel;
+            // Weekend surcharge
+            const startDay = startDate.getDay();
+            if (startDay === 5 || startDay === 6)
+                cost *= (1 + PRICING.weekendSurcharge);
+            // Group discount for overlapping trips
+            if (adjustments.hasGroupBooking)
+                cost *= (1 - PRICING.groupDiscount);
+            // Advance booking discount
+            const now = new Date();
+            const daysFromNow = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysFromNow > 30)
+                cost *= (1 - PRICING.advanceBookingDiscount);
+            return Math.round(cost);
+        };
+        // Detect conflicts and opportunities
+        const detectConflicts = (trips: any[]) => {
+            const conflicts = [];
+            const opportunities = [];
+            for (let i = 0; i < trips.length; i++) {
+                for (let j = i + 1; j < trips.length; j++) {
+                    const trip1 = trips[i];
+                    const trip2 = trips[j];
+                    // Date overlap check
+                    const start1 = new Date(trip1.startDate);
+                    const end1 = new Date(trip1.endDate);
+                    const start2 = new Date(trip2.startDate);
+                    const end2 = new Date(trip2.endDate);
+                    if (start1 <= end2 && start2 <= end1) {
+                        conflicts.push({
+                            trips: [trip1.id, trip2.id],
+                            type: 'date_overlap',
+                            users: [trip1.user_id, trip2.user_id],
+                            departments: [trip1.department, trip2.department]
+                        });
+                    }
+                    // Geo-clustering opportunity
+                    if (trip1.city === trip2.city && Math.abs(start1.getTime() - start2.getTime()) <= 7 * 24 * 60 * 60 * 1000) {
+                        opportunities.push({
+                            trips: [trip1.id, trip2.id],
+                            type: 'geo_clustering',
+                            city: trip1.city,
+                            potentialSavings: calculateTripCost(trip1) * PRICING.groupDiscount
+                        });
+                    }
+                }
+            }
+            return { conflicts, opportunities };
+        };
+        // AI analysis prompt
+        const prompt = `
     Analyze these corporate trips for optimization opportunities:
     
     ${JSON.stringify(trips.map(t => ({
-      id: t.id,
-      destination: t.city,
-      dates: `${t.startDate} to ${t.endDate}`,
-      department: t.department,
-      budget: t.budget,
-      travelMode: t.travelMode || 'flight'
-    })), null, 2)}
+            id: t.id,
+            destination: t.city,
+            dates: `${t.startDate} to ${t.endDate}`,
+            department: t.department,
+            budget: t.budget,
+            travelMode: t.travelMode || 'flight'
+        })), null, 2)}
     
     Provide optimization recommendations focusing on:
     1. Date adjustments to avoid conflicts and reduce costs
@@ -381,93 +352,80 @@ export async function optimizeCorporateTrips(trips: any[]): Promise<{
       "recommendations": ["list of general recommendations"]
     }
     `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-    });
-
-    const aiResult = JSON.parse(response.choices[0].message.content || "{}");
-    const { conflicts, opportunities } = detectConflicts(trips);
-
-    // Apply optimizations to trips
-    const optimizedTrips = trips.map(trip => {
-      const originalCost = calculateTripCost(trip);
-      const optimization = aiResult.optimizations?.find((opt: any) => opt.trip_id === trip.id);
-      
-      if (optimization) {
-        const hasGroupBooking = opportunities.some(opp => opp.trips.includes(trip.id));
-        const optimizedCost = calculateTripCost({
-          ...trip,
-          startDate: optimization.suggestedDates.split(' to ')[0],
-          endDate: optimization.suggestedDates.split(' to ')[1]
-        }, { hasGroupBooking });
-
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+        });
+        const aiResult = JSON.parse(response.choices[0].message.content || "{}");
+        const { conflicts, opportunities } = detectConflicts(trips);
+        // Apply optimizations to trips
+        const optimizedTrips = trips.map(trip => {
+            const originalCost = calculateTripCost(trip);
+            const optimization = aiResult.optimizations?.find((opt: any) => opt.trip_id === trip.id);
+            if (optimization) {
+                const hasGroupBooking = opportunities.some(opp => opp.trips.includes(trip.id));
+                const optimizedCost = calculateTripCost({
+                    ...trip,
+                    startDate: optimization.suggestedDates.split(' to ')[0],
+                    endDate: optimization.suggestedDates.split(' to ')[1]
+                }, { hasGroupBooking });
+                return {
+                    ...trip,
+                    originalStartDate: trip.startDate,
+                    originalEndDate: trip.endDate,
+                    suggestedStartDate: optimization.suggestedDates.split(' to ')[0],
+                    suggestedEndDate: optimization.suggestedDates.split(' to ')[1],
+                    originalCost,
+                    optimizedCost,
+                    savings: originalCost - optimizedCost,
+                    reasoning: optimization.reasoning,
+                    conflictFlags: conflicts.filter(c => c.trips.includes(trip.id)),
+                    hasOptimization: true
+                };
+            }
+            return {
+                ...trip,
+                originalCost: calculateTripCost(trip),
+                optimizedCost: calculateTripCost(trip),
+                savings: 0,
+                hasOptimization: false,
+                conflictFlags: conflicts.filter(c => c.trips.includes(trip.id))
+            };
+        });
+        // Calculate total savings
+        const totalMoneySaved = optimizedTrips.reduce((sum, trip) => sum + (trip.savings || 0), 0);
+        const conflictsResolved = conflicts.length;
+        const totalTimeSaved = Math.round(conflictsResolved * 2.5); // Assume 2.5 hours saved per conflict resolved
         return {
-          ...trip,
-          originalStartDate: trip.startDate,
-          originalEndDate: trip.endDate,
-          suggestedStartDate: optimization.suggestedDates.split(' to ')[0],
-          suggestedEndDate: optimization.suggestedDates.split(' to ')[1],
-          originalCost,
-          optimizedCost,
-          savings: originalCost - optimizedCost,
-          reasoning: optimization.reasoning,
-          conflictFlags: conflicts.filter(c => c.trips.includes(trip.id)),
-          hasOptimization: true
+            optimizedTrips,
+            savings: {
+                totalMoneySaved,
+                totalTimeSaved,
+                conflictsResolved
+            },
+            recommendations: aiResult.recommendations || [
+                "Consider consolidating trips to the same city within a 2-week window",
+                "Book business travel at least 30 days in advance for 10% savings",
+                "Avoid weekend departures when possible to reduce surcharges"
+            ]
         };
-      }
-
-      return {
-        ...trip,
-        originalCost: calculateTripCost(trip),
-        optimizedCost: calculateTripCost(trip),
-        savings: 0,
-        hasOptimization: false,
-        conflictFlags: conflicts.filter(c => c.trips.includes(trip.id))
-      };
-    });
-
-    // Calculate total savings
-    const totalMoneySaved = optimizedTrips.reduce((sum, trip) => sum + (trip.savings || 0), 0);
-    const conflictsResolved = conflicts.length;
-    const totalTimeSaved = Math.round(conflictsResolved * 2.5); // Assume 2.5 hours saved per conflict resolved
-
-    return {
-      optimizedTrips,
-      savings: {
-        totalMoneySaved,
-        totalTimeSaved,
-        conflictsResolved
-      },
-      recommendations: aiResult.recommendations || [
-        "Consider consolidating trips to the same city within a 2-week window",
-        "Book business travel at least 30 days in advance for 10% savings",
-        "Avoid weekend departures when possible to reduce surcharges"
-      ]
-    };
-
-  } catch (error) {
-    console.error("Error in optimizeCorporateTrips:", error);
-    return {
-      optimizedTrips: trips,
-      savings: { totalMoneySaved: 0, totalTimeSaved: 0, conflictsResolved: 0 },
-      recommendations: ["Unable to generate optimization recommendations at this time."]
-    };
-  }
+    }
+    catch (error) {
+        console.error("Error in optimizeCorporateTrips:", error);
+        return {
+            optimizedTrips: trips,
+            savings: { totalMoneySaved: 0, totalTimeSaved: 0, conflictsResolved: 0 },
+            recommendations: ["Unable to generate optimization recommendations at this time."]
+        };
+    }
 }
-
 /**
  * Provides weather-based trip suggestions
  */
-export async function suggestWeatherBasedActivities(
-  location: string,
-  date: string,
-  weatherCondition: string
-): Promise<any> {
-  try {
-    const prompt = `
+export async function suggestWeatherBasedActivities(location: string, date: string, weatherCondition: string): Promise<any> {
+    try {
+        const prompt = `
     You are a travel planning assistant recommending activities based on weather conditions.
     
     Location: ${location}
@@ -492,37 +450,31 @@ export async function suggestWeatherBasedActivities(
       ]
     }
     `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result;
-  } catch (error) {
-    console.error("Error in suggestWeatherBasedActivities:", error);
-    return { 
-      weather: {
-        condition: "Unknown weather condition",
-        recommendation: "Could not generate weather-based recommendations"
-      },
-      activities: [] 
-    };
-  }
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+        });
+        const result = JSON.parse(response.choices[0].message.content || "{}");
+        return result;
+    }
+    catch (error) {
+        console.error("Error in suggestWeatherBasedActivities:", error);
+        return {
+            weather: {
+                condition: "Unknown weather condition",
+                recommendation: "Could not generate weather-based recommendations"
+            },
+            activities: []
+        };
+    }
 }
-
 /**
  * Suggests budget-friendly options for a trip
  */
-export async function suggestBudgetOptions(
-  location: string,
-  budgetLevel: "low" | "medium" | "high",
-  activityType?: string
-): Promise<any> {
-  try {
-    const prompt = `
+export async function suggestBudgetOptions(location: string, budgetLevel: "low" | "medium" | "high", activityType?: string): Promise<any> {
+    try {
+        const prompt = `
     You are a budget-conscious travel planning assistant.
     
     Location: ${location}
@@ -548,83 +500,73 @@ export async function suggestBudgetOptions(
       ]
     }
     `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-    });
-
-    const result = JSON.parse(response.choices[0].message.content || "{}");
-    return result;
-  } catch (error) {
-    console.error("Error in suggestBudgetOptions:", error);
-    return { 
-      budgetInfo: {
-        level: budgetLevel,
-        estimatedDailyBudget: "Unknown",
-        savingTips: ["Could not generate budget recommendations"]
-      },
-      suggestions: [] 
-    };
-  }
-}
-
-export async function tripAssistant(question: string, tripContext: any): Promise<string | { answer: string, activities?: any[] }> {
-  try {
-    // Check if user is explicitly requesting to import an itinerary
-    const isExplicitImportRequest = 
-      question.toLowerCase().includes("import my itinerary") || 
-      question.toLowerCase().includes("add these activities") ||
-      question.toLowerCase().includes("add this schedule") ||
-      question.toLowerCase().includes("create activities from") ||
-      question.toLowerCase().includes("parse this itinerary");
-    
-    // Check if this looks like a pasted itinerary - look for multiple time patterns
-    const hasTimePatterns = (question.match(/\d{1,2}[\s]*[:-][\s]*\d{2}/g) || []).length > 2 ||  // 9:30, 10-30 formats
-                           (question.match(/\d{1,2}[\s]*[AP]M/g) || []).length > 2;  // 9AM, 10 PM formats
-    
-    const hasDayPatterns = question.includes("Day") || 
-                          question.includes("Monday") || question.includes("Tuesday") || 
-                          question.includes("Wednesday") || question.includes("Thursday") || 
-                          question.includes("Friday") || question.includes("Saturday") || 
-                          question.includes("Sunday");
-                          
-    const hasMultipleLines = question.split('\n').length > 5;
-    
-    // Check for activity-like patterns
-    const hasActivityPatterns = 
-      (question.match(/visit|museum|park|breakfast|lunch|dinner|check[ -]in|arrive|leave|drive|walk/gi) || []).length > 3;
-    
-    // Detect itineraries with multiple time entries and sufficient length
-    const isItinerary = (isExplicitImportRequest || 
-                         (hasTimePatterns && hasMultipleLines && hasActivityPatterns)) && 
-                        question.length > 100;
-    
-    if (isItinerary) {
-      return await parseItinerary(question, tripContext);
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+        });
+        const result = JSON.parse(response.choices[0].message.content || "{}");
+        return result;
     }
-    
-    // Detect weather-related queries
-    const isWeatherQuery = question.toLowerCase().includes("weather") ||
-                          question.toLowerCase().includes("rain") ||
-                          question.toLowerCase().includes("sunny") ||
-                          question.toLowerCase().includes("hot") ||
-                          question.toLowerCase().includes("cold") ||
-                          question.toLowerCase().includes("temperature") ||
-                          question.toLowerCase().includes("forecast");
-                          
-    // Detect budget-related queries
-    const isBudgetQuery = question.toLowerCase().includes("budget") ||
-                         question.toLowerCase().includes("cheap") ||
-                         question.toLowerCase().includes("expensive") ||
-                         question.toLowerCase().includes("cost") ||
-                         question.toLowerCase().includes("money") ||
-                         question.toLowerCase().includes("affordable") ||
-                         question.toLowerCase().includes("save") ||
-                         question.toLowerCase().includes("price");
-    
-    const prompt = `
+    catch (error) {
+        console.error("Error in suggestBudgetOptions:", error);
+        return {
+            budgetInfo: {
+                level: budgetLevel,
+                estimatedDailyBudget: "Unknown",
+                savingTips: ["Could not generate budget recommendations"]
+            },
+            suggestions: []
+        };
+    }
+}
+export async function tripAssistant(question: string, tripContext: any): Promise<string | {
+    answer: string;
+    activities?: any[];
+}> {
+    try {
+        // Check if user is explicitly requesting to import an itinerary
+        const isExplicitImportRequest = question.toLowerCase().includes("import my itinerary") ||
+            question.toLowerCase().includes("add these activities") ||
+            question.toLowerCase().includes("add this schedule") ||
+            question.toLowerCase().includes("create activities from") ||
+            question.toLowerCase().includes("parse this itinerary");
+        // Check if this looks like a pasted itinerary - look for multiple time patterns
+        const hasTimePatterns = (question.match(/\d{1,2}[\s]*[:-][\s]*\d{2}/g) || []).length > 2 || // 9:30, 10-30 formats
+            (question.match(/\d{1,2}[\s]*[AP]M/g) || []).length > 2; // 9AM, 10 PM formats
+        const hasDayPatterns = question.includes("Day") ||
+            question.includes("Monday") || question.includes("Tuesday") ||
+            question.includes("Wednesday") || question.includes("Thursday") ||
+            question.includes("Friday") || question.includes("Saturday") ||
+            question.includes("Sunday");
+        const hasMultipleLines = question.split('\n').length > 5;
+        // Check for activity-like patterns
+        const hasActivityPatterns = (question.match(/visit|museum|park|breakfast|lunch|dinner|check[ -]in|arrive|leave|drive|walk/gi) || []).length > 3;
+        // Detect itineraries with multiple time entries and sufficient length
+        const isItinerary = (isExplicitImportRequest ||
+            (hasTimePatterns && hasMultipleLines && hasActivityPatterns)) &&
+            question.length > 100;
+        if (isItinerary) {
+            return await parseItinerary(question, tripContext);
+        }
+        // Detect weather-related queries
+        const isWeatherQuery = question.toLowerCase().includes("weather") ||
+            question.toLowerCase().includes("rain") ||
+            question.toLowerCase().includes("sunny") ||
+            question.toLowerCase().includes("hot") ||
+            question.toLowerCase().includes("cold") ||
+            question.toLowerCase().includes("temperature") ||
+            question.toLowerCase().includes("forecast");
+        // Detect budget-related queries
+        const isBudgetQuery = question.toLowerCase().includes("budget") ||
+            question.toLowerCase().includes("cheap") ||
+            question.toLowerCase().includes("expensive") ||
+            question.toLowerCase().includes("cost") ||
+            question.toLowerCase().includes("money") ||
+            question.toLowerCase().includes("affordable") ||
+            question.toLowerCase().includes("save") ||
+            question.toLowerCase().includes("price");
+        const prompt = `
     You are a travel assistant helping with trip planning. You have access to the following trip information:
     
     ${JSON.stringify(tripContext, null, 2)}
@@ -636,32 +578,31 @@ export async function tripAssistant(question: string, tripContext: any): Promise
     If the question is about budget, suggest budget-friendly options.
     Consider the location and dates of the trip when providing personalized recommendations.
     `;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    return response.choices[0].message.content || "I couldn't process that question. Could you try rephrasing it?";
-  } catch (error) {
-    console.error("Error in tripAssistant:", error);
-    return "I'm having trouble answering that question right now. Please try again later.";
-  }
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+        });
+        return response.choices[0].message.content || "I couldn't process that question. Could you try rephrasing it?";
+    }
+    catch (error) {
+        console.error("Error in tripAssistant:", error);
+        return "I'm having trouble answering that question right now. Please try again later.";
+    }
 }
-
 /**
  * Parses a pasted itinerary and converts it to structured activities
  */
-async function parseItinerary(itineraryText: string, tripContext: any): Promise<{ answer: string, activities: any[] }> {
-  try {
-    // Get the location context from the trip
-    const city = tripContext.trip?.city || "New York City";
-    
-    // Get trip date range to help with date inference
-    const tripStartDate = tripContext.trip?.startDate ? new Date(tripContext.trip.startDate) : new Date();
-    const tripEndDate = tripContext.trip?.endDate ? new Date(tripContext.trip.endDate) : new Date(tripStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
-    const prompt = `
+async function parseItinerary(itineraryText: string, tripContext: any): Promise<{
+    answer: string;
+    activities: any[];
+}> {
+    try {
+        // Get the location context from the trip
+        const city = tripContext.trip?.city || "New York City";
+        // Get trip date range to help with date inference
+        const tripStartDate = tripContext.trip?.startDate ? new Date(tripContext.trip.startDate) : new Date();
+        const tripEndDate = tripContext.trip?.endDate ? new Date(tripContext.trip.endDate) : new Date(tripStartDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const prompt = `
     You are an expert itinerary parser and ACTIVITY CREATOR for a travel planning app. The user wants you to CREATE ACTUAL ACTIVITIES from their pasted itinerary.
     
     Trip Information:
@@ -699,59 +640,57 @@ async function parseItinerary(itineraryText: string, tripContext: any): Promise<
     
     This is CREATING REAL DATABASE ENTRIES, not just a summary. The system will take your response and create actual activities in the app.
     `;
-
-    // Define the schema for the activity parsing function
-    const parseItineraryFunction = {
-      name: "parse_itinerary_to_activities",
-      description: "Extract structured trip activities from a pasted itinerary. Do not summarize - only return exact structured activities.",
-      parameters: {
-        type: "object",
-        properties: {
-          activities: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                date: { 
-                  type: "string", 
-                  description: "Date of activity in YYYY-MM-DD format. If day of week is given, calculate the actual date based on trip start date."
+        // Define the schema for the activity parsing function
+        const parseItineraryFunction = {
+            name: "parse_itinerary_to_activities",
+            description: "Extract structured trip activities from a pasted itinerary. Do not summarize - only return exact structured activities.",
+            parameters: {
+                type: "object",
+                properties: {
+                    activities: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                date: {
+                                    type: "string",
+                                    description: "Date of activity in YYYY-MM-DD format. If day of week is given, calculate the actual date based on trip start date."
+                                },
+                                time: {
+                                    type: "string",
+                                    description: "Time of the activity in 24-hour format (14:30). Extract only start time if a range is given."
+                                },
+                                title: {
+                                    type: "string",
+                                    description: "Clear title of the activity"
+                                },
+                                locationName: {
+                                    type: "string",
+                                    description: "Exact location name as it would appear on a map search"
+                                },
+                                notes: {
+                                    type: "string",
+                                    description: "Any extra details or instructions"
+                                },
+                                tag: {
+                                    type: "string",
+                                    description: "Category tag (one of: 'Food', 'Culture', 'Shop', 'Rest', 'Transport', 'Event')"
+                                }
+                            },
+                            required: ["date", "time", "title", "locationName"]
+                        }
+                    }
                 },
-                time: { 
-                  type: "string", 
-                  description: "Time of the activity in 24-hour format (14:30). Extract only start time if a range is given."
-                },
-                title: { 
-                  type: "string", 
-                  description: "Clear title of the activity" 
-                },
-                locationName: { 
-                  type: "string", 
-                  description: "Exact location name as it would appear on a map search" 
-                },
-                notes: { 
-                  type: "string", 
-                  description: "Any extra details or instructions" 
-                },
-                tag: {
-                  type: "string",
-                  description: "Category tag (one of: 'Food', 'Culture', 'Shop', 'Rest', 'Transport', 'Event')"
-                }
-              },
-              required: ["date", "time", "title", "locationName"]
+                required: ["activities"]
             }
-          }
-        },
-        required: ["activities"]
-      }
-    };
-    
-    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { 
-          role: "system", 
-          content: `You are a travel assistant that converts freeform pasted itineraries into a list of structured activities.
+        };
+        // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+                {
+                    role: "system",
+                    content: `You are a travel assistant that converts freeform pasted itineraries into a list of structured activities.
 
 DO NOT summarize or paraphrase. Instead, extract each activity into a structured format with date, time, title, location, and optional notes.
 
@@ -777,90 +716,84 @@ Expected output activities:
 ]
 
 IMPORTANT: Each activity MUST have a specific locationName that can be found on a map, a date in YYYY-MM-DD format, and a time in 24-hour format.`
-        },
-        { 
-          role: "user", 
-          content: itineraryText 
+                },
+                {
+                    role: "user",
+                    content: itineraryText
+                }
+            ],
+            functions: [parseItineraryFunction],
+            function_call: { name: "parse_itinerary_to_activities" }
+        });
+        // Handle the function call response format
+        let activities = [];
+        let answer = "I've processed your itinerary and extracted activities.";
+        // Parse the function call arguments
+        if (response.choices[0].message.function_call) {
+            try {
+                const functionArgs = JSON.parse(response.choices[0].message.function_call.arguments || "{}");
+                activities = functionArgs.activities || [];
+                // Extracted activities from itinerary using function call
+            }
+            catch (error) {
+                console.error("Error parsing function call arguments:", error);
+            }
         }
-      ],
-      functions: [parseItineraryFunction],
-      function_call: { name: "parse_itinerary_to_activities" }
-    });
-
-    // Handle the function call response format
-    let activities = [];
-    let answer = "I've processed your itinerary and extracted activities.";
-    
-    // Parse the function call arguments
-    if (response.choices[0].message.function_call) {
-      try {
-        const functionArgs = JSON.parse(response.choices[0].message.function_call.arguments || "{}");
-        activities = functionArgs.activities || [];
-        // Extracted activities from itinerary using function call
-      } catch (error) {
-        console.error("Error parsing function call arguments:", error);
-      }
-    } 
-    // Fallback to old format if function call isn't available
-    else if (response.choices[0].message.content) {
-      try {
-        const result = JSON.parse(response.choices[0].message.content || "{}");
-        activities = result.activities || [];
-        answer = result.answer || answer;
-        // Extracted activities from itinerary using content parsing
-      } catch (error) {
-        console.error("Error parsing content:", error);
-      }
-    }
-    
-    // Create a result object with both the answer and activities
-    const result = {
-      answer,
-      activities
-    };
-    
-    // Itinerary parsing completed
-    
-    // Process locations to get coordinates where possible
-    if (result.activities && Array.isArray(result.activities)) {
-      // For each activity location, try to get coordinates
-      for (let i = 0; i < result.activities.length; i++) {
-        const activity = result.activities[i];
-        
-        // Skip if no location
-        if (!activity.locationName) continue;
-        
-        try {
-          // Try to find the location
-          const locationResult = await findLocation(activity.locationName, city);
-          // Location search completed for activity
-          
-          // If we have location results, use the first one
-          if (locationResult.locations && locationResult.locations.length > 0) {
-            const firstLocation = locationResult.locations[0];
-            
-            // Add location details to the activity
-            result.activities[i].locationName = firstLocation.name;
-            
-            // We need to geocode this location to get coordinates
-            // This would use our existing geocoding function, but for now we'll skip it
-            // as it would require importing additional modules
-          }
-        } catch (locError) {
-          console.error(`Error finding location for "${activity.locationName}":`, locError);
+        // Fallback to old format if function call isn't available
+        else if (response.choices[0].message.content) {
+            try {
+                const result = JSON.parse(response.choices[0].message.content || "{}");
+                activities = result.activities || [];
+                answer = result.answer || answer;
+                // Extracted activities from itinerary using content parsing
+            }
+            catch (error) {
+                console.error("Error parsing content:", error);
+            }
         }
-      }
+        // Create a result object with both the answer and activities
+        const result = {
+            answer,
+            activities
+        };
+        // Itinerary parsing completed
+        // Process locations to get coordinates where possible
+        if (result.activities && Array.isArray(result.activities)) {
+            // For each activity location, try to get coordinates
+            for (let i = 0; i < result.activities.length; i++) {
+                const activity = result.activities[i];
+                // Skip if no location
+                if (!activity.locationName)
+                    continue;
+                try {
+                    // Try to find the location
+                    const locationResult = await findLocation(activity.locationName, city);
+                    // Location search completed for activity
+                    // If we have location results, use the first one
+                    if (locationResult.locations && locationResult.locations.length > 0) {
+                        const firstLocation = locationResult.locations[0];
+                        // Add location details to the activity
+                        result.activities[i].locationName = firstLocation.name;
+                        // We need to geocode this location to get coordinates
+                        // This would use our existing geocoding function, but for now we'll skip it
+                        // as it would require importing additional modules
+                    }
+                }
+                catch (locError) {
+                    console.error(`Error finding location for "${activity.locationName}":`, locError);
+                }
+            }
+        }
+        return {
+            answer: result.answer || "I've processed your itinerary and extracted the activities.",
+            activities: result.activities || []
+        };
     }
-    
-    return {
-      answer: result.answer || "I've processed your itinerary and extracted the activities.",
-      activities: result.activities || []
-    };
-  } catch (error) {
-    console.error("Error in parseItinerary:", error);
-    return { 
-      answer: "I had trouble parsing your itinerary. Please check the format and try again.",
-      activities: []
-    };
-  }
+    catch (error) {
+        console.error("Error in parseItinerary:", error);
+        return {
+            answer: "I had trouble parsing your itinerary. Please check the format and try again.",
+            activities: []
+        };
+    }
 }

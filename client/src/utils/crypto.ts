@@ -1,7 +1,6 @@
 export const generateUUID = () => {
-  return crypto.randomUUID();
+    return crypto.randomUUID();
 };
-
 export const generateToken = () => {
-  return crypto.randomUUID();
+    return crypto.randomUUID();
 };

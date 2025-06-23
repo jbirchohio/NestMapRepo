@@ -1,5 +1,5 @@
 import 'express';
-import { UserRole } from '../src/auth/types';
+import type { UserRole } from '../src/auth/types';
 export { UserRole } from '../src/auth/types';
 
 export interface JWTUser {

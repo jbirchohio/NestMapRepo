@@ -1,77 +1,67 @@
 import puppeteer from 'puppeteer';
-import { Trip, Activity } from '../db/schema.js';
-
+import type { Trip, Activity } from '../db/schema.js';
 /**
  * Enterprise-ready PDF generation utility
  * Generates actual PDF binary data instead of HTML
  */
-
 interface PdfGenerationData {
-  trip: Trip;
-  activities: Activity[];
-  todos?: any[];
-  notes?: any[];
+    trip: Trip;
+    activities: Activity[];
+    todos?: any[];
+    notes?: any[];
 }
-
 export async function generatePdfBuffer(data: PdfGenerationData): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-gpu'
-    ]
-  });
-
-  try {
-    const page = await browser.newPage();
-    
-    // Generate professional HTML content for PDF
-    const htmlContent = generatePdfHtml(data);
-    
-    await page.setContent(htmlContent, { 
-      waitUntil: 'networkidle0',
-      timeout: 30000
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+        ]
     });
-
-    // Generate PDF with proper configuration
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm'
-      },
-      displayHeaderFooter: true,
-      headerTemplate: '<div></div>',
-      footerTemplate: `
+    try {
+        const page = await browser.newPage();
+        // Generate professional HTML content for PDF
+        const htmlContent = generatePdfHtml(data);
+        await page.setContent(htmlContent, {
+            waitUntil: 'networkidle0',
+            timeout: 30000
+        });
+        // Generate PDF with proper configuration
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            preferCSSPageSize: true,
+            margin: {
+                top: '20mm',
+                right: '15mm',
+                bottom: '20mm',
+                left: '15mm'
+            },
+            displayHeaderFooter: true,
+            headerTemplate: '<div></div>',
+            footerTemplate: `
         <div style="font-size: 10px; text-align: center; width: 100%; color: #666;">
           <span class="pageNumber"></span> / <span class="totalPages"></span>
         </div>
       `
-    });
-
-    return Buffer.from(pdfBuffer);
-  } finally {
-    await browser.close();
-  }
+        });
+        return Buffer.from(pdfBuffer);
+    }
+    finally {
+        await browser.close();
+    }
 }
-
 function generatePdfHtml(data: PdfGenerationData): string {
-  const { trip, activities } = data;
-  
-  // Group activities by day
-  const activitiesByDay = groupActivitiesByDay(activities);
-  
-  return `
+    const { trip, activities } = data;
+    // Group activities by day
+    const activitiesByDay = groupActivitiesByDay(activities);
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -250,38 +240,40 @@ function generatePdfHtml(data: PdfGenerationData): string {
 </body>
 </html>`;
 }
-
 function groupActivitiesByDay(activities: Activity[]) {
-  const grouped = activities.reduce((acc, activity) => {
-    const date = new Date(activity.date);
-    const dateKey = date.toDateString();
-    
-    if (!acc[dateKey]) {
-      acc[dateKey] = {
-        date: date,
-        dayName: getDayName(date),
-        activities: []
-      };
-    }
-    
-    acc[dateKey].activities.push(activity);
-    return acc;
-  }, {} as Record<string, { date: Date; dayName: string; activities: Activity[] }>);
-  
-  // Sort activities within each day by time
-  Object.values(grouped).forEach(day => {
-    day.activities.sort((a: Activity, b: Activity) => {
-      const timeA = a.time || '00:00';
-      const timeB = b.time || '00:00';
-      return timeA.localeCompare(timeB);
+    const grouped = activities.reduce((acc, activity) => {
+        const date = new Date(activity.date);
+        const dateKey = date.toDateString();
+        if (!acc[dateKey]) {
+            acc[dateKey] = {
+                date: date,
+                dayName: getDayName(date),
+                activities: []
+            };
+        }
+        acc[dateKey].activities.push(activity);
+        return acc;
+    }, {} as Record<string, {
+        date: Date;
+        dayName: string;
+        activities: Activity[];
+    }>);
+    // Sort activities within each day by time
+    Object.values(grouped).forEach(day => {
+        day.activities.sort((a: Activity, b: Activity) => {
+            const timeA = a.time || '00:00';
+            const timeB = b.time || '00:00';
+            return timeA.localeCompare(timeB);
+        });
     });
-  });
-  
-  // Return sorted days
-  return Object.values(grouped).sort((a: {date: Date}, b: {date: Date}) => a.date.getTime() - b.date.getTime());
+    // Return sorted days
+    return Object.values(grouped).sort((a: {
+        date: Date;
+    }, b: {
+        date: Date;
+    }) => a.date.getTime() - b.date.getTime());
 }
-
 function getDayName(date: Date): string {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return days[date.getDay()];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[date.getDay()];
 }

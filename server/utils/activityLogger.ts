@@ -1,6 +1,5 @@
 import { db } from '../db/db.js';
 import { userActivityLogs } from '../db/schema.js';
-
 /**
  * Logs a user activity to the database.
  *
@@ -11,24 +10,18 @@ import { userActivityLogs } from '../db/schema.js';
  * @param ipAddress - The IP address of the user.
  * @param userAgent - The user agent string of the user's browser.
  */
-export const logUserActivity = async (
-  userId: string,
-  organizationId: string,
-  action: string,
-  details: Record<string, any> = {},
-  ipAddress?: string,
-  userAgent?: string
-) => {
-  try {
-    await db.insert(userActivityLogs).values({
-      userId,
-      organizationId,
-      action,
-      details,
-      ip: ipAddress || null,
-      userAgent: userAgent || null,
-    });
-  } catch (error) {
-    console.error('Failed to log user activity:', error);
-  }
+export const logUserActivity = async (userId: string, organizationId: string, action: string, details: Record<string, any> = {}, ipAddress?: string, userAgent?: string) => {
+    try {
+        await db.insert(userActivityLogs).values({
+            userId,
+            organizationId,
+            action,
+            details,
+            ip: ipAddress || null,
+            userAgent: userAgent || null,
+        });
+    }
+    catch (error) {
+        console.error('Failed to log user activity:', error);
+    }
 };

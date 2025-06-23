@@ -1,24 +1,24 @@
 // Core auth exports
-export * from './jwt';
-export * from './middleware';
-export * from './types';
+export * from './jwt/index.ts';
+export * from './middleware/index.ts';
+export * from './types/index.ts';
 
 // Services and Repositories
-export * from './services/auth.service';
-export * from './repositories/user.repository';
-export * from './repositories/refresh-token.repository';
+export * from './services/auth.service.ts';
+export * from './repositories/user.repository.ts';
+export * from './repositories/refresh-token.repository.ts';
 
 // Controllers
-export * from './controllers/auth.controller';
+export * from './controllers/auth.controller.ts';
 
 // DTOs
-export * from './dtos/auth.dto';
+export * from './dtos/auth.dto.ts';
 
-// Container (for dependency injection)
-export * from './auth.container';
+// Dependency injection container
+export * from './auth.container.ts';
 
-// Re-export commonly used types
-export type { TokenPayload, TokenVerificationResult } from './types';
+// Re-export specific types
+export type { TokenPayload, TokenVerificationResult } from './types/index.ts';
 
-// Register auth routes
-export { registerAuthRoutes } from './auth.container';
+// Explicitly re-export registerAuthRoutes for clarity
+export { registerAuthRoutes } from './auth.container.ts';

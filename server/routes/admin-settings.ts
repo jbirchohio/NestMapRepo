@@ -1,273 +1,257 @@
-import type { Express } from "express";
-import { db } from "../db";
-import { eq, count } from "drizzle-orm";
-import { adminSettings, adminAuditLog } from "@shared/schema";
+import { db } from "../db/db.js";
+import { eq, count, and, desc } from "drizzle-orm";
+import { adminSettings, adminAuditLog } from "../db/schema.js";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import type { Express, Response, NextFunction, RequestHandler, Request as ExpressRequest } from 'express';
+import { parse as json2csv } from 'json2csv';
 
-interface SystemSettings {
-  general: {
-    platformName: string;
-    maintenanceMode: boolean;
-    registrationEnabled: boolean;
-    emailVerificationRequired: boolean;
-    maxUsersPerOrganization: number;
-    sessionTimeoutMinutes: number;
-  };
-  security: {
-    enforcePasswordComplexity: boolean;
-    requireTwoFactor: boolean;
-    passwordExpiryDays: number;
-    maxLoginAttempts: number;
-    lockoutDurationMinutes: number;
-  };
-  email: {
-    smtpHost: string;
-    smtpPort: number;
-    smtpSecure: boolean;
-    fromEmail: string;
-    fromName: string;
-  };
-  features: {
-    enableAIFeatures: boolean;
-    enableFlightBooking: boolean;
-    enableCorporateCards: boolean;
-    enableAnalytics: boolean;
-    enableWhiteLabel: boolean;
-  };
+// Define our custom user and organization types
+type AuthUser = {
+  id: string;
+  email: string;
+  role: string;
+  organizationId?: string | null;
+};
+
+type OrgInfo = {
+  id: string;
+  name: string;
+  slug: string;
+  settings?: Record<string, unknown>;
+};
+
+// Create a type that omits the existing user property and adds our custom one
+type CustomRequest = Omit<ExpressRequest, 'user'> & {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    organizationId?: string | null;
+  } | null;
+  organization?: {
+    id: string;
+    name: string;
+    slug: string;
+    settings?: Record<string, unknown>;
+  } | null;
 }
 
+// Define custom types for our extended request properties
+type User = CustomRequest['user'];
+type Organization = NonNullable<CustomRequest['organization']>;
+
+interface SystemSettings {
+    general: {
+        platformName: string;
+        maintenanceMode: boolean;
+        registrationEnabled: boolean;
+        emailVerificationRequired: boolean;
+        maxUsersPerOrganization: number;
+        sessionTimeoutMinutes: number;
+    };
+    security: {
+        enforcePasswordComplexity: boolean;
+        requireTwoFactor: boolean;
+        passwordExpiryDays: number;
+        maxLoginAttempts: number;
+        lockoutDurationMinutes: number;
+    };
+    email: {
+        smtpHost: string;
+        smtpPort: number;
+        smtpSecure: boolean;
+        fromEmail: string;
+        fromName: string;
+    };
+    features: {
+        enableAIFeatures: boolean;
+        enableFlightBooking: boolean;
+        enableCorporateCards: boolean;
+        enableAnalytics: boolean;
+        enableWhiteLabel: boolean;
+    };
+}
 const defaultSettings: SystemSettings = {
-  general: {
-    platformName: "NestMap",
-    maintenanceMode: false,
-    registrationEnabled: true,
-    emailVerificationRequired: true,
-    maxUsersPerOrganization: 100,
-    sessionTimeoutMinutes: 480,
-  },
-  security: {
-    enforcePasswordComplexity: true,
-    requireTwoFactor: false,
-    passwordExpiryDays: 90,
-    maxLoginAttempts: 5,
-    lockoutDurationMinutes: 15,
-  },
-  email: {
-    smtpHost: process.env.SMTP_HOST || "",
-    smtpPort: parseInt(process.env.SMTP_PORT || "587"),
-    smtpSecure: process.env.SMTP_SECURE === "true",
-    fromEmail: process.env.FROM_EMAIL || "noreply@nestmap.com",
-    fromName: process.env.FROM_NAME || "NestMap",
-  },
-  features: {
-    enableAIFeatures: true,
-    enableFlightBooking: true,
-    enableCorporateCards: true,
-    enableAnalytics: true,
-    enableWhiteLabel: true,
-  },
+    general: {
+        platformName: "NestMap",
+        maintenanceMode: false,
+        registrationEnabled: true,
+        emailVerificationRequired: true,
+        maxUsersPerOrganization: 100,
+        sessionTimeoutMinutes: 480,
+    },
+    security: {
+        enforcePasswordComplexity: true,
+        requireTwoFactor: false,
+        passwordExpiryDays: 90,
+        maxLoginAttempts: 5,
+        lockoutDurationMinutes: 15,
+    },
+    email: {
+        smtpHost: process.env.SMTP_HOST || "",
+        smtpPort: parseInt(process.env.SMTP_PORT || "587"),
+        smtpSecure: process.env.SMTP_SECURE === "true",
+        fromEmail: process.env.FROM_EMAIL || "noreply@nestmap.com",
+        fromName: process.env.FROM_NAME || "NestMap",
+    },
+    features: {
+        enableAIFeatures: true,
+        enableFlightBooking: true,
+        enableCorporateCards: true,
+        enableAnalytics: true,
+        enableWhiteLabel: true,
+    },
+};
+// Helper function to wrap route handlers with proper error handling
+const asyncHandler = <T = any>(
+  handler: (req: CustomRequest, res: Response<T>, next: NextFunction) => Promise<void | Response<T>>
+): RequestHandler => {
+  return (req, res: Response, next) => {
+    return Promise.resolve(handler(req as CustomRequest, res as Response<T>, next)).catch(next);
+  };
 };
 
 export function registerAdminSettingsRoutes(app: Express) {
-  // Apply middleware to all admin settings routes
-  app.use('/api/admin/settings', validateJWT);
-  app.use('/api/admin/settings', injectOrganizationContext);
-  app.use('/api/admin/settings', validateOrganizationAccess);
-  
-  // Apply middleware to admin logs routes
-  app.use('/api/admin/logs', validateJWT);
-  app.use('/api/admin/logs', injectOrganizationContext);
-  app.use('/api/admin/logs', validateOrganizationAccess);
-  // Get system settings
-  app.get("/api/admin/settings", async (req, res) => {
-    try {
-      if (!req.user || req.user?.role !== 'admin') {
+    // Apply middleware for admin settings routes
+    app.use('/api/admin/settings', 
+        validateJWT as RequestHandler,
+        injectOrganizationContext as RequestHandler,
+        validateOrganizationAccess as RequestHandler
+    );
+    
+    // Apply middleware for admin logs routes
+    app.use('/api/admin/logs',
+        validateJWT as RequestHandler,
+        injectOrganizationContext as RequestHandler,
+        validateOrganizationAccess as RequestHandler
+    );
+    
+        // Get system settings endpoint
+    app.get("/api/admin/settings", asyncHandler(async (req, res) => {
+      if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
-
-      // Try to get settings from database
-      const [existingSettings] = await db
-        .select()
-        .from(adminSettings)
-        .where(eq(adminSettings.key, 'system_settings'))
-        .limit(1);
-
-      if (existingSettings) {
-        const settings = JSON.parse(existingSettings.value);
-        res.json(settings);
-      } else {
-        // Return default settings if none exist
-        res.json(defaultSettings);
-      }
-    } catch (error) {
-      console.error("Error fetching admin settings:", error);
-      res.status(500).json({ error: "Failed to fetch settings" });
-    }
-  });
-
-  // Update system settings
-  app.put("/api/admin/settings", async (req, res) => {
-    try {
-      if (!req.user || req.user?.role !== 'admin') {
+      const settings = await db.select().from(adminSettings).limit(1);
+      return res.json(settings[0] || {});
+    }));
+    
+    // Update system settings endpoint
+    app.put("/api/admin/settings", asyncHandler(async (req, res) => {
+      if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
-
-      const updatedSettings = req.body;
-
-      // Validate required fields
-      if (!updatedSettings.general || !updatedSettings.security || !updatedSettings.email || !updatedSettings.features) {
-        return res.status(400).json({ error: "Invalid settings format" });
-      }
-
-      // Check if settings already exist
-      const [existingSettings] = await db
-        .select()
-        .from(adminSettings)
-        .where(eq(adminSettings.key, 'system_settings'))
-        .limit(1);
-
-      if (existingSettings) {
-        // Update existing settings
-        await db
-          .update(adminSettings)
-          .set({
-            value: JSON.stringify(updatedSettings),
-            updatedAt: new Date(),
-          })
-          .where(eq(adminSettings.key, 'system_settings'));
-      } else {
-        // Insert new settings
-        await db.insert(adminSettings).values({
-          key: 'system_settings',
-          value: JSON.stringify(updatedSettings),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-      }
-
-      // Log the change
-      await db.insert(adminAuditLog).values({
-        admin_user_id: req.user.id,
-        action_type: 'SYSTEM_SETTINGS_UPDATE',
-        action_data: { updatedSettings },
-        ip_address: req.ip || req.connection.remoteAddress || 'unknown',
-      });
-
-      res.json({ message: "Settings updated successfully" });
-    } catch (error) {
-      console.error("Error updating admin settings:", error);
-      res.status(500).json({ error: "Failed to update settings" });
-    }
-  });
-
-  // Test email configuration
-  app.post("/api/admin/settings/test-email", async (req, res) => {
-    try {
-      if (!req.user || req.user?.role !== 'admin') {
-        return res.status(403).json({ error: "Admin access required" });
-      }
-
-      // Get current email settings
-      const [existingSettings] = await db
-        .select()
-        .from(adminSettings)
-        .where(eq(adminSettings.key, 'system_settings'))
-        .limit(1);
-
-      const settings = existingSettings 
-        ? JSON.parse(existingSettings.value) 
-        : defaultSettings;
-
-      // Simulate email test (in production, you'd use the actual SMTP settings)
-      const emailConfig = settings.email;
       
-      if (!emailConfig.smtpHost || !emailConfig.fromEmail) {
-        return res.status(400).json({ error: "SMTP configuration incomplete" });
-      }
-
-      // Log the test
+      const updatedSettings = req.body;
+      const [settings] = await db
+          .update(adminSettings)
+          .set(updatedSettings)
+          .returning();
+          
+      // Log the update
       await db.insert(adminAuditLog).values({
-        admin_user_id: req.user.id,
-        action_type: 'EMAIL_TEST',
-        action_data: { smtpHost: emailConfig.smtpHost, fromEmail: emailConfig.fromEmail },
-        ip_address: req.ip || req.connection.remoteAddress || 'unknown',
+          action: 'SYSTEM_SETTINGS_UPDATE',
+          metadata: { updatedSettings },
+          ipAddress: req.ip || (req.socket?.remoteAddress?.toString() || 'unknown'),
+          userAgent: Array.isArray(req.headers['user-agent']) 
+              ? req.headers['user-agent'][0] 
+              : req.headers['user-agent'] || 'unknown',
+          userId: req.user?.id || null,
+          organizationId: req.organization?.id || null,
+          entityType: 'system_settings',
+          entityId: null
       });
-
-      // In a real implementation, you would send an actual test email here
-      res.json({ message: "Test email sent successfully" });
-    } catch (error) {
-      console.error("Error testing email configuration:", error);
-      res.status(500).json({ error: "Failed to send test email" });
-    }
-  });
-
-  // Get admin logs endpoint
-  app.get("/api/admin/logs", async (req, res) => {
-    try {
-      if (!req.user || req.user?.role !== 'admin') {
+      
+      return res.json(settings);
+    }));
+    
+    // Test email configuration
+    app.post("/api/admin/settings/test-email", asyncHandler(async (req: CustomRequest, res) => {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+          
+      const { email } = req.body as { email: string };
+      if (!email || typeof email !== 'string' || !/\S+@\S+\.\S+/.test(email)) {
+          return res.status(400).json({ error: "Valid email address is required" });
+      }
+      
+      // Here you would implement the actual email sending logic
+      // For now, we'll just log and return success
+      console.log(`[TEST EMAIL] Would send test email to: ${email}`);
+      
+      // Log the test email action
+      await db.insert(adminAuditLog).values({
+          action: 'TEST_EMAIL',
+          metadata: { email },
+          ipAddress: req.ip || (req.socket?.remoteAddress?.toString() || 'unknown'),
+          userAgent: Array.isArray(req.headers['user-agent']) 
+              ? req.headers['user-agent'][0] 
+              : req.headers['user-agent'] || 'unknown',
+          userId: req.user.id,
+          organizationId: req.organization?.id || null,
+          entityType: 'system_settings',
+          entityId: null
+      });
+      
+      return res.json({ success: true, message: "Test email would be sent" });
+    }));
+    
+    // Get admin logs endpoint
+    app.get("/api/admin/logs", asyncHandler(async (req: CustomRequest, res: Response) => {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+          
+      const { page = '1', limit = '20' } = req.query as { page?: string; limit?: string };
+      const pageNum = Math.max(1, parseInt(page) || 1);
+      const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+      const offset = (pageNum - 1) * limitNum;
+      
+      // Get logs with pagination
+      const logs = await db
+          .select()
+          .from(adminAuditLog)
+          .orderBy(desc(adminAuditLog.createdAt))
+          .limit(limitNum)
+          .offset(offset);
+          
+      // Get total count for pagination
+      const [{ count: totalCount }] = await db
+          .select({ count: count() })
+          .from(adminAuditLog);
+          
+      const total = Number(totalCount);
+      return res.json({
+          data: logs,
+          pagination: {
+              total,
+              page: pageNum,
+              limit: limitNum,
+              totalPages: Math.ceil(total / limitNum)
+          }
+      });
+    }));
+    // Export admin logs as CSV
+    app.get("/api/admin/logs/export", asyncHandler(async (req: CustomRequest, res: Response) => {
+      if (!req.user || req.user.role !== 'admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 50;
-      const offset = (page - 1) * limit;
-
       const logs = await db
-        .select()
-        .from(adminAuditLog)
-        .orderBy(adminAuditLog.timestamp)
-        .limit(limit)
-        .offset(offset);
+          .select()
+          .from(adminAuditLog)
+          .orderBy(desc(adminAuditLog.createdAt));
 
-      const [totalCountResult] = await db
-        .select({ count: count(adminAuditLog.id) })
-        .from(adminAuditLog);
+      // Convert logs to CSV
+      const fields = ['id', 'action', 'entityType', 'entityId', 'createdAt'];
+      const opts = { fields };
+      const csv = json2csv(logs, opts);
 
-      const totalCount = totalCountResult.count;
-
-      res.json({
-        logs,
-        pagination: {
-          page,
-          limit,
-          total: totalCount,
-          pages: Math.ceil(totalCount / limit),
-        }
-      });
-    } catch (error) {
-      console.error("Error fetching admin logs:", error);
-      res.status(500).json({ error: "Failed to fetch logs" });
-    }
-  });
-
-  // Export admin logs as CSV
-  app.get("/api/admin/logs/export", async (req, res) => {
-    try {
-      if (!req.user || req.user?.role !== 'admin') {
-        return res.status(403).json({ error: "Admin access required" });
-      }
-
-      const logs = await db
-        .select()
-        .from(adminAuditLog)
-        .orderBy(adminAuditLog.timestamp);
-
-      // Generate CSV content
-      const csvHeader = 'ID,Admin User ID,Action,IP Address,Timestamp,Details\n';
-      const csvRows = logs.map(log => {
-        const details = log.action_data ? JSON.stringify(log.action_data).replace(/"/g, '""') : '';
-        return `${log.id},"${log.admin_user_id}","${log.action_type}","${log.ip_address || ''}","${log.timestamp}","${details}"`;
-      }).join('\n');
-
-      const csvContent = csvHeader + csvRows;
-
+      // Set headers for file download
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename="admin-logs.csv"');
-      res.send(csvContent);
-    } catch (error) {
-      console.error("Error exporting admin logs:", error);
-      res.status(500).json({ error: "Failed to export logs" });
-    }
-  });
+      res.setHeader('Content-Disposition', 'attachment; filename=admin-logs-export.csv');
+      
+      return res.send(csv);
+    }));
 }

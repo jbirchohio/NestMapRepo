@@ -1,4 +1,4 @@
-import { Request as ExpressRequest } from 'express';
+import { Request as ExpressRequest } from '../../express-augmentations';
 
 declare global {
   namespace Express {

@@ -1,5 +1,6 @@
-import { Request as ExpressRequest, Response, NextFunction } from 'express';
-import { AuthUser } from './auth-user';
+import type { Response, NextFunction } from '../../express-augmentations'
+import { Request as ExpressRequest } from '../../express-augmentations';
+import type { AuthUser } from './auth-user';
 
 // Database metrics type
 export interface DatabaseMetrics {

@@ -4,31 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Calendar, 
-  Map, 
-  Plane, 
-  Hotel, 
-  Utensils, 
-  Camera, 
-  CreditCard, 
-  Users, 
-  MessageSquare,
-  Clock
-} from 'lucide-react';
-
+import { Calendar, Map, Plane, Hotel, Utensils, Camera, CreditCard, Users, MessageSquare, Clock } from 'lucide-react';
 export default function PreviewTemplate() {
-  return (
-    <div className="min-h-screen bg-background">
+    return (<div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b">
         <div className="container mx-auto py-4 px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img 
-              src="/placeholder-logo.png" 
-              alt="Company Logo" 
-              className="company-logo h-8 w-auto"
-            />
+            <img src="/placeholder-logo.png" alt="Company Logo" className="company-logo h-8 w-auto"/>
             <span className="company-name text-xl font-bold">NestMap</span>
           </div>
           <div className="flex items-center gap-4">
@@ -39,7 +22,7 @@ export default function PreviewTemplate() {
               <a href="#" className="text-sm font-medium hover:text-primary">Reports</a>
             </nav>
             <Avatar>
-              <AvatarImage src="/placeholder-avatar.png" />
+              <AvatarImage src="/placeholder-avatar.png"/>
               <AvatarFallback>JD</AvatarFallback>
             </Avatar>
           </div>
@@ -79,7 +62,7 @@ export default function PreviewTemplate() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <Card>
               <CardHeader className="pb-2">
-                <Plane className="h-6 w-6 text-primary mb-2" />
+                <Plane className="h-6 w-6 text-primary mb-2"/>
                 <CardTitle>Flight Booking</CardTitle>
                 <CardDescription>Simplified flight booking with AI recommendations</CardDescription>
               </CardHeader>
@@ -92,7 +75,7 @@ export default function PreviewTemplate() {
             
             <Card>
               <CardHeader className="pb-2">
-                <Hotel className="h-6 w-6 text-primary mb-2" />
+                <Hotel className="h-6 w-6 text-primary mb-2"/>
                 <CardTitle>Hotel Management</CardTitle>
                 <CardDescription>Find and book policy-compliant accommodations</CardDescription>
               </CardHeader>
@@ -105,7 +88,7 @@ export default function PreviewTemplate() {
             
             <Card>
               <CardHeader className="pb-2">
-                <Calendar className="h-6 w-6 text-primary mb-2" />
+                <Calendar className="h-6 w-6 text-primary mb-2"/>
                 <CardTitle>Itinerary Planning</CardTitle>
                 <CardDescription>AI-optimized travel schedules</CardDescription>
               </CardHeader>
@@ -118,7 +101,7 @@ export default function PreviewTemplate() {
             
             <Card>
               <CardHeader className="pb-2">
-                <CreditCard className="h-6 w-6 text-primary mb-2" />
+                <CreditCard className="h-6 w-6 text-primary mb-2"/>
                 <CardTitle>Expense Tracking</CardTitle>
                 <CardDescription>Simplified expense management</CardDescription>
               </CardHeader>
@@ -131,7 +114,7 @@ export default function PreviewTemplate() {
             
             <Card>
               <CardHeader className="pb-2">
-                <Users className="h-6 w-6 text-primary mb-2" />
+                <Users className="h-6 w-6 text-primary mb-2"/>
                 <CardTitle>Team Collaboration</CardTitle>
                 <CardDescription>Real-time travel coordination</CardDescription>
               </CardHeader>
@@ -144,7 +127,7 @@ export default function PreviewTemplate() {
             
             <Card>
               <CardHeader className="pb-2">
-                <MessageSquare className="h-6 w-6 text-primary mb-2" />
+                <MessageSquare className="h-6 w-6 text-primary mb-2"/>
                 <CardTitle>24/7 Support</CardTitle>
                 <CardDescription>Always available assistance</CardDescription>
               </CardHeader>
@@ -227,11 +210,7 @@ export default function PreviewTemplate() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <img 
-                  src="/placeholder-logo.png" 
-                  alt="Company Logo" 
-                  className="company-logo h-8 w-auto"
-                />
+                <img src="/placeholder-logo.png" alt="Company Logo" className="company-logo h-8 w-auto"/>
                 <span className="company-name text-xl font-bold">NestMap</span>
               </div>
               <p className="text-sm text-muted-foreground company-tagline">
@@ -277,6 +256,5 @@ export default function PreviewTemplate() {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>);
 }

@@ -1,4 +1,4 @@
-import { Logger } from 'winston';
+import type { Logger } from 'winston';
 
 declare module 'winston' {
   interface Logger {

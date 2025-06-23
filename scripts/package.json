@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "dependencies": {
+    "typescript": "^5.0.0",
+    "glob": "^10.3.10",
+    "@types/node": "^20.11.0"
+  }
+}

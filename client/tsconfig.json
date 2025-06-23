@@ -1,39 +1,81 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    // Output and source directories
     "outDir": "../dist/client",
     "rootDir": "src",
+    
+    // Module settings
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    
+    // JSX settings
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "allowSyntheticDefaultImports": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
+    
+    // Type checking
+    "strict": true,
     "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-    "strictNullChecks": true,
-    "allowJs": true,
-    "checkJs": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitOverride": true,
+    
+    // Module resolution
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/src/*"]
     },
+    
+    // Type definitions
     "types": ["vite/client", "node"],
     "typeRoots": [
       "./node_modules/@types",
       "../node_modules/@types"
     ],
+    
+    // Target and libraries
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    
+    // Output
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/client.tsbuildinfo"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts"
+  ],
+  
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/__tests__",
+    "src/**/*.test.*",
+    "src/setupTests.ts",
+    "src/**/*.mock.ts",
+    "src/**/__mocks__",
+    "src/temp",
+    "src/unused",
+    "src/deprecated"
+  ]
 }

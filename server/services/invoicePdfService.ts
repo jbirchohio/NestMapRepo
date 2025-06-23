@@ -1,71 +1,61 @@
 import puppeteer from 'puppeteer';
 import nodemailer from 'nodemailer';
-import { Invoice } from '../db/invoiceSchema';
+import type { Invoice } from '../db/invoiceSchema.ts';
 import { format } from 'date-fns';
-
 interface InvoicePdfOptions {
-  includeWatermark?: boolean;
-  logoUrl?: string;
-  companyInfo?: {
-    name: string;
-    address: string;
-    phone: string;
-    email: string;
-  };
+    includeWatermark?: boolean;
+    logoUrl?: string;
+    companyInfo?: {
+        name: string;
+        address: string;
+        phone: string;
+        email: string;
+    };
 }
-
-export async function generateInvoicePdf(
-  invoice: Invoice,
-  options: InvoicePdfOptions = {}
-): Promise<Buffer> {
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-gpu',
-    ],
-  });
-
-  try {
-    const page = await browser.newPage();
-    const htmlContent = generateInvoiceHtml(invoice, options);
-    
-    await page.setContent(htmlContent, {
-      waitUntil: 'networkidle0',
-      timeout: 30000,
+export async function generateInvoicePdf(invoice: Invoice, options: InvoicePdfOptions = {}): Promise<Buffer> {
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu',
+        ],
     });
-
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm',
-      },
-    });
-
-    return pdfBuffer;
-  } finally {
-    await browser.close();
-  }
+    try {
+        const page = await browser.newPage();
+        const htmlContent = generateInvoiceHtml(invoice, options);
+        await page.setContent(htmlContent, {
+            waitUntil: 'networkidle0',
+            timeout: 30000,
+        });
+        const pdfBytes = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            preferCSSPageSize: true,
+            margin: {
+                top: '20mm',
+                right: '15mm',
+                bottom: '20mm',
+                left: '15mm',
+            },
+        });
+        // Convert Uint8Array to Buffer
+        return Buffer.from(pdfBytes.buffer);
+    }
+    finally {
+        await browser.close();
+    }
 }
-
 function generateInvoiceHtml(invoice: Invoice, options: InvoicePdfOptions = {}): string {
-  const dueDate = invoice.dueDate ? new Date(invoice.dueDate) : null;
-  const createdAt = invoice.createdAt ? new Date(invoice.createdAt) : new Date();
-  
-  const items = Array.isArray(invoice.items) ? invoice.items : [];
-  
-  return `
+    const dueDate = invoice.dueDate ? new Date(invoice.dueDate) : null;
+    const createdAt = invoice.createdAt ? new Date(invoice.createdAt) : new Date();
+    const items = Array.isArray(invoice.items) ? invoice.items : [];
+    return `
     <!DOCTYPE html>
     <html>
       <head>
@@ -158,56 +148,53 @@ function generateInvoiceHtml(invoice: Invoice, options: InvoicePdfOptions = {}):
     </html>
   `;
 }
-
 function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency || 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount / 100); // Assuming amount is in cents
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency || 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(amount / 100); // Assuming amount is in cents
 }
-
-export async function sendInvoiceByEmail(
-  invoice: Invoice,
-  recipientEmail: string,
-  options: InvoicePdfOptions & { subject?: string } = {}
-): Promise<{ success: boolean; message: string }> {
-  try {
-    // Generate the PDF
-    const pdfBuffer = await generateInvoicePdf(invoice, options);
-    
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'localhost',
-      port: parseInt(process.env.SMTP_PORT || '25'),
-      secure: false,
-      auth: process.env.SMTP_USER
-        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-        : undefined,
-    });
-
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM || 'noreply@example.com',
-      to: recipientEmail,
-      subject: options.subject || `Invoice #${invoice.id}`,
-      text: 'Please find your invoice attached.',
-      attachments: [
-        {
-          filename: `invoice-${invoice.id}.pdf`,
-          content: pdfBuffer,
-        },
-      ],
-    });
-
-    return {
-      success: true,
-      message: 'Invoice sent successfully',
-    };
-  } catch (error) {
-    console.error('Error sending invoice by email:', error);
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to send invoice',
-    };
-  }
+export async function sendInvoiceByEmail(invoice: Invoice, recipientEmail: string, options: InvoicePdfOptions & {
+    subject?: string;
+} = {}): Promise<{
+    success: boolean;
+    message: string;
+}> {
+    try {
+        // Generate the PDF
+        const pdfBuffer = await generateInvoicePdf(invoice, options);
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST || 'localhost',
+            port: parseInt(process.env.SMTP_PORT || '25'),
+            secure: false,
+            auth: process.env.SMTP_USER
+                ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+                : undefined,
+        });
+        await transporter.sendMail({
+            from: process.env.EMAIL_FROM || 'noreply@example.com',
+            to: recipientEmail,
+            subject: options.subject || `Invoice #${invoice.id}`,
+            text: 'Please find your invoice attached.',
+            attachments: [
+                {
+                    filename: `invoice-${invoice.id}.pdf`,
+                    content: pdfBuffer,
+                },
+            ],
+        });
+        return {
+            success: true,
+            message: 'Invoice sent successfully',
+        };
+    }
+    catch (error) {
+        console.error('Error sending invoice by email:', error);
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : 'Failed to send invoice',
+        };
+    }
 }
