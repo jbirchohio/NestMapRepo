@@ -2,7 +2,7 @@ import { db } from './db.js';
 import { approvalRequests, approvalRules, users, organizations } from './db/schema.js';
 import { eq, and } from 'drizzle-orm';
 interface ApprovalWorkflowConfig {
-    organizationId: number;
+    organization_id: number;
     entityType: string;
     requestType: string;
     data: Record<string, any>;
