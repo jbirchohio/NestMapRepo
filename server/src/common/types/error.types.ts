@@ -9,11 +9,14 @@ export enum ErrorType {
     CONFLICT = 'CONFLICT',
     INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR'
 }
+
+import type { AppErrorCode } from '@shared/types/error-codes.js';
 /**
  * Standard API error structure
  */
 export interface ApiError extends Error {
     type: ErrorType;
+    code: AppErrorCode;
     message: string;
     details?: Record<string, unknown>;
     stack?: string;
@@ -28,6 +31,24 @@ export interface ApiError extends Error {
 export const createApiError = (type: ErrorType, message: string, details?: Record<string, unknown>): ApiError => {
     const error = new Error(message) as ApiError;
     error.type = type;
+    error.code = mapErrorTypeToCode(type);
     error.details = details;
     return error;
+};
+
+export const mapErrorTypeToCode = (type: ErrorType): AppErrorCode => {
+    switch (type) {
+        case ErrorType.BAD_REQUEST:
+            return AppErrorCode.BAD_REQUEST;
+        case ErrorType.UNAUTHORIZED:
+            return AppErrorCode.UNAUTHORIZED;
+        case ErrorType.FORBIDDEN:
+            return AppErrorCode.FORBIDDEN;
+        case ErrorType.NOT_FOUND:
+            return AppErrorCode.NOT_FOUND;
+        case ErrorType.CONFLICT:
+            return AppErrorCode.CONFLICT;
+        default:
+            return AppErrorCode.INTERNAL_SERVER_ERROR;
+    }
 };

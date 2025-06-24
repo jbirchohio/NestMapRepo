@@ -812,7 +812,7 @@ The database uses PostgreSQL with Drizzle ORM for schema definition and query bu
 ### 3.2 Error Handling (1 week)
 - [ ] Standardize error responses
 - [ ] Improve error messages
-- [ ] Add error codes
+ - [x] Add error codes
 - [ ] Implement proper error logging
 
 ## 4. Database Layer (Medium Priority)
