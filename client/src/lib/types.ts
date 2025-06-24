@@ -4,6 +4,8 @@ import { Trip, Activity, Todo, Note } from "@shared/schema";
 export { Todo, Note };
 // Extended types with additional client-side properties
 export interface ClientTrip extends Trip {
+    id: number | string;
+    title: string;
     days?: Date[];
     city?: string;
     location?: string;
@@ -17,6 +19,12 @@ export interface ClientTrip extends Trip {
     // Legacy coordinates (for backward compatibility)
     latitude?: string;
     longitude?: string;
+    // Sharing related fields
+    isPublic?: boolean;
+    sharingEnabled?: boolean;
+    shareCode?: string | null;
+    sharePermission?: 'read-only' | 'edit';
+    collaborators?: Record<string, string> | string[];
 }
 export interface ClientActivity extends Activity {
     travelTimeFromPrevious?: string;
