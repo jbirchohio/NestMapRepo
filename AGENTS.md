@@ -1,51 +1,62 @@
-# Server TypeScript Error Resolution Plan
+# NestMap - AI Assistant Guidelines
 
-This document describes the recommended workflow for cleaning up TypeScript errors located in `server/` and its subdirectories. The backend currently fails to compile with over 600 errors (mostly TS2339, TS2345 and TS7006). Use the steps below to gradually enforce type safety.
+This document provides context and guidelines for AI assistants working with the NestMap codebase.
 
-## Objectives
-1. Achieve a clean `npx tsc -p server/tsconfig.json --noEmit` run.
-2. Strengthen type definitions for Express, database models and shared modules.
-3. Keep incremental commits small and testable.
+## Project Overview
+- **Type**: B2B SaaS for Travel Planning & Itinerary Generation
+- **Stack**: TypeScript, Node.js, React
+- **Multi-tenant**: Yes, with strict JWT-based org/tenant isolation
 
-## Baseline Setup
-1. Install dependencies with `pnpm install` or `npm install`.
-2. Generate an error report:
-   ```bash
-   npx tsc -p server/tsconfig.json --noEmit > errors.txt
-   ```
-   Use this file to track progress as fixes are applied.
+## Code Style
+- **Frontend** (`/client`): camelCase
+- **Backend** (`/server`): snake_case
+- **TypeScript**: Strict mode enabled
+- **Modules**: ES Modules with `"type": "module"`
 
-## Project-wide Improvements
-1. Enable `"strict": true` and `"noImplicitAny": true` in `server/tsconfig.json`.
-2. Add global Express type augmentations under `server/src/@types/express.d.ts`.
-   Extend `Request` with properties used across middleware (e.g., `user`, `organization`, `roles`).
+## Key Directories
+- `/client`: Frontend React application
+- `/server`: Backend API services
+- `/shared`: Shared types and utilities between frontend and backend
 
-## Directory Fix Sequence
-1. `server/middleware/`
-   - Contains the highest error counts (`jwtAuth.ts`, `organizationContext.ts`, etc.).
-   - Update function signatures and request typings.
-2. `server/auth/`
-   - Ensure services and controllers use typed interfaces for `User`, tokens and sessions.
-3. `server/src/common/`
-   - Fix repository and utility types.
-4. `server/routes/` and `server/controllers/`
-   - Align route handlers with the updated typings.
-5. Remaining root files (`loadBalancer.ts`, `budgetForecast.ts`, etc.).
+## Authentication
+- JWT-based authentication
+- Token validation includes tenant/organization context
+- All API routes are protected by default
 
-## Typical Error Patterns
-- **TS2339**: Missing property on type.
-  - Add fields to the corresponding interface or perform runtime checks.
-- **TS2345**: Argument type mismatch.
-  - Correct generics or use explicit casting when unavoidable.
-- **TS7006**: Parameter implicitly has `any` type.
-  - Add explicit parameter and return types.
+## External Integrations
+- **Google APIs**: For maps and places
+- **Duffel**: Flight booking and management
+- **OpenMap**: Geospatial data and mapping
 
-## Workflow
-1. Pick a subdirectory and fix a small batch of files.
-2. Run `npx tsc -p server/tsconfig.json --noEmit` to confirm the error count decreases.
-3. Execute existing tests with `npm test` from the `server` directory.
-4. Commit with messages describing the fixes, e.g.
-   `fix(server/middleware): add typings for jwtAuth middleware`.
-5. Update `errors.txt` with the new count.
+## Type Safety
+- Use shared types from `/shared/types` where possible
+- All API responses should be properly typed
+- Runtime validation using Zod schemas
 
-Repeat until all files compile without TypeScript errors.
+## Best Practices
+1. Always validate external API responses
+2. Follow the principle of least privilege for API access
+3. Keep business logic in services, not in controllers
+4. Write unit tests for new features
+5. Document complex business logic with JSDoc
+
+## Common Patterns
+- API responses follow the format: `{ data: T, error: string | null }`
+- Error handling uses custom error classes in `/shared/errors`
+- Database access goes through repository pattern
+
+## Things to Avoid
+- Direct database access from controllers
+- Any type assertions (`as any`)
+- Implicit `any` types
+- Frontend logic in backend code and vice versa
+
+## Testing
+- Unit tests: `*.test.ts` alongside source files
+- Integration tests: `/server/tests`
+- E2E tests: `/client/cypress`
+
+## Getting Started
+1. Set up environment variables (see `.env.example`)
+2. Install dependencies: `pnpm install`
+3. Start development: `pnpm dev`
