@@ -53,7 +53,7 @@ router.post('/oauth/authorize', async (req, res) => {
     console.log('Request body:', req.body);
     console.log('Request headers:', req.headers);
     try {
-        const { organizationId } = req.body;
+        const { organization_id } = req.body;
         if (!process.env.STRIPE_CONNECT_CLIENT_ID) {
             console.log('❌ Missing Stripe Connect Client ID');
             return res.status(400).json({
@@ -73,7 +73,7 @@ router.post('/oauth/authorize', async (req, res) => {
             `&client_id=${process.env.STRIPE_CONNECT_CLIENT_ID}` +
             `&scope=read_write` +
             `&redirect_uri=${redirectUri}` +
-            `&state=${organizationId}`;
+            `&state=${organization_id}`;
         console.log('🚀 Generated OAuth URL:', authUrl);
         console.log('📤 Sending response...');
         res.json({ authUrl });

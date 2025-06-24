@@ -143,21 +143,22 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
             return res.status(401).json({ error: "Authentication required" });
         }
         const organizationId = req.user.organization_id || req.user.organizationId;
-        // Handle both camelCase (from frontend) and snake_case (from middleware transformation)
-        const companyName = req.body.companyName || req.body.company_name;
-        const primaryColor = req.body.primaryColor || req.body.primary_color;
-        const secondaryColor = req.body.secondaryColor || req.body.secondary_color;
-        const accentColor = req.body.accentColor || req.body.accent_color;
-        const tagline = req.body.tagline;
-        const companyLogo = req.body.companyLogo || req.body.company_logo;
+        const {
+            company_name,
+            primary_color,
+            secondary_color,
+            accent_color,
+            tagline,
+            company_logo
+        } = req.body;
         console.log('White label configure request body:', req.body);
         console.log('Extracted values:', {
-            companyName,
-            primaryColor,
-            secondaryColor,
-            accentColor,
+            company_name,
+            primary_color,
+            secondary_color,
+            accent_color,
             tagline,
-            companyLogo
+            company_logo
         });
         if (!organizationId) {
             return res.status(400).json({ error: "No organization found" });
@@ -201,12 +202,12 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
                 await db
                     .update(whiteLabelSettings)
                     .set({
-                    company_name: companyName || 'My Company',
+                    company_name: company_name || 'My Company',
                     tagline: tagline || null,
-                    primary_color: primaryColor || '#6D5DFB',
-                    secondary_color: secondaryColor || '#6D5DFB',
-                    accent_color: accentColor || '#6D5DFB',
-                    company_logo: companyLogo || null,
+                    primary_color: primary_color || '#6D5DFB',
+                    secondary_color: secondary_color || '#6D5DFB',
+                    accent_color: accent_color || '#6D5DFB',
+                    company_logo: company_logo || null,
                     status: 'approved', // Auto-approve for Professional+ plans
                     updated_at: new Date()
                 })
@@ -218,12 +219,12 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
                     .insert(whiteLabelSettings)
                     .values({
                     organization_id: organizationId,
-                    company_name: companyName || 'My Company',
+                    company_name: company_name || 'My Company',
                     tagline: tagline || null,
-                    primary_color: primaryColor || '#6D5DFB',
-                    secondary_color: secondaryColor || '#6D5DFB',
-                    accent_color: accentColor || '#6D5DFB',
-                    company_logo: companyLogo || null,
+                    primary_color: primary_color || '#6D5DFB',
+                    secondary_color: secondary_color || '#6D5DFB',
+                    accent_color: accent_color || '#6D5DFB',
+                    company_logo: company_logo || null,
                     status: 'approved', // Auto-approve for Professional+ plans
                     created_at: new Date(),
                     updated_at: new Date()
@@ -233,12 +234,12 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
                 success: true,
                 message: "Branding configuration saved successfully",
                 config: {
-                    companyName,
-                    primaryColor,
-                    secondaryColor,
-                    accentColor,
+                    company_name,
+                    primary_color,
+                    secondary_color,
+                    accent_color,
                     tagline,
-                    companyLogo
+                    company_logo
                 }
             });
         }
@@ -316,24 +317,24 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
                     .limit(1);
                 if (settings && settings.status === 'approved') {
                     brandingConfig = {
-                        companyName: settings.company_name,
+                        company_name: settings.company_name,
                         tagline: settings.tagline,
-                        primaryColor: settings.primary_color,
-                        secondaryColor: settings.secondary_color,
-                        accentColor: settings.accent_color,
-                        logoUrl: settings.company_logo
+                        primary_color: settings.primary_color,
+                        secondary_color: settings.secondary_color,
+                        accent_color: settings.accent_color,
+                        logo_url: settings.company_logo
                     };
                 }
             }
             res.json({
                 isWhiteLabelActive: organization.white_label_enabled && brandingConfig !== null,
                 config: brandingConfig || {
-                    companyName: "NestMap",
+                    company_name: "NestMap",
                     tagline: "",
-                    primaryColor: "#6D5DFB",
-                    secondaryColor: "#6D5DFB",
-                    accentColor: "#6D5DFB",
-                    logoUrl: null
+                    primary_color: "#6D5DFB",
+                    secondary_color: "#6D5DFB",
+                    accent_color: "#6D5DFB",
+                    logo_url: null
                 }
             });
         }
