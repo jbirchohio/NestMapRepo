@@ -974,7 +974,9 @@ interface ItineraryResponse {
   success: boolean;
   priorityList: any[];
   conflicts: any[];
-
+  itinerary: any | null;
+  error?: string;
+}
 // Group itinerary route
 router.post<ParamsDictionary, ItineraryResponse, ItineraryRequest, ParsedQs>(
   '/group-itinerary',

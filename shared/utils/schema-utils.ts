@@ -1,8 +1,5 @@
 import { camelCase, snakeCase, isPlainObject, isArray } from 'lodash';
-import type { 
-  ID,
-  ISO8601DateTime
-} from '../types/index.js';
+import type { ID, ISO8601DateTime } from '../types/core/base.js';
 
 type AnyObject = Record<string, unknown>;
 
@@ -53,7 +50,7 @@ export function toCamelCase<T = AnyObject>(obj: AnyObject | AnyObject[]): T {
     
     let newValue = value;
     if (isPlainObject(value)) {
-      newValue = toCamelCase(value);
+      newValue = toCamelCase(value as AnyObject);
     } else if (Array.isArray(value)) {
       newValue = value.map(item => 
         isPlainObject(item) ? toCamelCase(item) : item
@@ -92,7 +89,7 @@ export function toSnakeCase<T = AnyObject>(obj: AnyObject | AnyObject[] | unknow
     // Recursively process nested objects/arrays
     let newValue = value;
     if (isPlainObject(value)) {
-      newValue = toSnakeCase(value);
+      newValue = toSnakeCase(value as AnyObject);
     } else if (Array.isArray(value)) {
       newValue = value.map(item => 
         isPlainObject(item) ? toSnakeCase(item) : item

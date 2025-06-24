@@ -1,5 +1,11 @@
 import 'express';
-import type { JwtPayload, TokenType, AuthTokens as SharedAuthTokens, User } from '@shared/types/auth';
+import type {
+  JwtPayload,
+  TokenType,
+  AuthTokens as SharedAuthTokens,
+  User,
+  TokenPayload
+} from '@shared/types/auth';
 
 export type { TokenType };
 
@@ -28,9 +34,6 @@ export interface AuthTokens extends Omit<SharedAuthTokens, 'expires_at' | 'token
 
 export interface AuthResponse extends AuthTokens {
   user: Pick<User, 'id' | 'email' | 'name' | 'role' | 'organization_id'>;
-    username: string;
-    role: UserRole;
-  };
 }
 
 export interface PasswordResetTokenResult {
