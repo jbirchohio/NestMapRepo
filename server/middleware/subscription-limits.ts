@@ -3,7 +3,6 @@ import { and, eq, count } from 'drizzle-orm';
 import { db } from '../db.ts';
 import { organizations, users, trips } from '../db/schema.js';
 import { logger } from '../utils/logger.ts';
-import type { User } from '../types/user.ts';
 // Import JWTUser type from jwtAuth
 interface JWTUser {
     id: string;

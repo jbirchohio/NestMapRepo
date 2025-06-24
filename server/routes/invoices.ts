@@ -5,7 +5,6 @@ import { invoices } from '../db/invoiceSchema.js';
 import secureAuth from '../middleware/secureAuth.js';
 import { requireOrganizationContext } from '../middleware/organization.js';
 import { eq, and } from 'drizzle-orm';
-import type { User } from '../types/user.js';
 import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 import { stripe } from '../stripe.js';
 type AsyncRequestHandler<T = AuthenticatedRequest> = (req: T, res: Response, next: NextFunction) => Promise<void>;
