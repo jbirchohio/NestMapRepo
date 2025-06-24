@@ -200,35 +200,3 @@ export function AlertNotifications() {
       </CardContent>
     </Card>);
 }
-export function AlertSummaryWidget() {
-    const { user } = useAuth();
-    const { data: alertsData } = useQuery<AlertsResponse>({
-        queryKey: ['/api/alerts', { acknowledged: 'false' }],
-        refetchInterval: 30000,
-        enabled: user?.role === 'superadmin',
-    });
-    if (user?.role !== 'superadmin') {
-        return null;
-    }
-    const summary = alertsData?.summary || { critical: 0, warning: 0, info: 0, unacknowledged: 0 };
-    if (summary.unacknowledged === 0) {
-        return (<div className="flex items-center gap-2 text-green-600">
-        <CheckCircle className="h-4 w-4"/>
-        <span className="text-sm font-medium">All systems operational</span>
-      </div>);
-    }
-    return (<div className="flex items-center gap-2">
-      <Bell className="h-4 w-4 text-orange-500"/>
-      <div className="flex gap-1">
-        {summary.critical > 0 && (<Badge className="bg-red-100 text-red-700 text-xs">
-            {summary.critical} Critical
-          </Badge>)}
-        {summary.warning > 0 && (<Badge className="bg-yellow-100 text-yellow-700 text-xs">
-            {summary.warning} Warning
-          </Badge>)}
-        {summary.info > 0 && (<Badge className="bg-blue-100 text-blue-700 text-xs">
-            {summary.info} Info
-          </Badge>)}
-      </div>
-    </div>);
-}

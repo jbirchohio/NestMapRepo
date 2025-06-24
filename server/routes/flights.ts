@@ -3,6 +3,7 @@ import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';
 import { asyncHandler } from '../utils/routeHelpers.js';
+import type { FlightSearchParams } from '@shared/types/flight.js';
 // Define types for Duffel API responses
 interface DuffelOffer {
     id: string;
@@ -53,18 +54,6 @@ interface DuffelPassenger {
     type: 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat';
 }
 // Define types for search parameters
-interface FlightSearchParams {
-    origin: string;
-    destination: string;
-    departure_date: string;
-    return_date?: string;
-    passengers: {
-        adults: number;
-        children?: number;
-        infants?: number;
-    };
-    cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first';
-}
 const router = Router();
 // Apply middleware to all routes
 router.use(validateJWT);
