@@ -2,6 +2,8 @@ import { logger } from '../../../utils/logger.js';
 import type { BaseRepository } from './base.repository.interface.js';
 import { eq } from 'drizzle-orm';
 import { db } from '../../../db/db.js';
+import type { NodePgTransaction } from 'drizzle-orm/node-postgres';
+import type { TablesRelationalConfig } from 'drizzle-orm/relations';
 /**
  * Base repository implementation with common CRUD operations
  */
@@ -84,5 +86,9 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
     async exists(id: ID): Promise<boolean> {
         const entity = await this.findById(id);
         return entity !== null;
+    }
+
+    async withTransaction<R>(fn: (tx: NodePgTransaction<Record<string, unknown>, TablesRelationalConfig>) => Promise<R>): Promise<R> {
+        return db.transaction(fn);
     }
 }

@@ -213,6 +213,17 @@ export class BookingModule {}
 - **Modularity** - Repositories can be swapped out without affecting business logic
 - **Scalability** - New features can be added without modifying existing code
 
+### Transaction Support
+
+All repositories inherit a `withTransaction` helper from `BaseRepositoryImpl`. Use this method to group multiple operations in a single database transaction:
+
+```typescript
+await userRepository.withTransaction(async (tx) => {
+  await tx.insert(users).values(newUser);
+  await tx.insert(auditLogs).values(logEntry);
+});
+```
+
 ## Best Practices
 
 1. Always extend the base repository interface and implementation
