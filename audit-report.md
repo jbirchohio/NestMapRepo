@@ -825,7 +825,7 @@ The database uses PostgreSQL with Drizzle ORM for schema definition and query bu
 
 ### 4.2 Repository Pattern (2 weeks)
 - [ ] Standardize repository interfaces
-- [ ] Add transaction support
+ - [x] Add transaction support
 - [ ] Implement proper error handling
 - [ ] Add query optimization
 
