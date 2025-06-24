@@ -15,7 +15,7 @@ import { globalErrorHandler } from "./middleware/globalErrorHandler.js";
 // Authentication
 import { unifiedAuthMiddleware } from "./middleware/secureAuth.js";
 // Request/response processing
-import { caseConversionMiddleware } from "./middleware/caseConverter.js";
+import { caseConverterMiddleware } from "./middleware/caseConverter.js";
 const app = express();
 // Initialize PostgreSQL session store
 const PgSession = connectPgSimple(session);
@@ -55,7 +55,7 @@ app.use('/api', authenticateApiKey);
 app.use(resolveDomainOrganization);
 app.use(injectOrganizationContext);
 // Apply case conversion middleware and JWT authentication
-app.use(caseConversionMiddleware);
+app.use(caseConverterMiddleware);
 app.use(unifiedAuthMiddleware);
 // Enhanced session security middleware
 app.use(session({
