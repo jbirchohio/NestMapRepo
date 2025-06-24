@@ -1,0 +1,30 @@
+{
+  "dev": {
+    "driver": "pg",
+    "host": "${DB_HOST:localhost}",
+    "database": "${DB_NAME}",
+    "user": "${DB_USER}",
+    "password": "${DB_PASSWORD}",
+    "port": "${DB_PORT:5432}",
+    "schema": "public"
+  },
+  "test": {
+    "driver": "pg",
+    "host": "${TEST_DB_HOST:localhost}",
+    "database": "${TEST_DB_NAME}",
+    "user": "${TEST_DB_USER}",
+    "password": "${TEST_DB_PASSWORD}",
+    "port": "${TEST_DB_PORT:5432}",
+    "schema": "public"
+  },
+  "production": {
+    "driver": "pg",
+    "host": "${DB_HOST}",
+    "database": "${DB_NAME}",
+    "user": "${DB_USER}",
+    "password": "${DB_PASSWORD}",
+    "port": "${DB_PORT}",
+    "ssl": true,
+    "schema": "public"
+  }
+}

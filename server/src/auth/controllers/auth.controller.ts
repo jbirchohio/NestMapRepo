@@ -1,5 +1,5 @@
-import type { Response, NextFunction, RequestHandler } from '../../express-augmentations.ts';
-import type { Request } from '../../types/express/index.js';
+import type { Response, NextFunction, RequestHandler } from 'express';
+import type { AuthenticatedRequest } from '../../types/express-types';
 import type { IAuthService } from '../interfaces/auth.service.interface.js';
 import type { AuthResponse, LoginDto, UserResponse, RequestPasswordResetDto, ResetPasswordDto, UserRole } from '../dtos/auth.dto.js';
 import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware.js';
@@ -42,11 +42,7 @@ export class AuthController {
     }
     login = [
         rateLimiterMiddleware as unknown as RequestHandler,
-        async (req: Request<LoginDto, AuthResponseWithoutRefreshToken | {
-            error: string;
-        }>, res: Response<AuthResponseWithoutRefreshToken | {
-            error: string;
-        }>, next: NextFunction): Promise<void> => {
+        async (req: AuthenticatedRequest & { body: LoginDto }, res: Response<AuthResponseWithoutRefreshToken | { error: string }>, next: NextFunction): Promise<void> => {
             try {
                 const ip = req.ip || req.socket.remoteAddress || 'unknown';
                 const userAgent = req.headers['user-agent'] || '';

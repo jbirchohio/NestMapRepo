@@ -1,5 +1,9 @@
-import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
-import { UserRole } from '../auth/permissions';
+import { ValidatorConstraint } from 'class-validator';
+import type { ValidationArguments, ValidatorConstraintInterface } from 'class-validator';
+import { UserRole } from '../auth/permissions.js';
+
+// Define valid user roles as a constant array
+const VALID_USER_ROLES = Object.values(UserRole);
 
 /**
  * Validates if the value is a valid tenant ID
@@ -25,27 +29,12 @@ export class IsValidTenantId implements ValidatorConstraintInterface {
 @ValidatorConstraint({ name: 'isValidUserRole', async: false })
 export class IsValidUserRole implements ValidatorConstraintInterface {
   validate(value: any) {
-    return Object.values(UserRole).includes(value);
+    return VALID_USER_ROLES.includes(value as UserRole);
   }
 
   defaultMessage(args: ValidationArguments) {
-    return `${args.property} must be one of: ${Object.values(UserRole).join(', ')}`;
+    return `${args.property} must be one of: ${VALID_USER_ROLES.join(', ')}`;
   }
 }
 
-/**
- * Validates if the value is a strong password
- * Meets enterprise security requirements
- */
-@ValidatorConstraint({ name: 'isStrongPassword', async: false })
-export class IsStrongPassword implements ValidatorConstraintInterface {
-  validate(password: string) {
-    // At least 12 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
-    const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])(?=.{12,})/;
-    return strongRegex.test(password);
-  }
-
-  defaultMessage() {
-    return 'Password must be at least 12 characters long and include uppercase, lowercase, number, and special character';
-  }
-}
+// IsStrongPassword has been moved to decorators.ts to avoid duplicate exports

@@ -974,20 +974,45 @@ interface ItineraryResponse {
   success: boolean;
   priorityList: any[];
   conflicts: any[];
-  itinerary: any;
-  error?: string;
-}
 
 // Group itinerary route
-router.post<ParamsDictionary, ItineraryResponse, ItineraryRequest>(
+router.post<ParamsDictionary, ItineraryResponse, ItineraryRequest, ParsedQs>(
   '/group-itinerary',
-  ...createAuthenticatedRouteHandler<ParamsDictionary, ItineraryResponse>(
-    async (req: AuthenticatedRequest<ParamsDictionary, ItineraryRequest>, res: Response<ItineraryResponse>, next: NextFunction) => {
+  ...createAuthenticatedRouteHandler<ParamsDictionary, ItineraryResponse, ItineraryRequest, ParsedQs>(
+    async (req: AuthenticatedRequest<ParamsDictionary, ItineraryRequest, ParsedQs>, res: Response<ItineraryResponse>, next: NextFunction) => {
       try {
-        const { destination, start_date, end_date, preferences } = groupItinerarySchema.parse(req.body);
-        const { priorityList, conflicts } = await reconcileGroupPreferences(preferences);
-        const itinerary = await generateConsensusItinerary(destination, start_date, end_date, priorityList);
-        res.json({ success: true, priorityList, conflicts, itinerary });
+        const { destination, start_date, end_date, preferences } = req.body;
+        
+        if (!destination || !start_date || !end_date || !preferences) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Missing required fields: destination, start_date, end_date, and preferences are required',
+            priorityList: [],
+            conflicts: [],
+            itinerary: null
+          });
+        }
+
+        // Call the group reconciler to generate the itinerary
+        const result = await reconcilePreferences(
+          destination,
+          new Date(start_date),
+          new Date(end_date),
+          preferences
+        );
+
+        if (!result) {
+          throw new Error('Failed to generate itinerary');
+        }
+
+        const { priorityList = [], conflicts = [], itinerary = null } = result;
+
+        res.json({ 
+          success: true, 
+          priorityList, 
+          conflicts, 
+          itinerary
+        });
       } catch (error) {
         console.error('Group itinerary error:', error);
         next(error);

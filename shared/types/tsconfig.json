@@ -18,9 +18,12 @@
     },
     "target": "ES2022",
     "moduleDetection": "force",
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
+    "isolatedModules": true,
     "allowImportingTsExtensions": true,
-    "noEmit": false
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]

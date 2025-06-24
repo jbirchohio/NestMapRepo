@@ -1,17 +1,31 @@
-import { sign, verify, decode, SignOptions, VerifyOptions, JwtPayload as RawJwtPayload } from 'jsonwebtoken';
+import { sign, verify, decode } from 'jsonwebtoken';
+import type { SignOptions, VerifyOptions, JwtPayload as RawJwtPayload } from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
-import { redisClient } from '../../utils/redis';
-import { 
+import redisClient from '../../utils/redis.js';
+import logger from '../../utils/logger.js';
+
+// Import shared types from the correct path
+import type { 
   JwtPayload, 
   AuthTokens, 
   AccessTokenPayload, 
   RefreshTokenPayload, 
   TokenType,
-  AuthError,
-  AuthErrorCode
-} from '@shared/types/auth';
-import { UserRole } from '@shared/types/auth/permissions';
-import logger from '../../utils/logger';
+  TokenVerificationResult,
+  User
+} from '../../../../shared/types/auth/index.js';
+
+// Import AuthError and AuthErrorCode as values
+import { AuthError } from '../../../../shared/types/auth/auth.js';
+import { AuthErrorCode } from '../../../../shared/types/auth/auth.js';
+import { UserRole } from '../../../../shared/types/auth/permissions.js';
+
+// Extend User type to include all required fields
+interface UserWithPermissions extends Omit<User, 'email_verified'> {
+  email_verified: boolean;
+  permissions: string[];
+  organization_id: string | null;
+}
 
 interface TokenConfig {
   secret: string;
@@ -25,14 +39,13 @@ export class JwtService {
   private readonly config: TokenConfig;
   private readonly tokenBlacklistKey = 'jwt:blacklist:';
 
-  constructor(config: TokenConfig) {
+  constructor(config: Partial<TokenConfig> = {}) {
     this.config = {
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      accessTokenExpiresIn: process.env.JWT_ACCESS_EXPIRATION || '15m',
-      refreshTokenExpiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
-      issuer: process.env.JWT_ISSUER || 'nestmap-api',
-      audience: process.env.JWT_AUDIENCE?.split(',') || ['nestmap-web', 'nestmap-mobile'],
-      ...config,
+      secret: config.secret || process.env.JWT_SECRET || 'your-secret-key',
+      accessTokenExpiresIn: config.accessTokenExpiresIn || process.env.JWT_ACCESS_EXPIRATION || '15m',
+      refreshTokenExpiresIn: config.refreshTokenExpiresIn || process.env.JWT_REFRESH_EXPIRATION || '7d',
+      issuer: config.issuer || process.env.JWT_ISSUER || 'nestmap-api',
+      audience: config.audience || process.env.JWT_AUDIENCE?.split(',') || ['nestmap-web', 'nestmap-mobile']
     };
   }
 
@@ -79,10 +92,10 @@ export class JwtService {
     // Sign tokens
     const [accessToken, refreshToken] = await Promise.all([
       this.signToken(accessTokenPayload, this.config.secret, {
-        expiresIn: this.config.accessTokenExpiresIn,
+        expiresIn: this.parseTimeToSeconds(this.config.accessTokenExpiresIn),
       }),
       this.signToken(refreshTokenPayload, this.config.secret, {
-        expiresIn: this.config.refreshTokenExpiresIn,
+        expiresIn: this.parseTimeToSeconds(this.config.refreshTokenExpiresIn),
       }),
     ]);
 
@@ -94,7 +107,9 @@ export class JwtService {
       refresh_token: refreshToken,
       expires_at: new Date((now + accessTokenExpiresIn) * 1000).toISOString(),
       token_type: 'Bearer',
-    };
+      accessTokenExpiresAt: new Date((now + accessTokenExpiresIn) * 1000),
+      refreshTokenExpiresAt: new Date((now + refreshTokenExpiresIn) * 1000)
+    } as AuthTokens;
   }
 
   /**
@@ -103,7 +118,7 @@ export class JwtService {
   public async verifyToken<T extends JwtPayload>(
     token: string,
     type?: TokenType
-  ): Promise<T> {
+  ): Promise<TokenVerificationResult<T>> {
     try {
       // Check if token is blacklisted
       const isBlacklisted = await this.isTokenBlacklisted(token);
@@ -119,23 +134,56 @@ export class JwtService {
 
       // Validate token type if specified
       if (type && payload.type !== type) {
-        throw new AuthError(AuthErrorCode.INVALID_TOKEN, `Invalid token type: expected ${type}`);
+        return {
+          valid: false,
+          error: `Invalid token type: expected ${type}`,
+          code: AuthErrorCode.INVALID_TOKEN,
+          expired: false
+        };
       }
 
-      return payload;
-    } catch (error) {
-      if (error instanceof AuthError) throw error;
+      return {
+        valid: true,
+        payload,
+        expired: false
+      };
+    } catch (error: unknown) {
+      if (error instanceof AuthError) {
+        return {
+          valid: false,
+          error: error.message,
+          code: error.code,
+          expired: error.code === AuthErrorCode.EXPIRED_TOKEN
+        };
+      }
       
       // Handle JWT verification errors
-      if (error.name === 'TokenExpiredError') {
-        throw new AuthError(AuthErrorCode.EXPIRED_TOKEN, 'Token has expired');
-      }
-      if (error.name === 'JsonWebTokenError') {
-        throw new AuthError(AuthErrorCode.INVALID_TOKEN, 'Invalid token');
+      const err = error as Error;
+      if (err.name === 'TokenExpiredError') {
+        return {
+          valid: false,
+          error: 'Token has expired',
+          code: AuthErrorCode.EXPIRED_TOKEN,
+          expired: true
+        };
       }
       
-      logger.error('Error verifying token:', error);
-      throw new AuthError(AuthErrorCode.UNKNOWN_ERROR, 'Failed to verify token');
+      if (err.name === 'JsonWebTokenError') {
+        return {
+          valid: false,
+          error: err.message || 'Invalid token',
+          code: AuthErrorCode.INVALID_TOKEN,
+          expired: false
+        };
+      }
+      
+      logger.error('Error verifying token:', error instanceof Error ? error.message : String(error));
+      return {
+        valid: false,
+        error: 'Failed to verify token',
+        code: AuthErrorCode.UNKNOWN_ERROR,
+        expired: false
+      };
     }
   }
 
@@ -144,7 +192,16 @@ export class JwtService {
    */
   public async refreshToken(refreshToken: string): Promise<AuthTokens> {
     // Verify the refresh token
-    const payload = await this.verifyToken<RefreshTokenPayload>(refreshToken, 'refresh');
+    const result = await this.verifyToken<RefreshTokenPayload>(refreshToken, 'refresh');
+    
+    if (!result.valid) {
+      throw new AuthError(
+        result.code as AuthErrorCode || AuthErrorCode.INVALID_TOKEN, 
+        result.error || 'Invalid refresh token'
+      );
+    }
+    
+    const payload = result.payload!;
     
     // Check if refresh token is valid in Redis
     const isValid = await this.validateRefreshToken(payload.sub, payload.jti);
@@ -208,17 +265,22 @@ export class JwtService {
   private async signToken(
     payload: object,
     secret: string,
-    options: SignOptions = {}
+    options: Omit<SignOptions, 'expiresIn' | 'issuer' | 'audience'> & { 
+      expiresIn?: SignOptions['expiresIn'];
+      issuer?: string;
+      audience?: string | string[];
+    } = {}
   ): Promise<string> {
+    const signOptions: SignOptions = {
+      ...options,
+      issuer: options.issuer || this.config.issuer,
+      audience: options.audience || this.config.audience,
+    };
     return new Promise((resolve, reject) => {
       sign(
         payload,
         secret,
-        {
-          issuer: this.config.issuer,
-          audience: this.config.audience,
-          ...options,
-        },
+        signOptions,
         (err, token) => {
           if (err || !token) {
             return reject(err || new Error('Failed to sign token'));
@@ -289,16 +351,30 @@ export class JwtService {
     }
   }
 
-  // This should be implemented to fetch user data from your database
-  private async getUserById(userId: string): Promise<{
-    id: string;
-    email: string;
-    role: UserRole;
-    organization_id: string | null;
-    permissions: string[];
-  } | null> {
-    // Implement database lookup here
-    throw new Error('getUserById not implemented');
+  /**
+   * Fetch user data from the database
+   * This should be implemented to fetch user data from your actual database
+   */
+  private async getUserById(userId: string): Promise<UserWithPermissions | null> {
+    try {
+      // TODO: Implement actual database lookup
+      // This is a placeholder implementation
+      return {
+        id: userId,
+        email: 'user@example.com',
+        display_name: 'User',
+        role: 'member' as const,
+        organization_id: null,
+        permissions: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        email_verified: false,
+        is_active: true
+      } as unknown as UserWithPermissions;
+    } catch (error) {
+      logger.error(`Error fetching user ${userId}:`, error);
+      return null;
+    }
   }
 }
 

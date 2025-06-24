@@ -3,6 +3,9 @@
  * This serves as the single source of truth for JWT token structure
  */
 
+import { UserRole } from './permissions.js';
+import type { User } from './user.js';
+
 /**
  * Token types supported by the application
  */
@@ -20,8 +23,12 @@ interface BaseJwtPayload {
   iat: number;
   /** Expiration Time - when the token expires (UNIX timestamp) */
   exp: number;
+  /** Not Before - token is not valid before this time (UNIX timestamp) */
+  nbf?: number;
   /** Token type */
   type: TokenType;
+  /** User ID - for backward compatibility */
+  userId?: string;
 }
 
 /**
@@ -77,6 +84,22 @@ export type JwtPayload =
   | PasswordResetTokenPayload
   | EmailVerificationTokenPayload;
 
+// Export TokenPayload as an alias for JwtPayload for backward compatibility
+export type { JwtPayload as TokenPayload };
+
+/**
+ * Token verification result
+ */
+export interface TokenVerificationResult<T = JwtPayload> {
+  valid: boolean;
+  payload?: T;
+  error?: string;
+  expired?: boolean;
+  code?: string;
+}
+
+
+
 /**
  * Token pair returned after successful authentication
  */
@@ -94,7 +117,9 @@ export interface AuthTokens {
 /**
  * Extended auth response including user data
  */
-export interface AuthResponse extends AuthTokens {
-  /** Authenticated user information */
+export interface AuthResponse {
+  /** The authenticated user */
   user: User;
+  /** Authentication tokens */
+  tokens: AuthTokens;
 }

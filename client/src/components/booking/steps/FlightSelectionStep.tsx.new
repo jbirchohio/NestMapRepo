@@ -1,0 +1,17 @@
+import { useState, useCallback, useEffect } from 'react';
+import { format, parseISO } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { BookingFormData } from '../types';
+import type { 
+  Flight, 
+  FlightSearchParams,
+  FlightSegment,
+  Airport,
+  FlightPrice
+} from '@shared/types/flight';
+
+// Rest of the file remains the same...

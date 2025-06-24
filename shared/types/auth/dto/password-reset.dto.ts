@@ -1,42 +1,47 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, Validate } from 'class-validator';
-import { IsEmailValid, IsStrongPassword } from '../../validation';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, ValidateIf } from 'class-validator';
+import { IsEmailValid, IsStrongPassword } from '../../validation/index.js';
 
 export class RequestPasswordResetDto {
   @IsEmailValid()
-  @IsNotEmpty({ message: 'Email is required' })
-  email: string;
+  @IsNotEmpty()
+  email!: string;
 
   @IsString()
   @IsOptional()
   resetUrl?: string;
+
+  @IsString()
+  @MinLength(10)
+  @IsOptional()
+  token?: string;
 }
 
 export class ResetPasswordDto {
   @IsString()
   @IsNotEmpty({ message: 'Token is required' })
-  token: string;
+  token!: string;
 
   @IsStrongPassword()
   @IsString()
   @IsNotEmpty({ message: 'New password is required' })
-  newPassword: string;
+  newPassword!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Please confirm your password' })
-  confirmPassword: string;
+  confirmPassword!: string;
 }
 
 export class ChangePasswordDto {
   @IsString()
   @IsNotEmpty({ message: 'Current password is required' })
-  currentPassword: string;
+  currentPassword!: string;
 
   @IsStrongPassword()
   @IsString()
   @IsNotEmpty({ message: 'New password is required' })
-  newPassword: string;
+  newPassword!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Please confirm your new password' })
-  confirmPassword: string;
+  confirmPassword!: string;
 }

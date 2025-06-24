@@ -77,26 +77,19 @@ export function createSuccessResponse<T>(data: T, message?: string): StandardSuc
         timestamp: new Date().toISOString()
     };
 }
-import type { Request as ExpressRequest, Response, NextFunction, ErrorRequestHandler as ExpressErrorRequestHandler, Request as ExpressRequestType } from '../../express-augmentations.ts';
-import type { ParamsDictionary } from 'express-serve-static-core';
-import type { ParsedQs } from 'qs';
-// Use the project's existing Express type extensions
-import type { AuthenticatedRequest } from '../src/types/express.js';
-// Create a base request type with all the properties we need
-type BaseRequest = {
-    headers: {
-        [key: string]: string | string[] | undefined;
-        'x-request-id'?: string;
-    };
-    originalUrl: string;
-    method: string;
-    ip: string;
-    get(name: string): string | undefined;
-};
+import type { Response, NextFunction, Request as ExpressRequest } from 'express';
+import type { AuthenticatedRequest } from '../src/types/express-types';
+
 // Create a union type that includes both authenticated and unauthenticated requests
-type Request = (ExpressRequestType & BaseRequest) | (AuthenticatedRequest & BaseRequest);
+type Request = ExpressRequest | AuthenticatedRequest;
+
 // Create a custom ErrorRequestHandler type that matches Express's expectations
-type ErrorRequestHandler = (err: ErrorWithContext, req: Request, res: Response, next: NextFunction) => void | Response<any, Record<string, any>>;
+type ErrorRequestHandler = (
+  err: ErrorWithContext,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => void | Response<any, Record<string, any>>;
 /**
  * Express middleware for global error handling
  * Combines functionality from globalErrorHandler and standardizedErrorAdapter

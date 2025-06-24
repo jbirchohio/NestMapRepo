@@ -4,5 +4,6 @@
     { "path": "./client" },
     { "path": "./server" },
     { "path": "./shared" }
-  ]
+  ],
+  "exclude": ["**/node_modules", "**/dist"]
 }

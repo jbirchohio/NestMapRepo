@@ -1,5 +1,5 @@
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
-import { UserRole } from '../auth/permissions';
+import { UserRole } from '../auth/permissions.js';
 
 /**
  * Validates that the field is a valid tenant ID
@@ -38,10 +38,12 @@ export function IsValidRole(validationOptions?: ValidationOptions) {
       options: validationOptions,
       validator: {
         validate(value: any) {
-          return Object.values(UserRole).includes(value);
+          const validRoles = Object.values(UserRole) as string[];
+          return validRoles.includes(value);
         },
         defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be one of: ${Object.values(UserRole).join(', ')}`;
+          const validRoles = Object.values(UserRole).filter(v => typeof v === 'string') as string[];
+          return `${args.property} must be one of: ${validRoles.join(', ')}`;
         },
       },
     });

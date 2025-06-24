@@ -656,35 +656,56 @@ export class DuffelFlightService {
         }
         catch (error: any) {
             console.error('Duffel cancel booking error:', error);
-            throw new Error(`Cancellation failed: ${error.message}`);
+     */
+    async searchAirports(query: string): Promise<Array<{
+        iata_code: string;
+        name: string;
+        city_name: string;
+        country_name: string;
+    }>> {
+        try {
+            // Use the duffel client if available, otherwise fall back to direct API call
+            if (duffel && duffel.airports) {
+                const response = await duffel.airports.list({
+                    name: query,
+                    limit: 10
+                });
+                return response.data.map(airport => ({
+                    iata_code: airport.iata_code,
+                    name: airport.name,
+                    city_name: airport.city_name || airport.city?.name || airport.name,
+                    country_name: airport.country_name || airport.city?.country_name || 'Unknown'
+                }));
+            } else {
+                // Fallback to direct API call if duffel client is not available
+                const response = await fetch(`https://api.duffel.com/air/airports?name=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${process.env.DUFFEL_API_KEY}`,
+                        'Accept': 'application/json',
+                        'Duffel-Version': 'v1'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch airports: ${response.statusText}`);
+                }
+
+                const { data } = await response.json();
+                return data.map((airport: any) => ({
+                    iata_code: airport.iata_code,
+                    name: airport.name,
+                    city_name: airport.city_name || airport.name,
+                    country_name: airport.city?.country_name || 'Unknown'
+                }));
+            }
+        } catch (error) {
+            console.error('Error searching airports:', error);
+            throw new Error('Failed to search for airports');
         }
     }
 }
 
-/**
- * Get available airports for autocomplete
- */
-async searchAirports(query: string): Promise<Array<{
-    iata_code: string;
-    name: string;
-    city_name: string;
-    country_name: string;
-}>> {
-    try {
-        const airports = await duffel.airports.list({
-            name: query,
-            limit: 10
-        });
-        return airports.data.map(airport => ({
-            iata_code: airport.iata_code,
-            name: airport.name,
-            city_name: airport.city_name || airport.name,
-            country_name: airport.city?.country_name || 'Unknown'
-        }));
-    } catch (error: any) {
-        console.error('Duffel airport search error:', error);
-        throw new Error(`Airport search failed: ${error.message}`);
-    }
-}
-
+// Export a singleton instance
 export const duffelFlightService = new DuffelFlightService();
+
+export default duffelFlightService;

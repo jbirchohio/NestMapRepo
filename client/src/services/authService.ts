@@ -1,13 +1,30 @@
 import { apiClient } from './api/apiClient';
-import type {
-  LoginDto,
+import type { AxiosError } from 'axios';
+import type { 
+  LoginDto, 
   RegisterDto,
-  AuthResponse,
-  UserResponse,
-  AuthError,
-  RefreshTokenDto
+  ResetPasswordDto,
 } from '@shared/types/auth/dto';
+import type { AuthResponse, AuthUser } from '@shared/types/auth';
+import { AuthError, AuthErrorCode } from '@shared/types/auth/auth';
 import { TokenManager } from '@/utils/tokenManager';
+
+
+
+/**
+ * Type guard for AuthUser
+ * Validates if an object matches the AuthUser interface
+ */
+const isAuthUser = (user: unknown): user is AuthUser => {
+  if (typeof user !== 'object' || user === null) return false;
+  const u = user as Record<string, unknown>;
+  return (
+    typeof u['id'] === 'string' &&
+    typeof u['email'] === 'string' &&
+    typeof u['role'] === 'string' &&
+    (u['organization_id'] === null || typeof u['organization_id'] === 'string')
+  );
+};
 
 export class AuthService {
   private tokenManager: TokenManager;
@@ -17,131 +34,397 @@ export class AuthService {
   }
 
   /**
-   * Login with email and password
+   * Authenticates a user with email and password
+   * @param credentials - Login credentials
+   * @returns Authenticated user data or null if login fails
+   * @throws {AuthError} When authentication fails
    */
-  async login(loginDto: LoginDto): Promise<UserResponse> {
+  async login(credentials: LoginDto): Promise<AuthUser> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/login', loginDto);
+      const response = await apiClient.post<AuthResponse>(
+        '/auth/login',
+        credentials,
+        { skipAuth: true }
+      );
       
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (!response?.data?.data) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid response format from server'
+        );
+      }
+      
+      const { user, tokens } = response.data.data;
+
+      if (!user || !tokens) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid response format from server'
+        );
       }
 
-      // Store tokens
-      if (response.data?.tokens) {
-        this.tokenManager.setTokens(response.data.tokens);
+      if (!isAuthUser(user)) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid user data received from server'
+        );
       }
 
-      return response.data.user;
+      if (!tokens.access_token || !tokens.refresh_token) {
+        throw new AuthError(
+          AuthErrorCode.INVALID_TOKEN,
+          'Invalid tokens received from server'
+        );
+      }
+
+      this.tokenManager.setTokens(tokens.access_token, tokens.refresh_token);
+      return user;
     } catch (error) {
       console.error('Login failed:', error);
-      throw this.handleAuthError(error);
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as AxiosError<{ error?: { message?: string } }>;
+        throw new AuthError(
+          AuthErrorCode.INVALID_CREDENTIALS,
+          axiosError.response?.data?.error?.message || 'Login failed. Please check your credentials and try again.'
+        );
+      }
+      throw new AuthError(
+        AuthErrorCode.UNKNOWN_ERROR,
+        'An unexpected error occurred during login. Please try again.'
+      );
     }
   }
 
   /**
    * Register a new user
    */
-  async register(registerDto: RegisterDto): Promise<UserResponse> {
+  async register(registerDto: RegisterDto): Promise<AuthUser> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/register', registerDto);
+      const response = await apiClient.post<AuthResponse>(
+        '/auth/register',
+        registerDto,
+        { skipAuth: true }
+      );
       
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (!response?.data?.data) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid response format from server'
+        );
+      }
+      
+      const { user, tokens } = response.data.data;
+
+      if (!user || !tokens) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid response format from server'
+        );
       }
 
-      // Store tokens
-      if (response.data?.tokens) {
-        this.tokenManager.setTokens(response.data.tokens);
+      if (!isAuthUser(user)) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid user data received from server'
+        );
       }
 
-      return response.data.user;
+      if (!tokens.access_token || !tokens.refresh_token) {
+        throw new AuthError(
+          AuthErrorCode.INVALID_TOKEN,
+          'Invalid tokens received from server'
+        );
+      }
+
+      this.tokenManager.setTokens(tokens.access_token, tokens.refresh_token);
+      return user;
     } catch (error) {
       console.error('Registration failed:', error);
-      throw this.handleAuthError(error);
+      
+      if (error instanceof AuthError) {
+        throw error;
+      }
+
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as AxiosError<{ error?: { message?: string } }>;
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          axiosError.response?.data?.error?.message || 'Registration failed. Please check your information and try again.'
+        );
+      }
+      
+      throw new AuthError(
+        AuthErrorCode.UNKNOWN_ERROR,
+        'An unexpected error occurred during registration. Please try again.'
+      );
     }
   }
 
   /**
-   * Logout the current user
+   * Logs out the current user by revoking tokens and clearing local state
+   * @param allDevices - If true, revokes all sessions for the user
    */
-  async logout(): Promise<void> {
+  async logout(allDevices: boolean = false): Promise<void> {
     try {
-      // Call the logout endpoint
-      await apiClient.post('/auth/logout');
+      // Try to revoke the refresh token on the server
+      await apiClient.post(
+        `/auth/logout${allDevices ? '-all' : ''}`,
+        undefined,
+        { skipAuth: true, withCredentials: true }
+      );
     } catch (error) {
-      console.error('Logout failed:', error);
-      // Continue with local cleanup even if the server request fails
+      console.error('Logout API error (proceeding with client cleanup):', error);
+      // Continue with client-side cleanup even if server logout fails
     } finally {
-      // Clear local tokens and session data
+      // Always clear tokens and reset state
       this.tokenManager.clearTokens();
     }
   }
 
   /**
-   * Refresh the access token
+   * Refreshes the access token using the refresh token
+   * @returns New access token or null if refresh fails
+   * @throws {AuthError} When token refresh fails
    */
-  async refreshToken(): Promise<void> {
+  async refreshToken(): Promise<string | null> {
     try {
       const refreshToken = this.tokenManager.getRefreshToken();
       if (!refreshToken) {
-        throw new Error('No refresh token available');
+        throw new AuthError(
+          AuthErrorCode.UNAUTHORIZED,
+          'No refresh token available'
+        );
       }
 
-      const response = await apiClient.post<AuthResponse>('/auth/refresh-token', {
-        refreshToken
-      } as RefreshTokenDto);
+      const response = await apiClient.post<{ access_token: string }>(
+        '/auth/refresh',
+        { refresh_token: refreshToken },
+        { skipAuth: true, withCredentials: true }
+      );
+      
+      if (!response?.data?.data?.access_token) {
+        throw new AuthError(
+          AuthErrorCode.INVALID_TOKEN,
+          'No access token received in refresh response'
+        );
+      }
+      
+      const { access_token } = response.data.data;
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (!access_token) {
+        throw new AuthError(
+          AuthErrorCode.INVALID_TOKEN,
+          'No access token received in refresh response'
+        );
       }
 
-      // Update stored tokens
-      if (response.data?.tokens) {
-        this.tokenManager.setTokens(response.data.tokens);
-      }
+      // Update the stored access token
+      this.tokenManager.setTokens(access_token, refreshToken);
+      return access_token;
     } catch (error) {
       console.error('Token refresh failed:', error);
-      throw this.handleAuthError(error);
+      
+      // Clear tokens if refresh fails with token-related errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as AxiosError<{ error?: { code?: string } }>;
+        const errorCode = axiosError.response?.data?.error?.code;
+        
+        if (errorCode === 'INVALID_TOKEN' || errorCode === 'EXPIRED_TOKEN') {
+          this.tokenManager.clearTokens();
+        }
+        
+        throw new AuthError(
+          errorCode as AuthErrorCode || AuthErrorCode.UNAUTHORIZED,
+          'Your session has expired. Please log in again.'
+        );
+      }
+      
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      
+      throw new AuthError(
+        AuthErrorCode.UNKNOWN_ERROR,
+        'Failed to refresh authentication. Please log in again.'
+      );
     }
   }
 
   /**
    * Get the current user's profile
    */
-  async getCurrentUser(): Promise<UserResponse | null> {
+  async getCurrentUser(): Promise<AuthUser | null> {
     try {
-      const response = await apiClient.get<{ user: UserResponse }>('/auth/me');
-      return response.data?.user || null;
+      const response = await apiClient.get<{ user: AuthUser }>('/auth/me');
+      
+      if (!response?.data?.data?.user) {
+        throw new AuthError(
+          AuthErrorCode.USER_NOT_FOUND,
+          'No user data found in response'
+        );
+      }
+
+      const user = response.data.data.user;
+      
+      if (!isAuthUser(user)) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid user data received from server'
+        );
+      }
+
+      return user;
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      throw this.handleAuthError(error);
+      
+      // Clear tokens if unauthorized
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as AxiosError<{ error?: { code?: string } }>;
+        const errorCode = axiosError.response?.status;
+        
+        if (errorCode === 401) {
+          this.tokenManager.clearTokens();
+          throw new AuthError(
+            AuthErrorCode.UNAUTHORIZED,
+            'Your session has expired. Please log in again.'
+          );
+        }
+      }
+      
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      
+      throw new AuthError(
+        AuthErrorCode.UNKNOWN_ERROR,
+        'Failed to fetch user profile. Please try again.'
+      );
+    }
+  }
+
+
+
+  /**
+   * Request a password reset
+   * @param email The user's email address
+   * @param resetUrl Optional URL to include in the reset email
+   */
+  async requestPasswordReset(email: string): Promise<void> {
+    try {
+      const response = await apiClient.post<{ success: boolean; message: string }>(
+        '/auth/request-password-reset',
+        { email },
+        { skipAuth: true }
+      );
+      
+      if (!response?.data?.data?.success) {
+        throw new AuthError(
+          AuthErrorCode.UNKNOWN_ERROR,
+          response.data.data?.message || 'Failed to request password reset. Please try again.'
+        );
+      }
+    } catch (error) {
+      console.error('Password reset request failed:', error);
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as AxiosError<{ data?: { error?: { message?: string } } }>;
+        const errorMessage = axiosError.response?.data?.data?.error?.message || 
+                           axiosError.message || 
+                           'Failed to request password reset. Please try again.';
+        
+        throw new AuthError(
+          AuthErrorCode.UNKNOWN_ERROR,
+          errorMessage
+        );
+      }
+      
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      
+      throw new AuthError(
+        AuthErrorCode.UNKNOWN_ERROR,
+        'An unexpected error occurred. Please try again.'
+      );
     }
   }
 
   /**
-   * Handle authentication errors
+   * Reset password with token
+   * @param resetPasswordDto The reset password data
+   * @returns The authenticated user or null if not authenticated
+   * @throws {AuthError} If password reset fails
    */
-  private handleAuthError(error: unknown): Error {
-    if (error instanceof Error) {
-      return error;
-    }
-    
-    if (typeof error === 'object' && error !== null) {
-      const authError = error as { message?: string; error?: string };
-      if (authError.message) {
-        return new Error(authError.message);
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<AuthUser | null> {
+    try {
+      const response = await apiClient.put<{ 
+        success: boolean; 
+        message: string; 
+        user?: AuthUser 
+      }>(
+        '/auth/reset-password',
+        resetPasswordDto,
+        { skipAuth: true }
+      );
+      
+      if (!response?.data?.data) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid response format from server'
+        );
       }
-      if (authError.error) {
-        return new Error(authError.error);
+      
+      const { user } = response.data.data;
+
+      if (!user) {
+        throw new AuthError(
+          AuthErrorCode.USER_NOT_FOUND,
+          'No user data in reset password response'
+        );
       }
+
+      // Ensure the user has required AuthUser properties
+      const authUser: AuthUser = {
+        ...user,
+        permissions: user.permissions || [],
+        is_active: user.is_active ?? true
+      };
+
+      return authUser;
+    } catch (error) {
+      console.error('Password reset failed:', error);
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as AxiosError<{ error?: { message?: string; code?: string } }>;
+        const errorCode = axiosError.response?.data?.error?.code as AuthErrorCode;
+        
+        throw new AuthError(
+          errorCode || AuthErrorCode.UNKNOWN_ERROR,
+          axiosError.response?.data?.error?.message || 
+            'Failed to reset password. The link may have expired or is invalid.'
+        );
+      }
+      
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      
+      throw new AuthError(
+        AuthErrorCode.UNKNOWN_ERROR,
+        'An unexpected error occurred while resetting your password. Please try again.'
+      );
     }
-    
-    return new Error('An unknown authentication error occurred');
   }
+
 }
 
 // Create and export a singleton instance
 export const authService = new AuthService();
 
-export type { AuthError } from '@shared/types/auth/dto';
+// Re-export types for convenience
+export type { AuthError, AuthErrorCode } from '@shared/types/auth/auth';
+export type { AuthUser, AuthResponse } from '@shared/types/auth';
+export type { LoginDto, RegisterDto, RequestPasswordResetDto, ResetPasswordDto } from '@shared/types/auth/dto';

@@ -90,6 +90,7 @@ export const users = pgTable('users', {
     organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
     emailVerified: boolean('email_verified').notNull().default(false),
     isActive: boolean('is_active').notNull().default(true),
+    tokenVersion: integer('token_version').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow()
 }, (table) => ({

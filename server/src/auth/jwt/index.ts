@@ -1,72 +1,71 @@
-import jwt, { type SignOptions } from 'jsonwebtoken';
+import jwt, { type SignOptions, type JwtPayload as JsonWebTokenPayload } from 'jsonwebtoken';
 import { randomBytes, createHash } from 'crypto';
-import type { StringValue } from 'ms';
+import ms, { type StringValue } from 'ms';
 const { sign, verify, decode } = jwt;
 import { v4 as uuidv4 } from 'uuid';
-import { redisClient as redis } from '../../../utils/redis.ts';
-import { logger } from '../../../utils/logger.ts';
+import { redisClient as redis } from '../../../utils/redis.js';
+import { logger } from '../../../utils/logger.js';
+
+// Import utility functions
+import {
+  generateTokenId,
+  generateRandomString,
+  createJwtToken,
+  verifyJwtToken,
+  getExpirationTime,
+  hashToken,
+  isTokenBlacklisted,
+  createTokenVerificationResult
+} from './utils.js';
+
+// Import types
 import type { 
-  UserRole, 
-  TokenType, 
-  TokenPayload, 
-  TokenVerificationResult, 
-  JwtConfig, 
-  AuthTokens
-} from './types.ts';
+  JwtConfig,
+  ExtendedAuthTokens
+} from './types.js';
 
-// Extend TokenVerificationResult to include code property
-interface ExtendedTokenVerificationResult<T = TokenPayload> extends TokenVerificationResult<T> {
-  code?: string;
-}
+// Import shared JWT types
+import type {
+  JwtPayload,
+  AccessTokenPayload,
+  RefreshTokenPayload,
+  PasswordResetTokenPayload,
+  EmailVerificationTokenPayload,
+  TokenType,
+  TokenPayload,
+  TokenVerificationResult as JwtTokenVerificationResult
+} from '../../../../shared/types/auth/jwt.js';
 
-// Extend AuthTokens to include accessTokenExpiresAt
-export interface ExtendedAuthTokens extends AuthTokens {
-  accessTokenExpiresAt: Date;
-  refreshTokenExpiresAt: Date;
-}
+// Import UserRole and getPermissionsForRole
+import { UserRole, getPermissionsForRole } from '../../../../shared/types/auth/permissions.js';
 
-// Token expiration times (in seconds as strings for jsonwebtoken)
-const ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_EXPIRES_IN || '15m'; // 15 minutes
-const REFRESH_TOKEN_EXPIRY = process.env.JWT_REFRESH_EXPIRES_IN || '7d'; // 7 days
-const PASSWORD_RESET_EXPIRY = process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h'; // 1 hour
+// Import constants
+import {
+  TOKEN_BLACKLIST_PREFIX,
+  REFRESH_TOKEN_PREFIX,
+  ACCESS_TOKEN_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
+  PASSWORD_RESET_EXPIRY,
+  EMAIL_VERIFICATION_EXPIRY
+} from './constants.js';
 
-// Redis key prefixes
-const TOKEN_BLACKLIST_PREFIX = 'token:blacklist:';
-const REFRESH_TOKEN_PREFIX = 'refresh_token:';
+// Token expiration times are now imported from constants.js
+
 /**
  * JWT configuration with default values
  */
 const defaultJwtConfig: JwtConfig = {
-    secret: process.env.JWT_SECRET || 'your-256-bit-secret',
-    issuer: process.env.JWT_ISSUER || 'nestmap-api',
-    audience: process.env.JWT_AUDIENCE || 'nestmap-client',
-    accessExpiresIn: ACCESS_TOKEN_EXPIRY,
-    refreshExpiresIn: REFRESH_TOKEN_EXPIRY,
-    passwordResetExpiresIn: PASSWORD_RESET_EXPIRY,
+  secret: process.env.JWT_SECRET || 'your-256-bit-secret',
+  issuer: process.env.JWT_ISSUER || 'nestmap-api',
+  audience: process.env.JWT_AUDIENCE || 'nestmap-client',
+  accessExpiresIn: Number(process.env.JWT_ACCESS_EXPIRES_IN) || '15m',
+  refreshExpiresIn: Number(process.env.JWT_REFRESH_EXPIRES_IN) || '7d',
+  passwordResetExpiresIn: Number(process.env.JWT_PASSWORD_RESET_EXPIRES_IN) || '1h',
+  emailVerificationExpiresIn: Number(process.env.JWT_EMAIL_VERIFICATION_EXPIRES_IN) || '24h',
 };
 
-/**
- * Generate a cryptographically secure random token ID
- */
-function generateTokenId(): string {
-    return uuidv4();
-}
 
-/**
- * Generate a secure random string of a given length
- * @param length - The length of the random string to generate
- * @returns A random alphanumeric string
- */
-export function generateRandomString(length: number = 32): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    const charsLength = chars.length;
-    
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * charsLength));
-    }
-    return result;
-}
+
 /**
  * Generates a JWT token with enhanced security features
  * @param payload - The token payload (excluding jti, iat, exp which are auto-generated)
@@ -74,107 +73,91 @@ export function generateRandomString(length: number = 32): string {
  * @param expiresIn - Optional expiration time (defaults to access token expiry)
  * @returns Object containing the token and its expiration date
  */
-export const generateToken = async (
-    payload: Omit<TokenPayload, 'jti' | 'iat' | 'exp'> & { type: TokenType },
-    secret: string = defaultJwtConfig.secret,
-    expiresIn: string | number = defaultJwtConfig.accessExpiresIn
-): Promise<{ token: string; expiresAt: Date }> => {
-    const jti = generateTokenId();
-    const now = Math.floor(Date.now() / 1000);
-    
-    // Calculate expiration time
-    let exp: number;
-    if (typeof expiresIn === 'string') {
-        // Handle string format like '15m', '1h', '7d'
-        const unit = expiresIn.slice(-1);
-        const value = parseInt(expiresIn.slice(0, -1));
-        
-        switch (unit) {
-            case 's': exp = now + value; break;
-            case 'm': exp = now + (value * 60); break;
-            case 'h': exp = now + (value * 60 * 60); break;
-            case 'd': exp = now + (value * 24 * 60 * 60); break;
-            default: exp = now + 900; // Default 15 minutes if format is invalid
-        }
-    } else {
-        // Handle number (treated as seconds)
-        exp = now + expiresIn;
+/**
+ * Safely converts an expiresIn value to a string in a format that jsonwebtoken expects
+ * @param expiresIn - The expiration time as a StringValue, number, or undefined
+ * @returns A string in the format expected by jsonwebtoken (e.g., '1h', '7d')
+ */
+function normalizeExpiresIn(expiresIn: string | number | undefined): StringValue {
+  if (expiresIn === undefined) {
+    return '15m';
+  }
+  
+  if (typeof expiresIn === 'number') {
+    // Convert seconds to a string with 's' suffix
+    return `${expiresIn}s` as StringValue;
+  }
+  
+  // Already a string in the correct format
+  return expiresIn as StringValue;
+}
+
+export async function generateToken<T extends JwtPayload>(
+  payload: Omit<T, 'jti' | 'iat' | 'exp'>,
+  secret: string = defaultJwtConfig.secret,
+  expiresIn: string | number | undefined = defaultJwtConfig.accessExpiresIn
+): Promise<{ token: string; expiresAt: Date; payload: T }> {
+  const jti = generateTokenId();
+  
+  // Normalize the expiresIn value
+  const normalizedExpiresIn = normalizeExpiresIn(expiresIn);
+  const exp = getExpirationTime(normalizedExpiresIn);
+  
+  // Create the token payload with required JWT fields
+  const tokenPayload = { 
+    ...payload, 
+    jti, 
+    exp, 
+    iat: Math.floor(Date.now() / 1000) 
+  } as T;
+
+  // Generate the JWT token
+  const token = createJwtToken(
+    tokenPayload,
+    secret,
+    { 
+      expiresIn: normalizedExpiresIn,
+      issuer: defaultJwtConfig.issuer,
+      audience: defaultJwtConfig.audience,
+      algorithm: 'HS256',
+      noTimestamp: false
     }
+  );
 
-    const expiresAt = new Date(exp * 1000);
-    
-    // Create the token payload with standard claims
-    const tokenPayload = {
-        ...payload,
-        jti,
-        iat: now,
-        exp
-    };
-
-    return new Promise((resolve, reject) => {
-        const signOptions: SignOptions = {
-            issuer: defaultJwtConfig.issuer,
-            audience: defaultJwtConfig.audience,
-            algorithm: 'HS256',
-            expiresIn: expiresIn as StringValue | number
-        };
-
-        sign(tokenPayload, secret, signOptions, (err, token) => {
-            if (err || !token) {
-                logger.error('Error generating token:', err);
-                reject(err || new Error('Failed to generate token'));
-                return;
-            }
-
-            // Store refresh tokens in Redis
-            if (payload.type === 'refresh') {
-                const ttl = exp - now;
-                redis.set(
-                    `${REFRESH_TOKEN_PREFIX}${jti}`,
-                    payload.userId,
-                    'EX',
-                    ttl
-                ).catch(err => {
-                    logger.error('Failed to store refresh token in Redis:', err);
-                });
-            }
-
-            resolve({ token, expiresAt });
-        });
-    });
-};
+  return { 
+    token, 
+    expiresAt: new Date(exp * 1000),
+    payload: tokenPayload
+  };
+}
 
 /**
  * Generate a secure random token for password reset
  * @returns Object containing the hashed token and its expiration
  */
 export function generatePasswordResetToken(): { token: string; hashedToken: string; expires: Date } {
-    const token = randomBytes(32).toString('hex');
-    const hashedToken = createHash('sha256').update(token).digest('hex');
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-    
-    return {
-        token,
-        hashedToken,
-        expires
-    };
+  const token = generateRandomString(40);
+  const hashedToken = hashToken(token);
+  const expires = new Date(Date.now() + 3600000); // 1 hour
+  
+  return { token, hashedToken, expires };
 }
+
 /**
  * Decodes a JWT token
  */
-export const decodeToken = <T extends Record<string, any> = TokenPayload>(token: string): T | null => {
-    try {
-        const decoded = decode(token, { complete: true })?.payload;
-        if (!decoded)
-            return null;
-        // Convert to the expected type
-        return decoded as unknown as T;
-    }
-    catch (error) {
-        logger.error('Error decoding token:', error);
-        return null;
-    }
-};
+export function decodeToken<T extends JwtPayload = JwtPayload>(token: string): T | null {
+  try {
+    return verifyJwtToken<T>(token, defaultJwtConfig.secret, {
+      issuer: defaultJwtConfig.issuer,
+      audience: defaultJwtConfig.audience,
+    });
+  } catch (error) {
+    logger.error('Failed to decode token:', error);
+    return null;
+  }
+}
+
 /**
  * Verifies a JWT token with enhanced security checks
  * @param token - The JWT token to verify
@@ -182,149 +165,94 @@ export const decodeToken = <T extends Record<string, any> = TokenPayload>(token:
  * @param secret - Optional custom secret (defaults to JWT_SECRET from config)
  * @returns Token verification result with payload if valid
  */
-const verifyToken = async <T extends TokenPayload = TokenPayload>(
-    token: string, 
-    type: TokenType, 
-    secret: string = defaultJwtConfig.secret
-): Promise<ExtendedTokenVerificationResult<T>> => {
-    try {
-        if (!token) {
-            const result: ExtendedTokenVerificationResult<T> = {
-                valid: false,
-                error: 'No token provided',
-                code: 'MISSING_TOKEN'
-            };
-            return result;
-        }
+export async function verifyToken<T extends JwtPayload>(
+  token: string,
+  type?: TokenType,
+  secret: string = defaultJwtConfig.secret
+): Promise<JwtTokenVerificationResult<T>> {
+  if (!token) {
+    return createTokenVerificationResult<T>(
+      false,
+      undefined as unknown as T, // Type assertion to satisfy TypeScript
+      'No token provided',
+      'MISSING_TOKEN'
+    );
+  }
 
-        // Check token format
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-            const result: ExtendedTokenVerificationResult<T> = {
-                valid: false,
-                error: 'Invalid token format',
-                code: 'INVALID_TOKEN_FORMAT'
-            };
-            return result;
-        }
+  // Check token format
+  const tokenParts = token.split('.');
+  if (tokenParts.length !== 3) {
+    return createTokenVerificationResult<T>(
+      false,
+      undefined as unknown as T,
+      'Invalid token format',
+      'INVALID_TOKEN_FORMAT'
+    );
+  }
 
-        // Decode without verification to get the jti
-        const decoded = decodeToken<T>(token);
-        if (!decoded) {
-            const result: ExtendedTokenVerificationResult<T> = {
-                valid: false,
-                error: 'Invalid token payload',
-                code: 'INVALID_TOKEN_PAYLOAD'
-            };
-            return result;
-        }
+  // Verify token signature and decode payload
+  const verifiedPayload = verifyJwtToken<T>(token, secret, {
+    issuer: defaultJwtConfig.issuer,
+    audience: defaultJwtConfig.audience,
+    algorithms: ['HS256']
+  });
 
-        const payload = decoded as T;
-        const now = Math.floor(Date.now() / 1000);
+  if (!verifiedPayload) {
+    return createTokenVerificationResult<T>(
+      false,
+      undefined as unknown as T,
+      'Invalid token signature',
+      'INVALID_SIGNATURE'
+    );
+  }
 
-        // Check token type
-        if (payload.type !== type) {
-            const result: ExtendedTokenVerificationResult<T> = {
-                valid: false,
-                error: `Invalid token type. Expected ${type}, got ${payload.type}`,
-                code: 'INVALID_TOKEN_TYPE',
-                expired: payload.exp ? payload.exp < now : false
-            };
-            return result;
-        }
+  // Check token type
+  if (type && verifiedPayload.type !== type) {
+    return createTokenVerificationResult<T>(
+      false,
+      verifiedPayload as T,
+      `Invalid token type. Expected ${type}, got ${verifiedPayload.type}`,
+      'INVALID_TOKEN_TYPE'
+    );
+  }
 
-        // Check if token is expired
-        if (payload.exp && payload.exp < now) {
-            return {
-                valid: false,
-                error: 'Token has expired',
-                expired: true,
-                code: 'TOKEN_EXPIRED'
-            };
-        }
+  // Check if token is blacklisted
+  const isBlacklisted = await isTokenBlacklisted(verifiedPayload.jti);
+  if (isBlacklisted) {
+    return createTokenVerificationResult<T>(
+      false,
+      verifiedPayload as T,
+      'Token has been revoked',
+      'TOKEN_REVOKED'
+    );
+  }
 
+  // Additional security checks
+  const now = Math.floor(Date.now() / 1000);
+  
+  // Check issued at time (iat)
+  if (verifiedPayload.iat && verifiedPayload.iat > now + 60) { // Allow 1 minute clock skew
+    return createTokenVerificationResult<T>(
+      false,
+      verifiedPayload as T,
+      'Token issued in the future',
+      'TOKEN_ISSUED_IN_FUTURE'
+    );
+  }
 
-        // Check if token is blacklisted
-        if (payload.jti) {
-            const isBlacklisted = await redis.get(`${TOKEN_BLACKLIST_PREFIX}${payload.jti}`);
-            if (isBlacklisted) {
-                const result: ExtendedTokenVerificationResult<T> = {
-                    valid: false,
-                    error: 'Token has been revoked',
-                    expired: true,
-                    code: 'TOKEN_REVOKED'
-                };
-                return result;
-            }
+  // Check not before time (nbf) if present
+  if (verifiedPayload.nbf && verifiedPayload.nbf > now) {
+    return createTokenVerificationResult<T>(
+      false,
+      verifiedPayload as T,
+      'Token not yet valid',
+      'TOKEN_NOT_YET_VALID'
+    );
+  }
 
-            // For refresh tokens, verify it exists in Redis
-            if (type === 'refresh') {
-                const storedUserId = await redis.get(`${REFRESH_TOKEN_PREFIX}${payload.jti}`);
-                if (!storedUserId || storedUserId !== payload.sub) {
-                    return {
-                        valid: false,
-                        error: 'Invalid refresh token',
-                        code: 'INVALID_REFRESH_TOKEN'
-                    };
-                }
-            }
-        }
-
-        // Verify token signature and expiration
-        try {
-            const verified = await new Promise<T>((resolve, reject) => {
-                verify(token, secret, {
-                    issuer: defaultJwtConfig.issuer,
-                    audience: defaultJwtConfig.audience,
-                    algorithms: ['HS256'],
-                }, (err, decoded) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(decoded as T);
-                    }
-                });
-            });
-            // Verify token type
-            if (verified.type !== type) {
-                return { valid: false, error: 'Invalid token type' };
-            }
-            const result: ExtendedTokenVerificationResult<T> = {
-                valid: true,
-                payload: payload as T
-            };
-            return result;
-        }
-        catch (error: unknown) {
-            // Type guard to check if error is an Error object
-            if (error instanceof Error) {
-                if (error.name === 'TokenExpiredError') {
-                    const result: ExtendedTokenVerificationResult<T> = {
-                        valid: false,
-                        error: 'Token has expired',
-                        expired: true,
-                        code: 'TOKEN_EXPIRED'
-                    };
-                    return result;
-                }
-                if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') {
-                    return { valid: false, error: error.message };
-                }
-            }
-            // For any other type of error, re-throw it
-            throw error;
-        }
-    }
-    catch (error) {
-        logger.error('Error verifying token:', error);
-        return {
-            valid: false,
-            error: error instanceof Error ? error.message : 'Invalid token',
-            code: 'INVALID_TOKEN'
-        };
-    }
-};
+  // If we got here, the token is valid
+  return createTokenVerificationResult<T>(true, verifiedPayload as T);
+}
 
 /**
  * Blacklists a token by its ID
@@ -355,8 +283,9 @@ export const blacklistToken = async (
 };
 
 /**
- * Revokes a refresh token by its ID
+ * Revokes a refresh token by its ID and cleans up associated Redis entries
  * @param tokenId - The JWT ID (jti) of the refresh token to revoke
+ * @returns Promise that resolves when the token is fully revoked
  */
 export const revokeRefreshToken = async (tokenId: string): Promise<void> => {
     if (!tokenId) {
@@ -365,20 +294,41 @@ export const revokeRefreshToken = async (tokenId: string): Promise<void> => {
     }
     
     try {
-        // Delete from refresh tokens store
-        await redis.del(`${REFRESH_TOKEN_PREFIX}${tokenId}`);
-        // Also blacklist the token
+        // First, get the user info to find the user ID
+        const userInfoKey = `refresh_token:${tokenId}`;
+        const userInfoStr = await redis.get(userInfoKey);
+        
+        // Delete the refresh token info from Redis
+        await redis.del(userInfoKey);
+        
+        // If we have user info, clean up the user's token set
+        if (userInfoStr) {
+            try {
+                const userInfo = JSON.parse(userInfoStr);
+                if (userInfo.userId) {
+                    const userTokensKey = `user:${userInfo.userId}:refresh_tokens`;
+                    await redis.srem(userTokensKey, tokenId);
+                }
+            } catch (parseError) {
+                logger.warn('Failed to parse user info when revoking token:', parseError);
+            }
+        }
+        
+        // Also blacklist the token to prevent any further use
         await blacklistToken(tokenId);
-        logger.debug(`Refresh token revoked: ${tokenId}`);
+        
+        logger.debug(`Successfully revoked refresh token: ${tokenId}`);
     } catch (error) {
-        logger.error('Error revoking refresh token:', error);
-        throw new Error('Failed to revoke refresh token');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error(`Error revoking refresh token ${tokenId}:`, error);
+        throw new Error(`Failed to revoke refresh token: ${errorMessage}`);
     }
 };
 
 /**
- * Revokes all refresh tokens for a specific user
+ * Revokes all refresh tokens for a specific user and cleans up associated Redis entries
  * @param userId - The user ID whose tokens should be revoked
+ * @returns Promise that resolves when all tokens are revoked
  */
 export const revokeAllUserRefreshTokens = async (userId: string): Promise<void> => {
     if (!userId) {
@@ -387,34 +337,45 @@ export const revokeAllUserRefreshTokens = async (userId: string): Promise<void> 
     }
     
     try {
-        // Find all refresh tokens for this user
-        const keys = await redis.keys(`${REFRESH_TOKEN_PREFIX}*`);
+        logger.debug(`Revoking all refresh tokens for user ${userId}`);
         
-        // Filter keys where the value matches the user ID
-        const userTokenKeys = [];
-        for (const key of keys) {
-            const value = await redis.get(key);
-            if (value === userId) {
-                userTokenKeys.push(key);
-            }
+        // Get all refresh token IDs for this user
+        const userTokensKey = `user:${userId}:refresh_tokens`;
+        const tokenIds = await redis.smembers(userTokensKey);
+        
+        if (tokenIds.length === 0) {
+            logger.debug(`No refresh tokens found for user ${userId}`);
+            return;
         }
         
-        // Delete all matching refresh tokens
-        if (userTokenKeys.length > 0) {
-            // Extract token IDs for blacklisting
-            const tokenIds = userTokenKeys.map(key => key.replace(REFRESH_TOKEN_PREFIX, ''));
+        logger.debug(`Found ${tokenIds.length} refresh tokens to revoke for user ${userId}`);
+        
+        // Delete all refresh token info from Redis
+        const deletePromises = tokenIds.map(async (tokenId) => {
+            const userInfoKey = `refresh_token:${tokenId}`;
+            await redis.del(userInfoKey).catch(err => {
+                logger.warn(`Failed to delete refresh token info for ${tokenId}:`, err);
+            });
             
-            // Delete refresh tokens
-            await redis.del(...userTokenKeys);
+            // Blacklist each token
+            await blacklistToken(tokenId).catch(err => {
+                logger.warn(`Failed to blacklist token ${tokenId}:`, err);
+            });
             
-            // Blacklist all tokens
-            await Promise.all(tokenIds.map(id => blacklistToken(id)));
-            
-            logger.info(`Revoked ${tokenIds.length} refresh tokens for user ${userId}`);
-        }
+            return tokenId;
+        });
+        
+        // Wait for all deletions to complete
+        const deletedTokenIds = (await Promise.all(deletePromises)).filter(Boolean);
+        
+        // Clear the user's refresh tokens set
+        await redis.del(userTokensKey);
+        
+        logger.info(`Successfully revoked ${deletedTokenIds.length} refresh tokens for user ${userId}`);
     } catch (error) {
-        logger.error('Error revoking user refresh tokens:', error);
-        throw new Error('Failed to revoke user refresh tokens');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error(`Error revoking all refresh tokens for user ${userId}:`, error);
+        throw new Error(`Failed to revoke all refresh tokens: ${errorMessage}`);
     }
 };
 
@@ -465,37 +426,79 @@ export const cleanupExpiredTokens = async (): Promise<{ removed: number }> => {
  * @returns Object containing access and refresh tokens with their expiration dates
  */
 
-export const generateTokenPair = async (
-    userId: string, 
-    email: string, 
-    role: UserRole = 'member', 
-    organizationId?: string
-): Promise<ExtendedAuthTokens> => {
-    const [accessToken, refreshToken] = await Promise.all([
-        generateToken({
-            userId,
-            email,
-            role,
-            type: 'access',
-            organizationId,
-        }),
-        generateToken({
-            userId,
-            email,
-            role,
-            type: 'refresh',
-            organizationId,
-        }, defaultJwtConfig.secret, defaultJwtConfig.refreshExpiresIn)
-    ]);
+export async function generateTokenPair(
+  userId: string,
+  email: string,
+  role: UserRole = UserRole.MEMBER,
+  organizationId?: string
+): Promise<ExtendedAuthTokens> {
+  // Generate access token
+  const { token: accessToken, expiresAt, payload: accessPayload } = await generateToken<AccessTokenPayload>({
+    sub: userId, // Standard JWT subject claim
+    userId, // For backward compatibility
+    email,
+    role,
+    organization_id: organizationId || null,
+    permissions: getPermissionsForRole(role),
+    type: 'access' as const
+  }, defaultJwtConfig.secret, normalizeExpiresIn(defaultJwtConfig.accessExpiresIn));
 
-    return {
-        accessToken: accessToken.token,
-        refreshToken: refreshToken.token,
-        expiresIn: Math.floor((refreshToken.expiresAt.getTime() - Date.now()) / 1000),
-        tokenType: 'Bearer',
-        accessTokenExpiresAt: accessToken.expiresAt,
-        refreshTokenExpiresAt: refreshToken.expiresAt
-    };
+  // Generate refresh token with reference to access token
+  const refreshTokenId = generateTokenId();
+  
+  // Create the refresh token payload without the jti field (it will be added by generateToken)
+  const refreshTokenPayload: Omit<RefreshTokenPayload, 'jti' | 'iat' | 'exp'> = {
+    sub: userId, // Standard JWT subject claim
+    userId, // For backward compatibility
+    type: 'refresh' as const,
+    parent_jti: accessPayload.jti
+  };
+  
+  // Store additional user info in Redis for refresh token validation
+  const userInfo = { 
+    userId, // Include userId for reference
+    email, 
+    role, 
+    organization_id: organizationId || null,
+    created_at: new Date().toISOString()
+  };
+  
+  // Get the refresh token expiration time, defaulting to 7 days if not specified
+  const refreshExpiresIn = defaultJwtConfig.refreshExpiresIn || '7d';
+  
+  // Calculate TTL in seconds for Redis
+  const ttl = Math.floor((getExpirationTime(refreshExpiresIn) * 1000 - Date.now()) / 1000);
+  
+  // Store user info with the refresh token ID
+  await redis.setex(
+    `refresh_token:${refreshTokenId}`,
+    ttl,
+    JSON.stringify(userInfo)
+  );
+  
+  // Maintain a set of refresh tokens for this user
+  const userTokensKey = `user:${userId}:refresh_tokens`;
+  await redis.sadd(userTokensKey, refreshTokenId);
+  await redis.expire(userTokensKey, ttl);
+  
+  // Generate the actual refresh token
+  const { token: refreshToken, expiresAt: refreshExpiresAt } = await generateToken<RefreshTokenPayload>(
+    refreshTokenPayload,
+    defaultJwtConfig.secret,
+    normalizeExpiresIn(refreshExpiresIn)
+  );
+
+  // Calculate expiresIn in seconds
+  const expiresIn = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
+
+  return {
+    accessToken,
+    refreshToken,
+    expiresIn,
+    tokenType: 'Bearer',
+    accessTokenExpiresAt: expiresAt,
+    refreshTokenExpiresAt: refreshExpiresAt
+  };
 };
 
 /**
@@ -504,62 +507,168 @@ export const generateTokenPair = async (
  * @returns New auth tokens or null if refresh token is invalid
  */
 export const refreshAccessToken = async (refreshToken: string): Promise<ExtendedAuthTokens | null> => {
-    // Verify the refresh token
-    const result = await verifyToken<TokenPayload>(refreshToken, 'refresh');
+    try {
+        // Verify the refresh token
+        const result = await verifyToken<RefreshTokenPayload>(refreshToken, 'refresh');
+        
+        if (!result.valid || !result.payload) {
+            logger.warn('Invalid refresh token provided for refresh');
+            return null;
+        }
+
+        // Extract user ID and token ID from the refresh token
+        const userId = result.payload.sub;
+        const tokenId = result.payload.jti;
+        
+        if (!userId || !tokenId) {
+            logger.warn('Refresh token missing required fields');
+            return null;
+        }
+
+        // Get user info from Redis
+        const userInfoKey = `refresh_token:${tokenId}`;
+        const userInfoStr = await redis.get(userInfoKey);
+        
+        if (!userInfoStr) {
+            logger.warn('User info not found in Redis for refresh token');
+            return null;
+        }
+        
+        const userInfo = JSON.parse(userInfoStr);
+        const { email, role, organization_id } = userInfo;
+        
+        const tokens = await generateTokenPair(userId, email, role, organization_id);
+        
+        // Revoke the old refresh token
+        if (result.payload.jti) {
+            await revokeRefreshToken(result.payload.jti).catch(err => {
+                logger.error('Failed to revoke old refresh token:', err);
+            });
+        }
     
-    if (!result.valid || !result.payload) {
-        logger.warn('Invalid refresh token provided for refresh');
+        return tokens;
+    } catch (error) {
+        logger.error('Error refreshing access token:', error);
         return null;
     }
-
-    const { userId, email, role, organizationId } = result.payload;
-    
-    // Generate new tokens
-    const tokens = await generateTokenPair(userId, email, role, organizationId);
-    
-    // Revoke the old refresh token
-    if (result.payload.jti) {
-        await revokeRefreshToken(result.payload.jti).catch(err => {
-            logger.error('Failed to revoke old refresh token:', err);
-        });
-    }
-    
-    return tokens;
 };
 
 /**
- * Logs out a user by revoking their current refresh token
+ * Logs out a user by revoking their current refresh token and cleaning up associated data
  * @param refreshToken - The refresh token to revoke
- * @returns Promise that resolves when the token is revoked
+ * @returns Promise that resolves when the token is fully revoked and cleaned up
  */
 export const logout = async (refreshToken: string): Promise<void> => {
-    if (!refreshToken) return;
+    if (!refreshToken) {
+        logger.warn('No refresh token provided for logout');
+        return;
+    }
     
     try {
-        // Decode the token to get the jti
-        const decoded = decodeToken<TokenPayload>(refreshToken);
-        if (decoded?.jti) {
-            await revokeRefreshToken(decoded.jti);
+        logger.debug('Starting logout process');
+        
+        // Decode the token to get the jti and verify it's a refresh token
+        const decoded = decodeToken<RefreshTokenPayload>(refreshToken);
+        if (!decoded?.jti) {
+            logger.warn('Invalid refresh token provided for logout - missing jti');
+            return;
         }
+        
+        if (decoded.type !== 'refresh') {
+            logger.warn('Invalid token type provided for logout - expected refresh token');
+            return;
+        }
+        
+        const tokenId = decoded.jti;
+        logger.debug(`Processing logout for token ID: ${tokenId}`);
+        
+        // Get user info before deleting it
+        const userInfoKey = `refresh_token:${tokenId}`;
+        const userInfoStr = await redis.get(userInfoKey);
+        
+        // Delete the refresh token info from Redis
+        await redis.del(userInfoKey).catch(err => {
+            logger.warn(`Failed to delete refresh token info from Redis: ${err.message}`);
+        });
+        
+        // If we have user info, clean up the user's token set
+        if (userInfoStr) {
+            try {
+                const userInfo = JSON.parse(userInfoStr);
+                if (userInfo.userId) {
+                    const userTokensKey = `user:${userInfo.userId}:refresh_tokens`;
+                    await redis.srem(userTokensKey, tokenId);
+                }
+            } catch (parseError) {
+                logger.warn('Failed to parse user info during logout:', parseError);
+            }
+        }
+        
+        // Revoke the refresh token (blacklist it)
+        await revokeRefreshToken(tokenId);
+        
+        logger.info(`Successfully logged out user with token ID: ${tokenId}`);
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         logger.error('Error during logout:', error);
         // Don't throw, as this might be called in a cleanup context
+        // but log the error for debugging
+        if (error instanceof Error) {
+            logger.error(`Logout error details: ${errorMessage}`, { stack: error.stack });
+        }
     }
 };
 
 /**
- * Logs out all sessions for a specific user
+ * Logs out all sessions for a specific user by revoking all their refresh tokens
+ * and cleaning up associated Redis entries
  * @param userId - The ID of the user to log out
  * @returns Promise that resolves when all sessions are revoked
  */
 export const logoutAllSessions = async (userId: string): Promise<void> => {
-    if (!userId) return;
+    if (!userId) {
+        logger.warn('No user ID provided to logoutAllSessions');
+        return;
+    }
     
     try {
+        logger.debug(`Logging out all sessions for user ${userId}`);
+        
+        // First, get all refresh tokens for this user
+        // Note: This assumes you have a way to track user -> token mappings in Redis
+        // If not, you might need to scan all refresh_token:* keys and check their user IDs
+        const userTokensKey = `user:${userId}:refresh_tokens`;
+        const tokenIds = await redis.smembers(userTokensKey);
+        
+        if (tokenIds.length === 0) {
+            logger.debug(`No active sessions found for user ${userId}`);
+            return;
+        }
+        
+        logger.debug(`Found ${tokenIds.length} active sessions for user ${userId}`);
+        
+        // Delete all refresh token info from Redis
+        const deletePromises = tokenIds.map(async (tokenId) => {
+            const userInfoKey = `refresh_token:${tokenId}`;
+            await redis.del(userInfoKey).catch(err => {
+                logger.warn(`Failed to delete refresh token info for ${tokenId}:`, err);
+            });
+        });
+        
+        // Wait for all deletions to complete
+        await Promise.all(deletePromises);
+        
+        // Clear the user's refresh tokens set
+        await redis.del(userTokensKey);
+        
+        // Revoke all refresh tokens for this user
         await revokeAllUserRefreshTokens(userId);
+        
+        logger.info(`Successfully logged out all sessions for user ${userId}`);
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         logger.error(`Error logging out all sessions for user ${userId}:`, error);
-        throw new Error('Failed to log out all sessions');
+        throw new Error(`Failed to log out all sessions: ${errorMessage}`);
     }
 };
 /**
@@ -570,11 +679,28 @@ export const revokeAllUserTokens = async (_userId: string): Promise<void> => {
     logger.warn('revokeAllUserTokens is deprecated. Use session management instead.');
     // Implementation would depend on how sessions are stored
 };
-// Export all types from types.ts
-export * from './types.ts';
 
-// Export additional types defined in this file
-export type { ExtendedTokenVerificationResult };
+// Export utility functions
+export {
+  createJwtToken,
+  verifyJwtToken,
+  createTokenVerificationResult,
+  hashToken,
+  isTokenBlacklisted,
+  getExpirationTime,
+  generateTokenId,
+  generateRandomString
+} from './utils.js';
+
+// Export JWT constants
+export const JWT_CONSTANTS = {
+  ACCESS_TOKEN_EXPIRY: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+  REFRESH_TOKEN_EXPIRY: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+  PASSWORD_RESET_EXPIRY: process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h',
+  EMAIL_VERIFICATION_EXPIRY: process.env.JWT_EMAIL_VERIFICATION_EXPIRES_IN || '24h',
+  TOKEN_BLACKLIST_PREFIX: 'jwt:blacklist:',
+  REFRESH_TOKEN_PREFIX: 'refresh_token:'
+} as const;
 
 // Export the JWT utility functions
 const jwtUtils = {

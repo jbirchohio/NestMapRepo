@@ -19,7 +19,9 @@
     "baseUrl": ".",
     "paths": {
       "@server/*": ["./src/*"],
-      "@shared/*": ["../shared/src/*"]
+      "@shared/*": ["../shared/*"],
+      "@shared/types": ["../shared/types/index.ts"],
+      "@shared/types/*": ["../shared/types/*"]
     },
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,

@@ -1,23 +1,29 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, ValidateIf } from 'class-validator';
-import { IsEmailValid, IsStrongPassword } from '../../validation';
-import { UserRole } from '../permissions';
+import { IsEmail, IsNotEmpty, IsString, MinLength, MaxLength, Matches, IsOptional, ValidateIf } from 'class-validator';
+import { IsEmailValid, IsStrongPassword } from '../../validation/index.js';
+import { UserRole } from '../permissions.js';
 
 export class RegisterDto {
   @IsEmailValid()
   @IsNotEmpty({ message: 'Email is required' })
-  email: string;
+  @IsString()
+  @MaxLength(50)
+  email!: string;
 
   @IsStrongPassword()
   @IsString()
   @IsNotEmpty()
-  password: string;
+  @MinLength(8)
+  @MaxLength(50)
+  password!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'First name is required' })
-  firstName: string;
+  @MaxLength(50)
+  firstName!: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
+  @MaxLength(50)
   lastName?: string;
 
   @IsString()
@@ -30,7 +36,7 @@ export class RegisterDto {
   organizationId?: string;
 
   @IsOptional()
-  role?: UserRole = UserRole.USER;
+  role?: UserRole = UserRole.MEMBER;
 
   @IsOptional()
   acceptTerms?: boolean;

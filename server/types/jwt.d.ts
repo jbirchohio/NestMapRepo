@@ -1,16 +1,12 @@
 import 'express';
-import type { UserRole } from '../src/auth/types';
-export { UserRole } from '../src/auth/types';
+import type { JwtPayload, TokenType, AuthTokens as SharedAuthTokens, User } from '@shared/types/auth';
 
-export interface JWTUser {
-  userId: string;  // Changed from number to string for UUID consistency
-  email: string;
-  role: UserRole;
-  organizationId: string;  // Changed from optional number to required string
+export type { TokenType };
+
+export interface JWTUser extends JwtPayload {
+  // Add any additional fields specific to Express User
   displayName?: string;
-  jti: string;
-  iat: number;
-  exp: number;
+  organizationId?: string | null;
 }
 
 declare global {
@@ -24,30 +20,14 @@ declare global {
   }
 }
 
-export type TokenType = 'access' | 'refresh' | 'password_reset' | 'email_verification';
-
-export interface TokenPayload {
-  jti: string;
-  type: TokenType;
-  userId: string;
-  email: string;
-  role: UserRole;
-  iat: number;
-  exp: number;
-}
-
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
+export interface AuthTokens extends Omit<SharedAuthTokens, 'expires_at' | 'token_type'> {
   accessTokenExpiresAt: Date;
   refreshTokenExpiresAt: Date;
   tokenType: string;
 }
 
 export interface AuthResponse extends AuthTokens {
-  user: {
-    id: string;
-    email: string;
+  user: Pick<User, 'id' | 'email' | 'name' | 'role' | 'organization_id'>;
     username: string;
     role: UserRole;
   };

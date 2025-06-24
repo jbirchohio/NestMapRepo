@@ -3,9 +3,9 @@
  * This file serves as the main entry point for auth-related types
  */
 
-import { AuthTokens, JwtPayload, TokenType } from './jwt';
-import { UserRole } from './permissions';
-import { AuthUser, UserProfile, UserSettings } from './user';
+import type { AuthTokens, JwtPayload, TokenType } from './jwt.js';
+import type { UserRole } from './permissions.js';
+import type { AuthUser, UserProfile, UserSettings } from './user.js';
 
 /**
  * Authentication state

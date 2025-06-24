@@ -1,24 +1,28 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
     "outDir": "../dist/shared",
     "rootDir": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2022", "DOM", "ES2022.Object", "ES2022.String", "ES2015.Promise", "ES2015.Iterable"],
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
+    "lib": ["ES2022", "DOM"],
     "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/*"]
+      "@shared/*": ["types/*"]
     },
     "target": "ES2022",
     "skipLibCheck": true,
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/shared.tsbuildinfo"
   },
-  "include": ["src/**/*.ts", "types/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": ["types/**/*.ts", "utils/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "references": []
 }

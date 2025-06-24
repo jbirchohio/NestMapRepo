@@ -12,12 +12,15 @@
  * - member: Standard user with basic access
  * - guest: Limited read-only access
  */
-export type UserRole = 
-  | 'super_admin'    // Full system access across all organizations
-  | 'admin'          // Organization administrator
-  | 'manager'        // Team manager
-  | 'member'         // Regular organization member
-  | 'guest';         // Read-only access
+export enum UserRole {
+  SUPER_ADMIN = 'super_admin',   // Full system access across all organizations
+  ADMIN = 'admin',              // Organization administrator
+  MANAGER = 'manager',          // Team manager
+  MEMBER = 'member',            // Regular organization member
+  GUEST = 'guest'              // Read-only access
+}
+
+export type UserRoleType = UserRole;
 
 /**
  * Permission scopes define the domain of the permission
@@ -44,6 +47,8 @@ export type PermissionAction =
   | 'approve'        // Approve/review actions
   | 'export'         // Export data
   | 'import';        // Import data
+
+// Remove the duplicate PermissionAction type later in the file
 
 /**
  * Resource types that permissions can be applied to
@@ -110,12 +115,7 @@ export interface PermissionDefinition {
   // Optional conditions for the permission
   conditions?: PermissionCondition[];
 }
-export type PermissionAction = 
-  | 'create'
-  | 'read'
-  | 'update'
-  | 'delete'
-  | 'manage';
+// PermissionAction type is already defined above
 
 /**
  * Permission definition
@@ -147,7 +147,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'organization:read',
     name: 'View Organization',
     description: 'View organization details and settings',
-    defaultRoles: ['super_admin', 'admin', 'manager', 'member', 'guest'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER, UserRole.GUEST],
     scope: 'organization',
     action: 'read',
     resource: 'organization',
@@ -156,7 +156,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'organization:update',
     name: 'Update Organization',
     description: 'Update organization details and settings',
-    defaultRoles: ['super_admin', 'admin'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
     scope: 'organization',
     action: 'update',
     resource: 'organization',
@@ -165,7 +165,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'organization:delete',
     name: 'Delete Organization',
     description: 'Delete the organization',
-    defaultRoles: ['super_admin'],
+    defaultRoles: [UserRole.SUPER_ADMIN],
     scope: 'organization',
     action: 'delete',
     resource: 'organization',
@@ -176,7 +176,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'user:create',
     name: 'Create Users',
     description: 'Create new users in the organization',
-    defaultRoles: ['super_admin', 'admin', 'manager'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER],
     scope: 'user',
     action: 'create',
     resource: 'user',
@@ -185,7 +185,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'user:read',
     name: 'View Users',
     description: 'View user profiles in the organization',
-    defaultRoles: ['super_admin', 'admin', 'manager', 'member'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER],
     scope: 'user',
     action: 'read',
     resource: 'user',
@@ -194,7 +194,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'user:update',
     name: 'Update Users',
     description: 'Update user profiles in the organization',
-    defaultRoles: ['super_admin', 'admin', 'manager'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER],
     scope: 'user',
     action: 'update',
     resource: 'user',
@@ -203,7 +203,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'user:delete',
     name: 'Delete Users',
     description: 'Delete users from the organization',
-    defaultRoles: ['super_admin', 'admin'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
     scope: 'user',
     action: 'delete',
     resource: 'user',
@@ -214,7 +214,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'billing:read',
     name: 'View Billing',
     description: 'View billing information and invoices',
-    defaultRoles: ['super_admin', 'admin'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
     scope: 'billing',
     action: 'read',
     resource: 'billing',
@@ -223,7 +223,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'billing:update',
     name: 'Update Billing',
     description: 'Update billing information and payment methods',
-    defaultRoles: ['super_admin', 'admin'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
     scope: 'billing',
     action: 'update',
     resource: 'billing',
@@ -234,7 +234,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'settings:read',
     name: 'View Settings',
     description: 'View system settings',
-    defaultRoles: ['super_admin', 'admin', 'manager'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER],
     scope: 'settings',
     action: 'read',
     resource: 'settings',
@@ -243,7 +243,7 @@ export const PERMISSIONS: Record<string, Permission> = {
     key: 'settings:update',
     name: 'Update Settings',
     description: 'Update system settings',
-    defaultRoles: ['super_admin', 'admin'],
+    defaultRoles: [UserRole.SUPER_ADMIN, UserRole.ADMIN],
     scope: 'settings',
     action: 'update',
     resource: 'settings',

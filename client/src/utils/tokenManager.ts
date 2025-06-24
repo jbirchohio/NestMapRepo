@@ -2,6 +2,7 @@ import { jwtDecode } from 'jwt-decode';
 import { NavigateFunction } from 'react-router-dom';
 import { SecureCookie } from './cookies';
 import config from '@/config/env';
+import type { JwtPayload, AccessTokenPayload, AuthTokens } from '@shared/types/auth/jwt';
 // Constants
 const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -11,20 +12,7 @@ declare global {
         __tokenManager?: TokenManager;
     }
 }
-// JWT Payload type
-export interface JwtPayload {
-    exp: number;
-    iat: number;
-    sub: string;
-    [key: string]: unknown;
-}
-export interface DecodedToken {
-    exp: number;
-    iat: number;
-    sub: string;
-    type?: string;
-    scope?: string;
-}
+
 // Show toast notification function
 const showToast = (options: {
     title: string;
@@ -34,20 +22,20 @@ const showToast = (options: {
     // This is a placeholder - the actual implementation should be imported from your UI library
     console.log(`[Toast] ${options.title}: ${options.description}`);
 };
+
 export class TokenManager {
     private static instance: TokenManager | null = null;
     private accessToken: string | null = null;
-    private tokenRefreshTimeout: ReturnType<typeof setTimeout> | null = null;
-    private refreshToken: string | null = null;
     private tokenRotationTimeout: ReturnType<typeof setTimeout> | null = null;
-    private refreshPromise: Promise<string | null> | null = null;
-    private isRefreshing = false;
+    private refreshToken: string | null = null;
     private navigate: NavigateFunction | null = null;
+
     private constructor(navigate: NavigateFunction | null) {
         // Initialize instance variables
         this.navigate = navigate;
         this.refreshToken = SecureCookie.get(REFRESH_TOKEN_KEY) || null;
         this.accessToken = SecureCookie.get(TOKEN_KEY) || null;
+
         // Start token rotation if we have a refresh token
         if (this.refreshToken) {
             const decoded = this.getDecodedToken();
@@ -82,14 +70,18 @@ export class TokenManager {
         TokenManager.instance = null;
     }
     public hasValidToken(): boolean {
-        if (!this.accessToken)
-            return false;
+        if (!this.accessToken) return false;
+        
         try {
-            const decoded: DecodedToken = jwtDecode(this.accessToken);
+            const decoded = jwtDecode<AccessTokenPayload>(this.accessToken);
             const now = Date.now() / 1000;
+            
+            // Ensure the token has the correct type
+            if (decoded.type !== 'access') return false;
+            
             return decoded.exp > now;
-        }
-        catch (error) {
+        } catch (error) {
+            console.error('Failed to validate token:', error);
             return false;
         }
     }
@@ -99,282 +91,417 @@ export class TokenManager {
     public getRefreshToken(): string | null {
         return this.refreshToken;
     }
+
+    /**
+   * Refreshes the access token using the refresh token
+   * @returns New access token or null if refresh fails
+   */
+  public async refreshTokens(): Promise<string | null> {
+    if (!this.refreshToken) {
+      console.warn('No refresh token available');
+      return null;
+    }
+
+    try {
+      // Use the refresh token to get a new access token
+      const response = await fetch(`${config.API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(this.accessToken && { 'Authorization': `Bearer ${this.accessToken}` }),
+        },
+        credentials: 'include', // For httpOnly cookies
+        body: JSON.stringify({
+          refresh_token: this.refreshToken,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `Failed to refresh token: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data = await response.json() as AuthTokens;
+
+      if (!data?.access_token) {
+        throw new Error('Invalid token response: missing access_token');
+      }
+
+      // If refresh_token is not provided in the response, keep the existing one
+      const newRefreshToken = data.refresh_token || this.refreshToken;
+      
+      // Update tokens
+      this.setTokens(data.access_token, newRefreshToken);
+      
+      // Restart token rotation with the new token
+      const decoded = this.getDecodedToken();
+      if (decoded?.exp) {
+        const expiresIn = (decoded.exp * 1000) - Date.now();
+        this.startTokenRotation(expiresIn);
+      }
+      
+      return data.access_token;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      this.clearTokens();
+      
+      // Notify the user if needed
+      if (error instanceof Error) {
+        showToast({
+          title: 'Session Expired',
+          description: 'Your session has expired. Please log in again.',
+          variant: 'destructive',
+        });
+      }
+      
+      return null;
+    }
+  }
+
+    /**
+     * Checks if the current user is authenticated
+     * @returns true if authenticated, false otherwise
+     */
     public isAuthenticated(): boolean {
-        if (!this.accessToken)
+        // Check if we have a valid access token
+        const token = this.accessToken || SecureCookie.get(TOKEN_KEY);
+        if (!token) {
             return false;
+        }
+        
         try {
-            const decoded = jwtDecode<{
-                exp: number;
-            }>(this.accessToken);
-            const now = Math.floor(Date.now() / 1000);
-            return decoded.exp > now;
+            // Use getDecodedToken which handles validation and expiration
+            const decoded = this.getDecodedToken();
+            // If we have a valid decoded token with a subject, we're authenticated
+            return !!decoded?.sub;
         }
         catch (error) {
             return false;
         }
     }
-    private decodeToken(token: string): DecodedToken | null {
-        try {
-            return jwtDecode<DecodedToken>(token);
-        }
-        catch (error) {
-            console.error('Error decoding token:', error);
-            return null;
-        }
-    }
+
     public getTokenExpiration(): number | null {
         if (!this.accessToken)
             return null;
         const decoded = this.decodeToken(this.accessToken);
         return decoded ? decoded.exp * 1000 : null; // Convert to milliseconds
     }
+    /**
+     * Sets both access and refresh tokens
+     * @param accessToken The new access token
+     * @param refreshToken The new refresh token
+     * @throws {Error} If tokens are invalid or missing required fields
+     */
     public setTokens(accessToken: string, refreshToken: string): void {
-        try {
-            // Store tokens in memory
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
-            // Store tokens in cookies
-            SecureCookie.set(TOKEN_KEY, accessToken, {
-                secure: config.SECURE_COOKIE_OPTIONS.secure,
-                sameSite: config.SECURE_COOKIE_OPTIONS.sameSite,
-                maxAge: config.SESSION_TIMEOUT / 1000, // Convert to seconds
-            });
-            SecureCookie.set(REFRESH_TOKEN_KEY, refreshToken, {
-                secure: config.SECURE_COOKIE_OPTIONS.secure,
-                sameSite: config.SECURE_COOKIE_OPTIONS.sameSite,
-                maxAge: config.SESSION_TIMEOUT / 1000, // Convert to seconds
-            });
-            // Start token rotation
-            const decoded = jwtDecode<JwtPayload>(accessToken);
-            const expiresIn = (decoded.exp - Math.floor(Date.now() / 1000)) * 1000;
-            this.startTokenRotation(expiresIn);
+        // Validate input
+        if (!accessToken || !refreshToken) {
+            throw new Error('Both access token and refresh token are required');
         }
-        catch (error) {
-            console.error('Error setting tokens:', error);
+
+        // Decode and validate the access token
+        const decodedAccessToken = this.decodeToken(accessToken);
+        if (!decodedAccessToken) {
+            throw new Error('Invalid access token: failed to decode');
+        }
+
+        // Validate required token fields
+        if (!decodedAccessToken.sub) {
+            throw new Error('Invalid access token: missing subject (sub)');
+        }
+        
+        if (!decodedAccessToken.exp) {
+            throw new Error('Invalid access token: missing expiration (exp)');
+        }
+
+        // Store tokens in memory
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+
+        // Calculate token expiration time (with 5 minute buffer)
+        const expiresIn = Math.max(0, (decodedAccessToken.exp * 1000) - Date.now() - (5 * 60 * 1000));
+        
+        try {
+            // Store tokens in secure cookies
+            SecureCookie.set(TOKEN_KEY, accessToken, {
+                expires: new Date(decodedAccessToken.exp * 1000),
+                secure: window.location.protocol === 'https:',
+                sameSite: 'strict',
+                path: '/',
+            });
+
+            // Store refresh token with longer expiration (30 days)
+            const refreshExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            SecureCookie.set(REFRESH_TOKEN_KEY, refreshToken, {
+                expires: refreshExpires,
+                secure: window.location.protocol === 'https:',
+                sameSite: 'strict',
+                path: '/',
+            });
+            
+            // Restart token rotation with the new token
+            this.startTokenRotation(expiresIn);
+            
+        } catch (error) {
+            console.error('Failed to store tokens:', error);
+            // Clear tokens if storage fails
             this.clearTokens();
             throw error;
         }
     }
     public destroyTokens(): void {
-        if (this.tokenRefreshTimeout) {
-            clearTimeout(this.tokenRefreshTimeout);
-        }
         if (this.tokenRotationTimeout) {
             clearTimeout(this.tokenRotationTimeout);
         }
         this.accessToken = null;
         this.refreshToken = null;
-        this.isRefreshing = false;
-        this.refreshPromise = null;
         this.clearStoredTokens();
     }
-    public async refreshTokens(): Promise<string | null> {
-        if (!this.refreshToken) {
-            return null;
-        }
-        // If already refreshing, return the existing promise
-        if (this.isRefreshing && this.refreshPromise) {
-            return this.refreshPromise;
-        }
-        this.isRefreshing = true;
-        try {
-            // Import api dynamically to avoid circular dependency
-            const { default: apiClient } = await import('@/services/api/apiClient');
-            this.refreshPromise = apiClient
-                .post<{
-                accessToken: string;
-                refreshToken: string;
-            }>('/auth/refresh', {
-                refreshToken: this.refreshToken,
-            })
-                .then((response) => {
-                this.setTokens(response.accessToken, response.refreshToken);
-                return response.accessToken;
-            })
-                .catch((error) => {
-                this.handleTokenError(error, 'Failed to refresh token');
-                throw error;
-            })
-                .finally(() => {
-                this.isRefreshing = false;
-                this.refreshPromise = null;
-            });
-            return this.refreshPromise;
-        }
-        catch (error) {
-            this.isRefreshing = false;
-            this.refreshPromise = null;
-            throw error;
-        }
+
+
+
+  /**
+   * Clears all tokens from memory and stops any active refresh operations
+   */
+  public clearTokens(): void {
+    // Stop any ongoing token refresh operations
+    this.stopTokenRotation();
+    
+    // Clear in-memory tokens
+    this.accessToken = null;
+    this.refreshToken = null;
+    
+    // Clear stored tokens
+    this.clearStoredTokens();
+    
+    // Notify any listeners that tokens were cleared
+    this.notifyTokenCleared();
+  }
+
+  /**
+   * Clears tokens from all storage mechanisms
+   */
+  private clearStoredTokens(): void {
+    try {
+      const cookieOptions = {
+        path: '/',
+        secure: window.location.protocol === 'https:',
+        sameSite: 'strict' as const,
+      };
+      
+      // Clear from cookies
+      SecureCookie.remove(TOKEN_KEY, cookieOptions);
+      SecureCookie.remove(REFRESH_TOKEN_KEY, cookieOptions);
+      
+      // Clear from all other storage mechanisms
+      if (typeof window !== 'undefined') {
+        // Clear from localStorage and sessionStorage
+        window.localStorage.removeItem(TOKEN_KEY);
+        window.sessionStorage.removeItem(TOKEN_KEY);
+        window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+        window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+      }
+    } catch (error) {
+      console.error('Error clearing stored tokens:', error);
     }
-    // Handle token-related errors
-    private handleTokenError(error: unknown, message: string = 'Authentication error'): void {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`${message}:`, errorMessage);
-        this.clearTokens();
-        // Only navigate if we have a navigation function
-        if (this.navigate) {
-            try {
-                this.navigate('/login');
-            }
-            catch (navError) {
-                console.error('Navigation error:', navError);
-            }
-        }
-        // Show error to user
-        if (typeof window !== 'undefined') {
-            showToast({
-                title: 'Session Expired',
-                description: 'Your session has expired. Please log in again.',
-                variant: 'destructive',
-            });
-        }
+  }
+
+  /**
+   * Notifies any listeners that tokens were cleared
+   */
+  private notifyTokenCleared(): void {
+    // This can be expanded to use an event emitter or other notification system
+    console.log('Authentication tokens were cleared');
+    
+    // Optionally dispatch a custom event that other parts of the app can listen for
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth-tokens-cleared'));
     }
-    public clearTokens(): void {
-        this.refreshToken = null;
-        this.stopTokenRotation();
-        // Clear tokens from storage
-        SecureCookie.remove(TOKEN_KEY, {
-            path: '/',
-            secure: config.SECURE_COOKIE_OPTIONS.secure,
-            sameSite: config.SECURE_COOKIE_OPTIONS.sameSite
-        });
-        SecureCookie.remove(REFRESH_TOKEN_KEY, {
-            path: '/',
-            secure: config.SECURE_COOKIE_OPTIONS.secure,
-            sameSite: config.SECURE_COOKIE_OPTIONS.sameSite
-        });
-        // Clear from localStorage/sessionStorage if they were used as fallback
-        if (typeof window !== 'undefined') {
-            window.localStorage.removeItem(TOKEN_KEY);
-            window.sessionStorage.removeItem(TOKEN_KEY);
-            window.localStorage.removeItem(REFRESH_TOKEN_KEY);
-            window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
-        }
-    }
-    private clearStoredTokens(): void {
-        // Clear from cookies
-        SecureCookie.remove(TOKEN_KEY);
-        SecureCookie.remove(REFRESH_TOKEN_KEY);
-        // Clear from localStorage/sessionStorage if they were used as fallback
-        if (typeof window !== 'undefined') {
-            window.localStorage.removeItem(TOKEN_KEY);
-            window.sessionStorage.removeItem(TOKEN_KEY);
-            window.localStorage.removeItem(REFRESH_TOKEN_KEY);
-            window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
-        }
-    }
-    public getTokenState(): {
-        accessToken: string | null;
-        refreshToken: string | null;
-        isValid: boolean;
-        expiresIn: number;
-    } {
-        const expiresIn = this.getTokenExpiration() ? this.getTokenExpiration()! - Date.now() : 0;
-        return {
-            accessToken: this.accessToken,
-            refreshToken: this.refreshToken,
-            isValid: this.isAuthenticated(),
-            expiresIn
-        };
-    }
-    public isTokenValid(): boolean {
+  }
+
+  public getTokenState(): {
+    accessToken: string | null;
+    refreshToken: string | null;
+    isValid: boolean;
+    expiresIn: number;
+  } {
+    const expiresIn = this.getTokenExpiration() ? this.getTokenExpiration()! - Date.now() : 0;
+    return {
+      accessToken: this.accessToken,
+      refreshToken: this.refreshToken,
+      isValid: this.isAuthenticated(),
+      expiresIn: Math.max(0, expiresIn) // Ensure non-negative
+    };
+  }
+
+  public isTokenValid(): boolean {
         return this.isAuthenticated();
     }
-    public getDecodedToken(): DecodedToken | null {
-        if (!this.accessToken)
-            return null;
-        try {
-            return jwtDecode<DecodedToken>(this.accessToken);
-        }
-        catch (error) {
-            return null;
-        }
+    /**
+   * Decodes and validates the current access token
+   * @returns Decoded token payload or null if invalid/expired
+   */
+  public getDecodedToken(): JwtPayload | null {
+    const token = this.accessToken || SecureCookie.get(TOKEN_KEY);
+    if (!token) {
+      return null;
     }
+    
+    try {
+      const decoded = this.decodeToken(token);
+      if (!decoded) {
+        return null;
+      }
+      
+      // Check if token is expired
+      if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+        console.warn('Token has expired');
+        // Clear expired token
+        this.clearTokens();
+        return null;
+      }
+      
+      return decoded;
+    } catch (error) {
+      console.error('Error in getDecodedToken:', error);
+      return null;
+    }
+  }
     public getTokenType(): string {
         const decoded = this.getDecodedToken();
         return decoded ? decoded.type || 'access' : 'unknown';
     }
     public getTokenScope(): string[] {
         const decoded = this.getDecodedToken();
-        return decoded ? (decoded.scope || '').split(' ') : [];
+        if (!decoded) return [];
+        
+        // For access tokens, use the permissions array
+        if (decoded.type === 'access' && 'permissions' in decoded) {
+            return Array.isArray(decoded.permissions) ? decoded.permissions : [];
+        }
+        
+        // For other token types or if no permissions are found
+        return [];
     }
-    // Start token rotation
+    /**
+     * Starts the token rotation process
+     * @param expiresIn Time in milliseconds until the token expires
+     */
     private startTokenRotation(expiresIn: number): void {
+        // Clear any existing rotation timeout
         this.stopTokenRotation();
-        // Calculate rotation time (rotate before expiration)
-        const rotationTime = Math.max(expiresIn - config.REFRESH_TOKEN_THRESHOLD, config.TOKEN_REFRESH_INTERVAL);
-        this.tokenRotationTimeout = setTimeout(() => {
-            this.rotateToken().catch(error => {
-                console.error('Token rotation error:', error);
-                this.handleTokenError(error, 'Token rotation failed');
-            });
-        }, rotationTime);
+        
+        // Don't start rotation if token is already expired or about to expire
+        if (expiresIn <= 0) {
+            console.warn('Token is already expired or about to expire');
+            return;
+        }
+        
+        // Calculate when to refresh the token (5 minutes before expiration)
+        const refreshTime = Math.max(0, expiresIn - (5 * 60 * 1000));
+        
+        console.log(`Starting token rotation. Will refresh in ${Math.floor(refreshTime / 1000)} seconds`);
+        
+        // Set up the refresh timeout
+        this.tokenRotationTimeout = setTimeout(async () => {
+            try {
+                console.log('Rotating access token...');
+                const newToken = await this.refreshTokens();
+                if (!newToken) {
+                    console.warn('Token rotation failed - no new token received');
+                    this.clearTokens();
+                }
+            } catch (error) {
+                console.error('Error during token rotation:', error);
+                this.clearTokens();
+            }
+        }, refreshTime);
     }
-    // Stop token rotation
+    
+    /**
+     * Stops the token rotation process
+     */
     private stopTokenRotation(): void {
         if (this.tokenRotationTimeout) {
             clearTimeout(this.tokenRotationTimeout);
             this.tokenRotationTimeout = null;
         }
-        if (this.tokenRefreshTimeout) {
-            clearTimeout(this.tokenRefreshTimeout);
-            this.tokenRefreshTimeout = null;
-        }
-        this.isRefreshing = false;
-        this.refreshPromise = null;
     }
-    // Rotate the access token using the refresh token
-    private async rotateToken(): Promise<void> {
-        if (!this.refreshToken || this.isRefreshing) {
-            return;
-        }
-        this.isRefreshing = true;
-        try {
-            // Import the API client dynamically to avoid circular dependencies
-            const apiModule = await import('@/services/api/apiClient');
-            const api = apiModule.default;
-            const response = await api.post<{
-                accessToken: string;
-                refreshToken?: string;
-            }>('/auth/refresh', { refreshToken: this.refreshToken });
-            if (response?.accessToken) {
-                // Use the new refresh token if provided, otherwise keep the current one
-                const newRefreshToken = response.refreshToken || this.refreshToken;
-                this.setTokens(response.accessToken, newRefreshToken);
-            }
-            else {
-                throw new Error('Invalid token response');
-            }
-        }
-        catch (error) {
-            console.error('Token rotation failed:', error);
-            this.handleTokenError(error, 'Session expired');
-        }
-        finally {
-            this.isRefreshing = false;
-        }
-    }
-    // Clean up resources when the TokenManager is no longer needed
+    
+    /**
+     * Cleans up the TokenManager instance and clears all tokens
+     */
     public destroy(): void {
+        // Stop any ongoing token rotation
         this.stopTokenRotation();
+        
+        // Clear tokens from memory and storage
         this.clearTokens();
-        if (typeof window !== 'undefined' && window.__tokenManager) {
+        
+        // Remove instance reference
+        if (TokenManager.instance === this) {
+            TokenManager.instance = null;
+        }
+        
+        // Remove from window if it exists
+        if (typeof window !== 'undefined' && window.__tokenManager === this) {
             delete window.__tokenManager;
         }
+        
+        console.log('TokenManager instance destroyed');
     }
-       public getUserId(): string {
-        const token = SecureCookie.get('access_token');
-        if (!token)
+    
+    /**
+     * Gets the user ID from the access token if available
+     * @returns The user ID or an empty string if not available
+     */
+    public getUserId(): string {
+        const token = this.accessToken || SecureCookie.get(TOKEN_KEY);
+        if (!token) {
             return '';
+        }
+        
         try {
-            const decoded = jwtDecode<{
-                sub: string;
-            }>(token);
-            return decoded.sub;
+            const decoded = this.decodeToken(token);
+            if (!decoded) {
+                return '';
+            }
+            
+            // Check if the token has expired
+            if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+                return '';
+            }
+            
+            return decoded.sub || '';
         }
         catch (error) {
             return '';
+        }
+    }
+    /**
+     * Decodes a JWT token and validates its structure
+     * @param token The JWT token to decode
+     * @returns Decoded token payload or null if invalid
+     */
+    public decodeToken(token: string): JwtPayload | null {
+        if (!token) {
+            return null;
+        }
+
+        try {
+            const decoded = jwtDecode<JwtPayload>(token);
+            
+            // Basic validation of required JWT fields
+            if (!decoded || typeof decoded !== 'object' || !decoded.sub) {
+                console.error('Invalid token structure:', decoded);
+                return null;
+            }
+            
+            return decoded;
+        } catch (error) {
+            console.error('Failed to decode token:', error);
+            return null;
         }
     }
 }

@@ -3,7 +3,7 @@
  * This serves as the single source of truth for user-related types
  */
 
-import { UserRole } from './permissions';
+import { UserRole } from './permissions.js';
 
 /**
  * Base user interface with common fields
@@ -46,7 +46,7 @@ export interface AuthUser extends BaseUser {
 /**
  * User profile information
  */
-export interface UserProfile extends BaseUser {
+export interface UserProfile {
   /** User's first name */
   first_name: string | null;
   /** User's last name */
@@ -60,6 +60,14 @@ export interface UserProfile extends BaseUser {
   /** User's preferred locale */
   locale: string | null;
 }
+
+/**
+ * User type that combines all user-related interfaces
+ */
+export type User = BaseUser & Partial<UserProfile> & Partial<UserSettings>;
+
+// Export BaseUser as the default User type for backward compatibility
+export type { User as UserType };
 
 /**
  * User settings

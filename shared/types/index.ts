@@ -1,14 +1,10 @@
-// Re-export all types from individual files
-export * from './base.js';
-export * from './trips.js';
-export * from './bookings.js';
-export * from './users.js';
-export * from './organizations.js';
-export * from './common.js';
-export * from './api.js';
-export * from './db.js';
-export * from './utils.js';
-
-// Auth module
-export * from './auth/dto/index.js';
-export * from './auth/permissions.js';
+// Export auth types
+export { AuthError } from './auth/auth.js';
+export type { AuthErrorCode, AuthState, AuthConfig } from './auth/auth.js';
+export type { AuthTokens, JwtPayload, TokenType } from './auth/jwt.js';
+export type { UserRole } from './auth/permissions.js';
+export type { AuthUser, UserProfile, UserSettings } from './auth/user.js';
+// Export DTOs
+export type { LoginDto } from './auth/dto/login.dto.js';
+export type { RegisterDto } from './auth/dto/register.dto.js';
+export type { RequestPasswordResetDto, ResetPasswordDto, ChangePasswordDto } from './auth/dto/password-reset.dto.js';

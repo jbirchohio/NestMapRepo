@@ -6,7 +6,7 @@ import {
   ResourceType,
   PermissionAction,
   PermissionScope
-} from '../types/auth/permissions';
+} from '../types/auth/permissions.js'; // Added .js extension for ESM
 
 /**
  * Permission Manager class for handling role-based access control
@@ -24,11 +24,22 @@ export class PermissionManager {
    * Initialize the role hierarchy
    */
   private initializeRoleHierarchy(): void {
-    this.roleHierarchy.set('super_admin', ['admin', 'manager', 'member', 'guest']);
-    this.roleHierarchy.set('admin', ['manager', 'member', 'guest']);
-    this.roleHierarchy.set('manager', ['member', 'guest']);
-    this.roleHierarchy.set('member', ['guest']);
-    this.roleHierarchy.set('guest', []);
+    // Use the UserRole enum values directly to ensure type safety
+    const { SUPER_ADMIN, ADMIN, MANAGER, MEMBER, GUEST } = UserRole;
+    
+    // Explicitly type the role hierarchy to ensure type safety
+    const hierarchy: Record<UserRole, UserRole[]> = {
+      [SUPER_ADMIN]: [ADMIN, MANAGER, MEMBER, GUEST],
+      [ADMIN]: [MANAGER, MEMBER, GUEST],
+      [MANAGER]: [MEMBER, GUEST],
+      [MEMBER]: [GUEST],
+      [GUEST]: []
+    };
+
+    // Convert the record to a map
+    (Object.entries(hierarchy) as [UserRole, UserRole[]][]).forEach(([role, roles]) => {
+      this.roleHierarchy.set(role, roles);
+    });
   }
 
   /**
@@ -101,6 +112,18 @@ export class PermissionManager {
   }
 
   /**
+   * Get all roles that are lower in the hierarchy than the given role
+   */
+  public getInferiorRoles(role: UserRole): UserRole[] {
+    // Ensure the role exists in the hierarchy
+    if (!this.roleHierarchy.has(role)) {
+      console.warn(`Role '${role}' not found in hierarchy`);
+      return [];
+    }
+    return this.roleHierarchy.get(role) || [];
+  }
+
+  /**
    * Get all roles that inherit from the given role
    */
   private getInheritedRoles(role: UserRole): UserRole[] {
@@ -132,28 +155,113 @@ export class PermissionManager {
   /**
    * Evaluate a permission condition against the current context
    */
-  private evaluateCondition(condition: PermissionCondition, context: Record<string, any>): boolean {
-    const { field, operator, value } = condition;
-    const fieldValue = this.getNestedField(context, field);
-
-    switch (operator) {
-      case 'equals':
-        return fieldValue === value;
-      case 'notEquals':
-        return fieldValue !== value;
-      case 'in':
-        return Array.isArray(value) && value.includes(fieldValue);
-      case 'notIn':
-        return Array.isArray(value) && !value.includes(fieldValue);
-      case 'contains':
-        return typeof fieldValue === 'string' && fieldValue.includes(value);
-      case 'startsWith':
-        return typeof fieldValue === 'string' && fieldValue.startsWith(value);
-      case 'endsWith':
-        return typeof fieldValue === 'string' && fieldValue.endsWith(value);
-      default:
-        return false;
+  private checkCondition(
+    condition: PermissionCondition,
+    context: Record<string, any>,
+    resourceId?: string
+  ): boolean {
+    if (typeof condition === 'boolean') {
+      return condition;
     }
+
+    if (typeof condition === 'function') {
+      return condition(context, resourceId);
+    }
+
+    // Check if it's an object with a 'condition' property
+    if (condition && 
+        typeof condition === 'object' && 
+        condition !== null && 
+        'condition' in condition) {
+      const conditionObj = condition as { condition: PermissionCondition };
+      return this.checkCondition(conditionObj.condition, context, resourceId);
+    }
+
+    return false;
+  }
+
+  /**
+   * Evaluate a permission condition against the current context
+   */
+  private evaluateCondition(condition: PermissionCondition, context: Record<string, any>): boolean {
+    try {
+      const { field, operator, value } = condition;
+      const fieldValue = this.getNestedField(context, field);
+      
+      // Handle different operators safely
+      switch (operator) {
+        case 'equals':
+          return fieldValue === value;
+        case 'notEquals':
+          return fieldValue !== value;
+        case 'in':
+          return Array.isArray(value) && value.includes(fieldValue);
+        case 'notIn':
+          return Array.isArray(value) && !value.includes(fieldValue);
+        case 'contains':
+          return typeof fieldValue === 'string' && 
+                 typeof value === 'string' && 
+                 fieldValue.includes(value);
+        case 'startsWith':
+          return typeof fieldValue === 'string' && 
+                 typeof value === 'string' && 
+                 fieldValue.startsWith(value);
+        case 'endsWith':
+          return typeof fieldValue === 'string' && 
+                 typeof value === 'string' && 
+                 fieldValue.endsWith(value);
+        case 'deny':
+          // Special case for deny conditions
+          return value === true;
+        default:
+          console.warn(`Unknown operator: ${String(operator)}`);
+          return false;
+      }
+    } catch (error) {
+      console.error('Error evaluating condition:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Convert object keys to snake_case
+   * Handles objects, arrays, and primitive values
+   */
+  private toSnakeCase<T>(value: T): T {
+    // Handle null or undefined
+    if (value === null || value === undefined) {
+      return value;
+    }
+
+    // Handle arrays
+    if (Array.isArray(value)) {
+      return (value as any[]).map(v => this.toSnakeCase(v)) as unknown as T;
+    }
+
+    // Handle Date objects
+    if (value instanceof Date) {
+      return value;
+    }
+
+    // Handle plain objects
+    if (typeof value === 'object') {
+      return Object.entries(value as Record<string, unknown>).reduce((acc, [key, val]) => {
+        // Skip non-string keys
+        if (typeof key !== 'string') {
+          (acc as any)[key] = val;
+          return acc;
+        }
+        
+        // Convert key to snake_case
+        const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        // Recursively process nested objects/arrays
+        (acc as any)[snakeKey] = this.toSnakeCase(val);
+        return acc;
+      }, {} as Record<string, unknown>) as unknown as T;
+    }
+
+    // Return primitives as-is
+    return value;
   }
 
   /**

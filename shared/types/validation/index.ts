@@ -1,8 +1,8 @@
 // Base validators
-export * from './base.validator';
+export * from './base.validator.js';
 
 // Decorators
-export * from './decorators';
+export * from './decorators.js';
 
 // Validation groups
 export const VALIDATION_GROUPS = {

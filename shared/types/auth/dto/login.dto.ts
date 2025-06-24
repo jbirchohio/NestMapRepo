@@ -1,14 +1,14 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
-import { IsEmailValid } from '../../validation';
+import { IsEmailValid } from '../../validation/index.js';
 
 export class LoginDto {
   @IsEmailValid()
-  @IsNotEmpty({ message: 'Email is required' })
-  email: string;
+  @IsNotEmpty()
+  email!: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'Password is required' })
-  password: string;
+  @IsNotEmpty()
+  password!: string;
 
   @IsOptional()
   rememberMe?: boolean;

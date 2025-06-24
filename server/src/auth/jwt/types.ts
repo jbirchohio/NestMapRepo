@@ -1,38 +1,45 @@
-import { JwtPayload as BaseJwtPayload } from 'jsonwebtoken';
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
-export type TokenType = 'access' | 'refresh' | 'password_reset';
-// Extend JwtPayload but override the role to be required
-interface CustomJwtPayload extends Omit<BaseJwtPayload, 'role'> {
-    role: UserRole;
-}
-export interface TokenPayload extends CustomJwtPayload {
-    sub: string;
-    email: string;
-    jti: string;
-    type: TokenType;
-    organizationId?: string;
-}
-export interface TokenVerificationResult<T = TokenPayload> {
-    valid: boolean;
-    payload?: T;
-    error?: string;
-    expired?: boolean;
-}
-export interface TokenPair {
-    accessToken: string;
-    refreshToken: string;
-}
+import type { 
+  JwtPayload, 
+  AccessTokenPayload, 
+  RefreshTokenPayload, 
+  PasswordResetTokenPayload, 
+  EmailVerificationTokenPayload,
+  TokenType,
+  TokenPayload,
+  TokenVerificationResult as SharedTokenVerificationResult
+} from '../../../../shared/types/auth/jwt.js';
+import type { UserRole } from '../../../../shared/types/auth/permissions.js';
+
+// Re-export shared types
+export type { 
+  JwtPayload, 
+  AccessTokenPayload, 
+  RefreshTokenPayload, 
+  PasswordResetTokenPayload, 
+  EmailVerificationTokenPayload,
+  TokenType,
+  TokenPayload,
+  SharedTokenVerificationResult as TokenVerificationResult
+};
+
+// Re-export UserRole as type-only
+export type { UserRole };
+
 export interface JwtConfig {
-    secret: string;
-    issuer: string;
-    audience: string;
-    accessExpiresIn: string | number;
-    refreshExpiresIn: string | number;
-    passwordResetExpiresIn: string | number;
+  secret: string;
+  issuer: string;
+  audience: string;
+  accessExpiresIn: string | number;
+  refreshExpiresIn: string | number;
+  passwordResetExpiresIn: string | number;
+  emailVerificationExpiresIn: string | number;
 }
-export interface AuthTokens {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    tokenType: string;
+
+export interface ExtendedAuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+  accessTokenExpiresAt: Date;
+  refreshTokenExpiresAt: Date;
 }
