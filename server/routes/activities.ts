@@ -4,7 +4,7 @@ import { getAuthContext, requireAuth } from '../utils/authContext.js';
 import { logUserActivity } from '../utils/activityLogger.js';
 import type { JWTUser } from '../utils/authContext.js';
 import { z } from 'zod';
-import type { Activity, ActivityType, ActivityStatus } from '../types/activity.js';
+import type { Activity, ActivityType, ActivityStatus } from '@shared/types/activity';
 import { createActivitySchema, updateActivitySchema } from '../types/activity.js';
 import activityService from '../services/activity.service.js';
 import { validateOrganizationAccess } from '../middleware/organization.js';
