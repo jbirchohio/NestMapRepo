@@ -1,7 +1,7 @@
 import type { Response, NextFunction, RequestHandler } from 'express';
 import type { AuthenticatedRequest } from '../../types/express-types';
 import type { IAuthService } from '../interfaces/auth.service.interface.js';
-import type { AuthResponse, LoginDto, UserResponse, RequestPasswordResetDto, ResetPasswordDto, UserRole } from '../dtos/auth.dto.js';
+import type { AuthResponse, LoginDto, UserResponse, RequestPasswordResetDto, ResetPasswordDto, UserRole } from '@shared/types/auth/dto';
 import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware.js';
 import { isErrorWithMessage } from '../../utils/error-utils.js';
 import type { Logger } from '@nestjs/common';
