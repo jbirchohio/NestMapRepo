@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from '../../express-augmentation
 import type { Logger } from '@nestjs/common';
 import type { ApiError, ErrorType } from '../types/index.js';
 import { createApiError } from '../types/index.js';
+import { AppErrorCode } from '@shared/types/error-codes.js';
 /**
  * Maps error types to HTTP status codes
  */
@@ -30,6 +31,7 @@ export const standardizedErrorHandler = (logger: Logger) => {
             success: false,
             error: {
                 type: ErrorType.INTERNAL_SERVER_ERROR,
+                code: AppErrorCode.INTERNAL_SERVER_ERROR,
                 message: 'An unexpected error occurred',
                 timestamp: new Date().toISOString(),
                 path: req.path,
@@ -46,6 +48,7 @@ export const standardizedErrorHandler = (logger: Logger) => {
             // Use type assertion with interface extension to handle optional properties
             interface ExtendedErrorResponse {
                 type: ErrorType;
+                code: AppErrorCode;
                 message: string;
                 timestamp: string;
                 path: string;
@@ -59,6 +62,7 @@ export const standardizedErrorHandler = (logger: Logger) => {
             }
             // Map error type to status code
             statusCode = errorTypeToStatusCode[apiError.type] || 500;
+            (errorResponse.error as ExtendedErrorResponse).code = apiError.code;
             // Log based on error severity
             if (statusCode >= 500) {
                 logger.error(`[${apiError.type}] ${req.method} ${req.path}: ${apiError.message}`, apiError.stack);
@@ -70,6 +74,7 @@ export const standardizedErrorHandler = (logger: Logger) => {
         else {
             // For standard errors, convert to internal server error
             errorResponse.error.message = error.message || 'An unexpected error occurred';
+            (errorResponse.error as ExtendedErrorResponse).code = AppErrorCode.INTERNAL_SERVER_ERROR;
             // Add stack trace in development
             if (process.env.NODE_ENV !== 'production' && error.stack) {
                 (errorResponse.error as ExtendedErrorResponse).stack = error.stack;
