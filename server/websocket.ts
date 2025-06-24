@@ -1,4 +1,4 @@
-import type { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import { type RawData } from 'ws';
 import type { Server } from 'http';
 import { parse } from 'url';

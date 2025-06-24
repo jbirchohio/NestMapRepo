@@ -1,4 +1,4 @@
-import { ISO8601DateTime } from './core/base';
+import type { ISO8601DateTime } from './core/base.js';
 
 export interface Airport {
   iataCode: string;

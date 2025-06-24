@@ -13,273 +13,96 @@ export * from './domain/user';
 export * from './domain/organization';
 export * from './flight';
 
+// Import types for reference
+import * as BaseTypes from './core/base';
+import * as AuthTypes from './auth';
+import * as UserTypes from './domain/user';
+import * as OrganizationTypes from './domain/organization';
+import * as FlightTypes from './flight';
+
 // Re-export everything under the SharedTypes namespace for backward compatibility
 declare global {
   namespace SharedTypes {
     // Core types
-    export import ID = import('./core/base').ID;
-    export import UUID = import('./core/base').UUID;
-    export import ISO8601DateTime = import('./core/base').ISO8601DateTime;
-    export import Email = import('./core/base').Email;
-    export import URL = import('./core/base').URL;
-    export import Nullable = import('./core/base').Nullable;
-    export import Optional = import('./core/base').Optional;
-    export import Timestamps = import('./core/base').Timestamps;
-    export import PaginationParams = import('./core/base').PaginationParams;
-    export import PaginatedResponse = import('./core/base').PaginatedResponse;
-    export import ApiResponse = import('./core/base').ApiResponse;
-    export import ApiError = import('./core/base').ApiError;
+    export type ID = BaseTypes.ID;
+    export type UUID = BaseTypes.UUID;
+    export type ISO8601DateTime = BaseTypes.ISO8601DateTime;
+    export type Email = BaseTypes.Email;
+    export type URL = BaseTypes.URL;
+    export type Nullable<T> = BaseTypes.Nullable<T>;
+    export type Optional<T> = BaseTypes.Optional<T>;
+    export type Timestamps = BaseTypes.Timestamps;
+    export type PaginationParams = BaseTypes.PaginationParams;
+    export type PaginatedResponse<T> = BaseTypes.PaginatedResponse<T>;
+    export type ApiResponse<T = unknown> = BaseTypes.ApiResponse<T>;
+    export type ApiError = BaseTypes.ApiError;
     
     // Auth types
-    export import UserRole = import('./auth').UserRole;
-    export import Permission = import('./auth').Permission;
-    export import TokenType = import('./auth').TokenType;
-    export import JwtPayload = import('./auth').JwtPayload;
-    export import AuthTokens = import('./auth').AuthTokens;
-    export import AuthResponse = import('./auth').AuthResponse;
+    export type UserRole = AuthTypes.UserRole;
+    export type Permission = AuthTypes.Permission;
+    export type TokenType = AuthTypes.TokenType;
+    export type JwtPayload = AuthTypes.JwtPayload;
+    export type AuthTokens = AuthTypes.AuthTokens;
+    export type AuthResponse = AuthTypes.AuthResponse;
     
     // User types
-    export import UserPreferences = import('./domain/user').UserPreferences;
-    export import UserStatus = import('./domain/user').UserStatus;
-    export import BaseUser = import('./domain/user').BaseUser;
-    export import UserResponse = import('./domain/user').UserResponse;
-    export import CreateUserDto = import('./domain/user').CreateUserDto;
-    export import UpdateUserDto = import('./domain/user').UpdateUserDto;
+    export type UserPreferences = UserTypes.UserPreferences;
+    export type UserStatus = UserTypes.UserStatus;
+    export type BaseUser = UserTypes.BaseUser;
+    export type User = UserTypes.User;
+    export type UserResponse = UserTypes.UserResponse;
+    export type CreateUserDto = UserTypes.CreateUserDto;
+    export type UpdateUserDto = UserTypes.UpdateUserDto;
     
     // Organization types
-    export import OrganizationPlan = import('./domain/organization').OrganizationPlan;
-    export import OrganizationSettings = import('./domain/organization').OrganizationSettings;
+    export type OrganizationPlan = OrganizationTypes.OrganizationPlan;
+    export type OrganizationSettings = OrganizationTypes.OrganizationSettings;
+    export type Organization = OrganizationTypes.Organization;
+    export type OrganizationMember = OrganizationTypes.OrganizationMember;
+    export type OrganizationRole = OrganizationTypes.OrganizationRole;
+    export type CreateOrganizationDto = OrganizationTypes.CreateOrganizationDto;
+    export type UpdateOrganizationDto = OrganizationTypes.UpdateOrganizationDto;
+    export type OrganizationMemberDto = OrganizationTypes.OrganizationMemberDto;
+    export type OrganizationResponse = OrganizationTypes.OrganizationResponse;
+    export type OrganizationListResponse = OrganizationTypes.OrganizationListResponse;
+    export type OrganizationMemberListResponse = OrganizationTypes.OrganizationMemberListResponse;
     
     // Flight types
-    export import Airport = import('./flight').Airport;
-    export import FlightSegment = import('./flight').FlightSegment;
-    export import FlightPrice = import('./flight').FlightPrice;
-    export import Flight = import('./flight').Flight;
-    export import FlightSearchParams = import('./flight').FlightSearchParams;
-    export import FlightSearchResponse = import('./flight').FlightSearchResponse;
-    export import Organization = import('./domain/organization').Organization;
-    export import OrganizationMember = import('./domain/organization').OrganizationMember;
-    export import OrganizationRole = import('./domain/organization').OrganizationRole;
-    export import CreateOrganizationDto = import('./domain/organization').CreateOrganizationDto;
-    export import UpdateOrganizationDto = import('./domain/organization').UpdateOrganizationDto;
-    export import OrganizationMemberDto = import('./domain/organization').OrganizationMemberDto;
-    export import OrganizationResponse = import('./domain/organization').OrganizationResponse;
-    export import OrganizationListResponse = import('./domain/organization').OrganizationListResponse;
-    export import OrganizationMemberListResponse = import('./domain/organization').OrganizationMemberListResponse;
-  }
-  
-  // For global access to SharedTypes
-  // eslint-disable-next-line no-var
-  var SharedTypes: typeof SharedTypes;
-}
-    preferences?: UserPreferences;
+    export type Airport = FlightTypes.Airport;
+    export type FlightSegment = FlightTypes.FlightSegment;
+    export type FlightPrice = FlightTypes.FlightPrice;
+    export type Flight = FlightTypes.Flight;
+    export type FlightSearchParams = FlightTypes.FlightSearchParams;
+    export type FlightSearchResponse = FlightTypes.FlightSearchResponse;
     
-    // Authentication related fields (server-only, excluded from client)
-    passwordHash?: never;
-    emailVerificationToken?: never;
-    passwordResetToken?: never;
-    resetToken?: never;
-    resetTokenExpires?: never;
-    mfaSecret?: never;
-  }
-  
-  /** User data returned by the API */
-  type UserResponse = Omit<User, 
-    'passwordHash' | 'emailVerificationToken' | 'passwordResetToken' | 
-    'resetToken' | 'resetTokenExpires' | 'mfaSecret'
-  >;
-  
-  /** User data for creating a new user */
-  interface CreateUserDto {
-    email: Email;
-    password: string;
-    firstName: string;
-    lastName: string;
-    role?: UserRole;
-    organizationId?: UUID;
-  }
-  
-  /** User data for updates */
-  type UpdateUserDto = Partial<Omit<CreateUserDto, 'email' | 'password'>>;
-  
-  // ======================
-  // Organization Types
-  // ======================
-  
-  /** Organization plans */
-  type OrganizationPlan = 'free' | 'pro' | 'enterprise';
-  
-  /** Organization settings */
-  interface OrganizationSettings {
-    requireEmailVerification?: boolean;
-    allowSignups?: boolean;
-    maxUsers?: number;
-    branding?: {
-      logoUrl?: string;
-      primaryColor?: string;
-      secondaryColor?: string;
+    // Trip types
+    export type Trip = {
+      id: UUID;
+      name: string;
+      description?: string | null;
+      startDate: ISO8601DateTime;
+      endDate: ISO8601DateTime;
+      createdById: UUID;
+      organizationId: UUID;
+      isArchived: boolean;
+      coverImageUrl?: URL | null;
     };
-  }
-  
-  /** Organization type */
-  interface Organization extends Timestamps {
-    id: UUID;
-    name: string;
-    slug: string;
-    plan: OrganizationPlan;
-    settings: OrganizationSettings;
-    isActive: boolean;
-    ownerId: UUID;
-    billingEmail?: Email | null;
-    logoUrl?: URL | null;
-  }
-  
-  // ======================
-  // API Response Types
-  // ======================
-  
-  /** Standard API response */
-  interface ApiResponse<T = unknown> {
-    data: T;
-    message?: string;
-    meta?: {
-      total?: number;
-      page?: number;
-      pageSize?: number;
-      hasMore?: boolean;
+    
+    export type TripMemberRole = 'owner' | 'editor' | 'viewer';
+    
+    export type TripMember = {
+      id: UUID;
+      tripId: UUID;
+      userId: UUID;
+      role: TripMemberRole;
+      joinedAt: ISO8601DateTime;
     };
+    
+    // Utility Types
+    export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+    export type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
   }
   
-  /** API error response */
-  interface ApiError {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-    stack?: string;
-  }
-  
-  // ======================
-  // Utility Types
-  // ======================
-  
-  /** Make specific properties required */
-  type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
-  
-  /** Make specific properties optional */
-  type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-  
-  /** Pagination parameters */
-  interface PaginationParams {
-    page?: number;
-    pageSize?: number;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  }
-  
-  /** Paginated response */
-  interface PaginatedResponse<T> extends ApiResponse<T[]> {
-    meta: {
-      total: number;
-      page: number;
-      pageSize: number;
-      totalPages: number;
-      hasMore: boolean;
-    };
-  }
-
-  // Organization
-  type OrganizationPlan = 'free' | 'pro' | 'enterprise';
-  
-  interface Organization extends Timestamps {
-    id: UUID;
-    name: string;
-    slug: string;
-    plan: OrganizationPlan;
-    isActive: boolean;
-    billingEmail?: Email | null;
-    logoUrl?: URL | null;
-  }
-
-  // Trips
-  interface Trip extends Timestamps {
-    id: UUID;
-    name: string;
-    description?: string | null;
-    startDate: ISO8601DateTime;
-    endDate: ISO8601DateTime;
-    createdById: UUID;
-    organizationId: UUID;
-    isArchived: boolean;
-    coverImageUrl?: URL | null;
-  }
-
-  // Trip Members
-  type TripMemberRole = 'owner' | 'editor' | 'viewer';
-  
-  interface TripMember extends Timestamps {
-    id: UUID;
-    tripId: UUID;
-    userId: UUID;
-    role: TripMemberRole;
-    joinedAt: ISO8601DateTime;
-  }
-
-  // API Response Types
-  interface ApiResponse<T = unknown> {
-    data: T;
-    message?: string;
-    meta?: {
-      total?: number;
-      page?: number;
-      pageSize?: number;
-      hasMore?: boolean;
-    };
-  }
-
-  interface ApiError {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-    stack?: string;
-  }
-
-  // Authentication
-  interface AuthTokens {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    tokenType: string;
-  }
-
-  interface AuthResponse extends ApiResponse<{ user: User; tokens: AuthTokens }> {}
-  
-  // Utility Types
-  type Nullable<T> = T | null;
-  type Optional<T> = T | undefined;
-  type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
-  type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-  
-  // Pagination
-  interface PaginationParams {
-    page?: number;
-    pageSize?: number;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  }
-  
-  interface PaginatedResponse<T> extends ApiResponse<T[]> {
-    meta: {
-      total: number;
-      page: number;
-      pageSize: number;
-      totalPages: number;
-      hasMore: boolean;
-    };
-  }
-}
-
-// Global type augmentation
-declare global {
   // For Express Request type augmentation
   namespace Express {
     interface Request {

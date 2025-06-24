@@ -1,9 +1,9 @@
-import type { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Trip, User } from '../../../db/schema.js';
-import type { CorporateTripDto, TripService } from '../interfaces/trip.service.interface.ts';
-import type { TripRepository } from '../interfaces/trip.repository.interface.ts';
-import type { UnauthorizedError } from '../../common/errors.ts';
-import type { Inject } from '@nestjs/common';
+import type { CorporateTripDto, TripService } from '../interfaces/trip.service.interface.js';
+import type { TripRepository } from '../interfaces/trip.repository.interface.js';
+import { UnauthorizedError } from '../../common/errors.js';
+import { Inject } from '@nestjs/common';
 @Injectable()
 export class TripServiceImpl implements TripService {
     private readonly logger = new Logger(TripServiceImpl.name);

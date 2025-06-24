@@ -1,13 +1,21 @@
 import { useCallback, useMemo, useRef, useEffect } from 'react';
-import { debounce, throttle } from 'lodash';
+import { debounce, throttle, DebouncedFunc } from 'lodash';
+import React from 'react';
+
 /**
  * Memoize a component with React.memo and custom comparison function
  * @param Component The component to memoize
  * @param propsAreEqual Custom comparison function (optional)
  * @returns Memoized component
  */
-export function memo<T extends React.ComponentType<any>>(Component: T, propsAreEqual?: (prevProps: React.ComponentProps<T>, nextProps: React.ComponentProps<T>) => boolean) {
-    return React.memo(Component, propsAreEqual);
+export function memo<T extends React.ComponentType<any>>(
+  Component: T,
+  propsAreEqual?: (
+    prevProps: Readonly<React.ComponentProps<T>>,
+    nextProps: Readonly<React.ComponentProps<T>>
+  ) => boolean
+): React.MemoExoticComponent<T> {
+  return React.memo(Component, propsAreEqual) as React.MemoExoticComponent<T>;
 }
 /**
  * Custom hook that returns a memoized callback that only changes if one of the dependencies has changed
@@ -34,13 +42,26 @@ export function useMemoizedValue<T>(factory: () => T, dependencies: any[] = []):
  * @param dependencies Array of dependencies
  * @returns Debounced callback
  */
-export function useDebounce<T extends (...args: any[]) => any>(callback: T, delay: number, dependencies: any[] = []): T {
-    const callbackRef = useRef(callback);
-    // Update callback ref if callback changes
-    useEffect(() => {
-        callbackRef.current = callback;
-    }, [callback]);
-    return useMemo(() => debounce((...args: Parameters<T>) => callbackRef.current(...args), delay, { leading: true, trailing: true }), [delay, ...dependencies]) as T;
+export function useDebounce<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number,
+  dependencies: any[] = []
+): DebouncedFunc<T> {
+  const callbackRef = useRef(callback);
+  
+  // Update callback ref if callback changes
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+  
+  return useMemo(
+    () => debounce(
+      ((...args: Parameters<T>) => callbackRef.current(...args)) as T,
+      delay,
+      { leading: true, trailing: true }
+    ),
+    [delay, ...dependencies]
+  );
 }
 /**
  * Custom hook that returns a throttled version of the callback
@@ -49,13 +70,26 @@ export function useDebounce<T extends (...args: any[]) => any>(callback: T, dela
  * @param dependencies Array of dependencies
  * @returns Throttled callback
  */
-export function useThrottle<T extends (...args: any[]) => any>(callback: T, limit: number, dependencies: any[] = []): T {
-    const callbackRef = useRef(callback);
-    // Update callback ref if callback changes
-    useEffect(() => {
-        callbackRef.current = callback;
-    }, [callback]);
-    return useMemo(() => throttle((...args: Parameters<T>) => callbackRef.current(...args), limit, { leading: true, trailing: true }), [limit, ...dependencies]) as T;
+export function useThrottle<T extends (...args: any[]) => any>(
+  callback: T,
+  limit: number,
+  dependencies: any[] = []
+): DebouncedFunc<T> {
+  const callbackRef = useRef(callback);
+  
+  // Update callback ref if callback changes
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+  
+  return useMemo(
+    () => throttle(
+      ((...args: Parameters<T>) => callbackRef.current(...args)) as T,
+      limit,
+      { leading: true, trailing: true }
+    ),
+    [limit, ...dependencies]
+  );
 }
 /**
  * Custom hook that tracks component render count for debugging

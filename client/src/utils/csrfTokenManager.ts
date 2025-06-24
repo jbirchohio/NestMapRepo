@@ -1,5 +1,5 @@
-import { SecureCookie } from './SecureCookie.ts';
-import { handleError } from './errorHandler.ts';
+import { SecureCookie } from './SecureCookie';
+import { handleError } from './errorHandler';
 export interface CSRFTokenConfig {
     expiryTime: number; // in milliseconds
     refreshInterval: number; // in milliseconds
@@ -26,16 +26,36 @@ export class CSRFTokenManager {
     }
     private loadToken(): void {
         try {
-            this.csrfToken = SecureCookie.get('csrf_token');
-            if (this.csrfToken) {
-                const decoded = JSON.parse(atob(this.csrfToken.split('.')[1]));
-                if (Date.now() - decoded.timestamp > this.config.expiryTime) {
+            const token = SecureCookie.get('csrf_token');
+            if (!token) {
+                this.csrfToken = null;
+                return;
+            }
+
+            const tokenParts = token.split('.');
+            if (tokenParts.length < 2 || !tokenParts[1]) {
+                this.csrfToken = null;
+                return;
+            }
+
+            const encodedPayload = tokenParts[1];
+            try {
+                const jsonPayload = atob(encodedPayload);
+                const decoded = JSON.parse(jsonPayload) as { timestamp?: number };
+                
+                if (decoded?.timestamp && 
+                    typeof decoded.timestamp === 'number' && 
+                    Date.now() - decoded.timestamp <= this.config.expiryTime) {
+                    this.csrfToken = token;
+                } else {
                     this.csrfToken = null;
                 }
+            } catch (decodeError) {
+                handleError(decodeError instanceof Error ? decodeError : new Error(String(decodeError)));
+                this.csrfToken = null;
             }
-        }
-        catch (error) {
-            handleError(error);
+        } catch (error) {
+            handleError(error instanceof Error ? error : new Error(String(error)));
             this.csrfToken = null;
         }
     }
@@ -67,7 +87,7 @@ export class CSRFTokenManager {
             this.csrfToken = newToken;
         }
         catch (error) {
-            handleError(error);
+            handleError(error instanceof Error ? error : new Error(String(error)));
             throw new Error('Failed to refresh CSRF token');
         }
     }
@@ -78,13 +98,25 @@ export class CSRFTokenManager {
         return this.csrfToken;
     }
     public isTokenExpired(): boolean {
-        if (!this.csrfToken)
+        if (!this.csrfToken) {
             return true;
-        try {
-            const decoded = JSON.parse(atob(this.csrfToken.split('.')[1]));
-            return Date.now() - decoded.timestamp > this.config.expiryTime;
         }
-        catch {
+        
+        try {
+            const tokenParts = this.csrfToken.split('.');
+            if (tokenParts.length < 2 || !tokenParts[1]) {
+                return true;
+            }
+            
+            const encodedPayload = tokenParts[1];
+            const jsonPayload = atob(encodedPayload);
+            const decoded = JSON.parse(jsonPayload);
+            
+            return !decoded || 
+                   typeof decoded !== 'object' ||
+                   typeof decoded.timestamp !== 'number' || 
+                   Date.now() - decoded.timestamp > this.config.expiryTime;
+        } catch {
             return true;
         }
     }

@@ -1,4 +1,3 @@
-import { handleError } from './errorHandler.ts';
 export interface PasswordValidationResult {
     isValid: boolean;
     errors: string[];
@@ -69,9 +68,9 @@ export const validatePassword = (password: string): PasswordValidationResult => 
 const isSequential = (str: string): boolean => {
     const chars = str.split('');
     for (let i = 0; i < chars.length - 1; i++) {
-        const currentCharCode = chars[i].charCodeAt(0);
-        const nextCharCode = chars[i + 1].charCodeAt(0);
-        if (Math.abs(nextCharCode - currentCharCode) === 1) {
+        const currentCharCode = chars[i]?.charCodeAt(0);
+        const nextCharCode = chars[i + 1]?.charCodeAt(0);
+        if (currentCharCode && nextCharCode && Math.abs(nextCharCode - currentCharCode) === 1) {
             return true;
         }
     }

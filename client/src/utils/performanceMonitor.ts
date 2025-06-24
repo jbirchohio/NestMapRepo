@@ -1,8 +1,8 @@
 import { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { ErrorLogger } from './errorLogger.ts';
-import { SessionSecurity } from './sessionSecurity.ts';
-import { SecureCookie } from './SecureCookie.ts';
-import apiClient from '../services/api/apiClient.ts';
+import { ErrorLogger } from './errorLogger';
+import { SessionSecurity } from './sessionSecurity';
+import { SecureCookie } from './SecureCookie';
+import apiClient from '../services/api/apiClient';
 export interface PerformanceMetrics {
     timestamp: string;
     requestTime: number;

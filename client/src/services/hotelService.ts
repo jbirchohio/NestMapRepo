@@ -1,4 +1,4 @@
-import { apiClient } from './api/apiClient';
+import { ApiClient } from './api/apiClient';
 import { Hotel, HotelSearchParams, RoomType } from '@/components/booking/types';
 
 interface HotelSearchResponse {
@@ -23,7 +23,7 @@ export const hotelService = {
    */
   async searchHotels(params: HotelSearchParams): Promise<Hotel[]> {
     try {
-      const response = await apiClient.post<HotelSearchResponse>('/hotels/search', params);
+      const response = await ApiClient.post<HotelSearchResponse>('/hotels/search', params);
       return response.data.data;
     } catch (error) {
       console.error('Error searching hotels:', error);
@@ -36,7 +36,7 @@ export const hotelService = {
    */
   async getHotelById(hotelId: string): Promise<Hotel> {
     try {
-      const response = await apiClient.get<{ data: Hotel }>(`/hotels/${hotelId}`);
+      const response = await ApiClient.get<{ data: Hotel }>(`/hotels/${hotelId}`);
       return response.data.data;
     } catch (error) {
       console.error(`Error fetching hotel ${hotelId}:`, error);
@@ -54,7 +54,7 @@ export const hotelService = {
     guests: number
   ): Promise<RoomType[]> {
     try {
-      const response = await apiClient.get<{ data: RoomType[] }>(
+      const response = await ApiClient.get<{ data: RoomType[] }>(
         `/hotels/${hotelId}/rooms`,
         {
           params: { checkIn, checkOut, guests },
@@ -79,7 +79,7 @@ export const hotelService = {
     travelerInfo: any // TODO: Define proper type
   ): Promise<{ bookingId: string; confirmationNumber: string }> {
     try {
-      const response = await apiClient.post<{
+      const response = await ApiClient.post<{
         data: { bookingId: string; confirmationNumber: string };
       }>('/bookings', {
         hotelId,
@@ -101,7 +101,7 @@ export const hotelService = {
    */
   async getBookingDetails(bookingId: string) {
     try {
-      const response = await apiClient.get(`/bookings/${bookingId}`);
+      const response = await ApiClient.get(`/bookings/${bookingId}`);
       return response.data.data;
     } catch (error) {
       console.error(`Error fetching booking ${bookingId}:`, error);

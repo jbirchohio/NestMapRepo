@@ -1,4 +1,4 @@
-import type { Redis } from 'ioredis';
+import { Redis } from 'ioredis';
 // Create Redis client
 export const redisClient = new Redis({
     host: process.env.REDIS_HOST || 'localhost',

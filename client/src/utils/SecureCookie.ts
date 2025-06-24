@@ -27,7 +27,8 @@ export class SecureCookie {
     }
     static getAll(): Record<string, string> {
         const cookies = document.cookie;
-        return parse(cookies);
+        // Using type assertion since we know cookie values are always strings when they exist
+        return parse(cookies) as Record<string, string>;
     }
     static clearAll(): void {
         const cookies = this.getAll();

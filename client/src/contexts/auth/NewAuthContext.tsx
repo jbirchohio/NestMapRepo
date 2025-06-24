@@ -4,34 +4,31 @@ import { useToast } from '@/components/ui/use-toast';
 import { authService } from '@/services/authService';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionLockout } from '@/utils/sessionLockout';
-import type {
-  UserResponse,
-  LoginDto,
-  RegisterDto,
-  AuthError,
-  Permission
-} from '@shared/types/auth/dto';
-import type { JwtPayload } from '@shared/types/auth';
+import type { UserResponse, RegisterDto, LoginDto } from '@shared/types/auth/dto';
+import type { JwtPayload } from '@shared/types/auth/jwt';
+import type { AuthError, Permission, AuthUser, AuthTokens } from '@shared/types/auth/auth.types';
 
 // Use the shared JwtPayload type which already includes standard claims
 // and extend it with any custom claims if needed
 type ExtendedJwtPayload = JwtPayload & {
   permissions?: string[];
   tenantId?: string;
+  email?: string;
+  role?: string;
+  organization_id?: string | null;
 };
 
 // Constants
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-const SESSION_WARNING_THRESHOLD = 5 * 60 * 1000; // 5 minutes before session expires
 const TOKEN_REFRESH_MARGIN = 60 * 1000; // 1 minute before token expires
 
 // Context type
 export interface AuthContextType {
-  user: UserResponse | null;
+  user: AuthUser | null;
   loading: boolean;
   authReady: boolean;
   error: AuthError | null;
-  signIn: (email: string, password: string, tenantId: string) => Promise<void>;
+  signIn: (email: string, password: string, tenantId: string) => Promise<AuthUser | undefined>;
   signUp: (data: RegisterDto) => Promise<void>;
   signOut: () => Promise<void>;
   refreshToken: () => Promise<boolean>;
@@ -53,34 +50,65 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
+// Get client IP from request or context
+const getClientIp = (): string => {
+  // In a real app, you would get this from the request or a service
+  // For now, we'll use a dummy value
+  return '127.0.0.1';
+};
+
 // Provider component
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const tokenManager = useMemo(() => TokenManager.getInstance(), []);
-  const sessionLockout = useMemo(() => SessionSecurity.getInstance(), []);
+  const tokenManager = useMemo(() => TokenManager.getInstance(navigate), [navigate]);
+  const sessionLockout = useMemo(() => SessionLockout.getInstance(), []);
 
-  const [user, setUser] = useState<UserResponse | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
   const [sessionExpiresAt, setSessionExpiresAt] = useState<Date | null>(null);
 
   // Check if user is authenticated
-  const isAuthenticated = useMemo(() => {
-    return !!user && !!tokenManager.getAccessToken();
+  const isUserAuthenticated = useMemo(() => {
+    return !!user && tokenManager.hasValidToken();
   }, [user, tokenManager]);
 
   // Check if user has a specific permission
-  const hasPermission = useCallback((permission: Permission | string): boolean => {
+  const checkUserPermission = useCallback((permission: Permission | string): boolean => {
     if (!user?.permissions) return false;
-    return user.permissions.includes(permission as string);
+    const permissionStr = typeof permission === 'string' ? permission : `${permission.resource}:${permission.action}`;
+    return user.permissions.includes(permissionStr);
   }, [user]);
 
   // Handle successful authentication
-  const handleAuthSuccess = useCallback((userData: UserResponse) => {
-    setUser(userData);
+  const handleAuthSuccess = useCallback((tokens: AuthTokens, userData: UserResponse): AuthUser => {
+    // Set tokens in the token manager
+    tokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
+    
+    // Convert UserResponse to AuthUser
+    const authUser: AuthUser = {
+      ...userData,
+      permissions: [], // Permissions will be populated from the token
+      // Map UserResponse properties to AuthUser, handling both snake_case and camelCase
+      firstName: (userData as any).first_name || userData.firstName || null,
+      lastName: (userData as any).last_name || userData.lastName || null,
+      emailVerified: (userData as any).email_verified ?? userData.emailVerified ?? false,
+      createdAt: (userData as any).created_at || userData.createdAt,
+      updatedAt: (userData as any).updated_at || userData.updatedAt,
+      lastLoginAt: (userData as any).last_login_at || userData.lastLoginAt || null,
+      displayName: userData.displayName || 
+                 (userData as any).display_name || 
+                 `${(userData as any).first_name || userData.firstName || ''} ${(userData as any).last_name || userData.lastName || ''}`.trim() || 
+                 userData.email || '',
+      avatarUrl: (userData as any).avatar_url || userData.avatarUrl || null,
+      tenantId: (userData as any).tenant_id || (userData as any).tenantId || ''
+    };
+    
+    setUser(authUser);
     setError(null);
+    setAuthReady(true);
     
     // Set session expiration
     const expiresAt = new Date();
@@ -88,11 +116,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSessionExpiresAt(expiresAt);
     
     // Reset session lockout on successful auth
-    sessionLockout.reset();
-  }, [sessionLockout]);
+    const clientIp = getClientIp();
+    sessionLockout.unlockAccount(clientIp);
+    
+    return authUser;
+  }, [sessionLockout, tokenManager]);
 
   // Handle authentication errors
-  const handleAuthError = useCallback((error: unknown) => {
+  const handleAuthError = useCallback((error: unknown, email: string = ''): AuthError => {
+    // Increment failed attempts on authentication error
+    const clientIp = getClientIp();
+    sessionLockout.recordFailedAttempt(clientIp, email);
     console.error('Authentication error:', error);
     
     let errorMessage = 'An authentication error occurred';
@@ -100,113 +134,87 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       errorMessage = error.message;
     }
     
-    setError({
+    const authError: AuthError = {
       message: errorMessage,
       code: 'AUTH_ERROR',
       status: 401
-    });
-    
-    // Show error toast
-    toast({
-      title: 'Authentication Error',
-      description: errorMessage,
-      variant: 'destructive',
-    });
-  }, [toast]);
-  const [sessionExpiresAt, setSessionExpiresAt] = useState<Date | null>(null);
-  
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const tokenManager = useMemo(() => new TokenManager(), []);
-  const sessionLockout = useMemo(() => new SessionLockout(), []);
-
-  // Check if user is authenticated
-  const isAuthenticated = useCallback((): boolean => {
-    const tokens = tokenManager.getTokens();
-    if (!tokens?.accessToken) return false;
-    
-    try {
-      const decoded = jwtDecode<JwtPayload>(tokens.accessToken);
-      return decoded.exp ? decoded.exp * 1000 > Date.now() : false;
-    } catch (error) {
-      return false;
-    }
-  }, [tokenManager]);
-
-  // Check if user has specific permission
-  const hasPermission = useCallback((permission: Permission | string): boolean => {
-    if (!user) return false;
-    
-    // Super admin has all permissions
-    if (user.role === 'super_admin') return true;
-    
-    // Check direct permissions
-    const permissionStr = typeof permission === 'string' ? permission : `${permission.resource}:${permission.action}`;
-    return user.permissions?.includes(permissionStr) || false;
-  }, [user]);
-
-  // Handle successful authentication
-  const handleAuthSuccess = useCallback((tokens: AuthTokens, userData: User) => {
-    tokenManager.setTokens(tokens);
-    setUser(userData);
-    
-    // Set session expiration
-    if (tokens.expires_in) {
-      const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
-      setSessionExpiresAt(expiresAt);
-    }
-    
-    setError(null);
-    setAuthReady(true);
-    setLoading(false);
-  }, [tokenManager]);
-
-  // Handle authentication errors
-  const handleAuthError = useCallback((error: any) => {
-    let authError: AuthError;
-    
-    if (error instanceof AuthError) {
-      authError = error;
-    } else {
-      authError = new AuthError(
-        AuthErrorCode.AUTHENTICATION_FAILED,
-        error?.message || 'Authentication failed'
-      );
-    }
+    };
     
     setError(authError);
-    setLoading(false);
     
     // Show error toast
     toast({
       title: 'Authentication Error',
-      description: authError.message,
+      children: errorMessage,
       variant: 'destructive',
     });
+    
+    return authError;
+  }, [toast, sessionLockout]);
 
   // Sign in with email and password
-  const signIn = useCallback(async (email: string, password: string, tenantId: string) => {
+  const signIn = useCallback(async (email: string, password: string): Promise<AuthUser | undefined> => {
+    // Get client IP for session lockout
+    const currentClientIp = getClientIp();
+    
     try {
       setLoading(true);
       
       // Check session lockout
-      if (sessionLockout.isLockedOut()) {
-        const timeLeft = sessionLockout.getTimeUntilUnlock();
-        throw new Error(`Too many attempts. Please try again in ${Math.ceil(timeLeft / 1000)} seconds.`);
+      const lockoutStatus = sessionLockout.getLockoutStatus(currentClientIp);
+      if (lockoutStatus.isLocked) {
+        throw new Error(`Too many attempts. Please try again in ${Math.ceil(lockoutStatus.remainingTime / 1000)} seconds.`);
       }
       
-      const user = await authService.login({ email, password, tenantId });
+      // Login with email and password
+      const loginDto: LoginDto = { 
+        email, 
+        password,
+        // Add any additional optional fields if needed
+        // rememberMe: true,
+        // deviceId: 'browser-session' // Uncomment and set a device ID if needed
+      };
       
-      // Handle successful auth
-      handleAuthSuccess(user);
+      // Call the auth service to login
+      const authUser = await authService.login(loginDto);
+      
+      // Create a properly typed AuthUser object
+      const user: AuthUser = {
+        ...authUser,
+        // Ensure all required properties are set with proper fallbacks
+        firstName: (authUser as any).firstName ?? (authUser as any).first_name ?? null,
+        lastName: (authUser as any).lastName ?? (authUser as any).last_name ?? null,
+        emailVerified: (authUser as any).emailVerified ?? (authUser as any).email_verified ?? false,
+        createdAt: (authUser as any).createdAt ?? (authUser as any).created_at ?? new Date().toISOString(),
+        updatedAt: (authUser as any).updatedAt ?? (authUser as any).updated_at ?? new Date().toISOString(),
+        lastLoginAt: (authUser as any).lastLoginAt ?? (authUser as any).last_login_at ?? null,
+        displayName: (authUser as any).displayName ?? (authUser as any).display_name ?? 
+                    ((`${(authUser as any).firstName || (authUser as any).first_name || ''} ${(authUser as any).lastName || (authUser as any).last_name || ''}`.trim() || email) as string),
+        permissions: (authUser as any).permissions ?? [],
+        tenantId: (authUser as any).tenantId ?? (authUser as any).tenant_id ?? ''
+      };
+      
+      // Update the UI state with the authenticated user
+      setUser(user);
+      setError(null);
+      setAuthReady(true);
+      
+      // Set session expiration
+      const expiresAt = new Date();
+      expiresAt.setTime(expiresAt.getTime() + SESSION_TIMEOUT);
+      setSessionExpiresAt(expiresAt);
+      
+      // Reset session lockout on successful auth
+      sessionLockout.unlockAccount(currentClientIp);
       
       // Redirect to dashboard or intended URL
       navigate('/dashboard');
       
-      // Show success message
+      // Show success message with safe property access
+      const displayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || email;
       toast({
         title: 'Login successful',
-        description: `Welcome back, ${user.firstName || 'User'}!`,
+        children: `Welcome back, ${displayName}!`,
       });
       
       return user;
@@ -219,26 +227,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [handleAuthError, handleAuthSuccess, navigate, sessionLockout, toast]);
 
   // Sign up new user
-  const signUp = useCallback(async (data: RegisterDto) => {
+  const signUp = useCallback(async (data: RegisterDto): Promise<void> => {
     try {
       setLoading(true);
-      const user = await authService.register(data);
       
-      // Handle successful registration
-      handleAuthSuccess(user);
+      // Call the auth service to register
+      const authUser = await authService.register(data);
+      
+      // Create a properly typed AuthUser object
+      const user: AuthUser = {
+        ...authUser,
+        // Ensure all required properties are set with proper fallbacks
+        firstName: (authUser as any).firstName ?? (authUser as any).first_name ?? null,
+        lastName: (authUser as any).lastName ?? (authUser as any).last_name ?? null,
+        emailVerified: (authUser as any).emailVerified ?? (authUser as any).email_verified ?? false,
+        createdAt: (authUser as any).createdAt ?? (authUser as any).created_at ?? new Date().toISOString(),
+        updatedAt: (authUser as any).updatedAt ?? (authUser as any).updated_at ?? new Date().toISOString(),
+        lastLoginAt: (authUser as any).lastLoginAt ?? (authUser as any).last_login_at ?? null,
+        displayName: (authUser as any).displayName ?? (authUser as any).display_name ?? 
+                    ((`${(authUser as any).firstName || (authUser as any).first_name || ''} ${(authUser as any).lastName || (authUser as any).last_name || ''}`.trim() || data.email) as string),
+        permissions: (authUser as any).permissions ?? [],
+        tenantId: (authUser as any).tenantId ?? (authUser as any).tenant_id ?? ''
+      };
+      
+      // Update the UI state with the authenticated user
+      setUser(user);
+      setError(null);
+      setAuthReady(true);
+      
+      // Set session expiration
+      const expiresAt = new Date();
+      expiresAt.setTime(expiresAt.getTime() + SESSION_TIMEOUT);
+      setSessionExpiresAt(expiresAt);
+      
+      // Reset session lockout on successful auth if needed
+      const clientIp = getClientIp();
+      sessionLockout.unlockAccount(clientIp);
       
       // Redirect to onboarding
       navigate('/onboarding');
       
       // Show success message
+      const displayName = user.displayName || data.email;
       toast({
         title: 'Registration successful',
-        description: 'Your account has been created!',
+        children: `Welcome, ${displayName}! Your account has been created.`,
       });
-      
-      return user;
     } catch (error) {
-      handleAuthError(error);
+      handleAuthError(error, data.email);
       throw error;
     } finally {
       setLoading(false);
@@ -255,11 +291,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Clear user data
       setUser(null);
       setSessionExpiresAt(null);
+      tokenManager.clearTokens();
       
       // Redirect to login
       navigate('/login');
     }
-  }, [navigate]);
+  }, [navigate, tokenManager]);
 
   // Refresh token
   const refreshToken = useCallback(async (): Promise<boolean> => {
@@ -281,20 +318,58 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Check auth state on mount
   useEffect(() => {
-    const checkAuth = async () => {
+    let isMounted = true;
+    let refreshTimer: NodeJS.Timeout | null = null;
+    
+    const checkAuth = async (): Promise<(() => void) | undefined> => {
       try {
-        const user = await authService.getCurrentUser();
+        const currentUser = await authService.getCurrentUser();
         
-        if (user) {
-          setUser(user);
+        if (!isMounted) return undefined;
+        
+        if (currentUser) {
+          // Convert UserResponse to AuthUser
+          // Handle both snake_case and camelCase properties from the backend
+          const authUser: AuthUser = {
+            // Copy all properties from currentUser (UserResponse)
+            ...currentUser,
+            // Add required AuthUser properties
+            permissions: [], // Will be populated from the token
+            tenantId: (currentUser as any).tenantId || (currentUser as any).tenant_id || '',
+            
+            // Map snake_case to camelCase with fallbacks
+            displayName: (currentUser as any).displayName || (currentUser as any).display_name || '',
+            emailVerified: (currentUser as any).emailVerified ?? (currentUser as any).email_verified ?? false,
+            firstName: (currentUser as any).firstName || (currentUser as any).first_name || null,
+            lastName: (currentUser as any).lastName || (currentUser as any).last_name || null,
+            createdAt: (currentUser as any).createdAt || (currentUser as any).created_at || new Date().toISOString(),
+            updatedAt: (currentUser as any).updatedAt || (currentUser as any).updated_at || new Date().toISOString(),
+            lastLoginAt: (currentUser as any).lastLoginAt || (currentUser as any).last_login_at || null,
+            avatarUrl: (currentUser as any).avatarUrl || (currentUser as any).avatar_url || null
+          };
+          
+          // Set displayName if not already set
+          if (!authUser.displayName) {
+            const firstName = (authUser as any).first_name || (authUser as any).firstName || '';
+            const lastName = (authUser as any).last_name || (authUser as any).lastName || '';
+            const fullName = `${firstName} ${lastName}`.trim();
+            authUser.displayName = fullName || (authUser as any).email || '';
+          }
+          
+          if (isMounted) {
+            setUser(authUser);
+          }
           
           // Get token expiration from TokenManager
           const token = tokenManager.getAccessToken();
           if (token) {
-            const decoded = tokenManager.decodeToken<ExtendedJwtPayload>(token);
+            const decoded = tokenManager.decodeToken(token) as ExtendedJwtPayload;
             if (decoded?.exp) {
               const expiresAt = new Date(decoded.exp * 1000);
-              setSessionExpiresAt(expiresAt);
+              
+              if (isMounted) {
+                setSessionExpiresAt(expiresAt);
+              }
               
               // Set up token refresh timer
               const now = new Date();
@@ -302,24 +377,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               const refreshTime = Math.max(0, timeUntilExpiry - TOKEN_REFRESH_MARGIN);
               
               if (refreshTime > 0) {
-                const refreshTimer = setTimeout(() => {
+                refreshTimer = setTimeout(() => {
                   refreshToken().catch(console.error);
                 }, refreshTime);
-                
-                return () => clearTimeout(refreshTimer);
               }
             }
           }
+          
+          // Return cleanup function
+          return () => {
+            if (refreshTimer) {
+              clearTimeout(refreshTimer);
+            }
+          };
         }
+        
+        return undefined;
       } catch (error) {
         console.error('Auth check failed:', error);
-        await signOut();
+        if (isMounted) {
+          await signOut();
+        }
+        return undefined;
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     
-    checkAuth();
+    // Call checkAuth and handle the cleanup
+    const cleanupPromise = checkAuth();
     
     // Set up session check interval
     const sessionCheckInterval = setInterval(() => {
@@ -329,33 +417,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }, 60000); // Check every minute
     
-    return () => clearInterval(sessionCheckInterval);
+    // Cleanup function for the effect
+    return () => {
+      isMounted = false;
+      clearInterval(sessionCheckInterval);
+      
+      // Clean up any pending refresh timer
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+      
+      // Clean up the checkAuth cleanup
+      cleanupPromise.then(cleanup => {
+        if (cleanup) cleanup();
+      }).catch(console.error);
+    };
   }, [navigate, refreshToken, sessionExpiresAt, signOut, tokenManager]);
 
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
     user,
     loading,
-    authReady: !loading,
+    authReady,
     error,
     signIn,
     signUp,
     signOut,
     refreshToken,
-    isAuthenticated,
-    hasPermission,
+    isAuthenticated: isUserAuthenticated,
+    hasPermission: checkUserPermission,
     isLoading: loading,
     sessionExpiresAt,
   }), [
     user,
     loading,
+    authReady,
     error,
     signIn,
     signUp,
     signOut,
     refreshToken,
-    isAuthenticated,
-    hasPermission,
+    isUserAuthenticated,
+    checkUserPermission,
     sessionExpiresAt,
   ]);
 

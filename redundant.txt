@@ -1,0 +1,41 @@
+# Redundant Type Definitions
+
+This file lists type definitions in the server directory that are redundant with shared types and should be removed in favor of importing from the shared module.
+
+## Server Types to Remove
+
+1. `c:\Users\Jonas\Desktop\NestMapRepo\server\src\types\auth-user.ts`:
+   - `AuthUser` interface - Should use `AuthUser` from `@shared/types/auth/user.js`
+   - `RequestUser` type - Should use appropriate type from shared
+   - `AuthenticatedRequest` interface - Should use `AuthenticatedRequest` from `@shared/types/auth/custom-request.js`
+
+2. `c:\Users\Jonas\Desktop\NestMapRepo\server\src\types\middleware.d.ts`:
+   - `AuthenticatedRequest` type - Should use `AuthenticatedRequest` from `@shared/types/auth/custom-request.js`
+   - `CustomRequest` interface - Should use appropriate type from shared if available
+
+3. `c:\Users\Jonas\Desktop\NestMapRepo\server\src\types\express.d.ts`:
+   - `AuthenticatedRequest` type - Should use `AuthenticatedRequest` from `@shared/types/auth/custom-request.js`
+
+4. `c:\Users\Jonas\Desktop\NestMapRepo\server\src\types\express\index.d.ts.bak`:
+   - `AuthenticatedRequest` interface - Should use `AuthenticatedRequest` from `@shared/types/auth/custom-request.js`
+
+5. `c:\Users\Jonas\Desktop\NestMapRepo\server\types\custom-request.d.ts`:
+   - `CustomRequestFields` interface - Should use from `@shared/types/auth/custom-request.js`
+   - `AuthenticatedRequest` type - Should use `AuthenticatedRequest` from `@shared/types/auth/custom-request.js`
+
+6. `c:\Users\Jonas\Desktop\NestMapRepo\server\types\express-request.d.ts`:
+   - Any custom request extensions - Should use shared types
+
+## Recommended Action Plan
+
+1. Remove the redundant type definitions from server files
+2. Replace with imports from shared modules
+3. Update any imports in the codebase that reference these local types
+4. Ensure consistent naming and structure across the application
+
+## Already Fixed
+
+- Updated `server/src/types/auth-user.ts` to import and re-export `UserRole` from `@shared/types/auth/permissions.js`
+- Updated `server/utils/request.ts` to import `UserRole` directly from `@shared/types/auth/permissions.js`
+- Updated `server/types/custom-request.d.ts` to import `AuthUser` from `@shared/types/auth/user.js`
+- Updated `server/types/express-request.d.ts` to import `AuthUser` from `@shared/types/auth/user.js`

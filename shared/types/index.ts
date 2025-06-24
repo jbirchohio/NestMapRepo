@@ -18,4 +18,10 @@ export * from './bookings.js';
 export * from './invoice.js';
 export * from './users.js';
 export * from './organizations.js';
-export * from './activity.js';
+// Import and re-export with renamed types to avoid conflicts
+export { 
+  activityStatuses, 
+  activityTypes, 
+  type ActivityStatus,
+  type ActivityType as ActivityTypeEnum 
+} from './activity.js';

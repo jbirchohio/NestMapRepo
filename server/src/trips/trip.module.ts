@@ -1,7 +1,7 @@
-import type { Module } from '@nestjs/common';
-import type { TripController } from './controllers/trip.controller.ts';
-import type { TripServiceProvider } from './trip.container.ts';
-import type { RepositoriesModule } from '../common/repositories/index.ts';
+import { Module } from '@nestjs/common';
+import { TripController } from './controllers/trip.controller.js';
+import { TripServiceProvider } from './trip.container.js';
+import { RepositoriesModule } from '../common/repositories/index.js';
 @Module({
     imports: [RepositoriesModule],
     controllers: [TripController],

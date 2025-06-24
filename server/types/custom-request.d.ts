@@ -1,5 +1,5 @@
 import { Request as ExpressRequest } from '../../express-augmentations';
-import type { AuthUser } from '../src/types/auth-user';
+import type { AuthUser } from '@shared/types/auth/user.js';
 
 declare module 'express-serve-static-core' {
   interface Request {

@@ -1,4 +1,4 @@
-import { SecureCookie } from './SecureCookie.ts';
+import { SecureCookie } from './SecureCookie';
 // Token revocation list
 const revokedTokens = new Set<string>();
 /**

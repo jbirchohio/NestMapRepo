@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { preloadRoute } from '@/config/routes';
+import { preloadRoute } from '@/config/routes.new';
 /**
  * Preloads route components when links are hovered or focused
  */

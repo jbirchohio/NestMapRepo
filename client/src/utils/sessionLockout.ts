@@ -1,5 +1,5 @@
-import { SecureCookie } from './SecureCookie.ts';
-import { SessionSecurity } from './sessionSecurity.ts';
+import { SecureCookie } from './SecureCookie';
+import { SessionSecurity } from './sessionSecurity';
 export interface SessionLockoutConfig {
     maxAttempts: number;
     lockoutDuration: number; // in milliseconds

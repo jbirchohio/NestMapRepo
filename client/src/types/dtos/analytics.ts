@@ -1,4 +1,4 @@
-import { Timestamp } from './common.ts';
+import { Timestamp } from './common';
 export interface AnalyticsTimeRange {
     start: Timestamp;
     end: Timestamp;

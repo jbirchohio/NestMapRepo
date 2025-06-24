@@ -1,28 +1,25 @@
-import type { Response, NextFunction } from '../../express-augmentations.ts';
-import { Request as ExpressRequest } from '../../express-augmentations.ts';
-import type { ErrorType } from '../types/index.js';
-import { createApiError } from '../types/index.js';
+import type { Response, NextFunction, Request } from 'express';
+import type { AuthenticatedRequest } from '@shared/types/auth/custom-request.js';
+import { AppErrorCode } from '@shared/types/error-codes.js';
+import { UserRole } from '@shared/types/auth/permissions.js';
+
+// Local error creation function
+const createApiError = (code: AppErrorCode, message: string) => {
+    const error = new Error(message) as any;
+    error.code = code;
+    return error;
+};
 import type { Logger } from '@nestjs/common';
-// Extend the Express Request type to include the user property
-interface AuthenticatedRequest extends ExpressRequest {
-    user?: {
-        id: string;
-        email: string;
-        role: string;
-        organizationId: string | null;
-        [key: string]: any;
-    };
-}
 /**
  * Middleware to ensure user is authenticated
  * @param logger Logger instance
  * @returns Express middleware function
  */
 export const requireAuth = (logger: Logger) => {
-    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
         if (!req.user) {
             logger.warn('Authentication required but no user found in request');
-            next(createApiError(ErrorType.UNAUTHORIZED, 'Authentication required'));
+            next(createApiError(AppErrorCode.UNAUTHORIZED, 'Authentication required'));
             return;
         }
         next();
@@ -37,7 +34,7 @@ export const requireOrgContext = (logger: Logger) => {
     return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
         if (!req.user?.organizationId) {
             logger.warn('Organization context required but not found in user context');
-            next(createApiError(ErrorType.BAD_REQUEST, 'Organization context required'));
+            next(createApiError(AppErrorCode.BAD_REQUEST, 'Organization context required'));
             return;
         }
         next();
@@ -52,12 +49,12 @@ export const requireAdmin = (logger: Logger) => {
     return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
         if (!req.user) {
             logger.warn('Authentication required but no user found in request');
-            next(createApiError(ErrorType.UNAUTHORIZED, 'Authentication required'));
+            next(createApiError(AppErrorCode.UNAUTHORIZED, 'Authentication required'));
             return;
         }
-        if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+        if (req.user.role !== UserRole.ADMIN && req.user.role !== UserRole.SUPER_ADMIN) {
             logger.warn(`User ${req.user.id} attempted to access admin-only resource`);
-            next(createApiError(ErrorType.FORBIDDEN, 'Admin access required'));
+            next(createApiError(AppErrorCode.FORBIDDEN, 'Admin access required'));
             return;
         }
         next();
@@ -72,12 +69,12 @@ export const requireSuperAdmin = (logger: Logger) => {
     return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
         if (!req.user) {
             logger.warn('Authentication required but no user found in request');
-            next(createApiError(ErrorType.UNAUTHORIZED, 'Authentication required'));
+            next(createApiError(AppErrorCode.UNAUTHORIZED, 'Authentication required'));
             return;
         }
-        if (req.user.role !== 'superadmin') {
+        if (req.user.role !== UserRole.SUPER_ADMIN) {
             logger.warn(`User ${req.user.id} attempted to access superadmin-only resource`);
-            next(createApiError(ErrorType.FORBIDDEN, 'Superadmin access required'));
+            next(createApiError(AppErrorCode.FORBIDDEN, 'Superadmin access required'));
             return;
         }
         next();
@@ -90,34 +87,34 @@ export const requireSuperAdmin = (logger: Logger) => {
  * @returns Express middleware function
  */
 export const requireOwnership = (getResourceOwnerId: (req: AuthenticatedRequest) => Promise<string | undefined>, logger: Logger) => {
-    return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+    return async (req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> => {
         try {
             if (!req.user) {
                 logger.warn('Authentication required but no user found in request');
-                next(createApiError(ErrorType.UNAUTHORIZED, 'Authentication required'));
+                next(createApiError(AppErrorCode.UNAUTHORIZED, 'Authentication required'));
                 return;
             }
-            // Skip ownership check for admins and superadmins
-            if (req.user.role === 'admin' || req.user.role === 'superadmin') {
+            // Skip ownership check for admins and super_admins
+            if (req.user.role === UserRole.ADMIN || req.user.role === UserRole.SUPER_ADMIN) {
                 next();
                 return;
             }
             const ownerId = await getResourceOwnerId(req);
             if (!ownerId) {
                 logger.warn('Resource owner ID could not be determined');
-                next(createApiError(ErrorType.NOT_FOUND, 'Resource not found'));
+                next(createApiError(AppErrorCode.NOT_FOUND, 'Resource not found'));
                 return;
             }
             if (ownerId !== req.user.id) {
                 logger.warn(`User ${req.user.id} attempted to access resource owned by ${ownerId}`);
-                next(createApiError(ErrorType.FORBIDDEN, 'You do not have permission to access this resource'));
+                next(createApiError(AppErrorCode.FORBIDDEN, 'You do not have permission to access this resource'));
                 return;
             }
             next();
         }
         catch (error) {
             logger.error('Error in ownership validation middleware', error);
-            next(createApiError(ErrorType.INTERNAL_SERVER_ERROR, 'An error occurred while validating resource ownership'));
+            next(createApiError(AppErrorCode.INTERNAL_SERVER_ERROR, 'An error occurred while validating resource ownership'));
         }
     };
 };

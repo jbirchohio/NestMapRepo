@@ -1,8 +1,7 @@
-import { handleError } from './errorHandler.ts';
-import { TokenManager } from './tokenManager.ts';
-import { SessionSecurity } from './sessionSecurity.ts';
-import { SecurityContext, SecurityHeaders, SanitizedError, SessionDetails } from './types.ts';
-import { TokenError, CSRFError, SessionError, AccountLockoutError, ValidationError } from './errors.ts';
+import { TokenManager } from './tokenManager';
+import { SessionSecurity } from './sessionSecurity';
+import { SecurityContext, SecurityHeaders, SanitizedError, SessionDetails } from './types';
+import { TokenError, CSRFError, SessionError } from './errors';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 export class SecurityUtils {
     private static instance: SecurityUtils;

@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import React from 'react';
+import { useMemo, useRef } from 'react';
 /**
  * Memoize a function's result based on its arguments
  * @param fn The function to memoize
@@ -64,8 +65,14 @@ export function useMemoizedValue<T>(factory: () => T, deps: any[], options: {
  * @param areEqual Custom comparison function (optional)
  * @returns Memoized component
  */
-export function memo<T extends React.ComponentType<any>>(Component: T, areEqual?: (prevProps: React.ComponentProps<T>, nextProps: React.ComponentProps<T>) => boolean) {
-    return React.memo(Component, areEqual);
+export function memo<T extends React.ComponentType<any>>(
+  Component: T,
+  areEqual?: (
+    prevProps: Readonly<React.ComponentProps<T>>,
+    nextProps: Readonly<React.ComponentProps<T>>
+  ) => boolean
+): React.MemoExoticComponent<T> {
+  return React.memo(Component, areEqual) as React.MemoExoticComponent<T>;
 }
 /**
  * Memoize a value with a custom equality function

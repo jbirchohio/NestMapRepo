@@ -1,13 +1,13 @@
-import { 
+import type { 
   LoginDto, 
   RegisterDto,
   RequestPasswordResetDto, 
   ResetPasswordDto,
   ChangePasswordDto,
+  UserResponse,
   AuthResponse,
-  UserResponse
-} from '@shared/types/auth/dto';
-import { UserRole } from '@shared/types/auth/permissions';
+  UserRole
+} from '@shared/types';
 
 export interface IAuthService {
   /**

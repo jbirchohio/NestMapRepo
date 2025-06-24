@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import { RequestConfig, ApiResponse } from '../types.ts';
+import { RequestConfig, ApiResponse } from '../types';
 // Request cache entry
 interface RequestCacheEntry<T = any> {
     /** When the cache entry was created */

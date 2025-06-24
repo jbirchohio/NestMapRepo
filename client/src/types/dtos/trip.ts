@@ -1,4 +1,4 @@
-import { Timestamp, PaginationParams, PaginatedResponse, TripStatus } from './common.ts';
+import { Timestamp, PaginationParams, PaginatedResponse, TripStatus } from './common';
 export interface TripDTO {
     id: string;
     title: string;

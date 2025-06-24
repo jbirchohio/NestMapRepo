@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios';
-import { ApiErrorResponse, RequestConfig } from '../types.ts';
+import { ApiErrorResponse, RequestConfig } from '../types';
 /**
  * Custom error class for API errors
  */

@@ -45,10 +45,13 @@ export function parseAISuggestions(content: string): ParsedSuggestion[] {
     ];
     patterns.forEach((pattern, patternIndex) => {
         const matches = Array.from(content.matchAll(pattern.regex));
-        matches.forEach((match, matchIndex) => {
-            if (match[pattern.nameGroup] && match[pattern.descriptionGroup]) {
-                const name = match[pattern.nameGroup].trim();
-                const description = match[pattern.descriptionGroup].replace(/\s*-\s*/, '').trim();
+        matches.forEach((match: RegExpMatchArray, matchIndex: number) => {
+            const nameMatch = match[pattern.nameGroup];
+            const descMatch = match[pattern.descriptionGroup];
+            
+            if (typeof nameMatch === 'string' && typeof descMatch === 'string') {
+                const name = nameMatch.trim();
+                const description = descMatch.replace(/\s*-\s*/, '').trim();
                 suggestions.push({
                     key: `${pattern.prefix}-${patternIndex}-${matchIndex}`,
                     name,

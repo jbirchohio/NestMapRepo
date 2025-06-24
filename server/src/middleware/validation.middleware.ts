@@ -16,7 +16,7 @@ export function validateRequest<T extends object>(
 ) {
   const logger = new Logger('ValidationMiddleware');
   
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
     try {
       const { body, params, query } = req;
       const data = { ...body, ...params, ...query };
@@ -51,8 +51,9 @@ export function validateRequest<T extends object>(
       // Attach validated data to request object
       req.validatedData = object;
       next();
-    } catch (error) {
-      logger.error(`Validation middleware error: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      logger.error(`Validation middleware error: ${err.message}`, err.stack);
       next(error);
     }
   };

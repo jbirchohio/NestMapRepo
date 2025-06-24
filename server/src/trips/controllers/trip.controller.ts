@@ -1,7 +1,7 @@
-import type { Request, Response, NextFunction, RequestHandler } from '../../express-augmentations.ts';
-import type { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import type { TripService } from '../interfaces/trip.service.interface.js';
-import type { ResponseFormatter } from '../../common/utils/response-formatter.util.js';
+import { ResponseFormatter } from '../../common/utils/response-formatter.util.js';
 import { requireAuth, requireOrgContext } from '../../common/middleware/auth.middleware.js';
 // Define the AuthUser interface to match the expected User type from the service
 interface AuthUser {

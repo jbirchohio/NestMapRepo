@@ -69,7 +69,7 @@ export class PermissionManager {
     context: Record<string, any> = {}
   ): boolean {
     // Super admin has all permissions
-    if (role === 'super_admin') return true;
+    if (role === UserRole.SUPER_ADMIN) return true;
 
     // Check direct permissions first
     const permissions = this.getPermissionsForRole(role);
@@ -83,7 +83,7 @@ export class PermissionManager {
 
     // Check if any permission is explicitly denied
     const denied = matchingPermissions.some(p => 
-      p.conditions?.some(c => c.operator === 'deny' && this.evaluateCondition(c, context))
+      p.conditions?.some(c => this.evaluateCondition(c, context) === false)
     );
     if (denied) return false;
 
@@ -156,7 +156,7 @@ export class PermissionManager {
    * Evaluate a permission condition against the current context
    */
   private checkCondition(
-    condition: PermissionCondition,
+    condition: PermissionCondition | boolean | ((context: Record<string, any>, resourceId?: string) => boolean) | { condition: PermissionCondition },
     context: Record<string, any>,
     resourceId?: string
   ): boolean {
@@ -175,6 +175,14 @@ export class PermissionManager {
         'condition' in condition) {
       const conditionObj = condition as { condition: PermissionCondition };
       return this.checkCondition(conditionObj.condition, context, resourceId);
+    }
+
+    // If it's a standard PermissionCondition object
+    if (condition && 
+        typeof condition === 'object' && 
+        'field' in condition && 
+        'operator' in condition) {
+      return this.evaluateCondition(condition as PermissionCondition, context);
     }
 
     return false;
@@ -210,9 +218,7 @@ export class PermissionManager {
           return typeof fieldValue === 'string' && 
                  typeof value === 'string' && 
                  fieldValue.endsWith(value);
-        case 'deny':
-          // Special case for deny conditions
-          return value === true;
+        // Remove the 'deny' case as it's not in the allowed operators
         default:
           console.warn(`Unknown operator: ${String(operator)}`);
           return false;
@@ -315,7 +321,7 @@ export const defaultSystemPermissions: PermissionDefinition[] = [
     action: 'create',
     scope: 'user',
     level: 'organization',
-    defaultRoles: ['admin', 'manager'],
+    defaultRoles: [UserRole.ADMIN, UserRole.MANAGER],
     isSystem: true
   },
   {
@@ -326,7 +332,7 @@ export const defaultSystemPermissions: PermissionDefinition[] = [
     action: 'read',
     scope: 'user',
     level: 'organization',
-    defaultRoles: ['admin', 'manager', 'member'],
+    defaultRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER],
     isSystem: true
   },
   {
@@ -337,7 +343,7 @@ export const defaultSystemPermissions: PermissionDefinition[] = [
     action: 'update',
     scope: 'user',
     level: 'organization',
-    defaultRoles: ['admin', 'manager'],
+    defaultRoles: [UserRole.ADMIN, UserRole.MANAGER],
     isSystem: true
   },
   // Add more default permissions as needed

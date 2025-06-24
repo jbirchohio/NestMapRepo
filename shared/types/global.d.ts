@@ -1,4 +1,4 @@
-// Global type declarations for the application
+// Global type declarations shared between client and server
 
 // Add type definitions for environment variables
 declare namespace NodeJS {
@@ -7,6 +7,7 @@ declare namespace NodeJS {
     VITE_API_BASE_URL: string;
     VITE_APP_NAME: string;
     VITE_APP_VERSION: string;
+    // Add other environment variables used in both client and server
   }
 }
 

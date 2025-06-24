@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { HealthCheck, HealthCheckResult, HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
-import { DatabaseHealthIndicator } from './database.health';
+import { HealthCheck, type HealthCheckResult, HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
+import { DatabaseHealthIndicator } from './database.health.js';
 
 @Injectable()
 export class HealthService {
@@ -19,8 +19,9 @@ export class HealthService {
         () => this.db.pingCheck('database', { timeout: 300 }),
         () => this.databaseHealth.isHealthy('database'),
       ]);
-    } catch (error) {
-      this.logger.error('Health check failed', error.stack);
+    } catch (error: unknown) {
+      const err = error as Error;
+      this.logger.error('Health check failed', err.stack);
       throw error;
     }
   }
@@ -29,13 +30,14 @@ export class HealthService {
     try {
       await this.db.pingCheck('database', { timeout: 300 });
       return { status: 'ok' };
-    } catch (error) {
-      this.logger.error('Database connection check failed', error.stack);
+    } catch (error: unknown) {
+      const err = error as Error & { code?: string };
+      this.logger.error('Database connection check failed', err.stack);
       return {
         status: 'error',
         details: {
-          message: error.message,
-          code: error.code,
+          message: err.message,
+          code: err.code,
         },
       };
     }

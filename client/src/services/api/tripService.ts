@@ -21,11 +21,11 @@ class TripService {
     }
     // Create a new trip
     public async createTrip(tripData: CreateTripDTO, config?: RequestConfig): Promise<TripDTO> {
-        return apiClient.post<TripDTO, CreateTripDTO>(this.basePath, tripData, config);
+        return apiClient.post<TripDTO>(this.basePath, tripData, config);
     }
     // Update an existing trip
     public async updateTrip(id: string, updates: UpdateTripDTO, config?: RequestConfig): Promise<TripDTO> {
-        return apiClient.put<TripDTO, UpdateTripDTO>(`${this.basePath}/${id}`, updates, config);
+        return apiClient.put<TripDTO>(`${this.basePath}/${id}`, updates, config);
     }
     // Delete a trip
     public async deleteTrip(id: string, config?: RequestConfig): Promise<void> {

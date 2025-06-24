@@ -1,4 +1,4 @@
-import { apiClient } from './api/apiClient';
+import apiClient from './api/apiClient';
 import type { AxiosError } from 'axios';
 import type { 
   LoginDto, 
@@ -48,7 +48,7 @@ export class AuthService {
         { skipAuth: true }
       );
       
-      if (!response?.data?.data) {
+      if (!response) {
         throw new AuthError(
           AuthErrorCode.VALIDATION_ERROR,
           'Invalid response format from server'
@@ -206,14 +206,14 @@ export class AuthService {
         { skipAuth: true, withCredentials: true }
       );
       
-      if (!response?.data?.data?.access_token) {
+      if (!response?.access_token) {
         throw new AuthError(
           AuthErrorCode.INVALID_TOKEN,
           'No access token received in refresh response'
         );
       }
       
-      const { access_token } = response.data.data;
+      const { access_token } = response;
 
       if (!access_token) {
         throw new AuthError(
@@ -261,14 +261,14 @@ export class AuthService {
     try {
       const response = await apiClient.get<{ user: AuthUser }>('/auth/me');
       
-      if (!response?.data?.data?.user) {
+      if (!response?.user) {
         throw new AuthError(
           AuthErrorCode.USER_NOT_FOUND,
           'No user data found in response'
         );
       }
 
-      const user = response.data.data.user;
+      const user = response.user;
       
       if (!isAuthUser(user)) {
         throw new AuthError(
@@ -321,18 +321,18 @@ export class AuthService {
         { skipAuth: true }
       );
       
-      if (!response?.data?.data?.success) {
+      if (!response?.success) {
         throw new AuthError(
           AuthErrorCode.UNKNOWN_ERROR,
-          response.data.data?.message || 'Failed to request password reset. Please try again.'
+          response.message || 'Failed to request password reset. Please try again.'
         );
       }
     } catch (error) {
       console.error('Password reset request failed:', error);
       
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as AxiosError<{ data?: { error?: { message?: string } } }>;
-        const errorMessage = axiosError.response?.data?.data?.error?.message || 
+        const axiosError = error as AxiosError<{ error?: { message?: string } }>;
+        const errorMessage = axiosError.response?.data?.error?.message || 
                            axiosError.message || 
                            'Failed to request password reset. Please try again.';
         
@@ -371,14 +371,14 @@ export class AuthService {
         { skipAuth: true }
       );
       
-      if (!response?.data?.data) {
+      if (!response) {
         throw new AuthError(
           AuthErrorCode.VALIDATION_ERROR,
           'Invalid response format from server'
         );
       }
       
-      const { user } = response.data.data;
+      const { user } = response;
 
       if (!user) {
         throw new AuthError(

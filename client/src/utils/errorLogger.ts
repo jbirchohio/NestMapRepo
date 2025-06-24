@@ -1,9 +1,9 @@
 import { AxiosError } from 'axios';
-import { SecurityUtils } from './securityUtils.ts';
-import { TokenManager } from './tokenManager.ts';
-import { SessionSecurity } from './sessionSecurity.ts';
-import { SecureCookie } from './SecureCookie.ts';
-import apiClient from '../services/api/apiClient.ts';
+import { SecurityUtils } from './securityUtils';
+import { TokenManager } from './tokenManager';
+import { SessionSecurity } from './sessionSecurity';
+import { SecureCookie } from './SecureCookie';
+import apiClient from '../services/api/apiClient';
 export interface ErrorLog {
     timestamp: string;
     errorType: string;

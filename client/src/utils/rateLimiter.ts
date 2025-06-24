@@ -1,4 +1,3 @@
-import { handleError } from './errorHandler.ts';
 export interface RateLimitConfig {
     maxRequests: number;
     windowMs: number;

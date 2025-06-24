@@ -191,7 +191,7 @@ export class ErrorHandler {
             });
         }
         // In production, send to error reporting service
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env['NODE_ENV'] === 'production') {
             // Send to monitoring service (Sentry, LogRocket, etc.)
             this.reportError(error, context);
         }
