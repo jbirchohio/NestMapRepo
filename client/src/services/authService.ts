@@ -22,7 +22,8 @@ const isAuthUser = (user: unknown): user is AuthUser => {
     typeof u['id'] === 'string' &&
     typeof u['email'] === 'string' &&
     typeof u['role'] === 'string' &&
-    (u['organization_id'] === null || typeof u['organization_id'] === 'string')
+    ((u['organizationId'] === null || typeof u['organizationId'] === 'string') ||
+      (u['organization_id'] === null || typeof u['organization_id'] === 'string'))
   );
 };
 
