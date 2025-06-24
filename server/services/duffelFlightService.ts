@@ -653,10 +653,13 @@ export class DuffelFlightService {
                 refund_amount: cancellation.refund_amount,
                 refund_currency: cancellation.refund_currency
             };
-        }
-        catch (error: any) {
+        } catch (error: any) {
             console.error('Duffel cancel booking error:', error);
-     */
+            throw new Error(`Failed to cancel booking: ${error.message}`);
+        }
+
+    }
+
     async searchAirports(query: string): Promise<Array<{
         iata_code: string;
         name: string;

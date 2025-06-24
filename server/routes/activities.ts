@@ -267,22 +267,6 @@ router.post<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedA
         };
         
         const activity = await activityService.create(activityData);
-          startDate: result.data.startDate ? new Date(result.data.startDate).toISOString() : now.toISOString(),
-          
-          // Set system fields
-          tripId,
-          organizationId,
-          createdBy: userId,
-          
-          // Convert optional fields if they exist
-          ...(result.data.endDate && { endDate: new Date(result.data.endDate).toISOString() }),
-          ...(result.data.latitude !== undefined && { latitude: Number(result.data.latitude) }),
-          ...(result.data.longitude !== undefined && { longitude: Number(result.data.longitude) }),
-          
-          // Set timestamps
-          createdAt: now,
-          updatedAt: now
-        });
         return res.status(201).json(transformActivityToFrontend(activity));
       } catch (error) {
         console.error('Error creating activity:', error);
@@ -408,15 +392,13 @@ router.put<{ activityId: string }, any, UpdateActivityBody>(
       }
 });
 // Delete activity by ID
-router.delete<{
-    activityId: string;
-}>('/:activityId', async (req: ExtendedRequest<{
-    activityId: string;
-}> & {
-    params: {
-        activityId: string;
-    };
-}, res: Response, next: NextFunction) => {
+router.delete<{ activityId: string }>(
+  '/:activityId',
+  async (
+    req: ExtendedRequest<{ activityId: string }>,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
         const result = activityIdParamSchema.safeParse({ activityId: req.params.activityId });
         if (!result.success) {
