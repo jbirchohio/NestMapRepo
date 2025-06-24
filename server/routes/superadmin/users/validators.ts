@@ -12,24 +12,24 @@ type Role = z.infer<typeof RoleEnum>;
 export const userBaseSchema = z.object({
     email: z.string().email('Invalid email address').toLowerCase(),
     username: z.string().min(3, 'Username must be at least 3 characters'),
-    display_name: z.string().min(1, 'Display name is required'),
+    displayName: z.string().min(1, 'Display name is required'),
     role: RoleEnum,
-    organization_id: z.string().uuid('Invalid organization ID').optional(),
-    avatar_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+    organizationId: z.string().uuid('Invalid organization ID').optional(),
+    avatarUrl: z.string().url('Invalid URL').optional().or(z.literal('')),
 });
 // Create user schema
 export const createUserSchema = userBaseSchema.extend({
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirm_password: z.string(),
-}).refine(data => data.password === data.confirm_password, {
+    confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
     message: "Passwords don't match",
-    path: ["confirm_password"],
+    path: ["confirmPassword"],
 });
 // Update user schema
 export const updateUserSchema = userBaseSchema.partial().extend({
     role: RoleEnum.optional(),
-    organization_id: z.string().uuid('Invalid organization ID').optional(),
-    is_active: z.boolean().optional(),
+    organizationId: z.string().uuid('Invalid organization ID').optional(),
+    isActive: z.boolean().optional(),
 });
 // User ID param schema
 export const userIdParamSchema = z.object({
