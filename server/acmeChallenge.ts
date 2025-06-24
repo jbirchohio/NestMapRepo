@@ -1,4 +1,4 @@
-import type { Request as ExpressRequest, Response } from '../../express-augmentations.ts';
+import type { Request as ExpressRequest, Response } from './express-augmentations.ts';
 import { db } from './db-connection.js';
 import { customDomains } from './db/schema.js';
 import { eq } from 'drizzle-orm';

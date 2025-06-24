@@ -3,7 +3,7 @@ let stripe: Stripe | null = null;
 // Initialize Stripe if secret key is available
 if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: "2023-10-16",
+        apiVersion: "2025-05-28.basil",
     });
     console.log('✓ Stripe billing service initialized');
 }
@@ -58,10 +58,14 @@ export async function createOrganizationSubscription(params: CreateOrganizationS
             },
             expand: ['latest_invoice.payment_intent'],
         });
-        const paymentIntent = subscription.latest_invoice?.payment_intent as Stripe.PaymentIntent;
+        const latestInvoice = subscription.latest_invoice;
+        const paymentIntent =
+            typeof latestInvoice === 'string'
+                ? null
+                : (latestInvoice.payment_intent as Stripe.PaymentIntent | null);
         console.log(`✓ Created ${params.plan} subscription for organization ${params.organization_id}`);
         return {
-            clientSecret: paymentIntent.client_secret!,
+            clientSecret: paymentIntent?.client_secret || '',
             subscriptionId: subscription.id,
             customerId: customer.id
         };
@@ -99,7 +103,7 @@ export async function getOrganizationBilling(customerId: string): Promise<Billin
                 plan: 'free'
             };
         }
-        const subscription = subscriptions.data[0];
+        const subscription = subscriptions.data[0] as Stripe.Subscription;
         const plan = customer.metadata?.plan as 'team' | 'enterprise' || 'free';
         return {
             customerId,

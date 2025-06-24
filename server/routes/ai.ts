@@ -610,9 +610,10 @@ export interface OptimizeItineraryResponse {
 }
 
 // Optimize itinerary route
-router.post<OptimizeItineraryParams, OptimizeItineraryResponse, any, ParsedQs>(
+/*
+router.post(
   "/optimize-itinerary/:tripId",
-  ...createAuthenticatedRouteHandler<OptimizeItineraryParams, OptimizeItineraryResponse>(
+  ...createAuthenticatedRouteHandler(
     async (req: AuthenticatedRequest<OptimizeItineraryParams>, res: Response<OptimizeItineraryResponse>, next: NextFunction) => {
       try {
         const { tripId } = req.params;
@@ -719,6 +720,8 @@ Provide optimization suggestions in JSON format:
         res.status(500).json(errorResponse);
         return;
     }
+  ));
+*/
 router.post<{ city: string; interests: string[]; duration: number }, any, any, ParsedQs>(
   "/suggest-itinerary",
   ...createAuthenticatedRouteHandler<{ city: string; interests: string[]; duration: number }, any>(
