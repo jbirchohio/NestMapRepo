@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import { db } from '../db/db.ts';
 import { trips, activities, expenses } from '../db/schema.js';
 import { eq, sql } from 'drizzle-orm';
-import type { GaussianNB } from 'ml-naivebayes';
+import { GaussianNB } from 'ml-naivebayes';
 import MLR from 'ml-regression-multivariate-linear';
 dotenv.config();
 function encode(map: Map<string, number>, key: string): number {

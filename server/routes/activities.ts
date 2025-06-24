@@ -390,7 +390,8 @@ router.put<{ activityId: string }, any, UpdateActivityBody>(
         console.error('Error updating activity:', error);
         return res.status(500).json({ error: 'Failed to update activity' });
       }
-});
+    })
+  );
 // Delete activity by ID
 router.delete<{ activityId: string }>(
   '/:activityId',
