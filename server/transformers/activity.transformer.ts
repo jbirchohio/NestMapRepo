@@ -1,4 +1,4 @@
-import type { Activity } from '../types/activity.ts';
+import type { Activity } from '@shared/types/activity';
 type ActivityInput = Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>;
 export const transformActivityToFrontend = (activity: Activity): Activity => {
     const transformed = { ...activity };

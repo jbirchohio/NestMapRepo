@@ -1,41 +1,12 @@
 import { z } from 'zod';
-export const activityStatuses = [
-    'pending',
-    'confirmed',
-    'cancelled',
-    'in_progress',
-    'completed'
-] as const;
-export type ActivityStatus = typeof activityStatuses[number];
-export const activityTypes = [
-    'flight',
-    'hotel',
-    'restaurant',
-    'attraction',
-    'transport',
-    'event',
-    'other'
-] as const;
-export type ActivityType = typeof activityTypes[number];
-export interface Activity {
-    id: string;
-    title: string;
-    description?: string;
-    startDate?: string;
-    endDate?: string;
-    locationName?: string;
-    location?: string;
-    latitude?: number;
-    longitude?: number;
-    type?: ActivityType;
-    status: ActivityStatus;
-    notes?: string;
-    tripId: string;
-    organizationId: string;
-    createdBy: string;
-    createdAt: Date;
-    updatedAt: Date;
-}
+// Re-export shared activity types
+export {
+  activityStatuses,
+  activityTypes,
+  type ActivityStatus,
+  type ActivityType,
+  type Activity,
+} from '@shared/types/activity';
 export const activitySchema = z.object({
     id: z.string().uuid(),
     title: z.string().min(1, 'Title is required'),

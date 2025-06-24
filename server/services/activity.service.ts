@@ -1,7 +1,7 @@
 import { db } from '../db/db.ts';
 import { activities } from '../db/schema.js';
 import { and, eq, sql } from 'drizzle-orm';
-import type { Activity } from '../types/activity.ts';
+import type { Activity } from '@shared/types/activity';
 import { v4 as uuidv4 } from 'uuid';
 import type { InferSelectModel } from 'drizzle-orm';
 type ActivityRecord = InferSelectModel<typeof activities>;
