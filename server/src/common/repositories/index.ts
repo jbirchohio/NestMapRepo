@@ -8,7 +8,6 @@ export * from './booking/booking.repository.interface.ts';
 export * from './base.repository.ts';
 export * from './organization/organization.repository.ts';
 export * from './activity/activity.repository.ts';
-export * from './user/user.repository.ts';
 export * from './booking/booking.repository.ts';
 // Export repositories module
 export * from './repositories.module.ts';

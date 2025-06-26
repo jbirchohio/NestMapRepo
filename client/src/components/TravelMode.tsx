@@ -227,7 +227,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
               <div>
                 <div className="font-medium">{nextActivity.title}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  {nextActivity.time} • {nextActivity.locationName}
+                  {nextActivity.startTime || 'Time not specified'} • {nextActivity.locationName}
                 </div>
               </div>
               

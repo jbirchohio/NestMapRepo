@@ -1,4 +1,27 @@
-import type { Trip, User } from '../../../db/schema.js';
+import type { Trip } from '../../../db/schema.js';
+
+// Define the ServiceUser interface to match what the controller provides
+export interface ServiceUser {
+  id: string;
+  email: string;
+  username: string;
+  firstName: string | null;
+  lastName: string | null;
+  organizationId: string | null;
+  role: string;
+  passwordHash: string;
+  passwordChangedAt: Date | null;
+  tokenVersion: number;
+  passwordResetToken?: string | null;
+  passwordResetExpires?: Date | null;
+  resetToken?: string | null;
+  resetTokenExpires?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  lastLogin?: Date | null;
+  isActive?: boolean;
+  emailVerified?: boolean;
+}
 // A DTO for the transformed corporate trip data
 export interface CorporateTripDto {
     id: string; // Changed from number to string to match UUID
@@ -17,7 +40,7 @@ export interface CorporateTripDto {
     userEmail: string;
 }
 export interface TripService {
-    getTripsByUserId(userId: string, orgId: string): Promise<Trip[]>;
-    getCorporateTrips(orgId: string): Promise<CorporateTripDto[]>;
-    getTripById(tripId: string, user: User): Promise<Trip | null>;
+    getTripsByUserId(userId: string, orgId: string, user: ServiceUser): Promise<Trip[]>;
+    getCorporateTrips(orgId: string, user: ServiceUser): Promise<CorporateTripDto[]>;
+    getTripById(tripId: string, user: ServiceUser): Promise<Trip | null>;
 }

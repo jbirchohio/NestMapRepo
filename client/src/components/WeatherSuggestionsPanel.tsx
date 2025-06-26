@@ -28,12 +28,20 @@ interface Activity {
     rating?: number;
     imageUrl?: string;
     weatherCondition?: WeatherCondition;
+    // These will be populated from coordinates if not provided directly
+    lat?: number;
+    lng?: number;
 }
 interface WeatherSuggestionsPanelProps {
     trip: ClientTrip;
     onAddActivity: (activity: Activity) => Promise<void>;
 }
-type WeatherCondition = "sunny" | "rainy" | "hot" | "cold" | "windy";
+type WeatherCondition = "sunny" | "rainy" | "hot" | "cold" | "windy" | "cloudy";
+
+// Type guard for WeatherCondition
+const isWeatherCondition = (condition: string): condition is WeatherCondition => {
+    return ["sunny", "rainy", "hot", "cold", "windy", "cloudy"].includes(condition);
+};
 interface WeatherActivitySuggestion {
     title: string;
     category: "indoor" | "outdoor" | "either";
@@ -63,81 +71,156 @@ interface WeatherForecastResponse {
 }
 export default function WeatherSuggestionsPanel({ trip, onAddActivity }: WeatherSuggestionsPanelProps) {
     const { toast } = useToast();
-    const [selectedDate, setSelectedDate] = useState<string>(trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    const getInitialDate = (): string => {
+        try {
+            const date = trip.startDate ? new Date(trip.startDate) : new Date();
+            if (isNaN(date.getTime())) throw new Error('Invalid date');
+            const dateStr = date.toISOString().split('T')[0];
+            if (!dateStr) throw new Error('Invalid date format');
+            return dateStr;
+        } catch (error) {
+            console.error('Error getting initial date:', error);
+            return new Date().toISOString().split('T')[0] || '2023-01-01';
+        }
+    };
+    
+    const [selectedDate, setSelectedDate] = useState<string>(() => getInitialDate());
     const [weatherCondition, setWeatherCondition] = useState<WeatherCondition>("sunny");
     const [autoWeatherData, setAutoWeatherData] = useState<WeatherData[]>([]);
     const [isAutoDetected, setIsAutoDetected] = useState(false);
     const [selectedDayWeather, setSelectedDayWeather] = useState<WeatherData | null>(null);
-    const weatherIcons = {
+    const weatherIcons: Record<WeatherCondition, JSX.Element> = {
         sunny: <CloudSun className="h-5 w-5 text-yellow-500"/>,
         rainy: <Umbrella className="h-5 w-5 text-blue-500"/>,
         hot: <ThermometerSun className="h-5 w-5 text-orange-500"/>,
         cold: <Snowflake className="h-5 w-5 text-blue-400"/>,
-        windy: <Wind className="h-5 w-5 text-gray-500"/>
+        windy: <Wind className="h-5 w-5 text-gray-500"/>,
+        cloudy: <CloudSun className="h-5 w-5 text-gray-400"/>
     };
-    const weatherLabels = {
+    
+    const weatherLabels: Record<WeatherCondition, string> = {
         sunny: "Sunny",
         rainy: "Rainy",
         hot: "Hot",
         cold: "Cold",
-        windy: "Windy"
+        windy: "Windy",
+        cloudy: "Cloudy"
     };
     // Auto weather detection
-    const autoWeatherMutation = useMutation({
+    const autoWeatherMutation = useMutation<WeatherForecastResponse, Error>({
         mutationFn: async () => {
-            const tripDates = [];
-            if (trip.startDate) {
-                const start = new Date(trip.startDate);
-                const end = trip.endDate ? new Date(trip.endDate) : start;
-                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                    tripDates.push(d.toISOString().split('T')[0]);
+            try {
+                const tripDates: string[] = [];
+                if (trip.startDate) {
+                    const start = new Date(trip.startDate);
+                    if (isNaN(start.getTime())) {
+                        throw new Error('Invalid start date');
+                    }
+                    
+                    const end = trip.endDate ? new Date(trip.endDate) : start;
+                    if (trip.endDate && isNaN(end.getTime())) {
+                        throw new Error('Invalid end date');
+                    }
+
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                        const dateStr = d.toISOString().split('T')[0];
+                        if (dateStr) {
+                            tripDates.push(dateStr);
+                        }
+                    }
                 }
-            }
-            const res = await apiRequest("POST", API_ENDPOINTS.WEATHER.FORECAST, {
-                location: trip.city || trip.location || trip.title,
-                dates: tripDates
-            });
-            return res.json() as Promise<WeatherForecastResponse>;
-        },
-        onSuccess: (data) => {
-            if (data.forecast && data.forecast.length > 0) {
-                setAutoWeatherData(data.forecast);
-                setIsAutoDetected(true);
-                toast({
-                    title: "Weather detected!",
-                    description: `Found weather data for ${data.forecast.length} days of your trip.`,
+                
+                const location = trip.city || trip.location || trip.title;
+                if (!location) {
+                    throw new Error('No location information available');
+                }
+
+                const res = await apiRequest("POST", API_ENDPOINTS.WEATHER.FORECAST, {
+                    location,
+                    dates: tripDates
                 });
-            }
-            else if (data.current) {
-                setAutoWeatherData([data.current]);
-                setIsAutoDetected(true);
-                toast({
-                    title: "Current weather detected!",
-                    description: "Found current weather for your location.",
-                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to fetch weather data');
+                }
+
+                const data = await res.json() as WeatherForecastResponse;
+                
+                // Validate the response data
+                if (!data.forecast && !data.current) {
+                    throw new Error('Invalid weather data received');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error in autoWeatherMutation:', error);
+                throw error;
             }
         },
-        onError: (error) => {
+        onSuccess: (data: WeatherForecastResponse) => {
+            try {
+                if (data.forecast?.length) {
+                    setAutoWeatherData(data.forecast);
+                    setIsAutoDetected(true);
+                    toast({
+                        title: "Weather detected!",
+                        description: `Found weather data for ${data.forecast.length} days of your trip.`,
+                    });
+                }
+                else if (data.current) {
+                    setAutoWeatherData([data.current]);
+                    setIsAutoDetected(true);
+                    toast({
+                        title: "Current weather detected!",
+                        description: "Found current weather for your location.",
+                    });
+                } else {
+                    throw new Error('No weather data available');
+                }
+            } catch (error) {
+                console.error('Error processing weather data:', error);
+                throw error; // Re-throw to trigger onError
+            }
+        },
+        onError: (error: Error) => {
+            console.error("Error getting auto weather:", error);
             toast({
                 title: "Weather detection failed",
-                description: "Couldn't auto-detect weather. You can still use manual selection.",
+                description: error.message || "Couldn't auto-detect weather. You can still use manual selection.",
                 variant: "destructive",
             });
-            console.error("Error getting auto weather:", error);
-        },
+        }
     });
-    const weatherMutation = useMutation({
-        mutationFn: async () => {
-            // Use actual weather data if available, otherwise fall back to manual selection
-            const weatherToUse = selectedDayWeather ?
-                selectedDayWeather.description :
-                weatherLabels[weatherCondition];
-            const res = await apiRequest("POST", API_ENDPOINTS.AI.WEATHER_ACTIVITIES, {
-                location: trip.city || trip.location || trip.title,
-                date: selectedDate,
-                weatherCondition: weatherToUse
-            });
-            return res.json() as Promise<WeatherResponse>;
+    const weatherMutation = useMutation<WeatherResponse, Error>({
+        mutationFn: async (): Promise<WeatherResponse> => {
+            try {
+                // Use actual weather data if available, otherwise fall back to manual selection
+                const weatherToUse = selectedDayWeather ?
+                    selectedDayWeather.description :
+                    weatherLabels[weatherCondition];
+                    
+                const location = trip.city || trip.location || trip.title;
+                if (!location) {
+                    throw new Error('No location information available');
+                }
+
+                const res = await apiRequest("POST", API_ENDPOINTS.AI.WEATHER_ACTIVITIES, {
+                    location,
+                    date: selectedDate,
+                    weatherCondition: weatherToUse
+                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to fetch weather activities');
+                }
+
+                return await res.json() as WeatherResponse;
+            } catch (error) {
+                console.error('Error in weatherMutation:', error);
+                throw error;
+            }
         },
         onError: (error) => {
             toast({
@@ -149,17 +232,35 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
         },
     });
     // General activity suggestions
-    const generalMutation = useMutation({
-        mutationFn: async () => {
-            const res = await apiRequest("POST", API_ENDPOINTS.AI.THEMED_ITINERARY, {
-                location: trip.city || trip.location || trip.title,
-                theme: "general exploration",
-                days: 1,
-                preferences: "popular attractions and local experiences"
-            });
-            return res.json() as Promise<{
-                activities: WeatherActivitySuggestion[];
-            }>;
+    interface GeneralActivitiesResponse {
+        activities: WeatherActivitySuggestion[];
+    }
+
+    const generalMutation = useMutation<GeneralActivitiesResponse, Error>({
+        mutationFn: async (): Promise<GeneralActivitiesResponse> => {
+            try {
+                const location = trip.city || trip.location || trip.title;
+                if (!location) {
+                    throw new Error('No location information available');
+                }
+
+                const res = await apiRequest("POST", API_ENDPOINTS.AI.THEMED_ITINERARY, {
+                    location,
+                    theme: "general exploration",
+                    days: 1,
+                    preferences: "popular attractions and local experiences"
+                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to fetch general activities');
+                }
+
+                return await res.json() as GeneralActivitiesResponse;
+            } catch (error) {
+                console.error('Error in generalMutation:', error);
+                throw error;
+            }
         },
         onError: (error) => {
             toast({
@@ -185,13 +286,20 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
     }, [selectedDate, autoWeatherData]);
     // Handle date selection and trigger weather-based activities
     const handleDateSelect = (dateString: string) => {
+        if (!dateString) {
+            console.error('No date string provided');
+            return;
+        }
         setSelectedDate(dateString);
+        
         // Find weather for this day
         const dayWeather = autoWeatherData.find(weather => weather.date === dateString);
         if (dayWeather) {
             setSelectedDayWeather(dayWeather);
             // Auto-trigger weather activities for this day
             weatherMutation.mutate();
+        } else {
+            console.warn(`No weather data found for date: ${dateString}`);
         }
     };
     const handleGetSuggestions = () => {
@@ -200,53 +308,80 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
     const handleGeneralSuggestions = () => {
         generalMutation.mutate();
     };
-    const getWeatherIcon = (condition: string) => {
-        const conditionLower = condition.toLowerCase();
-        if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
-            return <Umbrella className="h-5 w-5 text-blue-500"/>;
-        }
-        if (conditionLower.includes('snow')) {
-            return <Snowflake className="h-5 w-5 text-blue-300"/>;
-        }
-        if (conditionLower.includes('sun') || conditionLower.includes('clear')) {
-            return <CloudSun className="h-5 w-5 text-yellow-500"/>;
-        }
-        if (conditionLower.includes('cloud')) {
-            return <CloudSun className="h-5 w-5 text-gray-500"/>;
-        }
-        if (conditionLower.includes('wind')) {
-            return <Wind className="h-5 w-5 text-gray-600"/>;
-        }
-        return <CloudSun className="h-5 w-5 text-gray-500"/>;
-    };
+
     const handleAddActivity = async (activitySuggestion: WeatherActivitySuggestion): Promise<void> => {
-        try {
-            // Format the activity for saving
-            const activityDate = new Date(selectedDate);
-            const formattedActivity = {
-                tripId: trip.id,
-                title: activitySuggestion.title,
-                date: activityDate,
-                time: "12:00", // Default time
-                locationName: activitySuggestion.locationName,
-                notes: activitySuggestion.description,
-                tag: activitySuggestion.tag,
-                order: 0 // Will be adjusted when added
-            };
-            await onAddActivity(formattedActivity);
-            toast({
-                title: "Activity added",
-                description: `Added "${activitySuggestion.title}" to your itinerary.`,
-            });
-        }
-        catch (error) {
+        if (!activitySuggestion) {
+            console.error('No activity suggestion provided');
             toast({
                 title: "Error",
-                description: "Failed to add activity to your itinerary.",
+                description: "No activity suggestion provided",
                 variant: "destructive",
             });
-            console.error("Error adding activity:", error);
+            return;
         }
+
+        try {
+            // Create a new activity with proper typing
+            const activity: Activity = {
+                id: `activity-${Date.now()}`,
+                title: activitySuggestion.title,
+                description: activitySuggestion.description,
+                category: activitySuggestion.category,
+                locationName: activitySuggestion.locationName,
+                tag: activitySuggestion.tag,
+                // Default coordinates (should be populated with actual coordinates from a geocoding service)
+                coordinates: {
+                    lat: 0,
+                    lng: 0
+                },
+                // For backward compatibility
+                lat: 0,
+                lng: 0,
+                weatherCondition: weatherCondition
+            };
+            
+            await onAddActivity(activity);
+            
+            toast({
+                title: "Activity added",
+                description: `Added "${activitySuggestion.title}" to your trip.`,
+            });
+        } catch (error) {
+            console.error("Error adding activity:", error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to add activity to your trip.';
+            toast({
+                title: "Error",
+                description: errorMessage,
+                variant: "destructive",
+            });
+            throw error; // Re-throw to allow parent components to handle the error if needed
+        }
+    };
+    const getWeatherIcon = (condition: string): JSX.Element => {
+        const conditionLower = condition.toLowerCase();
+        
+        // Map conditions to weather types
+        if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
+            return weatherIcons.rainy;
+        }
+        if (conditionLower.includes('snow') || conditionLower.includes('sleet')) {
+            return weatherIcons.cold;
+        }
+        if (conditionLower.includes('sun') || conditionLower.includes('clear')) {
+            return weatherIcons.sunny;
+        }
+        if (conditionLower.includes('cloud')) {
+            return weatherIcons.cloudy;
+        }
+        if (conditionLower.includes('wind')) {
+            return weatherIcons.windy;
+        }
+        if (conditionLower.includes('hot') || conditionLower.includes('warm')) {
+            return weatherIcons.hot;
+        }
+        
+        // Default to cloudy if no match is found
+        return weatherIcons.cloudy;
     };
     return (<div className="space-y-4">
       <div className="space-y-2">

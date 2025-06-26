@@ -42,12 +42,9 @@
                                           "@shared/*":  [
                                                             "../shared/*"
                                                         ],
-                                          "@shared/types":  [
-                                                                "../shared/types/index.ts"
-                                                            ],
                                           "@shared/types/*":  [
-                                                                  "../shared/types/*"
-                                                              ],
+                                                            "../shared/types/*"
+                                                        ],
                                           "@shared/src/*":  [
                                                                "../shared/src/*"
                                                            ],
@@ -55,8 +52,6 @@
                                                                        "../shared/types/auth/*"
                                                                    ]
                                       },
-                            "resolveJsonModule":  true,
-                            "allowSyntheticDefaultImports":  true,
                             "noUnusedParameters":  true,
                             "strictFunctionTypes":  true,
                             "strictBindCallApply":  true,
@@ -68,7 +63,6 @@
                             "moduleDetection":  "force",
                             "verbatimModuleSyntax":  true,
                             "tsBuildInfoFile":  "./node_modules/.cache/tsbuildinfo/server.tsbuildinfo",
-                            "allowImportingTsExtensions":  true,
                             "noEmit":  true
                         },
     "references":  [

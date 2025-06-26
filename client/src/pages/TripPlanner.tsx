@@ -101,23 +101,30 @@ export default function TripPlanner() {
     const mapMarkers: MapMarker[] = sortedActivities
         .filter(activity => {
         // Only include activities with valid coordinates
-        const hasLat = activity.latitude && activity.latitude !== "0" && !isNaN(parseFloat(activity.latitude));
-        const hasLng = activity.longitude && activity.longitude !== "0" && !isNaN(parseFloat(activity.longitude));
+        const lat = activity.latitude?.toString();
+        const lng = activity.longitude?.toString();
+        const hasLat = lat && lat !== "0" && !isNaN(parseFloat(lat));
+        const hasLng = lng && lng !== "0" && !isNaN(parseFloat(lng));
         return hasLat && hasLng;
     })
         .map((activity, index) => ({
         id: activity.id,
-        latitude: parseFloat(activity.latitude || "0"),
-        longitude: parseFloat(activity.longitude || "0"),
+        latitude: parseFloat(activity.latitude?.toString() || "0"),
+        longitude: parseFloat(activity.longitude?.toString() || "0"),
         label: String.fromCharCode(65 + index), // A, B, C, etc.
         activity,
         completed: activity.completed || false, // Pass completion status to map component
     }));
+    
     // Prepare map routes (simplified for now)
     const mapRoutes: MapRoute[] = mapMarkers.length > 1
         ? [{
                 id: "main-route",
                 coordinates: mapMarkers.map(marker => [marker.longitude, marker.latitude]),
+                geometry: {
+                    type: 'LineString',
+                    coordinates: mapMarkers.map(marker => [marker.longitude, marker.latitude])
+                },
                 duration: 0,
                 distance: 0,
             }]

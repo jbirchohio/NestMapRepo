@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { UserRole } from '@shared/types/auth/permissions.js';
 
 // Common validation patterns
 const patterns = {
@@ -47,7 +46,7 @@ export const registerSchema = z.object({
   organizationId: z.string()
     .refine(val => !val || patterns.uuid.test(val), validationMessages.invalidUuid)
     .optional(),
-  role: z.nativeEnum(UserRole).default(UserRole.USER),
+  role: z.enum(['super_admin', 'admin', 'manager', 'member', 'guest'] as const).default('member'),
   acceptTerms: z.boolean().optional(),
   inviteToken: z.string().optional(),
 });

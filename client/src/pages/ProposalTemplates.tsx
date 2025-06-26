@@ -13,8 +13,50 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Edit, Copy, Trash2, Template, Settings } from "lucide-react";
+import { Plus, Edit, Copy, Trash2, FileText, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+interface ProposalTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  isShared?: boolean;
+  branding?: {
+    companyName: string;
+    logo?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    contactInfo?: {
+      email: string;
+      phone?: string;
+      website?: string;
+      address?: string;
+    };
+  };
+  sections?: {
+    includeCostBreakdown?: boolean;
+    includeItinerary?: boolean;
+    includeTerms?: boolean;
+    includeAboutUs?: boolean;
+    customSections?: Array<{
+      title: string;
+      content: string;
+      order: number;
+    }>;
+  };
+  pricingRules?: {
+    markup?: number;
+    currency?: string;
+    discounts?: Array<{
+      condition: string;
+      percentage: number;
+    }>;
+  };
+  // Timestamps
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
 const templateSchema = z.object({
     name: z.string().min(1, "Template name is required"),
     description: z.string().optional(),
@@ -72,7 +114,7 @@ export default function ProposalTemplates() {
     });
     const updateTemplate = useMutation({
         mutationFn: ({ id, data }: {
-            id: number;
+            id: string | number;
             data: TemplateFormData;
         }) => apiRequest("PUT", `/api/proposal-templates/${id}`, data),
         onSuccess: () => {
@@ -85,7 +127,7 @@ export default function ProposalTemplates() {
         },
     });
     const deleteTemplate = useMutation({
-        mutationFn: (id: number) => apiRequest("DELETE", `/api/proposal-templates/${id}`),
+        mutationFn: (id: string | number) => apiRequest('DELETE', `/api/proposal-templates/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
             toast({
@@ -95,7 +137,7 @@ export default function ProposalTemplates() {
         },
     });
     const duplicateTemplate = useMutation({
-        mutationFn: (id: number) => apiRequest("POST", `/api/proposal-templates/${id}/duplicate`),
+        mutationFn: (id: string | number) => apiRequest('POST', `/api/proposal-templates/${id}/duplicate`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/api/proposal-templates"] });
             toast({
@@ -179,12 +221,20 @@ export default function ProposalTemplates() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates?.map((template: any) => (<Card key={template.id} className="hover:shadow-lg transition-shadow">
+        {Array.isArray(templates) && templates
+          .filter((template): template is ProposalTemplate => 
+            template && 
+            typeof template === 'object' && 
+            'id' in template && 
+            'name' in template
+          )
+          .map((template) => (
+            <Card key={template.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Template className="w-5 h-5 text-blue-600"/>
+                    <FileText className="w-5 h-5 text-blue-600"/>
                     {template.name}
                   </CardTitle>
                   <CardDescription>{template.description}</CardDescription>
@@ -223,7 +273,9 @@ export default function ProposalTemplates() {
                 {template.sections?.includeCostBreakdown && <span>Cost Breakdown</span>}
                 {template.sections?.includeItinerary && <span>Itinerary</span>}
                 {template.sections?.includeTerms && <span>Terms</span>}
-                {template.sections?.customSections?.length > 0 && (<span>+{template.sections.customSections.length} custom</span>)}
+                {template.sections?.customSections && template.sections.customSections.length > 0 && (
+                  <span>+{template.sections.customSections.length} custom</span>
+                )}
               </div>
             </CardContent>
           </Card>))}

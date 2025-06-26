@@ -9,7 +9,7 @@ import NewTripModal from "@/components/NewTripModal";
 import SwipeableTrip from "@/components/SwipeableTrip";
 import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import AuthModal from "@/components/auth/AuthModal";
 import RoleBasedRedirect from "@/components/RoleBasedRedirect";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -24,7 +24,7 @@ export default function Home() {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authView, setAuthView] = useState<"login" | "signup">("login");
     const { user, authReady, signOut } = useAuth();
-    const userId = user?.id ?? null;
+    const userId = user?.id ? Number(user.id) : null;
     const queryClient = useQueryClient();
     // Routing is now handled by RoleBasedRedirect component
     // Get user ID from authentication or use guest mode
@@ -207,10 +207,10 @@ export default function Home() {
             <Tabs defaultValue="active" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-6 bg-electric-50/50 dark:bg-electric-900/20">
                 <TabsTrigger value="active" className="data-[state=active]:bg-electric-500 data-[state=active]:text-white">
-                  Active ({trips.filter(trip => trip.status === "Active").length})
+                  Active ({trips.filter(trip => trip.status === "in_progress").length})
                 </TabsTrigger>
                 <TabsTrigger value="completed" className="data-[state=active]:bg-electric-500 data-[state=active]:text-white">
-                  Completed ({trips.filter(trip => trip.status === "Completed").length})
+                  Completed ({trips.filter(trip => trip.status === "completed").length})
                 </TabsTrigger>
                 <TabsTrigger value="all" className="data-[state=active]:bg-electric-500 data-[state=active]:text-white">
                   All ({trips.length})
@@ -219,13 +219,13 @@ export default function Home() {
               
               <TabsContent value="active" className="space-y-4">
                 {trips
-                .filter(trip => trip.status === "Active")
+                .filter(trip => trip.status === "in_progress")
                 .map((trip) => (<SwipeableTrip key={trip.id} trip={trip} onNavigate={handleNavigateToTrip} onRename={handleOpenRenameDialog}/>))}
               </TabsContent>
               
               <TabsContent value="completed" className="space-y-4">
                 {trips
-                .filter(trip => trip.status === "Completed")
+                .filter(trip => trip.status === "completed")
                 .map((trip) => (<SwipeableTrip key={trip.id} trip={trip} onNavigate={handleNavigateToTrip} onRename={handleOpenRenameDialog}/>))}
               </TabsContent>
               

@@ -41,13 +41,20 @@ export default function SignatureField({ proposalId, onSigned, readonly = false,
         if (!ctx)
             return;
         let x, y;
-        if ('touches' in e) {
-            x = e.touches[0].clientX - rect.left;
-            y = e.touches[0].clientY - rect.top;
+        if ('touches' in e && e.touches?.[0]) {
+            const touch = e.touches[0];
+            if (touch) {
+                x = touch.clientX - rect.left;
+                y = touch.clientY - rect.top;
+            } else {
+                return;
+            }
         }
-        else {
+        else if ('clientX' in e && 'clientY' in e) {
             x = e.clientX - rect.left;
             y = e.clientY - rect.top;
+        } else {
+            return; // Exit if no valid position can be determined
         }
         ctx.beginPath();
         ctx.moveTo(x, y);
@@ -66,14 +73,21 @@ export default function SignatureField({ proposalId, onSigned, readonly = false,
         if (!ctx)
             return;
         let x, y;
-        if ('touches' in e) {
+        if ('touches' in e && e.touches?.[0]) {
             e.preventDefault();
-            x = e.touches[0].clientX - rect.left;
-            y = e.touches[0].clientY - rect.top;
+            const touch = e.touches[0];
+            if (touch) {
+                x = touch.clientX - rect.left;
+                y = touch.clientY - rect.top;
+            } else {
+                return;
+            }
         }
-        else {
+        else if ('clientX' in e && 'clientY' in e) {
             x = e.clientX - rect.left;
             y = e.clientY - rect.top;
+        } else {
+            return; // Exit if no valid position can be determined
         }
         ctx.lineTo(x, y);
         ctx.stroke();

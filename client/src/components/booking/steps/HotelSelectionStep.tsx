@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { hotelService } from '@/services/hotelService';
-import { useToast } from '@/components/ui/use-toast';
+import { toast, useToast } from '@/components/ui/use-toast';
 
 // Extended Hotel interface to include all required properties
 type Hotel = BaseHotel & {
@@ -53,15 +53,23 @@ type Hotel = BaseHotel & {
 interface RoomType {
   id: string;
   name: string;
-  price: number;
-  currency: string;
-  bedType: string;
+  price: number | {
+    amount: number;
+    currency: string;
+    formatted: string;
+    taxes: number;
+    fees: number;
+    baseRate: number;
+    total: number;
+  };
+  currency?: string;
   available: number;
   refundable: boolean;
   maxOccupancy: number;
   amenities: string[];
-  description?: string;
-  bedConfiguration?: string;
+  description: string;
+  bedConfiguration: string;
+  bedType?: string; // Added for compatibility
   ratePlan?: {
     id: string;
     name: string;
@@ -86,6 +94,7 @@ interface HotelCardProps {
   onRoomSelect: (room: HotelRoom) => void;
   selectedRoomId?: string;
   isLoadingRooms: boolean;
+  searchParams: URLSearchParams;
 }
 
 const HotelCard: React.FC<HotelCardProps> = ({
@@ -94,24 +103,45 @@ const HotelCard: React.FC<HotelCardProps> = ({
   onSelect,
   onRoomSelect,
   selectedRoomId,
-  isLoadingRooms
+  isLoadingRooms,
+  searchParams: urlSearchParams
 }) => {
   const [showRooms, setShowRooms] = useState(false);
-  const [rooms, setRooms] = useState<HotelRoom[]>([]);
+  const [rooms, setRooms] = useState<(RoomType | HotelRoom)[]>([]);
 
-  const handleRoomSelect = (room: HotelRoom) => {
-    onRoomSelect(room);
-    onSelect(hotel, room);
+  const handleRoomSelect = (room: HotelRoom | RoomType) => {
+    onRoomSelect(room as HotelRoom);
+    onSelect(hotel, room as HotelRoom);
   };
 
   const toggleRooms = async () => {
     if (!showRooms && hotel.rooms.length === 0) {
       try {
-        // Fetch rooms if not already loaded
-        const response = await hotelService.getHotelRooms(hotel.id);
-        setRooms(response.rooms);
+        const searchParams: HotelSearchParams = {
+          destination: urlSearchParams.get('destination') || '',
+          checkIn: urlSearchParams.get('checkIn') || format(new Date(), 'yyyy-MM-dd'),
+          checkOut: urlSearchParams.get('checkOut') || format(addDays(new Date(), 1), 'yyyy-MM-dd'),
+          guests: {
+            adults: parseInt(urlSearchParams.get('guests')?.toString() || '1'),
+            children: 0,
+            rooms: 1
+          },
+          sortBy: 'price'
+        };
+        const rooms = await hotelService.getAvailableRooms(
+          hotel.id,
+          searchParams.checkIn,
+          searchParams.checkOut,
+          searchParams.guests.adults
+        );
+        setRooms(rooms as (RoomType | HotelRoom)[]);
       } catch (error) {
         console.error('Error fetching rooms:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load rooms. Please try again.',
+          variant: 'destructive',
+        });
       }
     } else {
       setShowRooms(!showRooms);
@@ -177,10 +207,10 @@ const HotelCard: React.FC<HotelCardProps> = ({
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-medium">{room.name}</h4>
-                    <p className="text-sm text-muted-foreground">{room.bedType}</p>
+                    <p className="text-sm text-muted-foreground">{room.bedConfiguration || 'Standard'}</p>
                     <div className="mt-1">
                       <span className="text-sm font-medium">
-                        ${room.ratePlan?.pricePerNight?.toFixed(2) || room.pricePerNight?.toFixed(2)}
+                        ${typeof room.price === 'number' ? room.price.toFixed(2) : room.price?.amount?.toFixed(2) || '0.00'}
                       </span>
                       <span className="text-xs text-muted-foreground ml-1">/night</span>
                     </div>
@@ -207,73 +237,151 @@ interface HotelSelectionStepProps {
   onNext: (data?: Partial<BookingFormData>) => void;
 }
 
-const mapHotelRoomToRoomType = (room: HotelRoom): RoomType => ({
-  id: room.id,
-  name: room.name,
-  price: room.ratePlan?.pricePerNight || room.pricePerNight || 0,
-  currency: room.currency || 'USD',
-  bedType: room.bedConfiguration || 'Standard',
-  available: room.ratePlan?.available || 0,
-  refundable: room.ratePlan?.refundable || false,
-  maxOccupancy: room.maxOccupancy || 2,
-  amenities: room.amenities || [],
-  description: room.description,
-  bedConfiguration: room.bedConfiguration,
-  ratePlan: room.ratePlan ? {
-    id: room.ratePlan.id,
-    name: room.ratePlan.name,
-    mealPlan: room.ratePlan.mealPlan,
-    nonSmoking: room.ratePlan.nonSmoking || false,
-    refundable: room.ratePlan.refundable || false,
-    available: room.ratePlan.available || 0
-  } : undefined,
-  images: room.images
-});
+const mapHotelRoomToRoomType = (room: HotelRoom): RoomType => {
+  return {
+    id: room.id,
+    name: room.name || 'Standard Room',
+    price: room.price,
+    currency: room.price?.currency || 'USD',
+    available: room.ratePlan?.available || 1,
+    refundable: room.ratePlan?.refundable || false,
+    maxOccupancy: room.maxOccupancy || 2,
+    amenities: room.amenities || [],
+    description: room.description || '',
+    bedConfiguration: room.bedConfiguration || 'Queen',
+    bedType: room.bedConfiguration || 'Queen', // Added for compatibility
+    ratePlan: room.ratePlan,
+    images: room.images
+  };
+};
 
-const mapApiHotelToHotel = (apiHotel: any): Hotel => ({
-  ...apiHotel,
-  roomTypes: apiHotel.roomTypes || [],
-  pricePerNight: apiHotel.pricePerNight || 0,
-  totalPrice: apiHotel.totalPrice || 0,
-  currency: apiHotel.currency || 'USD',
-  isRefundable: apiHotel.isRefundable || false,
-  isAvailable: apiHotel.isAvailable !== false,
-  checkInTime: apiHotel.checkInTime || '14:00',
-  checkOutTime: apiHotel.checkOutTime || '12:00',
-  rooms: apiHotel.rooms || [],
-  policies: {
-    checkIn: { minAge: 18 },
-    checkOut: { lateCheckOutAvailable: false },
-    pets: { allowed: false },
-    ...apiHotel.policies
-  },
-  distanceFrom: {
-    text: '0.5 miles from center',
-    value: 0.5,
-    unit: 'miles',
-    ...apiHotel.distanceFrom
-  },
-  address: {
-    street: apiHotel.address?.street || '',
-    city: apiHotel.address?.city || '',
-    state: apiHotel.address?.state || '',
-    country: apiHotel.address?.country || '',
-    postalCode: apiHotel.address?.postalCode || '',
-    coordinates: apiHotel.address?.coordinates,
-    ...apiHotel.address
-  },
-  reviewCount: apiHotel.reviewCount || 0,
-  reviewScore: apiHotel.reviewScore || 0
-});
+const mapApiHotelToHotel = (apiHotel: any): Hotel => {
+  // Ensure all required fields have proper defaults
+  const hotel: Hotel = {
+    id: apiHotel.id || '',
+    name: apiHotel.name || 'Unnamed Hotel',
+    starRating: apiHotel.starRating || 0,
+    address: {
+      line1: apiHotel.address?.line1 || '',
+      city: apiHotel.address?.city || '',
+      postalCode: apiHotel.address?.postalCode || '',
+      country: apiHotel.address?.country || '',
+      countryCode: apiHotel.address?.countryCode || 'US',
+      timezone: apiHotel.address?.timezone || 'UTC',
+      ...(apiHotel.address?.coordinates && {
+        coordinates: {
+          latitude: apiHotel.address.coordinates.latitude,
+          longitude: apiHotel.address.coordinates.longitude
+        }
+      })
+    },
+    description: apiHotel.description || '',
+    amenities: (apiHotel.amenities || []).map((a: any) => ({
+      code: a.code || `amenity-${Math.random().toString(36).substr(2, 9)}`,
+      name: a.name || 'Unnamed Amenity',
+      category: a.category || 'general',
+      isAvailable: a.isAvailable !== false
+    })),
+    images: apiHotel.images || [],
+    checkInTime: apiHotel.checkInTime || '14:00',
+    checkOutTime: apiHotel.checkOutTime || '12:00',
+    contact: {
+      phone: apiHotel.contact?.phone || '000-000-0000',
+      ...(apiHotel.contact?.email && { email: apiHotel.contact.email }),
+      ...(apiHotel.contact?.website && { website: apiHotel.contact.website })
+    },
+    rooms: (apiHotel.rooms || []).map((r: any) => ({
+      id: r.id || `room-${Math.random().toString(36).substr(2, 9)}`,
+      name: r.name || 'Standard Room',
+      description: r.description || 'Comfortable room with standard amenities',
+      maxOccupancy: r.maxOccupancy || 2,
+      bedConfiguration: r.bedConfiguration || '1 Queen Bed',
+      amenities: Array.isArray(r.amenities) ? r.amenities : [],
+      price: {
+        amount: r.price?.amount || 0,
+        currency: r.price?.currency || 'USD',
+        formatted: r.price?.formatted || '$0.00',
+        taxes: r.price?.taxes || 0,
+        fees: r.price?.fees || 0,
+        baseRate: r.price?.baseRate || 0,
+        total: r.price?.total || 0
+      },
+      cancellationPolicy: r.cancellationPolicy ? {
+        type: r.cancellationPolicy.type || 'NON_REFUNDABLE',
+        description: r.cancellationPolicy.description || 'Non-refundable',
+        ...(r.cancellationPolicy.deadline && { deadline: r.cancellationPolicy.deadline }),
+        ...(r.cancellationPolicy.penaltyAmount && { penaltyAmount: r.cancellationPolicy.penaltyAmount }),
+        ...(r.cancellationPolicy.penaltyCurrency && { penaltyCurrency: r.cancellationPolicy.penaltyCurrency })
+      } : undefined,
+      ratePlan: {
+        id: r.ratePlan?.id || `rate-${Math.random().toString(36).substr(2, 9)}`,
+        name: r.ratePlan?.name || 'Standard Rate',
+        ...(r.ratePlan?.mealPlan && { mealPlan: r.ratePlan.mealPlan }),
+        nonSmoking: r.ratePlan?.nonSmoking !== false,
+        refundable: r.ratePlan?.refundable || false,
+        available: r.ratePlan?.available || 1
+      },
+      images: Array.isArray(r.images) ? r.images : []
+    })),
+    policies: {
+      checkIn: {
+        minAge: apiHotel.policies?.checkIn?.minAge || 18,
+        ...(apiHotel.policies?.checkIn?.specialInstructions && {
+          specialInstructions: apiHotel.policies.checkIn.specialInstructions
+        })
+      },
+      checkOut: {
+        lateCheckOutAvailable: apiHotel.policies?.checkOut?.lateCheckOutAvailable || false,
+        ...(apiHotel.policies?.checkOut?.lateCheckOutFee && {
+          lateCheckOutFee: apiHotel.policies.checkOut.lateCheckOutFee
+        }),
+        ...(apiHotel.policies?.checkOut?.lateCheckOutTime && {
+          lateCheckOutTime: apiHotel.policies.checkOut.lateCheckOutTime
+        })
+      },
+      pets: {
+        allowed: apiHotel.policies?.pets?.allowed || false,
+        ...(apiHotel.policies?.pets?.fee && { fee: apiHotel.policies.pets.fee }),
+        ...(apiHotel.policies?.pets?.policy && { policy: apiHotel.policies.pets.policy })
+      },
+      fees: Array.isArray(apiHotel.policies?.fees) 
+        ? apiHotel.policies.fees 
+        : []
+    },
+    distanceFrom: (apiHotel.distanceFrom || []).map((d: any) => ({
+      place: d.place || 'Location',
+      distance: typeof d.distance === 'number' ? d.distance : 0,
+      unit: d.unit === 'mi' || d.unit === 'km' ? d.unit : 'km',
+      ...(typeof d.duration === 'number' && { duration: d.duration })
+    })),
+    ...(apiHotel.metadata && { metadata: apiHotel.metadata }),
+    ...(typeof apiHotel.rating === 'number' && { rating: apiHotel.rating }),
+    ...(apiHotel.price && {
+      price: {
+        amount: apiHotel.price.amount || 0,
+        currency: apiHotel.price.currency || 'USD',
+        ...(apiHotel.price.formatted && { formatted: apiHotel.price.formatted })
+      }
+    }),
+    ...(typeof apiHotel.distanceFromCenter === 'number' && { distanceFromCenter: apiHotel.distanceFromCenter }),
+    ...(typeof apiHotel.maxOccupancy === 'number' && { maxOccupancy: apiHotel.maxOccupancy }),
+    ...(typeof apiHotel.freeCancellation === 'boolean' && { freeCancellation: apiHotel.freeCancellation })
+  };
+
+  return hotel;
+};
 
 const HotelSelectionStep: React.FC<HotelSelectionStepProps> = ({ formData, onBack, onNext }) => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useState<URLSearchParams>(() => {
-    const params = new URLSearchParams();
-    params.set('destination', formData.destination || '');
-    params.set('checkIn', formData.checkIn || format(new Date(), 'yyyy-MM-dd'));
-    params.set('checkOut', formData.checkOut || format(addDays(new Date(), 1), 'yyyy-MM-dd'));
-    params.set('guests', String(formData.guests?.adults || 1));
+    const params = new URLSearchParams({
+      destination: formData.destination || '',
+      checkIn: formData.checkIn || format(new Date(), 'yyyy-MM-dd'),
+      checkOut: formData.checkOut || format(addDays(new Date(), 1), 'yyyy-MM-dd'),
+      location: formData.destination || '',
+      guests: formData.guests?.toString() || '1',
+      sortBy: 'price',
+    });
     return params;
   });
 
@@ -301,11 +409,15 @@ const HotelSelectionStep: React.FC<HotelSelectionStepProps> = ({ formData, onBac
         destination: searchParams.get('destination') || '',
         checkIn: searchParams.get('checkIn') || format(new Date(), 'yyyy-MM-dd'),
         checkOut: searchParams.get('checkOut') || format(addDays(new Date(), 1), 'yyyy-MM-dd'),
-        guests: parseInt(searchParams.get('guests') || '1'),
-        rooms: 1,
-        sortBy: 'recommended',
+        guests: {
+          adults: parseInt(searchParams.get('guests') || '1'),
+          children: 0,
+          rooms: 1
+        },
+        sortBy: 'price',
         page: 1,
-        limit: 10
+        pageSize: 10,
+        sortOrder: 'asc' // Add default sort order to match the interface
       };
       
       const response = await hotelService.searchHotels(params, { signal: controller.signal });
@@ -375,13 +487,27 @@ const HotelSelectionStep: React.FC<HotelSelectionStepProps> = ({ formData, onBac
 
   const handleContinue = useCallback(() => {
     if (selectedHotel && selectedRoom) {
+      // Create a compatible hotel object that matches the expected type
+      const compatibleHotel: any = {
+        ...selectedHotel,
+        // Ensure all required properties are present
+        amenities: selectedHotel.amenities || [],
+        images: selectedHotel.images || [],
+        rooms: selectedHotel.rooms || [],
+        distanceFrom: selectedHotel.distanceFrom || []
+      };
+
       onNext({
-        selectedHotel,
+        selectedHotel: compatibleHotel,
         selectedRoomType: selectedRoom,
         checkIn: searchParams.get('checkIn') || undefined,
         checkOut: searchParams.get('checkOut') || undefined,
-        guests: { adults: parseInt(searchParams.get('guests') || '1') }
-      });
+        guests: { 
+          adults: parseInt(searchParams.get('guests') || '1'),
+          children: 0,
+          rooms: 1 
+        }
+      } as unknown as Partial<BookingFormData>);
     }
   }, [selectedHotel, selectedRoom, onNext, searchParams]);
 
@@ -516,8 +642,9 @@ const HotelSelectionStep: React.FC<HotelSelectionStepProps> = ({ formData, onBac
                 selected={selectedHotel?.id === hotel.id}
                 onSelect={handleSelectHotel}
                 onRoomSelect={handleRoomSelect}
-                selectedRoomId={selectedRoom?.id}
+                selectedRoomId={formData.selectedRoomType?.id}
                 isLoadingRooms={isLoadingRooms}
+                searchParams={searchParams}
               />
             ))}
           </div>

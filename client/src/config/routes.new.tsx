@@ -1,16 +1,36 @@
 import { lazy, ComponentType, ReactElement, Suspense } from 'react';
 import { UserRole } from '@shared/types/auth';
-import { AuthRouteObject } from '@/components/routes/RouteRenderer';
 
 // Type for components that can be imported with dynamic imports
 type ImportedComponent = {
   default: ComponentType<any>;
 };
 
+// Type for route metadata
+export interface RouteMeta {
+  title?: string;
+  description?: string;
+  requiresAuth?: boolean;
+  roles?: string[];
+  permissions?: string[];
+  [key: string]: unknown;
+}
+
 // Type for route elements with preload capability
 type RouteElement = ReactElement & {
-  preload: () => Promise<ImportedComponent>;
+  preload?: () => Promise<ImportedComponent>;
 };
+
+// Extended route type with authentication and authorization support
+export interface AuthRouteObject {
+  path?: string;
+  element?: React.ReactNode;
+  children?: AuthRouteObject[];
+  requireAuth?: boolean;
+  requiredRoles?: string[];
+  requiredPermissions?: string[];
+  meta?: RouteMeta;
+}
 
 /**
  * Higher-order function for lazy loading components with preloading capability
@@ -21,11 +41,7 @@ function lazyLoad(
     requireAuth?: boolean;
     requiredRoles?: UserRole[];
     requiredPermissions?: string[];
-    meta?: {
-      title?: string;
-      description?: string;
-      [key: string]: any;
-    };
+    meta?: RouteMeta;
   } = {}
 ): RouteElement {
   // Create a properly typed lazy component
@@ -72,45 +88,43 @@ function lazyLoad(
 export const publicRoutes: AuthRouteObject[] = [
   {
     path: '/',
-    element: lazyLoad(() => import('@/pages/Home'), {
-      meta: { title: 'Home - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/Home')),
+    meta: { title: 'NestMap - AI-Powered Travel Planning' }
   },
   {
     path: '/login',
-    element: lazyLoad(() => import('@/pages/Login'), {
-      meta: { title: 'Login - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/Login')),
+    meta: { title: 'Login - NestMap' }
   },
   {
-    path: '/register',
-    element: lazyLoad(() => import('@/pages/Register'), {
-      meta: { title: 'Register - NestMap' }
-    })
+    path: '/signup',
+    element: lazyLoad(() => import('@/pages/Signup')),
+    meta: { title: 'Create Account - NestMap' }
   },
   {
     path: '/forgot-password',
-    element: lazyLoad(() => import('@/pages/ForgotPassword'), {
-      meta: { title: 'Forgot Password - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/auth/ForgotPassword')),
+    meta: { title: 'Forgot Password - NestMap' }
   },
   {
     path: '/reset-password',
-    element: lazyLoad(() => import('@/pages/ResetPassword'), {
-      meta: { title: 'Reset Password - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/auth/ResetPassword')),
+    meta: { title: 'Reset Password - NestMap' }
   },
   {
     path: '/unauthorized',
-    element: lazyLoad(() => import('@/pages/Unauthorized'), {
-      meta: { title: 'Unauthorized - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/Unauthorized')),
+    meta: { title: 'Unauthorized - NestMap' }
+  },
+  {
+    path: '/not-found',
+    element: lazyLoad(() => import('@/pages/NotFound')),
+    meta: { title: 'Page Not Found - NestMap' }
   },
   {
     path: '*',
-    element: lazyLoad(() => import('@/pages/NotFound'), {
-      meta: { title: 'Not Found - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/NotFound')),
+    meta: { title: 'Page Not Found - NestMap' }
   }
 ];
 
@@ -118,108 +132,83 @@ export const publicRoutes: AuthRouteObject[] = [
 export const protectedRoutes: AuthRouteObject[] = [
   {
     path: '/dashboard',
-    element: lazyLoad(() => import('@/pages/Dashboard'), {
-      requireAuth: true,
-      meta: { title: 'Dashboard - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/Dashboard')),
+    requireAuth: true,
+    meta: { title: 'Dashboard - NestMap' }
   },
   {
     path: '/profile',
-    element: lazyLoad(() => import('@/pages/Profile'), {
-      requireAuth: true,
-      meta: { title: 'My Profile - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/ProfileSettings')),
+    requireAuth: true,
+    meta: { title: 'My Profile - NestMap' }
   },
   {
     path: '/settings',
-    element: lazyLoad(() => import('@/pages/Settings'), {
-      requireAuth: true,
-      meta: { title: 'Settings - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/Settings')),
+    requireAuth: true,
+    meta: { title: 'Settings - NestMap' }
   },
   {
     path: '/bookings',
-    element: lazyLoad(() => import('@/pages/Bookings'), {
-      requireAuth: true,
-      meta: { title: 'My Bookings - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/Bookings')),
+    requireAuth: true,
+    meta: { title: 'My Bookings - NestMap' }
   },
   {
     path: '/trip-planner',
-    element: lazyLoad(() => import('@/pages/TripPlanner'), {
-      requireAuth: true,
-      meta: { title: 'Trip Planner - NestMap' }
-    })
+    element: lazyLoad(() => import('@/pages/TripPlanner')),
+    requireAuth: true,
+    meta: { title: 'Trip Planner - NestMap' }
   }
 ];
 
-// Admin routes (require admin role)
+// Admin routes (admin role required)
 export const adminRoutes: AuthRouteObject[] = [
   {
     path: '/admin',
-    children: [
-      {
-        index: true,
-        element: lazyLoad(() => import('@/pages/admin/AdminDashboard'), {
-          requireAuth: true,
-          requiredRoles: [UserRole.ADMIN],
-          meta: { title: 'Admin Dashboard - NestMap' }
-        })
-      },
-      {
-        path: 'users',
-        element: lazyLoad(() => import('@/pages/admin/UserManagement'), {
-          requireAuth: true,
-          requiredRoles: [UserRole.ADMIN],
-          requiredPermissions: ['users:read'],
-          meta: { title: 'User Management - NestMap' }
-        })
-      },
-      {
-        path: 'analytics',
-        element: lazyLoad(() => import('@/pages/admin/Analytics'), {
-          requireAuth: true,
-          requiredRoles: [UserRole.ADMIN],
-          requiredPermissions: ['analytics:view'],
-          meta: { title: 'Analytics - NestMap' }
-        })
-      }
-    ]
+    element: lazyLoad(() => import('@/pages/AdminDashboard')),
+    requireAuth: true,
+    requiredRoles: ['admin'],
+    meta: { title: 'Admin Dashboard - NestMap' }
+  },
+  {
+    path: '/admin/users',
+    element: lazyLoad(() => import('@/pages/AdminUserActivity')),
+    requireAuth: true,
+    requiredRoles: ['admin'],
+    meta: { title: 'User Management - NestMap' }
+  },
+  {
+    path: '/admin/analytics',
+    element: lazyLoad(() => import('@/pages/Analytics')),
+    requireAuth: true,
+    requiredRoles: ['admin'],
+    meta: { title: 'Analytics - NestMap' }
   }
 ];
 
-// Superadmin routes (require superadmin role)
+// Super admin routes (super admin role required)
 export const superadminRoutes: AuthRouteObject[] = [
   {
     path: '/superadmin',
-    children: [
-      {
-        index: true,
-        element: lazyLoad(() => import('@/pages/superadmin/SuperAdminDashboard'), {
-          requireAuth: true,
-          requiredRoles: [UserRole.SUPER_ADMIN],
-          meta: { title: 'Super Admin Dashboard - NestMap' }
-        })
-      },
-      {
-        path: 'system-settings',
-        element: lazyLoad(() => import('@/pages/superadmin/SystemSettings'), {
-          requireAuth: true,
-          requiredRoles: [UserRole.SUPER_ADMIN],
-          requiredPermissions: ['system:settings:manage'],
-          meta: { title: 'System Settings - NestMap' }
-        })
-      },
-      {
-        path: 'audit-logs',
-        element: lazyLoad(() => import('@/pages/superadmin/AuditLogs'), {
-          requireAuth: true,
-          requiredRoles: [UserRole.SUPER_ADMIN],
-          requiredPermissions: ['audit:read'],
-          meta: { title: 'Audit Logs - NestMap' }
-        })
-      }
-    ]
+    element: lazyLoad(() => import('@/pages/SuperadminSimple')),
+    requireAuth: true,
+    requiredRoles: ['superadmin'],
+    meta: { title: 'Super Admin Dashboard - NestMap' }
+  },
+  {
+    path: '/superadmin/settings',
+    element: lazyLoad(() => import('@/pages/AdminSettings')),
+    requireAuth: true,
+    requiredRoles: ['superadmin'],
+    meta: { title: 'System Settings - NestMap' }
+  },
+  {
+    path: '/superadmin/audit-logs',
+    element: lazyLoad(() => import('@/pages/AdminLogs')),
+    requireAuth: true,
+    requiredRoles: ['superadmin'],
+    meta: { title: 'Audit Logs - NestMap' }
   }
 ];
 
@@ -232,7 +221,7 @@ export const allRoutes: AuthRouteObject[] = [
 ];
 
 // Helper function to find a route by path
-export function findMatchingRoute(
+function findMatchingRoute(
   routes: AuthRouteObject[],
   path: string
 ): AuthRouteObject | undefined {
@@ -241,10 +230,8 @@ export function findMatchingRoute(
       return route;
     }
     if (route.children) {
-      const childRoute = findMatchingRoute(route.children, path);
-      if (childRoute) {
-        return childRoute;
-      }
+      const found = findMatchingRoute(route.children, path);
+      if (found) return found;
     }
   }
   return undefined;
@@ -252,16 +239,17 @@ export function findMatchingRoute(
 
 // Helper function to preload route components
 export async function preloadRoute(pathname: string): Promise<void> {
-  const route = findMatchingRoute(allRoutes, pathname);
-  if (route?.element && 'preload' in route.element) {
-    await route.element.preload();
+  const route = findMatchingRoute([...publicRoutes, ...protectedRoutes, ...adminRoutes, ...superadminRoutes], pathname);
+  const element = route?.element as unknown as { preload?: () => Promise<unknown> };
+  if (element?.preload) {
+    await element.preload();
   }
 }
 
 // Export the notFound route for the router
-export const notFoundRoute = {
+export const notFoundRoute: AuthRouteObject = {
   path: '*',
   element: lazyLoad(() => import('@/pages/NotFound'), {
-    meta: { title: 'Not Found - NestMap' }
+    meta: { title: 'Page Not Found - NestMap' }
   })
 };

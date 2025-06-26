@@ -20,7 +20,7 @@ class ErrorBoundary extends Component<Props, State> {
     static getDerivedStateFromError(error: Error): State {
         return { hasError: true, error, errorInfo: null };
     }
-    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         this.setState({ errorInfo });
         // Log error for debugging
         console.error('Error Boundary caught an error:', error, errorInfo);
@@ -29,7 +29,7 @@ class ErrorBoundary extends Component<Props, State> {
             this.props.onError(error, errorInfo);
         }
         // Send error to monitoring service in production
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env['NODE_ENV'] === 'production') {
             // In a real app, you would send this to a service like Sentry
             // captureException(error, { extra: errorInfo });
         }
@@ -40,7 +40,7 @@ class ErrorBoundary extends Component<Props, State> {
     handleGoHome = () => {
         window.location.href = '/';
     };
-    render() {
+    override render() {
         if (this.state.hasError) {
             // Custom fallback UI
             if (this.props.fallback) {
@@ -62,7 +62,7 @@ class ErrorBoundary extends Component<Props, State> {
                 We encountered an unexpected error. This has been logged and our team will investigate.
               </p>
               
-              {process.env.NODE_ENV === 'development' && this.state.error && (<details className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+              {process.env['NODE_ENV'] === 'development' && this.state.error && (<details className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
                   <summary className="font-medium cursor-pointer text-gray-700 dark:text-gray-300 mb-2">
                     Error Details (Development Only)
                   </summary>

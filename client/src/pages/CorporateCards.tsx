@@ -54,6 +54,7 @@ interface Expense {
     amount: number;
     currency: string;
     expense_category: string;
+    category: string; // Alias for expense_category
     description: string;
     status: string;
     approval_status: string;

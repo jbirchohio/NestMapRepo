@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { jwtAuth } from "@/lib/jwtAuth";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -80,7 +80,7 @@ export default function SequentialBooking() {
                     // Validate that required data exists
                     if (data && data.travelers && Array.isArray(data.travelers) && data.travelers.length > 0) {
                         // Validate each traveler has required properties
-                        const validTravelers = data.travelers.every(t => t && typeof t.name === 'string' && typeof t.email === 'string');
+                        const validTravelers = data.travelers.every((t: Traveler) => t && typeof t.name === 'string' && typeof t.email === 'string');
                         if (validTravelers) {
                             setBookingData(data);
                         }
@@ -133,8 +133,8 @@ export default function SequentialBooking() {
         <div className="text-center">Loading booking workflow...</div>
       </div>);
     }
-    const currentTraveler = bookingData.travelers?.[bookingData.currentTravelerIndex];
-    const totalSteps = bookingData.travelers?.length + 1 || 1; // All travelers + payment
+    const currentTraveler = bookingData.travelers?.[bookingData.currentTravelerIndex] as Traveler | undefined;
+    const totalSteps = (bookingData.travelers?.length || 0) + 1; // All travelers + payment
     let completedSteps = bookingData.currentTravelerIndex;
     if (bookingData.bookingStatus === 'payment') {
         completedSteps = bookingData.travelers?.length || 0;
@@ -154,6 +154,14 @@ export default function SequentialBooking() {
       </div>);
     }
     const handleFlightBooking = async () => {
+        if (!currentTraveler) {
+            toast({
+                title: "No traveler selected",
+                description: "Unable to find traveler information for booking.",
+                variant: "destructive",
+            });
+            return;
+        }
         // Check if date of birth is missing and show form to collect it
         if (!currentTraveler.dateOfBirth) {
             toast({
@@ -257,16 +265,53 @@ export default function SequentialBooking() {
         const destinationCode = convertCityToAirportCode(bookingData.tripDestination);
         console.log(`Converting "${currentTraveler.departureCity}" to "${originCode}" and "${bookingData.tripDestination}" to "${destinationCode}"`);
         // Format dates properly for API
-        const formatDate = (date: string | Date | any): string => {
-            if (!date)
+        const formatDate = (date: unknown): string => {
+            if (!date) return '';
+            
+            try {
+                // Handle string input
+                if (typeof date === 'string') {
+                    // If it's already in YYYY-MM-DD format, return it
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                    if (dateRegex.test(date)) {
+                        return date;
+                    }
+                    
+                    // Try to parse the date string
+                    const parsedDate = new Date(date);
+                    if (!isNaN(parsedDate.getTime())) {
+                        const isoString = parsedDate.toISOString();
+                        return isoString.split('T')[0] || '';
+                    }
+                    return '';
+                }
+                
+                // Handle Date object
+                if (date instanceof Date) {
+                    if (isNaN(date.getTime())) return '';
+                    const isoString = date.toISOString();
+                    return isoString.split('T')[0] || '';
+                }
+                
+                // Handle other object types that might be dates
+                if (date && typeof date === 'object') {
+                    try {
+                        const dateStr = JSON.parse(JSON.stringify(date));
+                        const parsedDate = new Date(dateStr);
+                        if (!isNaN(parsedDate.getTime())) {
+                            const isoString = parsedDate.toISOString();
+                            return isoString.split('T')[0] || '';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing date object:', e);
+                    }
+                }
+                
                 return '';
-            if (typeof date === 'string' && date.includes('-'))
-                return date;
-            if (date instanceof Date)
-                return date.toISOString().split('T')[0];
-            if (typeof date === 'object' && Object.keys(date).length === 0)
+            } catch (error) {
+                console.error('Error formatting date:', error);
                 return '';
-            return '';
+            }
         };
         const departureDateStr = formatDate(bookingData.departureDate);
         const returnDateStr = formatDate(bookingData.returnDate);
@@ -297,7 +342,7 @@ export default function SequentialBooking() {
                 setCurrentStep(1);
                 toast({
                     title: "Flights Found",
-                    description: `Found ${flightData.flights.length} flights for ${currentTraveler.name} from ${currentTraveler.departureCity} to ${bookingData.tripDestination}`,
+                    description: `Found ${flightData.flights.length} flights for ${currentTraveler?.name || 'Traveler'} • ${currentTraveler?.departureCity || 'Origin'} → ${bookingData.tripDestination}`,
                 });
             }
             else {
@@ -447,14 +492,14 @@ export default function SequentialBooking() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plane className="h-5 w-5"/>
-              Flight Booking - {currentTraveler.name}
+              Flight Booking - {currentTraveler?.name || 'Traveler'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="text-sm font-medium">Departing From</label>
-                <p className="text-lg">{currentTraveler.departureCity}</p>
+                <p className="text-lg">{currentTraveler?.departureCity || 'Origin'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium">Arriving At</label>
@@ -471,7 +516,7 @@ export default function SequentialBooking() {
             </div>
 
             {/* Show missing information warning if date of birth is missing */}
-            {!currentTraveler.dateOfBirth && (<div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+            {!currentTraveler?.dateOfBirth && (<div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-2 text-orange-800 mb-2">
                   <User className="h-4 w-4"/>
                   <span className="font-medium">Additional Information Required</span>
@@ -483,16 +528,16 @@ export default function SequentialBooking() {
 
             <div className="flex items-center gap-2 mb-4">
               <Badge variant="outline">
-                {currentTraveler.travelClass.charAt(0).toUpperCase() + currentTraveler.travelClass.slice(1)}
+                {currentTraveler?.travelClass ? currentTraveler.travelClass.charAt(0).toUpperCase() + currentTraveler.travelClass.slice(1) : 'Economy'}
               </Badge>
-              {currentTraveler.dietaryRequirements && (<Badge variant="secondary">
+              {currentTraveler?.dietaryRequirements && (<Badge variant="secondary">
                   {currentTraveler.dietaryRequirements}
                 </Badge>)}
             </div>
 
             <div className="flex gap-3">
               <Button onClick={handleFlightBooking} className="flex-1" disabled={isSearching}>
-                {isSearching ? 'Searching Flights...' : (currentTraveler.dateOfBirth ? 'Search Flights' : 'Complete Info & Search Flights')} for {currentTraveler.name}
+                {isSearching ? 'Searching Flights...' : (currentTraveler?.dateOfBirth ? 'Search Flights' : 'Complete Info & Search Flights')} for {currentTraveler?.name || 'Traveler'}
                 <ArrowRight className="ml-2 h-4 w-4"/>
               </Button>
               
@@ -512,13 +557,13 @@ export default function SequentialBooking() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plane className="h-5 w-5"/>
-              Select Flight for {currentTraveler.name}
+              Select Flight for {currentTraveler?.name || 'Traveler'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-4">
               <p className="text-sm text-muted-foreground">
-                {currentTraveler.departureCity} → {bookingData.tripDestination} • {flightOffers.length} options available
+                {currentTraveler?.departureCity || 'Origin'} → {bookingData.tripDestination} • {flightOffers.length} options available
               </p>
             </div>
 
@@ -548,7 +593,7 @@ export default function SequentialBooking() {
                       
                       <div className="text-right">
                         <div className="text-2xl font-bold text-primary">
-                          ${parseFloat(offer.price).toFixed(2)}
+ ${offer.price.toFixed(2)}
                         </div>
                         <div className="text-sm text-muted-foreground">{offer.currency}</div>
                       </div>
@@ -585,7 +630,7 @@ export default function SequentialBooking() {
                         const booking = await response.json();
                         toast({
                             title: 'Flight booked',
-                            description: `Booking reference ${booking.bookingReference || booking.id} for ${currentTraveler.name}`,
+                            description: `Booking reference ${booking.bookingReference || booking.id} for ${currentTraveler?.name || 'traveler'}`,
                         });
                         setCurrentStep(0);
                         handleNextTraveler();

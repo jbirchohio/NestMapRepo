@@ -87,14 +87,14 @@ export default function WhiteLabelPreview({ config, isActive }: WhiteLabelPrevie
         if (config.tagline) {
             const taglineElements = doc.querySelectorAll('.company-tagline');
             taglineElements.forEach(el => {
-                el.textContent = config.tagline;
+                el.textContent = config.tagline ?? null;
             });
         }
         // Update footer text if provided
         if (config.footerText) {
             const footerElements = doc.querySelectorAll('.footer-text');
             footerElements.forEach(el => {
-                el.textContent = config.footerText;
+                el.textContent = config.footerText ?? null;
             });
         }
     };

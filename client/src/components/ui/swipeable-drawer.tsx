@@ -14,7 +14,7 @@ interface SwipeableDrawerProps {
     showCloseButton?: boolean;
 }
 const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(({ children, isOpen, onClose, title, className, snapPoints = [0.3, 0.6, 0.9], defaultSnapPoint = 0.6, showHandle = true, showCloseButton = true }, ref) => {
-    const [currentSnapPoint, setCurrentSnapPoint] = useState(defaultSnapPoint);
+    const [currentSnapPoint, setCurrentSnapPoint] = useState<number>(defaultSnapPoint);
     const [isDragging, setIsDragging] = useState(false);
     // Prevent body scroll when drawer is open
     useEffect(() => {
@@ -50,16 +50,29 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(({ chil
         // Find closest snap point
         const windowHeight = window.innerHeight;
         const currentPosition = (windowHeight - (windowHeight * currentSnapPoint + offset)) / windowHeight;
-        let closestSnapPoint = snapPoints[0];
-        let minDistance = Math.abs(currentPosition - snapPoints[0]);
-        snapPoints.forEach(point => {
-            const distance = Math.abs(currentPosition - point);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestSnapPoint = point;
+        
+        // Ensure snapPoints has values before proceeding
+        const validSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0 ? snapPoints : [];
+        if (validSnapPoints.length > 0) {
+            const firstSnapPoint = validSnapPoints[0];
+            if (firstSnapPoint === undefined) return;
+            
+            let closestSnapPoint = firstSnapPoint;
+            let minDistance = Math.abs(currentPosition - firstSnapPoint);
+            
+            validSnapPoints.slice(1).forEach(point => {
+                const distance = Math.abs(currentPosition - point);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestSnapPoint = point;
+                }
+            });
+            
+            // Ensure closestSnapPoint is defined before setting state
+            if (closestSnapPoint !== undefined) {
+                setCurrentSnapPoint(closestSnapPoint);
             }
-        });
-        setCurrentSnapPoint(closestSnapPoint);
+        }
     };
     const overlayVariants = {
         hidden: {

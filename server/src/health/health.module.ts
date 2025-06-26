@@ -1,15 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { HealthController } from './health.controller';
-import { HealthService } from './health.service';
-import { DatabaseHealthIndicator } from './database.health';
+import { HealthController } from './health.controller.js';
+import { HealthService } from './health.service.js';
+import { DatabaseHealthIndicator } from './database.health.js';
 
 @Module({
-  imports: [
-    TerminusModule,
-    TypeOrmModule.forFeature([]), // Add any entities if needed
-  ],
+  imports: [TerminusModule],
   controllers: [HealthController],
   providers: [
     HealthService,

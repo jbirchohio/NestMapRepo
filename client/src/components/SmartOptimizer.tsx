@@ -35,23 +35,28 @@ interface SmartOptimizerProps {
     activities: OptimizableActivity[];
     onActivitiesUpdate: (activities: OptimizableActivity[]) => void;
 }
+
 export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate }: SmartOptimizerProps) {
     const [isAutoOptimizeEnabled, setIsAutoOptimizeEnabled] = useState(true);
     const [showConflicts, setShowConflicts] = useState(true);
     const [selectedTab, setSelectedTab] = useState('optimization');
+
     // Fetch optimization data
-    const { data: optimization, isLoading: optimizationLoading, refetch: refetchOptimization } = useQuery({
+    const { data: optimization, isLoading: optimizationLoading, refetch: refetchOptimization } = useQuery<Optimization>({
         queryKey: ['/api/optimize/schedule', tripId],
         enabled: !!tripId && activities.length > 0
     });
-    const { data: conflicts, isLoading: conflictsLoading } = useQuery({
+
+    const { data: conflicts, isLoading: conflictsLoading } = useQuery<Conflict[]>({
         queryKey: ['/api/conflicts/detect', tripId],
         enabled: !!tripId && activities.length > 0
     });
-    const { data: reminders, isLoading: remindersLoading } = useQuery({
-        queryKey: ['/api/reminders/smart', tripId],
+
+    const { data: reminders, isLoading: remindersLoading } = useQuery<Reminder[]>({
+        queryKey: ['/api/reminders', tripId],
         enabled: !!tripId && activities.length > 0
     });
+
     // Apply optimization mutation
     const applyOptimizationMutation = useMutation({
         mutationFn: () => apiRequest('POST', '/api/optimize/apply', { tripId, activities }),
@@ -187,7 +192,13 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
             </TabsList>
 
             <TabsContent value="optimization" className="space-y-4">
-              <OptimizationTab optimization={optimization} onApplyOptimization={() => applyOptimizationMutation.mutate()} isApplying={applyOptimizationMutation.isPending}/>
+              {optimization && (
+                <OptimizationTab 
+                  optimization={optimization} 
+                  onApplyOptimization={() => applyOptimizationMutation.mutate()} 
+                  isApplying={applyOptimizationMutation.isPending}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="conflicts" className="space-y-4">
@@ -212,6 +223,14 @@ interface OptimizationImprovement {
     routeChanges: number;
     suggestedActivities: OptimizableActivity[];
     optimizedSchedule: OptimizableActivity[];
+    travelTimeReduced?: number;
+    conflictsResolved?: number;
+    recommendations?: {
+        id: string;
+        type: string;
+        description: string;
+        impact: string;
+    }[];
 }
 interface Optimization {
     id: string;
@@ -231,7 +250,8 @@ function OptimizationTab({ optimization, onApplyOptimization, isApplying }: Opti
         No optimization suggestions available yet.
       </div>);
     }
-    const { improvements, recommendations } = optimization;
+    const { improvements } = optimization;
+    const recommendations = optimization.improvements.recommendations || [];
     return (<div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
@@ -263,10 +283,16 @@ function OptimizationTab({ optimization, onApplyOptimization, isApplying }: Opti
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {recommendations.map((rec: string, index: number) => (<div key={index} className="flex items-start gap-2 p-2 bg-muted rounded">
+              {recommendations.map((rec) => (
+                <div key={rec.id} className="flex items-start gap-2 p-2 bg-muted rounded">
                   <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"/>
-                  <span className="text-sm">{rec}</span>
-                </div>))}
+                  <div className="text-sm">
+                    <div className="font-medium">{rec.type}</div>
+                    <div>{rec.description}</div>
+                    <div className="text-xs text-muted-foreground">Impact: {rec.impact}</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -364,10 +390,13 @@ interface RemindersTabProps {
     reminders: Reminder[];
 }
 function RemindersTab({ reminders }: RemindersTabProps) {
-    const groupedReminders = reminders.reduce((acc: Record<string, Reminder[]>, reminder: Reminder) => {
+    type GroupedReminders = Record<string, Reminder[]>;
+    
+    const groupedReminders = reminders.reduce<GroupedReminders>((acc, reminder) => {
         const type = reminder.type;
-        if (!acc[type])
+        if (!acc[type]) {
             acc[type] = [];
+        }
         acc[type].push(reminder);
         return acc;
     }, {});
@@ -384,7 +413,8 @@ function RemindersTab({ reminders }: RemindersTabProps) {
         Smart reminders are automatically generated based on your activities and will be sent at optimal times.
       </div>
 
-      {Object.keys(groupedReminders).map(type => (<Card key={type}>
+      {Object.entries(groupedReminders).map(([type, reminders]) => (
+        <Card key={type}>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2 capitalize">
               {getReminderIcon(type)}
@@ -393,15 +423,18 @@ function RemindersTab({ reminders }: RemindersTabProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {groupedReminders[type].map((reminder: any, index: number) => (<div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              {reminders.map((reminder) => (
+                <div key={reminder.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex-1">
-                    <div className="font-medium">{reminder.title}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{reminder.message}</div>
+                    <div className="font-medium">{reminder.message}</div>
+                    {reminder.dueDate && (
+                      <div className="text-sm text-gray-500">
+                        Due: {new Date(reminder.dueDate).toLocaleString()}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {new Date(reminder.scheduledTime).toLocaleString()}
-                  </div>
-                </div>))}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>))}

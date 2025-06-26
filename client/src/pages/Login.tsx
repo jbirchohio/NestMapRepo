@@ -12,7 +12,7 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { signIn, signInWithProvider, error } = useAuth();
+    const { signIn, error } = useAuth();
     const [, setLocation] = useLocation();
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -20,7 +20,8 @@ export default function Login() {
             return;
         setIsLoading(true);
         try {
-            await signIn(email, password);
+            // Default tenant ID is used here, replace with actual tenant ID if needed
+            await signIn(email, password, 'default-tenant');
             setLocation('/');
         }
         catch (err) {
@@ -30,18 +31,7 @@ export default function Login() {
             setIsLoading(false);
         }
     };
-    const handleOAuthSignIn = async (provider: 'google' | 'github' | 'facebook') => {
-        setIsLoading(true);
-        try {
-            await signInWithProvider(provider);
-        }
-        catch (err) {
-            console.error(`${provider} sign-in failed:`, err);
-        }
-        finally {
-            setIsLoading(false);
-        }
-    };
+    // OAuth provider sign-in functionality will be implemented in a future update
     return (<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
@@ -61,9 +51,13 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {error && (<Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>)}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {typeof error === 'string' ? error : error?.message || 'An error occurred during login'}
+                </AlertDescription>
+              </Alert>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -84,18 +78,29 @@ export default function Login() {
             <Separator />
 
             <div className="space-y-2">
-              <Button type="button" variant="outline" className="w-full" onClick={() => handleOAuthSignIn('google')} disabled={isLoading}>
-                Continue with Google
-              </Button>
+              <Button type="button" variant="outline" className="w-full" disabled={isLoading}>
+              Continue with Google (Coming Soon)
+            </Button>
 
-              <Button type="button" variant="outline" className="w-full" onClick={() => handleOAuthSignIn('github')} disabled={isLoading}>
-                Continue with GitHub
-              </Button>
+            <Button type="button" variant="outline" className="w-full" disabled={isLoading}>
+              Continue with GitHub (Coming Soon)
+            </Button>
             </div>
 
             <Separator />
 
-            <Button type="button" variant="secondary" className="w-full" onClick={handleDemoMode} disabled={isLoading}>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              className="w-full" 
+              onClick={() => {
+                // Set demo credentials and submit
+                setEmail('demo@example.com');
+                setPassword('demo123');
+                handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+              }} 
+              disabled={isLoading}
+            >
               Continue with Demo Mode
             </Button>
 

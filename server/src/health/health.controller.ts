@@ -1,25 +1,20 @@
-import { Controller, Get, UseGuards, Post, Body, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, HttpStatus, Request, UseGuards } from '@nestjs/common';
 import { 
   HealthCheckService, 
   HealthCheck, 
-  HealthCheckResult,
-  HealthCheckError,
-  TypeOrmHealthIndicator,
-  HealthIndicatorResult,
+  type HealthCheckResult,
+  type HealthIndicatorResult,
 } from '@nestjs/terminus';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { HealthService } from './health.service';
-import { DatabaseHealthIndicator } from './database.health';
-import { AuthGuard } from '../auth/guards/auth.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/enums/user-role.enum';
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { HealthService } from './health.service.js';
+import { DatabaseHealthIndicator } from './database.health.js';
+import AuthGuard from '../middleware/authenticate.js';
 
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
   constructor(
     private health: HealthCheckService,
-    private db: TypeOrmHealthIndicator,
     private healthService: HealthService,
     private databaseHealth: DatabaseHealthIndicator,
   ) {}
@@ -36,22 +31,26 @@ export class HealthController {
   @Get('db')
   @HealthCheck()
   @UseGuards(AuthGuard)
-  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Database health check (Admin only)' })
   @ApiResponse({ status: 200, description: 'Database is healthy' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 503, description: 'Database is unhealthy' })
   async checkDb() {
     return this.health.check([
       async (): Promise<HealthIndicatorResult> => 
-        this.db.pingCheck('database', { timeout: 1000 })
+        this.healthService.checkDbConnection()
     ]);
   }
 
   @Get('details')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Detailed database health (Admin only)' })
   @ApiResponse({ status: 200, description: 'Detailed database health information' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   async getDbDetails() {
     try {
       const [health, stats] = await Promise.all([
@@ -67,12 +66,15 @@ export class HealthController {
         },
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      const errorCode = (error as { code?: string })?.code || 'UNKNOWN_ERROR';
+      
       return {
         status: 'error',
         error: {
-          message: error.message,
-          code: error.code,
+          message: errorMessage,
+          code: errorCode,
         },
         timestamp: new Date().toISOString(),
       };
@@ -81,10 +83,11 @@ export class HealthController {
 
   @Post('query')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Execute a read-only SQL query (Admin only)' })
   @ApiResponse({ status: 200, description: 'Query executed successfully' })
   @ApiResponse({ status: 400, description: 'Invalid query' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async query(@Body('sql') sql: string) {
     // Prevent any write operations
@@ -101,13 +104,13 @@ export class HealthController {
       throw new Error('Write operations are not allowed');
     }
 
-    const client = await this.databaseHealth['pool'].connect();
+    const client = await (this.databaseHealth as any).pool.connect();
     try {
       const result = await client.query(sql);
       return {
         status: 'ok',
         rowCount: result.rowCount,
-        fields: result.fields.map(f => ({
+        fields: result.fields.map((f: { name: string; dataTypeID: number; format: string }) => ({
           name: f.name,
           dataTypeID: f.dataTypeID,
           format: f.format,

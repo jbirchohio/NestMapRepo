@@ -1,7 +1,7 @@
-import type { Module } from '@nestjs/common';
-import type { BookingController } from '../controllers/booking.controller.ts';
-import type { BookingService } from '../services/booking.service.ts';
-import type { RepositoriesModule } from '../repositories/repositories.module.ts';
+import { Module } from '@nestjs/common';
+import { BookingController } from '../controllers/booking.controller.ts';
+import { BookingService } from '../services/booking.service.ts';
+import { RepositoriesModule } from '../repositories/repositories.module.ts';
 /**
  * Module for booking feature
  * Demonstrates how to register controllers, services, and repositories in the DI container

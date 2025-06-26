@@ -2,7 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { Route, Routes, useLocation, matchPath } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { UserRole } from '@shared/types/auth';
+import { UserRole } from '@shared/types/auth/user/index';
 import { ProtectedRoute } from './ProtectedRoute';
 
 /**

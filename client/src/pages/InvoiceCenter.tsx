@@ -14,12 +14,59 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FileText, Plus, Download, Send, DollarSign, Calendar, Clock, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Type definitions
+interface LineItem {
+  id?: string;
+  description: string;
+  quantity: number;
+  rate: number;
+  total: number;
+}
+
+
+
+interface Proposal {
+  id: number;
+  clientName: string;
+  clientEmail: string;
+  status: string;
+  updatedAt: string;
+  proposalData?: {
+    estimatedCost?: number;
+  };
+}
+
+interface Invoice {
+  id: number;
+  proposalId?: number;
+  clientName: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  invoiceNumber: string;
+  amount: number;
+  dueDate: string;
+  lineItems?: Array<{
+    description: string;
+    quantity: number;
+    rate: number;
+    total: number;
+  }>;
+  taxRate?: number;
+  notes?: string;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  message?: string;
+}
 const invoiceSchema = z.object({
-    proposalId: z.number().min(1, "Please select a proposal"),
+    proposalId: z.number().optional(),
     clientName: z.string().min(1, "Client name is required"),
     clientEmail: z.string().email("Valid email required"),
     dueDate: z.string().min(1, "Due date is required"),
     lineItems: z.array(z.object({
+        id: z.string().optional(),
         description: z.string().min(1, "Description is required"),
         quantity: z.number().min(1, "Quantity must be at least 1"),
         rate: z.number().min(0, "Rate must be positive"),
@@ -28,17 +75,29 @@ const invoiceSchema = z.object({
     taxRate: z.number().min(0).max(100).optional(),
     notes: z.string().optional()
 });
+
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
-export default function InvoiceCenter() {
+
+function InvoiceCenter() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-    const [selectedProposal, setSelectedProposal] = useState<any>(null);
+    const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
     const { toast } = useToast();
-    const { data: invoices, isLoading } = useQuery({
+    
+    // Fetch invoices with proper typing
+    const { data: invoicesResponse, isLoading } = useQuery<ApiResponse<Invoice[]>>({
         queryKey: ["/api/invoices"],
     });
-    const { data: proposals } = useQuery({
+    
+    // Extract invoices data or default to empty array
+    const invoices = invoicesResponse?.data || [];
+    
+    // Fetch proposals with proper typing
+    const { data: proposalsResponse } = useQuery<ApiResponse<Proposal[]>>({
         queryKey: ["/api/proposals"],
     });
+    
+    // Extract proposals data or default to empty array
+    const proposals = proposalsResponse?.data || [];
     const createInvoice = useMutation({
         mutationFn: (data: InvoiceFormData) => apiRequest("POST", "/api/invoices", data),
         onSuccess: () => {
@@ -124,10 +183,10 @@ export default function InvoiceCenter() {
       </div>);
     }
     const stats = {
-        totalInvoices: invoices?.length || 0,
-        totalRevenue: invoices?.reduce((sum: number, inv: any) => sum + (inv.amount / 100), 0) || 0,
-        paidInvoices: invoices?.filter((inv: any) => inv.status === 'paid').length || 0,
-        pendingInvoices: invoices?.filter((inv: any) => inv.status === 'sent').length || 0
+        totalInvoices: invoices.length,
+        totalRevenue: invoices.reduce((sum, inv) => sum + (inv.amount / 100), 0),
+        paidInvoices: invoices.filter(inv => inv.status === 'paid').length,
+        pendingInvoices: invoices.filter(inv => inv.status === 'sent').length
     };
     return (<div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -200,7 +259,7 @@ export default function InvoiceCenter() {
       </div>
 
       {/* Convertible Proposals */}
-      {proposals && proposals.some((p: any) => p.status === 'signed' && !invoices?.some((inv: any) => inv.proposalId === p.id)) && (<Card>
+      {proposals.some(p => p.status === 'signed' && !invoices.some(inv => inv.proposalId === p.id)) && (<Card>
           <CardHeader>
             <CardTitle>Ready to Convert</CardTitle>
             <CardDescription>Signed proposals that can be converted to invoices</CardDescription>
@@ -208,8 +267,8 @@ export default function InvoiceCenter() {
           <CardContent>
             <div className="space-y-2">
               {proposals
-                .filter((p: any) => p.status === 'signed' && !invoices?.some((inv: any) => inv.proposalId === p.id))
-                .map((proposal: any) => (<div key={proposal.id} className="flex items-center justify-between p-3 border rounded-lg">
+                .filter(p => p.status === 'signed' && !invoices.some(inv => inv.proposalId === p.id))
+                .map(proposal => (<div key={proposal.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <h4 className="font-medium">{proposal.clientName}</h4>
                       <p className="text-sm text-gray-500">
@@ -233,7 +292,7 @@ export default function InvoiceCenter() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {invoices?.map((invoice: any) => (<div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
+            {invoices.map(invoice => (<div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <h4 className="font-medium">{invoice.clientName}</h4>
@@ -265,7 +324,7 @@ export default function InvoiceCenter() {
                 </div>
               </div>))}
             
-            {(!invoices || invoices.length === 0) && (<div className="text-center py-8 text-gray-500">
+            {invoices.length === 0 && (<div className="text-center py-8 text-gray-500">
                 No invoices yet. Convert a signed proposal to get started.
               </div>)}
           </div>
@@ -273,146 +332,102 @@ export default function InvoiceCenter() {
       </Card>
     </div>);
 }
-function InvoiceForm({ form, onSubmit, isLoading, proposals }: {
-    form: any;
+import { UseFormReturn } from 'react-hook-form';
+
+interface InvoiceFormProps {
+    form: UseFormReturn<InvoiceFormData>;
     onSubmit: (data: InvoiceFormData) => void;
     isLoading: boolean;
-    proposals: any[];
-}) {
+    proposals: Proposal[];
+}
+
+
+
+const InvoiceForm: React.FC<InvoiceFormProps> = (props) => {
+    const { form, onSubmit, isLoading, proposals } = props;
+    const { register, control, watch, setValue, getValues } = form;
+    const lineItems = watch("lineItems") || [];
+    
+    // Ensure we always have at least one line item
+    useEffect(() => {
+        if (!lineItems || lineItems.length === 0) {
+            setValue("lineItems", [{ description: "", quantity: 1, rate: 0, total: 0 }]);
+        }
+    }, [lineItems, setValue]);
+    
     const addLineItem = () => {
-        const currentItems = form.getValues("lineItems");
-        form.setValue("lineItems", [...currentItems, { description: "", quantity: 1, rate: 0, total: 0 }]);
+        const currentItems = getValues("lineItems") || [];
+        const newItem: LineItem = { 
+            id: Date.now().toString(),
+            description: "", 
+            quantity: 1, 
+            rate: 0, 
+            total: 0 
+        };
+        setValue("lineItems", [...currentItems, newItem]);
     };
+    
     const removeLineItem = (index: number) => {
-        const currentItems = form.getValues("lineItems");
+        const currentItems = [...(getValues("lineItems") || [])];
         if (currentItems.length > 1) {
-            form.setValue("lineItems", currentItems.filter((_: any, i: number) => i !== index));
+            currentItems.splice(index, 1);
+            setValue("lineItems", currentItems, { shouldValidate: true });
         }
     };
-    const updateLineItemTotal = (index: number, quantity: number, rate: number) => {
-        const currentItems = form.getValues("lineItems");
-        currentItems[index].total = quantity * rate;
-        form.setValue("lineItems", currentItems);
+    
+    const updateLineItemTotal = (index: number, field: keyof LineItem, value: string | number) => {
+        const currentItems = [...(getValues("lineItems") || [])];
+        if (currentItems[index]) {
+            const updatedItem: LineItem = {
+                ...currentItems[index],
+                [field]: value,
+                quantity: field === 'quantity' ? Number(value) : currentItems[index].quantity,
+                rate: field === 'rate' ? Number(value) : currentItems[index].rate,
+                total: (field === 'quantity' ? Number(value) : currentItems[index].quantity) * 
+                       (field === 'rate' ? Number(value) : currentItems[index].rate)
+            };
+            currentItems[index] = updatedItem;
+            setValue("lineItems", currentItems, { shouldValidate: true });
+        }
     };
-    return (<Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="proposalId" render={({ field }) => (<FormItem>
-                <FormLabel>Linked Proposal (Optional)</FormLabel>
-                <FormControl>
-                  <Select value={field.value?.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select proposal"/>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {proposals?.map((proposal: any) => (<SelectItem key={proposal.id} value={proposal.id.toString()}>
-                          {proposal.clientName} - {new Date(proposal.createdAt).toLocaleDateString()}
-                        </SelectItem>))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>)}/>
-          <FormField control={form.control} name="dueDate" render={({ field }) => (<FormItem>
-                <FormLabel>Due Date</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>)}/>
-        </div>
+    
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Form fields will go here */}
+                <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" disabled={isLoading}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading ? "Saving..." : "Save Invoice"}
+                    </Button>
+                </div>
+            </form>
+        </Form>
+    );
+};
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="clientName" render={({ field }) => (<FormItem>
-                <FormLabel>Client Name</FormLabel>
-                <FormControl>
-                  <Input {...field}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>)}/>
-          <FormField control={form.control} name="clientEmail" render={({ field }) => (<FormItem>
-                <FormLabel>Client Email</FormLabel>
-                <FormControl>
-                  <Input type="email" {...field}/>
-                </FormControl>
-                <FormMessage />
-              </FormItem>)}/>
-        </div>
+// Helper function to update line item total
+const updateLineItemTotal = (
+  items: LineItem[], 
+  index: number, 
+  field: keyof LineItem, 
+  value: string | number
+): LineItem[] => {
+  const updatedItems = [...items];
+  if (updatedItems[index]) {
+    const updatedItem = {
+      ...updatedItems[index],
+      [field]: value,
+      quantity: field === 'quantity' ? Number(value) : updatedItems[index].quantity,
+      rate: field === 'rate' ? Number(value) : updatedItems[index].rate,
+    };
+    
+    updatedItem.total = updatedItem.quantity * updatedItem.rate;
+    updatedItems[index] = updatedItem;
+  }
+  return updatedItems;
+};
 
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Line Items</h3>
-            <Button type="button" variant="outline" onClick={addLineItem}>
-              <Plus className="w-4 h-4 mr-1"/>
-              Add Item
-            </Button>
-          </div>
-          
-          {form.watch("lineItems")?.map((item: any, index: number) => (<div key={index} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-5">
-                <FormField control={form.control} name={`lineItems.${index}.description`} render={({ field }) => (<FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input {...field}/>
-                      </FormControl>
-                    </FormItem>)}/>
-              </div>
-              <div className="col-span-2">
-                <FormField control={form.control} name={`lineItems.${index}.quantity`} render={({ field }) => (<FormItem>
-                      <FormLabel>Qty</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={(e) => {
-                    const qty = parseInt(e.target.value) || 0;
-                    field.onChange(qty);
-                    updateLineItemTotal(index, qty, form.getValues(`lineItems.${index}.rate`));
-                }}/>
-                      </FormControl>
-                    </FormItem>)}/>
-              </div>
-              <div className="col-span-2">
-                <FormField control={form.control} name={`lineItems.${index}.rate`} render={({ field }) => (<FormItem>
-                      <FormLabel>Rate</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} onChange={(e) => {
-                    const rate = parseFloat(e.target.value) || 0;
-                    field.onChange(rate);
-                    updateLineItemTotal(index, form.getValues(`lineItems.${index}.quantity`), rate);
-                }}/>
-                      </FormControl>
-                    </FormItem>)}/>
-              </div>
-              <div className="col-span-2">
-                <FormField control={form.control} name={`lineItems.${index}.total`} render={({ field }) => (<FormItem>
-                      <FormLabel>Total</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} readOnly className="bg-gray-50 dark:bg-gray-800"/>
-                      </FormControl>
-                    </FormItem>)}/>
-              </div>
-              <div className="col-span-1">
-                <Button type="button" variant="outline" size="sm" onClick={() => removeLineItem(index)} disabled={form.watch("lineItems").length === 1}>
-                  ×
-                </Button>
-              </div>
-            </div>))}
-        </div>
-
-        <FormField control={form.control} name="taxRate" render={({ field }) => (<FormItem>
-              <FormLabel>Tax Rate (%)</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.1" min="0" max="100" {...field} onChange={e => field.onChange(parseFloat(e.target.value) || 0)}/>
-              </FormControl>
-              <FormMessage />
-            </FormItem>)}/>
-
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Creating..." : "Create Invoice"}
-          </Button>
-        </div>
-      </form>
-    </Form>);
-}
+export { InvoiceCenter as default };

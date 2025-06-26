@@ -9,49 +9,141 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Leaf, DollarSign, TrendingUp, TrendingDown, Camera, Download, Upload, Target, AlertCircle, CheckCircle, BarChart3, PieChart, Receipt } from 'lucide-react';
+import { Receipt, Plus, TrendingUp, TrendingDown, ExternalLink as ExternalLinkIcon, Leaf, DollarSign, BarChart2, FileText, CheckCircle, BarChart3, PieChart, Download, Target } from 'lucide-react'; // Added Target icon
 import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from 'recharts';
+
+// Type definitions
+interface CarbonData {
+  totalEmissions: number;
+  comparison?: {
+    reductionPotential?: number;
+    offsetCost?: number;
+  };
+  breakdown: Record<string, number>;
+  recommendations?: string[];
+}
+
+interface ExpenseData {
+  totalCost: number;
+  currency: string;
+  expenses: Expense[];
+  breakdown?: Record<string, number>;
+  categories?: Record<string, number>;
+  receipts?: Array<{
+    id: string;
+    url: string;
+    uploadedAt: string;
+  }>;
+}
+
+interface Expense {
+  id: string;
+  amount: number;
+  category: string;
+  description: string;
+  vendor: string;
+  date: string;
+}
+
+interface OffsetOption {
+  id: string;
+  name: string;
+  description: string;
+  costPerTon: number;
+  type: string;
+}
+
+const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'] as const;
 interface CarbonExpenseTrackerProps {
-    tripId: number;
-    activities: any[];
-    budget?: number;
+  tripId: number;
+  activities: any[];
+  budget?: number;
+}
+
+interface CarbonTrackingTabProps {
+  carbonData: CarbonData | null;
+}
+
+interface NewExpense {
+  amount: string;
+  category: string;
+  description: string;
+  vendor: string;
+}
+
+interface ExpenseFormData extends Omit<Expense, 'id' | 'date'> {
+  // This is the type for the expense data after form submission
+}
+
+interface ExpenseManagementTabProps {
+  expenseData: ExpenseData | null;
+  budget: number | undefined;
+  newExpense: NewExpense;
+  setNewExpense: (expense: NewExpense) => void;
+  onAddExpense: (expense: Omit<Expense, 'id' | 'date'>) => void;
+  isAdding: boolean;
+}
+
+interface CarbonOffsetsTabProps {
+  offsetOptions: OffsetOption[] | null;
+  carbonFootprint: number;
+  onPurchaseOffset: (offsetData: { optionId: string; amount: number }) => void;
+  isPurchasing: boolean;
+}
+
+interface ReportsTabProps {
+  carbonData: CarbonData | null;
+  expenseData: ExpenseData | null;
 }
 export default function CarbonExpenseTracker({ tripId, activities, budget }: CarbonExpenseTrackerProps) {
     const [selectedTab, setSelectedTab] = useState('carbon');
-    const [newExpense, setNewExpense] = useState({
+    const [newExpense, setNewExpense] = useState<NewExpense>({
         amount: '',
         category: '',
         description: '',
         vendor: ''
     });
     // Fetch carbon footprint data
-    const { data: carbonData, isLoading: carbonLoading } = useQuery({
+    const { data: carbonData, isLoading: carbonLoading } = useQuery<CarbonData>({
         queryKey: ['/api/carbon/footprint', tripId],
         enabled: !!tripId
     });
     // Fetch expense data
-    const { data: expenseData, isLoading: expenseLoading } = useQuery({
+    const { data: expenseData, isLoading: expenseLoading } = useQuery<ExpenseData>({
         queryKey: ['/api/expenses/report', tripId],
-        enabled: !!tripId
+        enabled: !!tripId,
+        initialData: {
+          totalCost: 0,
+          currency: 'USD',
+          expenses: [],
+          receipts: []
+        }
     });
     // Fetch offset options
-    const { data: offsetOptions, isLoading: offsetLoading } = useQuery({
+    const { data: offsetOptions, isLoading: offsetLoading } = useQuery<OffsetOption[]>({
         queryKey: ['/api/carbon/offsets', tripId],
         enabled: !!tripId && !!carbonData
     });
     // Add expense mutation
     const addExpenseMutation = useMutation({
-        mutationFn: (expense: any) => apiRequest('POST', '/api/expenses/add', { tripId, ...expense }),
+        mutationFn: (expense: ExpenseFormData) =>
+          apiRequest('/api/expenses', 'POST', { 
+            ...expense, 
+            tripId, 
+            date: new Date().toISOString() 
+          }),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['/api/expenses/report', tripId] });
-            setNewExpense({ amount: '', category: '', description: '', vendor: '' });
-        }
-    });
+          queryClient.invalidateQueries({ queryKey: ['/api/expenses/report', tripId] });
+          setNewExpense({ amount: '', category: '', description: '', vendor: '' });
+        },
+      });
     // Purchase offset mutation
     const purchaseOffsetMutation = useMutation({
-        mutationFn: (offsetData: any) => apiRequest('POST', '/api/carbon/purchase-offset', { tripId, ...offsetData }),
+        mutationFn: (offsetData: { optionId: string; amount: number }) => 
+            apiRequest('/api/carbon/offsets/purchase', 'POST', { tripId, ...offsetData }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['/api/carbon/footprint', tripId] });
+            queryClient.invalidateQueries({ queryKey: ['/api/carbon/offsets', tripId] });
         }
     });
     const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
@@ -111,7 +203,7 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-300">vs Average Trip</p>
                 <p className="text-2xl font-bold text-electric-600">
-                  {carbonData?.comparison?.reductionPotential ? '-' : '+'}
+                  {carbonData?.comparison?.reductionPotential ? (carbonData.comparison.reductionPotential > 0 ? '-' : '+') : ''}
                   {Math.abs(carbonData?.comparison?.reductionPotential || 0)}%
                 </p>
                 <p className="text-xs text-gray-500">Carbon impact</p>
@@ -149,28 +241,38 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
             </TabsList>
 
             <TabsContent value="carbon" className="space-y-6">
-              <CarbonTrackingTab carbonData={carbonData}/>
+              <CarbonTrackingTab carbonData={carbonData || null}/>
             </TabsContent>
 
             <TabsContent value="expenses" className="space-y-6">
-              <ExpenseManagementTab expenseData={expenseData} budget={budget} newExpense={newExpense} setNewExpense={setNewExpense} onAddExpense={(expense) => addExpenseMutation.mutate(expense)} isAdding={addExpenseMutation.isPending}/>
+              <ExpenseManagementTab 
+              expenseData={expenseData || null} 
+              budget={budget} 
+              newExpense={newExpense} 
+              setNewExpense={setNewExpense} 
+              onAddExpense={(expense) => addExpenseMutation.mutate(expense)} 
+              isAdding={addExpenseMutation.isPending}
+            />
             </TabsContent>
 
             <TabsContent value="offsets" className="space-y-6">
-              <CarbonOffsetsTab offsetOptions={offsetOptions} carbonFootprint={carbonData?.totalEmissions || 0} onPurchaseOffset={(offsetData) => purchaseOffsetMutation.mutate(offsetData)} isPurchasing={purchaseOffsetMutation.isPending}/>
+              <CarbonOffsetsTab 
+              offsetOptions={offsetOptions as OffsetOption[] | null} 
+              carbonFootprint={carbonData?.totalEmissions || 0} 
+              onPurchaseOffset={(offsetData) => purchaseOffsetMutation.mutate(offsetData)} 
+              isPurchasing={purchaseOffsetMutation.isPending}
+            />
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-6">
-              <ReportsTab carbonData={carbonData} expenseData={expenseData}/>
+              <ReportsTab carbonData={carbonData || null} expenseData={expenseData || null}/>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
     </div>);
 }
-function CarbonTrackingTab({ carbonData }: {
-    carbonData: any;
-}) {
+function CarbonTrackingTab({ carbonData }: CarbonTrackingTabProps) {
     if (!carbonData) {
         return <div className="text-center py-8 text-gray-500">No carbon data available yet.</div>;
     }
@@ -206,9 +308,9 @@ function CarbonTrackingTab({ carbonData }: {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span>vs Average Trip</span>
-              <Badge className={comparison?.reductionPotential > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                {comparison?.reductionPotential > 0 ? '-' : '+'}
-                {Math.abs(comparison?.reductionPotential || 0)}%
+              <Badge className={(comparison?.reductionPotential ?? 0) > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                {(comparison?.reductionPotential ?? 0) > 0 ? '-' : '+'}
+                {Math.abs(comparison?.reductionPotential ?? 0)}%
               </Badge>
             </div>
             
@@ -222,7 +324,7 @@ function CarbonTrackingTab({ carbonData }: {
                 <span className="text-sm">Reduction Potential</span>
                 <span className="text-sm">{comparison?.reductionPotential || 0}%</span>
               </div>
-              <Progress value={comparison?.reductionPotential || 0} className="h-2"/>
+              <Progress value={comparison?.reductionPotential ?? 0} className="h-2"/>
             </div>
           </CardContent>
         </Card>
@@ -261,8 +363,36 @@ function CarbonTrackingTab({ carbonData }: {
       </Card>
     </div>);
 }
-function ExpenseManagementTab({ expenseData, budget, newExpense, setNewExpense, onAddExpense, isAdding }: any) {
-    const categories = ['flights', 'accommodation', 'meals', 'transportation', 'activities', 'miscellaneous'];
+function ExpenseManagementTab({ expenseData = { totalCost: 0, currency: 'USD', expenses: [], receipts: [] }, budget, newExpense, setNewExpense, onAddExpense, isAdding }: ExpenseManagementTabProps) {
+    const categories = ['flights', 'accommodation', 'meals', 'transportation', 'activities', 'miscellaneous'] as const;
+  
+  // Ensure expenseData.receipts is always defined
+  const receipts = expenseData?.receipts || [];
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setNewExpense({
+        ...newExpense,
+        category: e.target.value
+      });
+    };
+    
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewExpense({
+        ...newExpense,
+        [e.target.name]: e.target.value
+      });
+    };
+    
+    const handleSubmitExpense = () => {
+      if (!newExpense.amount || !newExpense.category) return;
+      
+      const expenseData: Omit<Expense, 'id' | 'date'> = {
+        amount: parseFloat(newExpense.amount) || 0,
+        category: newExpense.category,
+        description: newExpense.description || '',
+        vendor: newExpense.vendor || ''
+      };
+      onAddExpense(expenseData);
+    };
     return (<div className="space-y-6">
       {/* Quick Add Expense */}
       <Card>
@@ -273,11 +403,11 @@ function ExpenseManagementTab({ expenseData, budget, newExpense, setNewExpense, 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="amount">Amount</Label>
-              <Input id="amount" type="number" placeholder="0.00" value={newExpense.amount} onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}/>
+              <Input id="amount" type="number" placeholder="0.00" value={newExpense.amount} onChange={handleInputChange}/>
             </div>
             <div>
               <Label htmlFor="category">Category</Label>
-              <select id="category" className="w-full p-2 border rounded-md" value={newExpense.category} onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}>
+              <select id="category" className="w-full p-2 border rounded-md" value={newExpense.category} onChange={handleCategoryChange}>
                 <option value="">Select category</option>
                 {categories.map(cat => (<option key={cat} value={cat}>
                     {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -286,10 +416,14 @@ function ExpenseManagementTab({ expenseData, budget, newExpense, setNewExpense, 
             </div>
             <div>
               <Label htmlFor="vendor">Vendor</Label>
-              <Input id="vendor" placeholder="Vendor name" value={newExpense.vendor} onChange={(e) => setNewExpense({ ...newExpense, vendor: e.target.value })}/>
+              <Input id="vendor" placeholder="Vendor name" value={newExpense.vendor} onChange={handleInputChange}/>
             </div>
             <div className="flex items-end">
-              <Button onClick={() => onAddExpense(newExpense)} disabled={isAdding || !newExpense.amount || !newExpense.category} className="w-full">
+              <Button 
+                onClick={handleSubmitExpense} 
+                disabled={isAdding || !newExpense.amount || !newExpense.category} 
+                className="w-full"
+              >
                 <Receipt className="w-4 h-4 mr-2"/>
                 {isAdding ? 'Adding...' : 'Add Expense'}
               </Button>
@@ -299,82 +433,107 @@ function ExpenseManagementTab({ expenseData, budget, newExpense, setNewExpense, 
       </Card>
 
       {/* Expense Breakdown */}
-      {expenseData && (<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {expenseData && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Spending by Category</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={Object.entries(expenseData.breakdown || {}).map(([key, value]) => ({
-                category: key.charAt(0).toUpperCase() + key.slice(1),
-                amount: value as number
-            }))}>
-                  <CartesianGrid strokeDasharray="3 3"/>
-                  <XAxis dataKey="category"/>
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="amount" fill="#2563eb"/>
-                </BarChart>
-              </ResponsiveContainer>
+              {expenseData.breakdown ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart 
+                    data={Object.entries(expenseData.breakdown).map(([key, value]) => ({
+                      category: key.charAt(0).toUpperCase() + key.slice(1),
+                      amount: value as number
+                    }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="category" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="amount" fill="#2563eb" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No spending data available
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Budget vs Actual</CardTitle>
+              <CardTitle className="text-lg">Budget Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {expenseData.categories?.map((cat: any, index: number) => (<div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{cat.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">${cat.actual}</span>
-                        <Badge className={cat.status === 'under' ? 'bg-green-100 text-green-800' :
-                    cat.status === 'over' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'}>
-                          {cat.status}
-                        </Badge>
+              {expenseData.breakdown ? (
+                <div className="space-y-4">
+                  {Object.entries(expenseData.breakdown).map(([category, amount], index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">{category}</span>
+                        <span>${amount}</span>
                       </div>
+                      {budget && expenseData?.breakdown && (
+                        <>
+                          <Progress 
+                            value={Math.min((amount / (budget / Object.keys(expenseData.breakdown).length)) * 100, 100)} 
+                            className="h-2" 
+                          />
+                          <div className="text-xs text-gray-500">
+                            {budget && `Budget: $${(budget / Object.keys(expenseData.breakdown).length).toFixed(2)}`}
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <Progress value={(cat.actual / cat.budgeted) * 100} className="h-2"/>
-                    <div className="text-xs text-gray-500">
-                      Budget: ${cat.budgeted} | Variance: ${cat.variance}
-                    </div>
-                  </div>))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No budget data available
+                </div>
+              )}
             </CardContent>
           </Card>
-        </div>)}
+        </div>
+      )}
 
-      {/* Recent Expenses */}
-      {expenseData?.receipts && (<Card>
+      {/* Recent Receipts */}
+      {receipts.length > 0 && (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Recent Expenses</CardTitle>
+            <CardTitle className="text-lg">Recent Receipts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {expenseData.receipts.slice(0, 5).map((receipt: any, index: number) => (<div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex-1">
-                    <div className="font-medium">{receipt.description}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      {receipt.vendor} • {receipt.date}
+            <div className="space-y-4">
+              {receipts.slice(0, 5).map((receipt, index) => (
+                <div key={receipt.id || index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="font-medium">Receipt #{index + 1}</div>
+                    <div className="text-sm text-gray-500">
+                      Uploaded on {new Date(receipt.uploadedAt).toLocaleDateString()}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-bold">${receipt.amount}</div>
-                    <Badge variant="outline" className="text-xs">
-                      {receipt.category}
-                    </Badge>
-                  </div>
-                </div>))}
+                  <a 
+                    href={receipt.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex items-center"
+                  >
+                    <span className="mr-1">View</span>
+                    <ExternalLinkIcon className="w-4 h-4" />
+                  </a>
+                </div>
+              ))}
             </div>
           </CardContent>
-        </Card>)}
+        </Card>
+      )}
     </div>);
 }
-function CarbonOffsetsTab({ offsetOptions, carbonFootprint, onPurchaseOffset, isPurchasing }: any) {
+function CarbonOffsetsTab({ offsetOptions, carbonFootprint, onPurchaseOffset, isPurchasing }: CarbonOffsetsTabProps) {
     return (<div className="space-y-6">
       <Alert>
         <Leaf className="w-4 h-4"/>
@@ -418,7 +577,7 @@ function CarbonOffsetsTab({ offsetOptions, carbonFootprint, onPurchaseOffset, is
       </div>
     </div>);
 }
-function ReportsTab({ carbonData, expenseData }: any) {
+function ReportsTab({ carbonData, expenseData }: ReportsTabProps) {
     return (<div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Sustainability & Financial Reports</h3>
@@ -452,7 +611,9 @@ function ReportsTab({ carbonData, expenseData }: any) {
             </div>
             <div className="flex justify-between">
               <span>Offset Opportunities</span>
-              <span className="font-bold">${carbonData?.comparison?.offsetCost || 0}</span>
+              <p className="text-sm text-gray-500">
+                {carbonData?.comparison?.offsetCost ? `$${carbonData.comparison.offsetCost.toFixed(2)} to offset` : 'Calculating offset cost...'}
+              </p>
             </div>
           </CardContent>
         </Card>

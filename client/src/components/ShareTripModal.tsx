@@ -58,7 +58,8 @@ export default function ShareTripModal({ isOpen, onClose, trip, onSave, }: Share
                 sharePermission: sharePermission
             };
             try {
-                await onSave(trip.id, updates);
+                if (!trip?.id) return;
+                await onSave(Number(trip.id), updates);
                 const baseUrl = window.location.origin;
                 setShareLink(`${baseUrl}/share/${shareCode}?permission=${sharePermission}`);
                 toast({
@@ -132,7 +133,7 @@ export default function ShareTripModal({ isOpen, onClose, trip, onSave, }: Share
         try {
             // Ensure we have a share code - generate one if missing
             const shareCode = trip.shareCode || generateShareCode();
-            await onSave(trip.id, {
+            await onSave(Number(trip.id), {
                 sharePermission: newPermission,
                 shareCode: shareCode,
                 sharingEnabled: true
@@ -172,7 +173,7 @@ export default function ShareTripModal({ isOpen, onClose, trip, onSave, }: Share
             setCollaboratorEmail("");
             if (trip) {
                 // Save to database
-                onSave(trip.id, { collaborators: newCollaborators });
+                onSave(Number(trip.id), { collaborators: newCollaborators });
             }
         }
         else {
@@ -188,7 +189,7 @@ export default function ShareTripModal({ isOpen, onClose, trip, onSave, }: Share
         setCollaborators(newCollaborators);
         if (trip) {
             // Save to database
-            onSave(trip.id, { collaborators: newCollaborators });
+            onSave(Number(trip.id), { collaborators: newCollaborators });
         }
     };
     const handleSave = async () => {
@@ -198,7 +199,7 @@ export default function ShareTripModal({ isOpen, onClose, trip, onSave, }: Share
         try {
             // Only generate a share code if sharing is enabled and no code exists
             const shareCode = sharingEnabled && !trip.shareCode ? generateShareCode() : trip.shareCode;
-            await onSave(trip.id, {
+            await onSave(Number(trip.id), {
                 isPublic,
                 sharingEnabled,
                 shareCode: sharingEnabled ? shareCode : null,

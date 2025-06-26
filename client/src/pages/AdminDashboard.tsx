@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Users, Building2, Settings, BarChart3, CreditCard, Bell, Sparkles, Plus, TrendingUp, Activity } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";

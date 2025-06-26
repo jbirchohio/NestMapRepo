@@ -1,23 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import useAuth from '@/contexts/auth/useAuth';
+import { useAuth } from '@/contexts/auth/useAuth';
 import { userService } from '@/services/api/userService';
-import { UserRole } from '@/types/api';
+import { UserRole } from '@shared/types/auth/permissions';
 // Super admin role types for type safety
 const SUPER_ADMIN_ROLES: UserRole[] = [
-    'superadmin',
-    'superadmin_owner',
-    'superadmin_staff',
-    'superadmin_auditor',
-    'super_admin'
-] as const;
+    UserRole.SUPER_ADMIN
+];
 
 // Admin permission requirements
-const ADMIN_PERMISSIONS = [
+type AdminPermission = 'ACCESS_ANALYTICS' | 'BILLING_ACCESS' | 'MANAGE_TEAM_ROLES';
+const ADMIN_PERMISSIONS: AdminPermission[] = [
     'ACCESS_ANALYTICS',
     'BILLING_ACCESS',
     'MANAGE_TEAM_ROLES'
-] as const;
+];
 
 export default function RoleBasedRedirect() {
     const { authReady, user } = useAuth();

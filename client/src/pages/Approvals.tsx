@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,16 +10,26 @@ import { CheckCircle, XCircle, Clock, AlertTriangle, User, Calendar, DollarSign 
 import { formatDistanceToNow } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+interface ProposedData {
+    title?: string;
+    destination?: string;
+    description?: string;
+    amount?: number;
+    type?: string;
+    totalAmount?: number;
+    [key: string]: any; // For any other dynamic properties
+}
+
 interface ApprovalRequest {
     id: number;
     entityType: string;
     entityId: number;
     requestType: string;
-    proposedData: Record<string, any>;
+    proposedData: ProposedData;
     reason?: string;
     businessJustification?: string;
     status: string;
-    priority: string;
+    priority: keyof typeof priorityConfig;
     dueDate?: string;
     escalationLevel: number;
     createdAt: string;
@@ -29,6 +39,8 @@ interface ApprovalRequest {
         email: string;
     };
 }
+
+type PendingRequestsResponse = ApprovalRequest[];
 const priorityConfig = {
     urgent: { color: 'destructive', icon: AlertTriangle },
     high: { color: 'orange', icon: AlertTriangle },
@@ -40,22 +52,31 @@ export default function Approvals() {
     const [rejectionReason, setRejectionReason] = useState('');
     const { toast } = useToast();
     const queryClient = useQueryClient();
-    const { data: pendingRequests, isLoading } = useQuery({
+    const { data: pendingRequests, isLoading } = useQuery<PendingRequestsResponse>({
         queryKey: ['/api/approvals/pending'],
-        refetchInterval: 30000 // Refresh every 30 seconds
+        refetchInterval: 30000, // Refresh every 30 seconds
+        select: (data) => data || []
     });
-    const { data: approvalRules } = useQuery({
-        queryKey: ['/api/approvals/rules']
+
+    const { data: approvalRules } = useQuery<Array<{ id: string; name: string; entityType: string; autoApprove: boolean }>>({
+        queryKey: ['/api/approvals/rules'],
+        select: (data) => data || []
     });
+
+    const pendingRequestsList = useMemo(() => pendingRequests || [], [pendingRequests]);
+    const approvalRulesList = useMemo(() => approvalRules || [], [approvalRules]);
     const approveMutation = useMutation({
-        mutationFn: ({ requestId, decision, reason }: {
+        mutationFn: async ({ requestId, decision, reason }: {
             requestId: number;
-            decision: string;
+            decision: 'approve' | 'reject';
             reason?: string;
-        }) => apiRequest(`/api/approvals/${requestId}/decision`, {
-            method: 'PATCH',
-            body: { decision, reason }
-        }),
+        }) => {
+            await apiRequest(
+                'PATCH',
+                `/api/approvals/${requestId}/decision`,
+                { decision, reason }
+            );
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
             setSelectedRequest(null);
@@ -100,9 +121,9 @@ export default function Approvals() {
             case 'trip':
                 return `${data.title || 'New Trip'} - ${data.destination || 'Unknown destination'}`;
             case 'expense':
-                return `${data.description || 'Expense'} - ${formatAmount(data.amount || 0)}`;
+                return `${data.description || 'Expense'} - ${formatAmount(data.amount ?? 0)}`;
             case 'booking':
-                return `${data.type || 'Booking'} - ${formatAmount(data.totalAmount || 0)}`;
+                return `${data.type || 'Booking'} - ${formatAmount(data.totalAmount ?? 0)}`;
             default:
                 return `${request.entityType} ${request.requestType}`;
         }
@@ -131,7 +152,7 @@ export default function Approvals() {
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
-          {!pendingRequests?.length ? (<Card>
+          {!pendingRequestsList.length ? (<Card>
               <CardContent className="py-8 text-center">
                 <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4"/>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -141,7 +162,7 @@ export default function Approvals() {
                   All requests have been processed.
                 </p>
               </CardContent>
-            </Card>) : (pendingRequests.map((request: ApprovalRequest) => {
+            </Card>) : (pendingRequestsList.map((request) => {
             const PriorityIcon = priorityConfig[request.priority as keyof typeof priorityConfig]?.icon || Clock;
             const isOverdue = request.dueDate && new Date(request.dueDate) < new Date();
             return (<Card key={request.id} className={`${isOverdue ? 'border-red-500' : ''}`}>
@@ -229,8 +250,8 @@ export default function Approvals() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {approvalRules?.length ? (<div className="space-y-4">
-                  {approvalRules.map((rule: any) => (<div key={rule.id} className="p-4 border rounded-lg">
+              {approvalRulesList.length > 0 ? (<div className="space-y-4">
+                  {approvalRulesList.map((rule) => (<div key={rule.id} className="p-4 border rounded-lg">
                       <h3 className="font-medium">{rule.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                         Entity: {rule.entityType} | Auto-approve: {rule.autoApprove ? 'Yes' : 'No'}

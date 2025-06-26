@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Briefcase, Users, FileText, TrendingUp, MapPin, DollarSign, Target, Clock, Plus, BarChart3, Settings, Sparkles, User } from "lucide-react";
@@ -20,7 +20,8 @@ interface Trip {
     client_name?: string;
 }
 export default function AgencyDashboard() {
-    const { userId, user } = useAuth();
+    const { user } = useAuth();
+    const userId = user?.id ? Number(user.id) : 0; // Convert to number with fallback
     const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
     const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
         queryKey: ['/api/trips', { userId }],

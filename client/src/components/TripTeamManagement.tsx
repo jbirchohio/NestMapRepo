@@ -156,9 +156,10 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
             });
         },
         onError: (error: unknown) => {
+            const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
             toast({
                 title: "Failed to add team member",
-                description: error.message || "Please try again.",
+                description: errorMessage,
                 variant: "destructive",
             });
         },
@@ -214,20 +215,19 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
             });
             return;
         }
-        const travelerData = {
-            trip_id: tripId,
+        const travelerData: NewTraveler = {
             name: newTraveler.name,
             email: newTraveler.email,
             phone: newTraveler.phone,
-            date_of_birth: newTraveler.dateOfBirth,
-            emergency_contact_name: newTraveler.emergencyContactName,
-            emergency_contact_phone: newTraveler.emergencyContactPhone,
-            emergency_contact_relationship: newTraveler.emergencyContactRelationship,
+            dateOfBirth: newTraveler.dateOfBirth,
+            emergencyContactName: newTraveler.emergencyContactName,
+            emergencyContactPhone: newTraveler.emergencyContactPhone,
+            emergencyContactRelationship: newTraveler.emergencyContactRelationship,
             departure_city: newTraveler.departure_city,
             departure_country: newTraveler.departure_country,
             travel_class: newTraveler.travel_class,
             dietary_requirements: newTraveler.dietary_requirements,
-            budget_allocation: newTraveler.budget_allocation ? parseInt(newTraveler.budget_allocation) * 100 : null,
+            budget_allocation: newTraveler.budget_allocation || '0',
             notes: newTraveler.notes
         };
         console.log('Adding traveler with data:', travelerData); // Debug log
@@ -262,9 +262,9 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
             return;
         }
         // Validate required trip data fields
-        const city = tripData.city || tripData.location || 'Unknown';
-        const country = tripData.country || 'Unknown';
-        if (!city || city === 'Unknown') {
+        const city = tripData.city || tripData.location || tripData.destination?.split(',')[0]?.trim() || 'Unknown';
+        const country = tripData.destination?.split(',').pop()?.trim() || 'Unknown';
+        if ((!city || city === 'Unknown') && !tripData.destination) {
             toast({
                 title: "Trip destination missing",
                 description: "Please set the trip destination before starting sequential booking.",
@@ -275,34 +275,138 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         // Debug: Log complete trip data to identify date field names
         console.log('DEBUG: Complete tripData object:', tripData);
         console.log('DEBUG: Available date fields:', {
-            start_date: tripData.start_date,
             startDate: tripData.startDate,
-            end_date: tripData.end_date,
             endDate: tripData.endDate,
-            departure_date: tripData.departure_date,
-            return_date: tripData.return_date,
-            dates: tripData.dates
+            destination: tripData.destination,
+            city: tripData.city,
+            location: tripData.location
         });
         // Create sequential booking workflow data using existing tripData
+        /**
+         * Safely formats a date value into a YYYY-MM-DD string
+         * @param date - The date to format (string, Date, number, or object with getTime)
+         * @returns Formatted date string or empty string if invalid
+         */
         const formatDateForBooking = (date: unknown): string => {
-            if (!date)
-                return '';
-            if (typeof date === 'string' && date.length > 0)
-                return date;
-            if (date instanceof Date)
-                return date.toISOString().split('T')[0];
-            if (typeof date === 'object' && date.getTime)
-                return date.toISOString().split('T')[0];
-            // Handle empty objects from case conversion
-            if (typeof date === 'object' && Object.keys(date).length === 0)
-                return '';
+            if (!date) return '';
+            
+            try {
+                // Handle string dates
+                if (typeof date === 'string') {
+                    const trimmedDate = date.trim();
+                    if (!trimmedDate) return '';
+                    
+                    // If it's an ISO date string, return just the date part
+                    const dateParts = trimmedDate.split('T');
+                    const firstPart = dateParts[0];
+                    if (!firstPart) return '';
+                    
+                    // Validate the date format (YYYY-MM-DD)
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                    if (dateRegex.test(firstPart)) {
+                        return firstPart;
+                    }
+                    
+                    // Try to parse other date formats
+                    const parsedDate = new Date(trimmedDate);
+                    if (!isNaN(parsedDate.getTime())) {
+                        const isoString = parsedDate.toISOString();
+                        return isoString.split('T')[0] || '';
+                    }
+                    
+                    return '';
+                }
+                
+                // Handle Date objects
+                if (date instanceof Date) {
+                    if (isNaN(date.getTime())) return '';
+                    const isoString = date.toISOString();
+                    return isoString.split('T')[0] || '';
+                }
+                
+                // Handle objects with getTime method
+                if (date && typeof date === 'object' && 'getTime' in date) {
+                    try {
+                        const timeValue = (date as { getTime: () => number }).getTime();
+                        if (typeof timeValue === 'number' && !isNaN(timeValue)) {
+                            const dateObj = new Date(timeValue);
+                            if (isNaN(dateObj.getTime())) return '';
+                            const isoString = dateObj.toISOString();
+                            return isoString.split('T')[0] || '';
+                        }
+                    } catch (e) {
+                        console.error('Error processing date object:', e);
+                        return '';
+                    }
+                }
+                
+                // Handle numeric timestamps
+                if (typeof date === 'number') {
+                    const dateObj = new Date(date);
+                    if (isNaN(dateObj.getTime())) return '';
+                    const isoString = dateObj.toISOString();
+                    return isoString.split('T')[0] || '';
+                }
+            } catch (error) {
+                console.error('Error formatting date:', error);
+            }
+            
             return '';
         };
+        // Get dates with proper fallbacks and type safety
+        const formatDateSafely = (date: unknown): string | null => {
+            try {
+                if (!date) return null;
+                const formatted = formatDateForBooking(date);
+                return formatted || null;
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return null;
+            }
+        };
+
+        // Safely extract date from tripData with type checking
+        const getDateFromTripData = (data: unknown, key: string): string | null => {
+            try {
+                if (!data || typeof data !== 'object' || data === null) return null;
+                
+                const record = data as Record<string, unknown>;
+                if (!(key in record)) return null;
+                
+                const value = record[key];
+                if (value === null || value === undefined) return null;
+                
+                const formatted = formatDateForBooking(value);
+                return formatted || null;
+            } catch (error) {
+                console.error(`Error processing date for ${key}:`, error);
+                return null;
+            }
+        };
+
+        // Get dates with proper type checking
+        const departureDate = getDateFromTripData(tripData, 'startDate');
+        const returnDate = getDateFromTripData(tripData, 'endDate');
+
+        // Validate dates
+        if (!departureDate || !returnDate) {
+            const missingFields = [];
+            if (!departureDate) missingFields.push('start date');
+            if (!returnDate) missingFields.push('end date');
+            
+            toast({
+                title: "Invalid trip dates",
+                description: `Please ensure your trip has valid ${missingFields.join(' and ')}.`,
+                variant: "destructive",
+            });
+            return;
+        }
+
         const sequentialBookingData = {
             tripId: tripId.toString(),
             tripDestination: `${city}, ${country}`,
-            departureDate: formatDateForBooking(tripData.startDate) || formatDateForBooking(tripData.start_date),
-            returnDate: formatDateForBooking(tripData.endDate) || formatDateForBooking(tripData.end_date),
+            departureDate,
+            returnDate,
             currentTravelerIndex: 0,
             travelers: travelers.map(traveler => ({
                 id: traveler.id,
@@ -329,9 +433,15 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
         sessionStorage.setItem('sequentialBookingData', JSON.stringify(sequentialBookingData));
         // Navigate directly to sequential booking (bypass general bookings tab)
         window.location.href = `/sequential-booking?trip=${tripId}`;
+        
+        // Safely get traveler details for the success message
+        const firstTraveler = travelers[0];
+        const travelerName = firstTraveler?.name || 'first traveler';
+        const departureCity = firstTraveler?.departure_city || firstTraveler?.departureCity || 'departure city';
+        
         toast({
             title: "Sequential booking started",
-            description: `Starting with ${travelers[0].name || 'first traveler'}'s flight from ${travelers[0].departure_city || 'departure city'} to ${city}`,
+            description: `Starting with ${travelerName}'s flight from ${departureCity} to ${city}`,
         });
     };
     return (<Card>
@@ -505,7 +615,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Departure: {getDepartureInfo(traveler)} → {tripData ? `${tripData.city}, ${tripData.country}` : 'Trip destination'}
+                    Departure: {getDepartureInfo(traveler)} → {tripData?.destination || 'Trip destination'}
                   </p>
                 </div>
 

@@ -5,12 +5,13 @@ import { AnimatedCard } from "@/components/ui/animated-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
 import { Activity, Cpu, HardDrive, MemoryStick, Network, Server, AlertTriangle, CheckCircle, XCircle, RefreshCw, Zap, Clock, TrendingUp, AlertCircle } from "lucide-react";
 import { AlertNotifications } from "@/components/AlertNotifications";
+import { UserRole } from "@shared/types/index";
 interface SystemMetrics {
     server: {
         uptime: number;
@@ -153,7 +154,7 @@ export default function AdminSystemMetrics() {
             });
         }
     };
-    if (!user || user.role !== 'superadmin') {
+    if (!user || user.role !== UserRole.SUPER_ADMIN) {
         return (<div className="p-8 text-center">
         <AlertTriangle className="h-12 w-12 mx-auto text-yellow-500 mb-4"/>
         <h2 className="text-xl font-semibold mb-2">Access Restricted</h2>

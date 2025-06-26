@@ -90,7 +90,7 @@ export const getTripDayPills = (startDate: Date, endDate: Date): Array<{
         dayNumber: index + 1,
         date,
         label: `Day ${index + 1} - ${formatDate(date)}`,
-        value: date.toISOString().split('T')[0]
+        value: date.toISOString().split('T')[0] || ''
     }));
 };
 // Default map settings - centered on continental US

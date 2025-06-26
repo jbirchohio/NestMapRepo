@@ -3,7 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDateRange, formatDate } from "@/lib/constants";
-import { ClientTrip, ClientActivity, Todo } from "@/lib/types";
+import { ClientTrip, ClientActivity } from "@/lib/types";
+
+type Todo = {
+  id: string | number;
+  task: string;
+  completed: boolean;
+  tripId: string | number;
+};
 import ActivityTimeline from "./ActivityTimeline";
 import EnhancedAIAssistantModal from "./EnhancedAIAssistantModal";
 import { TripTeamManagement } from "./TripTeamManagement";
@@ -40,7 +47,7 @@ export default function ItinerarySidebar({ trip, activities, todos, notes, activ
     const handleAutoOptimize = async () => {
         setIsAutoOptimizing(true);
         try {
-            const result = await optimizeItinerary.mutateAsync(tripd);
+            const result = await optimizeItinerary.mutateAsync(Number(trip.id));
             // Debug: Log what optimizations we received
             console.log("Optimization result:", result);
             // Apply each optimization by updating the activity times
@@ -126,12 +133,15 @@ export default function ItinerarySidebar({ trip, activities, todos, notes, activ
             const res = await apiRequest("PUT", `/api/trips/${trip.id}/toggle-complete`, {});
             return res.json();
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, trip.id] });
             queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS] });
+            const isCompleted = data?.status === 'completed';
             toast({
-                title: trip.completed ? "Trip marked as ongoing" : "Trip completed!",
-                description: trip.completed ? "Trip has been marked as ongoing" : "Congratulations on completing your trip!",
+                title: isCompleted ? "Trip completed!" : "Trip marked as ongoing",
+                description: isCompleted 
+                    ? "Congratulations on completing your trip!" 
+                    : "Your trip has been marked as ongoing.",
             });
         }
     });
@@ -147,7 +157,7 @@ export default function ItinerarySidebar({ trip, activities, todos, notes, activ
             }
             // Otherwise update existing note (assuming there's only one note per trip for simplicity)
             else {
-                const res = await apiRequest("PUT", `${API_ENDPOINTS.NOTES}/1`, {
+                const res = await apiRequest("PUT", `${API_ENDPOINTS.NOTES}/${trip.id}`, {
                     tripId: trip.id,
                     content: newNote,
                 });
@@ -190,14 +200,9 @@ export default function ItinerarySidebar({ trip, activities, todos, notes, activ
                 {formatDateRange(new Date(trip.startDate), new Date(trip.endDate))}
               </p>
             </div>
-            <Button variant={trip.completed ? "default" : "outline"} size="sm" onClick={() => toggleTripCompletion.mutate()} disabled={toggleTripCompletion.isPending} className="flex items-center gap-2">
-              {trip.completed ? (<>
-                  <CheckCircle className="h-4 w-4"/>
-                  Completed
-                </>) : (<>
-                  <Circle className="h-4 w-4"/>
-                  Mark Complete
-                </>)}
+            <Button variant={"outline"} size="sm" onClick={() => toggleTripCompletion.mutate()} disabled={toggleTripCompletion.isPending} className="flex items-center gap-2">
+              <Circle className="h-4 w-4"/>
+              Mark Complete
             </Button>
           </div>
         </div>
@@ -289,7 +294,7 @@ export default function ItinerarySidebar({ trip, activities, todos, notes, activ
             </div>
 
             {/* Itinerary Timeline */}
-            <ActivityTimeline activities={activeDayActivities} date={activeDay} tripId={trip.id} onActivityUpdated={onActivitiesUpdated}/>
+            <ActivityTimeline activities={activeDayActivities} date={activeDay} tripId={trip.id.toString()} onActivityUpdated={onActivitiesUpdated}/>
           </TabsContent>
           
           <TabsContent value="todo">

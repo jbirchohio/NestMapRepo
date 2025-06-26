@@ -30,7 +30,7 @@ const passwordSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 export default function ProfileSettings() {
-    const { user, userId } = useAuth();
+    const { user } = useAuth();
     const { toast } = useToast();
     const queryClient = useQueryClient();
     // Privacy settings state
@@ -56,8 +56,8 @@ export default function ProfileSettings() {
     const profileForm = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
-            displayName: user?.user_metadata?.display_name || user?.email || '',
-            username: user?.user_metadata?.username || '',
+            displayName: user?.full_name || user?.email || '',
+            username: user?.email?.split('@')[0] || '',
             email: user?.email || '',
         },
     });
@@ -71,7 +71,7 @@ export default function ProfileSettings() {
     });
     const updateProfileMutation = useMutation({
         mutationFn: async (data: ProfileFormData) => {
-            return apiRequest('PUT', '/api/user/profile', { ...data, userId });
+            return apiRequest('PUT', '/api/user/profile', { ...data, userId: user?.id });
         },
         onSuccess: () => {
             toast({
@@ -93,7 +93,7 @@ export default function ProfileSettings() {
             const response = await apiRequest('PUT', '/api/user/password', {
                 currentPassword: data.currentPassword,
                 newPassword: data.newPassword,
-                userId,
+                userId: user?.id,
             });
             const result = await response.json();
             if (!result.success) {
@@ -121,7 +121,7 @@ export default function ProfileSettings() {
     };
     const updatePrivacyMutation = useMutation({
         mutationFn: async (settings: typeof privacySettings) => {
-            return apiRequest('PUT', '/api/user/privacy', { ...settings, userId });
+            return apiRequest('PUT', '/api/user/privacy', { ...settings, userId: user?.id });
         },
         onSuccess: () => {
             toast({
@@ -139,7 +139,7 @@ export default function ProfileSettings() {
     });
     const updateNotificationsMutation = useMutation({
         mutationFn: async (settings: typeof notificationSettings) => {
-            return apiRequest('PUT', '/api/user/notifications', { ...settings, userId });
+            return apiRequest('PUT', '/api/user/notifications', { ...settings, userId: user?.id });
         },
         onSuccess: () => {
             toast({

@@ -6,8 +6,67 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Lock, Download, Eye, Calendar, Clock, CheckCircle, FileSignature } from "lucide-react";
+import { Lock, Download, Eye, Calendar, Clock, CheckCircle, FileSignature, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+interface ContactInfo {
+  email?: string;
+  phone?: string;
+  website?: string;
+}
+
+interface SignatureData {
+  signed: boolean;
+  signerName?: string;
+  signedAt?: string;
+}
+
+interface Trip {
+  city?: string;
+  country?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface Activity {
+  time: string;
+  title: string;
+  locationName: string;
+  notes?: string;
+  tag?: string;
+}
+
+interface CostBreakdown {
+  flights: number;
+  hotels: number;
+  activities: number;
+  meals: number;
+  transportation: number;
+  miscellaneous: number;
+  [key: string]: number;
+}
+
+interface ProposalData {
+  validUntil?: string;
+  costBreakdown?: CostBreakdown;
+}
+
+interface Proposal {
+  clientName: string;
+  agentName: string;
+  companyName: string;
+  createdAt: string;
+  linkExpiration?: string;
+  trip: Trip;
+  activities: Activity[];
+  proposalData: ProposalData;
+  signatureData?: SignatureData;
+  contactInfo: ContactInfo;
+}
+
+interface ApiError extends Error {
+  status?: number;
+}
 interface PublicProposalViewProps {
     proposalId: string;
 }
@@ -45,32 +104,38 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         },
     });
     useEffect(() => {
-        if (proposal) {
-            // Track initial view
+        if (!proposal) return;
+        
+        // Track initial view
+        trackView.mutate({
+            eventType: "opened",
+            eventData: {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            }
+        });
+        
+        // Track view duration when user leaves
+        const trackViewDuration = () => {
+            const duration = Math.round((Date.now() - viewStartTime) / 1000);
             trackView.mutate({
-                eventType: "opened",
+                eventType: "view_duration",
                 eventData: {
-                    timestamp: new Date().toISOString(),
-                    userAgent: navigator.userAgent
+                    duration,
+                    timestamp: new Date().toISOString()
                 }
             });
-            // Track view duration when user leaves
-            const trackViewDuration = () => {
-                const duration = Math.round((Date.now() - viewStartTime) / 1000);
-                trackView.mutate({
-                    eventType: "view_duration",
-                    eventData: {
-                        duration,
-                        timestamp: new Date().toISOString()
-                    }
-                });
-            };
-            window.addEventListener('beforeunload', trackViewDuration);
-            return () => window.removeEventListener('beforeunload', trackViewDuration);
-        }
-    }, [proposal]);
+        };
+        
+        window.addEventListener('beforeunload', trackViewDuration);
+        return () => {
+            window.removeEventListener('beforeunload', trackViewDuration);
+        };
+    }, [proposal, trackView, viewStartTime]);
     // Handle password protection
-    if (error?.status === 401) {
+    const apiError = error as ApiError | undefined;
+    
+    if (apiError?.status === 401) {
         return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
@@ -90,7 +155,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
       </div>);
     }
     // Handle expired proposals
-    if (error?.status === 410) {
+    if (apiError?.status === 410) {
         return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
@@ -108,7 +173,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         </Card>
       </div>);
     }
-    if (isLoading) {
+    if (isLoading || !proposal) {
         return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"/>
       </div>);
@@ -128,7 +193,8 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
     const handleSectionView = (section: string) => {
         trackSectionView.mutate(section);
     };
-    const costBreakdown = proposal.proposalData?.costBreakdown || {
+const typedProposal = proposal as Proposal;
+    const costBreakdown: CostBreakdown = typedProposal.proposalData?.costBreakdown || {
         flights: 2400,
         hotels: 1800,
         activities: 1200,
@@ -147,16 +213,16 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
                 Travel Proposal
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-300 mt-1">
-                For {proposal.clientName}
+                For {typedProposal.clientName}
               </p>
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                <span>Prepared by {proposal.agentName}</span>
+                <span>Prepared by {typedProposal.agentName}</span>
                 <span>•</span>
-                <span>{new Date(proposal.createdAt).toLocaleDateString()}</span>
-                {proposal.linkExpiration && (<>
+                <span>{new Date(typedProposal.createdAt).toLocaleDateString()}</span>
+                {typedProposal.linkExpiration && (<>
                     <span>•</span>
                     <span className="text-orange-600">
-                      Expires {new Date(proposal.linkExpiration).toLocaleDateString()}
+                      Expires {new Date(typedProposal.linkExpiration).toLocaleDateString()}
                     </span>
                   </>)}
               </div>
@@ -185,12 +251,12 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <h4 className="font-medium text-gray-900 dark:text-white">Destination</h4>
-                <p className="text-gray-600 dark:text-gray-300">{proposal.trip?.city}, {proposal.trip?.country}</p>
+                <p className="text-gray-600 dark:text-gray-300">{typedProposal.trip?.city}, {typedProposal.trip?.country}</p>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900 dark:text-white">Duration</h4>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {new Date(proposal.trip?.startDate).toLocaleDateString()} - {new Date(proposal.trip?.endDate).toLocaleDateString()}
+                  {typedProposal.trip?.startDate ? new Date(typedProposal.trip.startDate).toLocaleDateString() : 'N/A'} - {typedProposal.trip?.endDate ? new Date(typedProposal.trip.endDate).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
               <div>
@@ -235,7 +301,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {proposal.activities?.map((activity: any, index: number) => (<div key={index} className="flex gap-4">
+              {typedProposal.activities?.map((activity: Activity, index: number) => (<div key={index} className="flex gap-4">
                   <div className="flex-shrink-0 w-16 text-center">
                     <div className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-lg px-2 py-1 text-sm font-medium">
                       {activity.time}
@@ -278,7 +344,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
               <div>
                 <h4 className="font-medium">Validity</h4>
                 <p className="text-gray-600 dark:text-gray-300">
-                  This proposal is valid until {new Date(proposal.proposalData?.validUntil || Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.
+                  This proposal is valid until {new Date(typedProposal.proposalData?.validUntil || Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}.
                   Prices subject to availability and may change.
                 </p>
               </div>
@@ -287,12 +353,12 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
         </Card>
 
         {/* Signature Section */}
-        {proposal.signatureData?.signed ? (<Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
+        {typedProposal.signatureData?.signed ? (<Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
             <CardContent className="pt-6">
               <div className="flex items-center justify-center gap-3 text-green-700 dark:text-green-300">
                 <CheckCircle className="w-6 h-6"/>
                 <span className="font-medium">
-                  Signed by {proposal.signatureData.signerName} on {new Date(proposal.signatureData.signedAt).toLocaleDateString()}
+                  Signed by {typedProposal.signatureData?.signerName} on {typedProposal.signatureData?.signedAt ? new Date(typedProposal.signatureData.signedAt).toLocaleDateString() : 'Unknown Date'}
                 </span>
               </div>
             </CardContent>
@@ -320,8 +386,8 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
 
         {/* Footer */}
         <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
-          <p>{proposal.companyName} • {proposal.contactInfo?.email} • {proposal.contactInfo?.phone}</p>
-          {proposal.contactInfo?.website && (<p className="mt-1">{proposal.contactInfo.website}</p>)}
+          <p>{typedProposal.companyName} • {typedProposal.contactInfo?.email} • {typedProposal.contactInfo?.phone}</p>
+          {typedProposal.contactInfo?.website && (<p className="mt-1">{typedProposal.contactInfo.website}</p>)}
         </div>
       </div>
     </div>);

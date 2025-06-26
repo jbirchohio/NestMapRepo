@@ -1,65 +1,77 @@
-import type { Response, NextFunction, Request } from 'express';
-import type { AuthenticatedRequest } from '@shared/types/auth/custom-request.js';
+import type { Response, NextFunction, Request, RequestHandler } from 'express';
 import { AppErrorCode } from '@shared/types/error-codes.js';
 import { UserRole } from '@shared/types/auth/permissions.js';
+import type { Logger } from '@nestjs/common';
+
+// Helper type for authenticated requests
+type AuthenticatedRequest = Request & {
+  user: Express.User;  // Use Express.User type which extends AuthUser
+};
 
 // Local error creation function
 const createApiError = (code: AppErrorCode, message: string) => {
-    const error = new Error(message) as any;
-    error.code = code;
-    return error;
+  const error = new Error(message) as any;
+  error.code = code;
+  return error;
 };
-import type { Logger } from '@nestjs/common';
 /**
  * Middleware to ensure user is authenticated
  * @param logger Logger instance
  * @returns Express middleware function
  */
-export const requireAuth = (logger: Logger) => {
-    return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
-        if (!req.user) {
-            logger.warn('Authentication required but no user found in request');
-            next(createApiError(AppErrorCode.UNAUTHORIZED, 'Authentication required'));
-            return;
-        }
-        next();
-    };
+export const requireAuth = (logger: Logger): RequestHandler => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      logger.warn('Authentication required but no user found in request');
+      next(createApiError(AppErrorCode.UNAUTHORIZED, 'Authentication required'));
+      return;
+    }
+    next();
+  };
 };
 /**
  * Middleware to ensure user has a valid organization context
  * @param logger Logger instance
  * @returns Express middleware function
  */
-export const requireOrgContext = (logger: Logger) => {
-    return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
-        if (!req.user?.organizationId) {
-            logger.warn('Organization context required but not found in user context');
-            next(createApiError(AppErrorCode.BAD_REQUEST, 'Organization context required'));
-            return;
-        }
-        next();
-    };
+export const requireOrgContext = (logger: Logger): RequestHandler => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      logger.warn('Authentication required but no user found in request');
+      next(createApiError(AppErrorCode.UNAUTHORIZED, 'Authentication required'));
+      return;
+    }
+    if (!req.user.organizationId) {
+      logger.warn('Organization context required but not found in user context');
+      next(createApiError(AppErrorCode.BAD_REQUEST, 'Organization context required'));
+      return;
+    }
+    next();
+  };
 };
 /**
  * Middleware to ensure user has admin role
  * @param logger Logger instance
  * @returns Express middleware function
  */
-export const requireAdmin = (logger: Logger) => {
-    return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
-        if (!req.user) {
-            logger.warn('Authentication required but no user found in request');
-            next(createApiError(AppErrorCode.UNAUTHORIZED, 'Authentication required'));
-            return;
-        }
-        if (req.user.role !== UserRole.ADMIN && req.user.role !== UserRole.SUPER_ADMIN) {
-            logger.warn(`User ${req.user.id} attempted to access admin-only resource`);
-            next(createApiError(AppErrorCode.FORBIDDEN, 'Admin access required'));
-            return;
-        }
-        next();
-    };
+export const requireAdmin = (logger: Logger): RequestHandler => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      logger.warn('Admin access required but no user found in request');
+      next(createApiError(AppErrorCode.FORBIDDEN, 'Admin access required'));
+      return;
+    }
+    
+    if (req.user.role !== UserRole.ADMIN && req.user.role !== UserRole.SUPER_ADMIN) {
+      logger.warn(`User ${req.user.id} attempted to access admin-only route`);
+      next(createApiError(AppErrorCode.FORBIDDEN, 'Insufficient permissions'));
+      return;
+    }
+    
+    next();
+  };
 };
+
 /**
  * Middleware to ensure user has superadmin role
  * @param logger Logger instance

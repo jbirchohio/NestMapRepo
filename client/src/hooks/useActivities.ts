@@ -81,7 +81,7 @@ export default function useActivities(tripId: string | number) {
                 for (let i = 0; i < dayActivities.length; i++) {
                     if (i !== index) {
                         const otherActivity = dayActivities[i];
-                        if (activity.time === otherActivity.time) {
+                        if (otherActivity && activity.time === otherActivity.time) {
                             hasTimeConflict = true;
                             break;
                         }
@@ -98,13 +98,28 @@ export default function useActivities(tripId: string | number) {
                     return;
                 }
                 const prevActivity = dayActivities[index - 1];
+                if (!prevActivity) {
+                    processedActivities.push(activity);
+                    return;
+                }
                 // Only add travel time if both activities have coordinates
                 if (prevActivity.latitude &&
                     prevActivity.longitude &&
                     activity.latitude &&
                     activity.longitude) {
                     // Simple distance-based travel time estimation
-                    const distance = calculateDistance(parseFloat(prevActivity.latitude), parseFloat(prevActivity.longitude), parseFloat(activity.latitude), parseFloat(activity.longitude));
+                    const prevLat = typeof prevActivity.latitude === 'string' ? parseFloat(prevActivity.latitude) : Number(prevActivity.latitude);
+                    const prevLng = typeof prevActivity.longitude === 'string' ? parseFloat(prevActivity.longitude) : Number(prevActivity.longitude);
+                    const currLat = typeof activity.latitude === 'string' ? parseFloat(activity.latitude) : Number(activity.latitude);
+                    const currLng = typeof activity.longitude === 'string' ? parseFloat(activity.longitude) : Number(activity.longitude);
+                    
+                    if (isNaN(prevLat) || isNaN(prevLng) || isNaN(currLat) || isNaN(currLng)) {
+                        console.warn('Invalid coordinates for activity', { prevActivity, activity });
+                        processedActivities.push(activity);
+                        return;
+                    }
+                    
+                    const distance = calculateDistance(prevLat, prevLng, currLat, currLng);
                     // Get travel speed based on travel mode and distance
                     let speedKmh = 4.8; // Default walking speed - average person walks at 3-4 mph (4.8-6.4 km/h)
                     let modeName = "walking";

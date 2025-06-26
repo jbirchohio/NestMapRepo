@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-interface GeolocationPosition {
-    latitude: number;
-    longitude: number;
-    accuracy: number;
-    timestamp: number;
-}
+// Using browser's built-in GeolocationPosition and GeolocationCoordinates types
 interface MobileFeatures {
     // Location services
-    currentLocation: GeolocationPosition | null;
+    currentLocation: {
+        latitude: number;
+        longitude: number;
+        accuracy: number;
+        timestamp: number;
+    } | null;
     isLocationEnabled: boolean;
     locationError: string | null;
     // Offline capabilities
@@ -29,7 +29,12 @@ interface MobileFeatures {
     }) => void;
 }
 export function useMobileFeatures(): MobileFeatures {
-    const [currentLocation, setCurrentLocation] = useState<GeolocationPosition | null>(null);
+    const [currentLocation, setCurrentLocation] = useState<{
+        latitude: number;
+        longitude: number;
+        accuracy: number;
+        timestamp: number;
+    } | null>(null);
     const [isLocationEnabled, setIsLocationEnabled] = useState(false);
     const [locationError, setLocationError] = useState<string | null>(null);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -52,7 +57,7 @@ export function useMobileFeatures(): MobileFeatures {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
                 accuracy: position.coords.accuracy,
-                timestamp: position.timestamp
+                timestamp: position.timestamp || Date.now()
             });
             setIsLocationEnabled(true);
             setLocationError(null);

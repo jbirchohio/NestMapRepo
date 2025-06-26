@@ -9,15 +9,15 @@ interface UseAutoCompleteProps {
     onActivityCompleted?: () => void;
 }
 export function useAutoComplete({ activities, tripId, onActivityCompleted }: UseAutoCompleteProps) {
-    const [processedActivityIds, setProcessedActivityIds] = useState<Set<number>>(new Set());
-    const processingRef = useRef<Set<number>>(new Set());
+    const [processedActivityIds, setProcessedActivityIds] = useState<Set<string>>(new Set());
+    const processingRef = useRef<Set<string>>(new Set());
     const autoCompleteMutation = useMutation({
-        mutationFn: async (activityId: number) => {
+        mutationFn: async (activityId: string) => {
             return apiRequest("PUT", `${API_ENDPOINTS.ACTIVITIES}/${activityId}/toggle-complete`, {
                 completed: true
             });
         },
-        onSuccess: (_, activityId) => {
+        onSuccess: (_, activityId: string) => {
             // Mark this activity as processed to prevent re-processing
             setProcessedActivityIds(prev => new Set(prev).add(activityId));
             processingRef.current.delete(activityId);
@@ -28,7 +28,7 @@ export function useAutoComplete({ activities, tripId, onActivityCompleted }: Use
                 onActivityCompleted();
             }
         },
-        onError: (_, activityId) => {
+        onError: (_, activityId: string) => {
             processingRef.current.delete(activityId);
         }
     });
@@ -61,9 +61,11 @@ export function useAutoComplete({ activities, tripId, onActivityCompleted }: Use
             for (const [dateStr, dayActivities] of Object.entries(activitiesByDate)) {
                 for (let i = 0; i < dayActivities.length; i++) {
                     const activity = dayActivities[i];
+                    if (!activity) continue;
+                    
                     const nextActivity = dayActivities[i + 1];
                     // Skip if already completed, no time set, or already processed/processing
-                    if (activity.completed || !activity.time ||
+                    if (!activity.id || activity.completed || !activity.time ||
                         processedActivityIds.has(activity.id) ||
                         processingRef.current.has(activity.id)) {
                         continue;
@@ -100,8 +102,10 @@ export function useAutoComplete({ activities, tripId, onActivityCompleted }: Use
                         }
                     }
                     if (shouldComplete) {
-                        processingRef.current.add(activity.id);
-                        autoCompleteMutation.mutate(activity.id);
+                        if (activity.id) {
+                            processingRef.current.add(activity.id);
+                            autoCompleteMutation.mutate(activity.id);
+                        }
                     }
                 }
             }
@@ -115,9 +119,16 @@ export function useAutoComplete({ activities, tripId, onActivityCompleted }: Use
 }
 // Helper function to add hours to a time string
 function addHoursToTime(timeString: string, hours: number): string {
+    if (!timeString) return '00:00';
+    
     const [hoursStr, minutesStr] = timeString.split(':');
-    const totalMinutes = parseInt(hoursStr) * 60 + parseInt(minutesStr) + (hours * 60);
-    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const hoursNum = hoursStr ? Math.max(0, Math.min(23, parseInt(hoursStr, 10))) : 0;
+    const minutesNum = minutesStr ? Math.max(0, Math.min(59, parseInt(minutesStr, 10))) : 0;
+    
+    const totalMinutes = hoursNum * 60 + minutesNum + (hours * 60);
+    const totalHours = Math.floor(totalMinutes / 60);
+    const newHours = totalHours % 24;
     const newMinutes = totalMinutes % 60;
+    
     return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
 }

@@ -10,7 +10,6 @@ import type {
   PaginationParams,
   PaginatedResponse 
 } from '@shared/types/users';
-import type { Organization } from '@shared/types/organizations';
 import type { BaseRepository } from '../base.repository.interface';
 
 /**

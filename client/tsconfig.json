@@ -28,18 +28,19 @@
     "alwaysStrict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
+    
+    // Path aliases
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../shared/types/*"],
+      "@client/*": ["./src/*"],
+      "@/*": ["./src/*"]
+    },
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitOverride": true,
-    
-    // Module resolution
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@shared/*": ["../shared/*"]
-    },
     
     // Type definitions
     "types": ["vite/client", "node"],
@@ -72,6 +73,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.d.ts",
+    "src/@types/**/*.d.ts",
     "../shared/types/**/*.ts",
     "../shared/types/**/*.d.ts"
   ],

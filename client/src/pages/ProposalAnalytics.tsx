@@ -6,15 +6,58 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, PieLabelRenderProps, Cell } from "recharts";
 import { Eye, Download, FileSignature, DollarSign, Clock, Users, TrendingUp, Calendar } from "lucide-react";
+
+interface AnalyticsOverview {
+  totalProposals: number;
+  totalViews: number;
+  averageViewTime: number;
+  conversionRate: number;
+  totalSigned: number;
+  totalRevenue: number;
+}
+
+interface ViewDataPoint {
+  date: string;
+  views: number;
+  opens: number;
+}
+
+interface SectionView {
+  section: string;
+  views: number;
+  avgTime: number;
+}
+
+interface FunnelStage {
+  name: string;
+  stage: string; // Alias for name for backward compatibility
+  count: number;
+  percentage: number;
+}
+
+interface MapData {
+  name: string;
+  value: number;
+  code: string;
+}
+
+interface AnalyticsData {
+  overview: AnalyticsOverview;
+  viewsOverTime: ViewDataPoint[];
+  sectionViews: SectionView[];
+  conversionFunnel: FunnelStage[];
+  map: MapData[];
+}
+
 export default function ProposalAnalytics() {
     const [timeRange, setTimeRange] = useState("30d");
     const [selectedProposal, setSelectedProposal] = useState<string>("all");
-    const { data: analytics, isLoading } = useQuery({
+    const { data: analytics, isLoading } = useQuery<AnalyticsData>({
         queryKey: ["/api/proposal-analytics", timeRange, selectedProposal],
     });
-    const { data: proposals } = useQuery({
+    const { data: proposals } = useQuery<Array<{ id: string; title: string }>>({
         queryKey: ["/api/proposals"],
     });
     if (isLoading) {
@@ -28,7 +71,7 @@ export default function ProposalAnalytics() {
         </div>
       </div>);
     }
-    const stats = analytics?.overview || {
+    const stats: AnalyticsOverview = analytics?.overview || {
         totalProposals: 24,
         totalViews: 186,
         averageViewTime: 4.2,
@@ -36,7 +79,8 @@ export default function ProposalAnalytics() {
         totalSigned: 7,
         totalRevenue: 125400
     };
-    const viewsData = analytics?.viewsOverTime || [
+    
+    const viewsData: ViewDataPoint[] = analytics?.viewsOverTime || [
         { date: "2024-01-01", views: 12, opens: 8 },
         { date: "2024-01-02", views: 18, opens: 12 },
         { date: "2024-01-03", views: 15, opens: 10 },
@@ -45,19 +89,19 @@ export default function ProposalAnalytics() {
         { date: "2024-01-06", views: 24, opens: 18 },
         { date: "2024-01-07", views: 32, opens: 24 }
     ];
-    const sectionData = analytics?.sectionViews || [
+    
+    const sectionData: SectionView[] = analytics?.sectionViews || [
         { section: "Cost Breakdown", views: 156, avgTime: 2.4 },
         { section: "Itinerary", views: 134, avgTime: 3.8 },
         { section: "Terms", views: 89, avgTime: 1.2 },
         { section: "About Us", views: 67, avgTime: 0.8 },
         { section: "Custom Sections", views: 45, avgTime: 1.5 }
     ];
-    const conversionFunnel = analytics?.conversionFunnel || [
-        { stage: "Sent", count: 24, percentage: 100 },
-        { stage: "Opened", count: 20, percentage: 83.3 },
-        { stage: "Viewed >30s", count: 16, percentage: 66.7 },
-        { stage: "Downloaded", count: 12, percentage: 50.0 },
-        { stage: "Signed", count: 7, percentage: 29.2 }
+    const conversionFunnel: FunnelStage[] = analytics?.conversionFunnel || [
+        { name: "Sent", stage: "Sent", count: 100, percentage: 100 },
+        { name: "Opened", stage: "Opened", count: 75, percentage: 75 },
+        { name: "Viewed", stage: "Viewed", count: 50, percentage: 50 },
+        { name: "Signed", stage: "Signed", count: 25, percentage: 25 }
     ];
     const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
     return (<div className="p-6 space-y-6">

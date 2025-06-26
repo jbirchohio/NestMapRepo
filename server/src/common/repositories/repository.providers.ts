@@ -2,7 +2,6 @@ import type { Provider } from '@nestjs/common';
 import { TripRepositoryImpl } from '../../trips/repositories/trip.repository.ts';
 import { OrganizationRepositoryImpl } from './organization/organization.repository.ts';
 import { ActivityRepositoryImpl } from './activity/activity.repository.ts';
-import { UserRepositoryImpl } from './user/user.repository.ts';
 import { BookingRepositoryImpl } from './booking/booking.repository.ts';
 import { UserRepositoryImpl as AuthUserRepositoryImpl } from '../../auth/repositories/user.repository.ts';
 import { RefreshTokenRepositoryImpl } from '../../auth/repositories/refresh-token.repository.ts';
@@ -22,10 +21,6 @@ export const ActivityRepositoryProvider: Provider = {
     provide: 'ActivityRepository',
     useClass: ActivityRepositoryImpl,
 };
-export const UserRepositoryProvider: Provider = {
-    provide: 'UserRepository',
-    useClass: UserRepositoryImpl,
-};
 export const BookingRepositoryProvider: Provider = {
     provide: 'BookingRepository',
     useClass: BookingRepositoryImpl,
@@ -43,7 +38,6 @@ export const RepositoryProviders = [
     TripRepositoryProvider,
     OrganizationRepositoryProvider,
     ActivityRepositoryProvider,
-    UserRepositoryProvider,
     BookingRepositoryProvider,
     AuthUserRepositoryProvider,
     RefreshTokenRepositoryProvider,

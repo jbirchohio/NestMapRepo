@@ -158,8 +158,8 @@ export default function FlightResults() {
                 }
             }
             // Stops filter
-            if (filters.stops !== 'any') {
-                const stopCount = flight.slices[0]?.segments.length - 1 || 0;
+            if (filters.stops !== 'any' && flight.slices[0]?.segments) {
+                const stopCount = flight.slices[0].segments.length - 1;
                 if (filters.stops === 'nonstop' && stopCount > 0)
                     return false;
                 if (filters.stops === '1stop' && stopCount !== 1)
@@ -397,16 +397,20 @@ export default function FlightResults() {
                         </div>
 
                         {/* Baggage info */}
-                        {flight.passengers[0]?.baggage?.length > 0 && (<div className="border-t pt-3 mt-3">
+                        {flight.passengers[0]?.baggage && flight.passengers[0].baggage.length > 0 && (
+                          <div className="border-t pt-3 mt-3">
                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                               <Luggage className="w-4 h-4"/>
                               <span>Included: </span>
-                              {flight.passengers[0].baggage.map((bag: any, index: number) => (<span key={index}>
+                              {flight.passengers[0].baggage.map((bag: any, index: number, array) => (
+                                <span key={index}>
                                   {bag.quantity} {bag.type.replace('_', ' ')}
-                                  {index < flight.passengers[0].baggage.length - 1 && ', '}
-                                </span>))}
+                                  {index < array.length - 1 && ', '}
+                                </span>
+                              ))}
                             </div>
-                          </div>)}
+                          </div>
+                        )}
                       </CardContent>
                     </Card>))}
                 </div>)}

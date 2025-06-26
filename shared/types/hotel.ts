@@ -1,4 +1,4 @@
-import type { Address, ContactInfo } from './common';
+import type { Address, ContactInfo } from './common.js';
 
 export interface HotelAmenity {
   code: string;

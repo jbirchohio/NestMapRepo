@@ -1,6 +1,7 @@
 import React from 'react';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { useAuth } from '@/contexts/auth/NewAuthContext';
+import type { User } from '@/components/navigation/types';
 import { useNotifications } from '@/hooks/useNotifications';
 import MainNavigation from '@/components/MainNavigation';
 import BrandedFooter from '@/components/BrandedFooter';
@@ -12,7 +13,9 @@ interface MainLayoutProps {
 }
 export const MainLayout: React.FC<MainLayoutProps> = ({ children, hideNav = false, hideFooter = false, }) => {
     const { config } = useWhiteLabel();
-    const { user, signOut } = useAuth();
+    const { user: authUser, signOut } = useAuth();
+    // Type assertion to match the expected User type in MainNavigation
+    const user = authUser as unknown as User | null;
     const { notifications = [], markAsRead, markAllAsRead } = useNotifications();
     const { toast } = useToast();
     return (<div className="min-h-screen flex flex-col" style={{

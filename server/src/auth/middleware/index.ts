@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../jwt/index.ts';
-import type { TokenType, TokenVerificationResult, AuthUser } from '@shared/types/auth';
-import { logger } from '../../../utils/logger.ts';
-import { redis } from '../../../db/redis.ts';
+import type { TokenVerificationResult, AuthUser } from '@shared/types/auth/index.js';
+import { logger } from '@server/utils/logger.ts';
+import { redis } from '@server/db/redis.js';
 // Extend Express Request type
 declare global {
     namespace Express {
@@ -73,8 +73,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             id: result.payload.sub,
             email: result.payload.email,
             role: result.payload.role,
-            organizationId: result.payload.organizationId,
-            sessionId: result.payload.sessionId
+            organizationId: result.payload.organization_id,
+            sessionId: result.payload.session_id
         };
         next();
     }

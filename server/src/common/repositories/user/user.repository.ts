@@ -606,7 +606,7 @@ export class UserRepository extends BaseRepositoryImpl<User, string, UserCreateI
       const [updatedUser] = await db
         .update(users)
         .set({ 
-          settings: JSON.stringify(updatedSettings) as any, // Cast to any to handle JSONB type
+          settings: JSON.stringify(updatedSettings) as any | null, // Cast to any to handle JSONB type
           updatedAt: new Date() 
         })
         .where(eq(users.id, userId))

@@ -534,6 +534,13 @@ export default function CorporateDashboard() {
         </DialogContent>
       </Dialog>
 
-      <NewTripModal isOpen={isNewTripModalOpen} onClose={() => setIsNewTripModalOpen(false)} onSuccess={() => setIsNewTripModalOpen(false)} userId={user.id}/>
+      {user && (
+        <NewTripModal 
+          isOpen={isNewTripModalOpen} 
+          onClose={() => setIsNewTripModalOpen(false)} 
+          onSuccess={() => setIsNewTripModalOpen(false)} 
+          userId={Number(user.id)}
+        />
+      )}
     </div>);
 }

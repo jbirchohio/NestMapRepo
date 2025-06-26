@@ -1,20 +1,9 @@
-import type { UserRole } from './types/auth-user';
+import type { AuthUser } from '@shared/types/auth/user.js';
 
 declare global {
   namespace Express {
-    // Simplified User interface that matches AuthUser
-    interface User {
-      id: string;
-      email: string;
-      role: UserRole;
-      organizationId: string | null;
-      sessionId?: string;
-      permissions: string[];
-      displayName?: string;
-      organization_id?: string;
-      analyticsScope?: AnalyticsScope;
-      [key: string]: any;
-    }
+    // Extend the User interface to match our AuthUser type
+    interface User extends AuthUser {}
 
     // Response metrics interface
     interface ResponseMetrics {
@@ -28,6 +17,8 @@ declare global {
 
     // Extend the Request interface with our custom properties
     interface Request {
+      // The user property is now properly typed from the User interface above
+      user?: User;
       // Standard Express properties
       method: string;
       originalUrl: string;

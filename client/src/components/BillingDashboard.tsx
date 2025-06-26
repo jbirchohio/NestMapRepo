@@ -7,6 +7,30 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { apiRequest } from "@/lib/queryClient";
+
+// Define the user metadata type
+interface UserMetadata {
+  customerId?: string;
+  organization_id?: string;
+  display_name?: string;
+  [key: string]: any;
+}
+
+// Define the user type with metadata
+interface AuthUser {
+  id: string;
+  email?: string;
+  role?: string;
+  user_metadata?: UserMetadata;
+}
+
+// Define permissions type
+interface UserPermissions {
+  canAccessBilling?: boolean;
+  canManageOrganization?: boolean;
+  canAccessAdmin?: boolean;
+  [key: string]: any;
+}
 import { CreditCard, Calendar, DollarSign, Users, ArrowUpRight, CheckCircle, AlertCircle, Settings } from "lucide-react";
 import { format } from "date-fns";
 
@@ -44,24 +68,38 @@ export default function BillingDashboard() {
     const queryClient = useQueryClient();
     const [isLoading, setIsLoading] = useState(false);
     // Check user permissions for billing access
-    const { data: userPermissions } = useQuery({
+    const { data: userPermissions = {} } = useQuery<UserPermissions>({
         queryKey: ['/api/user/permissions'],
         enabled: !!user,
+        initialData: {}
     });
-    const hasBillingAccess = userPermissions && (userPermissions.canAccessBilling ||
-        userPermissions.canManageOrganization ||
-        userPermissions.canAccessAdmin ||
-        user?.role === 'admin');
+    
+    const hasBillingAccess = Boolean(
+        userPermissions?.canAccessBilling ||
+        userPermissions?.canManageOrganization ||
+        userPermissions?.canAccessAdmin ||
+        user?.role === 'admin'
+    );
     // Get billing information
     const { data: billingInfo, isLoading: billingLoading } = useQuery<BillingInfo>({
         queryKey: ['/api/billing', user?.user_metadata?.customerId],
-        enabled: !!user?.user_metadata?.customerId && hasBillingAccess,
+        enabled: Boolean(user?.user_metadata?.customerId && hasBillingAccess),
+        initialData: { status: 'inactive', plan: 'free' },
+        select: (data) => ({
+            ...data,
+            status: (['active', 'inactive', 'past_due', 'canceled'].includes(data.status) ? data.status : 'inactive') as 'active' | 'inactive' | 'past_due' | 'canceled',
+            plan: (['free', 'team', 'enterprise'].includes(data.plan) ? data.plan : 'free') as 'free' | 'team' | 'enterprise'
+        })
     });
     // Create billing portal session
     const portalMutation = useMutation({
         mutationFn: async () => {
+            const customerId = user?.user_metadata?.customerId;
+            if (!customerId) {
+                throw new Error('Customer ID not found');
+            }
             const response = await apiRequest("POST", "/api/billing/portal", {
-                customerId: user?.user_metadata?.customerId,
+                customerId,
                 returnUrl: window.location.origin + "/team"
             });
             return response.json();
@@ -80,11 +118,18 @@ export default function BillingDashboard() {
     // Upgrade subscription
     const upgradeMutation = useMutation({
         mutationFn: async (plan: 'team' | 'enterprise') => {
+            const organizationId = user?.user_metadata?.organization_id;
+            const customerEmail = user?.email;
+            
+            if (!organizationId || !customerEmail) {
+                throw new Error('Missing required user information');
+            }
+
             const response = await apiRequest("POST", "/api/billing/subscription", {
-                organizationId: user?.user_metadata?.organization_id,
+                organizationId,
                 plan,
-                customerEmail: user?.email,
-                customerName: user?.user_metadata?.display_name || user?.email
+                customerEmail,
+                customerName: user?.user_metadata?.display_name || customerEmail
             });
             return response.json();
         },

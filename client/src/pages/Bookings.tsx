@@ -1,6 +1,6 @@
 import BookingWorkflow from "@/components/BookingWorkflow";
 import { TripTeamManagement } from "@/components/TripTeamManagement";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { Shield, Users, Plane, Sparkles } from "lucide-react";
+interface Trip {
+  id: string;
+  title: string;
+  city: string;
+  country: string;
+  startDate: string;
+  endDate: string;
+  tripType: 'business' | 'personal';
+  end_date?: string; // For backward compatibility
+}
+
 export default function Bookings() {
-    const { user, userId } = useAuth();
+    const { user } = useAuth();
+    const userId = user?.id;
     // Check user permissions for booking access
     const { data: userPermissions } = useQuery({
         queryKey: ['/api/user/permissions'],
@@ -25,7 +37,7 @@ export default function Bookings() {
         enabled: !!user,
     });
     // Get trips for team management context - always call this hook
-    const { data: trips = [] } = useQuery({
+    const { data: trips = [] } = useQuery<Trip[]>({
         queryKey: ['/api/trips/corporate'],
         enabled: !!user,
     });
@@ -133,9 +145,11 @@ export default function Bookings() {
             // Filter to show only current and future trips
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const currentAndUpcomingTrips = trips.filter((trip: any) => {
-                const tripEndDate = new Date(trip.endDate || trip.end_date);
-                return tripEndDate >= today;
+            const currentAndUpcomingTrips = trips.filter((trip) => {
+                const endDate = trip.endDate || trip.end_date;
+                if (!endDate) return false;
+                const tripEndDate = new Date(endDate);
+                return !isNaN(tripEndDate.getTime()) && tripEndDate >= today;
             });
             if (currentAndUpcomingTrips.length === 0) {
                 return (<div className="text-center py-8 text-muted-foreground">
@@ -144,19 +158,19 @@ export default function Bookings() {
                       </div>);
             }
             return (<div className="space-y-4">
-                      {currentAndUpcomingTrips.map((trip: any) => (<div key={trip.id} className="border rounded-lg p-4">
+                      {currentAndUpcomingTrips.map((trip) => (<div key={trip.id} className="border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-4">
                             <div>
                               <h3 className="font-semibold">{trip.title}</h3>
                               <p className="text-sm text-muted-foreground">
-                                {trip.city}, {trip.country} • {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+                                {trip.city}, {trip.country} • {trip.startDate ? new Date(trip.startDate).toLocaleDateString() : 'N/A'} - {trip.endDate ? new Date(trip.endDate).toLocaleDateString() : 'N/A'}
                               </p>
                             </div>
-                            <Badge variant={trip.tripType === 'business' ? 'default' : 'secondary'}>
+                            <Badge variant={trip.tripType === 'business' ? 'default' : 'outline'}>
                               {trip.tripType || 'personal'}
                             </Badge>
                           </div>
-                          <TripTeamManagement tripId={trip.id} userRole="admin"/>
+                          <TripTeamManagement tripId={parseInt(trip.id, 10)} userRole="admin"/>
                         </div>))}
                     </div>);
         })()}

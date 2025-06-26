@@ -26,7 +26,8 @@ interface OnboardingWizardProps {
     onComplete: () => void;
 }
 export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-    const { user, userId } = useAuth();
+    const { user } = useAuth();
+    const userId = user?.id; // Get userId from user object instead of directly from auth context
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [currentStep, setCurrentStep] = useState(0);
@@ -65,8 +66,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
             ...prev,
             sampleTrip: {
                 ...prev.sampleTrip,
-                startDate: nextWeek.toISOString().split('T')[0],
-                endDate: weekAfter.toISOString().split('T')[0]
+                startDate: nextWeek.toISOString().split('T')[0] || '',
+                endDate: weekAfter.toISOString().split('T')[0] || ''
             }
         }));
     }, []);
@@ -148,8 +149,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
             return await apiRequest('POST', '/api/trips', {
                 title: tripData.title,
                 city: tripData.destination,
-                startDate: new Date(startDate).toISOString(),
-                endDate: new Date(endDate).toISOString(),
+                startDate: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
+                endDate: endDate ? new Date(endDate).toISOString() : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
                 description: tripData.description || 'Sample trip created during onboarding',
                 budget: tripData.budget ? parseInt(tripData.budget.toString()) : 2500,
                 tripType: 'business'
@@ -183,6 +184,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
     };
     const handleNext = async () => {
         const currentStepData = steps[currentStep];
+        if (!currentStepData) return;
+        
         // Execute current step actions
         switch (currentStepData.id) {
             case 'company':
@@ -220,7 +223,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
     };
     const canProceed = () => {
         const step = steps[currentStep];
-        return step.completed || step.optional;
+        if (!step) return false;
+        return step.completed || !!step.optional;
     };
     return (<div className="min-h-screen bg-gradient-to-br from-navy-50 to-soft-100 dark:from-navy-900 dark:to-navy-800 flex items-center justify-center p-4">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-4xl">

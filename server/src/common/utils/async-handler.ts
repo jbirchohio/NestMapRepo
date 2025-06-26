@@ -1,5 +1,4 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
-import { RequestHandler as ExpressRequestHandler } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import type { Logger } from '@nestjs/common';
 /**
  * Wraps an async route handler to catch any unhandled promise rejections
@@ -8,7 +7,7 @@ import type { Logger } from '@nestjs/common';
  * @template Req - The request type extending Express Request
  * @template Res - The response type extending Express Response
  */
-export function asyncHandler<Req extends Request = Request, Res extends Response = Response>(handler: (req: Req, res: Res, next: NextFunction) => Promise<any>, logger?: Logger): ExpressRequestHandler {
+export function asyncHandler<Req extends Request = Request, Res extends Response = Response>(handler: (req: Req, res: Res, next: NextFunction) => Promise<any>, logger?: Logger): RequestHandler {
     return (req: Request, res: Response, next: NextFunction) => {
         Promise.resolve(handler(req as Req, res as Res, next)).catch((error) => {
             if (logger) {

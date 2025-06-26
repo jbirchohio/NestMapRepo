@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 // Supabase connection details from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'];
+const supabaseAnonKey = import.meta.env['VITE_SUPABASE_ANON_KEY'];
 // Validate environment variables
 if (!supabaseUrl) {
     console.error('VITE_SUPABASE_URL is required but not set');

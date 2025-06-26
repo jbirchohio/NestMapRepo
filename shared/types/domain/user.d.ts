@@ -24,7 +24,7 @@ export {
 } from '../auth/user.js';
 
 // Re-export UserRole from permissions
-import { UserRole } from '../auth/permissions.js';
+import { UserRole } from '../.../auth/permissions.js';
 export { UserRole };
 
 // Extend the global SharedTypes namespace with additional types

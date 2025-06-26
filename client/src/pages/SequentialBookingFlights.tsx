@@ -216,9 +216,25 @@ export default function SequentialBookingFlights() {
             return;
         setIsSearching(true);
         try {
-            // Use AI to get airport codes for current traveler's specific departure city
-            const departureCode = await getAirportCodeFromCity(currentTraveler.departureCity || '');
-            const destinationCode = await getAirportCodeFromCity((data.tripDestination || '').split(',')[0]);
+            // Use API to get airport codes for current traveler's specific departure city
+            const departureCity = currentTraveler?.departureCity;
+            if (!departureCity) {
+                throw new Error('Departure city is required');
+            }
+            const destinationCity = data?.tripDestination?.split(',')[0];
+            if (!destinationCity) {
+                throw new Error('Destination city is required');
+            }
+            
+            // Make API call to get airport codes
+            const [departureCode, destinationCode] = await Promise.all([
+                apiRequest('POST', '/api/locations/airport-code', { cityName: departureCity })
+                    .then(res => res.airportCode)
+                    .catch(() => 'JFK'), // Fallback to JFK if API fails
+                apiRequest('POST', '/api/locations/airport-code', { cityName: destinationCity })
+                    .then(res => res.airportCode)
+                    .catch(() => 'JFK')  // Fallback to JFK if API fails
+            ]);
             console.log(`Flight search for ${currentTraveler.name}: ${currentTraveler.departureCity} (${departureCode}) → ${data.tripDestination.split(',')[0]} (${destinationCode})`);
             const searchParams = {
                 origin: departureCode,
@@ -298,11 +314,12 @@ export default function SequentialBookingFlights() {
         try {
             // Store both outbound and return flight selections for current traveler
             const updatedTravelers = [...bookingData.travelers];
-            updatedTravelers[bookingData.currentTravelerIndex] = {
+            const updatedTraveler = {
                 ...currentTraveler,
                 selectedOutboundFlight: selectedOutbound,
                 selectedReturnFlight: selectedReturn
-            };
+            } as any; // Use type assertion since we're adding non-standard fields
+            updatedTravelers[bookingData.currentTravelerIndex] = updatedTraveler;
             // Check if more travelers need flights
             if (bookingData.currentTravelerIndex < bookingData.travelers.length - 1) {
                 // Move to next traveler
@@ -322,7 +339,7 @@ export default function SequentialBookingFlights() {
                 await handleFlightSearch(updatedData);
                 toast({
                     title: "Flight Selected",
-                    description: `Flight saved for ${currentTraveler.name}. Now selecting for next traveler.`,
+                    description: `Flight saved for ${currentTraveler?.name || 'traveler'}. Now selecting for next traveler.`,
                 });
             }
             else {
@@ -536,10 +553,19 @@ export default function SequentialBookingFlights() {
                 <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
                 <p>Searching authentic flight data...</p>
               </div>) : (<div className="space-y-3">
-                {sortFlights(activeTab === 'outbound' ? outboundFlights : returnFlights, sortBy).map((flight) => (<div key={flight.id} className={`border rounded-lg p-4 cursor-pointer transition-colors ${(activeTab === 'outbound' && selectedOutbound?.id === flight.id) ||
-                        (activeTab === 'return' && selectedReturn?.id === flight.id)
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'}`} onClick={() => {
+                {sortFlights(activeTab === 'outbound' ? outboundFlights : returnFlights, sortBy).map((flight) => {
+                  const isSelected = (activeTab === 'outbound' && selectedOutbound?.id === flight.id) ||
+                    (activeTab === 'return' && selectedReturn?.id === flight.id);
+                  
+                  return (
+                    <div 
+                      key={flight.id} 
+                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:border-primary/50'
+                      }`} 
+                      onClick={() => {
                         if (activeTab === 'outbound') {
                             setSelectedOutbound(flight);
                         }
@@ -551,45 +577,60 @@ export default function SequentialBookingFlights() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <span className="font-medium">{getAirlineName(flight.airline)}</span>
-                          <Badge variant="outline">{flight.segments?.[0] ? getFlightNumber(flight.segments[0]) : flight.flightNumber || 'N/A'}</Badge>
+                          <Badge variant="outline">
+                            {flight.segments?.[0] 
+                              ? getFlightNumber(flight.segments[0])
+                              : (flight.flightNumber ? String(flight.flightNumber) : 'N/A')}
+                          </Badge>
                           {flight.stops === 0 && (<Badge variant="secondary">Direct</Badge>)}
                         </div>
                         {/* Flight routing display with connections */}
-                        {flight.segments && flight.segments.length > 1 ? (
-                    // Multi-segment flight with connections
-                    <div className="space-y-2 text-sm">
-                            {(flight.segments || []).map((segment: FlightSegment, segmentIndex: number) =>
-                              segment ? (
-                                <div key={segmentIndex} className="flex items-center gap-2">
-                                <div className="flex-1 grid grid-cols-3 gap-4">
-                                  <div>
-                                    <p className="font-medium">{formatTime(segment.departure.at || segment.departure.time)}</p>
-                                    <p className="text-muted-foreground">{getAirportCode(segment.departure)}</p>
-                                  </div>
-                                  <div className="text-center">
-                                    <p className="text-muted-foreground">{formatDuration(segment.duration)}</p>
-                                    <div className="flex items-center justify-center">
-                                      <div className="w-8 h-px bg-border"></div>
-                                      <Plane className="h-3 w-3 mx-1 text-muted-foreground"/>
-                                      <div className="w-8 h-px bg-border"></div>
+                        {flight.segments && flight.segments.length > 0 ? (
+                          <div className="space-y-2 text-sm">
+                            {flight.segments?.map((segment: FlightSegment, segmentIndex: number) => (
+                              <div key={segmentIndex} className="flex flex-col gap-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex-1 grid grid-cols-3 gap-4">
+                                    <div>
+                                      <p className="font-medium">
+                                        {formatTime(segment.departure?.at || segment.departure?.time || '')}
+                                      </p>
+                                      <p className="text-muted-foreground">
+                                        {getAirportCode(segment.departure)}
+                                      </p>
+                                    </div>
+                                    <div className="text-center">
+                                      <p className="text-muted-foreground">
+                                        {formatDuration(segment.duration || '')}
+                                      </p>
+                                      <div className="flex items-center justify-center">
+                                        <div className="w-8 h-px bg-border"></div>
+                                        <Plane className="h-3 w-3 mx-1 text-muted-foreground"/>
+                                        <div className="w-8 h-px bg-border"></div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="font-medium">
+                                        {formatTime(segment.arrival?.at || segment.arrival?.time || '')}
+                                      </p>
+                                      <p className="text-muted-foreground">
+                                        {getAirportCode(segment.arrival)}
+                                      </p>
                                     </div>
                                   </div>
-                                  <div className="text-right">
-                                    <p className="font-medium">{formatTime(segment.arrival.at || segment.arrival.time)}</p>
-                                    <p className="text-muted-foreground">{getAirportCode(segment.arrival)}</p>
-                                  </div>
                                 </div>
-                                {segmentIndex < flight.segments.length - 1 && (
-                                  <div className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
+                                {flight.segments && segmentIndex < flight.segments.length - 1 && (
+                                  <div className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded self-start">
                                     Connection
                                   </div>
                                 )}
                               </div>
-                            ) : null)}
+                            ))}
                             <div className="text-xs text-muted-foreground mt-2">
-                              Total journey: {formatDuration(flight.duration)} • {flight.stops} stop{flight.stops !== 1 ? 's' : ''}
+                              Total journey: {formatDuration(flight.duration || '')} • {flight.stops} stop{flight.stops !== 1 ? 's' : ''}
                             </div>
-                          </div>) : (
+                          </div>
+                        ) : (
                     // Direct flight
                     <div className="grid grid-cols-3 gap-4 text-sm">
                             <div>
@@ -615,12 +656,17 @@ export default function SequentialBookingFlights() {
                         <p className="text-sm text-muted-foreground">{getPriceCurrency(flight.price, flight.currency)}</p>
                       </div>
                     </div>
-                  </div>))}
+                  </div>
+                ))}
                 
-                {flightOffers.length === 0 && !isSearching && (<div className="text-center py-8 text-muted-foreground">
+                {flightOffers.length === 0 && !isSearching && (
+                  <div className="text-center py-8 text-muted-foreground">
                     No flights found for this route. Please try different dates.
-                  </div>)}
-              </div>)}
+                  </div>
+                )}
+              </div>
+            )}
+            
 
             {/* Flight Selection Summary */}
             {(selectedOutbound || selectedReturn) && (<div className="mt-6 p-4 bg-muted/30 rounded-lg">

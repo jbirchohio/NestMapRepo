@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,12 +27,18 @@ interface LogsResponse {
         pages: number;
     };
 }
+
+interface InfiniteLogsResponse {
+    pages: LogsResponse[];
+    pageParams: number[];
+}
+
 export default function AdminLogs() {
     const [filterAction, setFilterAction] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('audit');
     // Use infinite query instead of regular query
-    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } = useInfiniteQuery<LogsResponse>({
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } = useInfiniteQuery<LogsResponse, Error, InfiniteLogsResponse, string[], number>({
         queryKey: ['/api/admin/logs', filterAction, searchTerm],
         queryFn: async ({ pageParam = 1 }): Promise<LogsResponse> => {
             const params = new URLSearchParams({
@@ -48,6 +54,7 @@ export default function AdminLogs() {
             const response = await apiRequest('GET', `/api/admin/logs?${params.toString()}`);
             return (await response.json()) as LogsResponse;
         },
+        initialPageParam: 1,
         getNextPageParam: (lastPage: LogsResponse) => {
             // Return undefined when there are no more pages
             if (lastPage.pagination.page >= lastPage.pagination.pages) {
@@ -56,8 +63,11 @@ export default function AdminLogs() {
             return lastPage.pagination.page + 1;
         },
     });
-    // Flatten the logs from all pages
-    const allLogs = data?.pages.flatMap(page => page.logs) || [];
+    // Flatten the logs from all pages with proper typing
+    const allLogs = useMemo(() => {
+        if (!data?.pages) return [];
+        return data.pages.flatMap(page => page.logs);
+    }, [data?.pages]);
     const getActionIcon = (actionType: string) => {
         switch (actionType.toLowerCase()) {
             case 'system_settings_update':
@@ -196,13 +206,25 @@ export default function AdminLogs() {
                 {isLoading ? (<div className="flex items-center justify-center h-32">
                     <RefreshCw className="w-6 h-6 animate-spin text-electric-600"/>
                   </div>) : (<div className="space-y-3">
-                    <InfiniteScrollList items={allLogs} loadMore={fetchNextPage} hasMore={!!hasNextPage} isLoading={isFetchingNextPage} loadingMessage={<div className="flex justify-center items-center py-4">
+                    <InfiniteScrollList 
+                      items={allLogs} 
+                      loadMore={fetchNextPage} 
+                      hasMore={!!hasNextPage} 
+                      isLoading={isFetchingNextPage} 
+                      loadingMessage={
+                        <div className="flex justify-center items-center py-4">
                           <RefreshCw className="w-5 h-5 animate-spin text-electric-600 mr-2"/>
                           <span className="text-sm text-muted-foreground">Loading more logs...</span>
-                        </div>} emptyMessage={<div className="text-center py-8">
+                        </div>
+                      } 
+                      emptyMessage={
+                        <div className="text-center py-8">
                           <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-4"/>
                           <p className="text-muted-foreground">No logs found matching your criteria</p>
-                        </div>} renderItem={(log, index) => (<div key={log.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                        </div>
+                      } 
+                      renderItem={(log: AdminLog) => (
+                        <div key={log.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                           <div className="flex items-center gap-3 flex-1">
                             <div className="p-2 bg-muted rounded-lg">
                               {getActionIcon(log.action_type)}
@@ -226,11 +248,15 @@ export default function AdminLogs() {
                               <Clock className="w-3 h-3"/>
                               {new Date(log.timestamp).toLocaleString()}
                             </div>
-                            {log.ip_address && (<p className="text-xs text-muted-foreground">
+                            {log.ip_address && (
+                              <p className="text-xs text-muted-foreground">
                                 IP: {log.ip_address}
-                              </p>)}
+                              </p>
+                            )}
                           </div>
-                        </div>)}/>
+                        </div>
+                      )}
+                    />
                   </div>)}
               </CardContent>
             </Card>

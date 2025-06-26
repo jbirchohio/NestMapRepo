@@ -6,23 +6,27 @@ import type {
   Booking as SharedBooking, 
   BookingStatus, 
   BookingType,
-  Booking as SharedBookingType
-} from '@shared/types/bookings';
+  Booking as SharedBookingType,
+  AnyBooking
+} from '../../../../shared/types/bookings.js';
 
 // Import database types
 import type { 
   Booking as DbBooking,
-  InsertBooking as DbInsertBooking,
-  UpdateBooking as DbUpdateBooking
+  InsertBooking as DbInsertBooking
 } from '../../../db/bookingSchema.js';
 
+type DbUpdateBooking = Partial<DbInsertBooking>;
+
 // Import repository interfaces
-import { BOOKING_REPOSITORY } from '../repositories/booking/booking.repository.interface.js';
+// Import repository token
+import { BOOKING_REPOSITORY } from '../repositories/repository.tokens.js';
 import type { 
-  BookingRepository as IBookingRepository,
-  CreateBookingData,
-  UpdateBookingData
+  BookingRepository as IBookingRepository
 } from '../repositories/booking/booking.repository.interface.js';
+
+type CreateBookingData = Omit<SharedBooking, 'id' | 'createdAt' | 'updatedAt' | 'reference'>;
+type UpdateBookingData = Partial<CreateBookingData>;
 
 // Import DTOs
 import type { 
@@ -68,14 +72,10 @@ export class BookingService {
         const now = new Date();
         const createData: CreateBookingData = {
             ...createBookingDto,
-            id: uuidv4(),
             status: 'pending',
             bookingDate: now,
-            createdAt: now,
-            updatedAt: now,
-            reference: `B-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-            providerReferenceId: createBookingDto.providerBookingId || `PR-${Date.now()}`,
             // Ensure all required fields have default values
+            providerBookingId: createBookingDto.providerBookingId || `PR-${Date.now()}`,
             amount: createBookingDto.amount ?? 0,
             currency: createBookingDto.currency ?? 'USD',
             metadata: createBookingDto.metadata ?? {},
@@ -142,7 +142,10 @@ export class BookingService {
                 // Map provider reference ID
                 providerBookingId: 'provider_reference_id' in booking 
                     ? (booking as any).provider_reference_id 
-                    : (booking as any).providerReferenceId ?? ''
+                    : (booking as any).providerReferenceId ?? '',
+                // Add missing required fields with default values
+                providerReferenceId: (booking as any).providerReferenceId ?? '',
+                cancellationReason: (booking as any).cancellationReason ?? null
             };
             return this.mapToSharedBooking(dbBooking);
         });
@@ -159,8 +162,8 @@ export class BookingService {
             const dbBooking: DbBooking & { providerBookingId: string } = {
                 id: booking.id,
                 reference: booking.reference,
-                type: booking.type as any, // Will be cast to BookingType in mapToSharedBooking
-                status: booking.status as any, // Will be cast to BookingStatus in mapToSharedBooking
+                type: booking.type as BookingType, 
+                status: booking.status as BookingStatus, 
                 bookingDate: booking.bookingDate instanceof Date ? booking.bookingDate : new Date(booking.bookingDate),
                 checkInDate: booking.checkInDate ? (booking.checkInDate instanceof Date ? booking.checkInDate : new Date(booking.checkInDate)) : null,
                 checkOutDate: booking.checkOutDate ? (booking.checkOutDate instanceof Date ? booking.checkOutDate : new Date(booking.checkOutDate)) : null,
@@ -168,16 +171,18 @@ export class BookingService {
                 currency: booking.currency ?? 'usd',
                 provider: booking.provider,
                 providerReferenceId: 'providerReferenceId' in booking ? booking.providerReferenceId : (booking as any).provider_reference_id || '',
-                userId: booking.userId,
-                organizationId: booking.organizationId,
-                tripId: booking.tripId ?? null,
-                activityId: booking.activityId ?? null,
+                user_id: booking.userId,
+                organization_id: booking.organizationId,
+                trip_id: booking.tripId ?? null,
+                activity_id: booking.activityId ?? null,
                 notes: booking.notes ?? null,
                 cancellationPolicy: booking.cancellationPolicy ?? null,
                 cancellationDeadline: booking.cancellationDeadline ? 
                     (booking.cancellationDeadline instanceof Date ? booking.cancellationDeadline : new Date(booking.cancellationDeadline)) : 
                     null,
-                cancellationReason: 'cancellationReason' in booking ? booking.cancellationReason : null,
+                cancellationReason: 'cancellationReason' in booking ? 
+                    (booking as { cancellationReason?: string | null }).cancellationReason ?? null : 
+                    null,
                 metadata: booking.metadata ? (typeof booking.metadata === 'object' ? booking.metadata : {}) : {},
                 createdAt: 'createdAt' in booking ? 
                     (booking.createdAt instanceof Date ? booking.createdAt : new Date(booking.createdAt)) : 
