@@ -1,14 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { bookingService } from '../services/bookingService.ts';
-import { Flight, FlightSearchParams } from '../types.ts';
+import { bookingService } from '../services/bookingService';
+import type { Flight } from '../types/flight';
+import type { FlightSearchParams } from '../types';
 interface UseFlightSearchProps {
     origin: string;
     destination: string;
     departureDate: string;
     returnDate?: string;
     passengers: number;
-    cabin: string;
+    cabin: 'economy' | 'premium' | 'business' | 'first';
 }
 export const useFlightSearch = ({ origin, destination, departureDate, returnDate, passengers, cabin, }: UseFlightSearchProps) => {
     const { toast } = useToast();
@@ -29,20 +30,83 @@ export const useFlightSearch = ({ origin, destination, departureDate, returnDate
                 origin,
                 destination,
                 departureDate,
-                passengers: {
-                    adults: passengers,
-                },
+                returnDate: returnDate || '',
+                passengers: passengers,
                 cabin,
             };
-            if (returnDate) {
-                params.returnDate = returnDate;
-            }
             const response = await bookingService.searchFlights(params);
             if (response.success && response.data?.flights) {
-                setFlights(response.data.flights);
+                // Map the response to match the Flight type
+                const mappedFlights = response.data.flights.map(flight => {
+                    const flightData: Flight = {
+                        id: flight.id,
+                        type: 'departure',
+                        segments: [{
+                            id: flight.id,
+                            departure: {
+                                airport: {
+                                    code: flight.departure.airport,
+                                    name: flight.departure.airport,
+                                    city: '',
+                                    country: '',
+                                    timezone: 'UTC'
+                                },
+                                time: flight.departure.time
+                            },
+                            arrival: {
+                                airport: {
+                                    code: flight.arrival.airport,
+                                    name: flight.arrival.airport,
+                                    city: '',
+                                    country: '',
+                                    timezone: 'UTC'
+                                },
+                                time: flight.arrival.time
+                            },
+                            carrier: {
+                                code: flight.airline,
+                                name: flight.airline
+                            },
+                            flightNumber: flight.flightNumber,
+                            aircraft: {
+                                code: '',
+                                name: ''
+                            },
+                            duration: flight.duration,
+                            cabin: cabin as 'economy' | 'premium' | 'business' | 'first',
+                            bookingClass: 'economy',
+                            fareBasis: '',
+                            technicalStops: []
+                        }],
+                        price: {
+                            amount: flight.price,
+                            currency: 'USD',
+                            formatted: `$${flight.price}`,
+                            taxes: 0,
+                            fees: 0,
+                            baseFare: flight.price
+                        },
+                        duration: flight.duration,
+                        stops: flight.stops,
+                        departureTime: flight.departure.time,
+                        arrivalTime: flight.arrival.time,
+                        bookingClass: 'economy',
+                        fareBasis: '',
+                        baggageAllowance: {
+                            cabin: '1 x 7kg',
+                            checked: '1 x 23kg'
+                        },
+                        refundable: false,
+                        changeable: false,
+                        availableSeats: 9,
+                        amenities: []
+                    };
+                    return flightData;
+                });
+                setFlights(mappedFlights);
             }
             else {
-                setError(response.error?.message || 'No flights found');
+                setError(typeof response.error === 'string' ? response.error : 'No flights found');
                 setFlights([]);
             }
         }

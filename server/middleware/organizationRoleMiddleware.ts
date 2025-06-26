@@ -26,7 +26,7 @@ export function requireOrgPermission(permission: string) {
             return res.status(403).json({ message: `Access denied: Missing permission '${permission}'` });
         }
         catch (err) {
-            // eslint-disable-next-line no-console
+             
             console.error('RBAC permission check error', err);
             return res.status(500).json({ message: 'Permission check failed' });
         }

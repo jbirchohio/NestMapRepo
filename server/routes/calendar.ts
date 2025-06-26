@@ -114,7 +114,7 @@ router.post('/sync-trip/:tripId', async (req, res) => {
 function generateICalendar(trip: any, activities: any[]): string {
     const startDate = new Date(trip.startDate);
     const endDate = new Date(trip.endDate);
-    let ical = [
+    const ical = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
         'PRODID:-//NestMap//Business Travel//EN',

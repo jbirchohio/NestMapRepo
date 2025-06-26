@@ -1,15 +1,65 @@
+
+
 import { lazy, Suspense, ComponentType } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+
 // Lazy load large components to improve initial bundle size
-export const LazyBookingWorkflow = lazy(() => import('./BookingWorkflow'));
-export const LazySuperadmin = lazy(() => import('../pages/SuperadminClean'));
-export const LazyCorporateCards = lazy(() => import('../pages/CorporateCards'));
-export const LazySequentialBooking = lazy(() => import('../pages/SequentialBooking'));
-export const LazyBookingSystem = lazy(() => import('./BookingSystem'));
-export const LazyOrganizationFunding = lazy(() => import('../pages/OrganizationFunding'));
-export const LazyWhiteLabelSettings = lazy(() => import('./WhiteLabelSettings'));
-export const LazyActivityModal = lazy(() => import('./ActivityModal'));
-export const LazyOnboardingWizard = lazy(() => import('./OnboardingWizard'));
+const lazyWithRetry = <T extends object>(
+  importFn: () => Promise<{ default: ComponentType<T> }>,
+  componentName: string
+) => {
+  return lazy(async () => {
+    try {
+      return await importFn();
+    } catch (error) {
+      console.error(`Failed to load component ${componentName}:`, error);
+      throw error;
+    }
+  });
+};
+
+type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+
+// Define component props interfaces
+export interface OnboardingWizardProps {
+  onComplete: () => void;
+}
+
+// Export lazy-loaded components
+export const LazyBookingWorkflow = lazyWithRetry<{}>(() => import('./BookingWorkflow'), 'BookingWorkflow');
+export const LazySuperadmin = lazyWithRetry<{}>(() => import('../pages/SuperadminClean'), 'SuperadminClean');
+export const LazyCorporateCards = lazyWithRetry<{}>(() => import('../pages/CorporateCards'), 'CorporateCards');
+export const LazySequentialBooking = lazyWithRetry<{}>(() => import('../pages/SequentialBookingFlights'), 'SequentialBookingFlights');
+
+type BookingSystemProps = {
+  // Add specific props for BookingSystem if needed
+};
+
+export const LazyBookingSystem = lazyWithRetry<BookingSystemProps>(
+  () => import('../pages/BookingSystem'),
+  'BookingSystem'
+);
+
+export const LazyOrganizationFunding = lazyWithRetry<{}>(
+  () => import('../pages/OrganizationFunding'),
+  'OrganizationFunding'
+);
+
+export const LazyWhiteLabelSettings = lazyWithRetry<{}>(
+  () => import('../pages/WhiteLabelSettings'),
+  'WhiteLabelSettings'
+);
+
+export const LazyActivityModal = lazyWithRetry<{}>(
+  () => import('../components/ActivityModal'),
+  'ActivityModal'
+);
+
+export const LazyOnboardingWizard = lazyWithRetry<OnboardingWizardProps>(
+  () => import('../components/OnboardingWizard'),
+  'OnboardingWizard'
+) as React.LazyExoticComponent<React.ComponentType<OnboardingWizardProps>>;
+
 // Loading fallback component
 function LoadingFallback({ componentName }: {
     componentName?: string;

@@ -6,7 +6,7 @@ import { UserRole } from '../auth/permissions.js';
  * Ensures proper tenant isolation in multi-tenant environment
  */
 export function IsTenantId(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'isTenantId',
       target: object.constructor,
@@ -30,7 +30,7 @@ export function IsTenantId(validationOptions?: ValidationOptions) {
  * Ensures only defined roles from UserRole enum are used
  */
 export function IsValidRole(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'isValidRole',
       target: object.constructor,
@@ -55,7 +55,7 @@ export function IsValidRole(validationOptions?: ValidationOptions) {
  * Meets enterprise security requirements
  */
 export function IsStrongPassword(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'isStrongPassword',
       target: object.constructor,
@@ -80,7 +80,7 @@ export function IsStrongPassword(validationOptions?: ValidationOptions) {
  * Includes basic format validation
  */
 export function IsEmailValid(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'isEmailValid',
       target: object.constructor,

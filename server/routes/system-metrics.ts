@@ -126,7 +126,7 @@ function generateAlerts(metrics: Partial<SystemMetrics>): {
 } {
     let critical = 0;
     let warning = 0;
-    let info = 0;
+    const info = 0;
     // Memory alerts
     if (metrics.memory && metrics.memory.memoryUtilization > 90) {
         critical++;

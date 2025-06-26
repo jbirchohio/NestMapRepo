@@ -1,63 +1,47 @@
 {
-    "extends":  "../tsconfig.base.json",
-    "compilerOptions":  {
-                            "module":  "NodeNext",
-                            "moduleResolution":  "NodeNext",
-                            "esModuleInterop":  true,
-                            "strict":  true,
-                            "skipLibCheck":  true,
-                            "forceConsistentCasingInFileNames":  true,
-                            "resolveJsonModule": true,
-                            "allowSyntheticDefaultImports": true,
-                            "allowImportingTsExtensions": true,
-                            "outDir":  "../dist/server",
-                            "rootDir":  "..",
-                            "rootDirs":  [
-                                             "..",
-                                             "../shared"
-                                         ],
-                            "lib":  [
-                                        "ES2022",
-                                        "DOM"
-                                    ],
-                            "types":  [
-                                          "jest",
-                                          "node"
-                                      ],
-                            "typeRoots":  [
-                                              "./node_modules/@types",
-                                              "../node_modules/@types",
-                                              "./src/types",
-                                              "./types",
-                                              "./src/@types"
-                                          ],
-                            "baseUrl":  ".",
-                            "paths":  {
-                                          "@server/*":  [
-                                                            "./src/*"
-                                                        ],
-                                          "@db/*": [
-                                                            "./db/*"
-                                                        ],
-                                          "@shared/*":  [
-                                                            "../shared/*"
-                                                        ],
-                                          "@shared/types/*":  [
-                                                            "../shared/types/*"
-                                                        ],
-                                          "@shared/src/*":  [
-                                                               "../shared/src/*"
-                                                           ],
-                                          "@shared/types/auth/*":  [
-                                                                       "../shared/types/auth/*"
-                                                                   ]
-                                      },
-                            "noUnusedParameters":  true,
-                            "strictFunctionTypes":  true,
-                            "strictBindCallApply":  true,
-                            "noImplicitReturns":  true,
-                            "composite":  true,
-                            "declaration":  true,
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "esModuleInterop": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+        "allowImportingTsExtensions": true,
+        "outDir": "../dist/server",
+        "rootDir": ".",
+        "baseUrl": ".",
+        "paths": {
+            "@server/*": ["./src/*"],
+            "@db/*": ["./db/*"],
+            "@shared/*": ["../shared/*"],
+            "@shared/types/*": ["../shared/types/*"],
+            "@shared/src/*": ["../shared/src/*"],
+            "@shared/types/auth/*": ["../shared/types/auth/*"]
+        },
+        "lib": [
+            "ES2022",
+            "DOM"
+        ],
+        "types": [
+            "jest",
+            "node"
+        ],
+        "typeRoots": [
+            "./node_modules/@types",
+            "../node_modules/@types",
+            "./src/types",
+            "./types",
+            "./src/@types"
+        ],
+        "noUnusedParameters": true,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "noImplicitReturns": true,
+        "composite": true,
+        "declaration": true,
                             "declarationMap":  true,
                             "target":  "ES2022",
                             "moduleDetection":  "force",
@@ -73,9 +57,7 @@
     "include":  [
                     "src/**/*.ts",
                     "db/**/*.ts",
-                    "middleware/**/*.ts",
-                    "utils/**/*.ts",
-                    "*.ts",
+                    "**/*.ts",
                     "../vite.config.ts"
                 ]
 }

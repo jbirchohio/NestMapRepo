@@ -1,17 +1,22 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    // Build settings
     "composite": true,
     "declaration": true,
     "outDir": "../dist/client",
     "rootDir": "..",
+    "rootDirs": [".", "../shared/types"],
     
-    // Module settings
+    // Module settings - align with Vite's expectations
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
     
     // JSX settings
     "jsx": "react-jsx",
@@ -26,32 +31,31 @@
     "strictPropertyInitialization": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    
-    // Path aliases
-    "baseUrl": ".",
-    "paths": {
-      "@shared/*": ["../shared/types/*"],
-      "@client/*": ["./src/*"],
-      "@/*": ["./src/*"]
-    },
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    
+    // Path aliases - ensure these match your Vite config
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../shared/*"],
+      "@client/*": ["./src/*"],
+      "@/*": ["./src/*"]
+    },
     
     // Type definitions
     "types": ["vite/client", "node"],
     "typeRoots": [
-      "../shared/types",
       "./node_modules/@types",
-      "../node_modules/@types"
+      "../node_modules/@types",
+      "../shared/types"
     ],
     
-    // Target and libraries
-    "target": "ES2022",
+    // Libraries
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     
     // Output
@@ -59,14 +63,14 @@
     "inlineSources": true,
     "declarationMap": true,
     
-    // Other
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "allowJs": true,
-    "skipDefaultLibCheck": true,
+    // Performance
     "skipLibCheck": true,
-    "useDefineForClassFields": true,
-    "moduleDetection": "force"
+    "skipDefaultLibCheck": true,
+    
+    // Compatibility
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": true
   },
   
   "include": [
@@ -75,7 +79,8 @@
     "src/**/*.d.ts",
     "src/@types/**/*.d.ts",
     "../shared/types/**/*.ts",
-    "../shared/types/**/*.d.ts"
+    "../shared/types/**/*.d.ts",
+    "../vite.config.ts"
   ],
   
   "exclude": [

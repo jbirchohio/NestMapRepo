@@ -1,9 +1,6 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { and, asc, desc, eq, gte, lte, or, sql, SQL, count, sum, inArray } from 'drizzle-orm';
-import type { SQLWrapper } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, lte, sql, count, sum, inArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import type { PgSelect, PgSelectQueryBuilder, PgSelectDynamic, PgSelectBase } from 'drizzle-orm/pg-core';
-import type { PgSelectHKT } from 'drizzle-orm/pg-core/query-builders/select.types';
 import { bookings } from '../../../../db/bookingSchema.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 import { BOOKING_REPOSITORY, DB_CONNECTION } from './booking.tokens.js';

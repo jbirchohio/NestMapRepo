@@ -1,5 +1,5 @@
 import { format, differenceInMinutes, parseISO } from 'date-fns';
-import { Plane, Clock, ArrowRight } from 'lucide-react';
+import { Plane, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Flight, FlightSegment } from '@shared/types/flight';
 

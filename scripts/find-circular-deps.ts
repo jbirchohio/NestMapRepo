@@ -79,7 +79,7 @@ async function processFile(filePath: string, graph: DependencyGraph) {
 async function resolveImportPath(fromPath: string, importPath: string): Promise<string | null> {
   try {
     const dir = path.dirname(fromPath);
-    let fullPath = path.resolve(dir, importPath);
+    const fullPath = path.resolve(dir, importPath);
     
     // Try with .ts/.tsx extensions if needed
     if (!path.extname(fullPath)) {

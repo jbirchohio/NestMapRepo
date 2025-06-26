@@ -27,7 +27,7 @@ export const standardizedErrorHandler = (logger: Logger) => {
             return next(error);
         }
         // Default error response
-        let errorResponse = {
+        const errorResponse = {
             success: false,
             error: {
                 type: ErrorType.INTERNAL_SERVER_ERROR,

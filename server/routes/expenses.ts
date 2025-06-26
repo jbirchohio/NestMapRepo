@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
             .leftJoin(users, eq(expenses.user_id, users.id))
             .where(eq(expenses.organization_id, organizationId));
         // Build filter conditions
-        let conditions = [eq(expenses.organization_id, organizationId)];
+        const conditions = [eq(expenses.organization_id, organizationId)];
         if (tripId) {
             conditions.push(eq(expenses.trip_id, parseInt(tripId as string)));
         }

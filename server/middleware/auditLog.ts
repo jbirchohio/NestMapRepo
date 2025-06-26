@@ -37,7 +37,7 @@ export async function auditLogMiddleware(req: AuditRequest, res: Response, next:
         }
         catch (err) {
             // Optionally log error, but do not block response
-            // eslint-disable-next-line no-console
+             
             console.error('Audit log error', err);
         }
     });
