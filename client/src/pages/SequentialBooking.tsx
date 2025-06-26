@@ -8,51 +8,51 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Plane, Hotel, CheckCircle, User, ArrowRight, ArrowLeft, Clock, MapPin, CreditCard } from "lucide-react";
+interface Traveler {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+    departureCity: string;
+    departureCountry: string;
+    travelClass: string;
+    dietaryRequirements: string;
+    emergencyContact: {
+        name: string;
+        phone: string;
+        relationship: string;
+    };
+}
+
 interface SequentialBookingData {
     tripId: string;
     tripDestination: string;
     departureDate: string | Date;
     returnDate: string | Date;
     currentTravelerIndex: number;
-    travelers: Array<{
-        id: number;
-        name: string;
-        email: string;
-        phone: string;
-        dateOfBirth: string;
-        departureCity: string;
-        departureCountry: string;
-        travelClass: string;
-        dietaryRequirements: string;
-        emergencyContact: {
-            name: string;
-            phone: string;
-            relationship: string;
-        };
-    }>;
+    travelers: Traveler[];
     roomsNeeded: number;
     roomConfiguration: 'shared' | 'separate' | null;
     bookingStatus: 'flights' | 'hotels' | 'room-preferences' | 'payment' | 'complete';
-    selectedHotel?: any;
+    selectedHotel?: any; // Consider replacing 'any' with a proper Hotel type
     confirmationNumber?: string;
     bookingDate?: string;
 }
+interface FlightLocation {
+    airport: string;
+    time: string;
+    date: string;
+}
+
 interface FlightOffer {
     id: string;
     airline: string;
     flightNumber: string;
     price: number;
     currency: string;
-    departure: {
-        airport: string;
-        time: string;
-        date: string;
-    };
-    arrival: {
-        airport: string;
-        time: string;
-        date: string;
-    };
+    departure: FlightLocation;
+    arrival: FlightLocation;
     duration: string;
     stops: number;
     type: string;

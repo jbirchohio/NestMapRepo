@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +45,7 @@ interface CorporateCard {
     };
 }
 export default function CorporateDashboard() {
-    const { userId, user } = useAuth();
+    const { user } = useAuth();
     const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
     const [selectedCard, setSelectedCard] = useState<CorporateCard | null>(null);
     const [showAddFunds, setShowAddFunds] = useState(false);
@@ -126,7 +126,7 @@ export default function CorporateDashboard() {
         },
     });
     const { data: analytics } = useQuery({
-        queryKey: ['/api/analytics/corporate', { userId }],
+        queryKey: ['/api/analytics/corporate', { user }],
         queryFn: async () => {
             const res = await fetch('/api/analytics', {
                 credentials: 'include'
@@ -534,6 +534,6 @@ export default function CorporateDashboard() {
         </DialogContent>
       </Dialog>
 
-      <NewTripModal isOpen={isNewTripModalOpen} onClose={() => setIsNewTripModalOpen(false)} onSuccess={() => setIsNewTripModalOpen(false)} userId={userId!}/>
+      <NewTripModal isOpen={isNewTripModalOpen} onClose={() => setIsNewTripModalOpen(false)} onSuccess={() => setIsNewTripModalOpen(false)} userId={user.id}/>
     </div>);
 }

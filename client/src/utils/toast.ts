@@ -8,7 +8,6 @@ export const showToast = (message: string, type: ToastType = 'info', options: To
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
-        progress: undefined,
         ...options,
     };
     switch (type) {
@@ -27,12 +26,11 @@ export const showToast = (message: string, type: ToastType = 'info', options: To
             break;
     }
 };
-export const dismissToast = (toastId?: string | number) => {
+export const dismissToast = (toastId?: string) => {
     if (toastId) {
         toastify.dismiss(toastId);
-    }
-    else {
-        toastify.dismiss();
+    } else {
+       toastify.dismiss();
     }
 };
 // Export toast object for direct usage if needed

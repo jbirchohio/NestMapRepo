@@ -39,18 +39,17 @@ export function RoleManagement({ tripId, userRole }: RoleManagementProps) {
     const [inviteRole, setInviteRole] = useState("viewer");
     const { toast } = useToast();
     const queryClient = useQueryClient();
-    const { data: collaborators = [], isLoading } = useQuery({
+    const { data: collaborators = [] as TripCollaborator[], isLoading } = useQuery<TripCollaborator[]>({
         queryKey: [`/api/trips/${tripId}/collaborators`],
         enabled: !!tripId
     });
     const inviteMutation = useMutation({
-        mutationFn: (data: {
-            email: string;
-            role: string;
-        }) => apiRequest(`/api/trips/${tripId}/collaborators`, {
-            method: "POST",
-            body: JSON.stringify(data),
-        }),
+        mutationFn: async (data: { email: string; role: string }) => {
+            return apiRequest(`/api/trips/${tripId}/collaborators`, JSON.stringify({
+                method: "POST",
+                body: JSON.stringify(data),
+            }));
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [`/api/trips/${tripId}/collaborators`] });
             setInviteEmail("");
@@ -69,13 +68,12 @@ export function RoleManagement({ tripId, userRole }: RoleManagementProps) {
         },
     });
     const updateRoleMutation = useMutation({
-        mutationFn: (data: {
-            collaboratorId: number;
-            role: string;
-        }) => apiRequest(`/api/trips/${tripId}/collaborators/${data.collaboratorId}`, {
-            method: "PUT",
-            body: JSON.stringify({ role: data.role }),
-        }),
+        mutationFn: async (data: { collaboratorId: number; role: string }) => {
+            return apiRequest(`/api/trips/${tripId}/collaborators/${data.collaboratorId}`, JSON.stringify({
+                method: "PUT",
+                body: JSON.stringify({ role: data.role }),
+            }));
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [`/api/trips/${tripId}/collaborators`] });
             toast({
@@ -85,9 +83,11 @@ export function RoleManagement({ tripId, userRole }: RoleManagementProps) {
         },
     });
     const removeCollaboratorMutation = useMutation({
-        mutationFn: (collaboratorId: number) => apiRequest(`/api/trips/${tripId}/collaborators/${collaboratorId}`, {
-            method: "DELETE",
-        }),
+        mutationFn: async (collaboratorId: number) => {
+            return apiRequest(`/api/trips/${tripId}/collaborators/${collaboratorId}`, JSON.stringify({
+                method: "DELETE",
+            }));
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [`/api/trips/${tripId}/collaborators`] });
             toast({

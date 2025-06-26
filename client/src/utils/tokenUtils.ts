@@ -22,14 +22,22 @@ export const isTokenRevoked = (token: string): boolean => {
 export const cleanupRevokedTokens = (): void => {
     const now = Date.now();
     const tokensToRemove = Array.from(revokedTokens).filter(token => {
+        if (!token || typeof token !== 'string') return true; // Remove invalid tokens
+        
+        const parts = token.split('.');
+        if (parts.length !== 3) return true; // JWT tokens should have 3 parts
+        
         try {
-            const decoded = JSON.parse(atob(token.split('.')[1]));
-            return now - (decoded.iat * 1000) > 24 * 60 * 60 * 1000;
-        }
-        catch {
+            const payload = parts[1];
+            if (!payload) return true; // No payload to decode
+            
+            const decoded = JSON.parse(atob(payload));
+            return now - (decoded.iat * 1000) > 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        } catch {
             return true; // Remove invalid tokens
         }
     });
+    
     tokensToRemove.forEach(token => revokedTokens.delete(token));
 };
 // Start cleanup interval

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Star, Clock, MapPin, Home, Users, X, Check } from 'lucide-react';
-import { Hotel } from '../types.ts';
+import { Hotel, HotelRoom } from '../types/hotel';
 interface HotelCardProps {
     hotel: Hotel;
     isSelected: boolean;
@@ -47,10 +47,10 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
         {/* Hotel Rating and Price */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
-            {formatStars(hotel.rating ?? hotel.starRating)}
+            {formatStars(hotel.starRating)}
           </div>
           <div className="font-medium">
-            Starting from {formatPrice(hotel.price?.amount ?? hotel.rooms[0]?.price.total)}
+            Starting from {formatPrice(hotel.rooms?.[0]?.price?.total ?? 0)}
           </div>
         </div>
 
@@ -75,19 +75,18 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4"/>
           <span>
-            {hotel.distanceFromCenter ?? hotel.distanceFrom?.[0]?.distance} km from city center
+            {hotel.distanceFrom?.[0]?.distance ?? 'N/A'} {hotel.distanceFrom?.[0]?.unit ?? 'km'} from {hotel.distanceFrom?.[0]?.place ?? 'city center'}
           </span>
         </div>
         <div className="flex items-center gap-1">
           <Users className="h-4 w-4"/>
           <span>
-            {hotel.maxOccupancy ?? hotel.rooms?.[0]?.maxOccupancy} guest
-            {(hotel.maxOccupancy ?? hotel.rooms?.[0]?.maxOccupancy) !== 1 ? 's' : ''}
+            {hotel.rooms?.[0]?.maxOccupancy ?? 1} guest
+            {(hotel.rooms?.[0]?.maxOccupancy ?? 1) !== 1 ? 's' : ''}
           </span>
         </div>
         <Badge variant="outline" className="ml-auto">
-          {(hotel.freeCancellation ??
-            hotel.rooms?.[0]?.cancellationPolicy?.type === 'FREE_CANCELLATION')
+          {hotel.rooms?.[0]?.cancellationPolicy?.type === 'FREE_CANCELLATION' || hotel.rooms?.[0]?.ratePlan?.refundable
             ? 'Free cancellation'
             : 'Prepayment required'}
         </Badge>
@@ -102,7 +101,7 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
         {showDetails && (<div className="mt-2 space-y-2">
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4"/>
-              <span>Rating: {hotel.rating ?? hotel.starRating} stars</span>
+              <span>Rating: {hotel.starRating} stars</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4"/>
@@ -115,13 +114,15 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4"/>
               <span>
-                Distance: {hotel.distanceFromCenter ?? hotel.distanceFrom?.[0]?.distance} km from city center
+                Distance: {hotel.distanceFrom?.[0]?.distance ?? 'N/A'} {hotel.distanceFrom?.[0]?.unit ?? 'km'} from {hotel.distanceFrom?.[0]?.place ?? 'city center'}
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {hotel.amenities.map((amenity) => (<Badge key={typeof amenity === 'string' ? amenity : amenity.code} variant="outline" className="capitalize">
-                  {typeof amenity === 'string' ? amenity : amenity.name}
-                </Badge>))}
+              {hotel.amenities.map((amenity) => (
+                  <Badge key={amenity.code} variant="outline" className="capitalize">
+                    {amenity.name}
+                  </Badge>
+              ))}
             </div>
           </div>)}
       </div>

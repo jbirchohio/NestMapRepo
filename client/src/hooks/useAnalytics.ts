@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { analyticsService } from '../services/api/analyticsService';
-import { useAuth } from '../contexts/auth/AuthContext';
+import { useAuth } from '../contexts/auth/NewAuthContext';
 import { AnalyticsFilterParams, AgencyAnalyticsDTO, CorporateAnalyticsDTO } from '../types/dtos/analytics';
+import { UserRole } from '../types/dtos/common';
 
 type AnalyticsResponse = AgencyAnalyticsDTO | CorporateAnalyticsDTO;
 
 export const useAnalytics = (params?: AnalyticsFilterParams) => {
     const { user } = useAuth();
-    const isCorporate = user?.role === 'corporate';
+    const isCorporate = user?.role === 'admin'; // Changed from UserRole.CORPORATE to match User interface
     
     return useQuery<AnalyticsResponse, Error>({
         queryKey: ['analytics', { ...params, isCorporate }],

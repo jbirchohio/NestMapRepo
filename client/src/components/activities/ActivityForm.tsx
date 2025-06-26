@@ -9,66 +9,123 @@ import { Label } from "@/components/ui/label";
 import { TravelMode } from "@/lib/constants";
 import ActivityTimePicker from "./ActivityTimePicker";
 import ActivityLocationPicker from "@/components/activities/ActivityLocationPicker";
+import { ClientActivity } from "@/lib/types";
+
+// Props for the ActivityForm component
 interface ActivityFormProps {
-    activity?: ActivityFormValues;
+    activity?: ClientActivity;
     tripId: string;
     onSubmit: (values: ActivityFormValues) => void;
 }
 export default function ActivityForm({ activity, onSubmit }: ActivityFormProps) {
-    const { register, handleSubmit, setValue: rawSetValue, watch } = useForm<ActivityFormValues>({
+    const form = useForm<ActivityFormValues>({
         resolver: zodResolver(activitySchema),
-        defaultValues: activity || {
-            title: "",
-            date: new Date(),
-            time: "",
-            locationName: "",
-            travelMode: "walking",
+        defaultValues: {
+            title: activity?.title || "",
+            date: activity?.date || new Date(),
+            time: activity?.time || "",
+            locationName: activity?.locationName || "",
+            travelMode: activity?.travelMode || "walking",
+            notes: activity?.notes,
+            tag: activity?.tag,
+            assignedTo: activity?.assignedTo,
+            latitude: activity?.latitude,
+            longitude: activity?.longitude
         },
     });
-    const setValue = (field: string, value: string) => {
-        rawSetValue(field as keyof ActivityFormValues, value);
+    
+    const { register, handleSubmit, formState: { errors }, setValue, watch } = form;
+    const handleLocationChange = (location: { name: string; lat: number; lng: number }) => {
+        setValue('locationName', location.name, { shouldValidate: true });
+        setValue('latitude', location.lat, { shouldValidate: true });
+        setValue('longitude', location.lng, { shouldValidate: true });
     };
-    // Use setValue with correct type
-    const setLocation = (field: string, value: string) => {
-        setValue(field, value);
-    };
-    return (<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <Label htmlFor="title">Activity Title</Label>
-        <Input id="title" placeholder="Enter activity title" {...register("title")}/>
-      </div>
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+                <Label htmlFor="title">Activity Title</Label>
+                <Input 
+                    id="title" 
+                    placeholder="Enter activity title" 
+                    {...register("title")} 
+                    className={errors.title ? 'border-red-500' : ''}
+                />
+                {errors.title && (
+                    <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+                )}
+            </div>
 
-      <div>
-        <Label htmlFor="location">Location</Label>
-        <ActivityLocationPicker setValue={setLocation}/>
-      </div>
+            <div>
+                <Label htmlFor="location">Location</Label>
+                <ActivityLocationPicker 
+                    onLocationSelect={handleLocationChange}
+                    initialValue={watch('locationName')}
+                />
+                {errors.locationName && (
+                    <p className="text-red-500 text-sm mt-1">{errors.locationName.message}</p>
+                )}
+            </div>
 
-      <div>
-        <Label htmlFor="time">Time</Label>
-        <ActivityTimePicker setValue={setValue}/>
-      </div>
+            <div>
+                <Label htmlFor="time">Time</Label>
+                <ActivityTimePicker 
+                    setValue={(field, value) => setValue(field as 'time', value, { shouldValidate: true })}
+                />
+            </div>
 
-      <div>
-        <Label htmlFor="travelMode">Travel Mode</Label>
-        <Select value={watch("travelMode")} onValueChange={(value) => setValue("travelMode", value)}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select travel mode"/>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {Object.entries(TravelMode).map(([key, value]) => (<SelectItem key={key} value={key}>
-                  {value}
-                </SelectItem>))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
+            <div>
+                <Label htmlFor="travelMode">Travel Mode</Label>
+                <Select 
+                    onValueChange={(value) => setValue("travelMode", value, { shouldValidate: true })}
+                    defaultValue={watch("travelMode")}
+                >
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select travel mode"/>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            {Object.entries(TravelMode).map(([key, value]) => (
+                                <SelectItem key={key} value={key}>
+                                    {value}
+                                </SelectItem>
+                            ))}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                {errors.travelMode && (
+                    <p className="text-sm text-red-500 mt-1">{errors.travelMode.message}</p>
+                )}
+            </div>
 
-      <div>
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea id="notes" placeholder="Add any notes about this activity" {...register("notes")}/>
-      </div>
+            <div>
+                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Textarea
+                    id="notes"
+                    placeholder="Add notes about this activity"
+                    {...register("notes")}
+                    className={errors.notes ? 'border-red-500' : ''}
+                />
+                {errors.notes && (
+                    <p className="text-red-500 text-sm mt-1">{errors.notes.message}</p>
+                )}
+            </div>
 
-      <Button type="submit" className="w-full">Save Activity</Button>
-    </form>);
+            <div>
+                <Label htmlFor="tag">Tag (Optional)</Label>
+                <Input 
+                    id="tag" 
+                    placeholder="e.g., sightseeing, food, shopping" 
+                    {...register("tag")} 
+                    className={errors.tag ? 'border-red-500' : ''}
+                />
+                {errors.tag && (
+                    <p className="text-red-500 text-sm mt-1">{errors.tag.message}</p>
+                )}
+            </div>
+
+            <Button type="submit" className="w-full">
+                {activity ? "Update Activity" : "Add Activity"}
+            </Button>
+        </form>
+    );
 }

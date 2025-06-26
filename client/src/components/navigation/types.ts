@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
-import { User as ApiUser } from '@/types/api';
+import type { User as ApiUser } from '@shared/types/auth/user';
 import type { Notification as AppNotification } from '@/types/notification';
+// Export as AppNotification to avoid conflict with the browser's Notification type
 export type { AppNotification };
 export interface NavigationItem {
     name: string;
@@ -26,6 +27,7 @@ export interface NavigationProps {
     onSignOut: () => Promise<void>;
     onNotificationClick: (id: string) => Promise<void>;
     onMarkAllAsRead: () => Promise<void>;
+    onNotificationsClick: () => void;
 }
 export interface MobileMenuProps extends NavigationProps {
     isOpen: boolean;
@@ -51,7 +53,7 @@ export interface UserMenuProps {
 export interface NotificationsMenuProps {
     isOpen: boolean;
     onClose: () => void;
-    notifications: Notification[];
+    notifications: AppNotification[];
     onNotificationClick: (id: string) => Promise<void>;
     onMarkAllAsRead: () => Promise<void>;
     onNotificationsClick: () => void;

@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { NavigationItem } from './types.ts';
+import { NavigationItem } from './types';
 interface NavigationLinkProps extends Omit<NavigationItem, 'requiresAuth'> {
     className?: string;
     onClick?: () => void;

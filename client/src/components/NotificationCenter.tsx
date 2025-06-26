@@ -42,7 +42,7 @@ export default function NotificationCenter() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
     // Fetch notifications
-    const { data: notifications = [], isLoading } = useQuery({
+    const { data: notifications = [], isLoading } = useQuery<Notification[]>({
         queryKey: ['/api/notifications'],
         refetchInterval: 30000, // Refetch every 30 seconds
     });

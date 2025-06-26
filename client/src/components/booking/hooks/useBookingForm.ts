@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { ClientInfo, clientInfoSchema } from '../types/booking.ts';
+import { ClientInfo, clientInfoSchema } from '../types/booking';
 export const useBookingForm = () => {
     const { toast } = useToast();
     const [formData, setFormData] = useState<Partial<ClientInfo>>({

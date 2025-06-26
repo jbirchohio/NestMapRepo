@@ -44,9 +44,9 @@
     // Type definitions
     "types": ["vite/client", "node"],
     "typeRoots": [
+      "../shared/types",
       "./node_modules/@types",
-      "../node_modules/@types",
-      "../shared/types"
+      "../node_modules/@types"
     ],
     
     // Target and libraries

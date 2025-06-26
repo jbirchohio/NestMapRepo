@@ -25,14 +25,27 @@ const showToast = (options: {
 
 export class TokenManager {
     private static instance: TokenManager | null = null;
-    private accessToken: string | null = null;
-    private tokenRotationTimeout: ReturnType<typeof setTimeout> | null = null;
-    private refreshToken: string | null = null;
-    private navigate: NavigateFunction | null = null;
+    private accessToken: string | null;
+    private tokenRotationTimeout: ReturnType<typeof setTimeout> | null;
+    private refreshToken: string | null;
+    private navigate: NavigateFunction | null;
+    private isTokenRotationInProgress: boolean;
+    private refreshPromise: Promise<AuthTokens | null> | null;
+    private refreshPromiseResolve: ((value: AuthTokens | null) => void) | null;
+    private refreshPromiseReject: ((reason?: any) => void) | null;
 
     private constructor(navigate: NavigateFunction | null) {
-        // Initialize instance variables
+        // Initialize all properties
+        this.accessToken = null;
+        this.tokenRotationTimeout = null;
+        this.refreshToken = null;
         this.navigate = navigate;
+        this.isTokenRotationInProgress = false;
+        this.refreshPromise = null;
+        this.refreshPromiseResolve = null;
+        this.refreshPromiseReject = null;
+        
+        // Load tokens from storage
         this.refreshToken = SecureCookie.get(REFRESH_TOKEN_KEY) || null;
         this.accessToken = SecureCookie.get(TOKEN_KEY) || null;
 

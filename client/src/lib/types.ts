@@ -1,7 +1,6 @@
 // Type definitions for the application
-import { Trip, Activity, Todo, Note } from "@shared/schema";
-// Re-export shared types for easier imports
-export { Todo, Note };
+import { Trip } from "@shared/types/trips";
+import { Activity } from "@shared/types/activity";
 // Extended types with additional client-side properties
 export interface ClientTrip extends Trip {
     id: number | string;
@@ -27,10 +26,23 @@ export interface ClientTrip extends Trip {
     collaborators?: Record<string, string> | string[];
 }
 export interface ClientActivity extends Activity {
+    // Extended client-side properties
     travelTimeFromPrevious?: string;
     travelDistanceFromPrevious?: string;
     conflict?: boolean;
     timeConflict?: boolean; // For identical time conflicts
+    travelMode?: string; // For transportation mode (walking, driving, transit, etc.)
+    tag?: string; // For activity categorization
+    notes?: string; // For activity notes
+    assignedTo?: string; // For assigning activities to users
+    
+    // Override base Activity properties to be more specific
+    date: Date;  // Always use Date object for consistency
+    time: string;  // Make time required since it's used in UI
+    locationName: string;  // Make locationName required since it's used in UI
+    latitude?: number;
+    longitude?: number;
+    completed: boolean;
 }
 export interface DayActivities {
     date: Date;
@@ -42,6 +54,7 @@ export interface MapMarker {
     longitude: number;
     latitude: number;
     label?: string;
+    color?: string; // Hex color code without the # (e.g., 'ff0000' for red)
     activity?: ClientActivity;
     completed?: boolean;
 }
@@ -51,8 +64,13 @@ export interface MapRoute {
         number,
         number
     ][];
+    geometry: {
+        type: 'LineString';
+        coordinates: [number, number][];
+    };
     duration: number;
     distance: number;
+    color?: string; // Optional color for the route line
 }
 // AI Assistant types
 export interface AIResponse {

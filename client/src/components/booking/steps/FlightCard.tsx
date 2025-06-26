@@ -16,16 +16,12 @@ export const FlightCard: React.FC<FlightCardProps> = ({
   onSelect,
   type,
 }) => {
-  const formatTime = (time: string) => format(new Date(time), 'h:mm a');
-  const formatDate = (time: string) => format(new Date(time), 'MMM d, yyyy');
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins > 0 ? `${mins}m` : ''}`.trim();
   };
 
-
-  
   // Format time from ISO string or Date
   const formatTime = (time: string | Date): string => {
     try {

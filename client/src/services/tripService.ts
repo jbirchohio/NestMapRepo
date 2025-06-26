@@ -1,11 +1,11 @@
 import apiClient from './api/apiClient';
-import { GeneratedTrip } from '@/types/trip';
+import { TripDTO } from '@/types/dtos/trip';
 export interface GenerateTripParams {
     prompt: string;
     conversationId?: string;
 }
 export interface CreateClientItineraryParams {
-    tripData: GeneratedTrip;
+    tripData: TripDTO;
     clientEmail: string;
 }
 class TripService {
@@ -17,8 +17,8 @@ class TripService {
         }
         return TripService.instance;
     }
-    public async generateTrip(params: GenerateTripParams): Promise<GeneratedTrip> {
-        const response = await apiClient.post<GeneratedTrip>('/trips/generate', params);
+    public async generateTrip(params: GenerateTripParams): Promise<TripDTO> {
+        const response = await apiClient.post<TripDTO>('/trips/generate', params);
         return response;
     }
     public async createClientItinerary(params: CreateClientItineraryParams): Promise<{
@@ -28,8 +28,8 @@ class TripService {
             trackingCode: string;
         }>('/client-itineraries', params);
     }
-    public async getTripByTrackingCode(trackingCode: string): Promise<GeneratedTrip> {
-        return apiClient.get<GeneratedTrip>(`/trips/track/${trackingCode}`);
+    public async getTripByTrackingCode(trackingCode: string): Promise<TripDTO> {
+        return apiClient.get<TripDTO>(`/trips/track/${trackingCode}`);
     }
     /**
      * Generate a public share URL for a client itinerary using its tracking code.

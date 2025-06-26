@@ -53,7 +53,7 @@ export function SystemStatusIndicator({ service, showIcon = false, className = "
                 };
             case 'stripe':
                 // Check if Stripe environment variables are available
-                const stripeConfigured = process.env.VITE_STRIPE_PUBLIC_KEY !== undefined;
+                const stripeConfigured = process.env['VITE_STRIPE_PUBLIC_KEY'] !== undefined;
                 return {
                     status: stripeConfigured ? 'healthy' : 'degraded',
                     text: stripeConfigured ? 'Configured' : 'Not Configured'
@@ -64,7 +64,7 @@ export function SystemStatusIndicator({ service, showIcon = false, className = "
                     text: healthData ? 'Active' : 'Disconnected'
                 };
             case 'payments':
-                const environment = process.env.NODE_ENV;
+                const environment = process.env['NODE_ENV'];
                 return {
                     status: 'healthy',
                     text: environment === 'production' ? 'Live' : 'Test Mode'

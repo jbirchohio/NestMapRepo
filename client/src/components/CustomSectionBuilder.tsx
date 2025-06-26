@@ -9,6 +9,51 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, Eye, Edit3 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@/components/dnd-stub";
+
+type SectionType = 'text' | 'list' | 'image' | 'table';
+
+interface SectionTypeOption {
+  value: SectionType;
+  label: string;
+  description: string;
+}
+
+// Local type definitions for dnd-stub
+interface DropResult {
+  destination?: {
+    index: number;
+    droppableId: string;
+  };
+  source: {
+    index: number;
+    droppableId: string;
+  };
+  draggableId: string;
+  type: string;
+  reason: 'DROP' | 'CANCEL';
+  mode: 'FLUID' | 'SNAP';
+}
+
+interface DroppableProvided {
+  innerRef: React.RefObject<HTMLDivElement>;
+  droppableProps: Record<string, unknown>;
+  placeholder?: React.ReactNode;
+}
+
+interface DraggableProvided {
+  innerRef: React.RefObject<HTMLDivElement>;
+  draggableProps: Record<string, unknown>;
+  dragHandleProps: Record<string, unknown>;
+}
+
+interface DraggableStateSnapshot {
+  isDragging: boolean;
+  isDropAnimating: boolean;
+  dropAnimation: any;
+  draggingOver?: string;
+  mode: 'FLUID' | 'SNAP';
+}
+
 interface CustomSection {
     id: string;
     title: string;
@@ -47,20 +92,29 @@ export default function CustomSectionBuilder({ sections, onChange }: CustomSecti
             setEditingSection(null);
         }
     };
-    const reorderSections = (result: any) => {
-        if (!result.destination)
+    const handleDragEnd = (result: DropResult) => {
+        if (!result.destination || result.source.index === result.destination.index) {
             return;
-        const items = Array.from(sections);
+        }
+        
+        const items = [...sections];
         const [reorderedItem] = items.splice(result.source.index, 1);
+        
+        if (!reorderedItem) {
+            console.error('Failed to reorder: Item not found at source index');
+            return;
+        }
+        
         items.splice(result.destination.index, 0, reorderedItem);
-        // Update order values
-        const reorderedItems = items.map((item, index) => ({
+        
+        // Update the order property based on the new index
+        const updatedItems = items.map((item, index) => ({
             ...item,
             order: index
         }));
-        onChange(reorderedItems);
+        onChange(updatedItems);
     };
-    const sectionTypes = [
+    const sectionTypes: SectionTypeOption[] = [
         { value: 'text', label: 'Text Block', description: 'Rich text content' },
         { value: 'list', label: 'Bulleted List', description: 'List of items' },
         { value: 'image', label: 'Image Gallery', description: 'Images with captions' },
@@ -80,7 +134,7 @@ export default function CustomSectionBuilder({ sections, onChange }: CustomSecti
             <Switch checked={previewMode} onCheckedChange={setPreviewMode}/>
             <Label>Preview Mode</Label>
           </div>
-          <Select onValueChange={(value) => addSection(value as any)}>
+          <Select onValueChange={(value: SectionType) => addSection(value)}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Add Section"/>
             </SelectTrigger>
@@ -108,20 +162,20 @@ export default function CustomSectionBuilder({ sections, onChange }: CustomSecti
                 Add custom sections to make your proposals more comprehensive
               </p>
               <div className="flex justify-center gap-2">
-                {sectionTypes.slice(0, 2).map(type => (<Button key={type.value} variant="outline" onClick={() => addSection(type.value as any)}>
+                {sectionTypes.slice(0, 2).map(type => (<Button key={type.value} variant="outline" onClick={() => addSection(type.value)}>
                     <Plus className="w-4 h-4 mr-2"/>
                     {type.label}
                   </Button>))}
               </div>
             </div>
           </CardContent>
-        </Card>) : (<DragDropContext onDragEnd={reorderSections}>
+        </Card>) : (<DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="sections">
-            {(provided) => (<div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+            {(provided: DroppableProvided) => (<div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
                 {sections
                     .sort((a, b) => a.order - b.order)
                     .map((section, index) => (<Draggable key={section.id} draggableId={section.id} index={index}>
-                      {(provided, snapshot) => (<Card ref={provided.innerRef} {...provided.draggableProps} className={`${snapshot.isDragging ? 'shadow-lg' : ''} ${!section.enabled ? 'opacity-50' : ''}`}>
+                      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (<Card ref={provided.innerRef} {...provided.draggableProps} className={`${snapshot.isDragging ? 'shadow-lg' : ''} ${!section.enabled ? 'opacity-50' : ''}`}>
                           <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
@@ -199,29 +253,50 @@ function SectionPreview({ section }: {
               </li>))}
           </ul>);
             case 'table':
-                const lines = section.content.split('\n').filter(line => line.trim());
-                if (lines.length < 2)
-                    return <div className="text-gray-500">Invalid table format</div>;
-                const headers = lines[0].split('|').map(h => h.trim());
-                const rows = lines.slice(2).map(line => line.split('|').map(cell => cell.trim()));
-                return (<div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">
-              <thead>
-                <tr className="bg-gray-50 dark:bg-gray-800">
-                  {headers.map((header, index) => (<th key={index} className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
-                      {header}
-                    </th>))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, rowIndex) => (<tr key={rowIndex}>
-                    {row.map((cell, cellIndex) => (<td key={cellIndex} className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                        {cell}
-                      </td>))}
-                  </tr>))}
-              </tbody>
-            </table>
-          </div>);
+                if (!section?.content) {
+                    return <div className="text-gray-500">No table content available</div>;
+                }
+                const lines = section.content.split('\n').filter((line: string) => line.trim());
+                if (lines.length < 2) {
+                    return <div className="text-gray-500">Invalid table format. Please provide at least a header row and a separator row.</div>;
+                }
+                const headers = lines[0]?.split('|').map((h: string) => h.trim()) || [];
+                const rows: string[][] = lines
+                    .slice(2)
+                    .map((line: string) => line.split('|').map((cell: string) => cell.trim()));
+                
+                return (
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">
+                            <thead>
+                                <tr className="bg-gray-50 dark:bg-gray-800">
+                                    {headers.map((header: string, index: number) => (
+                                        <th 
+                                            key={`header-${index}`} 
+                                            className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left"
+                                        >
+                                            {header}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rows.map((row: string[], rowIndex: number) => (
+                                    <tr key={`row-${rowIndex}`}>
+                                        {row.map((cell: string, cellIndex: number) => (
+                                            <td 
+                                                key={`cell-${rowIndex}-${cellIndex}`} 
+                                                className="border border-gray-300 dark:border-gray-600 px-3 py-2"
+                                            >
+                                                {cell || ' '}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
             case 'image':
                 return (<div className="text-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
             <Eye className="w-8 h-8 text-gray-400 mx-auto mb-2"/>

@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import type { Flight } from './flight';
+import type { Hotel } from '@shared/types/hotel';
+
 export const clientInfoSchema = z.object({
     // Travel Details
     origin: z.string().min(1, 'Origin is required'),

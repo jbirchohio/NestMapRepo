@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import useMapbox from "@/hooks/useMapbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ interface NewTripModalProps {
 }
 export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGuestMode = false }: NewTripModalProps) {
     const { toast } = useToast();
-    const { roleType } = useAuth();
+    const { user } = useAuth();
     const { geocodeLocation } = useMapbox();
     // Set default dates (today to 3 days from now)
     const today = new Date();
@@ -102,19 +102,25 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                             description: result.fullAddress,
                             duration: 2000,
                         });
+                        return; // Explicit return after successful operation
                     }
-                }
-                catch (error) {
+                    return; // Explicit return if no result
+                } catch (error) {
                     console.error("Error geocoding city:", error);
+                    return; // Explicit return in catch block
                 }
             }, 800);
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(timer);
+            };
         }
+        return () => { };
     }, [city, geocodeLocation, setValue, toast]);
     // Look up hotel coordinates when hotel field changes
     useEffect(() => {
+        let timer: NodeJS.Timeout;
         if (hotel && hotel.length > 3 && city) {
-            const timer = setTimeout(async () => {
+            timer = setTimeout(async () => {
                 try {
                     // Search for hotel in the context of the city
                     const searchTerm = hotel.includes(city) ? hotel : `${hotel}, ${city}`;
@@ -127,14 +133,18 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                             description: result.fullAddress,
                             duration: 2000,
                         });
+                        return; // Explicit return after successful operation
                     }
-                }
-                catch (error) {
+                    return; // Explicit return if no result
+                } catch (error) {
                     console.error("Error geocoding hotel:", error);
+                    return; // Explicit return in catch block
                 }
             }, 800);
-            return () => clearTimeout(timer);
         }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
     }, [hotel, city, geocodeLocation, setValue, toast]);
     const createTrip = useMutation({
         mutationFn: async (data: TripFormValues) => {
@@ -253,13 +263,17 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                 </h4>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {roleType === 'agency' ? (<div className="grid gap-2">
+                  {user?.role === 'admin' ? (
+                    <div className="grid gap-2">
                       <Label htmlFor="clientName">Client Name</Label>
                       <Input id="clientName" {...register("clientName")} placeholder="e.g., Acme Corp, Johnson & Associates"/>
-                    </div>) : (<div className="grid gap-2">
+                    </div>
+                  ) : (
+                    <div className="grid gap-2">
                       <Label htmlFor="clientName">Department/Team</Label>
                       <Input id="clientName" {...register("clientName")} placeholder="e.g., Sales Team, Engineering Dept"/>
-                    </div>)}
+                    </div>
+                  )}
                   
                   <div className="grid gap-2">
                     <Label htmlFor="projectType">Project Type</Label>
@@ -268,7 +282,8 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                         <SelectValue placeholder="Select project type"/>
                       </SelectTrigger>
                       <SelectContent>
-                        {roleType === 'agency' ? (<>
+                        {user?.role === 'admin' ? (
+                          <>
                             <SelectItem value="client_meeting">Client Meeting</SelectItem>
                             <SelectItem value="leisure_travel">Leisure Travel</SelectItem>
                             <SelectItem value="corporate_travel">Corporate Travel</SelectItem>
@@ -276,7 +291,9 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                             <SelectItem value="group_travel">Group Travel</SelectItem>
                             <SelectItem value="luxury_travel">Luxury Travel</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
-                          </>) : (<>
+                          </>
+                        ) : (
+                          <>
                             <SelectItem value="conference">Conference/Event</SelectItem>
                             <SelectItem value="team_meeting">Team Meeting</SelectItem>
                             <SelectItem value="sales_trip">Sales Trip</SelectItem>

@@ -10,14 +10,18 @@ interface Place {
     };
 }
 interface ActivityLocationPickerProps {
-    setValue: (field: string, value: string) => void;
+    onLocationSelect: (location: { name: string; lat: number; lng: number }) => void;
+    initialValue?: string;
 }
-export default function ActivityLocationPicker({ setValue }: ActivityLocationPickerProps) {
-    const [searchQuery, setSearchQuery] = useState("");
+export default function ActivityLocationPicker({ onLocationSelect, initialValue = "" }: ActivityLocationPickerProps) {
+    const [searchQuery, setSearchQuery] = useState(initialValue);
     const handlePlaceSelect = (place: Place) => {
-        setValue("locationName", place.name);
-        setValue("latitude", place.location.lat.toString());
-        setValue("longitude", place.location.lng.toString());
+        onLocationSelect({
+            name: place.name,
+            lat: place.location.lat,
+            lng: place.location.lng
+        });
+        setSearchQuery(place.name);
     };
     return (<div className="relative">
       <Input placeholder="Search for a location" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}/>

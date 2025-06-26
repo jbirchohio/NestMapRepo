@@ -1,6 +1,6 @@
-import { TokenManager } from './tokenManager.ts';
-import { SecureCookie } from './SecureCookie.ts';
-import { handleError, SessionError } from './errorHandler.ts';
+import { TokenManager } from './tokenManager';
+import { SecureCookie } from './SecureCookie';
+import { handleError, SessionError } from './errorHandler';
 interface SessionState {
     sessionId: string;
     userId: string;
@@ -14,10 +14,10 @@ const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes
 const MAX_SESSION_AGE = 24 * 60 * 60 * 1000; // 24 hours
 export class SessionSecurity {
-    private static instance: SessionSecurity;
+    private static instance: SessionSecurity | null = null;
     private sessionId: string | null = null;
-    private sessionTimeout: number = 30 * 60 * 1000; // 30 minutes
-    private lastActivity: number = Date.now();
+    private sessionTimeout: number;
+    private lastActivity: number;
     private inactivityTimeout: ReturnType<typeof setTimeout> | null = null;
     private sessionRefreshTimeout: ReturnType<typeof setTimeout> | null = null;
     private userId: string | null = null;
@@ -31,7 +31,10 @@ export class SessionSecurity {
         userAgent: string | null;
         ip: string | null;
     } | null = null;
+
     private constructor() {
+        this.sessionTimeout = 30 * 60 * 1000; // 30 minutes
+        this.lastActivity = Date.now();
         this.loadSession();
         this.startInactivityMonitor();
     }
@@ -45,23 +48,44 @@ export class SessionSecurity {
         try {
             const storedSession = SecureCookie.get('session_state');
             if (storedSession) {
-                this.sessionState = JSON.parse(storedSession);
-                this.sessionId = this.sessionState.sessionId;
-                this.lastActivity = this.sessionState.lastActivity;
-                this.userId = this.sessionState.userId;
-                this.userAgent = this.sessionState.userAgent;
-                this.ip = this.sessionState.ip;
+                const parsedSession = JSON.parse(storedSession);
+                // Validate required fields
+                if (parsedSession && 
+                    'sessionId' in parsedSession && 
+                    'lastActivity' in parsedSession) {
+                    // Create a new session state object with validated properties
+                    this.sessionState = {
+                        sessionId: parsedSession.sessionId,
+                        lastActivity: parsedSession.lastActivity,
+                        userId: 'userId' in parsedSession ? parsedSession.userId : null,
+                        userAgent: 'userAgent' in parsedSession ? parsedSession.userAgent : null,
+                        ip: 'ip' in parsedSession ? parsedSession.ip : null,
+                        createdAt: 'createdAt' in parsedSession && typeof parsedSession.createdAt === 'number' 
+                            ? parsedSession.createdAt 
+                            : Date.now()
+                    };
+                    // Update individual properties
+                    this.sessionId = parsedSession.sessionId;
+                    this.lastActivity = parsedSession.lastActivity;
+                    this.userId = 'userId' in parsedSession ? parsedSession.userId : null;
+                    this.userAgent = 'userAgent' in parsedSession ? parsedSession.userAgent : null;
+                    this.ip = 'ip' in parsedSession ? parsedSession.ip : null;
+                } else {
+                    // Invalid session format, clear it
+                    this.clearSession();
+                }
             }
-        }
-        catch (error) {
-            handleError(error);
+        } catch (error) {
+            handleError(error instanceof Error ? error : new Error(String(error)));
+            this.clearSession();
         }
     }
     public hasValidSession(): boolean {
-        if (!this.sessionId)
+        if (!this.sessionId || !this.sessionState) {
             return false;
+        }
         const now = Date.now();
-        const lastActivity = this.sessionState?.lastActivity || this.lastActivity;
+        const lastActivity = this.sessionState.lastActivity || this.lastActivity;
         return now - lastActivity <= this.sessionTimeout;
     }
     public getSessionId(): string | null {
@@ -141,7 +165,7 @@ export class SessionSecurity {
                 });
             }
             catch (error) {
-                handleError(error);
+                handleError(error instanceof Error ? error : new Error(String(error)));
             }
         }
     }

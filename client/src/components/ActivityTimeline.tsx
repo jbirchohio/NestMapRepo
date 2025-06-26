@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ClientActivity } from "@/lib/types";
 import ActivityItem from "./ActivityItem";
 import ActivityModal from "./ActivityModal";
+
 interface ActivityTimelineProps {
     activities: ClientActivity[];
     date: Date;

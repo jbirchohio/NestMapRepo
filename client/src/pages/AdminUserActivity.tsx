@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { apiRequest } from '@/lib/queryClient';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/contexts/auth/NewAuthContext';
 import { Users, Search, Filter, Download, RefreshCw, Clock, FilePlus, Edit, Trash2 } from 'lucide-react';
 interface UserActivityLog {
     id: number;
@@ -24,7 +24,10 @@ export default function AdminUserActivity() {
     const [currentPage, setCurrentPage] = useState(1);
     const [filterAction, setFilterAction] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
-    const orgId = user?.organization_id;
+    // Access organization ID from the user object
+    // Note: The AuthUser type might not include organization_id directly
+    // We'll need to access it from the user metadata if available
+    const orgId = (user as any)?.organization_id; // Temporary type assertion
     const { data: logs, isLoading, refetch } = useQuery<UserActivityLog[]>({
         queryKey: ['userActivityLogs', orgId, currentPage, filterAction, searchTerm],
         queryFn: async () => {

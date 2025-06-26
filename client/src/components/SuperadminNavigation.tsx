@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { Shield, Users, Building2, Activity, CreditCard, Settings, LogOut, BarChart3, Flag, Briefcase, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/contexts/auth/NewAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 const superadminNavItems = [

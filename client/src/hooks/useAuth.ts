@@ -3,8 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
  * @deprecated This file is deprecated and will be removed in a future version.
  * Please use the new auth context at '@/contexts/auth/NewAuthContext' instead.
  */
-import { useNavigate } from 'wouter';
-import { User } from '../types/user.ts';
+import { useLocation } from 'wouter';
+import { User } from '../types/user';
 interface AuthState {
     user: User | null;
     token: string | null;
@@ -20,7 +20,7 @@ export function useAuth() {
         isLoading: true,
         error: null,
     });
-    const navigate = useNavigate();
+    const [location, setLocation] = useLocation();
     // Initialize auth state from localStorage
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -101,8 +101,8 @@ export function useAuth() {
             isLoading: false,
             error: null,
         });
-        navigate('/login');
-    }, [navigate]);
+        setLocation('/login');
+    }, [setLocation]);
     const register = useCallback(async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
         try {
             setState(prev => ({ ...prev, isLoading: true, error: null }));

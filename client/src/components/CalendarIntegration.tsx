@@ -37,9 +37,15 @@ export default function CalendarIntegration() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
     // Fetch calendar connections
-    const { data: connections = [], isLoading } = useQuery({
-        queryKey: ['/api/calendar/connections'],
+    const { data: connections = [], isLoading } = useQuery<CalendarConnection[]>({
+      queryKey: ['/api/calendar/connections'],
+      queryFn: async () => {
+        const res = await fetch('/api/calendar/connections');
+        if (!res.ok) throw new Error('Failed to fetch connections');
+        return res.json();
+      },
     });
+    
     // Connect to calendar provider
     const connectCalendarMutation = useMutation({
         mutationFn: async (provider: 'google' | 'outlook' | 'apple') => {

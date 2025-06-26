@@ -18,6 +18,7 @@ export * from './bookings.js';
 export * from './invoice.js';
 export * from './users.js';
 export * from './organizations.js';
+export * from './hotel.js';
 // Import and re-export with renamed types to avoid conflicts
 export { 
   activityStatuses, 

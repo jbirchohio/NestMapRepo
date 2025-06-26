@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

@@ -39,7 +39,7 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
         },
     });
     // Convert 24-hour time to 12-hour format
-    const formatTime = (time: string) => {
+    const formatTime = (time: string | undefined) => {
         if (!time)
             return "--:--";
         const [hours, minutes] = time.split(':');

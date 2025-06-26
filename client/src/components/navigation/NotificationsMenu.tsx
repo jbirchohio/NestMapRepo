@@ -1,9 +1,32 @@
 import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellIcon } from '../icons';
-import { NotificationsMenuProps } from './types';
-export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ isOpen, onClose, notifications, onNotificationClick, onMarkAllAsRead, onNotificationsClick, }) => {
-    const unreadCount = notifications.filter(n => !n.read).length;
+import type { NotificationsMenuProps } from './types';
+import type { Notification as AppNotification } from '@/types/notification';
+
+// Helper function to safely cast notifications to AppNotification[]
+const getSafeNotifications = (notifications: any[]): AppNotification[] => {
+  return notifications.filter((item): item is AppNotification => (
+    item &&
+    typeof item === 'object' &&
+    'id' in item &&
+    'message' in item &&
+    'read' in item &&
+    'createdAt' in item
+  ));
+};
+
+export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
+  isOpen,
+  onClose,
+  notifications,
+  onNotificationClick,
+  onMarkAllAsRead,
+  onNotificationsClick
+}) => {
+  // Safely process notifications
+  const safeNotifications = getSafeNotifications(Array.isArray(notifications) ? notifications : []);
+  const unreadCount = safeNotifications.filter(n => !n.read).length;
     const ref = useRef<HTMLDivElement>(null);
     return (<div className="relative ml-3" ref={ref}>
       <button type="button" className="relative rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" onClick={onNotificationsClick} aria-label={isOpen ? 'Close notifications' : 'Open notifications'} aria-expanded={isOpen} aria-haspopup="true">
@@ -22,7 +45,15 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ isOpen, on
                 </button>)}
             </div>
             <div className="max-h-96 overflow-y-auto">
-              {notifications.length === 0 ? (<div className="px-4 py-3 text-sm text-gray-500">No notifications</div>) : (notifications.map((notification) => (<button key={notification.id} onClick={() => onNotificationClick(notification.id)} className={`block w-full px-4 py-2 text-left text-sm ${notification.read ? 'text-gray-500' : 'bg-blue-50 text-gray-900'} hover:bg-gray-50`}>
+              {safeNotifications.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-gray-500">No notifications</div>
+              ) : (
+                safeNotifications.map((notification: AppNotification) => (
+                  <button 
+                    key={notification.id} 
+                    onClick={() => onNotificationClick(notification.id)} 
+                    className={`block w-full px-4 py-2 text-left text-sm ${notification.read ? 'text-gray-500' : 'bg-blue-50 text-gray-900'} hover:bg-gray-50`}
+                  >
                     <div className="flex items-center">
                       <div className="flex-1">
                         <p className="text-sm">{notification.message}</p>

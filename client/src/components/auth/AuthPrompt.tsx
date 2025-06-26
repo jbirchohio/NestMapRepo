@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserRound, MapPin } from "lucide-react";
-import AuthModal from "./AuthModal.ts";
+import AuthModal from "./AuthModal";
 interface AuthPromptProps {
     title?: string;
     description?: string;

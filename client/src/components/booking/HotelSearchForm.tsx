@@ -60,7 +60,7 @@ export function HotelSearchForm({ dateRange, onDateRangeChange, onSearch, isSear
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar initialFocus mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={(range) => onDateRangeChange(range || { from: undefined, to: undefined })} numberOfMonths={2} disabled={(date) => date < new Date()}/>
+              <Calendar initialFocus mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={(range) =>   onDateRangeChange({ from: range?.from, to: range?.to ?? undefined  }) }  numberOfMonths={2} disabled={(date) => date < new Date()}/>
             </PopoverContent>
           </Popover>
         </div>

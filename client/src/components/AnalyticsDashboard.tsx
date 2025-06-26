@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { Users, MapPin, Calendar, Activity, TrendingUp, Download, Globe, BarChart3 } from "lucide-react";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 interface AnalyticsData {
     overview: {
         totalTrips: number;
@@ -58,7 +58,8 @@ interface AnalyticsData {
 }
 const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 export default function AnalyticsDashboard() {
-    const { user, userId } = useAuth();
+    const { user } = useAuth();
+    const userId = user?.id;
     console.log('AnalyticsDashboard - userId:', userId);
     console.log('AnalyticsDashboard - user:', user);
     const { data: analytics, isLoading, error } = useQuery({
@@ -123,16 +124,16 @@ export default function AnalyticsDashboard() {
     }
     if (!analytics)
         return null;
-    const tripDurationChartData = analytics.tripDurations.map(item => ({
+    const tripDurationChartData = analytics.tripDurations.map((item: { duration: string; count: number; percentage: number }) => ({
         name: item.duration,
         value: item.count,
         percentage: item.percentage
     }));
-    const destinationChartData = analytics.destinations.slice(0, 6).map(item => ({
+    const destinationChartData = analytics.destinations.slice(0, 6).map((item: { city: string; country: string; tripCount: number }) => ({
         name: `${item.city}, ${item.country}`,
         value: item.tripCount
     }));
-    const activityTagsChartData = analytics.activityTags.slice(0, 8).map(item => ({
+    const activityTagsChartData = analytics.activityTags.slice(0, 8).map((item: { tag: string; count: number }) => ({
         name: item.tag,
         value: item.count
     }));
@@ -240,7 +241,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analytics.destinations.slice(0, 8).map((destination, index) => (<div key={`${destination.city}-${destination.country}`} className="flex items-center justify-between">
+              {analytics.destinations.slice(0, 8).map((destination: { city: string; country: string; tripCount: number; percentage: number }, index: number) => (<div key={`${destination.city}-${destination.country}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">
                       #{index + 1}
@@ -269,13 +270,13 @@ export default function AnalyticsDashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie data={tripDurationChartData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value" label={({ name, percentage }) => `${percentage}%`}>
-                  {tripDurationChartData.map((entry, index) => (<Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]}/>))}
+                  {tripDurationChartData.map((index: number) => (<Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]}/>))}
                 </Pie>
                 <Tooltip formatter={(value, name) => [`${value} trips`, name]}/>
               </PieChart>
             </ResponsiveContainer>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {tripDurationChartData.map((item, index) => (<div key={item.name} className="flex items-center gap-2">
+              {tripDurationChartData.map((item: { name: string; value: number; percentage: number }, index: number) => (<div key={item.name} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}/>
                   <span className="text-xs">{item.name}</span>
                 </div>))}

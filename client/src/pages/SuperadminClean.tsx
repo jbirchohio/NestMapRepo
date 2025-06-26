@@ -11,14 +11,66 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from '@tanstack/react-query';
+
 interface Organization {
     id: number;
     name: string;
     type: string;
     memberCount: number;
+    user_count?: number; // Added missing property
     isActive: boolean;
     created_at: string;
+    plan?: string; // Added missing property
+    subscription_status?: 'active' | 'inactive' | 'trial' | 'cancelled' | 'expired'; // Added missing property
 }
+
+interface BillingData {
+    id: string;
+    organization_id: string;
+    status: 'active' | 'inactive' | 'past_due' | 'canceled' | 'trialing';
+    plan: string;
+    current_period_start: string;
+    current_period_end: string;
+    amount: number;
+    currency: string;
+    billing_email: string;
+    created_at: string;
+    updated_at: string;
+}
+
+interface FeatureFlag {
+    id: string;
+    name: string;
+    description: string;
+    enabled: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+interface BackgroundJob {
+    id: string;
+    job_type: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'retrying';
+    progress: number;
+    started_at: string;
+    completed_at: string | null;
+    error: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+interface ActiveSession {
+    id: string;
+    user_id: string;
+    user_email: string;
+    ip_address: string;
+    user_agent: string;
+    last_activity: string;
+    created_at: string;
+    expires_at: string;
+    is_current: boolean;
+}
+
 interface User {
     id: number;
     email: string;
@@ -40,31 +92,31 @@ export default function SuperadminClean() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
     // Individual API queries for each section (original working approach)
-    const { data: organizations = [], isLoading: orgsLoading } = useQuery({
+    const { data: organizations = [], isLoading: orgsLoading } = useQuery<Organization[]>({
         queryKey: ['/api/superadmin/organizations'],
         retry: false
     });
-    const { data: users = [], isLoading: usersLoading } = useQuery({
+    const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
         queryKey: ['/api/superadmin/users'],
         retry: false
     });
-    const { data: activeSessions = [] } = useQuery({
+    const { data: activeSessions = [] } = useQuery<ActiveSession[]>({
         queryKey: ['/api/superadmin/sessions'],
         retry: false
     });
-    const { data: backgroundJobs = [] } = useQuery({
-        queryKey: ['/api/superadmin/jobs'],
+    const { data: backgroundJobs = [] } = useQuery<BackgroundJob[]>({
+        queryKey: ['/api/superadmin/background-jobs'],
         retry: false
     });
-    const { data: auditLogs = [] } = useQuery({
+    const { data: auditLogs = [] } = useQuery<AuditLog[]>({
         queryKey: ['/api/superadmin/activity'],
         retry: false
     });
-    const { data: billingData = [] } = useQuery({
+    const { data: billingData = [] } = useQuery<BillingData[]>({
         queryKey: ['/api/superadmin/billing'],
         retry: false
     });
-    const { data: featureFlags = [] } = useQuery({
+    const { data: featureFlags = [] } = useQuery<FeatureFlag[]>({
         queryKey: ['/api/superadmin/flags'],
         retry: false
     });
@@ -325,17 +377,21 @@ export default function SuperadminClean() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {activeSessions.map((session: any) => (<TableRow key={session.id}>
+                  {activeSessions.map((session: ActiveSession) => (
+                    <TableRow key={session.id}>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{session.username}</div>
-                          <div className="text-sm text-gray-500">{session.email}</div>
+                          <div className="font-medium">{session.user_email}</div>
+                          <div className="text-sm text-gray-500">{session.user_id}</div>
                         </div>
                       </TableCell>
                       <TableCell>{session.ip_address || 'Unknown'}</TableCell>
                       <TableCell className="truncate max-w-xs">{session.user_agent || 'Unknown'}</TableCell>
-                      <TableCell>{session.created_at ? formatDistanceToNow(new Date(session.created_at), { addSuffix: true }) : 'Unknown'}</TableCell>
-                    </TableRow>))}
+                      <TableCell>
+                        {session.created_at ? formatDistanceToNow(new Date(session.created_at), { addSuffix: true }) : 'Unknown'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </AnimatedCard>

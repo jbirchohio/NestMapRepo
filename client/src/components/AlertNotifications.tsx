@@ -73,13 +73,27 @@ function formatTimeAgo(timestamp: string): string {
         return `${diffHours}h ago`;
     return `${diffDays}d ago`;
 }
+/**
+ * Displays and manages system alerts for users with the 'superadmin' role.
+ * 
+ * Uses `useAuth` to get the current user and `useQuery` to fetch alert data.
+ * Allows superadmins to view, acknowledge, and manage system alerts.
+ * 
+ * Features:
+ * - Toggle display of acknowledged alerts.
+ * - Acknowledge individual alerts or all alerts at once.
+ * - Displays alert summary including total, critical, warning, and info alerts.
+ * - Animates alert list updates using framer-motion's `AnimatePresence`.
+ * 
+ * Returns `null` if the user does not have a 'superadmin' role.
+ */
 export function AlertNotifications() {
     const { user } = useAuth();
     const [showAcknowledged, setShowAcknowledged] = useState(false);
     const { data: alertsData, refetch } = useQuery<AlertsResponse>({
         queryKey: ['/api/alerts', { acknowledged: showAcknowledged ? 'all' : 'false' }],
         refetchInterval: 30000, // Refresh every 30 seconds
-        enabled: user?.role === 'superadmin',
+        enabled: user?.role === 'super_admin', // Using 'super_admin' as per the UserRole type in auth
     });
     const acknowledgeAlert = async (alertId: string) => {
         try {
@@ -99,7 +113,7 @@ export function AlertNotifications() {
             console.error('Failed to acknowledge all alerts:', error);
         }
     };
-    if (user?.role !== 'superadmin') {
+    if (user?.role !== 'super_admin') {
         return null;
     }
     const alerts = alertsData?.alerts || [];

@@ -31,7 +31,7 @@ export function ItineraryOptimizationModal({ open, onOpenChange, trip, activitie
     const { toast } = useToast();
     const handleOptimize = async () => {
         try {
-            const result = await optimizeItinerary.mutateAsync(trip.id);
+            const result = await optimizeItinerary.mutateAsync(Number(trip.id));
             setOptimizationResult(result);
             // Auto-apply if enabled
             if (autoApply && onApplyOptimization) {

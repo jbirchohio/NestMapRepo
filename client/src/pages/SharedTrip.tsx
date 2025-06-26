@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Edit, MapPin, Calendar, Users } from "lucide-react";
 import { format } from "date-fns";
-import TripPlanner from "./TripPlanner.ts";
 interface SharedTripData {
     id: number;
     title: string;

@@ -1,6 +1,68 @@
-import { BookingWorkflowProps } from './BookingWorkflow';
-
 export type BookingStep = 'client-info' | 'flights' | 'hotels' | 'confirmation';
+
+export interface FlightSearchResponse {
+  success: boolean;
+  data: {
+    flights: Array<{
+      id: string;
+      airline: string;
+      flightNumber: string;
+      departure: {
+        airport: string;
+        time: string;
+      };
+      arrival: {
+        airport: string;
+        time: string;
+      };
+      price: number;
+      duration: number;
+      stops: number;
+    }>;
+  };
+  error?: string;
+}
+
+export interface HotelSearchResponse {
+  success: boolean;
+  data: {
+    hotels: Hotel[];
+    total: number;
+    filters: {
+      minPrice: number;
+      maxPrice: number;
+      amenities: string[];
+      starRatings: number[];
+    };
+  };
+  error?: string;
+}
+
+export interface BookingDetails {
+  id: string;
+  type: 'flight' | 'hotel' | 'package';
+  status: 'confirmed' | 'pending' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+  bookingReference: string;
+  totalPrice: number;
+  currency: string;
+  paymentStatus: 'paid' | 'pending' | 'refunded';
+  travelerInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+  };
+  flightDetails?: any; // Replace with more specific type if needed
+  hotelDetails?: any;   // Replace with more specific type if needed
+  cancellationPolicy?: {
+    canCancel: boolean;
+    freeCancellationUntil?: string;
+    penaltyAmount?: number;
+    refundPercentage?: number;
+  };
+}
 
 export interface TravelerInfo {
   firstName: string;
@@ -128,5 +190,3 @@ export interface StepComponentProps {
   onNext?: () => void;
   onConfirm?: () => void;
 }
-
-export { BookingWorkflowProps };

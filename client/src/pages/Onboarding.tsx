@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/contexts/auth/NewAuthContext';
 import OnboardingWizard from '@/components/OnboardingWizard';
 import { motion } from 'framer-motion';
 export default function Onboarding() {
     const [, setLocation] = useLocation();
-    const { roleType, user, loading } = useAuth();
+    const { user, loading } = useAuth();
     const handleOnboardingComplete = () => {
         // Redirect to unified dashboard
         setLocation('/dashboard');

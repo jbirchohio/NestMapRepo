@@ -99,7 +99,21 @@ export default function CorporateTripOptimizer() {
     const exportToCSV = () => {
         if (!optimizationResult)
             return;
-        const csvData = optimizationResult.optimizedTrips.map(trip => ({
+        interface CsvRow {
+            'Trip Title': string;
+            'Traveler': string;
+            'Department': string;
+            'Destination': string;
+            'Original Dates': string;
+            'Suggested Dates': string;
+            'Original Cost': string;
+            'Optimized Cost': string;
+            'Savings': string;
+            'Conflicts': number;
+            'Reasoning': string;
+        }
+
+        const csvData: CsvRow[] = optimizationResult.optimizedTrips.map(trip => ({
             'Trip Title': trip.title,
             'Traveler': trip.userName || `User ${trip.userId}`,
             'Department': trip.department,
@@ -112,9 +126,57 @@ export default function CorporateTripOptimizer() {
             'Conflicts': trip.conflictFlags.length,
             'Reasoning': trip.reasoning || 'No optimization needed'
         }));
+        
+        if (csvData.length === 0) {
+            toast({
+                title: "No Data to Export",
+                description: "There are no trips to export.",
+                variant: "destructive"
+            });
+            return;
+        }
+        
+        // Get the first row to determine headers
+        const firstRow = csvData[0];
+        if (!firstRow) {
+            toast({
+                title: "Export Failed",
+                description: "No data available to export.",
+                variant: "destructive"
+            });
+            return;
+        }
+        
+        // Define headers explicitly to ensure type safety
+        const headers: Array<keyof CsvRow> = [
+            'Trip Title',
+            'Traveler',
+            'Department',
+            'Destination',
+            'Original Dates',
+            'Suggested Dates',
+            'Original Cost',
+            'Optimized Cost',
+            'Savings',
+            'Conflicts',
+            'Reasoning'
+        ];
+        
+        // Generate CSV content with proper escaping
         const csvContent = "data:text/csv;charset=utf-8," +
-            Object.keys(csvData[0]).join(",") + "\n" +
-            csvData.map(row => Object.values(row).join(",")).join("\n");
+            headers.join(",") + "\n" +
+            csvData.map(row => 
+                headers.map(header => {
+                    const value = row[header];
+                    // Convert to string and escape quotes
+                    const strValue = String(value);
+                    // If the string contains commas, quotes, or newlines, wrap it in quotes and escape existing quotes
+                    if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+                        return `"${strValue.replace(/"/g, '""')}"`;
+                    }
+                    return strValue;
+                }).join(",")
+            ).join("\n");
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);

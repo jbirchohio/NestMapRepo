@@ -4,21 +4,30 @@ import { Button } from '@/components/ui/button';
 /**
  * Error boundary component to catch JavaScript errors in child components
  */
-class ErrorBoundary extends Component<{
+interface ErrorBoundaryProps {
     fallback?: React.ReactNode;
     children: React.ReactNode;
-}, {
+}
+
+interface ErrorBoundaryState {
     hasError: boolean;
-    error?: Error;
-}> {
-    state = { hasError: false, error: undefined };
-    static getDerivedStateFromError(error: Error) {
+    error: Error | undefined;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+    constructor(props: ErrorBoundaryProps) {
+        super(props);
+        this.state = { hasError: false, error: undefined };
+    }
+    
+    static getDerivedStateFromError(error: Error): ErrorBoundaryState {
         return { hasError: true, error };
     }
-    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    
+    override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
         console.error('Error caught by ErrorBoundary:', error, errorInfo);
     }
-    render() {
+    override render() {
         if (this.state.hasError) {
             return (this.props.fallback || (<div className="p-4 text-center space-y-2">
             <h6 className="text-red-600 font-semibold">Something went wrong</h6>

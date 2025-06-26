@@ -1,4 +1,4 @@
-import { UserResponse } from './user-response.dto';
+import type { UserResponse } from './user-response.dto.js';
 
 export interface AuthResponse {
   /** Authentication token */

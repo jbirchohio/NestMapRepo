@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/contexts/auth/NewAuthContext';
 import { DollarSign, Plane, Hotel as HotelIcon, Calendar, MapPin, Clock, Users, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -252,25 +252,25 @@ export default function BookingWorkflow() {
             
             // Create ClientInfo object with proper types
             const clientInfo: ClientInfo = {
-                origin: String(formDataObj.origin || ''),
-                destination: String(formDataObj.destination || ''),
-                departureDate: String(formDataObj.departureDate || ''),
-                returnDate: formDataObj.returnDate ? String(formDataObj.returnDate) : null,
-                tripType: (formDataObj.tripType as 'one-way' | 'round-trip') || 'round-trip',
-                passengers: Number(formDataObj.passengers) || 1,
-                cabin: String(formDataObj.cabin || 'economy'),
+                origin: String(formDataObj['origin'] || ''),
+                destination: String(formDataObj['destination'] || ''),
+                departureDate: String(formDataObj['departureDate'] || ''),
+                returnDate: formDataObj['returnDate'] ? String(formDataObj['returnDate']) : null,
+                tripType: (formDataObj['tripType'] as 'one-way' | 'round-trip') || 'round-trip',
+                passengers: Number(formDataObj['passengers']) || 1,
+                cabin: String(formDataObj['cabin'] || 'economy'),
                 primaryTraveler: {
-                    firstName: String(formDataObj.primaryTraveler?.firstName || ''),
-                    lastName: String(formDataObj.primaryTraveler?.lastName || ''),
-                    email: String(formDataObj.primaryTraveler?.email || ''),
-                    phone: String(formDataObj.primaryTraveler?.phone || ''),
-                    dateOfBirth: String(formDataObj.primaryTraveler?.dateOfBirth || '')
+                    firstName: String((formDataObj['primaryTraveler'] as any)?.['firstName'] || ''),
+                    lastName: String((formDataObj['primaryTraveler'] as any)?.['lastName'] || ''),
+                    email: String((formDataObj['primaryTraveler'] as any)?.['email'] || ''),
+                    phone: String((formDataObj['primaryTraveler'] as any)?.['phone'] || ''),
+                    dateOfBirth: String((formDataObj['primaryTraveler'] as any)?.['dateOfBirth'] || '')
                 },
                 additionalTravelers: [], // Initialize empty, you can populate this if needed
-                department: formDataObj.department ? String(formDataObj.department) : null,
-                projectCode: formDataObj.projectCode ? String(formDataObj.projectCode) : null,
-                costCenter: formDataObj.costCenter ? String(formDataObj.costCenter) : null,
-                budget: formDataObj.budget ? Number(formDataObj.budget) : null
+                department: formDataObj['department'] ? String(formDataObj['department']) : null,
+                projectCode: formDataObj['projectCode'] ? String(formDataObj['projectCode']) : null,
+                costCenter: formDataObj['costCenter'] ? String(formDataObj['costCenter']) : null,
+                budget: formDataObj['budget'] ? Number(formDataObj['budget']) : null
             };
             
             setClientInfo(clientInfo);
@@ -373,26 +373,28 @@ export default function BookingWorkflow() {
     };
 
     const handleFlightSelectionComplete = () => {
-        if (currentTravelerIndex < totalTravelers - 1) {
+        const travelers = getAllTravelers();
+        const currentTraveler = travelers[currentTravelerIndex]?.fullName || `Traveler ${currentTravelerIndex + 1}`;
+        
+        const updateBookings = () => {
             const updatedBookings = [...travelerBookings];
             updatedBookings[currentTravelerIndex] = {
+                traveler: currentTraveler,
                 ...updatedBookings[currentTravelerIndex],
                 departureFlight: selectedDepartureFlight,
                 returnFlight: selectedReturnFlight
             };
-            setTravelerBookings(updatedBookings);
+            return updatedBookings;
+        };
+
+        const updatedBookings = updateBookings();
+        setTravelerBookings(updatedBookings);
+
+        if (currentTravelerIndex < totalTravelers - 1) {
             setSelectedDepartureFlight(null);
             setSelectedReturnFlight(null);
             setCurrentTravelerIndex(currentTravelerIndex + 1);
-        }
-        else {
-            const updatedBookings = [...travelerBookings];
-            updatedBookings[currentTravelerIndex] = {
-                ...updatedBookings[currentTravelerIndex],
-                departureFlight: selectedDepartureFlight,
-                returnFlight: selectedReturnFlight
-            };
-            setTravelerBookings(updatedBookings);
+        } else {
             setCurrentStep('hotels');
             if (clientInfo) {
                 searchHotels(clientInfo);

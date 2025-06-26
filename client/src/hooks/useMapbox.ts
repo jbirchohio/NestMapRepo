@@ -3,6 +3,13 @@ import mapboxgl from "mapbox-gl";
 import { MapMarker, MapRoute } from "@/lib/types";
 // Import the Mapbox CSS
 import "mapbox-gl/dist/mapbox-gl.css";
+// Extend the existing ImportMetaEnv type
+declare global {
+  interface ImportMetaEnv {
+    VITE_MAPBOX_TOKEN: string;
+  }
+}
+
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 export default function useMapbox() {
     const mapInstance = useRef<mapboxgl.Map | null>(null);
@@ -49,7 +56,8 @@ export default function useMapbox() {
                 });
                 console.log('Mapbox map created successfully');
             }
-            catch (mapboxError) {
+            catch (error) {
+                const mapboxError = error as Error;
                 console.error('Mapbox GL initialization failed:', mapboxError);
                 console.error('Error details:', {
                     message: mapboxError?.message || 'Unknown error',

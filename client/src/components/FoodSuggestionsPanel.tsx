@@ -77,7 +77,7 @@ export default function FoodSuggestionsPanel({ trip, onAddActivity }: FoodSugges
                 tag: "food",
                 notes: `${suggestion.type} - ${suggestion.description}\nPrice: ${suggestion.priceRange}\nDistance: ${suggestion.distance}`,
                 time: "12:00", // Default lunch time
-                date: new Date().toISOString().split('T')[0] // Today's date
+                date: new Date() // Current date as Date object
             };
             await onAddActivity(formattedActivity);
             toast({

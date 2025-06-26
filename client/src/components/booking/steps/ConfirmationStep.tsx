@@ -1,31 +1,98 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { format } from 'date-fns';
-import { CalendarIcon, Plane, Home, Users, CreditCard, CheckCircle } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { CalendarIcon, Plane, Home, Users, CreditCard, CheckCircle, MapPin } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { BookingFormData, Flight, Hotel } from '../types';
+import { BookingFormData, Hotel, RoomType } from '../types';
+import { Flight } from '../types/flight';
+import { ToastAction } from '@/components/ui/toast';
+
+interface FlightDetails {
+  outbound: {
+    airline: string;
+    flightNumber: string;
+    departureTime: string;
+    price: {
+      amount: number;
+      currency: string;
+    };
+  };
+  return?: {
+    airline: string;
+    flightNumber: string;
+    departureTime: string;
+    price: {
+      amount: number;
+      currency: string;
+    };
+  };
+}
+
+interface HotelBooking {
+  name: string;
+  checkInTime: string;
+  address: {
+    street: string;
+    city: string;
+    state?: string;
+    country: string;
+    postalCode?: string;
+  };
+  price: {
+    amount: number;
+    currency: string;
+  };
+}
+
+export interface ExtendedBookingFormData extends Omit<BookingFormData, 'flights' | 'hotel'> {
+  flights: FlightDetails;
+  hotel: HotelBooking;
+  returnFlight?: {
+    airline: string;
+    flightNumber: string;
+  };
+  selectedFlight?: {
+    airline: string;
+    flightNumber: string;
+    price: number;
+  };
+  selectedRoomType?: RoomType;
+}
 interface ConfirmationStepProps {
-    formData: BookingFormData;
+    formData: ExtendedBookingFormData;
     onBack: () => void;
     onConfirm: () => void;
     onNext?: () => void;
-    onChange?: (data: Partial<BookingFormData>) => void;
+    onChange?: (data: Partial<ExtendedBookingFormData>) => void;
 }
 export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationStepProps) => {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
-    const formatPrice = (amount: number) => {
+
+    const formatPrice = (amount: number | undefined) => {
+        if (amount === undefined) return '$0.00';
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD',
+            currency: formData.hotel?.price?.currency || 'USD',
         }).format(amount);
     };
-    const formatDuration = (duration: string) => {
-        const parts = duration.split(' ');
-        const hours = parseInt(parts[0]);
-        const minutes = parseInt(parts[2]);
-        return `${hours}h ${minutes}m`;
+
+    const formatDate = (dateString: string | undefined) => {
+        if (!dateString) return 'N/A';
+        try {
+            const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
+            return format(date, 'PPP h:mm a');
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid date';
+        }
+    };
+
+    const getTotalPrice = () => {
+        const flightPrice = formData.selectedFlight?.price || 0;
+        const roomPrice = formData.selectedRoomType?.price || 0;
+        return flightPrice + roomPrice;
     };
     const handleConfirm = async () => {
         setIsLoading(true);
@@ -36,6 +103,7 @@ export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationSt
             toast({
                 title: 'Booking Confirmed!',
                 description: 'Your trip has been successfully booked. You will receive a confirmation email shortly.',
+                action: <ToastAction altText="Dismiss">Dismiss</ToastAction>,
             });
             // Navigate to booking confirmation page
             // window.location.href = '/booking/confirmation';
@@ -46,6 +114,7 @@ export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationSt
                 title: 'Error',
                 description: 'Failed to confirm booking. Please try again.',
                 variant: 'destructive',
+                action: <ToastAction altText="Dismiss">Dismiss</ToastAction>,
             });
         }
         finally {
@@ -83,14 +152,13 @@ export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationSt
                   <Plane className="h-4 w-4"/>
                   <span>Outbound Flight:</span>
                   <span className="font-medium">
-                    {formData.selectedFlight?.airline} {formData.selectedFlight?.flightNumber}
+                    {formData.selectedFlight?.airline ?? 'N/A'} {formData.selectedFlight?.flightNumber ?? ''}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
                   <span>
-                    {format(new Date(formData.flights.outbound.departureTime), 'PPP')} at{' '}
-                    {format(new Date(formData.flights.outbound.departureTime), 'h:mm a')}
+                    {formData.flights?.outbound?.departureTime ? formatDate(formData.flights.outbound.departureTime) : 'N/A'}
                   </span>
                 </div>
                 {formData.returnFlight && (
@@ -98,7 +166,7 @@ export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationSt
                     <Plane className="h-4 w-4" />
                     <span>Return Flight:</span>
                     <span className="font-medium">
-                      {formData.returnFlight.airline} {formData.returnFlight.flightNumber}
+                      {formData.returnFlight.airline ?? 'N/A'} {formData.returnFlight.flightNumber ?? ''}
                     </span>
                   </div>
                 )}
@@ -111,18 +179,17 @@ export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationSt
               <div className="mt-2 space-y-2">
                 <div className="flex items-center gap-2">
                   <Home className="h-4 w-4" />
-                  <span>{formData.hotel.name}</span>
+                  <span>{formData.hotel?.name ?? 'No hotel selected'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
                   <span>
-                    Check-in: {format(new Date(formData.hotel.checkInTime), 'PPP')} at{' '}
-                    {format(new Date(formData.hotel.checkInTime), 'h:mm a')}
+                    Check-in: {formData.hotel?.checkInTime ? formatDate(formData.hotel.checkInTime) : 'N/A'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
-                  <span>{formData.hotel.address.street}, {formData.hotel.address.city}</span>
+                  <span>{formData.hotel?.address ? `${formData.hotel.address.street || ''}, ${formData.hotel.address.city || ''}` : 'No address available'}</span>
                 </div>
               </div>
             </div>
@@ -133,15 +200,19 @@ export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationSt
               <div className="mt-2">
                 <div className="flex justify-between">
                   <span>Flights</span>
-                  <span>{formatPrice(formData.flights.return ? formData.flights.outbound.price.amount + formData.flights.return.price.amount : formData.flights.outbound.price.amount)}</span>
+                  <span>{formatPrice(
+                    formData.flights?.outbound?.price?.amount && formData.flights.return?.price?.amount 
+                      ? formData.flights.outbound.price.amount + formData.flights.return.price.amount 
+                      : formData.flights?.outbound?.price?.amount
+                  )}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Hotel</span>
-                  <span>{formatPrice(formData.hotel.price.amount)}</span>
+                  <span>{formatPrice(formData.hotel?.price?.amount)}</span>
                 </div>
                 <div className="flex justify-between font-medium mt-2">
                   <span>Total</span>
-                  <span>Total Cost: {formatPrice(formData.selectedFlight?.price || 0 + (formData.selectedRoomType?.price || 0))}</span>
+                  <span>{formatPrice(getTotalPrice())}</span>
                 </div>
               </div>
             </div>

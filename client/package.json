@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.1.1",
+    "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
@@ -50,7 +51,7 @@
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.5.0",
-    "zod": "^3.22.0"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.1",

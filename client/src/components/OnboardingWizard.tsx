@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/contexts/auth/NewAuthContext';
 import { CheckCircle, Circle, Building2, Users, MapPin, CreditCard, ArrowRight, ArrowLeft, Sparkles, Mail, Calendar, DollarSign, Target, Zap } from 'lucide-react';
 interface OnboardingStep {
     id: string;

@@ -23,13 +23,20 @@ export class ErrorLogger {
     private errorLogs: ErrorLog[];
     private maxLogs: number;
     private logInterval: NodeJS.Timeout | null;
+    private isProcessing: boolean;
+    private pendingLogs: ErrorLog[];
     private constructor() {
+        // Initialize all properties with default values
         this.securityUtils = SecurityUtils.getInstance();
         this.tokenManager = TokenManager.getInstance();
         this.sessionSecurity = SessionSecurity.getInstance();
         this.errorLogs = [];
         this.maxLogs = 100; // Maximum logs to keep in memory
         this.logInterval = null;
+        this.isProcessing = false;
+        this.pendingLogs = [];
+        
+        // Set up log rotation
         this.setupLogRotation();
     }
     public static getInstance(): ErrorLogger {

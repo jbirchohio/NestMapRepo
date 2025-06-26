@@ -27,7 +27,8 @@ export function useInfiniteScroll(loadMore: () => void, hasMore: boolean, isLoad
             return;
         observer.current = new IntersectionObserver((entries) => {
             // If the sentinel element is visible and we have more items to load
-            if (entries[0].isIntersecting && hasMore && !isLoading) {
+            const [entry] = entries;
+            if (entry?.isIntersecting && hasMore && !isLoading) {
                 setPage((prevPage) => prevPage + 1);
                 loadMore();
             }

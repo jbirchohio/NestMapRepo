@@ -5,10 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { apiRequest } from "@/lib/queryClient";
 import { CreditCard, Calendar, DollarSign, Users, ArrowUpRight, CheckCircle, AlertCircle, Settings } from "lucide-react";
 import { format } from "date-fns";
+
+
+/**
+ * Billing information returned by the API.
+ *
+ * @property {string} [customerId] Customer ID in Stripe.
+ * @property {string} [subscriptionId] Subscription ID in Stripe.
+ * @property {string} status The status of the subscription.
+ * @property {string} [currentPeriodEnd] The end of the current billing period.
+ * @property {string} plan The plan the user is currently on.
+ */
 interface BillingInfo {
     customerId?: string;
     subscriptionId?: string;
@@ -16,6 +27,17 @@ interface BillingInfo {
     currentPeriodEnd?: string;
     plan: 'free' | 'team' | 'enterprise';
 }
+/**
+ * Displays the billing and subscription management page for the user's organization.
+ * 
+ * If the user does not have permission to access billing information, they will see a message
+ * indicating that they should contact their administrator.
+ * 
+ * If the user does have permission, they will see a summary of their current plan and status,
+ * as well as options to upgrade to a different plan or manage their payment methods.
+ * 
+ * @returns A React component displaying the billing and subscription management page.
+ */
 export default function BillingDashboard() {
     const { user } = useAuth();
     const { toast } = useToast();

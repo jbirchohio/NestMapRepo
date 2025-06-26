@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './auth/AuthContext';
+import { useAuth } from './auth/NewAuthContext';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 export interface WhiteLabelConfig {

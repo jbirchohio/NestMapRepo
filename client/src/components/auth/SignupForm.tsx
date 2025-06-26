@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,8 @@ import { mapUseCaseToRoleType } from "@/lib/roleUtils";
 // Enhanced B2B signup form validation schema
 const signupSchema = z.object({
     email: z.string().email({ message: "Please enter a valid business email address" }),
-    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+    firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
+    lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
     password: z.string().min(8, { message: "Password must be at least 8 characters" }),
     passwordConfirm: z.string().min(8, { message: "Password must be at least 8 characters" }),
     // Business information
@@ -36,10 +37,11 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const form = useForm<SignupFormValues>({
-        resolver: zodResolver(signupSchema),
+        resolver: zodResolver(signupSchema) as any, // Type assertion to fix TS2589
         defaultValues: {
             email: "",
-            name: "",
+            firstName: "",
+            lastName: "",
             password: "",
             passwordConfirm: "",
             company: "",
@@ -52,18 +54,29 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
         try {
             setIsLoading(true);
             setErrorMessage("");
-            // Determine role type based on use case using utility function
-            const roleType = mapUseCaseToRoleType(values.useCase);
-            await signUp(values.email, values.password, values.name);
+            
+            // Create a RegisterDto object with the required fields
+            const registerData = {
+                email: values.email,
+                password: values.password,
+                firstName: values.firstName,
+                lastName: values.lastName,
+                company: values.company,
+                jobTitle: values.jobTitle,
+                teamSize: values.teamSize,
+                useCase: values.useCase,
+                roleType: mapUseCaseToRoleType(values.useCase)
+            };
+
+            await signUp(registerData);
+            
             if (onSuccess) {
                 onSuccess();
             }
-        }
-        catch (error: Error | unknown) {
+        } catch (error: Error | unknown) {
             const err = error as Error;
             setErrorMessage(err.message || "Failed to sign up. Please try again.");
-        }
-        finally {
+        } finally {
             setIsLoading(false);
         }
     };
@@ -90,10 +103,21 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
             {form.formState.errors.email && (<p className="text-sm text-destructive">{form.formState.errors.email.message}</p>)}
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input id="name" type="text" placeholder="Your Name" {...form.register("name")}/>
-            {form.formState.errors.name && (<p className="text-sm text-destructive">{form.formState.errors.name.message}</p>)}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input id="firstName" type="text" placeholder="First Name" {...form.register("firstName")}/>
+              {form.formState.errors.firstName && (
+                <p className="text-sm text-destructive">{form.formState.errors.firstName.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input id="lastName" type="text" placeholder="Last Name" {...form.register("lastName")}/>
+              {form.formState.errors.lastName && (
+                <p className="text-sm text-destructive">{form.formState.errors.lastName.message}</p>
+              )}
+            </div>
           </div>
           
           <div className="space-y-2">

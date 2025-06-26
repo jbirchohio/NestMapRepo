@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/contexts/auth/NewAuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import MainNavigation from '@/components/MainNavigation';
 import BrandedFooter from '@/components/BrandedFooter';
