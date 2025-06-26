@@ -1,4 +1,4 @@
-import { UserResponse } from '@shared/types/auth/dto/user-response.dto.js';
+import type { UserResponse } from '@shared/types/auth/dto/user-response.dto.js';
 
 /**
  * Maps a UserResponse object to a User object with snake_case properties

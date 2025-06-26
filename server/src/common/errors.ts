@@ -1,7 +1,7 @@
 /**
  * Base error class for all custom errors in the application
  */
-import type { AppErrorCode } from '@shared/types/error-codes.js';
+import { AppErrorCode } from '@shared/types/error-codes.js';
 
 export class AppError extends Error {
     public readonly statusCode: number;

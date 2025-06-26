@@ -4,10 +4,11 @@ import type {
   TokenType,
   AuthTokens as SharedAuthTokens,
   User,
-  TokenPayload
+  TokenPayload,
+  UserRole
 } from '@shared/types/auth';
 
-export type { TokenType };
+export type { TokenType, TokenPayload, UserRole };
 
 export interface JWTUser extends JwtPayload {
   // Add any additional fields specific to Express User

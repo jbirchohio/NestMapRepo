@@ -1,4 +1,5 @@
-import { apiClient } from './apiClient.ts';
+import { apiClient } from './apiClient';
+import axios from 'axios';
 /**
  * Utility functions for handling API responses and common patterns
  */
@@ -56,37 +57,40 @@ export function createCancellableRequest<T>(request: (signal: AbortSignal) => Pr
  * @param wait Time to wait in milliseconds
  * @returns Debounced function
  */
-export function debounceApi<T extends (...args: any[]) => Promise<any>>(func: T, wait: number): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
+export function debounceApi<T extends (...args: any[]) => ReturnType<T>>(func: T, wait: number): T {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let pendingPromise: Promise<Awaited<ReturnType<T>>> | null = null;
-    return async (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
+    let pendingPromise: ReturnType<T> | null = null;
+    
+    return ((...args: Parameters<T>): ReturnType<T> => {
         // Cancel any pending timeouts
         if (timeoutId) {
             clearTimeout(timeoutId);
         }
+        
         // Cancel any pending requests if they support it
         if (pendingPromise) {
-            apiClient.cancelRequest('debounced');
+            const controller = new AbortController();
+            controller.abort('debounced');
         }
+        
         // Create a new promise that will be resolved after the debounce time
         return new Promise((resolve, reject) => {
             timeoutId = setTimeout(async () => {
                 try {
                     pendingPromise = func(...args);
                     const result = await pendingPromise;
-                    resolve(result);
-                }
-                catch (error) {
-                    if (!apiClient.isCancel(error)) {
+                    resolve(result as Awaited<ReturnType<T>>);
+                } catch (error) {
+                    // Check if the error is from a cancelled request
+                    if (!axios.isCancel(error)) {
                         reject(error);
                     }
-                }
-                finally {
+                } finally {
                     pendingPromise = null;
                 }
             }, wait);
-        });
-    };
+        }) as ReturnType<T>;
+    }) as T;
 }
 /**
  * Helper function to handle paginated API responses
@@ -200,22 +204,47 @@ export function createCacheKey(prefix: string, params: Record<string, any> = {})
  * @returns Promise that resolves when all tasks are complete
  */
 export async function runConcurrent<T>(tasks: (() => Promise<T>)[], concurrency = 5): Promise<T[]> {
-    const results: T[] = [];
-    const executing: Promise<void>[] = [];
-    let index = 0;
+    const results: (T | undefined)[] = new Array(tasks.length).fill(undefined);
+    const executing = new Set<Promise<void>>();
+    let currentIndex = 0;
+
     const execute = async (taskIndex: number): Promise<void> => {
-        if (taskIndex >= tasks.length)
-            return;
+        if (taskIndex >= tasks.length) return;
+        
         const task = tasks[taskIndex];
-        const result = await task();
-        results[taskIndex] = result;
-        // Start the next task
-        await execute(index++);
+        if (!task) return;
+        
+        try {
+            const result = await task();
+            results[taskIndex] = result;
+        } catch (error) {
+            console.error(`Error in task ${taskIndex}:`, error);
+            throw error;
+        }
+        
+        // Start the next task if there are more
+        if (currentIndex < tasks.length) {
+            const nextIndex = currentIndex++;
+            const nextTask = execute(nextIndex);
+            executing.add(nextTask);
+            nextTask.finally(() => executing.delete(nextTask));
+        }
     };
+
     // Start initial set of concurrent tasks
-    for (let i = 0; i < Math.min(concurrency, tasks.length); i++) {
-        executing.push(execute(index++));
+    const initialTasks = [];
+    const initialCount = Math.min(concurrency, tasks.length);
+    
+    for (let i = 0; i < initialCount; i++) {
+        if (currentIndex >= tasks.length) break;
+        const taskIndex = currentIndex++;
+        const task = execute(taskIndex);
+        executing.add(task);
+        task.finally(() => executing.delete(task));
+        initialTasks.push(task);
     }
-    await Promise.all(executing);
-    return results;
+
+    // Wait for all tasks to complete
+    await Promise.all(Array.from(executing));
+    return results as T[];
 }

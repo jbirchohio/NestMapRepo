@@ -71,10 +71,13 @@ export const FlightSelectionStep: React.FC<FlightSelectionStepProps> = ({
 
       // Auto-select the first outbound flight if none selected
       if (outboundResponse.length > 0 && !selectedFlights.outbound) {
-        setSelectedFlights(prev => ({
-          ...prev,
-          outbound: outboundResponse[0]
-        }));
+        const firstOutbound = outboundResponse[0];
+        if (firstOutbound) {
+          setSelectedFlights(prev => ({
+            ...prev,
+            outbound: firstOutbound
+          }));
+        }
       }
 
     } catch (error) {
@@ -104,33 +107,58 @@ export const FlightSelectionStep: React.FC<FlightSelectionStepProps> = ({
 
   // Handle continue to next step
   const handleContinue = () => {
-    if (!selectedFlights.outbound) {
+    const { outbound, return: returnFlight } = selectedFlights;
+    
+    if (!outbound) {
       toast({
         title: 'No flight selected',
-        description: 'Please select an outbound flight',
+        children: 'Please select an outbound flight',
         variant: 'destructive',
       });
       return;
     }
 
-    if (isRoundTrip && !selectedFlights.return) {
+    if (isRoundTrip && !returnFlight) {
       // If it's a round trip but no return flight selected, ask if they want to skip
       const shouldSkip = window.confirm('No return flight selected. Continue without a return flight?');
       if (!shouldSkip) return;
     }
 
+    // Validate segments and required data
+    const firstSegment = outbound.segments?.[0];
+    const lastSegment = outbound.segments?.[outbound.segments.length - 1];
+    
+    if (!firstSegment?.departure?.airport?.iataCode || !lastSegment?.arrival?.airport?.iataCode) {
+      toast({
+        title: 'Invalid flight data',
+        children: 'Selected flight is missing required airport information',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Prepare data for the next step
     const flightData: Partial<BookingFormData> = {
-      origin: selectedFlights.outbound.origin,
-      destination: selectedFlights.outbound.destination,
-      departureDate: selectedFlights.outbound.departureTime,
-      returnDate: selectedFlights.return?.departureTime,
+      origin: firstSegment.departure.airport.iataCode,
+      destination: lastSegment.arrival.airport.iataCode,
+      departureDate: outbound.departureTime,
+      returnDate: returnFlight?.departureTime,
       passengers: 1, // This should come from search params
-      cabin: selectedFlights.outbound.cabin,
-      selectedFlight: selectedFlights.outbound,
-      selectedReturnFlight: selectedFlights.return || undefined,
+      cabin: outbound.cabin,
+      selectedFlight: outbound,
+      ...(returnFlight && { selectedReturnFlight: returnFlight }),
       tripType: isRoundTrip ? 'round-trip' : 'one-way',
     };
+    
+    // Additional validation for required fields
+    if (!flightData.origin || !flightData.destination || !flightData.departureDate) {
+      toast({
+        title: 'Invalid flight data',
+        children: 'Selected flight is missing required information',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     onNext(flightData);
   };

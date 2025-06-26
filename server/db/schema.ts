@@ -16,16 +16,16 @@ type ExtractTableData<C> = {
 };
 
 // Simplified schema creation with proper typing
-function createSchema<T extends PgTableWithColumns<any>>(table: T) {
+function createSchema<TTable extends PgTableWithColumns<any>>(table: TTable) {
   type TableData = {
-    [K in keyof T['_']['columns']]: T['_']['columns'][K] extends PgColumn<infer C, any, any> 
+    [K in keyof TTable['_']['columns']]: TTable['_']['columns'][K] extends PgColumn<infer C, any, any> 
       ? C['data'] 
       : never;
   };
 
   return {
-    insert: createInsertSchema(table) as unknown as z.ZodType<Partial<TableData>>,
-    select: createSelectSchema(table) as unknown as z.ZodType<TableData>
+    insert: createInsertSchema(table as any) as unknown as z.ZodType<Partial<TableData>>,
+    select: createSelectSchema(table as any) as unknown as z.ZodType<TableData>
   };
 }
 
@@ -49,7 +49,8 @@ export type WithTimestamps<T> = T & {
 // Enums
 // ======================
 export const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
-export const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
+const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
+export const organizationMemberStatusEnum = pgEnum('organization_member_status', ['active', 'invited', 'suspended', 'inactive']);
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 export type OrganizationPlan = 'free' | 'pro' | 'enterprise';
 // ======================
@@ -69,6 +70,38 @@ export type UserRoleType = typeof USER_ROLES[keyof typeof USER_ROLES];
 // Table Definitions
 // ======================
 // Users table
+// User settings type
+export type UserSettings = {
+    theme?: 'light' | 'dark' | 'system';
+    notifications?: {
+        email?: boolean;
+        push?: boolean;
+        sms?: boolean;
+    };
+    preferences?: {
+        language?: string;
+        timezone?: string;
+        dateFormat?: string;
+        timeFormat?: string;
+    };
+    privacy?: {
+        showEmail?: boolean;
+        showFullName?: boolean;
+        showLastActive?: boolean;
+    };
+};
+
+// User settings table
+export const userSettings = pgTable('user_settings', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull().unique(),
+    settings: jsonb('settings').$type<UserSettings>(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow()
+}, (table) => ({
+    userIdIdx: index('user_settings_user_id_idx').on(table.userId)
+}));
+
 export const users = pgTable('users', {
     id: uuid('id').primaryKey().defaultRandom(),
     email: text('email').notNull().unique(),
@@ -100,6 +133,8 @@ export const users = pgTable('users', {
     orgUserIdx: index('users_org_composite_idx').on(table.organizationId, table.isActive, table.role)
 }));
 // Organizations table
+// Organization Members table is defined below
+
 export const organizations = pgTable('organizations', {
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
@@ -205,7 +240,6 @@ export const cardTransactionCategoryEnum = pgEnum('card_transaction_category', [
 export const tripCollaboratorRoleEnum = pgEnum('trip_collaborator_role', ['admin', 'editor', 'viewer', 'commenter']);
 export const invitationStatusEnum = pgEnum('invitation_status', ['pending', 'accepted', 'expired', 'revoked']);
 export const organizationMemberRoleEnum = pgEnum('organization_member_role', ['admin', 'manager', 'member', 'viewer', 'billing']); // Added billing as a common role
-export const organizationMemberStatusEnum = pgEnum('organization_member_status', ['active', 'invited', 'suspended', 'inactive']);
 export const tripTypeEnum = pgEnum('trip_type', ['personal', 'business']);
 export const sharePermissionEnum = pgEnum('share_permission', ['read-only', 'edit']);
 // Trips Table
@@ -691,9 +725,15 @@ export const approvalRules = pgTable("approval_rules", {
     description: text("description"),
     entityType: text("entity_type").notNull(), // 'trip', 'expense', 'budget', 'booking', etc.
     conditions: jsonb("conditions").$type<{
+        minAmount?: number;
+        maxAmount?: number;
+        requiredApprovals?: number;
+        approverRoles?: string[];
+        departmentIds?: string[];
         budgetThreshold?: number;
         tripDuration?: number;
         destinationCountries?: string[];
+        userRoles?: string[];
         expenseCategories?: string[];
         [key: string]: any;
     }>().default(sql `'{}'::jsonb`),

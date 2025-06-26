@@ -1,11 +1,11 @@
 import type { Provider } from '@nestjs/common';
-import type { TripRepositoryImpl } from '../../trips/repositories/trip.repository.ts';
-import type { OrganizationRepositoryImpl } from './organization/organization.repository.ts';
-import type { ActivityRepositoryImpl } from './activity/activity.repository.ts';
-import type { UserRepositoryImpl } from './user/user.repository.ts';
-import type { BookingRepositoryImpl } from './booking/booking.repository.ts';
+import { TripRepositoryImpl } from '../../trips/repositories/trip.repository.ts';
+import { OrganizationRepositoryImpl } from './organization/organization.repository.ts';
+import { ActivityRepositoryImpl } from './activity/activity.repository.ts';
+import { UserRepositoryImpl } from './user/user.repository.ts';
+import { BookingRepositoryImpl } from './booking/booking.repository.ts';
 import { UserRepositoryImpl as AuthUserRepositoryImpl } from '../../auth/repositories/user.repository.ts';
-import type { RefreshTokenRepositoryImpl } from '../../auth/repositories/refresh-token.repository.ts';
+import { RefreshTokenRepositoryImpl } from '../../auth/repositories/refresh-token.repository.ts';
 /**
  * Provider definitions for all repositories
  * These can be imported and used in any module that needs repository access

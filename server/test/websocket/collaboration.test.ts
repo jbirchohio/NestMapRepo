@@ -1,9 +1,9 @@
 import type { Server } from 'http';
-import type { WebSocket } from 'ws';
+import { WebSocket } from 'ws';
 import type { AddressInfo } from 'net';
 import express from '../../express-augmentations.ts';
 import jwt from 'jsonwebtoken';
-import type { CollaborationWebSocketServer } from '../../websocket.ts';
+import { CollaborationWebSocketServer } from '../../websocket.ts';
 describe('CollaborationWebSocketServer', () => {
     let server: Server;
     let collaborationWS: CollaborationWebSocketServer;

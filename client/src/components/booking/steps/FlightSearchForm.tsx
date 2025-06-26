@@ -70,7 +70,7 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({
     if (value.length > 1) {
       const suggestions = MOCK_AIRPORTS.filter(
         airport => 
-          airport.code.toLowerCase().includes(value.toLowerCase()) ||
+          airport.iataCode.toLowerCase().includes(value.toLowerCase()) ||
           airport.name.toLowerCase().includes(value.toLowerCase()) ||
           airport.city.toLowerCase().includes(value.toLowerCase())
       ).slice(0, 5);
@@ -85,7 +85,7 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({
     if (value.length > 1) {
       const suggestions = MOCK_AIRPORTS.filter(
         airport => 
-          airport.code.toLowerCase().includes(value.toLowerCase()) ||
+          airport.iataCode.toLowerCase().includes(value.toLowerCase()) ||
           airport.name.toLowerCase().includes(value.toLowerCase()) ||
           airport.city.toLowerCase().includes(value.toLowerCase())
       ).slice(0, 5);
@@ -150,14 +150,14 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({
                     <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg">
                       {airportSuggestions.origin.map((airport) => (
                         <div
-                          key={airport.code}
+                          key={airport.iataCode}
                           className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                           onClick={() => {
-                            setOrigin(airport.code);
+                            setOrigin(airport.iataCode);
                             setAirportSuggestions(prev => ({ ...prev, origin: [] }));
                           }}
                         >
-                          <div className="font-medium">{airport.city} ({airport.code})</div>
+                          <div className="font-medium">{airport.city} ({airport.iataCode})</div>
                           <div className="text-sm text-gray-500">{airport.name}</div>
                         </div>
                       ))}
@@ -192,14 +192,14 @@ export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({
                     <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg">
                       {airportSuggestions.destination.map((airport) => (
                         <div
-                          key={airport.code}
+                          key={airport.iataCode}
                           className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                           onClick={() => {
-                            setDestination(airport.code);
+                            setDestination(airport.iataCode);
                             setAirportSuggestions(prev => ({ ...prev, destination: [] }));
                           }}
                         >
-                          <div className="font-medium">{airport.city} ({airport.code})</div>
+                          <div className="font-medium">{airport.city} ({airport.iataCode})</div>
                           <div className="text-sm text-gray-500">{airport.name}</div>
                         </div>
                       ))}

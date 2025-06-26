@@ -21,20 +21,27 @@ export type ActivityType = typeof activityTypes[number];
 
 export interface Activity {
   id: string;
-  title: string;
-  description?: string;
-  startDate?: string;
-  endDate?: string;
-  locationName?: string;
-  location?: string;
-  latitude?: number;
-  longitude?: number;
-  type?: ActivityType;
-  status: ActivityStatus;
-  notes?: string;
   tripId: string;
   organizationId: string;
+  title: string;
+  date: Date | string;
+  time?: string;
+  locationName?: string;
+  latitude?: number;
+  longitude?: number;
+  notes?: string;
+  tag?: string;
+  assignedTo?: string;
+  order: number;
+  travelMode?: string;
+  completed: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  // Computed fields for compatibility
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  type?: ActivityType;
+  status: ActivityStatus;
   createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
 }

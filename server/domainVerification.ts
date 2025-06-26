@@ -2,6 +2,7 @@ import * as dns from 'dns';
 import { promisify } from 'util';
 import crypto from 'crypto';
 import https from 'https';
+import { TLSSocket } from 'tls';
 /**
  * Helper to wrap fetch with a timeout using AbortController.
  */
@@ -77,7 +78,7 @@ export async function verifySSLCertificate(domain: string): Promise<SSLVerificat
             rejectUnauthorized: true
         };
         const req = https.request(options, (res) => {
-            const cert = res.socket?.getPeerCertificate?.();
+            const cert = (res.socket as TLSSocket).getPeerCertificate();
             if (cert && cert.valid_to) {
                 const expiresAt = new Date(cert.valid_to);
                 const now = new Date();

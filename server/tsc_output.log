@@ -1,0 +1,456 @@
+db/cardTransactionSchema.ts(51,63): error TS2345: Argument of type 'PgTableWithColumns<{ name: "card_transactions"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "card_transactions"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; ... 7 more ...; generated: undefined; }, {}, {}>; ... 22 more ...; updatedAt: PgColumn<....' is not assignable to parameter of type 'Table<TableConfig<Column<any, object, object>>>'.
+  The types of '_.config.columns' are incompatible between these types.
+    Type '{ id: PgColumn<{ name: "id"; tableName: "card_transactions"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>; ... 22 more ...; updatedAt: PgColumn<...>; }' is not assignable to type 'Record<string, Column<any, object, object>>'.
+      Property 'id' is incompatible with index signature.
+        Type 'PgColumn<{ name: "id"; tableName: "card_transactions"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to type 'Column<any, object, object>'.
+          The types of 'table._.config.columns' are incompatible between these types.
+            Type 'Record<string, PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>>' is not assignable to type 'Record<string, Column<any, object, object>>'.
+              'string' index signatures are incompatible.
+                Type 'PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>' is not assignable to type 'Column<any, object, object>'.
+                  Property 'config' is protected but type 'Column<T, TRuntimeConfig, TTypeConfig>' is not a class derived from 'Column<T, TRuntimeConfig, TTypeConfig>'.
+db/cardTransactionSchema.ts(60,63): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'PgTableWithColumns<{ name: "card_transactions"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "card_transactions"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; ... 7 more ...; generated: undefined; }, {}, {}>; ... 22 more ...; updatedAt: PgColumn<....' is not assignable to parameter of type 'PgEnum<any>'.
+      Type 'PgTable<{ name: "card_transactions"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "card_transactions"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; ... 7 more ...; generated: undefined; }, {}, {}>; ... 22 more ...; updatedAt: PgColumn<...>; }; dia...' is missing the following properties from type 'PgEnum<any>': enumName, enumValues, schema
+db/corporateCardSchema.ts(41,61): error TS2345: Argument of type 'PgTableWithColumns<{ name: "corporate_cards"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "corporate_cards"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; ... 7 more ...; generated: undefined; }, {}, {}>; ... 16 more ...; deletedAt: PgColumn<...>;...' is not assignable to parameter of type 'Table<TableConfig<Column<any, object, object>>>'.
+  The types of '_.config.columns' are incompatible between these types.
+    Type '{ id: PgColumn<{ name: "id"; tableName: "corporate_cards"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>; ... 16 more ...; deletedAt: PgColumn<...>; }' is not assignable to type 'Record<string, Column<any, object, object>>'.
+      Property 'id' is incompatible with index signature.
+        Type 'PgColumn<{ name: "id"; tableName: "corporate_cards"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to type 'Column<any, object, object>'.
+          The types of 'table._.config.columns' are incompatible between these types.
+            Type 'Record<string, PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>>' is not assignable to type 'Record<string, Column<any, object, object>>'.
+              'string' index signatures are incompatible.
+                Type 'PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>' is not assignable to type 'Column<any, object, object>'.
+                  Property 'config' is protected but type 'Column<T, TRuntimeConfig, TTypeConfig>' is not a class derived from 'Column<T, TRuntimeConfig, TTypeConfig>'.
+db/corporateCardSchema.ts(52,61): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'PgTableWithColumns<{ name: "corporate_cards"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "corporate_cards"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; ... 7 more ...; generated: undefined; }, {}, {}>; ... 16 more ...; deletedAt: PgColumn<...>;...' is not assignable to parameter of type 'PgEnum<any>'.
+      Type 'PgTable<{ name: "corporate_cards"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "corporate_cards"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; ... 7 more ...; generated: undefined; }, {}, {}>; ... 16 more ...; deletedAt: PgColumn<...>; }; dialect...' is missing the following properties from type 'PgEnum<any>': enumName, enumValues, schema
+db/index.ts(57,3): error TS2724: '"./schema.js"' has no exported member named 'organizationPlanEnum'. Did you mean 'OrganizationPlan'?
+db/invoiceSchema.ts(6,34): error TS2307: Cannot find module '@shared/types/invoice' or its corresponding type declarations.
+db/invoiceSchema.ts(69,55): error TS2345: Argument of type 'PgTableWithColumns<{ name: "invoices"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "invoices"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 25 more ...; updatedAt: PgColumn<....' is not assignable to parameter of type 'Table<TableConfig<Column<any, object, object>>>'.
+  The types of '_.config.columns' are incompatible between these types.
+    Type '{ id: PgColumn<{ name: "id"; tableName: "invoices"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>; ... 25 more ...; updatedAt: PgColumn<...>; }' is not assignable to type 'Record<string, Column<any, object, object>>'.
+      Property 'id' is incompatible with index signature.
+        Type 'PgColumn<{ name: "id"; tableName: "invoices"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to type 'Column<any, object, object>'.
+          The types of 'table._.config.columns' are incompatible between these types.
+            Type 'Record<string, PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>>' is not assignable to type 'Record<string, Column<any, object, object>>'.
+              'string' index signatures are incompatible.
+                Type 'PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>' is not assignable to type 'Column<any, object, object>'.
+                  Property 'config' is protected but type 'Column<T, TRuntimeConfig, TTypeConfig>' is not a class derived from 'Column<T, TRuntimeConfig, TTypeConfig>'.
+db/invoiceSchema.ts(76,55): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'PgTableWithColumns<{ name: "invoices"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "invoices"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 25 more ...; updatedAt: PgColumn<....' is not assignable to parameter of type 'PgEnum<any>'.
+      Type 'PgTable<{ name: "invoices"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "invoices"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 25 more ...; updatedAt: PgColumn<...>; }; dia...' is missing the following properties from type 'PgEnum<any>': enumName, enumValues, schema
+db/proposalSchema.ts(92,56): error TS2345: Argument of type 'PgTableWithColumns<{ name: "proposals"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "proposals"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 24 more ...; updatedAt: PgColumn...' is not assignable to parameter of type 'Table<TableConfig<Column<any, object, object>>>'.
+  The types of '_.config.columns' are incompatible between these types.
+    Type '{ id: PgColumn<{ name: "id"; tableName: "proposals"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>; ... 24 more ...; updatedAt: PgColumn<...>; }' is not assignable to type 'Record<string, Column<any, object, object>>'.
+      Property 'id' is incompatible with index signature.
+        Type 'PgColumn<{ name: "id"; tableName: "proposals"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to type 'Column<any, object, object>'.
+          The types of 'table._.config.columns' are incompatible between these types.
+            Type 'Record<string, PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>>' is not assignable to type 'Record<string, Column<any, object, object>>'.
+              'string' index signatures are incompatible.
+                Type 'PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}>' is not assignable to type 'Column<any, object, object>'.
+                  Property 'config' is protected but type 'Column<T, TRuntimeConfig, TTypeConfig>' is not a class derived from 'Column<T, TRuntimeConfig, TTypeConfig>'.
+db/proposalSchema.ts(110,56): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'PgTableWithColumns<{ name: "proposals"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "proposals"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 24 more ...; updatedAt: PgColumn...' is not assignable to parameter of type 'PgEnum<any>'.
+      Type 'PgTable<{ name: "proposals"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "proposals"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 24 more ...; updatedAt: PgColumn<...>; }; d...' is missing the following properties from type 'PgEnum<any>': enumName, enumValues, schema
+middleware/secureAuth.ts(17,29): error TS6307: File 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/utils/secureJwt.ts' is not listed within the file list of project 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/tsconfig.json'. Projects must list all files or use an 'include' pattern.
+  File is ECMAScript module because 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/package.json' has field "type" with value "module"
+middleware/secureAuth.ts(58,5): error TS2739: Type '{ id: any; userId: any; email: any; role: any; organizationId: any; displayName: any; jti: any; iat: any; exp: any; permissions: never[]; }' is missing the following properties from type 'User': hasRole, hasPermission, isInOrganization
+src/auth/auth.container.ts(23,48): error TS1361: 'RefreshTokenRepositoryImpl' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.container.ts(29,40): error TS1361: 'UserRepositoryImpl' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.container.ts(35,37): error TS1361: 'AuthService' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.container.ts(35,78): error TS2345: Argument of type 'UserRepositoryImpl' is not assignable to parameter of type 'UserRepository'.
+  Type 'UserRepositoryImpl' is missing the following properties from type 'UserRepository': findByEmailAndOrganization, verifyPassword, updateSettings, getProfile, and 2 more.
+src/auth/auth.container.ts(41,40): error TS1361: 'AuthController' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(4,37): error TS2307: Cannot find module './services/jwtAuthService.js' or its corresponding type declarations.
+src/auth/auth.module.ts(12,2): error TS1361: 'Module' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(14,9): error TS1361: 'ConfigModule' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(15,9): error TS1361: 'RepositoriesModule' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(16,9): error TS1361: 'EmailModule' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(18,19): error TS1361: 'AuthController' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(20,9): error TS1361: 'JwtAuthService' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(21,9): error TS1361: 'AuthUserRepositoryProvider' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(22,9): error TS1361: 'RefreshTokenRepositoryProvider' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.module.ts(24,15): error TS1361: 'JwtAuthService' cannot be used as a value because it was imported using 'import type'.
+src/auth/auth.routes.ts(1,10): error TS1485: 'Router' resolves to a type-only declaration and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/auth/auth.routes.ts(1,18): error TS1484: 'Response' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/auth/auth.routes.ts(1,28): error TS1484: 'NextFunction' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/auth/auth.routes.ts(1,42): error TS1484: 'Request' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/auth/auth.routes.ts(1,69): error TS2614: Module '"../../express-augmentations.ts"' has no exported member 'RequestHandler'. Did you mean to use 'import RequestHandler from "../../express-augmentations.ts"' instead?
+src/auth/auth.routes.ts(1,91): error TS6307: File 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/express-augmentations.ts' is not listed within the file list of project 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/tsconfig.json'. Projects must list all files or use an 'include' pattern.
+  File is ECMAScript module because 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/package.json' has field "type" with value "module"
+src/auth/auth.routes.ts(6,32): error TS2307: Cannot find module './services/jwtAuthService.js' or its corresponding type declarations.
+src/auth/auth.routes.ts(11,44): error TS6307: File 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/middleware/inputValidation.ts' is not listed within the file list of project 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/tsconfig.json'. Projects must list all files or use an 'include' pattern.
+  File is ECMAScript module because 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/package.json' has field "type" with value "module"
+src/auth/auth.routes.ts(12,30): error TS6307: File 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/middleware/secureAuth.ts' is not listed within the file list of project 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/tsconfig.json'. Projects must list all files or use an 'include' pattern.
+  File is ECMAScript module because 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/package.json' has field "type" with value "module"
+src/auth/auth.routes.ts(19,8): error TS2307: Cannot find module '@shared/types/auth/dto' or its corresponding type declarations.
+src/auth/auth.routes.ts(44,6): error TS2300: Duplicate identifier 'ControllerMethod'.
+src/auth/auth.routes.ts(46,16): error TS1362: 'Router' cannot be used as a value because it was exported using 'export type'.
+src/auth/auth.routes.ts(67,6): error TS2300: Duplicate identifier 'ControllerMethod'.
+src/auth/auth.routes.ts(76,29): error TS7006: Parameter 'req' implicitly has an 'any' type.
+src/auth/auth.routes.ts(76,34): error TS7006: Parameter 'res' implicitly has an 'any' type.
+src/auth/auth.routes.ts(76,39): error TS7006: Parameter 'next' implicitly has an 'any' type.
+src/auth/auth.routes.ts(78,65): error TS2345: Argument of type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to parameter of type 'CustomRequest'.
+  Types of property 'query' are incompatible.
+    Type 'ParsedQs' is not assignable to type '{ [key: string]: string | string[] | undefined; }'.
+      'string' index signatures are incompatible.
+        Type 'string | ParsedQs | (string | ParsedQs)[] | undefined' is not assignable to type 'string | string[] | undefined'.
+          Type 'ParsedQs' is not assignable to type 'string | string[] | undefined'.
+            Type 'ParsedQs' is missing the following properties from type 'string[]': length, pop, push, concat, and 29 more.
+src/auth/auth.routes.ts(91,58): error TS2339: Property 'register' does not exist on type 'AuthController'.
+src/auth/auth.routes.ts(120,65): error TS2339: Property 'changePassword' does not exist on type 'AuthController'.
+src/auth/controllers/__tests__/auth.controller.spec.ts(4,53): error TS2307: Cannot find module '@shared/types/auth/jwt/jwt.ts' or its corresponding type declarations.
+src/auth/controllers/__tests__/auth.controller.spec.ts(22,22): error TS2339: Property 'USER' does not exist on type 'typeof UserRole'.
+src/auth/controllers/__tests__/auth.controller.spec.ts(108,24): error TS2339: Property 'register' does not exist on type 'AuthController'.
+src/auth/controllers/__tests__/auth.controller.spec.ts(109,20): error TS2339: Property 'register' does not exist on type 'AuthController'.
+src/auth/controllers/auth.controller.ts(8,3): error TS2305: Module '"@shared/types/auth/dto/index.js"' has no exported member 'AuthResponse'.
+src/auth/index.ts(17,10): error TS2305: Module '"./auth.container.ts"' has no exported member 'registerAuthRoutes'.
+src/auth/jwt/index.ts(6,38): error TS2307: Cannot find module '../../../../db/redis.js' or its corresponding type declarations.
+src/auth/jwt/index.ts(7,24): error TS2307: Cannot find module '../../../../utils/logger.js' or its corresponding type declarations.
+src/auth/jwt/index.ts(354,52): error TS7006: Parameter 'tokenId' implicitly has an 'any' type.
+src/auth/jwt/index.ts(356,48): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/auth/jwt/index.ts(590,44): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/auth/jwt/index.ts(651,52): error TS7006: Parameter 'tokenId' implicitly has an 'any' type.
+src/auth/jwt/index.ts(653,48): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/auth/jwt/utils.ts(4,38): error TS6307: File 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/utils/redis.ts' is not listed within the file list of project 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/tsconfig.json'. Projects must list all files or use an 'include' pattern.
+  The file is in the program because:
+    Imported via '../../../utils/redis.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/auth/jwt/utils.ts'
+    Imported via '../../utils/redis.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/auth/auth.service.ts'
+  File is ECMAScript module because 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/package.json' has field "type" with value "module"
+src/auth/jwt/utils.ts(5,24): error TS6307: File 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/utils/logger.ts' is not listed within the file list of project 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/tsconfig.json'. Projects must list all files or use an 'include' pattern.
+  The file is in the program because:
+    Imported via '../../../utils/logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/auth/jwt/utils.ts'
+    Imported via '../../../utils/logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/auth/services/auth.service.ts'
+    Imported via '../../../utils/logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/auth/repositories/refresh-token.repository.ts'
+    Imported via '../../../utils/logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/common/repositories/base.repository.ts'
+    Imported via '../../../utils/logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/auth/repositories/user.repository.ts'
+    Imported via '../../../../utils/logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/common/repositories/user/user.repository.ts'
+    Imported via '../utils/logger.ts' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/db/redis.ts'
+    Imported via './logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/utils/secureJwt.ts'
+    Imported via '../utils/logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/middleware/secureAuth.ts'
+    Imported via '../../utils/logger.js' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/auth/auth.service.ts'
+    Imported via '../../../utils/logger.ts' from file 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/src/auth/middleware/index.ts'
+  File is ECMAScript module because 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/package.json' has field "type" with value "module"
+src/auth/middleware/index.ts(3,67): error TS2307: Cannot find module '@shared/types/auth' or its corresponding type declarations.
+src/auth/middleware/index.ts(39,29): error TS7030: Not all code paths return a value.
+src/auth/middleware/index.ts(77,13): error TS2353: Object literal may only specify known properties, and 'sessionId' does not exist in type '{ id: string; email: string; role: string; organizationId?: string | null | undefined; }'.
+src/auth/middleware/index.ts(94,12): error TS7030: Not all code paths return a value.
+src/auth/repositories/refresh-token.ts(3,20): error TS6307: File 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/db.ts' is not listed within the file list of project 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/tsconfig.json'. Projects must list all files or use an 'include' pattern.
+  File is ECMAScript module because 'C:/Users/jbirc/Desktop/NestleIn/NestMapRepo/server/package.json' has field "type" with value "module"
+src/auth/repositories/refresh-token.ts(6,2): error TS1361: 'Injectable' cannot be used as a value because it was imported using 'import type'.
+src/auth/repositories/refresh-token.ts(7,14): error TS2420: Class 'RefreshTokenRepositoryImpl' incorrectly implements interface 'RefreshTokenRepository'.
+  Type 'RefreshTokenRepositoryImpl' is missing the following properties from type 'RefreshTokenRepository': revokeByUserId, revokeByToken, deleteExpired
+src/auth/repositories/refresh-token.ts(8,35): error TS1361: 'Logger' cannot be used as a value because it was imported using 'import type'.
+src/auth/repositories/refresh-token.ts(77,24): error TS2339: Property 'rowCount' does not exist on type 'RowList<never[]>'.
+src/auth/repositories/refresh-token.ts(110,47): error TS2339: Property 'rowCount' does not exist on type 'RowList<never[]>'.
+src/auth/repositories/refresh-token.ts(111,27): error TS2339: Property 'rowCount' does not exist on type 'RowList<never[]>'.
+src/auth/repositories/user.repository.ts(4,10): error TS1484: 'UserRepository' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/auth/repositories/user.repository.ts(13,14): error TS2420: Class 'UserRepositoryImpl' incorrectly implements interface 'UserRepository'.
+  Type 'UserRepositoryImpl' is missing the following properties from type 'UserRepository': findByEmailAndOrganization, verifyPassword, updateSettings, getProfile, and 2 more.
+src/auth/repositories/user.repository.ts(13,41): error TS1361: 'BaseRepositoryImpl' cannot be used as a value because it was imported using 'import type'.
+src/auth/services/__tests__/auth.service.spec.ts(3,10): error TS1484: 'UserRepository' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/auth/services/__tests__/auth.service.spec.ts(4,10): error TS1484: 'RefreshTokenRepository' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/auth/services/__tests__/auth.service.spec.ts(19,20): error TS2339: Property 'USER' does not exist on type 'typeof UserRole'.
+src/auth/services/__tests__/auth.service.spec.ts(37,22): error TS2339: Property 'USER' does not exist on type 'typeof UserRole'.
+src/auth/services/__tests__/auth.service.spec.ts(82,9): error TS2353: Object literal may only specify known properties, and 'tenantId' does not exist in type 'LoginDto'.
+src/auth/services/__tests__/auth.service.spec.ts(85,22): error TS2339: Property 'findByEmailAndTenant' does not exist on type 'Mocked<UserRepository>'.
+src/auth/services/__tests__/auth.service.spec.ts(95,9): error TS2353: Object literal may only specify known properties, and 'updatedAt' does not exist in type 'RefreshToken | Promise<RefreshToken>'.
+src/auth/services/__tests__/auth.service.spec.ts(105,29): error TS2339: Property 'findByEmailAndTenant' does not exist on type 'Mocked<UserRepository>'.
+src/auth/services/__tests__/auth.service.spec.ts(107,18): error TS2339: Property 'tenantId' does not exist on type 'LoginDto'.
+src/auth/services/__tests__/auth.service.spec.ts(115,9): error TS2353: Object literal may only specify known properties, and 'tenantId' does not exist in type 'LoginDto'.
+src/auth/services/__tests__/auth.service.spec.ts(118,22): error TS2339: Property 'findByEmailAndTenant' does not exist on type 'Mocked<UserRepository>'.
+src/auth/services/__tests__/auth.service.spec.ts(134,9): error TS2353: Object literal may only specify known properties, and 'tenantId' does not exist in type 'RegisterDto'.
+src/auth/services/__tests__/auth.service.spec.ts(137,22): error TS2339: Property 'findByEmailAndTenant' does not exist on type 'Mocked<UserRepository>'.
+src/auth/services/__tests__/auth.service.spec.ts(152,33): error TS2339: Property 'tenantId' does not exist on type 'RegisterDto'.
+src/auth/services/__tests__/auth.service.spec.ts(163,9): error TS2353: Object literal may only specify known properties, and 'tenantId' does not exist in type 'RegisterDto'.
+src/auth/services/__tests__/auth.service.spec.ts(166,22): error TS2339: Property 'findByEmailAndTenant' does not exist on type 'Mocked<UserRepository>'.
+src/auth/services/auth.service.ts(52,52): error TS2339: Property 'findById' does not exist on type 'UserRepository'.
+src/auth/services/auth.service.ts(146,48): error TS2339: Property 'findById' does not exist on type 'UserRepository'.
+src/common/controllers/booking.controller.ts(2,15): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Request'.
+src/common/controllers/booking.controller.ts(2,24): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Response'.
+src/common/controllers/booking.controller.ts(2,34): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'NextFunction'.
+src/common/controllers/booking.controller.ts(7,42): error TS2305: Module '"../middleware/auth.middleware.ts"' has no exported member 'enforceOrganizationSecurity'.
+src/common/controllers/booking.controller.ts(8,40): error TS2307: Cannot find module '../middleware/validation.middleware' or its corresponding type declarations.
+src/common/controllers/booking.controller.ts(11,57): error TS2307: Cannot find module '@shared/schema' or its corresponding type declarations.
+src/common/controllers/booking.controller.ts(16,2): error TS1361: 'Controller' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(18,35): error TS1361: 'Logger' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(20,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(25,6): error TS1361: 'Get' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(27,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(29,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(30,5): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(31,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(32,5): error TS6133: 'res' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(33,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(34,5): error TS6133: 'next' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(37,13): error TS2304: Cannot find name 'asyncHandler'.
+src/common/controllers/booking.controller.ts(37,33): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(39,59): error TS2339: Property 'getBookingById' does not exist on type 'BookingService'.
+src/common/controllers/booking.controller.ts(43,24): error TS1361: 'ResponseFormatter' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(50,6): error TS1361: 'Get' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(52,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(54,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(55,5): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(56,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(57,5): error TS6133: 'res' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(58,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(59,5): error TS6133: 'next' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(62,13): error TS2304: Cannot find name 'asyncHandler'.
+src/common/controllers/booking.controller.ts(62,33): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(65,24): error TS1361: 'ResponseFormatter' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(72,6): error TS1361: 'Get' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(74,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(76,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(77,5): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(78,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(79,5): error TS6133: 'res' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(80,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(81,5): error TS6133: 'next' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(84,13): error TS2304: Cannot find name 'asyncHandler'.
+src/common/controllers/booking.controller.ts(84,33): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(87,24): error TS1361: 'ResponseFormatter' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(94,6): error TS1361: 'Post' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(96,6): error TS1361: 'Body' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(98,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(99,5): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(100,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(101,5): error TS6133: 'res' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(102,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(103,5): error TS6133: 'next' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(107,13): error TS2304: Cannot find name 'asyncHandler'.
+src/common/controllers/booking.controller.ts(107,33): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(109,59): error TS2339: Property 'createBooking' does not exist on type 'BookingService'.
+src/common/controllers/booking.controller.ts(110,24): error TS1361: 'ResponseFormatter' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(117,6): error TS1361: 'Put' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(119,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(121,6): error TS1361: 'Body' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(124,51): error TS2339: Property 'updateBooking' does not exist on type 'BookingService'.
+src/common/controllers/booking.controller.ts(133,6): error TS1361: 'Delete' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(135,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(140,51): error TS2339: Property 'deleteBooking' does not exist on type 'BookingService'.
+src/common/controllers/booking.controller.ts(149,6): error TS1361: 'Put' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(151,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(153,6): error TS1361: 'Body' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(155,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(156,5): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(157,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(158,5): error TS6133: 'res' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(159,6): error TS1361: 'Inject' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(160,5): error TS6133: 'next' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(163,13): error TS2304: Cannot find name 'asyncHandler'.
+src/common/controllers/booking.controller.ts(163,33): error TS6133: 'req' is declared but its value is never read.
+src/common/controllers/booking.controller.ts(165,59): error TS2339: Property 'confirmBooking' does not exist on type 'BookingService'.
+src/common/controllers/booking.controller.ts(169,24): error TS1361: 'ResponseFormatter' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(176,6): error TS1361: 'Put' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(178,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(180,6): error TS1361: 'Body' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(183,51): error TS2339: Property 'cancelBooking' does not exist on type 'BookingService'.
+src/common/controllers/booking.controller.ts(192,6): error TS1361: 'Get' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(194,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(202,6): error TS1361: 'Get' cannot be used as a value because it was imported using 'import type'.
+src/common/controllers/booking.controller.ts(204,6): error TS1361: 'Param' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/auth.middleware.test.ts(1,15): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Request'.
+src/common/middleware/auth.middleware.test.ts(1,24): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Response'.
+src/common/middleware/auth.middleware.test.ts(1,34): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'NextFunction'.
+src/common/middleware/auth.middleware.test.ts(14,13): error TS2717: Subsequent property declarations must have the same type.  Property 'user' must be of type 'User | undefined', but here has type 'AuthUser | undefined'.
+src/common/middleware/auth.middleware.test.ts(18,99): error TS2307: Cannot find module './auth.middleware' or its corresponding type declarations.
+src/common/middleware/auth.middleware.test.ts(85,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/auth.middleware.test.ts(120,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/auth.middleware.test.ts(135,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/auth.middleware.test.ts(177,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/auth.middleware.test.ts(195,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/auth.middleware.test.ts(223,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/auth.middleware.test.ts(234,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/auth.middleware.test.ts(246,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/error-handler.middleware.test.ts(1,15): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Request'.
+src/common/middleware/error-handler.middleware.test.ts(1,24): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Response'.
+src/common/middleware/error-handler.middleware.test.ts(1,34): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'NextFunction'.
+src/common/middleware/error-handler.middleware.test.ts(3,32): error TS2307: Cannot find module './error-handler.middleware' or its corresponding type declarations.
+src/common/middleware/error-handler.middleware.test.ts(4,70): error TS2307: Cannot find module './error-handler.middleware' or its corresponding type declarations.
+src/common/middleware/error-handler.middleware.test.ts(26,45): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/error-handler.middleware.test.ts(56,42): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/error-handler.middleware.test.ts(58,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/error-handler.middleware.test.ts(80,52): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/error-handler.middleware.test.ts(84,45): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/permission.middleware.ts(1,10): error TS1484: 'Request' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/common/middleware/permission.middleware.ts(1,19): error TS1484: 'Response' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/common/middleware/permission.middleware.ts(1,29): error TS1484: 'NextFunction' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/common/middleware/permission.middleware.ts(2,36): error TS2307: Cannot find module 'inversify' or its corresponding type declarations.
+src/common/middleware/permission.middleware.ts(3,23): error TS2307: Cannot find module '../../types.js' or its corresponding type declarations.
+src/common/middleware/permission.middleware.ts(5,43): error TS2834: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Consider adding an extension to the import path.
+src/common/middleware/permission.middleware.ts(6,52): error TS2307: Cannot find module '@shared/utils/permissions' or its corresponding type declarations.
+src/common/middleware/permission.middleware.ts(7,75): error TS2307: Cannot find module '@shared/types/auth/permissions' or its corresponding type declarations.
+src/common/middleware/permission.middleware.ts(12,7): error TS2717: Subsequent property declarations must have the same type.  Property 'user' must be of type 'User | undefined', but here has type '{ [key: string]: any; id: string; email: string; role: UserRole; organizationId: string | null; permissions?: string[] | undefined; } | undefined'.
+src/common/middleware/permission.middleware.ts(200,5): error TS6133: 'ownerField' is declared but its value is never read.
+src/common/middleware/standardized-error-handler.middleware.ts(1,15): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Request'.
+src/common/middleware/standardized-error-handler.middleware.ts(1,24): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Response'.
+src/common/middleware/standardized-error-handler.middleware.ts(1,34): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'NextFunction'.
+src/common/middleware/standardized-error-handler.middleware.ts(10,6): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/standardized-error-handler.middleware.ts(11,6): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/standardized-error-handler.middleware.ts(12,6): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/standardized-error-handler.middleware.ts(13,6): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/standardized-error-handler.middleware.ts(14,6): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/standardized-error-handler.middleware.ts(15,6): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/standardized-error-handler.middleware.ts(33,23): error TS1361: 'ErrorType' cannot be used as a value because it was imported using 'import type'.
+src/common/middleware/standardized-error-handler.middleware.ts(77,37): error TS2304: Cannot find name 'ExtendedErrorResponse'.
+src/common/middleware/standardized-error-handler.middleware.ts(80,41): error TS2304: Cannot find name 'ExtendedErrorResponse'.
+src/common/middleware/standardized-error-handler.middleware.ts(88,37): error TS2304: Cannot find name 'ExtendedErrorResponse'.
+src/common/middleware/standardized-error-handler.middleware.ts(100,123): error TS6133: 'logger' is declared but its value is never read.
+src/common/modules/booking.module.ts(9,2): error TS1361: 'Module' cannot be used as a value because it was imported using 'import type'.
+src/common/modules/booking.module.ts(10,15): error TS1361: 'RepositoriesModule' cannot be used as a value because it was imported using 'import type'.
+src/common/modules/booking.module.ts(11,19): error TS1361: 'BookingController' cannot be used as a value because it was imported using 'import type'.
+src/common/modules/booking.module.ts(15,23): error TS1361: 'BookingService' cannot be used as a value because it was imported using 'import type'.
+src/common/pipes/validation.pipe.ts(23,26): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(object: object, validatorOptions?: ValidatorOptions | undefined): Promise<ValidationError[]>', gave the following error.
+    Object literal may only specify known properties, and 'transform' does not exist in type 'ValidatorOptions'.
+  Overload 2 of 2, '(schemaName: string, object: object, validatorOptions?: ValidatorOptions | undefined): Promise<ValidationError[]>', gave the following error.
+    Argument of type 'unknown[]' is not assignable to parameter of type 'string'.
+src/common/pipes/validation.pipe.ts(33,17): error TS1361: 'BadRequestException' cannot be used as a value because it was imported using 'import type'.
+src/common/repositories/booking/booking.repository.ts(36,13): error TS2416: Property 'mapToModel' in type 'BookingRepositoryImpl' is not assignable to the same property in base type 'BaseRepositoryImpl<Booking, string, any, any>'.
+  Type '(data: any) => Booking | null' is not assignable to type '(data: any) => Promise<Booking>'.
+    Type 'Booking | null' is not assignable to type 'Promise<Booking>'.
+      Type 'null' is not assignable to type 'Promise<Booking>'.
+src/common/repositories/booking/booking.repository.ts(36,13): error TS2416: Property 'mapToModel' in type 'BookingRepositoryImpl' is not assignable to the same property in base type 'BookingRepository'.
+  Type '(data: any) => Booking | null' is not assignable to type '(data: any) => Booking | Promise<Booking>'.
+    Type 'Booking | null' is not assignable to type 'Booking | Promise<Booking>'.
+      Type 'null' is not assignable to type 'Booking | Promise<Booking>'.
+src/common/repositories/booking/booking.repository.ts(288,7): error TS2322: Type '(Booking | null)[]' is not assignable to type 'Booking[]'.
+  Type 'Booking | null' is not assignable to type 'Booking'.
+    Type 'null' is not assignable to type 'Booking'.
+src/common/repositories/index.ts(11,1): error TS2308: Module './user/user.repository.interface.ts' has already exported a member named 'UserRepository'. Consider explicitly re-exporting to resolve the ambiguity.
+src/common/repositories/organization/organization.repository.ts(23,13): error TS2416: Property 'mapToModel' in type 'OrganizationRepositoryImpl' is not assignable to the same property in base type 'BaseRepositoryImpl<Organization, string, CreateOrganizationData, UpdateOrganizationData>'.
+  Type '(data: any) => Organization' is not assignable to type '(data: any) => Promise<Organization>'.
+    Type 'Organization' is missing the following properties from type 'Promise<Organization>': then, catch, finally, [Symbol.toStringTag]
+src/common/repositories/organization/organization.repository.ts(92,31): error TS2339: Property 'avatarUrl' does not exist on type 'PgTableWithColumns<{ name: "users"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "users"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; ... 6 more ...; generated: undefined; }, {}, {}>; ... 21 more ...; updatedAt: PgColumn<...>; }...'.
+src/common/repositories/organization/organization.repository.ts(105,7): error TS2322: Type '{ id: string; userId: string; organizationId: string; role: UserRole; joinDate: Date; permissions: string[]; user: { id: any; email: any; username: any; firstName: any; lastName: any; fullName: any; avatarUrl: any; ... 9 more ...; metadata: {}; }; metadata: {}; }[]' is not assignable to type 'OrganizationMember[]'.
+  Type '{ id: string; userId: string; organizationId: string; role: UserRole; joinDate: Date; permissions: string[]; user: { id: any; email: any; username: any; firstName: any; lastName: any; fullName: any; ... 10 more ...; metadata: {}; }; metadata: {}; }' is not assignable to type 'OrganizationMember'.
+    The types of 'user.organizationId' are incompatible between these types.
+      Type 'string' is not assignable to type 'number'.
+src/common/repositories/organization/organization.repository.ts(109,30): error TS2304: Cannot find name 'UserRole'.
+src/common/repositories/organization/organization.repository.ts(120,32): error TS2304: Cannot find name 'UserRole'.
+src/common/repositories/organization/organization.repository.ts(170,7): error TS2739: Type '{ id: string; role: "admin" | "manager" | "member" | "viewer" | "billing"; organizationId: string; createdAt: Date; updatedAt: Date; status: "active" | "inactive" | "suspended" | "invited" | null; ... 4 more ...; joinedAt: Date | null; }' is missing the following properties from type 'OrganizationMember': joinDate, permissions
+src/common/repositories/repository.providers.ts(5,10): error TS2724: '"./user/user.repository.ts"' has no exported member named 'UserRepositoryImpl'. Did you mean 'UserRepository'?
+src/common/repositories/user/user.repository.interface.ts(12,8): error TS2307: Cannot find module '@shared/types/users' or its corresponding type declarations.
+src/common/repositories/user/user.repository.interface.ts(13,35): error TS2307: Cannot find module '@shared/types/organizations' or its corresponding type declarations.
+src/common/repositories/user/user.repository.interface.ts(14,37): error TS2307: Cannot find module '../base.repository.interface' or its corresponding type declarations.
+src/common/repositories/user/user.repository.ts(609,11): error TS2353: Object literal may only specify known properties, and 'settings' does not exist in type '{ email?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | undefined; username?: string | SQL<unknown> | PgColumn<...> | undefined; ... 20 more ...; tokenVersion?: number | ... 2 more ... | undefined; }'.
+src/common/repositories/user/UserRepository.ts(135,16): error TS2339: Property 'settings' does not exist on type '{ id: string; email: string; role: "super_admin" | "admin" | "manager" | "member" | "guest"; organizationId: string | null; createdAt: Date; updatedAt: Date; username: string; ... 15 more ...; tokenVersion: number; }'.
+src/common/repositories/user/UserRepository.ts(137,46): error TS2339: Property 'settings' does not exist on type '{ id: string; email: string; role: "super_admin" | "admin" | "manager" | "member" | "guest"; organizationId: string | null; createdAt: Date; updatedAt: Date; username: string; ... 15 more ...; tokenVersion: number; }'.
+src/common/repositories/user/UserRepository.ts(138,31): error TS2339: Property 'settings' does not exist on type '{ id: string; email: string; role: "super_admin" | "admin" | "manager" | "member" | "guest"; organizationId: string | null; createdAt: Date; updatedAt: Date; username: string; ... 15 more ...; tokenVersion: number; }'.
+src/common/repositories/user/UserRepository.ts(139,20): error TS2339: Property 'settings' does not exist on type '{ id: string; email: string; role: "super_admin" | "admin" | "manager" | "member" | "guest"; organizationId: string | null; createdAt: Date; updatedAt: Date; username: string; ... 15 more ...; tokenVersion: number; }'.
+src/common/repositories/user/UserRepository.ts(180,9): error TS2345: Argument of type 'SQL<unknown> | undefined' is not assignable to parameter of type 'SQL<unknown>'.
+  Type 'undefined' is not assignable to type 'SQL<unknown>'.
+src/common/repositories/user/UserRepository.ts(308,55): error TS2345: Argument of type '(() => SQL<unknown>) | (() => boolean) | PgColumn<{ name: "id"; tableName: "users"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; ... 5 more ...; generated: undefined; }, {}, {}> | ... 25 more ... | undefined' is not assignable to parameter of type 'SQLWrapper | AnyColumn'.
+  Type 'undefined' is not assignable to type 'SQLWrapper | AnyColumn'.
+src/common/repositories/user/UserRepository.ts(308,76): error TS2345: Argument of type '(() => SQL<unknown>) | (() => boolean) | PgColumn<{ name: "id"; tableName: "users"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; ... 5 more ...; generated: undefined; }, {}, {}> | ... 25 more ... | undefined' is not assignable to parameter of type 'SQLWrapper | AnyColumn'.
+  Type 'undefined' is not assignable to type 'SQLWrapper | AnyColumn'.
+src/common/repositories/user/UserRepository.ts(433,14): error TS18047: 'result.rowCount' is possibly 'null'.
+src/common/repositories/user/UserRepository.ts(473,14): error TS18047: 'result.rowCount' is possibly 'null'.
+src/common/repositories/user/UserRepository.ts(490,14): error TS18047: 'result.rowCount' is possibly 'null'.
+src/common/services/booking.service.ts(10,8): error TS2307: Cannot find module '@shared/types/bookings' or its corresponding type declarations.
+src/common/services/booking.service.ts(16,3): error TS2305: Module '"../../../db/bookingSchema.js"' has no exported member 'UpdateBooking'.
+src/common/services/booking.service.ts(20,10): error TS2724: '"../repositories/booking/booking.repository.interface.js"' has no exported member named 'BOOKING_REPOSITORY'. Did you mean 'BookingRepository'?
+src/common/services/booking.service.ts(23,3): error TS2305: Module '"../repositories/booking/booking.repository.interface.js"' has no exported member 'CreateBookingData'.
+src/common/services/booking.service.ts(24,3): error TS2305: Module '"../repositories/booking/booking.repository.interface.js"' has no exported member 'UpdateBookingData'.
+src/common/services/booking.service.ts(32,8): error TS2307: Cannot find module './dto/booking.dto.js' or its corresponding type declarations.
+src/common/services/booking.service.ts(116,15): error TS2322: Type '{ createdAt: any; updatedAt: any; metadata: Record<string, unknown>; providerBookingId: any; reference: string; type: BookingType; status: BookingStatus; ... 16 more ...; deleted_at?: Timestamp | null; }' is not assignable to type '{ id: string; organizationId: string; metadata: Record<string, unknown> | null; createdAt: Date; updatedAt: Date; status: "pending" | "completed" | "cancelled" | "confirmed" | "refunded"; ... 15 more ...; cancellationReason: string | null; } & { ...; }'.
+  Type '{ createdAt: any; updatedAt: any; metadata: Record<string, unknown>; providerBookingId: any; reference: string; type: BookingType; status: BookingStatus; bookingDate: string | Date; ... 15 more ...; deleted_at?: Timestamp | ... 1 more ... | undefined; }' is missing the following properties from type '{ id: string; organizationId: string; metadata: Record<string, unknown> | null; createdAt: Date; updatedAt: Date; status: "pending" | "completed" | "cancelled" | "confirmed" | "refunded"; ... 15 more ...; cancellationReason: string | null; }': providerReferenceId, cancellationReason
+src/common/services/booking.service.ts(135,19): error TS2322: Type '{ createdAt: any; updatedAt: any; metadata: Record<string, unknown>; providerBookingId: any; reference: string; type: BookingType; status: BookingStatus; ... 16 more ...; deleted_at?: Timestamp | null; }' is not assignable to type '{ id: string; organizationId: string; metadata: Record<string, unknown> | null; createdAt: Date; updatedAt: Date; status: "pending" | "completed" | "cancelled" | "confirmed" | "refunded"; ... 15 more ...; cancellationReason: string | null; } & { ...; }'.
+  Type '{ createdAt: any; updatedAt: any; metadata: Record<string, unknown>; providerBookingId: any; reference: string; type: BookingType; status: BookingStatus; bookingDate: string | Date; ... 15 more ...; deleted_at?: Timestamp | ... 1 more ... | undefined; }' is missing the following properties from type '{ id: string; organizationId: string; metadata: Record<string, unknown> | null; createdAt: Date; updatedAt: Date; status: "pending" | "completed" | "cancelled" | "confirmed" | "refunded"; ... 15 more ...; cancellationReason: string | null; }': providerReferenceId, cancellationReason
+src/common/services/booking.service.ts(160,17): error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/common/services/booking.service.ts(171,17): error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/common/services/booking.service.ts(172,17): error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/common/services/booking.service.ts(173,17): error TS2322: Type 'string | number | null' is not assignable to type 'string | null'.
+  Type 'number' is not assignable to type 'string'.
+src/common/services/booking.service.ts(174,17): error TS2322: Type 'string | number | null' is not assignable to type 'string | null'.
+  Type 'number' is not assignable to type 'string'.
+src/common/services/booking.service.ts(180,17): error TS2322: Type 'unknown' is not assignable to type 'string | null'.
+src/common/services/booking.service.ts(183,87): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'string | number'.
+src/common/services/booking.service.ts(186,87): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'string | number'.
+src/common/services/booking.service.ts(200,19): error TS2322: Type '{ createdAt: any; updatedAt: any; metadata: Record<string, unknown>; providerBookingId: any; reference: string; type: BookingType; status: BookingStatus; ... 16 more ...; deleted_at?: Timestamp | null; }' is not assignable to type '{ id: string; organizationId: string; metadata: Record<string, unknown> | null; createdAt: Date; updatedAt: Date; status: "pending" | "completed" | "cancelled" | "confirmed" | "refunded"; ... 15 more ...; cancellationReason: string | null; } & { ...; }'.
+  Type '{ createdAt: any; updatedAt: any; metadata: Record<string, unknown>; providerBookingId: any; reference: string; type: BookingType; status: BookingStatus; bookingDate: string | Date; ... 15 more ...; deleted_at?: Timestamp | ... 1 more ... | undefined; }' is missing the following properties from type '{ id: string; organizationId: string; metadata: Record<string, unknown> | null; createdAt: Date; updatedAt: Date; status: "pending" | "completed" | "cancelled" | "confirmed" | "refunded"; ... 15 more ...; cancellationReason: string | null; }': providerReferenceId, cancellationReason
+src/common/types/error.types.ts(42,20): error TS1361: 'AppErrorCode' cannot be used as a value because it was imported using 'import type'.
+src/common/types/error.types.ts(44,20): error TS1361: 'AppErrorCode' cannot be used as a value because it was imported using 'import type'.
+src/common/types/error.types.ts(46,20): error TS1361: 'AppErrorCode' cannot be used as a value because it was imported using 'import type'.
+src/common/types/error.types.ts(48,20): error TS1361: 'AppErrorCode' cannot be used as a value because it was imported using 'import type'.
+src/common/types/error.types.ts(50,20): error TS1361: 'AppErrorCode' cannot be used as a value because it was imported using 'import type'.
+src/common/types/error.types.ts(52,20): error TS1361: 'AppErrorCode' cannot be used as a value because it was imported using 'import type'.
+src/common/types/user.types.ts(1,37): error TS2307: Cannot find module '../../../../db/schema.js' or its corresponding type declarations.
+src/common/utils/async-handler.ts(1,15): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Request'.
+src/common/utils/async-handler.ts(1,24): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'Response'.
+src/common/utils/async-handler.ts(1,34): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'NextFunction'.
+src/common/utils/async-handler.ts(2,10): error TS2305: Module '"../../express-augmentations.ts"' has no exported member 'RequestHandler'.
+src/common/validation/auth.validator.ts(50,49): error TS2339: Property 'USER' does not exist on type 'typeof UserRole'.
+src/email/email.module.ts(5,2): error TS1361: 'Module' cannot be used as a value because it was imported using 'import type'.
+src/email/email.module.ts(6,15): error TS1361: 'ConfigModule' cannot be used as a value because it was imported using 'import type'.
+src/email/email.module.ts(11,28): error TS1361: 'NodemailerEmailService' cannot be used as a value because it was imported using 'import type'.
+src/email/email.module.ts(13,22): error TS1361: 'ConfigService' cannot be used as a value because it was imported using 'import type'.
+src/email/email.module.ts(13,37): error TS1361: 'ErrorService' cannot be used as a value because it was imported using 'import type'.
+src/email/email.module.ts(15,9): error TS1361: 'ErrorService' cannot be used as a value because it was imported using 'import type'.
+src/health/health.controller.ts(5,3): error TS1484: 'HealthCheckResult' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/health/health.controller.ts(8,3): error TS1484: 'HealthIndicatorResult' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/health/health.controller.ts(10,52): error TS2307: Cannot find module '@nestjs/swagger' or its corresponding type declarations.
+src/health/health.controller.ts(11,31): error TS2307: Cannot find module './health.service' or its corresponding type declarations.
+src/health/health.controller.ts(12,41): error TS2307: Cannot find module './database.health' or its corresponding type declarations.
+src/health/health.controller.ts(13,27): error TS2307: Cannot find module '../auth/guards/auth.guard' or its corresponding type declarations.
+src/health/health.controller.ts(14,23): error TS2307: Cannot find module '../auth/decorators/roles.decorator' or its corresponding type declarations.
+src/health/health.controller.ts(15,26): error TS2307: Cannot find module '../users/enums/user-role.enum' or its corresponding type declarations.
+src/health/health.controller.ts(74,20): error TS18046: 'error' is of type 'unknown'.
+src/health/health.controller.ts(75,17): error TS18046: 'error' is of type 'unknown'.
+src/health/health.controller.ts(110,35): error TS7006: Parameter 'f' implicitly has an 'any' type.
+src/health/health.module.ts(3,31): error TS2307: Cannot find module '@nestjs/typeorm' or its corresponding type declarations.
+src/health/health.module.ts(4,34): error TS2307: Cannot find module './health.controller' or its corresponding type declarations.
+src/health/health.module.ts(5,31): error TS2307: Cannot find module './health.service' or its corresponding type declarations.
+src/health/health.module.ts(6,41): error TS2307: Cannot find module './database.health' or its corresponding type declarations.
+src/trips/controllers/trip.controller.ts(64,13): error TS2322: Type '(req: AuthenticatedRequest, _res: Response, next: NextFunction) => void' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Types of parameters 'req' and 'req' are incompatible.
+    Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+      Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'CustomRequestFields'.
+        Types of property 'user' are incompatible.
+          Type '{ id: string; email: string; role: string; organizationId?: string | null | undefined; } | undefined' is not assignable to type 'AuthUser'.
+            Type 'undefined' is not assignable to type 'AuthUser'.
+src/trips/controllers/trip.controller.ts(65,13): error TS2322: Type '(req: AuthenticatedRequest, _res: Response, next: NextFunction) => void' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Types of parameters 'req' and 'req' are incompatible.
+    Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+      Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'CustomRequestFields'.
+        Types of property 'user' are incompatible.
+          Type '{ id: string; email: string; role: string; organizationId?: string | null | undefined; } | undefined' is not assignable to type 'AuthUser'.
+            Type 'undefined' is not assignable to type 'AuthUser'.
+src/trips/controllers/trip.controller.ts(89,13): error TS2322: Type '(req: AuthenticatedRequest, _res: Response, next: NextFunction) => void' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Types of parameters 'req' and 'req' are incompatible.
+    Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+      Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'CustomRequestFields'.
+        Types of property 'user' are incompatible.
+          Type '{ id: string; email: string; role: string; organizationId?: string | null | undefined; } | undefined' is not assignable to type 'AuthUser'.
+            Type 'undefined' is not assignable to type 'AuthUser'.
+src/trips/controllers/trip.controller.ts(90,13): error TS2322: Type '(req: AuthenticatedRequest, _res: Response, next: NextFunction) => void' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Types of parameters 'req' and 'req' are incompatible.
+    Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+      Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'CustomRequestFields'.
+        Types of property 'user' are incompatible.
+          Type '{ id: string; email: string; role: string; organizationId?: string | null | undefined; } | undefined' is not assignable to type 'AuthUser'.
+            Type 'undefined' is not assignable to type 'AuthUser'.
+src/trips/controllers/trip.controller.ts(114,13): error TS2322: Type '(req: AuthenticatedRequest, _res: Response, next: NextFunction) => void' is not assignable to type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Types of parameters 'req' and 'req' are incompatible.
+    Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'AuthenticatedRequest'.
+      Type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>' is not assignable to type 'CustomRequestFields'.
+        Types of property 'user' are incompatible.
+          Type '{ id: string; email: string; role: string; organizationId?: string | null | undefined; } | undefined' is not assignable to type 'AuthUser'.
+            Type 'undefined' is not assignable to type 'AuthUser'.
+src/trips/controllers/trip.controller.ts(123,77): error TS2345: Argument of type '{ id: string; email: string; role: string; organizationId?: string | null | undefined; } & AuthUser' is not assignable to parameter of type '{ id: string; email: string; role: "super_admin" | "admin" | "manager" | "member" | "guest"; organizationId: string | null; createdAt: Date; updatedAt: Date; username: string; ... 15 more ...; tokenVersion: number; }'.
+  Property 'tokenVersion' is missing in type '{ id: string; email: string; role: string; organizationId?: string | null | undefined; } & AuthUser' but required in type '{ id: string; email: string; role: "super_admin" | "admin" | "manager" | "member" | "guest"; organizationId: string | null; createdAt: Date; updatedAt: Date; username: string; ... 15 more ...; tokenVersion: number; }'.

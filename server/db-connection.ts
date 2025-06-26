@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import type { Pool } from 'pg';
-import * as schema from "@shared/schema";
+import { Pool } from 'pg';
+import * as schema from "../shared/src/schema.js";
 import config from './config.js';
 import { logger } from './utils/logger.js';
 // Check if Supabase credentials are provided

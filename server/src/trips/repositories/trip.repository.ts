@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
-import { db } from '../../../db.js';
+import { db } from '../../../db/db.js';
 import { trips as tripsTable, users as usersTable } from '../../../db/schema.js';
 import type { Trip, User } from '../../../db/schema.js';
 import type { TripRepository } from '../interfaces/trip.repository.interface.js';

@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from 'express';
 import type { AnyZodObject } from 'zod';
 import { z } from 'zod';
 // TODO: Implement actual validation logic

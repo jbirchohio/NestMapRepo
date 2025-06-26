@@ -1,7 +1,7 @@
-import type { Test } from '@nestjs/testing';
-import type { BookingRepositoryImpl } from './booking.repository.ts';
-import type { Logger } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { Test } from '@nestjs/testing';
+import { BookingRepositoryImpl } from './booking.repository.js';
+import { Logger } from '@nestjs/common';
+
 // Mock the database module
 jest.mock('../../../../db', () => ({
     db: {
@@ -150,8 +150,13 @@ describe('BookingRepository', () => {
     describe('confirmBooking', () => {
         it('should confirm a booking', async () => {
             // Arrange
-            const confirmationDetails = { confirmationCode: 'ABC123' };
-            const mockBooking = { id: '1', status: 'confirmed', confirmationDetails };
+            const confirmationDetails = {
+              providerReferenceId: 'PROV123',
+              confirmationNumber: 'ABC123',
+              confirmedAt: new Date(),
+              details: { reference: 'ABC123' }
+            };
+            const mockBooking = { id: '1', status: 'confirmed', ...confirmationDetails };
             mockDb.returning.mockResolvedValueOnce([mockBooking]);
             // Act
             const result = await repository.confirmBooking('1', confirmationDetails);

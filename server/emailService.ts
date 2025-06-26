@@ -1,19 +1,23 @@
-import type { MailService } from '@sendgrid/mail';
-import type { getBrandingConfig } from '../branding.js';
+import { MailService } from '@sendgrid/mail';
+import { getBrandingConfig } from './branding';
+
+// Initialize mail service
 let mailService: MailService | null = null;
+
 // Initialize SendGrid if API key is available
 if (process.env.SENDGRID_API_KEY) {
     mailService = new MailService();
     mailService.setApiKey(process.env.SENDGRID_API_KEY);
     console.log('✓ SendGrid email service initialized');
-}
-else {
+} else {
     console.warn('⚠ SENDGRID_API_KEY not found - email features will be disabled');
 }
+
 interface BrandingContext {
     organizationId?: number;
     domain?: string;
 }
+
 interface TeamInvitationEmailParams {
     to: string;
     inviterName: string;
@@ -21,6 +25,7 @@ interface TeamInvitationEmailParams {
     invitationToken: string;
     role: string;
 }
+
 interface NotificationEmailParams {
     to: string;
     subject: string;
@@ -30,26 +35,63 @@ interface NotificationEmailParams {
     actionText?: string;
     type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system';
 }
+
+function generateNotificationHTML(params: NotificationEmailParams): string {
+    const branding = getBrandingConfig();
+    const actionButton = params.actionUrl && params.actionText 
+        ? `<a href="${params.actionUrl}" style="display: inline-block; padding: 12px 24px; background-color: ${branding.primaryColor}; color: white; text-decoration: none; border-radius: 4px; margin: 16px 0;">${params.actionText}</a>`
+        : '';
+
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>${params.subject}</title>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { text-align: center; margin-bottom: 24px; }
+                .logo { max-width: 150px; height: auto; }
+                .content { background-color: #f9f9f9; padding: 24px; border-radius: 8px; }
+                .footer { margin-top: 24px; font-size: 12px; color: #666; text-align: center; }
+                .action-button { display: inline-block; padding: 12px 24px; background-color: ${branding.primaryColor}; color: white; text-decoration: none; border-radius: 4px; margin: 16px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <img src="${branding.logo}" alt="${branding.appName} Logo" class="logo">
+            </div>
+            <div class="content">
+                <h1>${params.title}</h1>
+                <p>${params.message}</p>
+                ${actionButton}
+            </div>
+            <div class="footer">
+                <p>  ${new Date().getFullYear()} ${branding.appName}. All rights reserved.</p>
+                <p><a href="${branding.privacyUrl}" style="color: #666;">Privacy Policy</a> | <a href="${branding.termsUrl}" style="color: #666;">Terms of Service</a></p>
+            </div>
+        </body>
+        </html>
+    `;
+}
+
 export async function sendNotificationEmail(params: NotificationEmailParams): Promise<boolean> {
-    if (!process.env.SENDGRID_API_KEY) {
+    if (!mailService) {
         console.log('⚠ SendGrid not configured - email sending disabled');
         return false;
     }
     try {
-        const sgMail = require('@sendgrid/mail');
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
         const msg = {
             to: params.to,
             from: process.env.FROM_EMAIL || 'noreply@nestmap.com',
             subject: params.subject,
             html: generateNotificationHTML(params),
         };
-        await sgMail.send(msg);
-        console.log(`Notification email sent to ${params.to}: ${params.subject}`);
+        await mailService.send(msg);
+        console.log(`✓ Notification email sent to ${params.to}: ${params.subject}`);
         return true;
-    }
-    catch (error) {
-        console.error('Error sending notification email:', error);
+    } catch (error) {
+        console.error('✗ Error sending notification email:', error);
         return false;
     }
 }

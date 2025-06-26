@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRole } from '@shared/types/auth/permissions';
+import { UserRole } from '@shared/types/auth/permissions.js';
 
 // Common validation patterns
 const patterns = {

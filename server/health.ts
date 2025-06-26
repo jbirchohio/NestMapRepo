@@ -1,5 +1,5 @@
-import type { Request, Response } from '../../express-augmentations.ts';
-import { pool } from "db-connection.js";
+import type { Request, Response } from './express-augmentations';
+import { pool } from './db-connection';
 /**
  * Standard health check handler that works across all platforms
  * Used by cloud providers to verify application health

@@ -1,6 +1,3 @@
-import { eq, sql } from 'drizzle-orm';
-import { db } from '../../../db/db.js';
-import { users } from '../../../db/schema.js';
 import type { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
 import { logger } from '../../../utils/logger.js';
 import type { RefreshToken } from '../interfaces/refresh-token.repository.interface.js';

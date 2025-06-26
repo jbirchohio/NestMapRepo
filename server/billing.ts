@@ -58,11 +58,18 @@ export async function createOrganizationSubscription(params: CreateOrganizationS
             },
             expand: ['latest_invoice.payment_intent'],
         });
-        const latestInvoice = subscription.latest_invoice;
-        const paymentIntent =
-            typeof latestInvoice === 'string'
-                ? null
-                : (latestInvoice.payment_intent as Stripe.PaymentIntent | null);
+        // Type the expanded invoice properly
+        const latestInvoice = subscription.latest_invoice as Stripe.Invoice & {
+            payment_intent?: Stripe.PaymentIntent | string | null;
+        };
+        
+        // Handle the payment intent from the expanded invoice
+        const paymentIntent = 
+            typeof latestInvoice === 'string' 
+                ? null 
+                : typeof latestInvoice.payment_intent === 'string'
+                    ? null
+                    : latestInvoice.payment_intent as Stripe.PaymentIntent | null;
         console.log(`✓ Created ${params.plan} subscription for organization ${params.organization_id}`);
         return {
             clientSecret: paymentIntent?.client_secret || '',
@@ -103,13 +110,23 @@ export async function getOrganizationBilling(customerId: string): Promise<Billin
                 plan: 'free'
             };
         }
-        const subscription = subscriptions.data[0] as Stripe.Subscription;
+        // Extend the Stripe.Subscription type to include current_period_end
+        const subscription = subscriptions.data[0] as Stripe.Subscription & {
+            current_period_end: number;
+        };
         const plan = customer.metadata?.plan as 'team' | 'enterprise' || 'free';
+        
+        // Get the current period end from the subscription
+        // The current_period_end is available on the subscription object
+        const currentPeriodEnd = typeof subscription.current_period_end === 'number' 
+            ? subscription.current_period_end 
+            : Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // Fallback: 30 days from now
+        
         return {
             customerId,
             subscriptionId: subscription.id,
             status: subscription.status as any,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+            currentPeriodEnd: new Date(currentPeriodEnd * 1000),
             plan
         };
     }

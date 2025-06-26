@@ -1,4 +1,4 @@
-import { db } from 'db.js';
+import { db } from './db.js';
 import { auditLogs } from './db/auditLog.js';
 interface AuditLogEntry {
     userId: string;

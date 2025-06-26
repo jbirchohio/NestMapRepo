@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction, RequestHandler } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 /**
  * Wraps an async route handler to ensure proper error handling and return values
  * This solves the TypeScript error TS7030: Not all code paths return a value

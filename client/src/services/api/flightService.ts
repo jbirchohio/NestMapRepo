@@ -1,5 +1,11 @@
-import { apiClient } from './apiClient';
-import type { Flight, FlightSearchParams } from '@shared/types/flight';
+import { ApiClient } from './apiClient';
+import type { Flight, FlightSearchParams, Airport } from '@shared/types/flight';
+
+// Create an instance of ApiClient
+const apiClient = new ApiClient({
+  baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
+  timeout: 30000
+});
 
 export const flightService = {
   async searchFlights(params: FlightSearchParams): Promise<Flight[]> {
@@ -13,15 +19,21 @@ export const flightService = {
   },
   
   async createFlightBooking(offerId: string, passengerDetails: any) {
-    const response = await apiClient.post('/api/flights/bookings', {
+    const response = await apiClient.post<{ 
+      data: { 
+        bookingId: string; 
+        status: string;
+        // Add other fields from your API response
+      } 
+    }>('/api/flights/bookings', {
       offer_id: offerId,
       ...passengerDetails
     });
     return response.data;
   },
   
-  async getAirports(query: string) {
-    const response = await apiClient.get(`/api/airports?query=${encodeURIComponent(query)}`);
+  async getAirports(query: string): Promise<Airport[]> {
+    const response = await apiClient.get<{ data: Airport[] }>(`/api/airports?query=${encodeURIComponent(query)}`);
     return response.data;
   }
 };

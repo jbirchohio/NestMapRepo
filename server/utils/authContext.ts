@@ -1,4 +1,4 @@
-import type { Request } from '../../express-augmentations.ts';
+import type { Request } from 'express';
 // Types for our auth context
 export interface AuthUser {
     id: string | number;

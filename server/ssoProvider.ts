@@ -1,6 +1,6 @@
-import type { Router } from '../../express-augmentations.ts';
-import { db } from 'db.js';
-import { users, organizations, userRoleEnum } from '@shared/schema';
+import { Router } from 'express';
+import { db } from './db-connection.js';
+import { users, organizations } from './db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { auditLogger } from './auditLogger.js';
 type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';

@@ -297,7 +297,7 @@ export class ApiClient {
     }
 }
 // Create and export a singleton instance
-const apiClient = new ApiClient({
+export const apiClient = new ApiClient({
     baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
     timeout: 30000
 });

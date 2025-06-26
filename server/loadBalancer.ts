@@ -1,10 +1,12 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
-import { db } from 'db-connection.js';
-import { customDomains, organizations, whiteLabelSettings } from '@shared/schema';
+import type { Request, Response, NextFunction } from 'express';
+import { db } from './db-connection.js';
+import { customDomains, organizations } from '../shared/src/schema.js';
+import { whiteLabelSettings } from './db/schema';
 import { eq, and } from 'drizzle-orm';
+
 export interface DomainConfig {
     domain: string;
-    organizationId: number;
+    organizationId: string;
     ssl_verified: boolean;
     status: string;
     branding: {
@@ -19,6 +21,7 @@ export interface DomainConfig {
         footerText?: string;
     } | null;
 }
+
 /**
  * Load balancer middleware for handling custom domains
  */
@@ -29,7 +32,7 @@ export async function domainRoutingMiddleware(req: Request, res: Response, next:
             return next();
         }
         // Skip routing for default domain or localhost
-        if (host.includes('localhost') || host.includes('nestmap.com') || host.includes('replit.dev') || host.includes('replit.app')) {
+        if (host.includes('localhost') || host.includes('nestmap.com') || host.includes('replit.dev') || host.includes('replit.app') || host.includes('127.0.0.1')) {
             return next();
         }
         // Look up custom domain configuration
@@ -76,18 +79,18 @@ async function getDomainConfig(domain: string): Promise<DomainConfig | null> {
             organizationId: customDomains.organization_id,
             dns_verified: customDomains.dns_verified,
             status: customDomains.status,
-            companyName: whiteLabelSettings.company_name,
-            companyLogo: whiteLabelSettings.company_logo,
-            primaryColor: whiteLabelSettings.primary_color,
-            secondaryColor: whiteLabelSettings.secondary_color,
-            accentColor: whiteLabelSettings.accent_color,
-            customDomain: whiteLabelSettings.custom_domain,
-            supportEmail: whiteLabelSettings.support_email,
-            helpUrl: whiteLabelSettings.help_url,
-            footerText: whiteLabelSettings.footer_text,
+            companyName: whiteLabelSettings.companyName,
+            companyLogo: whiteLabelSettings.companyLogo,
+            primaryColor: whiteLabelSettings.primaryColor,
+            secondaryColor: whiteLabelSettings.secondaryColor,
+            accentColor: whiteLabelSettings.accentColor,
+            customDomain: whiteLabelSettings.customDomain,
+            supportEmail: whiteLabelSettings.supportEmail,
+            helpUrl: whiteLabelSettings.helpUrl,
+            footerText: whiteLabelSettings.footerText,
         })
             .from(customDomains)
-            .leftJoin(whiteLabelSettings, eq(customDomains.organization_id, whiteLabelSettings.organization_id))
+            .leftJoin(whiteLabelSettings, eq(customDomains.organization_id, whiteLabelSettings.organizationId))
             .where(eq(customDomains.domain, domain))
             .limit(1);
         if (!result.length) {

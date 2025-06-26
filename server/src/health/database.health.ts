@@ -1,4 +1,4 @@
-import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
+import { HealthIndicator, type HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
 import { Injectable, Logger } from '@nestjs/common';
 import { Pool } from 'pg';
 
@@ -37,12 +37,16 @@ export class DatabaseHealthIndicator extends HealthIndicator {
         db_size_bytes: parseInt(statsResult.rows[0].db_size_bytes, 10),
       });
     } catch (error) {
-      this.logger.error('Database health check failed', error.stack);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
+      const errorCode = error && typeof error === 'object' && 'code' in error ? String(error.code) : 'UNKNOWN_ERROR';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      this.logger.error('Database health check failed', errorStack);
       throw new HealthCheckError(
         'Database connection failed',
         this.getStatus(key, false, {
-          error: error.message,
-          code: error.code,
+          error: errorMessage,
+          code: errorCode,
         })
       );
     } finally {

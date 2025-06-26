@@ -1,11 +1,12 @@
-import type { Request, Response } from '../../express-augmentations.ts';
-import type { Activity, Trip } from '@shared/schema';
+import type { Request, Response } from './express-augmentations.js';
+// Import types directly from the shared directory
+import type { Activity, Trip } from '../shared/src/schema.js';
 // Generate iCal format content for calendar export
 export function generateICalContent(trip: Trip, activities: Activity[]): string {
     const events = activities.map(activity => {
         // Parse the activity date and time properly
-        const activityDate = new Date(activity.date);
-        const [hours, minutes] = activity.time.split(':').map(Number);
+        const activityDate = activity.date ? new Date(activity.date) : new Date();
+        const [hours = 12, minutes = 0] = activity.time?.split(':').map(Number) || [];
         const startDate = new Date(activityDate);
         startDate.setHours(hours, minutes, 0, 0);
         // Default 2 hour duration for each activity
@@ -36,8 +37,8 @@ END:VCALENDAR`;
 // Generate Google Calendar URLs for each activity
 export function generateGoogleCalendarUrls(trip: Trip, activities: Activity[]): string[] {
     return activities.map(activity => {
-        const activityDate = new Date(activity.date);
-        const [hours, minutes] = activity.time.split(':').map(Number);
+        const activityDate = activity.date ? new Date(activity.date) : new Date();
+        const [hours = 12, minutes = 0] = activity.time?.split(':').map(Number) || [];
         const startDate = new Date(activityDate);
         startDate.setHours(hours, minutes, 0, 0);
         const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
@@ -50,8 +51,8 @@ export function generateGoogleCalendarUrls(trip: Trip, activities: Activity[]): 
 // Generate Outlook Calendar URLs for each activity
 export function generateOutlookCalendarUrls(trip: Trip, activities: Activity[]): string[] {
     return activities.map(activity => {
-        const activityDate = new Date(activity.date);
-        const [hours, minutes] = activity.time.split(':').map(Number);
+        const activityDate = activity.date ? new Date(activity.date) : new Date();
+        const [hours = 12, minutes = 0] = activity.time?.split(':').map(Number) || [];
         const startDate = new Date(activityDate);
         startDate.setHours(hours, minutes, 0, 0);
         const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));

@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import Handlebars from 'handlebars';
-import type { Buffer } from 'buffer';
+import { Buffer } from 'buffer';
 // Define local types since we can't import from @shared/schema
 type Activity = {
     id: string;
@@ -16,7 +16,7 @@ type Activity = {
     tag?: string;
 };
 type Todo = {
-    id: string;
+    id: string;S
     title: string;
     completed: boolean;
     dueDate?: string | Date;

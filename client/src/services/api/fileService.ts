@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient.ts';
+import { apiClient } from './apiClient';
 export interface FileUploadResponse {
     id: string;
     url: string;
@@ -29,7 +29,7 @@ class FileService {
         if (metadata) {
             formData.append('metadata', JSON.stringify(metadata));
         }
-        return apiClient.post<FileUploadResponse, FormData>(`${this.basePath}/upload`, formData, {
+        return apiClient.post<FileUploadResponse>(`${this.basePath}/upload`, formData, {
             ...config,
             headers: {
                 ...config?.headers,
@@ -74,7 +74,7 @@ class FileService {
         return apiClient.delete<void>(`${this.basePath}/${fileId}`, config);
     }
     public async updateFileMetadata(fileId: string, metadata: Partial<FileMetadata>, config?: RequestConfig): Promise<FileUploadResponse> {
-        return apiClient.patch<FileUploadResponse, Partial<FileMetadata>>(`${this.basePath}/${fileId}/metadata`, metadata, config);
+        return apiClient.patch<FileUploadResponse>(`${this.basePath}/${fileId}/metadata`, metadata, config);
     }
     public async getFileMetadata(fileId: string, config?: RequestConfig): Promise<FileMetadata> {
         return apiClient.get<FileMetadata>(`${this.basePath}/${fileId}/metadata`, config);

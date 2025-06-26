@@ -1,0 +1,25 @@
+import type { Request, Response, NextFunction } from 'express';
+import { db } from './db-connection.js';
+import { organizations } from '../shared/src/schema.js';
+import { customDomains, whiteLabelSettings } from './db/schema';
+import { eq, and } from 'drizzle-orm';
+
+export interface DomainConfig {
+    domain: string;
+    organizationId: string;
+    ssl_verified: boolean;
+    status: string;
+    branding: {
+        companyName: string;
+        companyLogo?: string;
+        primaryColor: string;
+        secondaryColor: string;
+        accentColor: string;
+        customDomain?: string;
+        supportEmail?: string;
+        helpUrl?: string;
+        footerText?: string;
+    } | null;
+}
+
+// ... rest of the file remains the same ...

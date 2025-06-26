@@ -19,4 +19,11 @@ export interface BaseRepository<T, ID, CreateData, UpdateData> {
      *   provided transaction instance.
      */
     withTransaction<R>(fn: (tx: NodePgTransaction<Record<string, unknown>, TablesRelationalConfig>) => Promise<R>): Promise<R>;
+    
+    /**
+     * Maps a database record to a domain model
+     * @param data - Raw database record
+     * @returns Mapped domain model or a Promise that resolves to one
+     */
+    mapToModel(data: any): T | Promise<T>;
 }

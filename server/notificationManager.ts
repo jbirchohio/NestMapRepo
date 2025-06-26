@@ -1,5 +1,5 @@
-import { sendNotificationEmail } from 'emailService.js';
-import { sendPushNotification, sendPushToMultipleSubscriptions } from 'pushNotifications.js';
+import { sendNotificationEmail } from './emailService';
+import { sendPushNotification, sendPushToMultipleSubscriptions } from './pushNotifications';
 interface NotificationData {
     userId: number;
     type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system';

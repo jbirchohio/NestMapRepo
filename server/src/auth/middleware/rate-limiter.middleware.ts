@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction, RequestHandler } from '../../express-augmentations.ts';
+import type { Request, Response, RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 // Rate limiting configuration
 const limiter = rateLimit({
@@ -12,7 +12,7 @@ const limiter = rateLimit({
         return process.env.NODE_ENV === 'development' ||
             skipPaths.some(path => req.path.startsWith(path));
     },
-    handler: (req: Request, res: Response) => {
+    handler: (_req: Request, res: Response) => {
         res.status(429).json({
             error: 'Too many requests, please try again later.',
             status: 429

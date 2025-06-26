@@ -1,6 +1,24 @@
-import type { Request, Response } from '../../express-augmentations.ts';
-import type { Activity, Trip } from '@shared/schema';
+import type { Request, Response } from 'express';
+import type { Activity, Trip } from '../../shared/src/schema'; // Updated path to match project structure
 import crypto from "crypto";
+
+// Define response types for calendar sync operations
+type CalendarSyncResponse = {
+    success: boolean;
+    eventId?: string;
+    title?: string;
+    error?: string;
+};
+
+type CalendarEventResponse = CalendarSyncResponse & {
+    eventId: string;
+    title: string;
+};
+
+type CalendarErrorResponse = CalendarSyncResponse & {
+    error: string;
+    title: string;
+};
 /**
  * CSRF Protection for Calendar Sync Operations
  */
@@ -79,7 +97,7 @@ export function validateCalendarCSRF(req: Request, res: Response, next: Function
     next();
 }
 // Google Calendar API integration
-export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], accessToken: string) {
+export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], accessToken: string): Promise<Array<CalendarEventResponse | CalendarErrorResponse>> {
     const events = activities.map(activity => {
         const activityDate = new Date(activity.date);
         const [hours, minutes] = activity.time.split(':').map(Number);
@@ -113,22 +131,37 @@ export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], a
             });
             if (response.ok) {
                 const createdEvent = await response.json();
-                results.push({ success: true, eventId: createdEvent.id, title: event.summary });
+                const result: CalendarEventResponse = { 
+                    success: true, 
+                    eventId: createdEvent.id, 
+                    title: event.summary 
+                };
+                results.push(result);
             }
             else {
                 const error = await response.text();
-                results.push({ success: false, error, title: event.summary });
+                const errorResult: CalendarErrorResponse = { 
+                    success: false, 
+                    error: typeof error === 'string' ? error : 'Unknown error', 
+                    title: event.summary 
+                };
+                results.push(errorResult);
             }
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-            results.push({ success: false, error: errorMessage, title: event.summary });
+            const errorResult: CalendarErrorResponse = { 
+                success: false, 
+                error: errorMessage, 
+                title: event.summary 
+            };
+            results.push(errorResult);
         }
     }
     return results;
 }
 // Outlook Calendar API integration
-export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], accessToken: string) {
+export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], accessToken: string): Promise<Array<CalendarEventResponse | CalendarErrorResponse>> {
     const events = activities.map(activity => {
         const activityDate = new Date(activity.date);
         const [hours, minutes] = activity.time.split(':').map(Number);
@@ -167,16 +200,31 @@ export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], 
             });
             if (response.ok) {
                 const createdEvent = await response.json();
-                results.push({ success: true, eventId: createdEvent.id, title: event.subject });
+                const result: CalendarEventResponse = {
+                    success: true,
+                    eventId: createdEvent.id,
+                    title: event.subject
+                };
+                results.push(result);
             }
             else {
                 const error = await response.text();
-                results.push({ success: false, error, title: event.subject });
+                const errorResult: CalendarErrorResponse = {
+                    success: false,
+                    error: typeof error === 'string' ? error : 'Unknown error',
+                    title: event.subject
+                };
+                results.push(errorResult);
             }
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-            results.push({ success: false, error: errorMessage, title: event.subject });
+            const errorResult: CalendarErrorResponse = {
+                success: false,
+                error: errorMessage,
+                title: event.subject
+            };
+            results.push(errorResult);
         }
     }
     return results;

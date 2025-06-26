@@ -1,4 +1,4 @@
-import apiClient from './apiClient'; // Default import
+import { apiClient } from './apiClient';
 export interface MetricPoint {
     timestamp: string;
     value: number;
@@ -140,9 +140,10 @@ class MetricsService {
     }
     // Custom Metrics
     public async queryMetrics(queries: MetricQuery[]): Promise<MetricResponse[]> {
-        return apiClient.post<MetricResponse[], {
-            queries: MetricQuery[];
-        }>(`${this.basePath}/query`, { queries });
+        return apiClient.post<MetricResponse[]>(
+            `${this.basePath}/query`,
+            { queries }
+        );
     }
     // Error Tracking
     public async getErrorMetrics(params: TimeRange): Promise<{
@@ -216,11 +217,10 @@ class MetricsService {
     }
     // Custom Events
     public async trackEvent(eventName: string, properties: Record<string, any> = {}, userId?: string): Promise<void> {
-        return apiClient.post<void, {
-            eventName: string;
-            properties: Record<string, any>;
-            userId?: string;
-        }>(`${this.basePath}/events`, { eventName, properties, userId });
+        return apiClient.post<void>(
+            `${this.basePath}/events`,
+            { eventName, properties, userId }
+        );
     }
     // Health Check
     public async healthCheck(): Promise<{

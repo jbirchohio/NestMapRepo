@@ -1,6 +1,6 @@
 // Import UserRole from shared to maintain consistency
 import { UserRole } from '@shared/types/auth/permissions.js';
-import type { Request } from '../../express-augmentations.ts';
+import type { Request } from 'express';
 import type { AuthenticatedRequest as SharedAuthenticatedRequest } from '@shared/types/auth/custom-request.js';
 
 export { UserRole };

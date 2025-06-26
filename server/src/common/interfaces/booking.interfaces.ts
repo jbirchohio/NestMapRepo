@@ -1,6 +1,24 @@
 /**
  * Booking-related interfaces for user preferences and booking data
  */
+
+export interface BookingConfirmationDetails {
+    bookingId: string;
+    referenceNumber: string;
+    status: 'confirmed' | 'pending' | 'cancelled';
+    bookingDate: Date;
+    totalAmount: number;
+    currency: string;
+    customerEmail: string;
+    items: Array<{
+        type: 'flight' | 'hotel' | 'car' | 'activity';
+        id: string;
+        name: string;
+        date: Date;
+        status: string;
+    }>;
+}
+
 export interface UserBookingPreferences {
     preferredAirlines?: string[];
     seatPreference?: 'window' | 'aisle' | 'middle';

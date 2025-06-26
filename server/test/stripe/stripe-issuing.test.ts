@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import type { StripeIssuingService, CardIssuanceRequest, CardControlsUpdate } from '../../services/stripeIssuingService.ts';
+import { StripeIssuingService, CardIssuanceRequest, CardControlsUpdate } from '../../services/stripeIssuingService.ts';
 import { storage } from '../../storage.ts';
 // Mock dependencies
 jest.mock('stripe');

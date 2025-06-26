@@ -4,20 +4,34 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../../db/db.js';
 import type { NodePgTransaction } from 'drizzle-orm/node-postgres';
 import type { TablesRelationalConfig } from 'drizzle-orm/relations';
+
 /**
  * Base repository implementation with common CRUD operations
  */
 export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string, any>, UpdateData extends Record<string, any>> implements BaseRepository<T, ID, CreateData, UpdateData> {
     protected logger = logger;
     constructor(protected entityName: string, protected table: any, protected idColumn: any) { }
+    
+    /**
+     * Maps a database record to a domain model
+     * @param data - Raw database record
+     * @returns Promise that resolves to the mapped domain model
+     */
+    public async mapToModel(data: any): Promise<T> {
+        // Default implementation - can be overridden by child classes
+        return data as T;
+    }
+
     async findById(id: ID): Promise<T | null> {
         try {
-            const [result] = await db
+            const result = await db
                 .select()
                 .from(this.table)
                 .where(eq(this.idColumn, id))
                 .limit(1);
-            return result || null;
+            
+            const data = Array.isArray(result) ? result[0] || null : null;
+            return data ? await this.mapToModel(data) : null;
         }
         catch (error) {
             this.logger.error(`Error finding ${this.entityName} by ID ${id}:`, error);
@@ -26,7 +40,10 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
     }
     async findAll(): Promise<T[]> {
         try {
-            return await db.select().from(this.table);
+            const result = await db.select().from(this.table);
+            const items = Array.isArray(result) ? result : [result];
+            const mappedItems = await Promise.all(items.map(item => this.mapToModel(item)));
+            return mappedItems;
         }
         catch (error) {
             this.logger.error(`Error finding all ${this.entityName}:`, error);
@@ -35,11 +52,14 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
     }
     async create(data: CreateData): Promise<T> {
         try {
-            const [result] = await db
+            const result = await db
                 .insert(this.table)
                 .values(data as any)
                 .returning();
-            return result;
+            if (!Array.isArray(result) || result.length === 0) {
+                throw new Error('Failed to create record');
+            }
+            return await this.mapToModel(result[0]);
         }
         catch (error) {
             this.logger.error(`Error creating ${this.entityName}:`, error);
@@ -53,7 +73,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
                 .set(data as any)
                 .where(eq(this.idColumn, id))
                 .returning();
-            return result || null;
+            return result ? await this.mapToModel(result[0]) : null;
         }
         catch (error) {
             this.logger.error(`Error updating ${this.entityName} with ID ${id}:`, error);
@@ -65,7 +85,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
             const result = await db
                 .delete(this.table)
                 .where(eq(this.idColumn, id));
-            return result.rowsAffected > 0;
+            return (result.rowCount ?? 0) > 0;
         }
         catch (error) {
             this.logger.error(`Error deleting ${this.entityName} with ID ${id}:`, error);

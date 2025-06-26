@@ -1,29 +1,22 @@
-import type { Activity } from '@shared/types/activity';
+import { Activity } from '../../shared/types/activity';
+
 type ActivityInput = Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Helper function to safely convert Date to ISO string
+const toISOString = (date: Date | string | undefined): string | undefined => {
+  if (!date) return undefined;
+  return date instanceof Date ? date.toISOString() : date;
+};
+
 export const transformActivityToFrontend = (activity: Activity): Activity => {
-    const transformed = { ...activity };
-    // Ensure dates are properly formatted as strings
-    if (activity.startDate) {
-        transformed.startDate = activity.startDate instanceof Date
-            ? activity.startDate.toISOString()
-            : activity.startDate;
-    }
-    if (activity.endDate) {
-        transformed.endDate = activity.endDate instanceof Date
-            ? activity.endDate.toISOString()
-            : activity.endDate;
-    }
-    if (activity.createdAt) {
-        transformed.createdAt = activity.createdAt instanceof Date
-            ? activity.createdAt.toISOString()
-            : activity.createdAt;
-    }
-    if (activity.updatedAt) {
-        transformed.updatedAt = activity.updatedAt instanceof Date
-            ? activity.updatedAt.toISOString()
-            : activity.updatedAt;
-    }
-    return transformed;
+  return {
+    ...activity,
+    startDate: toISOString(activity.startDate),
+    endDate: toISOString(activity.endDate),
+    createdAt: toISOString(activity.createdAt) || '',
+    updatedAt: toISOString(activity.updatedAt) || '',
+    date: toISOString(activity.date) || ''
+  };
 };
 export const transformActivityToDatabase = (activity: Partial<Activity>): Partial<ActivityInput> => {
     const { id, createdAt, updatedAt, ...rest } = activity;

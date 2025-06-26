@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-import type { Trip, Activity } from '@shared/schema';
+import type { Trip, Activity } from '../shared/src/schema';
 export interface ProposalData {
     trip: Trip;
     activities: Activity[];

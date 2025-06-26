@@ -1,6 +1,6 @@
 import { AxiosError, AxiosResponse } from 'axios';
-import { RequestConfig } from '../types.ts';
-import { ApiError } from '../utils/error.ts';
+import { RequestConfig } from '../types';
+import { ApiError } from '../utils/error';
 /**
  * Error interceptor to handle API errors consistently
  */
@@ -15,7 +15,7 @@ export class ErrorInterceptor {
     /**
      * Response error interceptor to handle API errors
      */
-    public onResponseError = async (error: AxiosError): Promise<never> => {
+    public onResponseError = async <T = any, D = any>(error: AxiosError<T, D>): Promise<never> => {
         const config = error.config as RequestConfig;
         // Skip error handling if explicitly requested
         if (config.skipErrorHandling) {
@@ -24,13 +24,13 @@ export class ErrorInterceptor {
         // Handle network errors
         if (!error.response) {
             const networkError = new ApiError(error.message || 'Network Error', {
-                code: error.code,
+                code: error.code || 'NETWORK_ERROR',
                 config: error.config as RequestConfig,
-                response: error.response?.data
+                response: undefined
             });
             return Promise.reject(networkError);
         }
-        const { status, data } = error.response;
+        const { status, data } = error.response as { status: number; data: T };
         const responseData = data as any;
         // Create a standardized error object
         const apiError = new ApiError(responseData?.message || error.message || 'An error occurred', {

@@ -112,14 +112,19 @@ class NotificationService extends EventEmitter {
         this.eventCallbacks[event].push(callback);
         // Return cleanup function
         return () => {
-            this.eventCallbacks[event] = this.eventCallbacks[event].filter(cb => cb !== callback);
+            if (this.eventCallbacks[event]) {
+                this.eventCallbacks[event] = this.eventCallbacks[event].filter(cb => cb !== callback);
+                // Clean up empty arrays
+                if (this.eventCallbacks[event].length === 0) {
+                    delete this.eventCallbacks[event];
+                }
+            }
         };
     }
     public sendMessage(type: string, data: any) {
         if (this.isConnected && this.ws) {
             this.ws.send(JSON.stringify({ type, data }));
-        }
-        else {
+        } else {
             console.warn('WebSocket not connected, message not sent:', { type, data });
         }
     }
@@ -142,38 +147,43 @@ class NotificationService extends EventEmitter {
         return apiClient.get<NotificationCount>(`${this.basePath}/unread-count`);
     }
     public async markAsRead(notificationId: string): Promise<Notification> {
-        return apiClient.patch<Notification, void>(`${this.basePath}/${notificationId}/read`, undefined);
+        return apiClient.patch<Notification>(`${this.basePath}/${notificationId}/read`, undefined);
     }
     public async markAllAsRead(): Promise<{
         count: number;
     }> {
         return apiClient.patch<{
             count: number;
-        }, void>(`${this.basePath}/mark-all-read`, undefined);
+        }>(`${this.basePath}/mark-all-read`, undefined);
     }
     public async getPreferences(): Promise<NotificationPreferences> {
         return apiClient.get<NotificationPreferences>(`${this.basePath}/preferences`);
     }
     public async updatePreferences(preferences: Partial<NotificationPreferences>): Promise<NotificationPreferences> {
-        return apiClient.patch<NotificationPreferences, Partial<NotificationPreferences>>(`${this.basePath}/preferences`, preferences);
+        return apiClient.patch<NotificationPreferences>(
+            `${this.basePath}/preferences`,
+            preferences
+        );
     }
     public async subscribeToTopic(topic: string): Promise<{
         success: boolean;
     }> {
         return apiClient.post<{
             success: boolean;
-        }, {
-            topic: string;
-        }>(`${this.basePath}/subscribe`, { topic });
+        }>(
+            `${this.basePath}/subscribe`,
+            { topic }
+        );
     }
     public async unsubscribeFromTopic(topic: string): Promise<{
         success: boolean;
     }> {
         return apiClient.post<{
             success: boolean;
-        }, {
-            topic: string;
-        }>(`${this.basePath}/unsubscribe`, { topic });
+        }>(
+            `${this.basePath}/unsubscribe`,
+            { topic }
+        );
     }
     // Cleanup
     public cleanup() {

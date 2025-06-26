@@ -131,7 +131,7 @@ function convertCityToAirportCode(cityOrCode: string): string {
     // Return airport code if found, otherwise return original (assuming it might be a valid code)
     return cityToAirport[lookup] || cityOrCode.toUpperCase();
 }
-import { duffelProvider } from 'duffelProvider.js';
+import { duffelProvider } from './duffelProvider';
 interface BookingProvider {
     name: string;
     urlTemplate: string;

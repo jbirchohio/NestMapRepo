@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient.ts';
+import { apiClient } from './apiClient';
 export interface AISuggestion {
     id: string;
     text: string;
@@ -38,10 +38,11 @@ class AIService {
         return AIService.instance;
     }
     public async chat(messages: AIChatMessage[], sessionId?: string, config?: RequestConfig): Promise<AIChatResponse> {
-        return apiClient.post<AIChatResponse, {
-            messages: AIChatMessage[];
-            sessionId?: string;
-        }>(`${this.basePath}/chat`, { messages, sessionId }, config);
+        return apiClient.post<AIChatResponse>(
+            `${this.basePath}/chat`,
+            { messages, sessionId },
+            config
+        );
     }
     public async findLocation(description: string, context?: {
         currentLocation?: {
@@ -50,7 +51,11 @@ class AIService {
         };
         tripId?: string;
     }, config?: RequestConfig): Promise<AILocationSuggestion> {
-        return apiClient.post<AILocationSuggestion, any>(`${this.basePath}/find-location`, { description, ...context }, config);
+        return apiClient.post<AILocationSuggestion>(
+            `${this.basePath}/find-location`,
+            { description, ...context },
+            config
+        );
     }
     public async generateItinerary(tripDetails: {
         destination: string;
@@ -66,7 +71,11 @@ class AIService {
         return apiClient.post<{
             itinerary: string;
             suggestions: AISuggestion[];
-        }, any>(`${this.basePath}/generate-itinerary`, tripDetails, config);
+        }>(
+            `${this.basePath}/generate-itinerary`,
+            tripDetails,
+            config
+        );
     }
     public async getActivitySuggestions(context: {
         location: string;
@@ -75,7 +84,11 @@ class AIService {
         interests?: string[];
         budget?: string;
     }, config?: RequestConfig): Promise<AISuggestion[]> {
-        return apiClient.post<AISuggestion[], any>(`${this.basePath}/suggest-activities`, context, config);
+        return apiClient.post<AISuggestion[]>(
+            `${this.basePath}/suggest-activities`,
+            context,
+            config
+        );
     }
     public async analyzeImage(image: File | Blob, context?: {
         tripId?: string;
@@ -95,7 +108,7 @@ class AIService {
             description: string;
             tags: string[];
             metadata: Record<string, any>;
-        }, FormData>(`${this.basePath}/analyze-image`, formData, {
+        }>(`${this.basePath}/analyze-image`, formData, {
             ...config,
             headers: {
                 ...config?.headers,

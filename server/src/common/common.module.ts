@@ -1,8 +1,8 @@
-import type { Module, Global } from '@nestjs/common';
-import type { ErrorService } from './services/error.service.ts';
-import type { BookingService } from './services/booking.service.ts';
-import type { BookingController } from './controllers/booking.controller.ts';
-import type { RepositoriesModule } from './repositories/repositories.module.ts';
+import { Module, Global } from '@nestjs/common';
+import { ErrorService } from './services/error.service.js';
+import { BookingService } from './services/booking.service.js';
+import { BookingController } from './controllers/booking.controller.js';
+import { RepositoriesModule } from './repositories/repositories.module.js';
 /**
  * Common module providing shared services and utilities
  */

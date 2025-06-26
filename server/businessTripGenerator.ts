@@ -1,10 +1,10 @@
 import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient.js";
 import { calculateTripCost } from "./utils/tripCost.js";
 import { detectTripConflicts } from "./services/conflictDetector.js";
-import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "predictiveAI.js";
-import { optimizeScheduleIntelligently, detectScheduleConflicts } from "smartOptimizer.js";
-import { calculateCarbonFootprint } from "carbonTracker.js";
-import { searchFlights, searchHotels } from "bookingProviders.js";
+import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "./predictiveAI";
+import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer";
+import { calculateCarbonFootprint } from "./carbonTracker";
+import { searchFlights, searchHotels } from "./bookingProviders";
 interface BusinessTripRequest {
     clientName: string;
     destination: string;
@@ -265,7 +265,7 @@ async function addSustainabilityMetrics(trip: any, request: BusinessTripRequest)
             complianceNotes,
             tripSummary: {
                 ...trip.tripSummary,
-                carbonFootprint: carbonFootprint.totalEmissions
+                carbonFootprint: carbonFootprint.totalCO2kg
             }
         };
     }
@@ -275,7 +275,7 @@ async function addSustainabilityMetrics(trip: any, request: BusinessTripRequest)
     }
 }
 function generateBusinessRecommendations(trip: any, request: BusinessTripRequest, conflicts: any[]): string[] {
-    const recommendations = [];
+    const recommendations: string[] = [];
     // Budget optimization
     if (trip.budgetBreakdown?.total > request.budget * 0.9) {
         recommendations.push('Consider economy flights to stay within budget constraints');
@@ -299,7 +299,7 @@ function generateBusinessRecommendations(trip: any, request: BusinessTripRequest
     return recommendations;
 }
 function generateComplianceNotes(trip: any, request: BusinessTripRequest): string[] {
-    const notes = [];
+    const notes: string[] = [];
     notes.push('All expenses align with standard corporate travel policies');
     notes.push('Accommodation meets business traveler standards');
     if (trip.budgetBreakdown?.meals) {
@@ -310,13 +310,29 @@ function generateComplianceNotes(trip: any, request: BusinessTripRequest): strin
     }
     return notes;
 }
-function generateDateRange(startDate: string, endDate: string): string[] {
-    const dates = [];
+function generateDateRange(startDate: string | Date, endDate: string | Date): string[] {
+    const dates: string[] = [];
     const start = new Date(startDate);
     const end = new Date(endDate);
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        dates.push(d.toISOString().split('T')[0]);
+    
+    // Handle invalid dates
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        console.error('Invalid date provided to generateDateRange');
+        return [];
     }
+    
+    // Create a new date object for iteration to avoid modifying the original
+    const currentDate = new Date(start);
+    
+    // Reset time components to avoid timezone issues
+    currentDate.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    
+    while (currentDate <= end) {
+        dates.push(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
     return dates;
 }
 // Quick trip generation for simple requests

@@ -4,7 +4,7 @@
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "../dist/shared",
+    "outDir": "./dist",
     "rootDir": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -22,7 +22,7 @@
     "allowSyntheticDefaultImports": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/shared.tsbuildinfo"
   },
-  "include": ["types/**/*.ts", "utils/**/*.ts"],
+  "include": ["src/**/*.ts", "types/**/*.ts", "utils/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
   "references": []
 }

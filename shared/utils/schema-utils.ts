@@ -156,14 +156,18 @@ const typeGuards = {
     isType<TripMemberType>(obj, ['id', 'tripId', 'userId', 'role'])
 };
 
-// Initialize global SharedTypes if it doesn't exist
-declare global {
-  // eslint-disable-next-line no-var
-  var SharedTypes: {
-    TypeGuards: typeof typeGuards;
-  };
+// Export TypeGuards directly instead of using global SharedTypes
+declare module '../types/domain/user.js' {
+  // Augment the SharedTypes namespace if it exists
+  namespace SharedTypes {
+    interface TypeGuards {
+      isUser: (obj: unknown) => obj is UserType;
+      isOrganization: (obj: unknown) => obj is OrganizationType;
+      isTrip: (obj: unknown) => obj is TripType;
+      isTripMember: (obj: unknown) => obj is TripMemberType;
+    }
+  }
 }
 
-global.SharedTypes = global.SharedTypes || { TypeGuards: typeGuards };
-
+// Export TypeGuards directly for direct usage
 export const TypeGuards = typeGuards;

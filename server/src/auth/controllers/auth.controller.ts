@@ -1,10 +1,14 @@
 import type { Response, NextFunction, Request, RequestHandler } from 'express';
 import type { AuthenticatedRequest } from '@shared/types/auth/custom-request.js';
 import type { IAuthService } from '../interfaces/auth.service.interface.js';
-import { LoginDto, RequestPasswordResetDto, ResetPasswordDto } from '@shared/types/auth/dto/index.js';
-import type { AuthResponse } from '@shared/types/auth/jwt.js';
+import type { 
+  LoginDto,
+  RequestPasswordResetDto,
+  ResetPasswordDto,
+  UserResponse
+} from '@shared/types/auth/dto/index.js';
+import type { AuthResponse } from '@shared/types/auth/dto/auth-response.dto.js';
 import type { User } from '@shared/types/auth/user.js';
-import type { UserResponse } from '@shared/types/auth/dto/user-response.dto.js';
 import type { UserRole } from '@shared/types/auth/permissions.js';
 import { rateLimiterMiddleware } from '@server/auth/middleware/rate-limiter.middleware.js';
 import { isErrorWithMessage } from '../../utils/error-utils.js';
@@ -40,18 +44,46 @@ export class AuthController {
      * Converts a User object to a UserResponse DTO
      * Handles both snake_case and camelCase property names
      */
+    /**
+     * Safely gets a property from an object, handling both snake_case and camelCase
+     */
+    private getProperty<T>(obj: any, keys: string[], defaultValue: T): T {
+        for (const key of keys) {
+            if (obj && key in obj) {
+                return obj[key] as T;
+            }
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Converts a User object to a UserResponse DTO
+     * Handles both snake_case and camelCase property names
+     */
     private sanitizeUserResponse(user: User): UserResponse {
         // Extract properties, handling both snake_case and camelCase
-        const firstName = (user as any).first_name || (user as any).firstName || null;
-        const lastName = (user as any).last_name || (user as any).lastName || null;
-        const emailVerified = (user as any).email_verified || (user as any).emailVerified || false;
-        const createdAt = (user as any).createdAt || (user as any).created_at || new Date().toISOString();
-        const updatedAt = (user as any).updatedAt || (user as any).updated_at || new Date().toISOString();
-        const lastLoginAt = (user as any).last_login_at || (user as any).lastLoginAt || null;
-        const displayName = (user as any).display_name || (user as any).displayName || null;
-        const avatarUrl = (user as any).avatar_url || (user as any).avatarUrl || null;
+        const firstName = this.getProperty<string | null>(user, ['firstName', 'first_name'], null);
+        const lastName = this.getProperty<string | null>(user, ['lastName', 'last_name'], null);
+        const emailVerified = this.getProperty<boolean>(user, ['emailVerified', 'email_verified'], false);
+        const createdAt = this.getProperty<Date | string>(user, ['createdAt', 'created_at'], new Date());
+        const updatedAt = this.getProperty<Date | string>(user, ['updatedAt', 'updated_at'], new Date());
+        const lastLoginAt = this.getProperty<Date | string | null>(user, ['lastLoginAt', 'last_login_at'], null);
+        const displayName = this.getProperty<string | null>(user, ['displayName', 'display_name'], null);
+        const avatarUrl = this.getProperty<string | null>(user, ['avatarUrl', 'avatar_url'], null);
 
-        // Create the response object with proper typing
+        // Format dates consistently
+        const formatDate = (date: Date | string | null): string | null => {
+            if (!date) return null;
+            return date instanceof Date ? date.toISOString() : new Date(date).toISOString();
+        };
+
+        // Generate display name if not provided
+        const generateDisplayName = (): string => {
+            if (displayName) return displayName;
+            const nameParts = [firstName, lastName].filter(Boolean) as string[];
+            return nameParts.length > 0 ? nameParts.join(' ') : user.email.split('@')[0];
+        };
+
         return {
             id: user.id,
             email: user.email,
@@ -59,14 +91,14 @@ export class AuthController {
             firstName,
             lastName,
             emailVerified,
-            createdAt: typeof createdAt === 'string' ? createdAt : new Date(createdAt).toISOString(),
-            updatedAt: typeof updatedAt === 'string' ? updatedAt : new Date(updatedAt).toISOString(),
-            lastLoginAt: lastLoginAt ? (typeof lastLoginAt === 'string' ? lastLoginAt : new Date(lastLoginAt).toISOString()) : null,
-            displayName: displayName || [firstName, lastName].filter(Boolean).join(' ') || user.email.split('@')[0],
+            createdAt: formatDate(createdAt) || new Date().toISOString(),
+            updatedAt: formatDate(updatedAt) || new Date().toISOString(),
+            lastLoginAt: formatDate(lastLoginAt),
+            displayName: generateDisplayName(),
             avatarUrl
         };
     }
-    login = [
+    login: (RequestHandler | ((req: AuthenticatedRequest & { body: LoginDto }, res: Response<AuthResponseWithoutRefreshToken | { error: string }>, next: NextFunction) => Promise<void>))[] = [
         rateLimiterMiddleware as unknown as RequestHandler,
         async (req: AuthenticatedRequest & { body: LoginDto }, res: Response<AuthResponseWithoutRefreshToken | { error: string }>, next: NextFunction): Promise<void> => {
             try {

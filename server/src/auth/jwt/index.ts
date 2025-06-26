@@ -3,8 +3,8 @@ import { randomBytes, createHash } from 'crypto';
 import ms, { type StringValue } from 'ms';
 const { sign, verify, decode } = jwt;
 import { v4 as uuidv4 } from 'uuid';
-import { redisClient as redis } from '../../../utils/redis.js';
-import { logger } from '../../../utils/logger.js';
+import { redisClient as redis } from '../../../../db/redis.js';
+import { logger } from '../../../../utils/logger.js';
 
 // Import utility functions
 import {

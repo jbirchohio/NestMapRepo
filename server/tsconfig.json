@@ -1,4 +1,4 @@
-﻿{
+{
     "extends":  "../tsconfig.base.json",
     "compilerOptions":  {
                             "module":  "NodeNext",
@@ -7,6 +7,9 @@
                             "strict":  true,
                             "skipLibCheck":  true,
                             "forceConsistentCasingInFileNames":  true,
+                            "resolveJsonModule": true,
+                            "allowSyntheticDefaultImports": true,
+                            "allowImportingTsExtensions": true,
                             "outDir":  "../dist/server",
                             "rootDir":  "..",
                             "rootDirs":  [
@@ -25,12 +28,16 @@
                                               "./node_modules/@types",
                                               "../node_modules/@types",
                                               "./src/types",
-                                              "./types"
+                                              "./types",
+                                              "./src/@types"
                                           ],
                             "baseUrl":  ".",
                             "paths":  {
                                           "@server/*":  [
                                                             "./src/*"
+                                                        ],
+                                          "@db/*": [
+                                                            "./db/*"
                                                         ],
                                           "@shared/*":  [
                                                             "../shared/*"
@@ -41,6 +48,9 @@
                                           "@shared/types/*":  [
                                                                   "../shared/types/*"
                                                               ],
+                                          "@shared/src/*":  [
+                                                               "../shared/src/*"
+                                                           ],
                                           "@shared/types/auth/*":  [
                                                                        "../shared/types/auth/*"
                                                                    ]
@@ -68,6 +78,7 @@
                    ],
     "include":  [
                     "src/**/*.ts",
+                    "db/**/*.ts",
                     "../vite.config.ts"
                 ]
 }

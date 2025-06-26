@@ -1,4 +1,4 @@
-import { sendEmail } from 'emailService.js';
+import { sendNotificationEmail } from './emailService';
 interface ProposalNotificationData {
     proposalId: number;
     clientName: string;
@@ -23,20 +23,26 @@ interface ProposalViewData {
 export async function sendProposalSentNotification(data: ProposalNotificationData): Promise<boolean> {
     try {
         // Email to client
-        const clientEmailSent = await sendEmail({
+        // Email to client
+        const clientEmailSent = await sendNotificationEmail({
             to: data.clientEmail,
-            from: `${data.agentName} <${data.agentEmail}>`,
             subject: `Travel Proposal for ${data.tripDestination} - ${data.companyName}`,
-            html: generateProposalSentEmailHTML(data),
-            text: generateProposalSentEmailText(data)
+            title: `Your Travel Proposal is Ready!`,
+            message: `Hello ${data.clientName}, your travel proposal for ${data.tripDestination} has been prepared by ${data.agentName} from ${data.companyName}.`,
+            actionUrl: data.proposalUrl,
+            actionText: 'View Proposal',
+            type: 'trip_shared'
         });
+        
         // Email to agent (confirmation)
-        const agentEmailSent = await sendEmail({
+        const agentEmailSent = await sendNotificationEmail({
             to: data.agentEmail,
-            from: `NestMap Notifications <notifications@nestmap.app>`,
             subject: `Proposal Sent Confirmation - ${data.clientName}`,
-            html: generateAgentConfirmationHTML(data),
-            text: generateAgentConfirmationText(data)
+            title: 'Proposal Successfully Sent',
+            message: `You've successfully sent a travel proposal to ${data.clientName} for ${data.tripDestination}.`,
+            actionUrl: data.proposalUrl,
+            actionText: 'View Proposal',
+            type: 'booking_confirmed'
         });
         return clientEmailSent && agentEmailSent;
     }
@@ -47,12 +53,14 @@ export async function sendProposalSentNotification(data: ProposalNotificationDat
 }
 export async function sendProposalViewedNotification(data: ProposalViewData): Promise<boolean> {
     try {
-        const emailSent = await sendEmail({
+        const emailSent = await sendNotificationEmail({
             to: data.agentEmail,
-            from: `NestMap Notifications <notifications@nestmap.app>`,
             subject: `🎉 ${data.clientName} viewed your proposal!`,
-            html: generateProposalViewedHTML(data),
-            text: generateProposalViewedText(data)
+            title: 'Your Proposal Was Viewed',
+            message: `${data.clientName} has viewed your travel proposal.`,
+            actionUrl: `#`, // You might want to add a proper URL here
+            actionText: 'View Details',
+            type: 'activity_reminder'
         });
         return emailSent;
     }

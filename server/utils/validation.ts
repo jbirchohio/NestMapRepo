@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Response, NextFunction } from '../../express-augmentations.ts';
+import type { Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types/custom-request.js';
 // Common validation schemas
 export const paginationSchema = z.object({

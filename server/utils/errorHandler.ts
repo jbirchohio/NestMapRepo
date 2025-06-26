@@ -77,11 +77,7 @@ export function createSuccessResponse<T>(data: T, message?: string): StandardSuc
         timestamp: new Date().toISOString()
     };
 }
-import type { Response, NextFunction, Request as ExpressRequest } from 'express';
-import type { AuthenticatedRequest } from '../src/types/express-types';
-
-// Create a union type that includes both authenticated and unauthenticated requests
-type Request = ExpressRequest | AuthenticatedRequest;
+import type { Response, NextFunction, Request } from 'express';
 
 // Create a custom ErrorRequestHandler type that matches Express's expectations
 type ErrorRequestHandler = (
@@ -155,7 +151,7 @@ export const globalErrorHandler: ErrorRequestHandler = (err: ErrorWithContext, r
         // Safely add user agent if available
         const userAgent = req.get?.('user-agent');
         if (userAgent) {
-            errorContext.userAgent = userAgent;
+            errorContext.userAgent = Array.isArray(userAgent) ? userAgent[0] : userAgent;
         }
         console.error('Error processing request', errorContext);
         // Handle different error types
@@ -172,7 +168,8 @@ export const globalErrorHandler: ErrorRequestHandler = (err: ErrorWithContext, r
         }
         // 3. Handle not found
         if (err.statusCode === 404 || err.status === 404) {
-            return res.status(404).json(createErrorResponse('NOT_FOUND', err.message || 'Resource not found', { path: req.originalUrl }, requestId));
+            const originalUrl = Array.isArray(req.originalUrl) ? req.originalUrl[0] : req.originalUrl;
+            return res.status(404).json(createErrorResponse('NOT_FOUND', err.message || 'Resource not found', { path: originalUrl }, requestId));
         }
         // 4. Handle rate limiting
         if (err.statusCode === 429 || err.status === 429) {
@@ -180,8 +177,9 @@ export const globalErrorHandler: ErrorRequestHandler = (err: ErrorWithContext, r
         }
         // 5. Handle external service errors
         if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ECONNABORTED') {
+            const hostname = Array.isArray(err.hostname) ? err.hostname[0] : err.hostname;
             return res.status(503).json(createErrorResponse('EXTERNAL_SERVICE_ERROR', 'External service temporarily unavailable', {
-                service: err.hostname || 'unknown',
+                service: hostname || 'unknown',
                 code: err.code,
                 message: err.message
             }, requestId));
@@ -197,17 +195,19 @@ export const globalErrorHandler: ErrorRequestHandler = (err: ErrorWithContext, r
         }
         // 7. Handle standardized API errors with status codes
         if ('statusCode' in err || 'status' in err) {
-            const status = err.statusCode || err.status || 500;
+            const status = (err.statusCode || err.status || 500) as number;
             const errorCode = statusToErrorCode[status] as keyof typeof ErrorCodes || 'INTERNAL_ERROR';
-            return res.status(status).json(createErrorResponse(errorCode, err.message || 'An error occurred', process.env.NODE_ENV === 'development' ? {
+            const message = Array.isArray(err.message) ? err.message[0] : err.message;
+            return res.status(status).json(createErrorResponse(errorCode, message || 'An error occurred', process.env.NODE_ENV === 'development' ? {
                 details: err.details,
                 code: err.code,
                 stack: err.stack
             } : undefined, requestId));
         }
         // Default error handler for uncaught exceptions
+        const errorMessage = Array.isArray(err.message) ? err.message[0] : err.message;
         return res.status(500).json(createErrorResponse('INTERNAL_ERROR', 'An unexpected error occurred', process.env.NODE_ENV === 'development' ? {
-            message: err.message,
+            message: errorMessage,
             name: err.name,
             stack: err.stack
         } : undefined, requestId));

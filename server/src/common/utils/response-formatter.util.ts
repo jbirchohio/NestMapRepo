@@ -1,4 +1,4 @@
-import type { Response } from '../../express-augmentations.ts';
+import type { Response } from 'express';
 /**
  * Standard API success response structure
  */
