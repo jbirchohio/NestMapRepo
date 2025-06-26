@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { ActivityFormValues, ActivityModalProps } from './types';
@@ -10,6 +10,7 @@ import TripDatePicker from '@/components/TripDatePicker';
 import { Label } from '@/components/ui/label';
 export default function ActivityModal({ tripId, date, activity, onClose, onSave }: ActivityModalProps) {
     const { toast } = useToast();
+    const [loading, setLoading] = useState(false);
     const [selectedDate, setSelectedDate] = useState(date);
     const activityMutation = useMutation({
         mutationFn: async (data: ActivityFormValues) => {
@@ -39,6 +40,7 @@ export default function ActivityModal({ tripId, date, activity, onClose, onSave 
         },
     });
     const handleSubmit = (data: ActivityFormValues) => {
+        setLoading(true);
         activityMutation.mutate(data);
     };
     return (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
