@@ -558,7 +558,9 @@ export default function SequentialBookingFlights() {
                         {flight.segments && flight.segments.length > 1 ? (
                     // Multi-segment flight with connections
                     <div className="space-y-2 text-sm">
-                            {(flight.segments || []).map((segment: FlightSegment, segmentIndex: number) => segment ? (<div key={segmentIndex} className="flex items-center gap-2">
+                            {(flight.segments || []).map((segment: FlightSegment, segmentIndex: number) =>
+                              segment ? (
+                                <div key={segmentIndex} className="flex items-center gap-2">
                                 <div className="flex-1 grid grid-cols-3 gap-4">
                                   <div>
                                     <p className="font-medium">{formatTime(segment.departure.at || segment.departure.time)}</p>
@@ -577,10 +579,13 @@ export default function SequentialBookingFlights() {
                                     <p className="text-muted-foreground">{getAirportCode(segment.arrival)}</p>
                                   </div>
                                 </div>
-                                {segmentIndex < flight.segments.length - 1 && (<div className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
+                                {segmentIndex < flight.segments.length - 1 && (
+                                  <div className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
                                     Connection
-                                  </div>)}
-                              </div>))}
+                                  </div>
+                                )}
+                              </div>
+                            ) : null)}
                             <div className="text-xs text-muted-foreground mt-2">
                               Total journey: {formatDuration(flight.duration)} • {flight.stops} stop{flight.stops !== 1 ? 's' : ''}
                             </div>
