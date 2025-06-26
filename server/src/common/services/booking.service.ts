@@ -86,8 +86,9 @@ export class BookingService {
             activityId: createBookingDto.activityId || null,
             notes: createBookingDto.notes || null,
             cancellationPolicy: createBookingDto.cancellationPolicy || null,
-            cancellationDeadline: createBookingDto.cancellationDeadline ?
+            cancellationDeadline: createBookingDto.cancellationDeadline ? 
                 new Date(createBookingDto.cancellationDeadline) : null,
+            cancellationReason: createBookingDto.cancellationReason || null,
         };
         
         const dbBooking = await this.bookingRepository.create(createData);
@@ -113,18 +114,16 @@ export class BookingService {
         
         // Convert the repository's Booking type to our expected format
         const dbBooking: DbBooking & { providerBookingId: string } = {
-            ...booking as any,
+            ...booking,
             // Map snake_case to camelCase for timestamps
             createdAt: 'created_at' in booking ? (booking as any).created_at : new Date(),
             updatedAt: 'updated_at' in booking ? (booking as any).updated_at : new Date(),
             // Ensure all required fields are present
             metadata: 'metadata' in booking ? (booking.metadata as Record<string, unknown>) ?? {} : {},
             // Map provider reference ID
-            providerBookingId: 'provider_reference_id' in booking
-                ? (booking as any).provider_reference_id
-                : (booking as any).providerReferenceId ?? '',
-            providerReferenceId: (booking as any).providerReferenceId ?? '',
-            cancellationReason: (booking as any).cancellationReason ?? null,
+            providerBookingId: 'provider_reference_id' in booking 
+                ? (booking as any).provider_reference_id 
+                : (booking as any).providerReferenceId ?? ''
         };
         
         return this.mapToSharedBooking(dbBooking);
@@ -134,24 +133,19 @@ export class BookingService {
         const bookings = await this.bookingRepository.searchBookings(params);
         return bookings.map(booking => {
             const dbBooking: DbBooking & { providerBookingId: string } = {
-                ...booking as any,
+                ...booking,
                 // Map snake_case to camelCase for timestamps
                 createdAt: 'created_at' in booking ? (booking as any).created_at : new Date(),
                 updatedAt: 'updated_at' in booking ? (booking as any).updated_at : new Date(),
                 // Ensure all required fields are present
                 metadata: 'metadata' in booking ? (booking.metadata as Record<string, unknown>) ?? {} : {},
                 // Map provider reference ID
-                providerBookingId: 'provider_reference_id' in booking
-                    ? (booking as any).provider_reference_id
+                providerBookingId: 'provider_reference_id' in booking 
+                    ? (booking as any).provider_reference_id 
                     : (booking as any).providerReferenceId ?? '',
                 // Add missing required fields with default values
                 providerReferenceId: (booking as any).providerReferenceId ?? '',
-                cancellationReason: (booking as any).cancellationReason ?? null,
-                id: String(booking.id),
-                userId: String(booking.userId),
-                organizationId: String(booking.organizationId),
-                tripId: booking.tripId ? String(booking.tripId) : null,
-                activityId: booking.activityId ? String(booking.activityId) : null,
+                cancellationReason: (booking as any).cancellationReason ?? null
             };
             return this.mapToSharedBooking(dbBooking);
         });
@@ -166,7 +160,7 @@ export class BookingService {
         return bookings.map(booking => {
             // Create a properly typed DbBooking object with all required fields
             const dbBooking: DbBooking & { providerBookingId: string } = {
-                id: String(booking.id),
+                id: booking.id,
                 reference: booking.reference,
                 type: booking.type as BookingType, 
                 status: booking.status as BookingStatus, 
@@ -176,26 +170,25 @@ export class BookingService {
                 amount: booking.amount ?? null,
                 currency: booking.currency ?? 'usd',
                 provider: booking.provider,
-                providerReferenceId: 'providerReferenceId' in booking ?
-                    String((booking as any).providerReferenceId) : (booking as any).provider_reference_id || '',
-                userId: String(booking.userId),
-                organizationId: String(booking.organizationId),
-                tripId: booking.tripId ? String(booking.tripId) : null,
-                activityId: booking.activityId ? String(booking.activityId) : null,
+                providerReferenceId: 'providerReferenceId' in booking ? booking.providerReferenceId : (booking as any).provider_reference_id || '',
+                user_id: booking.userId,
+                organization_id: booking.organizationId,
+                trip_id: booking.tripId ?? null,
+                activity_id: booking.activityId ?? null,
                 notes: booking.notes ?? null,
                 cancellationPolicy: booking.cancellationPolicy ?? null,
                 cancellationDeadline: booking.cancellationDeadline ? 
                     (booking.cancellationDeadline instanceof Date ? booking.cancellationDeadline : new Date(booking.cancellationDeadline)) : 
                     null,
-                cancellationReason: 'cancellationReason' in booking ?
-                    ((booking as { cancellationReason?: string | null }).cancellationReason ?? null) :
+                cancellationReason: 'cancellationReason' in booking ? 
+                    (booking as { cancellationReason?: string | null }).cancellationReason ?? null : 
                     null,
                 metadata: booking.metadata ? (typeof booking.metadata === 'object' ? booking.metadata : {}) : {},
-                createdAt: (booking as any).createdAt ?
-                    ((booking as any).createdAt instanceof Date ? (booking as any).createdAt : new Date((booking as any).createdAt)) :
+                createdAt: 'createdAt' in booking ? 
+                    (booking.createdAt instanceof Date ? booking.createdAt : new Date(booking.createdAt)) : 
                     new Date(),
-                updatedAt: (booking as any).updatedAt ?
-                    ((booking as any).updatedAt instanceof Date ? (booking as any).updatedAt : new Date((booking as any).updatedAt)) :
+                updatedAt: 'updatedAt' in booking ?
+                    (booking.updatedAt instanceof Date ? booking.updatedAt : new Date(booking.updatedAt)) :
                     new Date(),
                 // Alias for providerReferenceId to match SharedBooking interface
                 providerBookingId: 'providerReferenceId' in booking ? 
@@ -210,23 +203,16 @@ export class BookingService {
         const bookings = await this.bookingRepository.findByTripId(tripId, {});
         return bookings.map(booking => {
             const dbBooking: DbBooking & { providerBookingId: string } = {
-                ...booking as any,
+                ...booking,
                 // Map snake_case to camelCase for timestamps
                 createdAt: 'created_at' in booking ? (booking as any).created_at : new Date(),
                 updatedAt: 'updated_at' in booking ? (booking as any).updated_at : new Date(),
                 // Ensure all required fields are present
                 metadata: 'metadata' in booking ? (booking.metadata as Record<string, unknown>) ?? {} : {},
                 // Map provider reference ID
-                providerBookingId: 'provider_reference_id' in booking
-                    ? (booking as any).provider_reference_id
-                    : (booking as any).providerReferenceId ?? '',
-                providerReferenceId: (booking as any).providerReferenceId ?? '',
-                cancellationReason: (booking as any).cancellationReason ?? null,
-                id: String(booking.id),
-                userId: String(booking.userId),
-                organizationId: String(booking.organizationId),
-                tripId: booking.tripId ? String(booking.tripId) : null,
-                activityId: booking.activityId ? String(booking.activityId) : null
+                providerBookingId: 'provider_reference_id' in booking 
+                    ? (booking as any).provider_reference_id 
+                    : (booking as any).providerReferenceId ?? ''
             };
             return this.mapToSharedBooking(dbBooking);
         });
@@ -265,6 +251,7 @@ export class BookingService {
             bookingDate: dbBooking.bookingDate.toISOString(),
             provider: dbBooking.provider,
             providerBookingId: dbBooking.providerBookingId,
+            providerReferenceId: dbBooking.providerReferenceId,
             userId: dbBooking.userId,
             organizationId: dbBooking.organizationId,
             // Handle optional fields with nullish coalescing
@@ -277,10 +264,11 @@ export class BookingService {
             notes: dbBooking.notes ?? undefined,
             cancellationPolicy: dbBooking.cancellationPolicy ?? undefined,
             cancellationDeadline: dbBooking.cancellationDeadline?.toISOString(),
+            cancellationReason: dbBooking.cancellationReason ?? undefined,
             metadata: dbBooking.metadata ?? {},
             // Timestamps
-            created_at: dbBooking.createdAt.toISOString(),
-            updated_at: dbBooking.updatedAt.toISOString(),
+            createdAt: dbBooking.createdAt.toISOString(),
+            updatedAt: dbBooking.updatedAt.toISOString(),
         };
 
         return booking;
