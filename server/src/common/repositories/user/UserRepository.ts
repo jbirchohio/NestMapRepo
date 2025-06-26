@@ -6,11 +6,6 @@ import type { User as DbUser } from '../../../../db/schema.js';
 import { hash, compare } from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 
-// Allow optional settings when mapping joined queries
-interface DbUserWithSettings extends DbUser {
-  settings?: string | UserSettings;
-}
-
 // Types
 export type UserRole = 'admin' | 'manager' | 'member' | 'guest';
 
@@ -133,18 +128,18 @@ export class UserRepository {
   /**
    * Maps a database user to a domain user
    */
-  private mapDbUserToUser(dbUser: DbUserWithSettings): UserProfile {
+  private mapDbUserToUser(dbUser: DbUser): UserProfile {
     let userSettings: UserSettings = { ...DEFAULT_USER_SETTINGS };
-
+    
     // Parse settings if they exist
     if (dbUser.settings) {
       try {
-        const parsedSettings = typeof dbUser.settings === 'string'
-          ? JSON.parse(dbUser.settings)
+        const parsedSettings = typeof dbUser.settings === 'string' 
+          ? JSON.parse(dbUser.settings) 
           : dbUser.settings;
-
+        
         if (parsedSettings && typeof parsedSettings === 'object') {
-          userSettings = { ...DEFAULT_USER_SETTINGS, ...(parsedSettings as UserSettings) };
+          userSettings = { ...DEFAULT_USER_SETTINGS, ...parsedSettings };
         }
       } catch (error) {
         this.logger.error('Error parsing user settings:', error);
@@ -181,13 +176,14 @@ export class UserRepository {
     
     if (params.search) {
       const searchTerm = `%${params.search}%`;
-      const searchCondition = or(
-        ilike(users.email, searchTerm),
-        ilike(users.username, searchTerm),
-        ilike(users.firstName, searchTerm),
-        ilike(users.lastName, searchTerm)
+      conditions.push(
+        or(
+          ilike(users.email, searchTerm),
+          ilike(users.username, searchTerm),
+          ilike(users.firstName, searchTerm),
+          ilike(users.lastName, searchTerm)
+        )
       );
-      conditions.push(searchCondition);
     }
 
     if (params.role) {
@@ -308,26 +304,7 @@ export class UserRepository {
       }
       
       // Handle sorting
-      const sortableColumns = {
-        id: users.id,
-        email: users.email,
-        username: users.username,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        role: users.role,
-        organizationId: users.organizationId,
-        emailVerified: users.emailVerified,
-        isActive: users.isActive,
-        lastLoginAt: users.lastLoginAt,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-      } as const;
-
-      type SortableColumn = keyof typeof sortableColumns;
-      const sortColumn: SortableColumn = (sortBy && sortBy in sortableColumns)
-        ? (sortBy as SortableColumn)
-        : 'createdAt';
-      const orderByField = sortableColumns[sortColumn];
+      const orderByField = sortBy in users ? users[sortBy as keyof typeof users] : users.createdAt;
       const orderByClause = sortOrder === 'asc' ? asc(orderByField) : desc(orderByField);
       
       const dbUsers = await query
@@ -376,6 +353,7 @@ export class UserRepository {
         organizationId: userData.organizationId || null,
         emailVerified: userData.emailVerified || false,
         isActive: userData.isActive !== false, // Default to true if not set
+        settings: userData.settings ? JSON.stringify(userData.settings) : JSON.stringify(DEFAULT_USER_SETTINGS),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -417,6 +395,12 @@ export class UserRepository {
       if (userData.organizationId !== undefined) updateData.organizationId = userData.organizationId;
       if (userData.emailVerified !== undefined) updateData.emailVerified = userData.emailVerified;
       if (userData.isActive !== undefined) updateData.isActive = userData.isActive;
+      if (userData.settings !== undefined) {
+        updateData.settings = JSON.stringify({
+          ...(existingUser.settings || {}),
+          ...userData.settings,
+        });
+      }
 
       if (Object.keys(updateData).length === 1) { // Only updatedAt was set
         return existingUser; // No actual changes to update
@@ -446,7 +430,7 @@ export class UserRepository {
         })
         .where(eq(users.id, id));
       
-      return (result.rowCount ?? 0) > 0;
+      return result.rowCount > 0;
     } catch (error) {
       this.logger.error(`Error deleting user ${id}:`, error);
       throw error;
@@ -486,7 +470,7 @@ export class UserRepository {
         })
         .where(eq(users.id, id));
       
-      return (result.rowCount ?? 0) > 0;
+      return result.rowCount > 0;
     } catch (error) {
       this.logger.error(`Error updating password for user ${id}:`, error);
       throw error;
@@ -503,7 +487,7 @@ export class UserRepository {
         })
         .where(eq(users.id, id));
       
-      return (result.rowCount ?? 0) > 0;
+      return result.rowCount > 0;
     } catch (error) {
       this.logger.error(`Error updating last login for user ${id}:`, error);
       throw error;
