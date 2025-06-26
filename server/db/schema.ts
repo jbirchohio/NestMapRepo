@@ -49,7 +49,7 @@ export type WithTimestamps<T> = T & {
 // Enums
 // ======================
 export const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
-const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
+export const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
 export const organizationMemberStatusEnum = pgEnum('organization_member_status', ['active', 'invited', 'suspended', 'inactive']);
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 export type OrganizationPlan = 'free' | 'pro' | 'enterprise';

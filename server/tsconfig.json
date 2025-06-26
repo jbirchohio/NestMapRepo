@@ -63,7 +63,7 @@
                             "moduleDetection":  "force",
                             "verbatimModuleSyntax":  true,
                             "tsBuildInfoFile":  "./node_modules/.cache/tsbuildinfo/server.tsbuildinfo",
-                            "noEmit":  true
+                            "emitDeclarationOnly": true
                         },
     "references":  [
                        {
@@ -73,6 +73,9 @@
     "include":  [
                     "src/**/*.ts",
                     "db/**/*.ts",
+                    "middleware/**/*.ts",
+                    "utils/**/*.ts",
+                    "*.ts",
                     "../vite.config.ts"
                 ]
 }
