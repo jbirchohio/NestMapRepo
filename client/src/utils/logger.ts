@@ -5,10 +5,11 @@ interface LogContext {
     action?: string;
     component?: string;
     metadata?: Record<string, any>;
+    [key: string]: unknown;
 }
 class Logger {
-    private isDevelopment = process.env.NODE_ENV === 'development';
-    private isProduction = process.env.NODE_ENV === 'production';
+    private isDevelopment = process.env['NODE_ENV'] === 'development';
+    private isProduction = process.env['NODE_ENV'] === 'production';
     private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
         const timestamp = new Date().toISOString();
         const contextStr = context ? ` | Context: ${JSON.stringify(context)}` : '';
