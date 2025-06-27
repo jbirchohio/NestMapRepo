@@ -8,7 +8,10 @@ This document outlines the steps required to migrate the authentication system t
 ### 1. Type Duplication
 - **Client**: Defines its own `JwtPayload` in `tokenManager.ts`
 - **Server**: Defines `TokenPayload` in `auth/jwt/types.ts`
-- **Shared**: Has canonical types in `shared/types/auth/*`
+ - **Shared**: Has canonical types in `shared/src/types/auth/*` (legacy `shared/types` is deprecated)
+
+### Breaking Changes
+Legacy imports from `@shared/types/auth` should migrate to `@shared/src/types/auth`. The old package still exports backwards-compatible aliases but will be removed in a future release.
 
 ### 2. Inconsistent Type Usage
 - Client's `AuthService` uses shared DTOs but not JWT types
@@ -20,7 +23,7 @@ This document outlines the steps required to migrate the authentication system t
 ### Phase 1: Align Shared Types (1-2 days)
 
 1. **Update Shared Types**
-   - Ensure all necessary types exist in `shared/types/auth/*`
+   - Ensure all necessary types exist in `shared/src/types/auth/*`
    - Add any missing fields from client/server implementations
    - Add JSDoc comments for better developer experience
 
