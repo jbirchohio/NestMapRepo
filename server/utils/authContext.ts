@@ -3,7 +3,12 @@ import type { Request } from 'express';
 // Extended Request type with our custom properties
 declare module 'express-serve-static-core' {
     interface Request {
-        user?: JWTUser | AuthUser;
+        user?: {
+            id: string;
+            email: string;
+            role: string;
+            organizationId?: string | null;
+        };
         organizationId?: string;
     }
 }

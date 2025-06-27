@@ -65,6 +65,7 @@ interface OutgoingMessage<T = unknown> {
     organizationId?: number;
     data?: T;
     lastSeen?: Date;
+    timestamp?: Date;
 }
 export class CollaborationWebSocketServer {
     private wss: WebSocketServer;
@@ -84,10 +85,10 @@ export class CollaborationWebSocketServer {
     }
     private async handleConnection(ws: AuthenticatedWebSocket, request: { url?: string }) {
         try {
-            const url = parse(request.url, true);
+            const url = parse(request.url || '', true);
             const token = url.query.token as string;
             if (!token) {
-                ws.close(1008, 'Authentication required');
+                ws.close(401, 'Authentication required');
                 return;
             }
             // Verify JWT token

@@ -1,6 +1,5 @@
-import SharedTripType from '@/types/SharedTripType';
-import SharedConflictFlagsType from '@/types/SharedConflictFlagsType';
-import React, { useState } from 'react';
+import { SharedTripType, SharedConflictFlagsType } from '@shared/types/trip';
+import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,13 +59,13 @@ export default function CorporateTripOptimizer() {
         }
         setIsOptimizing(true);
         try {
-            const response = await apiRequest('POST', '/api/optimize-corporate-trips', {
-                trips: corporateTrips
+            const result = await apiRequest<OptimizationResult>({
+                method: 'POST',
+                url: '/api/optimize-corporate-trips',
+                data: {
+                    trips: corporateTrips
+                }
             });
-            if (!response.ok) {
-                throw new Error('Failed to optimize trips');
-            }
-            const result = await response.json();
             setOptimizationResult(result);
             toast({
                 title: "Optimization Complete!",
@@ -429,7 +428,7 @@ export default function CorporateTripOptimizer() {
                           {trip.city}, {trip.country}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {trip.startDate} to {trip.endDate} • {trip.budget || 'No budget set'}
+                          {trip.startDate} to {trip.endDate} • {trip.cost ? `$${trip.cost}` : 'No budget set'}
                         </p>
                       </div>
                     </div>

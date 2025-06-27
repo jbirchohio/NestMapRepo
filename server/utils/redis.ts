@@ -62,8 +62,16 @@ export class RedisWithFallback {
     return item.value;
   }
 
+  /**
+   * Set a value in the store with an optional TTL (in milliseconds).
+   * If the Redis client is available, it will be used. Otherwise, the in-memory store is used.
+   * If the Redis client is used and the operation fails, the in-memory store is used as a fallback.
+   * @param key The key to set
+   * @param value The value to set
+   * @param ttlMs Optional TTL in milliseconds
+   */
   async set(key: string, value: any, ttlMs?: number) {
-    const item = { value };
+    const item: { value: any; expires?: number } = { value };
     if (ttlMs) {
       item.expires = Date.now() + ttlMs;
     }

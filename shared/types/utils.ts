@@ -187,10 +187,3 @@ export type TypeGuardCreate<T, TArgs extends any[] = any[]> = {
     create(...args: TArgs): T;
     is(value: unknown): value is T;
 };
-/**
- * Type for a class with a static from method that acts as a type guard
- */
-export type TypeGuardFromCreate<T, TFrom> = {
-    from(source: TFrom, ...args: unknown[]): T;
-    is(value: unknown): value is TFrom & T;
-};

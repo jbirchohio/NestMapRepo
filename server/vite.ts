@@ -1,4 +1,4 @@
-import express, { type Express, type Request, type Response, type NextFunction } from 'express';
+import express, { type Express, type Request, type Response, type NextFunction, type RequestHandler } from 'express';
 import fs from "fs";
 import path from "path";
 import { createServer as createViteServer, createLogger } from "vite";
@@ -17,7 +17,9 @@ export function log(message: string, source = "express") {
     console.log(`${formattedTime} [${source}] ${message}`);
 }
 export async function setupVite(app: Express, server: Server) {
-    const { default: viteConfig } = await import('../vite.config.js');
+    // Dynamically import the Vite config, supporting both ESM and CJS
+    const viteConfigModule = await import(path.resolve(currentDir, "../vite.config.js"));
+    const viteConfig = viteConfigModule.default || viteConfigModule;
     const serverOptions = {
         middlewareMode: true,
         hmr: { server },
@@ -60,8 +62,13 @@ export function serveStatic(app: Express) {
     if (!fs.existsSync(distPath)) {
         throw new Error(`Could not find the build directory: ${distPath}, make sure to build the client first`);
     }
-    app.use(express.static(distPath));
-    app.get("*", ((_req: Request, res: Response, _next: NextFunction) => {
-        res.sendFile(path.resolve(distPath, "index.html"));
-    }) as express.RequestHandler);
+    app.use(express.static(distPath) as unknown as RequestHandler);
+    app.get("*", (_req, res, next) => {
+        const indexPath = path.resolve(distPath, "index.html");
+        if (!fs.existsSync(indexPath)) {
+            log(`Cannot find index.html at ${indexPath}`, "express");
+            return next(new Error(`Cannot find index.html at ${indexPath}`));
+        }
+        return res.sendFile(indexPath);
+    });
 }

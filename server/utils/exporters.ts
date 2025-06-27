@@ -1,5 +1,5 @@
 import { stringify } from 'csv-stringify/sync';
-import { createEvents, EventAttributes } from 'ics';
+import { createEvents, type EventAttributes } from 'ics';
 
 interface Activity {
     date: string;
@@ -47,7 +47,9 @@ export function exportTripToICS(trip: Trip): string {
     }
     return value || '';
 }
-function parseDateTime(date: string, time?: string): number[] {
+import type { DateTime } from 'ics';
+
+function parseDateTime(date: string, time?: string): DateTime {
     const d = new Date(`${date}T${time || '09:00'}`);
     return [
         d.getFullYear(),
@@ -55,5 +57,5 @@ function parseDateTime(date: string, time?: string): number[] {
         d.getDate(),
         d.getHours(),
         d.getMinutes()
-    ] as [number, number, number, number, number];
+    ];
 }

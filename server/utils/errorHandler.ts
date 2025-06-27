@@ -84,10 +84,6 @@ export function createSuccessResponse<T>(data: T, message?: string): StandardSuc
 }
 import type { Response, NextFunction, Request } from 'express';
 
-/**
- * Represents the structure of error details in the application
- */
-type ErrorDetails = Record<string, unknown> | Record<string, unknown>[] | string | number | boolean | null | undefined;
 
 /**
  * Represents the structure of a standardized error response
@@ -199,8 +195,11 @@ export const globalErrorHandler: ErrorRequestHandler = (err: ErrorWithContext, r
             return next();
         }
         // Generate request ID for tracking
-        const requestId = req.headers['x-request-id'] ||
+        let requestId = req.headers['x-request-id'] ||
             `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        if (Array.isArray(requestId)) {
+            requestId = requestId[0];
+        }
         // Log the error with context
         const errorContext: Record<string, unknown> = {
             error: err.message,

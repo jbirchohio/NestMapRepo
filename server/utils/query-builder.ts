@@ -50,12 +50,16 @@ export class QueryBuilder<T extends Record<string, unknown>> {
             .map(([key, value]) => {
             const column = this.table[key as keyof typeof this.table];
             if (!column) {
-                logger.warn(`Column ${key} not found in table ${this.table.getSQL().name}`);
+                logger.warn(`Column ${key} not found in table definition`);
                 return undefined;
             }
             return Array.isArray(value)
-                ? inArray(column, value)
-                : eq(column, value);
+                ? (('sql' in column && 'fieldAlias' in column)
+                    ? inArray(column, value)
+                    : (logger.warn(`Column ${key} is not a valid Aliased column for inArray`), undefined))
+                : (('table' in column && 'name' in column && 'columnType' in column)
+                    ? eq(column as any, value)
+                    : (logger.warn(`Column ${key} is not a valid column for eq`), undefined));
         })
             .filter(Boolean);
         if (conditions.length > 0) {
@@ -118,7 +122,11 @@ export class QueryBuilder<T extends Record<string, unknown>> {
                 return column ? { ...acc, [field]: column } : acc;
             }, {} as Record<string, unknown>))
                 .from(table)
-                .where(inArray(table[foreignKey], ids));
+                .where(
+                    ('sql' in table[foreignKey] && 'fieldAlias' in table[foreignKey])
+                        ? inArray(table[foreignKey], ids)
+                        : (logger.warn(`Foreign key ${foreignKey} is not a valid Aliased column for inArray`), sql`1=0`)
+                );
             // Group related items by foreign key
             type RelatedItem = typeof related[number];
             const grouped = related.reduce<Record<string, RelatedItem[]>>((acc: Record<string, RelatedItem[]>, item: RelatedItem) => {

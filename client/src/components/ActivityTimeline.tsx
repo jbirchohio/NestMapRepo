@@ -1,8 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ClientActivity } from "@/lib/types";
 import ActivityItem from "./ActivityItem";
 import ActivityModal from "./ActivityModal";
+
+// Define the ClientActivity type locally since we can't import it
+interface ClientActivity {
+    id: string | number;
+    time?: string;
+    // Add other properties as needed
+}
 
 interface ActivityTimelineProps {
     activities: ClientActivity[];
@@ -30,7 +36,7 @@ export default function ActivityTimeline({ activities, date, tripId, onActivityU
         onActivityUpdated();
     };
     // Handle toggling activity completion status
-    const handleToggleComplete = (activityId: string, completed: boolean) => {
+    const handleToggleComplete = (activityId: string | number, completed: boolean) => {
         console.log(`Toggling activity ${activityId} completion to ${completed}`);
         // The API request is handled in the ActivityItem component
         // We just need to refresh the list when completed

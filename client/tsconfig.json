@@ -1,14 +1,20 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    // Build settings
     "composite": true,
     "declaration": true,
     "outDir": "../dist/client",
     "rootDir": "..",
-    "rootDirs": [".", "../shared/types"],
-    
-    // Module settings - align with Vite's expectations
+
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../shared/src/*"],
+      "@client/*": ["./src/*"],
+      "@/*": ["./src/*"],
+      "@shared/constants/*": ["../shared/src/constants/*"]
+    },
+
+
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -17,12 +23,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    
-    // JSX settings
+
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    
-    // Type checking
+
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -38,51 +42,37 @@
     "noImplicitOverride": true,
     "noUnusedLocals": true,
     "noUnusedParameters": false,
-    
-    // Path aliases - ensure these match your Vite config
-    "baseUrl": ".",
-    "paths": {
-      "@shared/*": ["../shared/*"],
-      "@client/*": ["./src/*"],
-      "@/*": ["./src/*"]
-    },
-    
-    // Type definitions
+
     "types": ["vite/client", "node"],
     "typeRoots": [
       "./node_modules/@types",
-      "../node_modules/@types",
-      "../shared/types"
+      "../node_modules/@types"
     ],
-    
-    // Libraries
+    "include": [
+      "src/**/*",
+      "../shared/src/types/**/*",
+      "../shared/src/constants/**/*"
+    ],
+
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    
-    // Output
+
     "sourceMap": true,
     "inlineSources": true,
     "declarationMap": true,
-    
-    // Performance
+
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    
-    // Compatibility
+
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true
   },
-  
+
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.d.ts",
-    "src/@types/**/*.d.ts",
-    "../shared/types/**/*.ts",
-    "../shared/types/**/*.d.ts",
+    "src",
+    "../shared/src/types",
     "../vite.config.ts"
   ],
-  
   "exclude": [
     "node_modules",
     "dist",

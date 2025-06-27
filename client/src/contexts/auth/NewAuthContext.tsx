@@ -1,16 +1,31 @@
-import SharedErrorType from '@/types/SharedErrorType';
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { authService } from '@/services/authService';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionLockout } from '@/utils/sessionLockout';
-import type { UserResponse, RegisterDto, LoginDto } from '@shared/types/auth/dto';
-import type { JwtPayload } from '@shared/types/auth/jwt';
-import type { AuthError, Permission, AuthUser, AuthTokens } from '@shared/types/auth/auth.types';
+import type { 
+  AuthError, 
+  AuthUser, 
+  AuthTokens, 
+  JwtPayload, 
+  LoginDto, 
+  RegisterDto,
+  Permission
+} from '@shared/types/auth';
+type UserResponse = AuthUser;
 
-// Types for API responses that might use snake_case
-interface UserResponseSnakeCase {
+// Extend the shared AuthUser type with any client-specific fields
+type ExtendedAuthUser = AuthUser & {
+  // Add any client-specific user fields here
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  tenantId?: string;
+  lastLoginAt?: string | null;
+};
+
+// Type for API responses that might use snake_case
+type UserResponseSnakeCase = {
   id?: string;
   email: string;
   first_name?: string;
@@ -25,7 +40,7 @@ interface UserResponseSnakeCase {
   role?: string;
   organization_id?: string | null;
   permissions?: string[];
-}
+};
 
 type UserResponseMixed = UserResponse | UserResponseSnakeCase;
 
@@ -58,16 +73,16 @@ function toAuthUser(userData: UserResponseMixed): AuthUser {
   const id = String(userData.id || '');
   const email = String(userData.email || '');
   
-  // Handle both snake_case and camelCase properties
-  const firstName = isSnake ? userData.first_name : (userData as UserResponse).firstName;
-  const lastName = isSnake ? userData.last_name : (userData as UserResponse).lastName;
-  const emailVerified = isSnake ? userData.email_verified : (userData as UserResponse).emailVerified;
-  const createdAt = isSnake ? userData.created_at : (userData as UserResponse).createdAt;
-  const updatedAt = isSnake ? userData.updated_at : (userData as UserResponse).updatedAt;
-  const lastLoginAt = isSnake ? userData.last_login_at : (userData as UserResponse).lastLoginAt;
-  const displayName = isSnake ? userData.display_name : (userData as UserResponse).displayName;
-  const avatarUrl = isSnake ? userData.avatar_url : (userData as UserResponse).avatarUrl;
-  const tenantId = isSnake ? userData.tenant_id : (userData as UserResponse).tenantId;
+  // Handle both snake_case and camelCase properties using bracket notation
+  const firstName = isSnake ? userData['first_name'] : (userData as UserResponse)['firstName'];
+  const lastName = isSnake ? userData['last_name'] : (userData as UserResponse)['lastName'];
+  const emailVerified = isSnake ? userData['email_verified'] : (userData as UserResponse)['emailVerified'];
+  const createdAt = isSnake ? userData['created_at'] : (userData as UserResponse)['createdAt'];
+  const updatedAt = isSnake ? userData['updated_at'] : (userData as UserResponse)['updatedAt'];
+  const lastLoginAt = isSnake ? userData['last_login_at'] : (userData as UserResponse)['lastLoginAt'];
+  const displayName = isSnake ? userData['display_name'] : (userData as UserResponse)['displayName'];
+  const avatarUrl = isSnake ? userData['avatar_url'] : (userData as UserResponse)['avatarUrl'];
+  const tenantId = isSnake ? userData['tenant_id'] : (userData as UserResponse)['tenantId'];
   
   // Generate displayName if not provided
   const finalDisplayName = displayName || 

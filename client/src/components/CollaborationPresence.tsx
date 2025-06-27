@@ -1,21 +1,137 @@
-import SharedItemDataType from '@/types/SharedItemDataType';
-import SharedCollaboratorType from '@/types/SharedCollaboratorType';
-import { useState, useEffect } from 'react';
+import type { SharedCollaboratorType } from '@shared/types/SharedCollaboratorType';
+import type { CollaborationPresenceProps, RecentActivityItem } from '@shared/types/collaboration/CollaborationTypes';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { ActivityData } from '@shared/types/activity/ActivityTypes';
+import { ActivityAction } from '@shared/constants/ActivityActions.js';
 import { useRealTimeCollaboration } from '@/hooks/useRealTimeCollaboration';
+import { ACTIVITY_ACTIONS } from '@shared/constants/ActivityActions.js';
+import { useAuth } from '@/contexts/auth/useAuth';
+
+// Constants
+const DEFAULT_USER_COLOR = '#000000';
+const COLLABORATION_SECTION = 'collaboration_presence';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Users, Eye, Edit3, MapPin, Wifi, WifiOff } from 'lucide-react';
-interface CollaborationPresenceProps {
-    tripId: number;
-    organizationId?: number;
-    userId: number;
-    showCursors?: boolean;
-    showActivityFeed?: boolean;
+import { Users, Eye, Edit3, MapPin, Wifi, WifiOff, Globe, FileText, Map, Calendar } from 'lucide-react';
+
+// Helper function to get icon based on activity type
+export function getActivityIcon(activityType?: string): JSX.Element {
+  if (!activityType) return <Globe className="w-3 h-3" />;
+  
+  const type = activityType.toLowerCase();
+  if (type.includes('trip') || type.includes('itinerary')) {
+    return <Map className="w-3 h-3" />;
+  } else if (type.includes('note') || type.includes('document')) {
+    return <FileText className="w-3 h-3" />;
+  } else if (type.includes('event') || type.includes('calendar')) {
+    return <Calendar className="w-3 h-3" />;
+  }
+  return <Globe className="w-3 h-3" />;
 }
-export default function CollaborationPresence({ tripId, organizationId, userId, showCursors = true, showActivityFeed = true }: CollaborationPresenceProps) {
-    const { collaborators, isConnected, connectionError, updateCursor, updateSection, totalCollaborators } = useRealTimeCollaboration({ tripId, organizationId, userId });
-    const [recentActivity, setRecentActivity] = useState<any /** FIXANYERROR: Replace 'any' */[]>([]);
+
+
+
+export default function CollaborationPresence({ 
+    tripId, 
+    organizationId, 
+    userId, 
+    showCursors = true, 
+    showActivityFeed = true 
+}: CollaborationPresenceProps) {
+    const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([]);
+    
+    // Handle new activities from the real-time collaboration hook
+    const handleNewActivity = useCallback((activity: RecentActivityItem) => {
+        setRecentActivity(prev => [activity, ...prev].slice(0, 20)); // Keep last 20 activities
+    }, []);
+    
+    const { 
+        collaborators, 
+        isConnected, 
+        connectionError, 
+        updateCursor, 
+        updateSection, 
+        totalCollaborators,
+        sendActivity 
+    } = useRealTimeCollaboration({ 
+        tripId, 
+        organizationId, 
+        userId,
+        onActivity: handleNewActivity
+    });
+    
+    // Get current user from auth context
+    const { user, isAuthenticated } = useAuth();
+
+    // Track the current section and send initial activity when component mounts
+    useEffect(() => {
+        // Update the current section when the component mounts
+        updateSection(COLLABORATION_SECTION);
+        
+        if (sendActivity && isAuthenticated && user) {
+            const displayName = user.displayName || 
+                             (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : 
+                             user.email?.split('@')[0] || 'Anonymous');
+            
+            // Only include properties that exist in ActivityData
+            const activityData = {
+                section: COLLABORATION_SECTION,
+                username: String(displayName || 'Anonymous'), // Ensure username is a string
+                userColor: user.avatar ? `#${user.avatar.slice(-6)}` : DEFAULT_USER_COLOR
+                // Don't include email as it's not part of ActivityData
+            };
+            
+            sendActivity(ACTIVITY_ACTIONS.PAGE_VIEW, activityData);
+        }
+        
+        // Cleanup function to clear the section when unmounting
+        return () => {
+            updateSection('');
+        };
+    }, [sendActivity, updateSection]);
+
+    // Update timeAgo for activities periodically
+    useEffect(() => {
+        const updateTimeAgo = () => {
+            setRecentActivity(prev => 
+                prev.map(activity => ({
+                    ...activity,
+                    timeAgo: formatTimeAgo(activity.timestamp)
+                }))
+            );
+        };
+        
+        const interval = setInterval(updateTimeAgo, 60000); // Update every minute
+        updateTimeAgo(); // Initial update
+        
+        return () => clearInterval(interval);
+    }, []);
+    
+    // Format time ago string (e.g., "2m ago", "1h ago")
+    const formatTimeAgo = (date: Date): string => {
+        const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+        
+        const intervals = {
+            year: 31536000,
+            month: 2592000,
+            week: 604800,
+            day: 86400,
+            hour: 3600,
+            minute: 60,
+            second: 1
+        };
+        
+        for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+            const interval = Math.floor(seconds / secondsInUnit);
+            if (interval >= 1) {
+                return interval === 1 ? `1 ${unit} ago` : `${interval} ${unit}s ago`;
+            }
+        }
+        
+        return 'just now';
+    };
+
     // Track mouse movement for cursor sharing
     useEffect(() => {
         if (!showCursors || !isConnected)
@@ -145,43 +261,115 @@ export default function CollaborationPresence({ tripId, organizationId, userId, 
               </div>
             </div>
           </div>))}
-    </div>);
+    </div>
+  );
 }
+
 // Component for showing section-specific collaboration
-export function SectionCollaboration({ sectionId, children }: {
+export function SectionCollaboration({ 
+    sectionId, 
+    children,
+    updateSection,
+    sendActivity
+}: {
     sectionId: string;
     children: React.ReactNode;
+    updateSection: (sectionId: string) => void;
+    sendActivity?: (action: ActivityAction, data: Omit<Partial<ActivityData>, 'id' | 'action' | 'timestamp' | 'timeAgo'>) => void;
 }) {
-    const { updateSection } = useRealTimeCollaboration({ tripId: 1, userId: 1 }); // These would be passed as props
     const handleFocus = () => {
         updateSection(sectionId);
+        if (sendActivity) {
+            sendActivity('section_focus', { sectionId });
+        }
     };
+    
     const handleBlur = () => {
         updateSection('');
+        if (sendActivity) {
+            sendActivity('section_blur', { sectionId });
+        }
     };
-    return (<div onFocus={handleFocus} onBlur={handleBlur} onMouseEnter={handleFocus} onMouseLeave={handleBlur} className="relative">
-      {children}
-    </div>);
+    
+    return (
+        <div 
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onMouseEnter={handleFocus}
+            onMouseLeave={handleBlur}
+            className="relative"
+        >
+            {children}
+        </div>
+    );
 }
+
 // Hook for components to easily integrate collaboration
-export function useCollaborationAwareness(sectionId: string) {
-    const { sendActivity } = useRealTimeCollaboration({ tripId: 1, userId: 1 });
-    const notifyEdit = (itemType: string, itemId: string) => {
-        sendActivity('editing', { sectionId, itemType, itemId });
-    };
-    const notifyView = (itemType: string, itemId: string) => {
-        sendActivity('viewing', { sectionId, itemType, itemId });
-    };
-    const notifyAdd = (itemType: string, itemData: SharedItemDataType) => {
-        sendActivity('added', { sectionId, itemType, itemData });
-    };
-    const notifyDelete = (itemType: string, itemId: string) => {
-        sendActivity('deleted', { sectionId, itemType, itemId });
-    };
-    return {
+interface UseCollaborationAwarenessProps {
+    sectionId: string;
+    tripId: string;
+    organizationId?: string;
+    userId: number;
+}
+
+// Create a type for the activity data that can be passed to sendActivity
+type SendActivityData = Omit<Partial<ActivityData>, 'id' | 'action' | 'timestamp' | 'timeAgo'>;
+
+export function useCollaborationAwareness({ 
+    sectionId, 
+    tripId, 
+    organizationId, 
+    userId 
+}: UseCollaborationAwarenessProps) {
+    // Ensure organizationId is always a string, even if undefined
+    const safeOrganizationId = organizationId ?? 'default-org';
+    
+    const { sendActivity } = useRealTimeCollaboration({ 
+        tripId: tripId.toString(), 
+        organizationId: safeOrganizationId, 
+        userId: userId || 0, // Provide a default user ID if undefined
+        onActivity: () => {}
+    });
+    
+    // Create a base activity data object with common properties
+    const getBaseActivityData = useCallback((): SendActivityData => ({
+        section: sectionId,
+        username: 'User', // This should be replaced with the actual username
+        userColor: '#000000',
+    }), [sectionId]);
+    
+    const notifyEdit = useCallback((itemType: string, itemId: string) => {
+        sendActivity?.('editing', {
+            ...getBaseActivityData(),
+            // Add any additional properties specific to edit actions
+        });
+    }, [sendActivity, getBaseActivityData]);
+    
+    const notifyView = useCallback((itemType: string, itemId: string) => {
+        sendActivity?.('viewing', {
+            ...getBaseActivityData(),
+            // Add any additional properties specific to view actions
+        });
+    }, [sendActivity, getBaseActivityData]);
+    
+    const notifyAdd = useCallback((itemType: string, itemData: Record<string, unknown>) => {
+        sendActivity?.('added', {
+            ...getBaseActivityData(),
+            // Add any additional properties specific to add actions
+        });
+    }, [sendActivity, getBaseActivityData]);
+    
+    const notifyDelete = useCallback((itemType: string, itemId: string) => {
+        sendActivity?.('deleted', {
+            ...getBaseActivityData(),
+            // Add any additional properties specific to delete actions
+        });
+    }, [sendActivity, getBaseActivityData]);
+    
+    return useMemo(() => ({
         notifyEdit,
         notifyView,
         notifyAdd,
         notifyDelete
-    };
+    }), [notifyEdit, notifyView, notifyAdd, notifyDelete]);
 }

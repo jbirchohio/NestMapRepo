@@ -1,5 +1,5 @@
-import type { Response } from '../../express-augmentations.js';
-import type { ApiResponse, PaginatedApiResponse } from '@shared/types/api';
+import type { Response, Request, NextFunction } from 'express';
+import type { ApiResponse, PaginatedApiResponse } from '@shared/types/api.ts';
 
 type ErrorDetails = Record<string, unknown> | Array<Record<string, unknown>> | string | undefined;
 /**
@@ -23,6 +23,7 @@ class ResponseHandler {
     public static error(res: Response, message: string, statusCode: number = 500, errorCode?: string, details?: ErrorDetails): Response {
         const response: ApiResponse = {
             success: false,
+            data: null,
             message,
             error: {
                 code: errorCode || 'INTERNAL_SERVER_ERROR',

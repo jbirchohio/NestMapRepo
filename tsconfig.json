@@ -1,4 +1,11 @@
 {
+  "compilerOptions": {
+    "rootDir": "../"
+  },
+  "include": [
+      "vite.config.ts",
+      "server/**/*.ts"
+  ],
   "files": [],
   "references": [
     { "path": "./client" },
