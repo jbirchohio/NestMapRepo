@@ -3,7 +3,7 @@ import { randomBytes, createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { redisClient as redis } from '../../../utils/redis.js';
 import { logger } from '../../../utils/logger.js';
-import type { JwtPayload } from '../../../../shared/types/auth/jwt.js';
+import type { JwtPayload } from '../../../../shared/src/types/auth/jwt.js';
 import type { 
   JwtConfig,
   ExtendedAuthTokens,

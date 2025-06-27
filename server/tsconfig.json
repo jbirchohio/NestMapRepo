@@ -19,7 +19,8 @@
             "@shared/*": ["../shared/*"],
             "@shared/types/*": ["../shared/types/*"],
             "@shared/src/*": ["../shared/src/*"],
-            "@shared/types/auth/*": ["../shared/types/auth/*"]
+            "@shared/src/types/auth/*": ["../shared/src/types/auth/*"],
+            "@shared/types/auth/*": ["../shared/src/types/auth/*"]
         },
         "lib": [
             "ES2022",

@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../auth.service.js';
 import { UserRepository } from '../../../common/repositories/user/user.repository.interface.js';
 import { RefreshTokenRepository } from '../../interfaces/refresh-token.repository.interface.js';
-import { UserRole } from '@shared/types/auth/permissions.js';
-import { LoginDto, RegisterDto } from '@shared/types/auth/dto/index.js';
+import { UserRole } from '@shared/src/types/auth/permissions.js';
+import { LoginDto, RegisterDto } from '@shared/src/types/auth/dto/index.js';
 
 describe('AuthService', () => {
   let service: AuthService;

@@ -5,10 +5,10 @@ import type {
   ResetPasswordDto,
   ChangePasswordDto,
   UserResponse
-} from '@shared/types/auth/dto/index.js';
-import type { AuthResponse } from '@shared/types/auth/jwt.js';
+} from '@shared/src/types/auth/dto/index.js';
+import type { AuthResponse } from '@shared/src/types/auth/jwt.js';
 import { verifyToken } from '../jwt/index.js';
-import { UserRole } from '@shared/types/auth/permissions.js';
+import { UserRole } from '@shared/src/types/auth/permissions.js';
 import type { IAuthService } from '../interfaces/auth.service.interface.js';
 import type { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
 import type { UserRepository } from '../../common/repositories/user/user.repository.interface.js';

@@ -1,15 +1,15 @@
 import type { Response, NextFunction, Request, RequestHandler } from 'express';
-import type { AuthenticatedRequest } from '@shared/types/auth/custom-request.js';
+import type { AuthenticatedRequest } from '@shared/src/types/auth/custom-request.js';
 import type { IAuthService } from '../interfaces/auth.service.interface.js';
 import type { 
   LoginDto,
   RequestPasswordResetDto,
   ResetPasswordDto,
   UserResponse
-} from '@shared/types/auth/dto/index.js';
-import type { AuthResponse } from '@shared/types/auth/dto/auth-response.dto.js';
-import type { User } from '@shared/types/auth/user.js';
-import type { UserRole } from '@shared/types/auth/permissions.js';
+} from '@shared/src/types/auth/dto/index.js';
+import type { AuthResponse } from '@shared/src/types/auth/dto/auth-response.dto.js';
+import type { User } from '@shared/src/types/auth/user.js';
+import type { UserRole } from '@shared/src/types/auth/permissions.js';
 import { rateLimiterMiddleware } from '@server/auth/middleware/rate-limiter.middleware.js';
 import { isErrorWithMessage } from '../../utils/error-utils.js';
 import { Logger } from '@nestjs/common';
@@ -28,7 +28,7 @@ interface AuthResponseWithoutRefreshToken {
 }
 
 // Re-export the UserResponse type from shared types
-// This is defined in @shared/types/auth/dto/user-response.dto.ts
+// This is defined in @shared/src/types/auth/dto/user-response.dto.ts
 export class AuthController {
     private readonly logger = new Logger(AuthController.name);
     constructor(private readonly authService: IAuthService) { }

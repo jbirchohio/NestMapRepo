@@ -7,7 +7,7 @@ import { eq, sql } from 'drizzle-orm';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 
 // Runtime imports
-import { AuthError, AuthErrorCode } from '@shared/types/auth/auth.js';
+import { AuthError, AuthErrorCode } from '@shared/src/types/auth/auth.js';
 import { users, refreshTokens, auditLogsTableDefinition as auditLogs } from '../../db/schema.js';
 import logger from '../../utils/logger.js';
 import { redisClient } from '../../utils/redis.js';
@@ -15,7 +15,7 @@ import { jwtService } from '../common/services/jwt.service.js';
 import type { Database } from '../../db/db.js';
 
 // Type imports
-import { UserRole } from '@shared/types/auth/permissions.js';
+import { UserRole } from '@shared/src/types/auth/permissions.js';
 import type { 
   JwtPayload,
   RegisterDto,

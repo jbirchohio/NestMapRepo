@@ -7,8 +7,8 @@ import type {
   TokenType,
   TokenPayload,
   TokenVerificationResult as SharedTokenVerificationResult
-} from '../../../../shared/types/auth/jwt.js';
-import type { UserRole } from '../../../../shared/types/auth/permissions.js';
+} from '../../../../shared/src/types/auth/jwt.js';
+import type { UserRole } from '../../../../shared/src/types/auth/permissions.js';
 
 // Re-export shared types
 export type { 

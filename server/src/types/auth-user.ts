@@ -1,7 +1,7 @@
 // Import UserRole from shared to maintain consistency
-import { UserRole } from '@shared/types/auth/permissions.js';
+import { UserRole } from '@shared/src/types/auth/permissions.js';
 import type { Request } from 'express';
-import type { AuthenticatedRequest as SharedAuthenticatedRequest } from '@shared/types/auth/custom-request.js';
+import type { AuthenticatedRequest as SharedAuthenticatedRequest } from '@shared/src/types/auth/custom-request.js';
 
 export { UserRole };
 
@@ -25,7 +25,7 @@ export type RequestUser = Omit<AuthUser, 'organization_id'> & {
 };
 
 // Re-export the AuthenticatedRequest from shared types
-export type { AuthenticatedRequest } from '@shared/types/auth/custom-request.js';
+export type { AuthenticatedRequest } from '@shared/src/types/auth/custom-request.js';
 
 // Define extended properties if needed
 export interface ExtendedRequestFields {

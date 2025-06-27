@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../jwt/index.ts';
-import type { TokenVerificationResult, AuthUser } from '@shared/types/auth/index.js';
+import type { TokenVerificationResult, AuthUser } from '@shared/src/types/auth/index.js';
 import { logger } from '@server/utils/logger.ts';
 import { redis } from '@server/db/redis.js';
 // Extend Express Request type

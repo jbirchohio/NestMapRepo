@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from '../auth.controller.js';
 import { AuthService } from '../../services/auth.service.js';
-import { LoginDto, RegisterDto, AuthResponse } from '@shared/types/auth/jwt/jwt.ts';
-import { UserRole } from '@shared/types/auth/permissions.js';
+import { LoginDto, RegisterDto, AuthResponse } from '@shared/src/types/auth/jwt/jwt.ts';
+import { UserRole } from '@shared/src/types/auth/permissions.js';
 import type { Response } from 'express';
 
 describe('AuthController', () => {
