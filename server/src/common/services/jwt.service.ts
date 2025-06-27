@@ -13,12 +13,12 @@ import type {
   TokenType,
   TokenVerificationResult,
   User
-} from '../../../../shared/types/auth/index.js';
+} from '../../../../shared/src/types/auth/index.js';
 
 // Import AuthError and AuthErrorCode as values
-import { AuthError } from '../../../../shared/types/auth/auth.js';
-import { AuthErrorCode } from '../../../../shared/types/auth/auth.js';
-import { UserRole } from '../../../../shared/types/auth/permissions.js';
+import { AuthError } from '../../../../shared/src/types/auth/auth.js';
+import { AuthErrorCode } from '../../../../shared/src/types/auth/auth.js';
+import { UserRole } from '../../../../shared/src/types/auth/permissions.js';
 
 // Extend User type to include all required fields
 interface UserWithPermissions extends Omit<User, 'email_verified'> {

@@ -3,7 +3,16 @@ import { z } from 'zod';
 /**
  * User roles in the application
  */
-export type UserRole = 'user' | 'admin' | 'moderator';
+// Support legacy roles while keeping the newer ones
+export type UserRole =
+  | 'user'
+  | 'admin'
+  | 'moderator'
+  | 'superadmin'
+  | 'super_admin'
+  | 'manager'
+  | 'member'
+  | 'guest';
 
 /**
  * User notification preferences
@@ -155,5 +164,17 @@ export function isUser(obj: unknown): obj is User {
  * Type guard to check if an object is a valid UserRole
  */
 export function isUserRole(role: unknown): role is UserRole {
-  return typeof role === 'string' && ['user', 'admin', 'moderator'].includes(role);
+  return (
+    typeof role === 'string' &&
+    [
+      'user',
+      'admin',
+      'moderator',
+      'superadmin',
+      'super_admin',
+      'manager',
+      'member',
+      'guest',
+    ].includes(role)
+  );
 }

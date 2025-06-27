@@ -16,7 +16,7 @@ import {
   RequestPasswordResetDto,
   ResetPasswordDto,
   ChangePasswordDto
-} from '@shared/types/auth/dto';
+} from '@shared/src/types/auth/dto';
 // Helper type to make certain properties required
 type WithRequired<T, K extends keyof T> = T & {
     [P in K]-?: T[P];

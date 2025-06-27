@@ -24,7 +24,8 @@
       "@shared/*": ["../shared/*"],
       "@shared/types": ["../shared/types/index.ts"],
       "@shared/types/*": ["../shared/types/*"],
-      "@shared/types/auth/*": ["../shared/types/auth/*"]
+      "@shared/src/types/auth/*": ["../shared/src/types/auth/*"],
+      "@shared/types/auth/*": ["../shared/src/types/auth/*"]
     },
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,

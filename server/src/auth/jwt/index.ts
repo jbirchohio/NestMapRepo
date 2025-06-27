@@ -34,10 +34,10 @@ import type {
   TokenType,
   TokenPayload,
   TokenVerificationResult as JwtTokenVerificationResult
-} from '../../../../shared/types/auth/jwt.js';
+} from '../../../../shared/src/types/auth/jwt.js';
 
 // Import UserRole and getPermissionsForRole
-import { UserRole, getPermissionsForRole } from '../../../../shared/types/auth/permissions.js';
+import { UserRole, getPermissionsForRole } from '../../../../shared/src/types/auth/permissions.js';
 
 // Import constants
 import {

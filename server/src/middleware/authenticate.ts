@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../auth/jwt/index.js';
-import type { AccessTokenPayload } from '@shared/types/auth/jwt.js';
+import type { AccessTokenPayload } from '@shared/src/types/auth/jwt.js';
 
 
 export async function authenticate(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
