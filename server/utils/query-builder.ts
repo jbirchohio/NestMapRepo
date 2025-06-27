@@ -1,9 +1,11 @@
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql, SQL } from 'drizzle-orm';
 import { dbService } from '../services/database.service.js';
 import { logger } from './logger.js';
+
 type OrderDirection = 'asc' | 'desc';
-interface QueryOptions<T> {
-    where?: Record<string, any>;
+
+export interface QueryOptions<T> {
+    where?: Partial<Record<keyof T, unknown>> | Record<string, unknown>;
     orderBy?: {
         column: keyof T;
         direction: OrderDirection;
@@ -16,13 +18,22 @@ interface QueryOptions<T> {
         key?: string;
     };
 }
-export class QueryBuilder<T> {
-    private table: any;
-    private schema: any;
-    private query: any;
+
+type Table = Record<string, SQL.Aliased | SQL>;
+type Schema = {
+    relations?: Record<string, {
+        table: Table;
+        foreignKey: string;
+        fields?: string[];
+    }>;
+};
+export class QueryBuilder<T extends Record<string, unknown>> {
+    private table: Table;
+    private schema: Schema;
+    private query: ReturnType<typeof dbService.getDrizzle>['select'];
     private options: QueryOptions<T>;
-    private relationMappings: Record<string, any> = {};
-    constructor(table: any, schema: any, options: QueryOptions<T> = {}) {
+    private relationMappings: Record<string, unknown> = {};
+    constructor(table: Table, schema: Schema, options: QueryOptions<T> = {}) {
         this.table = table;
         this.schema = schema;
         this.options = options;
@@ -86,7 +97,7 @@ export class QueryBuilder<T> {
     /**
      * Apply eager loading for relations
      */
-    private async applyRelations(results: any[]) {
+    private async applyRelations(results: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]) {
         if (!this.options.relations?.length || !results.length) {
             return results;
         }
@@ -102,10 +113,10 @@ export class QueryBuilder<T> {
                 return { [relation]: [] };
             }
             const related = await dbService.getDrizzle()
-                .select(fields.reduce((acc: Record<string, any>, field: string) => {
+                .select(fields.reduce((acc: Record<string, unknown>, field: string) => {
                 const column = table[field as keyof typeof table];
                 return column ? { ...acc, [field]: column } : acc;
-            }, {} as Record<string, any>))
+            }, {} as Record<string, unknown>))
                 .from(table)
                 .where(inArray(table[foreignKey], ids));
             // Group related items by foreign key
@@ -183,6 +194,10 @@ export class QueryBuilder<T> {
 /**
  * Helper function to create a new query builder instance
  */
-export function createQueryBuilder<T>(table: any, schema: any, options: QueryOptions<T> = {}): QueryBuilder<T> {
+export function createQueryBuilder<T extends Record<string, unknown>>(
+    table: Table,
+    schema: Schema,
+    options: QueryOptions<T> = {}
+): QueryBuilder<T> {
     return new QueryBuilder<T>(table, schema, options);
 }

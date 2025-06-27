@@ -1,3 +1,5 @@
+import SharedValueType from '@/types/SharedValueType';
+import SharedErrorType from '@/types/SharedErrorType';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -59,7 +61,7 @@ export default function AdminSettings() {
                 description: "System settings have been saved successfully.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Update Failed",
                 description: error.message || "Failed to update settings.",
@@ -83,7 +85,7 @@ export default function AdminSettings() {
             });
         },
     });
-    const handleSettingUpdate = (section: keyof SystemSettings, key: string, value: any) => {
+    const handleSettingUpdate = (section: keyof SystemSettings, key: string, value: SharedValueType) => {
         if (!settings)
             return;
         const updatedSettings = {

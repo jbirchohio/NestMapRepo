@@ -35,7 +35,7 @@ jest.mock('../../../../db/schema', () => ({
 }));
 describe('BookingRepository', () => {
     let repository: BookingRepositoryImpl;
-    let mockDb: any;
+    let mockDb: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     beforeEach(async () => {
         // Create a testing module with our repository
         const moduleRef = await Test.createTestingModule({

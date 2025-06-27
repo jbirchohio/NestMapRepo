@@ -52,7 +52,7 @@ export const requireSuperadminOwner = (req: Request, res: Response, next: NextFu
     next();
 };
 // Audit logging function for superadmin actions
-export const logSuperadminAction = async (adminUserId: string, action: string, targetType: string, targetId?: string, details?: any, targetUserId?: string, targetOrganizationId?: string, request?: Request) => {
+export const logSuperadminAction = async (adminUserId: string, action: string, targetType: string, targetId?: string, details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, targetUserId?: string, targetOrganizationId?: string, request?: Request) => {
     try {
         const { db } = await import('../db');
         const { superadminAuditLogs } = await import('../db/superadminSchema');

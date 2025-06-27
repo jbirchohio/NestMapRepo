@@ -54,8 +54,8 @@ export interface BookingDetails {
     email: string;
     phone?: string;
   };
-  flightDetails?: any; // Replace with more specific type if needed
-  hotelDetails?: any;   // Replace with more specific type if needed
+  flightDetails?: unknown; // Replace with more specific type if needed
+  hotelDetails?: unknown;   // Replace with more specific type if needed
   cancellationPolicy?: {
     canCancel: boolean;
     freeCancellationUntil?: string;
@@ -170,7 +170,7 @@ export interface BookingFormData extends Omit<FlightSearchParams, 'passengers' |
   department: string;
   projectCode: string;
   costCenter: string;
-  selectedFlight?: any; // TODO: Add proper flight type
+  selectedFlight?: unknown; // TODO: Add proper flight type
   selectedHotel?: Hotel;
   selectedRoomType?: RoomType;
 }

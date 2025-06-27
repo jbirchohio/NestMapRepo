@@ -324,7 +324,7 @@ export async function createBooking(params: {
     providerId: string;
     type: 'flight' | 'hotel' | 'activity';
     itemId: string;
-    userDetails: any;
+    userDetails: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
 }): Promise<any> {
     return {
         bookingId: `booking-${Date.now()}`,

@@ -1,3 +1,5 @@
+import SharedValueType from '@/types/SharedValueType';
+import SharedErrorType from '@/types/SharedErrorType';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -80,7 +82,7 @@ export default function ProfileSettings() {
             });
             queryClient.invalidateQueries({ queryKey: ['/api/user/profile'] });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Update Failed",
                 description: error.message || "Failed to update profile",
@@ -108,7 +110,7 @@ export default function ProfileSettings() {
             });
             passwordForm.reset();
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Password Change Not Available",
                 description: error.message || "Password change functionality requires authentication setup",
@@ -129,7 +131,7 @@ export default function ProfileSettings() {
                 description: "Your privacy preferences have been saved.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Update Failed",
                 description: error.message || "Failed to update privacy settings",
@@ -147,7 +149,7 @@ export default function ProfileSettings() {
                 description: "Your notification preferences have been saved.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Update Failed",
                 description: error.message || "Failed to update notification settings",
@@ -158,12 +160,12 @@ export default function ProfileSettings() {
     const onSubmitPassword = (data: PasswordFormData) => {
         changePasswordMutation.mutate(data);
     };
-    const updatePrivacySettings = (key: string, value: any) => {
+    const updatePrivacySettings = (key: string, value: SharedValueType) => {
         const newSettings = { ...privacySettings, [key]: value };
         setPrivacySettings(newSettings);
         updatePrivacyMutation.mutate(newSettings);
     };
-    const updateNotificationSettings = (key: string, value: any) => {
+    const updateNotificationSettings = (key: string, value: SharedValueType) => {
         const newSettings = { ...notificationSettings, [key]: value };
         setNotificationSettings(newSettings);
         updateNotificationsMutation.mutate(newSettings);

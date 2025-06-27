@@ -1,3 +1,5 @@
+import SharedTripType from '@/types/SharedTripType';
+import SharedConflictFlagsType from '@/types/SharedConflictFlagsType';
 import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +26,7 @@ interface OptimizedTrip {
     optimizedCost: number;
     savings: number;
     reasoning?: string;
-    conflictFlags: any[];
+    conflictFlags: SharedConflictFlagsType[];
     hasOptimization: boolean;
     travelMode?: string;
     budget?: string;
@@ -44,7 +46,7 @@ export default function CorporateTripOptimizer() {
     const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
     const [appliedChanges, setAppliedChanges] = useState<Set<number>>(new Set());
     // Fetch real corporate trips data from API
-    const { data: corporateTrips, isLoading: isLoadingTrips } = useQuery<any[]>({
+    const { data: corporateTrips, isLoading: isLoadingTrips } = useQuery<any /** FIXANYERROR: Replace 'any' */[]>({
         queryKey: ['/api/trips/corporate']
     });
     const handleOptimizeTrips = async () => {
@@ -416,7 +418,7 @@ export default function CorporateTripOptimizer() {
               {isLoadingTrips ? (<div className="text-center py-8">
                   <RefreshCw className="h-6 w-6 animate-spin mx-auto text-muted-foreground"/>
                   <p className="text-muted-foreground mt-2">Loading corporate trips...</p>
-                </div>) : corporateTrips && Array.isArray(corporateTrips) && corporateTrips.length > 0 ? (corporateTrips.map((trip: any) => (<div key={trip.id} className="flex items-center justify-between p-4 border rounded-lg">
+                </div>) : corporateTrips && Array.isArray(corporateTrips) && corporateTrips.length > 0 ? (corporateTrips.map((trip: SharedTripType) => (<div key={trip.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                         <Users className="h-4 w-4 text-blue-600"/>

@@ -1,3 +1,4 @@
+import SharedBagType from '@/types/SharedBagType';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -402,7 +403,7 @@ export default function FlightResults() {
                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                               <Luggage className="w-4 h-4"/>
                               <span>Included: </span>
-                              {flight.passengers[0].baggage.map((bag: any, index: number, array) => (
+                              {flight.passengers[0].baggage.map((bag: SharedBagType, index: number, array) => (
                                 <span key={index}>
                                   {bag.quantity} {bag.type.replace('_', ' ')}
                                   {index < array.length - 1 && ', '}

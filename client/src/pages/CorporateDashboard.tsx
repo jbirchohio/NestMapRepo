@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -81,7 +82,7 @@ export default function CorporateDashboard() {
             setShowAddFunds(false);
             setAddFundsAmount("");
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to add funds",
@@ -99,7 +100,7 @@ export default function CorporateDashboard() {
                 description: "Card has been successfully frozen.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to freeze card",
@@ -117,7 +118,7 @@ export default function CorporateDashboard() {
                 description: "Card has been successfully activated.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to activate card",

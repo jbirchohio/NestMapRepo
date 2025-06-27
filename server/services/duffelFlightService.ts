@@ -584,7 +584,7 @@ export class DuffelFlightService {
                 }))
             };
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel booking error:', error);
             if (error.response?.data) {
                 console.error('Duffel API booking error details:', error.response.data);
@@ -629,7 +629,7 @@ export class DuffelFlightService {
                 }))
             };
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel get booking error:', error);
             throw new Error(`Failed to get booking: ${error.message}`);
         }
@@ -653,7 +653,7 @@ export class DuffelFlightService {
                 refund_amount: cancellation.refund_amount,
                 refund_currency: cancellation.refund_currency
             };
-        } catch (error: any) {
+        } catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel cancel booking error:', error);
             throw new Error(`Failed to cancel booking: ${error.message}`);
         }
@@ -694,7 +694,7 @@ export class DuffelFlightService {
                 }
 
                 const { data } = await response.json();
-                return data.map((airport: any) => ({
+                return data.map((airport: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => ({
                     iata_code: airport.iata_code,
                     name: airport.name,
                     city_name: airport.city_name || airport.name,

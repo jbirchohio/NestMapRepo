@@ -1,3 +1,7 @@
+import SharedFlagType from '@/types/SharedFlagType';
+import SharedJobType from '@/types/SharedJobType';
+import SharedEventType from '@/types/SharedEventType';
+import SharedLogType from '@/types/SharedLogType';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'wouter';
@@ -302,7 +306,7 @@ export default function SuperadminClean() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {auditLogs.map((log: any) => (<TableRow key={log.id}>
+                  {auditLogs.map((log: SharedLogType) => (<TableRow key={log.id}>
                       <TableCell className="font-medium">{log.action}</TableCell>
                       <TableCell>{log.admin_user_id ? `Admin ${log.admin_user_id}` : 'System'}</TableCell>
                       <TableCell>
@@ -345,7 +349,7 @@ export default function SuperadminClean() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {billingData.map((event: any) => (<TableRow key={event.id}>
+                  {billingData.map((event: SharedEventType) => (<TableRow key={event.id}>
                       <TableCell>{event.organization_name}</TableCell>
                       <TableCell className="font-medium">{event.event_type}</TableCell>
                       <TableCell>${event.amount?.toFixed(2) || '0.00'}</TableCell>
@@ -418,7 +422,7 @@ export default function SuperadminClean() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {backgroundJobs.map((job: any) => (<TableRow key={job.id}>
+                  {backgroundJobs.map((job: SharedJobType) => (<TableRow key={job.id}>
                       <TableCell className="font-medium">{job.job_type}</TableCell>
                       <TableCell>
                         <Badge variant={job.status === 'completed' ? 'default' : job.status === 'failed' ? 'destructive' : 'secondary'}>
@@ -459,7 +463,7 @@ export default function SuperadminClean() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {featureFlags.map((flag: any) => (<TableRow key={flag.id}>
+                    {featureFlags.map((flag: SharedFlagType) => (<TableRow key={flag.id}>
                         <TableCell className="font-medium">{flag.flag_name}</TableCell>
                         <TableCell>{flag.description || 'No description'}</TableCell>
                         <TableCell>

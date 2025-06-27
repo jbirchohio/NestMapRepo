@@ -1,3 +1,5 @@
+import SharedValueType from '@/types/SharedValueType';
+import SharedErrorType from '@/types/SharedErrorType';
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -109,7 +111,7 @@ export default function FlightSearch() {
         onSuccess: (data) => {
             console.log('Flight search results:', data);
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Search Failed",
                 description: error.message || "Unable to search flights",
@@ -257,7 +259,7 @@ export default function FlightSearch() {
                 </div>
                 <div>
                   <Label htmlFor="class">Cabin Class</Label>
-                  <Select value={searchParams.cabin_class} onValueChange={(value: any) => setSearchParams(prev => ({ ...prev, cabin_class: value }))}>
+                  <Select value={searchParams.cabin_class} onValueChange={(value: SharedValueType) => setSearchParams(prev => ({ ...prev, cabin_class: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

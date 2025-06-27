@@ -1,223 +1,217 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/constants';
-import { useAuth } from '../contexts/auth/AuthContext';
-
-// Define local types since we're not using @shared/schema
-type BaseTrip = {
-    id: number | string;
-    isGuest?: boolean;
-    createdAt?: string;
-    updatedAt?: string;
-};
-
-type TripWithDetails = BaseTrip & {
-    title: string;
-    startDate: string;
-    endDate: string;
-    description?: string;
-    [key: string]: any; // For additional properties
-};
-
-type ClientTrip = BaseTrip | TripWithDetails;
-
-// Type guard to check if a trip has required details
-const hasRequiredTripDetails = (trip: ClientTrip): trip is TripWithDetails => {
-    return 'title' in trip && 'startDate' in trip && 'endDate' in trip;
-};
+import { useAuth } from '@/state/contexts/AuthContext';
+import type { Trip, CreateTripDTO, UpdateTripDTO } from '@/shared/types/trip';
 
 // Types
 export interface GetTripsParams {
-    status?: string[];
-    limit?: number;
-    page?: number;
-    pageSize?: number;
-    sortBy?: string;
-    sortDirection?: 'asc' | 'desc';
+  status?: string[];
+  limit?: number;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+  [key: string]: unknown; // Allow additional filter params
 }
 
-export interface CreateTripDTO {
-    [key: string]: any;
-}
+// Type guard to check if a trip has required details
+const hasRequiredTripDetails = (trip: Trip): trip is Required<Trip> => {
+  return 'title' in trip && 'startDate' in trip && 'endDate' in trip;
+};
 
-export interface UpdateTripDTO {
-    [key: string]: any;
-}
+// Helper function to manage guest trips in localStorage
+const getGuestTrip = (tripId: string | number): Trip | null => {
+  if (typeof window === 'undefined') return null;
+  
+  const stored = localStorage.getItem('nestmap_guest_trips');
+  if (!stored) return null;
+  
+  try {
+    const guestTrips = JSON.parse(stored) as Trip[];
+    return guestTrips.find(trip => trip.id === tripId) || null;
+  } catch (error) {
+    console.error('Error parsing guest trips:', error);
+    return null;
+  }
+};
 
-// Helper function to check if trip exists in localStorage (guest mode)
-const getGuestTrip = (tripId: string | number): ClientTrip | null => {
-    if (typeof window === 'undefined') return null;
-    
-    const stored = localStorage.getItem('nestmap_guest_trips');
-    if (!stored) return null;
-    
-    try {
-        const guestTrips = JSON.parse(stored);
-        return guestTrips.find((trip: ClientTrip) => trip.id === Number(tripId)) || null;
-    } catch (error) {
-        console.error('Error parsing guest trips:', error);
-        return null;
-    }
+// Helper to get guest trips
+const getGuestTrips = (): Trip[] => {
+  if (typeof window === 'undefined') return [];
+  
+  const stored = localStorage.getItem('nestmap_guest_trips');
+  if (!stored) return [];
+  
+  try {
+    return JSON.parse(stored) as Trip[];
+  } catch (error) {
+    console.error('Error parsing guest trips:', error);
+    return [];
+  }
+};
+
+// Save guest trips to localStorage
+const saveGuestTrips = (trips: Trip[]): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('nestmap_guest_trips', JSON.stringify(trips));
 };
 
 // Main hook for trip-related operations
 export function useTrip(tripId: string | number) {
-    const { user } = useAuth();
-    const isGuest = !user;
+  const { isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
 
-    return useQuery<ClientTrip | null>({
-        queryKey: ['trip', tripId],
-        queryFn: async () => {
-            if (isGuest) {
-                return getGuestTrip(tripId);
-            }
-            
-            try {
-                const data = await apiRequest('GET', `${API_ENDPOINTS.TRIPS}/${tripId}`);
-                return data;
-            } catch (error) {
-                console.error('Error fetching trip:', error);
-                throw error;
-            }
-        },
-        enabled: !!tripId,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-    });
+  return useQuery<Trip | null, Error>({
+    queryKey: ['trip', tripId],
+    queryFn: async () => {
+      if (!isAuthenticated || !user) {
+        return getGuestTrip(tripId);
+      }
+      
+      const response = await apiClient.get<Trip>(`${API_ENDPOINTS.TRIPS}/${tripId}`);
+      return response.data;
+    },
+    enabled: !!tripId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 }
 
-export function useTrips(params?: GetTripsParams) {
-    const { user } = useAuth();
-    const isCorporate = user?.role === 'corporate';
+export function useTrips(params: GetTripsParams = {}) {
+  const { isAuthenticated, user } = useAuth();
+  const isCorporate = user?.role === 'admin'; // Changed to match our UserRole type
 
-    return useQuery<ClientTrip[]>({
-        queryKey: ['trips', { ...params, isCorporate }],
-        queryFn: async () => {
-            if (!user) {
-                // Handle guest mode
-                const stored = localStorage.getItem('nestmap_guest_trips');
-                return stored ? JSON.parse(stored) : [];
-            }
+  return useQuery<Trip[], Error>({
+    queryKey: ['trips', { ...params, isCorporate }],
+    queryFn: async () => {
+      if (!isAuthenticated || !user) {
+        // Handle guest mode
+        return getGuestTrips();
+      }
 
-            // For now, use the regular trips endpoint for both corporate and regular users
-            // until we have a dedicated corporate endpoint
-            const endpoint = API_ENDPOINTS.TRIPS;
-            
-            const queryParams = new URLSearchParams();
-            if (params?.status?.length) {
-                params.status.forEach(status => queryParams.append('status', status));
-            }
-            if (params?.limit) {
-                queryParams.append('limit', params.limit.toString());
-            }
-            if (isCorporate) {
-                queryParams.append('corporate', 'true');
-            }
+      // Handle authenticated user
+      const endpoint = API_ENDPOINTS.TRIPS;
+      const queryParams = new URLSearchParams();
+      
+      // Add filter params
+      Object.entries(params).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          value.forEach(v => queryParams.append(key, v.toString()));
+        } else if (value !== undefined && value !== null) {
+          queryParams.append(key, value.toString());
+        }
+      });
 
-            const url = `${endpoint}?${queryParams.toString()}`;
-            return await apiRequest('GET', url);
-        },
-        enabled: !!user || typeof window !== 'undefined',
-        staleTime: 5 * 60 * 1000, // 5 minutes
-    });
+      const queryString = queryParams.toString();
+      const url = queryString ? `${API_ENDPOINTS.TRIPS}?${queryString}` : API_ENDPOINTS.TRIPS;
+      
+      const response = await apiClient.get<Trip[]>(url);
+      return response.data;
+    },
+    enabled: !!user || typeof window !== 'undefined',
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 }
 
 export function useCreateTrip() {
-    const queryClient = useQueryClient();
-    const { user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: async (tripData: CreateTripDTO) => {
-            if (!user) {
-                // Handle guest mode
-                const newTrip: ClientTrip = {
-                    ...tripData,
-                    id: Date.now(),
-                    isGuest: true,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                };
+  return useMutation<Trip, Error, CreateTripDTO>({
+    mutationFn: async (tripData) => {
+      if (!isAuthenticated || !user) {
+        // Handle guest mode
+        const newTrip: Trip = {
+          ...tripData,
+          id: `guest-${Date.now()}`,
+          isGuest: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
 
-                const stored = localStorage.getItem('nestmap_guest_trips');
-                const guestTrips = stored ? JSON.parse(stored) : [];
-                localStorage.setItem('nestmap_guest_trips', JSON.stringify([...guestTrips, newTrip]));
-                
-                return newTrip;
-            }
+        const guestTrips = getGuestTrips();
+        guestTrips.push(newTrip);
+        saveGuestTrips(guestTrips);
+        return newTrip;
+      }
 
-            return await apiRequest('POST', API_ENDPOINTS.TRIPS, tripData);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['trips'] });
-        },
-    });
+      // Handle authenticated user
+      const response = await apiClient.post<Trip>(API_ENDPOINTS.TRIPS, tripData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
 }
 
 export function useUpdateTrip(tripId: string | number) {
-    const queryClient = useQueryClient();
-    const { user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: async (tripData: UpdateTripDTO) => {
-            if (!user) {
-                // Handle guest mode
-                const stored = localStorage.getItem('nestmap_guest_trips');
-                if (!stored) throw new Error('Trip not found');
-                
-                const guestTrips: ClientTrip[] = JSON.parse(stored);
-                const tripIndex = guestTrips.findIndex(t => t.id === (typeof tripId === 'string' ? tripId : Number(tripId)));
-                
-                if (tripIndex === -1) throw new Error('Trip not found');
-                
-                const currentTrip = guestTrips[tripIndex];
-                if (!currentTrip) {
-                    throw new Error('Trip not found');
-                }
-                
-                const updatedTrip: ClientTrip = {
-                    ...currentTrip,
-                    ...tripData,
-                    id: currentTrip.id, // Ensure ID is preserved
-                    updatedAt: new Date().toISOString(),
-                };
-                
-                guestTrips[tripIndex] = updatedTrip;
-                localStorage.setItem('nestmap_guest_trips', JSON.stringify(guestTrips));
-                
-                return updatedTrip;
-            }
+  return useMutation<Trip, Error, UpdateTripDTO>({
+    mutationFn: async (tripData) => {
+      if (!isAuthenticated || !user) {
+        // Handle guest mode
+        const guestTrips = getGuestTrips();
+        const tripIndex = guestTrips.findIndex(trip => trip.id === tripId);
+        
+        if (tripIndex === -1) {
+          throw new Error('Trip not found in guest trips');
+        }
+        
+        const updatedTrip: Trip = {
+          ...guestTrips[tripIndex],
+          ...tripData,
+          updatedAt: new Date().toISOString(),
+        };
+        
+        guestTrips[tripIndex] = updatedTrip;
+        saveGuestTrips(guestTrips);
+        return updatedTrip;
+      }
 
-            return await apiRequest('PATCH', `${API_ENDPOINTS.TRIPS}/${tripId}`, tripData);
-        },
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['trips'] });
-            queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
-        },
-    });
+      // Handle authenticated user
+      const response = await apiClient.patch<Trip>(`${API_ENDPOINTS.TRIPS}/${tripId}`, tripData);
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      
+      // Also invalidate any dashboard queries that might include this trip
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
 }
 
 export function useDeleteTrip() {
-    const queryClient = useQueryClient();
-    const { user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: async (tripId: string | number) => {
-            if (!user) {
-                // Handle guest mode
-                const stored = localStorage.getItem('nestmap_guest_trips');
-                if (stored) {
-                    const guestTrips: ClientTrip[] = JSON.parse(stored);
-                    const updatedTrips = guestTrips.filter(trip => trip.id !== Number(tripId));
-                    localStorage.setItem('nestmap_guest_trips', JSON.stringify(updatedTrips));
-                }
-                return;
-            }
+  return useMutation<void, Error, string | number>({
+    mutationFn: async (tripId) => {
+      if (!isAuthenticated || !user) {
+        // Handle guest mode
+        const guestTrips = getGuestTrips();
+        const updatedTrips = guestTrips.filter(trip => trip.id !== tripId);
+        saveGuestTrips(updatedTrips);
+        return;
+      }
 
-            await apiRequest('DELETE', `${API_ENDPOINTS.TRIPS}/${tripId}`);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['trips'] });
-        },
-    });
+      // Handle authenticated user
+      await apiClient.delete(`${API_ENDPOINTS.TRIPS}/${tripId}`);
+    },
+    onSuccess: (_, tripId) => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      queryClient.removeQueries({ queryKey: ['trip', tripId] });
+      
+      // Also invalidate any dashboard queries that might include this trip
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
 }
 
 export function useDashboardTrips(params?: { limit?: number; status?: string[] }) {

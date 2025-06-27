@@ -1,3 +1,4 @@
+import SharedDataType from '@/types/SharedDataType';
 import { ValidationError } from '@/utils/errorHandler';
 export class InputValidator {
     private static xssPatterns: RegExp[] = [
@@ -93,7 +94,7 @@ export class InputValidator {
         sanitized = sanitized.replace(/'/g, '&#039;');
         return sanitized;
     }
-    static validateRequestData(data: any): any {
+    static validateRequestData(data: SharedDataType): unknown {
         if (typeof data === 'string') {
             return this.sanitizeString(data);
         }
@@ -102,7 +103,7 @@ export class InputValidator {
         }
         if (typeof data === 'object' && data !== null) {
             const result: {
-                [key: string]: any;
+                [key: string]: unknown;
             } = {};
             Object.entries(data).forEach(([key, value]) => {
                 result[key] = this.validateRequestData(value);
@@ -111,7 +112,7 @@ export class InputValidator {
         }
         return data;
     }
-    static validateResponse(data: any): any {
+    static validateResponse(data: SharedDataType): unknown {
         if (typeof data === 'string') {
             return this.sanitizeString(data);
         }
@@ -120,7 +121,7 @@ export class InputValidator {
         }
         if (typeof data === 'object' && data !== null) {
             const result: {
-                [key: string]: any;
+                [key: string]: unknown;
             } = {};
             Object.entries(data).forEach(([key, value]) => {
                 result[key] = this.validateResponse(value);

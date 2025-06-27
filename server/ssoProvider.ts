@@ -182,7 +182,7 @@ export class SSOManager {
             return this.generateOAuthRequest(config, returnUrl);
         }
     }
-    private parseSAMLResponse(samlResponse: string): any {
+    private parseSAMLResponse(samlResponse: string): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
         // In production, use a proper SAML library
         return {
             isValid: true,

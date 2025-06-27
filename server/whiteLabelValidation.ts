@@ -72,11 +72,15 @@ export const whiteLabelSettingsSchema = z.object({
         enableCollaboration: z.boolean().optional(),
     }).optional(),
 });
+/**
+ * Type representing the validated white label settings
+ * Inferred from the whiteLabelSettingsSchema
+ */
 export type WhiteLabelSettings = z.infer<typeof whiteLabelSettingsSchema>;
 /**
  * Validation function with detailed error handling
  */
-export function validateWhiteLabelSettings(data: any): {
+export function validateWhiteLabelSettings(data: unknown): {
     success: true;
     data: WhiteLabelSettings;
 } | {

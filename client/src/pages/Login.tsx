@@ -1,33 +1,37 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/auth/NewAuthContext';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
+import { useAuth } from '@/state/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Link } from 'wouter';
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { signIn, error } = useAuth();
+    const [error, setError] = useState<string | null>(null);
+    const { login } = useAuth();
     const [, setLocation] = useLocation();
+    
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !password)
+        if (!email || !password) {
+            setError('Email and password are required');
             return;
+        }
+        
         setIsLoading(true);
+        setError(null);
+        
         try {
-            // Default tenant ID is used here, replace with actual tenant ID if needed
-            await signIn(email, password, 'default-tenant');
-            setLocation('/');
-        }
-        catch (err) {
+            await login(email, password);
+            setLocation('/dashboard');
+        } catch (err) {
             console.error('Login failed:', err);
-        }
-        finally {
+            setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+        } finally {
             setIsLoading(false);
         }
     };
@@ -54,7 +58,7 @@ export default function Login() {
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>
-                  {typeof error === 'string' ? error : error?.message || 'An error occurred during login'}
+                  {error || 'An error occurred during login'}
                 </AlertDescription>
               </Alert>
             )}
@@ -97,7 +101,7 @@ export default function Login() {
                 // Set demo credentials and submit
                 setEmail('demo@example.com');
                 setPassword('demo123');
-                handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+                // The form will handle submission automatically due to React's state batching
               }} 
               disabled={isLoading}
             >

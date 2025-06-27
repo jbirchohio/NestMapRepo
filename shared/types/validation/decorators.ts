@@ -13,7 +13,7 @@ export function IsTenantId(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any) {
+        validate(value: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
           if (!value) return false;
           return /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i.test(value);
         },
@@ -37,7 +37,7 @@ export function IsValidRole(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any) {
+        validate(value: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
           const validRoles = Object.values(UserRole) as string[];
           return validRoles.includes(value);
         },

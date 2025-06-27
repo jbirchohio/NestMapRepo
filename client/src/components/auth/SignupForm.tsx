@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useAuth } from "@/contexts/auth/NewAuthContext";
+import { useAuth } from "@/state/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,11 +34,12 @@ interface SignupFormProps {
     onToggleForm?: () => void;
 }
 export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps) {
-    const { signUp } = useAuth();
+    const { register: signUp } = useAuth();
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const form = useForm<SignupFormValues>({
-        resolver: zodResolver(signupSchema) as any, // Type assertion to fix TS2589
+        resolver: zodResolver(signupSchema) as unknown as Resolver<SignupFormValues>,
         defaultValues: {
             email: "",
             firstName: "",
@@ -70,12 +72,18 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
 
             await signUp(registerData);
             
+            // Navigate to dashboard on successful signup
+            navigate('/dashboard');
+            
             if (onSuccess) {
                 onSuccess();
             }
-        } catch (error: Error | unknown) {
-            const err = error as Error;
-            setErrorMessage(err.message || "Failed to sign up. Please try again.");
+        } catch (error: unknown) {
+            console.error('Signup error:', error);
+            const errorMessage = error instanceof Error 
+                ? error.message 
+                : 'Failed to sign up. Please try again.';
+            setErrorMessage(errorMessage);
         } finally {
             setIsLoading(false);
         }

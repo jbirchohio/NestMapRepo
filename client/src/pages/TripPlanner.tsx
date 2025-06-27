@@ -1,3 +1,4 @@
+import SharedUpdatesType from '@/types/SharedUpdatesType';
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -173,7 +174,7 @@ export default function TripPlanner() {
         setShareModalOpen(true);
     };
     // Handle saving share settings
-    const handleSaveShareSettings = async (tripId: number, updates: any) => {
+    const handleSaveShareSettings = async (tripId: number, updates: SharedUpdatesType) => {
         try {
             const response = await fetch(`/api/trips/${tripId}`, {
                 method: "PUT",

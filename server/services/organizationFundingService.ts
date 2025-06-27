@@ -64,7 +64,7 @@ export class OrganizationFundingService {
                 .where(eq(organizations.id, organizationId));
             return account;
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             throw new Error(`Failed to create connected account: ${error.message}`);
         }
     }
@@ -85,7 +85,7 @@ export class OrganizationFundingService {
             });
             return accountLink;
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             throw new Error(`Failed to create onboarding link: ${error.message}`);
         }
     }
@@ -118,7 +118,7 @@ export class OrganizationFundingService {
                 account: account
             };
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             return { ready: false, reason: error.message };
         }
     }
@@ -175,7 +175,7 @@ export class OrganizationFundingService {
                 .where(eq(organizations.id, config.organizationId));
             return { success: true, fundingSourceId };
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             throw new Error(`Failed to setup funding source: ${error.message}`);
         }
     }
@@ -253,7 +253,7 @@ export class OrganizationFundingService {
             });
             return { card, cardholder };
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             throw new Error(`Failed to create card: ${error.message}`);
         }
     }
@@ -282,7 +282,7 @@ export class OrganizationFundingService {
             }
             return { success: true, amount };
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             throw new Error(`Failed to add funds: ${error.message}`);
         }
     }

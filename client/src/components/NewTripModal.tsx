@@ -1,3 +1,4 @@
+import SharedLocType from '@/types/SharedLocType';
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
@@ -355,7 +356,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                 const aiData = await aiResponse.json();
                 if (aiData.locations && Array.isArray(aiData.locations)) {
                     const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
-                    const processedLocations = await Promise.all(aiData.locations.map(async (loc: any) => {
+                    const processedLocations = await Promise.all(aiData.locations.map(async (loc: SharedLocType) => {
                         try {
                             const fullAddress = (loc.address || loc.name) + ", " +
                                 (loc.city || city) + ", " +

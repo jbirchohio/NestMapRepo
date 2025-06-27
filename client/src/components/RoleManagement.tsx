@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -59,7 +60,7 @@ export function RoleManagement({ tripId, userRole }: RoleManagementProps) {
                 description: "The user has been invited to collaborate on this trip.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Failed to send invitation",
                 description: error.message || "Please try again.",
@@ -244,7 +245,7 @@ export function RoleManagement({ tripId, userRole }: RoleManagementProps) {
                       {config.description}
                     </div>
                   </div>
-                  <Badge variant={config.color as any}>{config.label}</Badge>
+                  <Badge variant={config.color as any /** FIXANYERROR: Replace 'any' */}>{config.label}</Badge>
                 </div>))}
             </CardContent>
           </Card>

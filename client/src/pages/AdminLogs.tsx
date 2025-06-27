@@ -1,3 +1,4 @@
+import SharedAction_dataType from '@/types/SharedAction_dataType';
 import React, { useState, useCallback, useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ interface AdminLog {
     id: number;
     admin_user_id: number;
     action_type: string;
-    action_data: any;
+    action_data: SharedAction_dataType;
     ip_address: string | null;
     timestamp: Date;
 }

@@ -1,3 +1,5 @@
+import SharedErrorType from '@/types/SharedErrorType';
+import SharedDataType from '@/types/SharedDataType';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -85,7 +87,7 @@ export default function Settings() {
         }
     }, [whiteLabelConfig]);
     const saveMutation = useMutation({
-        mutationFn: async (data: any) => {
+        mutationFn: async (data: SharedDataType) => {
             const response = await apiRequest('POST', '/api/white-label/configure', {
                 companyName: data.companyName,
                 primaryColor: data.primaryColor,
@@ -105,7 +107,7 @@ export default function Settings() {
             });
             queryClient.invalidateQueries({ queryKey: ['/api/white-label/config'] });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Update Failed",
                 description: error.message || "Failed to update settings",
@@ -117,7 +119,7 @@ export default function Settings() {
         (userPermissions as any).canAccessAdmin ||
         user?.role === 'admin');
     const canUseBranding = orgPlan?.plan === 'pro' || orgPlan?.plan === 'business' || orgPlan?.plan === 'enterprise';
-    const onSubmit = (data: any) => {
+    const onSubmit = (data: SharedDataType) => {
         if (!canUseBranding) {
             toast({
                 title: "Upgrade Required",

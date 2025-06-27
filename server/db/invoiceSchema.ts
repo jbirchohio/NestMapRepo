@@ -55,7 +55,7 @@ export const invoices = pgTable('invoices', {
         stripeEvent?: string;
         stripeEventId?: string;
         lastPaymentError?: string;
-        [key: string]: any;
+        [key: string]: any /** FIXANYERROR: Replace 'any' */;
     }>(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),

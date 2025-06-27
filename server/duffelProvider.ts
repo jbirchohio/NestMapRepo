@@ -184,11 +184,11 @@ export class DuffelProvider {
         const cityKey = Object.keys(cityMap).find(city => destination.toLowerCase().includes(city.toLowerCase()));
         return cityKey ? cityMap[cityKey] : { latitude: 37.7749, longitude: -122.4194 }; // Default to SF
     }
-    private transformHotelResults(data: any) {
+    private transformHotelResults(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         if (!data.data?.search_results || !Array.isArray(data.data.search_results)) {
             return { hotels: [] };
         }
-        const hotels = data.data.search_results.map((result: any, index: number) => {
+        const hotels = data.data.search_results.map((result: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, index: number) => {
             const accommodation = result.accommodation;
             const location = accommodation?.location;
             return {
@@ -209,8 +209,8 @@ export class DuffelProvider {
                     latitude: location?.geographic_coordinates?.latitude || 0,
                     longitude: location?.geographic_coordinates?.longitude || 0
                 },
-                amenities: accommodation?.amenities?.map((a: any) => a.name) || [],
-                images: accommodation?.photos?.map((photo: any) => photo.url) || [],
+                amenities: accommodation?.amenities?.map((a: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => a.name) || [],
+                images: accommodation?.photos?.map((photo: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => photo.url) || [],
                 description: accommodation?.description || '',
                 checkIn: data.data.check_in_date,
                 checkOut: data.data.check_out_date,
@@ -231,11 +231,11 @@ export class DuffelProvider {
         console.log('Duffel car search not available - Duffel focuses on flights');
         return { cars: [] };
     }
-    private transformFlightResults(data: any) {
+    private transformFlightResults(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         if (!data.data || !Array.isArray(data.data)) {
             return { flights: [] };
         }
-        const flights = data.data.map((offer: any, index: number) => {
+        const flights = data.data.map((offer: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, index: number) => {
             const slice = offer.slices?.[0];
             const segment = slice?.segments?.[0];
             return {
@@ -268,7 +268,7 @@ export class DuffelProvider {
                     code: segment?.marketing_carrier?.iata_code || '',
                     name: segment?.marketing_carrier?.name || 'Unknown Airline'
                 },
-                segments: slice?.segments?.map((seg: any) => ({
+                segments: slice?.segments?.map((seg: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => ({
                     departure: {
                         airport: {
                             code: seg.origin?.iata_code,
@@ -302,8 +302,8 @@ export class DuffelProvider {
     }
     async bookFlight(params: {
         bookingToken: string;
-        passengers: any[];
-        contactInfo: any;
+        passengers: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
+        contactInfo: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     }) {
         if (!this.apiKey) {
             throw new Error('Duffel API key not configured');

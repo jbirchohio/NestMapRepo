@@ -14,6 +14,7 @@ export interface Booking extends BaseModel {
   currency: string;
   provider: string;
   providerBookingId: string;
+  providerReferenceId?: string | null;
   userId: number | string;
   organizationId: number | string;
   tripId?: number | string | null;

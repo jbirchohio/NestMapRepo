@@ -1,11 +1,18 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "types": ["jest", "node"],
     "module": "esnext",
     "moduleResolution": "node",
-    "lib": ["es2017", "esnext", "dom"]
+    "lib": ["es2017", "esnext", "dom"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "baseUrl": "."
   },
-  "include": ["tests/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["tests/**/*", "**/*.test.ts", "**/*.test.tsx"],
+  "exclude": ["node_modules", "dist"]
 }

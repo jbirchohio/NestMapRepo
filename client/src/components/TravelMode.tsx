@@ -36,7 +36,7 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
     const { currentLocation, isLocationEnabled, locationError, isOnline, capturePhoto, sendNotification, isTravelMode, setTravelMode, openMapsNavigation } = useMobileFeatures();
     const [checkedInActivities, setCheckedInActivities] = useState<Set<number>>(new Set());
     const [tripPhotos, setTripPhotos] = useState<string[]>([]);
-    const [nearbyActivities, setNearbyActivities] = useState<any[]>([]);
+    const [nearbyActivities, setNearbyActivities] = useState<any /** FIXANYERROR: Replace 'any' */[]>([]);
     // Calculate travel progress
     const totalActivities = activities.length;
     const completedActivities = checkedInActivities.size;

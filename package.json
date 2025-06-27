@@ -13,8 +13,8 @@
     "check:batch": "node check-ts-batch.js",
     "check:types": "tsx scripts/fix-any-types.ts",
     "db:push": "drizzle-kit push",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test": "cross-env NODE_OPTIONS='--experimental-vm-modules --loader ts-node/esm' jest --config=jest.config.js",
+    "test:watch": "cross-env NODE_OPTIONS='--experimental-vm-modules --loader ts-node/esm' jest --watch --config=jest.config.js",
     "test:payment": "cross-env NODE_OPTIONS='--loader ts-node/esm' tsx server/scripts/test-payment-flow.ts"
   },
   "dependencies": {
@@ -101,7 +101,7 @@
     "crypto-js": "^4.2.0",
     "csv-stringify": "^6.5.2",
     "date-fns": "^3.6.0",
-    "dotenv": "^16.5.0",
+    "docker": "^1.0.0",
     "drizzle-orm": "^0.44.2",
     "drizzle-zod": "0.7.1",
     "duffel": "^0.0.2",
@@ -154,6 +154,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.2.5",
+    "typecheck": "^0.1.2",
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",
     "web-push": "^3.6.7",
@@ -163,36 +164,6 @@
     "ws": "^8.18.0",
     "zod": "^3.25.56",
     "zod-validation-error": "^3.4.0"
-  },
-  "jest": {
-    "preset": "ts-jest/presets/default-esm",
-    "testEnvironment": "node",
-    "extensionsToTreatAsEsm": [
-      ".ts"
-    ],
-    "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    },
-    "transform": {
-      "^.+\\.tsx?$": [
-        "ts-jest",
-        {
-          "useESM": true,
-          "tsconfig": "tsconfig.test.json"
-        }
-      ]
-    },
-    "testMatch": [
-      "**/tests/**/*.test.ts"
-    ],
-    "collectCoverageFrom": [
-      "**/server/src/**/*.ts"
-    ],
-    "coverageDirectory": "coverage",
-    "coverageReporters": [
-      "text",
-      "lcov"
-    ]
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
@@ -230,11 +201,13 @@
     "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
+    "axios": "^1.10.0",
     "cli-progress": "^3.12.0",
     "cross-env": "^7.0.3",
     "db-migrate": "^0.11.14",
     "db-migrate-pg": "^1.5.2",
     "diff": "^8.0.2",
+    "dotenv": "^16.6.0",
     "drizzle-kit": "^0.30.6",
     "esbuild": "^0.25.0",
     "eslint": "^9.28.0",

@@ -1,16 +1,23 @@
+import SharedFeatureFlagsType from '@/types/SharedFeatureFlagsType';
+import SharedBillingDataType from '@/types/SharedBillingDataType';
+import SharedAuditLogsType from '@/types/SharedAuditLogsType';
+import SharedBackgroundJobsType from '@/types/SharedBackgroundJobsType';
+import SharedActiveSessionsType from '@/types/SharedActiveSessionsType';
+import SharedUsersType from '@/types/SharedUsersType';
+import SharedOrganizationsType from '@/types/SharedOrganizationsType';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Activity, Users, Building, AlertTriangle, CheckCircle, Clock, Database, Server, Zap } from 'lucide-react';
 interface SystemMetricsProps {
     dashboardData: {
-        organizations: any[];
-        users: any[];
-        activeSessions: any[];
-        backgroundJobs: any[];
-        auditLogs: any[];
-        billingData: any[];
-        featureFlags: any[];
+        organizations: SharedOrganizationsType[];
+        users: SharedUsersType[];
+        activeSessions: SharedActiveSessionsType[];
+        backgroundJobs: SharedBackgroundJobsType[];
+        auditLogs: SharedAuditLogsType[];
+        billingData: SharedBillingDataType[];
+        featureFlags: SharedFeatureFlagsType[];
     };
     isLoading?: boolean;
 }

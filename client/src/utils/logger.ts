@@ -57,7 +57,7 @@ class Logger {
         }
     }
     // Performance logging for API requests
-    apiRequest(method: string, url: string, data?: any): void {
+    apiRequest(method: string, url: string, data?: unknown): void {
         this.debug(`API Request: ${method} ${url}`, {
             method,
             url,
@@ -79,7 +79,7 @@ class Logger {
         }
     }
     // Component lifecycle logging
-    componentMount(componentName: string, props?: any): void {
+    componentMount(componentName: string, props?: unknown): void {
         this.debug(`Component mounted: ${componentName}`, {
             component: componentName,
             action: 'mount',
@@ -93,7 +93,7 @@ class Logger {
         });
     }
     // User action logging
-    userAction(action: string, details?: any, userId?: number): void {
+    userAction(action: string, details?: unknown, userId?: number): void {
         this.info(`User action: ${action}`, {
             userId,
             action,
@@ -102,7 +102,7 @@ class Logger {
         });
     }
     // Business logic logging
-    businessEvent(event: string, data?: any, organizationId?: number): void {
+    businessEvent(event: string, data?: unknown, organizationId?: number): void {
         this.info(`Business event: ${event}`, {
             organizationId,
             event,
@@ -132,7 +132,7 @@ class Logger {
 }
 export const logger = new Logger();
 // Convenience functions for common logging patterns
-export const logApiCall = (method: string, url: string, data?: any) => {
+export const logApiCall = (method: string, url: string, data?: unknown) => {
     logger.apiRequest(method, url, data);
 };
 export const logApiResponse = (method: string, url: string, status: number, duration?: number) => {
@@ -141,9 +141,9 @@ export const logApiResponse = (method: string, url: string, status: number, dura
 export const logError = (message: string, error?: Error, context?: LogContext) => {
     logger.error(message, error, context);
 };
-export const logUserAction = (action: string, details?: any, userId?: number) => {
+export const logUserAction = (action: string, details?: unknown, userId?: number) => {
     logger.userAction(action, details, userId);
 };
-export const logBusinessEvent = (event: string, data?: any, organizationId?: number) => {
+export const logBusinessEvent = (event: string, data?: unknown, organizationId?: number) => {
     logger.businessEvent(event, data, organizationId);
 };

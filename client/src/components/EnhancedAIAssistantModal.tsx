@@ -1,3 +1,4 @@
+import SharedActivityType from '@/types/SharedActivityType';
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ClientTrip, ClientActivity } from "@/lib/types";
@@ -38,7 +39,7 @@ export default function EnhancedAIAssistantModal({ isOpen, onClose, trip, activi
         }
     ]);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [foodSuggestions, setFoodSuggestions] = useState<any[]>([]);
+    const [foodSuggestions, setFoodSuggestions] = useState<any /** FIXANYERROR: Replace 'any' */[]>([]);
     const assistantMutation = useMutation({
         mutationFn: async (question: string) => {
             // Get current date activities
@@ -68,7 +69,7 @@ export default function EnhancedAIAssistantModal({ isOpen, onClose, trip, activi
         },
     });
     const createActivityMutation = useMutation({
-        mutationFn: async (activity: any) => {
+        mutationFn: async (activity: SharedActivityType) => {
             const res = await apiRequest("POST", API_ENDPOINTS.ACTIVITIES, activity);
             return res.json();
         },
@@ -84,7 +85,7 @@ export default function EnhancedAIAssistantModal({ isOpen, onClose, trip, activi
             console.error("Error creating activity:", error);
         },
     });
-    const handleAddActivity = async (activity: any): Promise<void> => {
+    const handleAddActivity = async (activity: SharedActivityType): Promise<void> => {
         await createActivityMutation.mutateAsync(activity);
     };
     const handleSendQuestion = async () => {

@@ -1,19 +1,24 @@
 import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient.js";
+
+interface LocationData {
+    name: string;
+    address?: string;
+    city?: string;
+    region?: string;
+    country?: string;
+    description?: string;
+    fullAddress?: string;
+}
+
+interface FindLocationResponse {
+    locations: LocationData[];
+    error?: string;
+}
+
 /**
  * Finds a location using AI to handle fuzzy search and returns multiple potential matches
  */
-export async function findLocation(searchQuery: string, cityContext?: string): Promise<{
-    locations: Array<{
-        name: string;
-        address?: string;
-        fullAddress?: string;
-        city: string;
-        region?: string;
-        country?: string;
-        description?: string;
-    }>;
-    error?: string;
-}> {
+export async function findLocation(searchQuery: string, cityContext?: string): Promise<FindLocationResponse> {
     try {
         // Debug to see what's being received
         console.log("AI Location search:", { searchQuery, cityContext });
@@ -109,7 +114,7 @@ export async function findLocation(searchQuery: string, cityContext?: string): P
         }
         // Return the array of locations
         return {
-            locations: result.locations.map((loc: any) => ({
+            locations: result.locations.map((loc: LocationData) => ({
                 name: loc.name,
                 address: loc.address,
                 city: loc.city || cityContext || "",

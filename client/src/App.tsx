@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider, useAuth } from '@/contexts/auth/NewAuthContext';
+import { AuthProvider, useAuth } from '@/state/contexts/AuthContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { RouteRenderer } from '@/components/routes/RouteRenderer';

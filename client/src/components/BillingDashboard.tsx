@@ -13,7 +13,7 @@ interface UserMetadata {
   customerId?: string;
   organization_id?: string;
   display_name?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Define the user type with metadata
@@ -29,7 +29,7 @@ interface UserPermissions {
   canAccessBilling?: boolean;
   canManageOrganization?: boolean;
   canAccessAdmin?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 import { CreditCard, Calendar, DollarSign, Users, ArrowUpRight, CheckCircle, AlertCircle, Settings } from "lucide-react";
 import { format } from "date-fns";

@@ -12,7 +12,7 @@ export interface CustomRequestFields {
   /** The authenticated user */
   user: AuthUser;
   /** Authentication details */
-  auth?: any;
+  auth?: any /** FIXANYERROR: Replace 'any' */;
   /** Organization ID for the current request context */
   organizationId?: string | number;
   /** Unique ID for the request for tracing */

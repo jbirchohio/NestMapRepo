@@ -25,5 +25,5 @@ export interface BaseRepository<T, ID, CreateData, UpdateData> {
      * @param data - Raw database record
      * @returns Mapped domain model or a Promise that resolves to one
      */
-    mapToModel(data: any): T | Promise<T>;
+    mapToModel(data: any /** FIXANYERROR: Replace 'any' */): T | Promise<T>;
 }

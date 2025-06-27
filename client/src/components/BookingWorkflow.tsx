@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth/NewAuthContext';
 import { DollarSign, Plane, Hotel as HotelIcon, Calendar, MapPin, Clock, Users, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,29 @@ interface TravelerInfo {
 }
 
 type TripType = 'one-way' | 'round-trip';
+
+interface TravelerBooking {
+    traveler: string;
+    departureFlight: SimpleFlight | null;
+    returnFlight: SimpleFlight | null;
+}
+
+interface TripData {
+    clientInfo: ClientInfo;
+    flights: {
+        departure: SimpleFlight | null;
+        return: SimpleFlight | null;
+    };
+    hotel: Hotel | null;
+    travelerBookings: TravelerBooking[];
+    totalCost: number;
+    createdBy: string;
+}
+
+interface BookingFormData extends Omit<FlightSearchData, 'primaryTraveler' | 'additionalTravelers'> {
+    primaryTraveler: TravelerInfo;
+    additionalTravelers: TravelerInfo[];
+}
 
 export interface FlightSearchData {
     origin: string;
@@ -49,6 +72,17 @@ type ClientInfo = {
     department: string | null;
     projectCode: string | null;
     costCenter: string | null;
+};
+
+type FormDataObject = {
+    [key: string]: FormDataEntryValue | FormDataEntryValue[] | Record<string, FormDataEntryValue>;
+    primaryTraveler?: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone: string;
+        dateOfBirth: string;
+    };
 };
 
 // Flight and Hotel interfaces
@@ -237,40 +271,59 @@ export default function BookingWorkflow() {
         }
     };
 
-    const handleClientInfoSubmit = async (e: React.FormEvent) => {
+    const handleClientInfoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            // Get the form data from the form element
-            const form = e.currentTarget as HTMLFormElement;
+            const form = e.currentTarget;
             const formData = new FormData(form);
             
-            // Convert FormData to plain object
-            const formDataObj: Record<string, any> = {};
+            // Convert FormData to typed object
+            const formDataObj: Partial<Record<string, FormDataEntryValue>> = {};
             formData.forEach((value, key) => {
                 formDataObj[key] = value;
             });
             
-            // Create ClientInfo object with proper types
+            // Extract primary traveler data with proper type assertion
+            const primaryTravelerData = (formDataObj.primaryTraveler && typeof formDataObj.primaryTraveler === 'object' 
+                ? formDataObj.primaryTraveler 
+                : {}) as Partial<TravelerInfo>;
+                
+            // Ensure all required fields have default values
+            const defaultTraveler: TravelerInfo = {
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: '',
+                dateOfBirth: ''
+            };
+            // Create ClientInfo object with proper types and validation
             const clientInfo: ClientInfo = {
-                origin: String(formDataObj['origin'] || ''),
-                destination: String(formDataObj['destination'] || ''),
-                departureDate: String(formDataObj['departureDate'] || ''),
-                returnDate: formDataObj['returnDate'] ? String(formDataObj['returnDate']) : null,
-                tripType: (formDataObj['tripType'] as 'one-way' | 'round-trip') || 'round-trip',
-                passengers: Number(formDataObj['passengers']) || 1,
-                cabin: String(formDataObj['cabin'] || 'economy'),
+                origin: String(formDataObj.origin || ''),
+                destination: String(formDataObj.destination || ''),
+                departureDate: String(formDataObj.departureDate || ''),
+                returnDate: formDataObj.returnDate ? String(formDataObj.returnDate) : null,
+                tripType: (['one-way', 'round-trip', 'multi-city'].includes(String(formDataObj.tripType)) 
+                    ? formDataObj.tripType 
+                    : 'round-trip') as 'one-way' | 'round-trip' | 'multi-city',
+                passengers: Math.max(1, Number(formDataObj.passengers) || 1),
                 primaryTraveler: {
-                    firstName: String((formDataObj['primaryTraveler'] as any)?.['firstName'] || ''),
-                    lastName: String((formDataObj['primaryTraveler'] as any)?.['lastName'] || ''),
-                    email: String((formDataObj['primaryTraveler'] as any)?.['email'] || ''),
-                    phone: String((formDataObj['primaryTraveler'] as any)?.['phone'] || ''),
-                    dateOfBirth: String((formDataObj['primaryTraveler'] as any)?.['dateOfBirth'] || '')
+                    ...defaultTraveler,
+                    ...primaryTravelerData,
+                    // Ensure all required fields are strings
+                    firstName: String(primaryTravelerData.firstName || defaultTraveler.firstName),
+                    lastName: String(primaryTravelerData.lastName || defaultTraveler.lastName),
+                    email: String(primaryTravelerData.email || defaultTraveler.email),
+                    phone: String(primaryTravelerData.phone || defaultTraveler.phone),
+                    dateOfBirth: String(primaryTravelerData.dateOfBirth || defaultTraveler.dateOfBirth)
                 },
-                additionalTravelers: [], // Initialize empty, you can populate this if needed
-                department: formDataObj['department'] ? String(formDataObj['department']) : null,
-                projectCode: formDataObj['projectCode'] ? String(formDataObj['projectCode']) : null,
-                costCenter: formDataObj['costCenter'] ? String(formDataObj['costCenter']) : null,
-                budget: formDataObj['budget'] ? Number(formDataObj['budget']) : null
+                additionalTravelers: [], // Will be populated from additionalTravelers form data
+                cabin: String(formDataObj.cabin || 'economy'),
+                budget: formDataObj.budget && !isNaN(Number(formDataObj.budget)) 
+                    ? Number(formDataObj.budget) 
+                    : null,
+                department: formDataObj.department ? String(formDataObj.department) : null,
+                projectCode: formDataObj.projectCode ? String(formDataObj.projectCode) : null,
+                costCenter: formDataObj.costCenter ? String(formDataObj.costCenter) : null
             };
             
             setClientInfo(clientInfo);
@@ -282,6 +335,7 @@ export default function BookingWorkflow() {
             })));
             setCurrentStep('flights');
             await searchFlights(clientInfo);
+            await searchHotels(clientInfo);
         }
         catch (error) {
             if (error instanceof Error) {
@@ -372,18 +426,23 @@ export default function BookingWorkflow() {
         }
     };
 
-    const handleFlightSelectionComplete = () => {
+    const handleFlightSelectionComplete = useCallback((): void => {
         const travelers = getAllTravelers();
         const currentTraveler = travelers[currentTravelerIndex]?.fullName || `Traveler ${currentTravelerIndex + 1}`;
         
-        const updateBookings = () => {
+        const updateBookings = (): TravelerBooking[] => {
             const updatedBookings = [...travelerBookings];
-            updatedBookings[currentTravelerIndex] = {
+            const currentBooking: TravelerBooking = {
                 traveler: currentTraveler,
-                ...updatedBookings[currentTravelerIndex],
                 departureFlight: selectedDepartureFlight,
                 returnFlight: selectedReturnFlight
             };
+            
+            updatedBookings[currentTravelerIndex] = {
+                ...updatedBookings[currentTravelerIndex],
+                ...currentBooking
+            };
+            
             return updatedBookings;
         };
 
@@ -402,12 +461,15 @@ export default function BookingWorkflow() {
         }
     };
 
-    const handleCreateTrip = async () => {
-        if (!clientInfo || !user)
+    const handleCreateTrip = async (): Promise<void> => {
+        if (!clientInfo || !user) {
             return;
+        }
+        
         setIsBooking(true);
+        
         try {
-            const tripData = {
+            const tripData: TripData = {
                 clientInfo,
                 flights: {
                     departure: selectedDepartureFlight,

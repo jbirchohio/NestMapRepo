@@ -1,3 +1,5 @@
+import SharedProposalType from '@/types/SharedProposalType';
+import SharedPType from '@/types/SharedPType';
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -141,14 +143,14 @@ function InvoiceCenter() {
     useEffect(() => {
         const proposalId = searchParams.get('proposalId');
         if (proposalId && proposals) {
-            const proposal = proposals.find((p: any) => String(p.id) === proposalId);
+            const proposal = proposals.find((p: SharedPType) => String(p.id) === proposalId);
             if (proposal) {
                 convertProposalToInvoice(proposal);
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, proposals]);
-    const convertProposalToInvoice = (proposal: any) => {
+    const convertProposalToInvoice = (proposal: SharedProposalType) => {
         setSelectedProposal(proposal);
         // Pre-populate form with proposal data
         const lineItems = [

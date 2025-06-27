@@ -1,3 +1,4 @@
+import SharedSampleType from '@/types/SharedSampleType';
 /**
  * Performance Dashboard - Phase 3 Optimization Complete
  * Real-time monitoring and optimization insights for administrators
@@ -246,7 +247,7 @@ export default function PerformanceDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {realtime?.memoryTrend?.slice(-5).map((sample: any, index: number) => (<div key={index} className="flex justify-between items-center">
+                    {realtime?.memoryTrend?.slice(-5).map((sample: SharedSampleType, index: number) => (<div key={index} className="flex justify-between items-center">
                         <span className="text-sm">
                           {new Date(sample.timestamp).toLocaleTimeString()}
                         </span>

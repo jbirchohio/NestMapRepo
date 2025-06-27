@@ -34,7 +34,7 @@ router.get("/status", validateJWT, async (req, res) => {
         const status = await organizationFundingService.getFundingSourceStatus(req.user.organization_id);
         res.json(status);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error("Get funding status error:", error);
         res.status(500).json({ error: error.message });
     }
@@ -53,7 +53,7 @@ router.post("/create-account", validateJWT, async (req, res) => {
             message: "Stripe Connect account created successfully"
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error("Create account error:", error);
         res.status(400).json({ error: error.message });
     }
@@ -75,7 +75,7 @@ router.post("/onboarding-link", validateJWT, async (req, res) => {
             expiresAt: link.expires_at
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error("Create onboarding link error:", error);
         res.status(400).json({ error: error.message });
     }
@@ -89,7 +89,7 @@ router.get("/account-status", validateJWT, async (req, res) => {
         const status = await organizationFundingService.checkAccountStatus(req.user.organization_id);
         res.json(status);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error("Check account status error:", error);
         res.status(500).json({ error: error.message });
     }
@@ -111,7 +111,7 @@ router.post("/setup-funding", validateJWT, async (req, res) => {
             message: "Funding source configured successfully"
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error("Setup funding source error:", error);
         res.status(400).json({ error: error.message });
     }
@@ -133,7 +133,7 @@ router.post("/add-funds", validateJWT, async (req, res) => {
             message: `$${amount} added to organization funding`
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error("Add organization funds error:", error);
         res.status(400).json({ error: error.message });
     }

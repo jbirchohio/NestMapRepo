@@ -1,3 +1,4 @@
+import SharedNotificationsType from '@/types/SharedNotificationsType';
 import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellIcon } from '../icons';
@@ -5,7 +6,7 @@ import type { NotificationsMenuProps } from './types';
 import type { Notification as AppNotification } from '@/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
-const getSafeNotifications = (notifications: any[]): AppNotification[] => {
+const getSafeNotifications = (notifications: SharedNotificationsType[]): AppNotification[] => {
   return notifications.filter((item): item is AppNotification => (
     item &&
     typeof item === 'object' &&

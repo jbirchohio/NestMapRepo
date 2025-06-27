@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import { useState, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { ClientInfo, clientInfoSchema } from '../types/booking';
@@ -24,7 +25,7 @@ export const useBookingForm = () => {
             setErrors({});
             return true;
         }
-        catch (error: unknown) {
+        catch (error: SharedErrorType) {
             const newErrors: Record<string, string> = {};
             // Type guard for Zod validation error
             const zodError = error as {
@@ -68,9 +69,17 @@ export const useBookingForm = () => {
             if (field.includes('[') && field.includes(']')) {
                 const [parent, indexStr, child] = field.split(/\[|\]|\./).filter(Boolean);
                 const index = parseInt(indexStr, 10);
-                const array = [...(prev[parent as keyof typeof prev] as any[])];
-                array[index] = { ...array[index], [child]: value };
-                return { ...prev, [parent]: array };
+                const arrayField = parent as keyof typeof prev;
+                const currentArray = Array.isArray(prev[arrayField]) ? [...prev[arrayField] as unknown[]] : [];
+                
+                if (index >= 0 && index < currentArray.length) {
+                    currentArray[index] = { 
+                        ...(currentArray[index] as Record<string, unknown>), 
+                        [child]: value 
+                    };
+                    return { ...prev, [parent]: currentArray };
+                }
+                return prev;
             }
             // Handle regular fields
             return { ...prev, [field]: value };

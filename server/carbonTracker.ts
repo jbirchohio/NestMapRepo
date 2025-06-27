@@ -76,7 +76,68 @@ interface Receipt {
     verified: boolean;
     activityId?: number;
 }
-export async function calculateCarbonFootprint(activities: any[], flights: any[] = [], accommodation: any[] = [], destination: string): Promise<CarbonFootprint> {
+
+interface Activity {
+    id: string;
+    type: string;
+    date: string;
+    location: string;
+    distance?: number;
+    duration?: number;
+    category: string;
+}
+
+interface Flight {
+    id: string;
+    departure: string;
+    arrival: string;
+    distance: number;
+    duration: number;
+    airline: string;
+    flightNumber: string;
+}
+
+interface Accommodation {
+    id: string;
+    type: string;
+    checkIn: string;
+    checkOut: string;
+    location: string;
+    nights: number;
+}
+
+interface Trip {
+    id: number;
+    startDate: string;
+    endDate: string;
+    destination: string;
+    activities: Activity[];
+    bookings: Booking[];
+    organizationId: number;
+}
+
+interface Booking {
+    id: string;
+    type: string;
+    date: string;
+    location: string;
+    details: string;
+}
+
+/**
+ * Calculates the carbon footprint based on activities, flights, and accommodation
+ * @param activities - Array of activities contributing to carbon footprint
+ * @param flights - Array of flight segments
+ * @param accommodation - Accommodation details
+ * @param destination - Destination location for contextual calculations
+ * @returns Promise resolving to CarbonFootprint object with detailed breakdown
+ */
+export async function calculateCarbonFootprint(
+    activities: Activity[],
+    flights: Flight[] = [],
+    accommodation: Accommodation[] = [],
+    destination: string
+): Promise<CarbonFootprint> {
     try {
         // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         const response = await openai.chat.completions.create({
@@ -106,7 +167,7 @@ export async function calculateCarbonFootprint(activities: any[], flights: any[]
         
         // Calculate metrics
         const tripDays = activities.length > 0 ? 
-            (new Set(activities.map((a: any) => a.date)).size) : 1;
+            (new Set(activities.map((a: Activity) => a.date)).size) : 1;
         const totalDistance = flights.reduce((sum, f) => sum + (f.distance || 0), 0);
         
         return {
@@ -137,7 +198,28 @@ export async function calculateCarbonFootprint(activities: any[], flights: any[]
         return generateFallbackCarbonReport(activities, flights, accommodation);
     }
 }
-export async function generateExpenseReport(tripId: number, expenses: any[] = [], budget?: number): Promise<ExpenseReport> {
+
+/**
+ * Generates an expense report for a trip
+ * @param tripId - ID of the trip
+ * @param expenses - Array of expenses to include in the report
+ * @param budget - Optional budget amount for comparison
+ * @returns Promise resolving to ExpenseReport with cost breakdown
+ */
+export async function generateExpenseReport(
+    tripId: number,
+    expenses: Array<{
+        id: string;
+        amount: number;
+        currency: string;
+        category: string;
+        date: string;
+        description?: string;
+        receiptUrl?: string;
+        status?: 'pending' | 'approved' | 'rejected';
+    }> = [],
+    budget?: number
+): Promise<ExpenseReport> {
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4o",
@@ -181,7 +263,17 @@ export async function generateExpenseReport(tripId: number, expenses: any[] = []
         return generateFallbackExpenseReport(expenses, budget);
     }
 }
-export async function suggestCarbonOffsets(carbonFootprint: number, destination: string): Promise<any[]> {
+interface CarbonOffsetOption {
+    provider: string;
+    projectType: string;
+    costPerTon: number;
+    certification: 'Gold Standard' | 'VCS' | 'CDM' | 'Other';
+    description: string;
+    estimatedCost: number;
+    url?: string;
+}
+
+export async function suggestCarbonOffsets(carbonFootprint: number, destination: string): Promise<CarbonOffsetOption[]> {
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4o",
@@ -215,12 +307,43 @@ export async function suggestCarbonOffsets(carbonFootprint: number, destination:
         return generateDefaultOffsetOptions(carbonFootprint);
     }
 }
-export function analyzeExpenseCompliance(expenses: any[]): any {
-    const compliance = {
-        issues: [] as any[],
-        recommendations: [] as string[],
+
+interface ComplianceIssue {
+    type: 'missing_receipt' | 'unusual_amount' | 'policy_violation' | 'missing_approval';
+    severity: 'low' | 'medium' | 'high';
+    description: string;
+    expenseId?: string;
+    amount?: number;
+}
+
+interface ComplianceResult {
+    issues: ComplianceIssue[];
+    recommendations: string[];
+    taxDeductible: number;
+    flaggedItems: Array<{
+        id: string;
+        amount: number;
+        category: string;
+        date: string;
+        flag: string;
+        reason: string;
+    }>;
+}
+
+export function analyzeExpenseCompliance(expenses: Array<{
+    id: string;
+    amount: number;
+    category: string;
+    date: string;
+    description?: string;
+    imageUrl?: string;
+    status?: 'pending' | 'approved' | 'rejected';
+}> = []): ComplianceResult {
+    const compliance: ComplianceResult = {
+        issues: [],
+        recommendations: [],
         taxDeductible: 0,
-        flaggedItems: [] as any[]
+        flaggedItems: []
     };
     expenses.forEach(expense => {
         // Check for missing receipts
@@ -254,7 +377,31 @@ export function analyzeExpenseCompliance(expenses: any[]): any {
     return compliance;
 }
 
-export async function calculateTripCarbonFootprint(trip: any, activities: any[], bookings: any[], organizationId: number): Promise<CarbonFootprint> {
+export async function calculateTripCarbonFootprint(
+    trip: {
+        id: string;
+        startDate: string;
+        endDate: string;
+        destination: string;
+        travelers: number;
+        purpose?: string;
+        status?: 'planned' | 'in-progress' | 'completed' | 'cancelled';
+    },
+    activities: Activity[] = [],
+    bookings: Array<{
+        id: string;
+        type: 'flight' | 'hotel' | 'car' | 'train' | 'other';
+        startDate: string;
+        endDate?: string;
+        details: {
+            distance?: number;
+            duration?: number;
+            passengers?: number;
+            [key: string]: unknown;
+        };
+    }> = [],
+    organizationId: number
+): Promise<CarbonFootprint> {
     const carbon: CarbonFootprint = {
         totalCO2kg: 0,
         breakdown: {
@@ -355,7 +502,14 @@ export async function calculateTripCarbonFootprint(trip: any, activities: any[],
 }
 
 // Calculate flight emissions using ICAO methodology
-async function calculateFlightEmissions(flight: any): Promise<number> {
+async function calculateFlightEmissions(flight: Flight & {
+    bookingData?: {
+        distance?: number;
+        origin?: string;
+        destination?: string;
+        cabinClass?: 'economy' | 'premium' | 'business' | 'first';
+    };
+}): Promise<number> {
     const distance = flight.bookingData?.distance || estimateFlightDistance(flight.bookingData?.origin, flight.bookingData?.destination);
     const cabinClass = flight.bookingData?.cabinClass || 'economy';
     
@@ -373,7 +527,13 @@ async function calculateFlightEmissions(flight: any): Promise<number> {
 }
 
 // Calculate hotel emissions based on nights stayed
-function calculateHotelEmissions(hotel: any): number {
+function calculateHotelEmissions(hotel: Accommodation & {
+    checkInDate: string;
+    checkOutDate: string;
+    bookingData?: {
+        sustainabilityRating?: number;
+    };
+}): number {
     const nights = Math.ceil((new Date(hotel.checkOutDate).getTime() - new Date(hotel.checkInDate).getTime()) / (1000 * 60 * 60 * 24));
     const baseEmission = 30; // kg CO2 per room per night
     const sustainabilityFactor = hotel.bookingData?.sustainabilityRating ? 
@@ -382,7 +542,11 @@ function calculateHotelEmissions(hotel: any): number {
 }
 
 // Calculate ground transport emissions
-function calculateGroundTransportEmissions(transport: any): number {
+function calculateGroundTransportEmissions(transport: {
+    estimatedDistance?: number;
+    category: 'car_rental' | 'taxi' | 'train' | 'bus' | 'electric_car' | 'hybrid' | string;
+    [key: string]: unknown;
+}): number {
     const distance = transport.estimatedDistance || 50; // Default 50km
     const emissionFactors = {
         car_rental: 0.171, // kg CO2 per km
@@ -397,7 +561,10 @@ function calculateGroundTransportEmissions(transport: any): number {
 }
 
 // Calculate activity emissions
-function calculateActivityEmissions(activity: any): number {
+function calculateActivityEmissions(activity: {
+    category: 'restaurant' | 'entertainment' | 'shopping' | 'sightseeing' | 'conference' | 'meeting' | string;
+    [key: string]: unknown;
+}): number {
     const activityEmissions = {
         restaurant: 5, // kg CO2 per meal
         entertainment: 2,
@@ -420,7 +587,14 @@ function estimateFlightDistance(origin: string, destination: string): number {
 }
 
 // Generate carbon reduction recommendations
-async function generateCarbonRecommendations(carbon: CarbonFootprint, trip: any): Promise<CarbonReduction[]> {
+async function generateCarbonRecommendations(carbon: CarbonFootprint, trip: {
+    id: string | number;
+    startDate: string;
+    endDate: string;
+    destination: string;
+    travelers: number;
+    [key: string]: unknown;
+}): Promise<CarbonReduction[]> {
     const recommendations: CarbonReduction[] = [];
     
     if (carbon.breakdown.flights > carbon.totalCO2kg * 0.7) {
@@ -476,8 +650,19 @@ async function calculateCarbonTrends(currentCarbon: CarbonFootprint, organizatio
     };
 }
 
-// Generate emissions comparison data
-function generateEmissionsComparison(totalEmissions: number): any {
+// Interface for emissions comparison data
+interface EmissionsComparison {
+    averageTrip: number;
+    reductionPotential: number;
+    offsetCost: number;
+}
+
+/**
+ * Generates comparison data for emissions
+ * @param totalEmissions - Total emissions in kg CO2
+ * @returns Object containing comparison metrics
+ */
+function generateEmissionsComparison(totalEmissions: number): EmissionsComparison {
     return {
         averageTrip: 500, // kg CO2 for average trip
         reductionPotential: Math.round(totalEmissions * 0.3), // 30% reduction potential
@@ -486,17 +671,19 @@ function generateEmissionsComparison(totalEmissions: number): any {
 }
 
 // Calculate fallback emissions when detailed data isn't available
-function calculateFallbackEmissions(activities: any[], flights: any[], accommodation: any[]): number {
-    // Flight emissions (rough estimate: 0.5 kg CO2 per km)
+function calculateFallbackEmissions(
+    activities: Activity[] = [],
+    flights: Flight[] = [],
+    accommodation: Accommodation[] = []
+): number {
+    // Flight emissions (rough estimate: 0.25 kg CO2 per passenger km)
     const flightEmissions = flights.reduce((sum, flight) => {
-        const distance = flight.distance || 1000; // Default to 1000km if distance not provided
-        return sum + (distance * 0.5);
+        return sum + (flight.distance * 0.25);
     }, 0);
 
     // Hotel emissions (rough estimate: 30 kg CO2 per night)
     const hotelEmissions = accommodation.reduce((sum, hotel) => {
-        const nights = hotel.nights || 1;
-        return sum + (nights * 30);
+        return sum + ((hotel.nights || 1) * 30);
     }, 0);
 
     // Activity emissions (rough estimate: 10 kg CO2 per activity day)
@@ -507,7 +694,11 @@ function calculateFallbackEmissions(activities: any[], flights: any[], accommoda
 }
 
 // Generate emissions breakdown for the report
-function generateEmissionsBreakdown(activities: any[], flights: any[], accommodation: any[]): CarbonFootprint['breakdown'] {
+function generateEmissionsBreakdown(
+    activities: Activity[] = [],
+    flights: Flight[] = [],
+    accommodation: Accommodation[] = []
+): CarbonFootprint['breakdown'] {
     const total = calculateFallbackEmissions(activities, flights, accommodation);
     return {
         flights: Math.round(total * 0.6), // Flights typically 60% of travel emissions
@@ -519,7 +710,11 @@ function generateEmissionsBreakdown(activities: any[], flights: any[], accommoda
 }
 
 // Generate a fallback carbon report when detailed data isn't available
-function generateFallbackCarbonReport(activities: any[], flights: any[], accommodation: any[]): CarbonFootprint {
+function generateFallbackCarbonReport(
+    activities: Activity[] = [],
+    flights: Flight[] = [],
+    accommodation: Accommodation[] = []
+): CarbonFootprint {
     const totalEmissions = calculateFallbackEmissions(activities, flights, accommodation);
     const breakdown = generateEmissionsBreakdown(activities, flights, accommodation);
     
@@ -543,14 +738,8 @@ function generateFallbackCarbonReport(activities: any[], flights: any[], accommo
             vsLastTrip: 0,
             vsOrgAverage: 0,
             improvementAreas: []
-        }
-    };
-}
-function calculateTotalExpenses(expenses: any[]): number {
-    return expenses.reduce((total, expense) => total + (expense.amount || 0), 0);
-}
-function generateExpenseBreakdown(expenses: any[]): any {
-    const breakdown = {
+        },
+        lastUpdated: new Date().toISOString(),
         flights: 0,
         accommodation: 0,
         meals: 0,
@@ -561,15 +750,28 @@ function generateExpenseBreakdown(expenses: any[]): any {
     expenses.forEach(expense => {
         const category = expense.category || 'miscellaneous';
         if (breakdown.hasOwnProperty(category)) {
-            breakdown[category as keyof typeof breakdown] += expense.amount || 0;
-        }
-        else {
+            breakdown[category as keyof ExpenseBreakdown] += expense.amount || 0;
+        } else {
             breakdown.miscellaneous += expense.amount || 0;
         }
     });
     return breakdown;
 }
-function generateDailyAverages(expenses: any[]): any[] {
+
+interface Expense {
+    id: string;
+    amount: number;
+    currency: string;
+    category: string;
+    date: string;
+    description?: string;
+    receiptUrl?: string;
+    status?: 'pending' | 'approved' | 'rejected';
+}
+
+// ... (rest of the code remains the same)
+
+function generateDailyAverages(expenses: Expense[]): { date: string; amount: number }[] {
     const dailyTotals: Record<string, number> = {};
     expenses.forEach(expense => {
         const date = expense.date || new Date().toISOString().split('T')[0];
@@ -577,7 +779,14 @@ function generateDailyAverages(expenses: any[]): any[] {
     });
     return Object.entries(dailyTotals).map(([date, amount]) => ({ date, amount }));
 }
-function generateExpenseCategories(expenses: any[], budget?: number): ExpenseCategory[] {
+
+/**
+ * Generates expense categories with budget vs actual comparison
+ * @param expenses - Array of expense objects
+ * @param budget - Optional total budget amount
+ * @returns Array of expense categories with budget vs actual comparison
+ */
+function generateExpenseCategories(expenses: Expense[] = [], budget?: number): ExpenseCategory[] {
     const breakdown = generateExpenseBreakdown(expenses);
     const totalBudget = budget || Object.values<number>(breakdown).reduce((sum: number, val: number) => sum + val, 0) * 1.2;
     return Object.entries<number>(breakdown).map(([name, actual]) => {
@@ -592,7 +801,13 @@ function generateExpenseCategories(expenses: any[], budget?: number): ExpenseCat
         } as ExpenseCategory;
     });
 }
-function formatReceipt(expense: any): Receipt {
+
+/**
+ * Formats an expense into a receipt object
+ * @param expense - The expense to format
+ * @returns A formatted receipt object
+ */
+function formatReceipt(expense: Partial<Expense> & { id?: string; amount?: number }): Receipt {
     return {
         id: expense.id || `receipt_${Date.now()}`,
         date: expense.date || new Date().toISOString().split('T')[0],
@@ -605,7 +820,14 @@ function formatReceipt(expense: any): Receipt {
         activityId: expense.activityId
     };
 }
-function generateFallbackExpenseReport(expenses: any[], budget?: number): ExpenseReport {
+
+/**
+ * Generates a fallback expense report with basic calculations
+ * @param expenses - Array of expense objects
+ * @param budget - Optional total budget amount
+ * @returns A complete expense report
+ */
+function generateFallbackExpenseReport(expenses: Expense[] = [], budget?: number): ExpenseReport {
     const totalCost = calculateTotalExpenses(expenses);
     return {
         totalCost,
@@ -616,7 +838,21 @@ function generateFallbackExpenseReport(expenses: any[], budget?: number): Expens
         receipts: expenses.map(formatReceipt)
     };
 }
-function generateDefaultOffsetOptions(carbonFootprint: number): any[] {
+
+interface OffsetOption {
+    provider: string;
+    project: string;
+    cost: number;
+    quality: 'Basic' | 'High' | 'Premium';
+    certification: string;
+}
+
+/**
+ * Generates default carbon offset options based on footprint
+ * @param carbonFootprint - Total carbon footprint in kg CO2
+ * @returns Array of carbon offset options
+ */
+function generateDefaultOffsetOptions(carbonFootprint: number): OffsetOption[] {
     const offsetCost = carbonFootprint * 0.02; // $0.02 per kg CO2
     return [
         {

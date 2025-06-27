@@ -164,7 +164,7 @@ export class CloudflareDNSManager {
             const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${this.zoneId}/dns_records?type=TXT&name=_nestmap-verification.${domain}`);
             const result = await response.json();
             if (result.success && result.result.length > 0) {
-                return result.result.some((record: any) => record.content.includes(expectedValue));
+                return result.result.some((record: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => record.content.includes(expectedValue));
             }
             return false;
         }

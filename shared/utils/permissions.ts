@@ -273,7 +273,7 @@ export class PermissionManager {
   /**
    * Get a nested field from an object using dot notation
    */
-  private getNestedField(obj: Record<string, any>, path: string): any {
+  private getNestedField(obj: Record<string, any>, path: string): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
   }
 

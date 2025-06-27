@@ -6,7 +6,7 @@ type CustomRequest = Request & {
         role: string;
         organization_id?: number;
     };
-    [key: string]: any;
+    [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
 };
 /**
  * Admin Input Validation Middleware
@@ -166,7 +166,7 @@ export function validateAdminOperation(allowedOperations: string[]) {
 export function auditAdminOperation(operationType: string) {
     return (req: CustomRequest, res: Response, next: NextFunction): Response | void => {
         const originalSend = res.send;
-        res.send = function (data: any) {
+        res.send = function (data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             // Log successful admin operations
             if (res.statusCode < 400) {
                 console.log('ADMIN_AUDIT:', {

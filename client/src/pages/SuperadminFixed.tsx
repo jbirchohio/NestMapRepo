@@ -1,3 +1,10 @@
+import SharedFlagType from '@/types/SharedFlagType';
+import SharedEventType from '@/types/SharedEventType';
+import SharedLogType from '@/types/SharedLogType';
+import SharedJobType from '@/types/SharedJobType';
+import SharedSessionType from '@/types/SharedSessionType';
+import SharedUserType from '@/types/SharedUserType';
+import SharedOrgType from '@/types/SharedOrgType';
 // UNUSED - legacy superadmin page
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'wouter';
@@ -106,7 +113,7 @@ export default function Superadmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {organizations.map((org: any) => (<TableRow key={org.id} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => window.location.href = `/superadmin/organizations/${org.id}`}>
+                {organizations.map((org: SharedOrgType) => (<TableRow key={org.id} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" onClick={() => window.location.href = `/superadmin/organizations/${org.id}`}>
                     <TableCell>
                       <div>
                         <div className="font-medium">{org.name}</div>
@@ -151,7 +158,7 @@ export default function Superadmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user: any) => (<TableRow key={user.id}>
+                {users.map((user: SharedUserType) => (<TableRow key={user.id}>
                     <TableCell>
                       <div>
                         <div className="font-medium">{user.username}</div>
@@ -192,7 +199,7 @@ export default function Superadmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activeSessions.map((session: any) => (<TableRow key={session.id}>
+                {activeSessions.map((session: SharedSessionType) => (<TableRow key={session.id}>
                     <TableCell>
                       <div>
                         <div className="font-medium">{session.username}</div>
@@ -227,7 +234,7 @@ export default function Superadmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {backgroundJobs.map((job: any) => (<TableRow key={job.id}>
+                {backgroundJobs.map((job: SharedJobType) => (<TableRow key={job.id}>
                     <TableCell className="font-medium">{job.job_type}</TableCell>
                     <TableCell>
                       <Badge variant={job.status === 'completed' ? 'default' : job.status === 'failed' ? 'destructive' : 'secondary'}>
@@ -261,7 +268,7 @@ export default function Superadmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {auditLogs.map((log: any) => (<TableRow key={log.id}>
+                {auditLogs.map((log: SharedLogType) => (<TableRow key={log.id}>
                     <TableCell className="font-medium">{log.action}</TableCell>
                     <TableCell>{log.username || 'System'}</TableCell>
                     <TableCell>
@@ -295,7 +302,7 @@ export default function Superadmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {billingData.map((event: any) => (<TableRow key={event.id}>
+                {billingData.map((event: SharedEventType) => (<TableRow key={event.id}>
                     <TableCell>{event.organization_name}</TableCell>
                     <TableCell className="font-medium">{event.event_type}</TableCell>
                     <TableCell>${event.amount?.toFixed(2) || '0.00'}</TableCell>
@@ -328,7 +335,7 @@ export default function Superadmin() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {featureFlags.map((flag: any) => (<TableRow key={flag.id}>
+                {featureFlags.map((flag: SharedFlagType) => (<TableRow key={flag.id}>
                     <TableCell className="font-medium">{flag.flag_name}</TableCell>
                     <TableCell>{flag.description || 'No description'}</TableCell>
                     <TableCell>
@@ -376,7 +383,7 @@ export default function Superadmin() {
               <Activity className="h-4 w-4 text-muted-foreground"/>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{backgroundJobs.filter((job: any) => job.status === 'running').length}</div>
+              <div className="text-2xl font-bold">{backgroundJobs.filter((job: SharedJobType) => job.status === 'running').length}</div>
               <p className="text-xs text-muted-foreground">Running background tasks</p>
             </CardContent>
           </Card>
@@ -400,7 +407,7 @@ export default function Superadmin() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {organizations.slice(0, 5).map((org: any) => (<div key={org.id} className="flex items-center justify-between">
+                {organizations.slice(0, 5).map((org: SharedOrgType) => (<div key={org.id} className="flex items-center justify-between">
                     <div>
                       <div className="font-medium">{org.name}</div>
                       <div className="text-sm text-gray-500">{org.userCount || 0} users</div>
@@ -417,7 +424,7 @@ export default function Superadmin() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {auditLogs.slice(0, 5).map((log: any) => (<div key={log.id} className="flex items-center justify-between">
+                {auditLogs.slice(0, 5).map((log: SharedLogType) => (<div key={log.id} className="flex items-center justify-between">
                     <div>
                       <div className="font-medium">{log.action}</div>
                       <div className="text-sm text-gray-500">{formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}</div>

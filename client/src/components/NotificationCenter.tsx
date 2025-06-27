@@ -17,7 +17,7 @@ interface Notification {
     timestamp: string;
     read: boolean;
     actionUrl?: string;
-    metadata?: any;
+    metadata?: unknown;
 }
 const notificationIcons = {
     trip_shared: Users,

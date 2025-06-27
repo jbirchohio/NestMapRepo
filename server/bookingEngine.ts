@@ -1,11 +1,23 @@
 import { z } from 'zod';
 // Enhanced booking provider system with real API integration
-interface BookingProvider {
+interface BookingParams {
+    offer: unknown;
+    passengers: Array<{
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone?: string;
+        dateOfBirth?: string;
+    }>;
+    paymentMethod: string;
+}
+
+interface BookingProvider<TParams = unknown> {
     name: string;
     type: 'flight' | 'hotel' | 'activity';
     enabled: boolean;
     requiresAuth: boolean;
-    book: (params: any) => Promise<BookingResult>;
+    book: (params: TParams) => Promise<BookingResult>;
     cancel: (bookingId: string) => Promise<CancellationResult>;
     getStatus: (bookingId: string) => Promise<BookingStatus>;
 }
@@ -59,7 +71,7 @@ class AmadeusFlightProvider implements BookingProvider {
         return data.access_token;
     }
     async book(params: {
-        offer: any;
+        offer: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
         passengers: Array<{
             firstName: string;
             lastName: string;
@@ -128,7 +140,7 @@ class AmadeusFlightProvider implements BookingProvider {
             currency: order.flightOffers[0].price.currency,
             confirmationDetails: {
                 pnr: order.associatedRecords?.[0]?.reference,
-                ticketNumbers: order.travelers?.map((t: any) => t.documents?.[0]?.number),
+                ticketNumbers: order.travelers?.map((t: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => t.documents?.[0]?.number),
                 flightDetails: order.flightOffers[0].itineraries
             },
             cancellationPolicy: order.rules?.cancellation || {}
@@ -171,36 +183,57 @@ class AmadeusFlightProvider implements BookingProvider {
     }
 }
 // Booking.com Hotel Provider (placeholder for real integration)
-class BookingComHotelProvider implements BookingProvider {
+class BookingComHotelProvider implements BookingProvider<BookingParams> {
     name = 'Booking.com Hotels';
     type = 'hotel' as const;
     enabled = false; // Disabled until API access is configured
     requiresAuth = true;
-    async book(params: any): Promise<BookingResult> {
+    
+    async book(params: BookingParams): Promise<BookingResult> {
         throw new Error('Booking.com API integration requires partner credentials');
     }
+    
     async cancel(bookingId: string): Promise<CancellationResult> {
         throw new Error('Booking.com cancellation requires API access');
     }
+    
     async getStatus(bookingId: string): Promise<BookingStatus> {
         throw new Error('Booking.com status check requires API access');
     }
 }
 // Stripe Payment Integration
+type StripeConfig = {
+    paymentIntents: {
+        create: (params: {
+            amount: number;
+            currency: string;
+            metadata: Record<string, unknown>;
+        }) => Promise<{ client_secret: string }>;
+        confirm: (paymentIntentId: string) => Promise<{ status: string }>;
+    };
+};
+
 export class StripePaymentProcessor {
-    private stripe: any;
+    private stripe: StripeConfig | null = null;
+    
     constructor() {
         if (process.env.STRIPE_SECRET_KEY) {
             // Would require: npm install stripe
             // this.stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
         }
     }
-    async createPaymentIntent(amount: number, currency: string, metadata: Record<string, any>) {
+    async createPaymentIntent(amount: number, currency: string, metadata: Record<string, unknown>) {
         if (!process.env.STRIPE_SECRET_KEY) {
             throw new Error('Stripe integration requires STRIPE_SECRET_KEY');
         }
-        // Stripe integration would go here
-        throw new Error('Stripe SDK not installed. Please configure payment processing.');
+        if (!this.stripe) {
+            throw new Error('Stripe not initialized');
+        }
+        return await this.stripe.paymentIntents.create({
+            amount,
+            currency,
+            metadata
+        });
     }
     async confirmPayment(paymentIntentId: string) {
         if (!this.stripe) {
@@ -221,18 +254,14 @@ export class BookingEngine {
     private registerProvider(id: string, provider: BookingProvider) {
         this.providers.set(id, provider);
     }
-    async bookFlight(params: {
-        offer: any;
-        passengers: any[];
-        paymentMethod: string;
-    }): Promise<BookingResult> {
+    async bookFlight(params: BookingParams): Promise<BookingResult> {
         const provider = this.providers.get('amadeus-flights');
         if (!provider || !provider.enabled) {
             throw new Error('Flight booking service not available');
         }
         return provider.book(params);
     }
-    async bookHotel(params: any): Promise<BookingResult> {
+    async bookHotel(params: BookingParams): Promise<BookingResult> {
         const provider = this.providers.get('booking-hotels');
         if (!provider || !provider.enabled) {
             throw new Error('Hotel booking service not available');

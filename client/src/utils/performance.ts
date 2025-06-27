@@ -1,3 +1,5 @@
+import SharedDependenciesType from '@/types/SharedDependenciesType';
+import SharedArgsType from '@/types/SharedArgsType';
 import { useCallback, useMemo, useRef, useEffect } from 'react';
 import { debounce, throttle, DebouncedFunc } from 'lodash';
 import React from 'react';
@@ -23,7 +25,7 @@ export function memo<T extends React.ComponentType<any>>(
  * @param dependencies Array of dependencies
  * @returns Memoized callback
  */
-export function useMemoizedCallback<T extends (...args: any[]) => any>(callback: T, dependencies: any[] = []): T {
+export function useMemoizedCallback<T extends (...args: SharedArgsType[]) => any>(callback: T, dependencies: SharedDependenciesType[] = []): T {
     return useCallback(callback, dependencies);
 }
 /**
@@ -32,7 +34,7 @@ export function useMemoizedCallback<T extends (...args: any[]) => any>(callback:
  * @param dependencies Array of dependencies
  * @returns Memoized value
  */
-export function useMemoizedValue<T>(factory: () => T, dependencies: any[] = []): T {
+export function useMemoizedValue<T>(factory: () => T, dependencies: SharedDependenciesType[] = []): T {
     return useMemo(factory, dependencies);
 }
 /**
@@ -42,10 +44,10 @@ export function useMemoizedValue<T>(factory: () => T, dependencies: any[] = []):
  * @param dependencies Array of dependencies
  * @returns Debounced callback
  */
-export function useDebounce<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: SharedArgsType[]) => any>(
   callback: T,
   delay: number,
-  dependencies: any[] = []
+  dependencies: SharedDependenciesType[] = []
 ): DebouncedFunc<T> {
   const callbackRef = useRef(callback);
   
@@ -70,10 +72,10 @@ export function useDebounce<T extends (...args: any[]) => any>(
  * @param dependencies Array of dependencies
  * @returns Throttled callback
  */
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: SharedArgsType[]) => any>(
   callback: T,
   limit: number,
-  dependencies: any[] = []
+  dependencies: SharedDependenciesType[] = []
 ): DebouncedFunc<T> {
   const callbackRef = useRef(callback);
   

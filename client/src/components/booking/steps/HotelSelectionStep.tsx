@@ -1,3 +1,8 @@
+import SharedCompatibleHotelType from '@/types/SharedCompatibleHotelType';
+import SharedDType from '@/types/SharedDType';
+import SharedRType from '@/types/SharedRType';
+import SharedAType from '@/types/SharedAType';
+import SharedApiHotelType from '@/types/SharedApiHotelType';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { format, parseISO, addDays } from 'date-fns';
 import { Calendar as CalendarIcon, Star, MapPin, Hotel as HotelIcon, Bed, Users, Loader2 } from 'lucide-react';
@@ -29,7 +34,7 @@ type Hotel = BaseHotel & {
     checkIn: { minAge: number };
     checkOut: { lateCheckOutAvailable: boolean };
     pets: { allowed: boolean; fee?: number };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   distanceFrom: {
     text: string;
@@ -255,7 +260,7 @@ const mapHotelRoomToRoomType = (room: HotelRoom): RoomType => {
   };
 };
 
-const mapApiHotelToHotel = (apiHotel: any): Hotel => {
+const mapApiHotelToHotel = (apiHotel: SharedApiHotelType): Hotel => {
   // Ensure all required fields have proper defaults
   const hotel: Hotel = {
     id: apiHotel.id || '',
@@ -276,7 +281,7 @@ const mapApiHotelToHotel = (apiHotel: any): Hotel => {
       })
     },
     description: apiHotel.description || '',
-    amenities: (apiHotel.amenities || []).map((a: any) => ({
+    amenities: (apiHotel.amenities || []).map((a: SharedAType) => ({
       code: a.code || `amenity-${Math.random().toString(36).substr(2, 9)}`,
       name: a.name || 'Unnamed Amenity',
       category: a.category || 'general',
@@ -290,7 +295,7 @@ const mapApiHotelToHotel = (apiHotel: any): Hotel => {
       ...(apiHotel.contact?.email && { email: apiHotel.contact.email }),
       ...(apiHotel.contact?.website && { website: apiHotel.contact.website })
     },
-    rooms: (apiHotel.rooms || []).map((r: any) => ({
+    rooms: (apiHotel.rooms || []).map((r: SharedRType) => ({
       id: r.id || `room-${Math.random().toString(36).substr(2, 9)}`,
       name: r.name || 'Standard Room',
       description: r.description || 'Comfortable room with standard amenities',
@@ -348,7 +353,7 @@ const mapApiHotelToHotel = (apiHotel: any): Hotel => {
         ? apiHotel.policies.fees 
         : []
     },
-    distanceFrom: (apiHotel.distanceFrom || []).map((d: any) => ({
+    distanceFrom: (apiHotel.distanceFrom || []).map((d: SharedDType) => ({
       place: d.place || 'Location',
       distance: typeof d.distance === 'number' ? d.distance : 0,
       unit: d.unit === 'mi' || d.unit === 'km' ? d.unit : 'km',
@@ -488,7 +493,7 @@ const HotelSelectionStep: React.FC<HotelSelectionStepProps> = ({ formData, onBac
   const handleContinue = useCallback(() => {
     if (selectedHotel && selectedRoom) {
       // Create a compatible hotel object that matches the expected type
-      const compatibleHotel: any = {
+      const compatibleHotel: SharedCompatibleHotelType = {
         ...selectedHotel,
         // Ensure all required properties are present
         amenities: selectedHotel.amenities || [],

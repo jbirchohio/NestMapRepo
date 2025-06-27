@@ -12,12 +12,12 @@ export interface TripConflict {
 export interface ActivityConflict {
     type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict';
     severity: 'high' | 'medium' | 'low';
-    activities: any[];
+    activities: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
     description: string;
     suggestedFix: string;
     autoFixAvailable: boolean;
 }
-export function detectTripConflicts(trips: any[]): {
+export function detectTripConflicts(trips: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]): {
     conflicts: TripConflict[];
     opportunities: TripConflict[];
 } {
@@ -89,7 +89,7 @@ export function detectTripConflicts(trips: any[]): {
     }
     return { conflicts, opportunities };
 }
-export function detectActivityConflicts(activities: any[]): ActivityConflict[] {
+export function detectActivityConflicts(activities: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]): ActivityConflict[] {
     const conflicts: ActivityConflict[] = [];
     for (let i = 0; i < activities.length; i++) {
         for (let j = i + 1; j < activities.length; j++) {
@@ -106,7 +106,7 @@ export function detectActivityConflicts(activities: any[]): ActivityConflict[] {
     }
     return conflicts;
 }
-function checkActivityTimeConflict(activity1: any, activity2: any): ActivityConflict | null {
+function checkActivityTimeConflict(activity1: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, activity2: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): ActivityConflict | null {
     const time1 = parseTime(activity1.time);
     const time2 = parseTime(activity2.time);
     if (!time1 || !time2)
@@ -158,7 +158,7 @@ function formatTime(minutes: number): string {
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 }
-function calculateDistance(activity1: any, activity2: any): number {
+function calculateDistance(activity1: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, activity2: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): number {
     if (!activity1.latitude || !activity1.longitude || !activity2.latitude || !activity2.longitude) {
         return 5; // Default estimate
     }

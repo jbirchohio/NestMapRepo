@@ -10,14 +10,14 @@ import type { TablesRelationalConfig } from 'drizzle-orm/relations';
  */
 export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string, any>, UpdateData extends Record<string, any>> implements BaseRepository<T, ID, CreateData, UpdateData> {
     protected logger = logger;
-    constructor(protected entityName: string, protected table: any, protected idColumn: any) { }
+    constructor(protected entityName: string, protected table: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, protected idColumn: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) { }
     
     /**
      * Maps a database record to a domain model
      * @param data - Raw database record
      * @returns Promise that resolves to the mapped domain model
      */
-    public async mapToModel(data: any): Promise<T> {
+    public async mapToModel(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<T> {
         // Default implementation - can be overridden by child classes
         return data as T;
     }

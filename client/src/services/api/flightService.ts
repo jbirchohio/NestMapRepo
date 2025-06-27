@@ -1,3 +1,4 @@
+import SharedPassengerDetailsType from '@/types/SharedPassengerDetailsType';
 import { ApiClient } from './apiClient';
 import type { Flight, FlightSearchParams, Airport } from '@shared/types/flight';
 
@@ -18,7 +19,7 @@ export const flightService = {
     return response.data;
   },
   
-  async createFlightBooking(offerId: string, passengerDetails: any) {
+  async createFlightBooking(offerId: string, passengerDetails: SharedPassengerDetailsType) {
     const response = await apiClient.post<{ 
       data: { 
         bookingId: string; 

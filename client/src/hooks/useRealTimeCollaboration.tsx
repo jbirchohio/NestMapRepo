@@ -1,3 +1,5 @@
+import SharedCollabType from '@/types/SharedCollabType';
+import SharedDataType from '@/types/SharedDataType';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 interface CollaboratorPresence {
@@ -106,10 +108,10 @@ export function useRealTimeCollaboration({ tripId, organizationId, userId }: Use
             }));
         }
     }, [location]);
-    const handleWebSocketMessage = (data: any) => {
+    const handleWebSocketMessage = (data: SharedDataType) => {
         switch (data.type) {
             case 'collaborators_list':
-                setCollaborators(data.collaborators.map((collab: any, index: number) => ({
+                setCollaborators(data.collaborators.map((collab: SharedCollabType, index: number) => ({
                     ...collab,
                     color: PRESENCE_COLORS[index % PRESENCE_COLORS.length]
                 })));
@@ -169,7 +171,7 @@ export function useRealTimeCollaboration({ tripId, organizationId, userId }: Use
         }
     };
     // Send activity updates (editing, viewing, etc.)
-    const sendActivity = (activityType: string, data: any) => {
+    const sendActivity = (activityType: string, data: SharedDataType) => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
             wsRef.current.send(JSON.stringify({
                 type: 'activity_update',

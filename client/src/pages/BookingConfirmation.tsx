@@ -1,3 +1,6 @@
+import SharedPassengerType from '@/types/SharedPassengerType';
+import SharedSegmentType from '@/types/SharedSegmentType';
+import SharedSliceType from '@/types/SharedSliceType';
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -122,7 +125,7 @@ export default function BookingConfirmation() {
                   <CardTitle>Flight Details</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {bookingData.slices?.map((slice: any, sliceIndex: number) => (<div key={sliceIndex} className="space-y-4">
+                  {bookingData.slices?.map((slice: SharedSliceType, sliceIndex: number) => (<div key={sliceIndex} className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-2 text-lg font-semibold">
@@ -141,7 +144,7 @@ export default function BookingConfirmation() {
                         </div>
                       </div>
 
-                      {slice.segments?.map((segment: any, segmentIndex: number) => (<div key={segmentIndex} className="border rounded-lg p-4">
+                      {slice.segments?.map((segment: SharedSegmentType, segmentIndex: number) => (<div key={segmentIndex} className="border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
                               <img src={segment.airline?.logo_url} alt={segment.airline?.name} className="w-8 h-8" onError={(e) => {
@@ -201,7 +204,7 @@ export default function BookingConfirmation() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {bookingData.passengers?.map((passenger: any, index: number) => (<div key={index} className="border rounded-lg p-4 mb-4 last:mb-0">
+                  {bookingData.passengers?.map((passenger: SharedPassengerType, index: number) => (<div key={index} className="border rounded-lg p-4 mb-4 last:mb-0">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-semibold text-lg">

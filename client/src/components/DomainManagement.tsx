@@ -1,3 +1,5 @@
+import SharedErrorType from '@/types/SharedErrorType';
+import SharedBrandingType from '@/types/SharedBrandingType';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -26,7 +28,7 @@ interface DomainDashboard {
     currentPlan: string;
     whiteLabelEnabled: boolean;
     domains: Domain[];
-    branding: any;
+    branding: SharedBrandingType;
     features: {
         customDomain: boolean;
         customBranding: boolean;
@@ -66,7 +68,7 @@ export default function DomainManagement() {
                 description: data.domain ? "Custom domain added successfully" : "Subdomain configured successfully"
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Failed to Add Domain",
                 description: error.message || "An error occurred",
@@ -86,7 +88,7 @@ export default function DomainManagement() {
                 description: "Domain verification successful"
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Verification Failed",
                 description: error.message || "DNS verification failed",

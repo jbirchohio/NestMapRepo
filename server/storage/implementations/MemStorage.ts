@@ -27,7 +27,7 @@ export class MemStorage implements IStorage {
         return this.travelerRepository.removeTripTraveler(id);
     }
     // Corporate Card operations
-    async createCorporateCard(cardData: any): Promise<any> {
+    async createCorporateCard(cardData: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<any> {
         // In a real implementation, this would create a new card in the database
         // For the mock, we'll return a basic card object
         return {
@@ -39,7 +39,7 @@ export class MemStorage implements IStorage {
     }
     async updateCorporateCard(_id: string | number, _updates: {
         status?: string;
-        [key: string]: any;
+        [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     }): Promise<boolean> {
         // In a real implementation, this would update the card in the database
         // For the mock, we'll just return true to indicate success

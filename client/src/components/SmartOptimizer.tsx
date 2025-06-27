@@ -1,3 +1,7 @@
+import SharedConflictType from '@/types/SharedConflictType';
+import SharedConflictIdsType from '@/types/SharedConflictIdsType';
+import SharedCType from '@/types/SharedCType';
+import SharedDataType from '@/types/SharedDataType';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -60,7 +64,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
     // Apply optimization mutation
     const applyOptimizationMutation = useMutation({
         mutationFn: () => apiRequest('POST', '/api/optimize/apply', { tripId, activities }),
-        onSuccess: (data: any) => {
+        onSuccess: (data: SharedDataType) => {
             onActivitiesUpdate(data?.optimizedActivities || []);
             queryClient.invalidateQueries({ queryKey: ['/api/trips', tripId] });
             refetchOptimization();
@@ -69,13 +73,13 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
     // Auto-fix conflicts mutation
     const autoFixMutation = useMutation({
         mutationFn: (conflictIds: string[]) => apiRequest('POST', '/api/conflicts/autofix', { tripId, conflictIds }),
-        onSuccess: (data: any) => {
+        onSuccess: (data: SharedDataType) => {
             onActivitiesUpdate(data?.fixedActivities || []);
             queryClient.invalidateQueries({ queryKey: ['/api/conflicts/detect', tripId] });
         }
     });
     const hasConflicts = conflicts && Array.isArray(conflicts) && conflicts.length > 0;
-    const hasOptimizations = optimization && (optimization as any).improvements && Array.isArray((optimization as any).improvements);
+    const hasOptimizations = optimization && (optimization as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */' */).improvements && Array.isArray((optimization as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */' */).improvements);
     if (optimizationLoading || conflictsLoading || remindersLoading) {
         return (<Card>
         <CardHeader>
@@ -112,7 +116,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
               <div>
                 <div className="font-medium">Optimization Score</div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {hasOptimizations ? `${Math.round((optimization as any).improvements?.efficiencyGain || 0)}%` : 'N/A'}
+                  {hasOptimizations ? `${Math.round((optimization as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */' */).improvements?.efficiencyGain || 0)}%` : 'N/A'}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Efficiency gain</div>
               </div>
@@ -123,7 +127,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
               <div>
                 <div className="font-medium">Time Saved</div>
                 <div className="text-2xl font-bold text-green-600">
-                  {hasOptimizations ? `${(optimization as any).improvements?.timeSaved || 0}m` : '0m'}
+                  {hasOptimizations ? `${(optimization as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */' */).improvements?.timeSaved || 0}m` : '0m'}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Travel time reduced</div>
               </div>
@@ -165,8 +169,8 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
             <div className="flex gap-2">
               <Button size="sm" onClick={() => {
                 const autoFixableConflicts = conflicts
-                    .filter((c: any) => c.autoFixAvailable)
-                    .map((c: any) => c.id);
+                    .filter((c: SharedCType) => c.autoFixAvailable)
+                    .map((c: SharedCType) => c.id);
                 if (autoFixableConflicts.length > 0) {
                     autoFixMutation.mutate(autoFixableConflicts);
                 }
@@ -202,7 +206,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
             </TabsContent>
 
             <TabsContent value="conflicts" className="space-y-4">
-              <ConflictsTab conflicts={conflicts || []} onAutoFix={(conflictIds: any) => autoFixMutation.mutate(conflictIds)} isFixing={autoFixMutation.isPending}/>
+              <ConflictsTab conflicts={conflicts || []} onAutoFix={(conflictIds: SharedConflictIdsType) => autoFixMutation.mutate(conflictIds)} isFixing={autoFixMutation.isPending}/>
             </TabsContent>
 
             <TabsContent value="reminders" className="space-y-4">
@@ -336,7 +340,7 @@ function ConflictsTab({ conflicts, onAutoFix, isFixing }: ConflictsTabProps) {
             default: return 'text-muted-foreground bg-muted border-border';
         }
     };
-    const autoFixableConflicts = conflicts.filter((c: any) => c.autoFixAvailable);
+    const autoFixableConflicts = conflicts.filter((c: SharedCType) => c.autoFixAvailable);
     return (<div className="space-y-4">
       {autoFixableConflicts.length > 0 && (<div className="flex justify-between items-center p-4 bg-primary/10 rounded-lg">
           <div>
@@ -345,14 +349,14 @@ function ConflictsTab({ conflicts, onAutoFix, isFixing }: ConflictsTabProps) {
               {autoFixableConflicts.length} conflicts can be automatically resolved
             </div>
           </div>
-          <Button onClick={() => onAutoFix(autoFixableConflicts.map((c: any) => c.id))} disabled={isFixing} className="flex items-center gap-2">
+          <Button onClick={() => onAutoFix(autoFixableConflicts.map((c: SharedCType) => c.id))} disabled={isFixing} className="flex items-center gap-2">
             <Zap className="w-4 h-4"/>
             {isFixing ? 'Fixing...' : 'Auto-Fix All'}
           </Button>
         </div>)}
 
       <div className="space-y-3">
-        {conflicts.map((conflict: any, index: number) => (<Alert key={index} className={getSeverityColor(conflict.severity)}>
+        {conflicts.map((conflict: SharedConflictType, index: number) => (<Alert key={index} className={getSeverityColor(conflict.severity)}>
             <AlertTriangle className="w-4 h-4"/>
             <AlertDescription>
               <div className="flex justify-between items-start">

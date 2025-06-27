@@ -4,7 +4,7 @@ declare global {
   namespace Express {
     export interface Request {
       user?: AuthUser;
-      auth?: any;
+      auth?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
       organizationId?: string;
       requestId?: string;
       startTime?: [number, number];
@@ -15,7 +15,7 @@ declare global {
       params: {
         [key: string]: string;
       };
-      body: any;
+      body: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
       query: {
         [key: string]: string | string[] | undefined;
       };

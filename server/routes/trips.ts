@@ -297,7 +297,7 @@ router.post("/:tripId/proposal", validateAndSanitizeRequest({ params: tripIdPara
         res.setHeader('Content-Disposition', `attachment; filename="Travel_Proposal_${clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${trip.title.replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`);
         return res.send(pdfBuffer);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */) {
         console.error("Error generating proposal:", error);
         return res.status(500).json({ message: "Error generating proposal: " + error.message });
     }

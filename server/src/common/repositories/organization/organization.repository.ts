@@ -20,7 +20,7 @@ export class OrganizationRepositoryImpl
   extends BaseRepositoryImpl<Organization, string, CreateOrganizationData, UpdateOrganizationData>
   implements OrganizationRepository {
   
-  protected mapToModel(data: any): Organization {
+  protected mapToModel(data: any /** FIXANYERROR: Replace 'any' */): Organization {
     return {
       ...data,
       status: 'active' as const,

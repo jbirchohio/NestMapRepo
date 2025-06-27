@@ -148,7 +148,7 @@ router.post('/organizations/:orgId/domains/:domainId/verify', requireOrgPermissi
             sendJsonResponse(res, 400, { success: false, message: 'Verification failed. TXT record not found or does not match.' });
         }
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */) {
         console.error('Error verifying domain:', error);
         if (error.code === 'ENOTFOUND' || error.code === 'ENODATA') {
             sendJsonResponse(res, 400, { success: false, message: 'Could not find DNS records for this domain.' });

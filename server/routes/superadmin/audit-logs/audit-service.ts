@@ -8,7 +8,7 @@ import { superadminAuditLogs } from '../../../db/schema.js';
  * @param targetId The ID of the resource being acted upon
  * @param details Additional details about the action
  */
-export const logSuperadminAction = async (adminUserId: number, action: string, targetType: string, targetId?: string | number, details?: any) => {
+export const logSuperadminAction = async (adminUserId: number, action: string, targetType: string, targetId?: string | number, details?: any /** FIXANYERROR: Replace 'any' */) => {
     try {
         await db.insert(superadminAuditLogs).values({
             admin_user_id: adminUserId,

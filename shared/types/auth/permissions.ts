@@ -87,7 +87,7 @@ export interface PermissionCondition {
   // Operator for comparison (e.g., 'equals', 'notEquals', 'in', 'notIn')
   operator: 'equals' | 'notEquals' | 'in' | 'notIn' | 'contains' | 'startsWith' | 'endsWith';
   // Value to compare against
-  value: any;
+  value: any /** FIXANYERROR: Replace 'any' */;
 }
 
 /**

@@ -1,13 +1,19 @@
+import SharedBillingDataType from '@/types/SharedBillingDataType';
+import SharedBackgroundJobsType from '@/types/SharedBackgroundJobsType';
+import SharedActiveSessionsType from '@/types/SharedActiveSessionsType';
+import SharedAuditLogsType from '@/types/SharedAuditLogsType';
+import SharedUsersType from '@/types/SharedUsersType';
+import SharedOrganizationsType from '@/types/SharedOrganizationsType';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Building2, Activity, DollarSign, TrendingUp } from 'lucide-react';
 interface DashboardData {
-    organizations: any[];
-    users: any[];
-    auditLogs: any[];
-    activeSessions: any[];
-    backgroundJobs: any[];
-    billingData: any[];
+    organizations: SharedOrganizationsType[];
+    users: SharedUsersType[];
+    auditLogs: SharedAuditLogsType[];
+    activeSessions: SharedActiveSessionsType[];
+    backgroundJobs: SharedBackgroundJobsType[];
+    billingData: SharedBillingDataType[];
 }
 interface DashboardMetricsProps {
     data: DashboardData;

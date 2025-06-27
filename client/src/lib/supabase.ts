@@ -1,3 +1,6 @@
+import SharedSessionType from '@/types/SharedSessionType';
+import SharedEventType from '@/types/SharedEventType';
+import SharedMetadataType from '@/types/SharedMetadataType';
 import { createClient } from '@supabase/supabase-js';
 // Supabase connection details from environment variables
 const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'];
@@ -19,7 +22,7 @@ export const supabase = createClient(validUrl || 'https://placeholder.supabase.c
 // Auth helper functions
 export const auth = {
     // Sign up with email and password
-    signUp: async (email: string, password: string, metadata: any = {}) => {
+    signUp: async (email: string, password: string, metadata: SharedMetadataType = {}) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -60,7 +63,7 @@ export const auth = {
         return { session: data.session, error };
     },
     // Set up auth state change listener
-    onAuthStateChange: (callback: (event: any, session: any) => void) => {
+    onAuthStateChange: (callback: (event: SharedEventType, session: SharedSessionType) => void) => {
         return supabase.auth.onAuthStateChange(callback);
     }
 };

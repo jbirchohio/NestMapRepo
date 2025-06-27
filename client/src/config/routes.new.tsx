@@ -3,7 +3,7 @@ import { UserRole } from '@shared/types/auth';
 
 // Type for components that can be imported with dynamic imports
 type ImportedComponent = {
-  default: ComponentType<any>;
+  default: ComponentType<Record<string, unknown>>;
 };
 
 // Type for route metadata
@@ -71,14 +71,21 @@ function lazyLoad(
   
   // Add auth metadata to the element
   if (options.requireAuth || options.requiredRoles?.length || options.requiredPermissions?.length) {
-    (element as any).requireAuth = options.requireAuth ?? true;
-    (element as any).requiredRoles = options.requiredRoles;
-    (element as any).requiredPermissions = options.requiredPermissions;
+    const routeElement = element as RouteElement & {
+      requireAuth?: boolean;
+      requiredRoles?: UserRole[];
+      requiredPermissions?: string[];
+    };
+    
+    routeElement.requireAuth = options.requireAuth ?? true;
+    routeElement.requiredRoles = options.requiredRoles;
+    routeElement.requiredPermissions = options.requiredPermissions;
   }
   
   // Add meta information if provided
   if (options.meta) {
-    (element as any).meta = options.meta;
+    const routeElement = element as RouteElement & { meta?: RouteMeta };
+    routeElement.meta = options.meta;
   }
   
   return element;

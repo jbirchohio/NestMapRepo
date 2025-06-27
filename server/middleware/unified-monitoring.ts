@@ -6,7 +6,7 @@ interface UnifiedMetrics {
     startTime: bigint;
     dbQueries: number;
     dbTotalTime: number;
-    slowQueries: any[];
+    slowQueries: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
     memoryBefore: number;
 }
 declare global {
@@ -51,7 +51,7 @@ export function unifiedMonitoringMiddleware(req: Request, res: Response, next: N
     // Single response interception point
     const originalEnd = res.end;
     let responseEnded = false;
-    res.end = function (chunk?: any, encoding?: any, cb?: any) {
+    res.end = function (chunk?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, encoding?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, cb?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         if (responseEnded) {
             return originalEnd.call(this, chunk, encoding, cb);
         }

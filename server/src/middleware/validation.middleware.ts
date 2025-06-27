@@ -3,7 +3,7 @@ import { validate, ValidationError } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 import { Logger } from '@nestjs/common';
 
-type Constructor<T = any> = new (...args: any[]) => T;
+type Constructor<T = any> = new (...args: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]) => T;
 
 export function validateRequest<T extends object>(
   type: Constructor<T>,
@@ -77,7 +77,7 @@ function formatErrors(errors: ValidationError[]): Record<string, string[]> {
 declare global {
   namespace Express {
     interface Request {
-      validatedData?: any;
+      validatedData?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     }
   }
 }

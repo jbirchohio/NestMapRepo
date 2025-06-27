@@ -2,7 +2,7 @@ import { apiClient } from './apiClient';
 export interface MetricPoint {
     timestamp: string;
     value: number;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 export interface TimeRange {
     start: string | Date;
@@ -22,7 +22,7 @@ export interface MetricResponse {
     metadata?: {
         unit?: string;
         description?: string;
-        [key: string]: any;
+        [key: string]: unknown;
     };
 }
 export interface SystemMetrics {

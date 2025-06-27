@@ -1,3 +1,4 @@
+import UserIcon from '@/unknown/UserIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XIcon } from '../icons';
 import { NavigationLink } from './NavigationLink';

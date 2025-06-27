@@ -1,3 +1,4 @@
+import SharedDropAnimationType from '@/types/SharedDropAnimationType';
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ interface DraggableProvided {
 interface DraggableStateSnapshot {
   isDragging: boolean;
   isDropAnimating: boolean;
-  dropAnimation: any;
+  dropAnimation: SharedDropAnimationType;
   draggingOver?: string;
   mode: 'FLUID' | 'SNAP';
 }

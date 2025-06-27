@@ -106,7 +106,7 @@ export class DuffelHTTPClient {
             console.log(`Duffel API Response: ${response.status} - Data received`);
             return data;
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel API Request Failed:', error.message);
             throw error;
         }
@@ -152,7 +152,7 @@ export class DuffelHTTPClient {
             console.log(`Found ${offersResponse.data.length} flight offers`);
             return offersResponse.data;
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel flight search error:', error);
             throw new Error(`Flight search failed: ${error.message}`);
         }
@@ -165,7 +165,7 @@ export class DuffelHTTPClient {
             const offerResponse = await this.request(`/air/offers/${offerId}`);
             return offerResponse.data;
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel get offer error:', error);
             throw new Error(`Failed to get offer: ${error.message}`);
         }
@@ -185,7 +185,7 @@ export class DuffelHTTPClient {
             const response = await this.request(`/air/airports?name=${encodeURIComponent(query)}&limit=10`);
             return response.data;
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel airport search error:', error);
             throw new Error(`Airport search failed: ${error.message}`);
         }
@@ -217,7 +217,7 @@ export class DuffelHTTPClient {
             console.log('Duffel booking created:', response.data.id);
             return response.data;
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel booking error:', error);
             throw new Error(`Booking failed: ${error.message}`);
         }
@@ -237,7 +237,7 @@ export class DuffelHTTPClient {
             console.log('Duffel booking cancelled:', response.data.id);
             return response.data;
         }
-        catch (error: any) {
+        catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel cancel booking error:', error);
             throw new Error(`Cancellation failed: ${error.message}`);
         }

@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import { apiClient } from '@/services/api/apiClient';
 import { FlightSearchParams, FlightSearchResponse, HotelSearchParams, HotelSearchResponse, BookingDetails, } from '../types';
 // Interface for booking data to replace 'any' type
@@ -80,7 +81,7 @@ class BookingService {
                 success: true,
                 bookingId: response.bookingId
             };
-        } catch (error: any) {
+        } catch (error: SharedErrorType) {
             return {
                 success: false,
                 error: error.message || 'Failed to create booking'

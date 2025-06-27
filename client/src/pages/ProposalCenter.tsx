@@ -1,3 +1,4 @@
+import SharedTripType from '@/types/SharedTripType';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +22,9 @@ export default function ProposalCenter() {
             return response.json();
         }
     });
-    const filteredTrips = trips?.filter((trip: any) => trip.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const filteredTrips = trips?.filter((trip: SharedTripType) => trip.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         trip.city?.toLowerCase().includes(searchTerm.toLowerCase())) || [];
-    const selectedTripData = trips?.find((trip: any) => trip.id === selectedTrip);
+    const selectedTripData = trips?.find((trip: SharedTripType) => trip.id === selectedTrip);
     return (<div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="text-center space-y-4">
@@ -81,7 +82,7 @@ export default function ProposalCenter() {
                       </div>
                     </div>))}
                 </div>) : filteredTrips.length > 0 ? (<div className="grid gap-3">
-                  {filteredTrips.map((trip: any) => (<Card key={trip.id} className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-blue-500" onClick={() => setSelectedTrip(trip.id)}>
+                  {filteredTrips.map((trip: SharedTripType) => (<Card key={trip.id} className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-blue-500" onClick={() => setSelectedTrip(trip.id)}>
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="space-y-2 flex-1">

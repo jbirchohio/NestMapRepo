@@ -12,7 +12,7 @@ declare global {
       params: {
         [key: string]: string;
       };
-      body: any;
+      body: any /** FIXANYERROR: Replace 'any' */;
     }
   }
 }

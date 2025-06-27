@@ -1,3 +1,4 @@
+import SharedTravelerInfoType from '@/types/SharedTravelerInfoType';
 import { apiClient } from './api/apiClient';
 import { Hotel, HotelSearchParams, RoomType } from '@/components/booking/types';
 
@@ -89,7 +90,7 @@ export const hotelService = {
     checkIn: string,
     checkOut: string,
     guests: number,
-    travelerInfo: any // TODO: Define proper type
+    travelerInfo: SharedTravelerInfoType // TODO: Define proper type
   ): Promise<{ bookingId: string; confirmationNumber: string }> {
     try {
       const response = await apiClient.post<{

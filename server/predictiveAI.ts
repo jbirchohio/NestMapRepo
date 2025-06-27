@@ -38,8 +38,8 @@ interface CrowdPrediction {
     }[];
 }
 interface WeatherAdaptation {
-    originalPlan: any[];
-    adaptedPlan: any[];
+    originalPlan: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
+    adaptedPlan: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
     weatherForecast: {
         date: string;
         condition: string;
@@ -47,8 +47,8 @@ interface WeatherAdaptation {
         precipitation: number;
         recommendations: string[];
     }[];
-    indoorAlternatives: any[];
-    postponeRecommendations: any[];
+    indoorAlternatives: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
+    postponeRecommendations: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
 }
 export async function predictFlightPrices(origin: string, destination: string, departureDate: string, returnDate?: string): Promise<PricePrediction> {
     try {
@@ -135,7 +135,7 @@ export async function predictCrowdLevels(location: string, date: string, time?: 
         throw new Error('Crowd prediction requires valid API credentials. Please provide necessary API keys.');
     }
 }
-export async function generateWeatherAdaptiveItinerary(activities: any[], destination: string, dates: string[]): Promise<WeatherAdaptation> {
+export async function generateWeatherAdaptiveItinerary(activities: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[], destination: string, dates: string[]): Promise<WeatherAdaptation> {
     try {
         if (!process.env.OPENAI_API_KEY) {
             throw new Error('OpenAI API key required for weather adaptation. Please provide OPENAI_API_KEY.');
@@ -178,7 +178,7 @@ export async function generateWeatherAdaptiveItinerary(activities: any[], destin
         throw new Error('Weather adaptation requires valid API credentials. Please provide necessary API keys.');
     }
 }
-export async function optimizeItinerary(activities: any[], constraints: {
+export async function optimizeItinerary(activities: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[], constraints: {
     budget?: number;
     timeLimit?: number;
     preferences?: string[];

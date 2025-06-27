@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
 import { AbortController } from 'abort-controller';
 import { SecurityUtils } from '@/utils/securityUtils';
@@ -109,7 +110,7 @@ export class ApiClient {
                 // Start performance monitoring
                 const metrics = this.performanceMonitor.startRequest(config);
                 (config as InternalAxiosRequestConfig & {
-                    metrics?: any; // Performance metrics type can be defined more specifically if needed
+                    metrics?: unknown; // Performance metrics type can be defined more specifically if needed
                 }).metrics = metrics;
                 // Add security headers
                 const securityHeaders = this.securityUtils.getSecurityHeaders();
@@ -203,7 +204,7 @@ export class ApiClient {
                 }
                 return Promise.reject(error);
             }
-            catch (error: unknown) {
+            catch (error: SharedErrorType) {
                 const errorObj = error as Error & { code?: string; details?: unknown };
                 this.errorLogger.logError(errorObj, {
                     type: 'ResponseError',

@@ -4,7 +4,7 @@ import type { AuthUser } from '@shared/types/auth/user.js';
 declare module 'express-serve-static-core' {
   interface Request {
     user?: AuthUser;
-    auth?: any;
+    auth?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     organizationId?: string | number;
     requestId?: string;
     startTime?: [number, number];
@@ -17,7 +17,7 @@ declare module 'express-serve-static-core' {
 
 export interface CustomRequestFields {
   user: AuthUser;
-  auth?: any;
+  auth?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
   organizationId?: string | number;
   requestId?: string;
   startTime?: [number, number];

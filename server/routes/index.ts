@@ -353,7 +353,7 @@ router.get('/health', (_req, res) => {
     });
 });
 // Function to register admin settings routes that need app instance
-export function registerDirectRoutes(app: any) {
+export function registerDirectRoutes(app: any /** FIXANYERROR: Replace 'any' */) {
     registerAdminSettingsRoutes(app);
     registerWhiteLabelStatusRoutes(app);
     registerSimplifiedWhiteLabelRoutes(app); // Call the imported function

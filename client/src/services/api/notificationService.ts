@@ -1,3 +1,4 @@
+import SharedDataType from '@/types/SharedDataType';
 import apiClient from './apiClient'; // Default import
 import { EventEmitter } from 'events';
 export interface Notification {
@@ -36,7 +37,7 @@ class NotificationService extends EventEmitter {
     private reconnectTimeout = 1000; // Start with 1 second
     private ws: WebSocket | null = null;
     private isConnected = false;
-    private eventCallbacks: Record<string, ((data: any) => void)[]> = {};
+    private eventCallbacks: Record<string, ((data: SharedDataType) => void)[]> = {};
     private constructor() {
         super();
         this.setupWebSocket();
@@ -105,7 +106,7 @@ class NotificationService extends EventEmitter {
             this.emit('reconnect_failed');
         }
     }
-    public onEvent(event: string, callback: (data: any) => void) {
+    public onEvent(event: string, callback: (data: SharedDataType) => void) {
         if (!this.eventCallbacks[event]) {
             this.eventCallbacks[event] = [];
         }
@@ -121,7 +122,7 @@ class NotificationService extends EventEmitter {
             }
         };
     }
-    public sendMessage(type: string, data: any) {
+    public sendMessage(type: string, data: SharedDataType) {
         if (this.isConnected && this.ws) {
             this.ws.send(JSON.stringify({ type, data }));
         } else {

@@ -1,3 +1,4 @@
+import SharedFormType from '@/types/SharedFormType';
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -296,7 +297,7 @@ export default function ProposalTemplates() {
     </div>);
 }
 function TemplateForm({ form, onSubmit, isLoading, isEditing = false }: {
-    form: any;
+    form: SharedFormType;
     onSubmit: (data: TemplateFormData) => void;
     isLoading: boolean;
     isEditing?: boolean;

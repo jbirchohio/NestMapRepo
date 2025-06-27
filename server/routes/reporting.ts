@@ -184,7 +184,7 @@ router.get('/export/:reportType', async (req, res) => {
         const organizationId = req.user.organization_id;
         const { reportType } = req.params;
         const { format = 'csv', startDate, endDate } = req.query;
-        let data: any[] = [];
+        let data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] = [];
         let filename = '';
         switch (reportType) {
             case 'trips':
@@ -377,24 +377,24 @@ async function getTrendAnalytics(organizationId: number, startDate: Date, endDat
         monthly: monthlyTrends
     };
 }
-function calculateTripROI(trip: any): number {
+function calculateTripROI(trip: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): number {
     // Simplified ROI calculation
     const revenue = trip.trip.totalBudget || 0;
     const cost = trip.metrics.totalExpenseAmount || 0;
     return revenue > 0 ? ((revenue - cost) / cost) * 100 : 0;
 }
-function calculateTripEfficiency(trip: any): number {
+function calculateTripEfficiency(trip: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): number {
     // Activities per day metric
     const duration = trip.trip.startDate && trip.trip.endDate ?
         Math.ceil((new Date(trip.trip.endDate).getTime() - new Date(trip.trip.startDate).getTime()) / (1000 * 60 * 60 * 24)) : 1;
     return trip.metrics.activitiesCount / duration;
 }
-function calculateCostPerDay(trip: any): number {
+function calculateCostPerDay(trip: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): number {
     const duration = trip.trip.startDate && trip.trip.endDate ?
         Math.ceil((new Date(trip.trip.endDate).getTime() - new Date(trip.trip.startDate).getTime()) / (1000 * 60 * 60 * 24)) : 1;
     return trip.metrics.totalExpenseAmount / duration;
 }
-function calculateCompletionRate(statusBreakdown: any[]): number {
+function calculateCompletionRate(statusBreakdown: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]): number {
     const completed = statusBreakdown.find(s => s.status === 'completed')?.count || 0;
     const total = statusBreakdown.reduce((sum, s) => sum + s.count, 0);
     return total > 0 ? (completed / total) * 100 : 0;
@@ -473,12 +473,12 @@ async function getAuditTrailCompleteness(organizationId: number, startDate: Date
         issues: []
     };
 }
-function calculateComplianceScore(metrics: any[]): number {
+function calculateComplianceScore(metrics: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]): number {
     // Calculate overall compliance score
     const scores = metrics.map(m => m.complianceRate || m.onTimeRate || m.receiptComplianceRate || 100);
     return scores.reduce((sum, score) => sum + score, 0) / scores.length;
 }
-function generateComplianceRecommendations(metrics: any[]): string[] {
+function generateComplianceRecommendations(metrics: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]): string[] {
     const recommendations: string[] = [];
     metrics.forEach(metric => {
         if (metric.issues) {
@@ -524,14 +524,14 @@ async function exportComplianceData(organizationId: number, startDate?: string, 
         .leftJoin(users, eq(approvalRequests.requesterId, users.id))
         .where(eq(approvalRequests.organization_id, organizationId));
 }
-function convertToCSV(data: any[]): string {
+function convertToCSV(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]): string {
     if (!data.length)
         return '';
     const headers = Object.keys(data[0]).join(',');
     const rows = data.map(row => Object.values(row).map(value => typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value).join(','));
     return [headers, ...rows].join('\n');
 }
-async function buildCustomReport(organizationId: number, config: any) {
+async function buildCustomReport(organizationId: number, config: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
     // Custom report builder - would implement based on config
     return {
         message: "Custom report builder would be implemented here",

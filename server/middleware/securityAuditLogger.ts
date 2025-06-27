@@ -44,7 +44,7 @@ export class SecurityAuditLogger {
     static auditAdminAction(action: string, resource: string) {
         return async (req: Request, res: Response, next: NextFunction) => {
             const originalSend = res.send.bind(res);
-            res.send = function (data: any) {
+            res.send = function (data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
                 const success = res.statusCode >= 200 && res.statusCode < 400;
                 if (req.user) {
                     SecurityAuditLogger.logAction({

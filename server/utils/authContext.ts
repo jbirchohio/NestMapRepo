@@ -1,15 +1,23 @@
 import type { Request } from 'express';
+
+// Extended Request type with our custom properties
+declare module 'express-serve-static-core' {
+    interface Request {
+        user?: JWTUser | AuthUser;
+        organizationId?: string;
+    }
+}
 // Types for our auth context
 export interface AuthUser {
     id: string | number;
     email: string;
     role?: string;
-    [key: string]: any;
+    [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
 }
 export interface JWTUser {
     id: string | number;
     email: string;
-    [key: string]: any;
+    [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
 }
 export interface AuthContext {
     user?: JWTUser | AuthUser;
@@ -25,7 +33,7 @@ export interface AuthContext {
  */
 export function getAuthContext(req: Request): AuthContext {
     const user = (req as any).user as JWTUser | AuthUser | undefined;
-    const organizationId = (req as any).organizationId as string | undefined;
+    const organizationId = req.organizationId;
     return {
         user,
         organizationId,
@@ -34,7 +42,7 @@ export function getAuthContext(req: Request): AuthContext {
         hasRole: (role: string) => {
             if (!user)
                 return false;
-            return (user as any).role === role;
+            return 'role' in user && user.role === role;
         }
     };
 }

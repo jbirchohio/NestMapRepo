@@ -1,3 +1,7 @@
+import SharedMemberType from '@/types/SharedMemberType';
+import SharedUserDataType from '@/types/SharedUserDataType';
+import SharedErrorType from '@/types/SharedErrorType';
+import SharedUpdatesType from '@/types/SharedUpdatesType';
 import { useParams, Link } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -46,7 +50,7 @@ export default function SuperadminOrganizationDetail() {
     console.log('Organization query state:', { organization, isLoading, error });
     // Update organization mutation
     const updateOrganization = useMutation({
-        mutationFn: async (updates: any) => {
+        mutationFn: async (updates: SharedUpdatesType) => {
             const res = await apiRequest('PUT', `/api/superadmin/organizations/${id}`, updates);
             return res.json();
         },
@@ -77,7 +81,7 @@ export default function SuperadminOrganizationDetail() {
     const updateUser = useMutation({
         mutationFn: async ({ userId, updates }: {
             userId: number;
-            updates: any;
+            updates: SharedUpdatesType;
         }) => {
             return await apiRequest('PUT', `/api/superadmin/users/${userId}`, updates);
         },
@@ -88,7 +92,7 @@ export default function SuperadminOrganizationDetail() {
                 description: `Role changed to ${data.role}`
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             console.error('User update error:', error);
             toast({
                 title: 'Failed to update user',
@@ -113,7 +117,7 @@ export default function SuperadminOrganizationDetail() {
     });
     // Create user mutation
     const createUser = useMutation({
-        mutationFn: async (userData: any) => {
+        mutationFn: async (userData: SharedUserDataType) => {
             const res = await apiRequest('POST', '/api/superadmin/users', {
                 ...userData,
                 organization_id: parseInt(id as string)
@@ -737,7 +741,7 @@ export default function SuperadminOrganizationDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {organization.members.map((member: any) => (<TableRow key={member.id}>
+                  {organization.members.map((member: SharedMemberType) => (<TableRow key={member.id}>
                       <TableCell>
                         <div>
                           <div className="font-medium text-navy-900 dark:text-white">{member.display_name || member.username}</div>

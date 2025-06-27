@@ -99,5 +99,5 @@ type RequestConfig = {
     headers?: Record<string, string>;
     params?: Record<string, any>;
     responseType?: 'json' | 'blob' | 'arraybuffer' | 'document' | 'text' | 'stream';
-    [key: string]: any;
+    [key: string]: unknown;
 };

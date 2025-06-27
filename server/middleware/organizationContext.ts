@@ -170,7 +170,7 @@ export function validateOrganizationAccess(req: ExpressRequest, res: Response, n
  */
 export function addOrganizationScope<T extends {
     organizationId: Column<any>;
-}>(baseQuery: any, req: ExpressRequest, table: T) {
+}>(baseQuery: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, req: ExpressRequest, table: T) {
     if (!req.organizationId) {
         throw new Error('Organization context required for scoped queries');
     }
@@ -181,7 +181,7 @@ export function addOrganizationScope<T extends {
  * Validation helper for organization-scoped inserts
  * Automatically injects organization ID into create operations
  */
-export function validateOrganizationData(data: any, req: ExpressRequest) {
+export function validateOrganizationData(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, req: ExpressRequest) {
     if (!req.organizationId) {
         throw new Error('Organization context required');
     }
@@ -280,7 +280,7 @@ export async function resolveDomainOrganization(
         const { eq } = await import('drizzle-orm');
         
         // Dynamic schema import with better error handling
-        let customDomains: any;
+        let customDomains: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
         try {
             const schema = await import('../db/schema.js');
             if (!schema?.customDomains) {

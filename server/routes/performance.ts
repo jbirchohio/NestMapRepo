@@ -110,7 +110,7 @@ export function registerPerformanceRoutes(app: Express): void {
         }
     });
 }
-function generateOptimizationRecommendations(report: any): any[] {
+function generateOptimizationRecommendations(report: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] {
     const recommendations = [];
     // Analyze slow endpoints
     if (report.overview.topSlowEndpoints.length > 0) {
@@ -140,7 +140,7 @@ function generateOptimizationRecommendations(report: any): any[] {
     // Analyze memory trends
     const recentMemory = report.memoryTrends.slice(-10);
     if (recentMemory.length > 5) {
-        const avgMemory = recentMemory.reduce((sum: number, m: any) => sum + m.usage, 0) / recentMemory.length;
+        const avgMemory = recentMemory.reduce((sum: number, m: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => sum + m.usage, 0) / recentMemory.length;
         if (avgMemory > 300) { // > 300MB
             recommendations.push({
                 type: 'MEMORY_OPTIMIZATION',

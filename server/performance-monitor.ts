@@ -17,7 +17,7 @@ interface PerformanceAlert {
     type: 'SLOW_ENDPOINT' | 'HIGH_ERROR_RATE' | 'MEMORY_LEAK' | 'DB_BOTTLENECK';
     severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
     message: string;
-    metrics: any;
+    metrics: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     timestamp: Date;
 }
 class AdvancedPerformanceMonitor {
@@ -81,7 +81,7 @@ class AdvancedPerformanceMonitor {
             });
         }
     }
-    private createAlert(type: PerformanceAlert['type'], severity: PerformanceAlert['severity'], metrics: any): void {
+    private createAlert(type: PerformanceAlert['type'], severity: PerformanceAlert['severity'], metrics: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): void {
         const alert: PerformanceAlert = {
             type,
             severity,
@@ -96,7 +96,7 @@ class AdvancedPerformanceMonitor {
             this.alerts = this.alerts.slice(-1000);
         }
     }
-    private generateAlertMessage(type: PerformanceAlert['type'], metrics: any): string {
+    private generateAlertMessage(type: PerformanceAlert['type'], metrics: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): string {
         switch (type) {
             case 'SLOW_ENDPOINT':
                 return `Slow endpoint detected: ${metrics.endpoint} (${metrics.responseTime || metrics.avgResponseTime}ms)`;
@@ -186,7 +186,7 @@ class AdvancedPerformanceMonitor {
 export const performanceMonitor = new AdvancedPerformanceMonitor();
 // Middleware for automatic performance tracking
 export function createPerformanceMiddleware() {
-    return (req: any, res: any, next: any) => {
+    return (req: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, res: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, next: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
         const startTime = Date.now();
         const startMemory = process.memoryUsage().heapUsed / 1024 / 1024; // MB
         res.on('finish', () => {

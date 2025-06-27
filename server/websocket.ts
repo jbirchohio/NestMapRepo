@@ -3,15 +3,68 @@ import { type RawData } from 'ws';
 import type { Server } from 'http';
 import { parse } from 'url';
 import jwt from 'jsonwebtoken';
-interface AuthenticatedWebSocket extends WebSocket {
+export interface AuthenticatedWebSocket extends WebSocket {
     userId?: number;
     organizationId?: number;
     tripId?: number;
 }
-interface WebSocketMessage {
-    type: 'join_trip' | 'leave_trip' | 'trip_update' | 'comment_added' | 'activity_changed' | 'user_presence';
+
+/** Base interface for all WebSocket messages */
+interface BaseWebSocketMessage {
+    type: string;
     tripId?: number;
-    data?: any;
+}
+
+/** Specific message types */
+interface JoinTripMessage extends BaseWebSocketMessage {
+    type: 'join_trip';
+    tripId: number;
+}
+
+interface LeaveTripMessage extends BaseWebSocketMessage {
+    type: 'leave_trip';
+    tripId: number;
+}
+
+interface TripUpdateMessage extends BaseWebSocketMessage {
+    type: 'trip_update';
+    tripId: number;
+    data: unknown;
+}
+
+interface CommentAddedMessage extends BaseWebSocketMessage {
+    type: 'comment_added';
+    tripId: number;
+    data: unknown;
+}
+
+interface ActivityChangedMessage extends BaseWebSocketMessage {
+    type: 'activity_changed';
+    tripId: number;
+    data: unknown;
+}
+
+interface UserPresenceMessage extends BaseWebSocketMessage {
+    type: 'user_presence';
+    tripId: number;
+}
+
+/** Union type of all possible WebSocket messages */
+type WebSocketMessage = 
+    | JoinTripMessage
+    | LeaveTripMessage
+    | TripUpdateMessage
+    | CommentAddedMessage
+    | ActivityChangedMessage
+    | UserPresenceMessage;
+
+/** Type for outgoing messages */
+interface OutgoingMessage<T = unknown> {
+    type: string;
+    userId?: number;
+    organizationId?: number;
+    data?: T;
+    lastSeen?: Date;
 }
 export class CollaborationWebSocketServer {
     private wss: WebSocketServer;
@@ -29,7 +82,7 @@ export class CollaborationWebSocketServer {
         // Clean up inactive connections every 30 seconds
         setInterval(() => this.cleanupInactiveConnections(), 30000);
     }
-    private async handleConnection(ws: AuthenticatedWebSocket, request: any) {
+    private async handleConnection(ws: AuthenticatedWebSocket, request: { url?: string }) {
         try {
             const url = parse(request.url, true);
             const token = url.query.token as string;
@@ -153,7 +206,7 @@ export class CollaborationWebSocketServer {
             lastSeen: new Date()
         });
     }
-    private broadcastToTrip(tripId: number, message: any, sender?: AuthenticatedWebSocket) {
+    private broadcastToTrip<T = unknown>(tripId: number, message: OutgoingMessage<T>, sender?: AuthenticatedWebSocket) {
         const room = this.tripRooms.get(tripId);
         if (!room)
             return;
@@ -193,7 +246,19 @@ export class CollaborationWebSocketServer {
         });
     }
     // Public method to broadcast trip updates from API endpoints
-    public notifyTripUpdate(tripId: number, organizationId: number, updateType: string, data: any) {
+    /**
+     * Notify all clients in a trip about an update
+     * @param tripId - The ID of the trip
+     * @param organizationId - The ID of the organization
+     * @param updateType - The type of update
+     * @param data - The update data
+     */
+    public notifyTripUpdate<T = unknown>(
+        tripId: number, 
+        organizationId: number, 
+        updateType: string, 
+        data: T
+    ): void {
         this.broadcastToTrip(tripId, {
             type: updateType,
             organizationId,

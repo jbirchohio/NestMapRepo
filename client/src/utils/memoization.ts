@@ -1,3 +1,7 @@
+import SharedBType from '@/types/SharedBType';
+import SharedAType from '@/types/SharedAType';
+import SharedDepsType from '@/types/SharedDepsType';
+import SharedArgsType from '@/types/SharedArgsType';
 import React from 'react';
 import { useMemo, useRef } from 'react';
 /**
@@ -6,7 +10,7 @@ import { useMemo, useRef } from 'react';
  * @param keyFn Optional function to generate a cache key from arguments
  * @returns Memoized function
  */
-export function memoize<T extends (...args: any[]) => any>(fn: T, keyFn?: (...args: Parameters<T>) => any): T {
+export function memoize<T extends (...args: SharedArgsType[]) => any>(fn: T, keyFn?: (...args: Parameters<T>) => any): T {
     const cache = new Map<any, ReturnType<T>>();
     return ((...args: Parameters<T>): ReturnType<T> => {
         const key = keyFn ? keyFn(...args) : JSON.stringify(args);
@@ -25,9 +29,9 @@ export function memoize<T extends (...args: any[]) => any>(fn: T, keyFn?: (...ar
  * @param options Configuration options
  * @returns Memoized value
  */
-export function useMemoizedValue<T>(factory: () => T, deps: any[], options: {
+export function useMemoizedValue<T>(factory: () => T, deps: SharedDepsType[], options: {
     maxSize?: number;
-    equalityFn?: (a: any, b: any) => boolean;
+    equalityFn?: (a: SharedAType, b: SharedBType) => boolean;
 } = {}): T {
     const { maxSize = 100, equalityFn } = options;
     return useMemo(() => {
@@ -94,9 +98,9 @@ export function useDeepCompareMemo<T>(value: T, equalityFn: (a: T, b: T) => bool
  * @param equalityFn Function to compare dependency arrays
  * @returns Memoized function
  */
-export function useDeepCallback<T extends (...args: any[]) => any>(fn: T, deps: any[], equalityFn: (a: any[], b: any[]) => boolean = (a, b) => a.length === b.length && a.every((val, i) => Object.is(val, b[i]))): T {
+export function useDeepCallback<T extends (...args: SharedArgsType[]) => any>(fn: T, deps: SharedDepsType[], equalityFn: (a: SharedAType[], b: SharedBType[]) => boolean = (a, b) => a.length === b.length && a.every((val, i) => Object.is(val, b[i]))): T {
     const ref = useRef<{
-        deps: any[];
+        deps: SharedDepsType[];
         fn: T;
     }>({ deps: [], fn });
     if (!equalityFn(ref.current.deps, deps)) {

@@ -1,5 +1,7 @@
 import type { Response } from '../../express-augmentations.js';
 import type { ApiResponse, PaginatedApiResponse } from '@shared/types/api';
+
+type ErrorDetails = Record<string, unknown> | Array<Record<string, unknown>> | string | undefined;
 /**
  * Response utility for sending standardized API responses
  */
@@ -18,7 +20,7 @@ class ResponseHandler {
     /**
      * Send an error response
      */
-    public static error(res: Response, message: string, statusCode: number = 500, errorCode?: string, details?: any): Response {
+    public static error(res: Response, message: string, statusCode: number = 500, errorCode?: string, details?: ErrorDetails): Response {
         const response: ApiResponse = {
             success: false,
             message,
@@ -79,26 +81,60 @@ class ResponseHandler {
     /**
      * Send a bad request response
      */
-    public static badRequest(res: Response, message: string = 'Bad request', details?: any): Response {
+    public static badRequest(res: Response, message: string = 'Bad request', details?: ErrorDetails): Response {
         return this.error(res, message, 400, 'BAD_REQUEST', details);
     }
 }
 /**
  * Middleware to extend the Response object with custom methods
  */
-export const extendResponse = (_req: any, res: Response, next: () => void): void => {
+// Extended Response type with our custom methods
+export interface ExtendedResponse extends Response {
+    success: <T = unknown>(data: T, message?: string, statusCode?: number) => Response;
+    error: (message: string, statusCode?: number, errorCode?: string, details?: ErrorDetails) => Response;
+    paginate: <T = unknown>(data: T[], total: number, page: number, limit: number, message?: string) => Response;
+}
+
+/**
+ * Middleware to extend the Response object with custom methods
+ */
+export const extendResponse = (
+    _req: Request,
+    res: Response,
+    next: NextFunction
+): void => {
+    const extendedRes = res as ExtendedResponse;
+    
     // Add success method
-    res.success = function <T = any>(data: T, message: string = 'Success', statusCode: number = 200) {
+    extendedRes.success = function <T = unknown>(
+        data: T,
+        message: string = 'Success',
+        statusCode: number = 200
+    ): Response {
         return ResponseHandler.success<T>(this, data, message, statusCode);
     };
+    
     // Add error method
-    res.error = function (message: string, statusCode: number = 500, errorCode?: string, details?: any) {
+    extendedRes.error = function (
+        message: string,
+        statusCode: number = 500,
+        errorCode?: string,
+        details?: ErrorDetails
+    ): Response {
         return ResponseHandler.error(this, message, statusCode, errorCode, details);
     };
+    
     // Add paginate method
-    res.paginate = function <T = any>(data: T[], total: number, page: number, limit: number, message: string = 'Success') {
+    extendedRes.paginate = function <T = unknown>(
+        data: T[],
+        total: number,
+        page: number,
+        limit: number,
+        message: string = 'Success'
+    ): Response {
         return ResponseHandler.paginate<T>(this, data, total, page, limit, message);
     };
+    
     next();
 };
 export default ResponseHandler;

@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 declare module 'sonner' {
   export interface ToastOptions {
     description?: string;
@@ -11,7 +12,7 @@ declare module 'sonner' {
   export interface ToastPromiseOptions<T> {
     loading: string;
     success: string | ((data: T) => string);
-    error: string | ((error: any) => string);
+    error: string | ((error: SharedErrorType) => string);
   }
 
   export const toast: {

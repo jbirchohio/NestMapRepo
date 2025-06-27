@@ -1,3 +1,6 @@
+import SharedOptionsType from '@/types/SharedOptionsType';
+import SharedEType from '@/types/SharedEType';
+import SharedOfflineDataType from '@/types/SharedOfflineDataType';
 import { useState, useEffect, useRef } from 'react';
 // Using browser's built-in GeolocationPosition and GeolocationCoordinates types
 interface MobileFeatures {
@@ -12,11 +15,11 @@ interface MobileFeatures {
     locationError: string | null;
     // Offline capabilities
     isOnline: boolean;
-    offlineData: any[];
+    offlineData: SharedOfflineDataType[];
     // Camera integration
     capturePhoto: () => Promise<string | null>;
     // Push notifications
-    sendNotification: (title: string, body: string, options?: any) => void;
+    sendNotification: (title: string, body: string, options?: unknown) => void;
     requestNotificationPermission: () => Promise<boolean>;
     // Travel mode
     isTravelMode: boolean;
@@ -185,7 +188,7 @@ export function useMobileFeatures(): MobileFeatures {
                 input.accept = 'image/*';
                 input.capture = 'environment';
                 return new Promise((resolve) => {
-                    input.onchange = (e: any) => {
+                    input.onchange = (e: SharedEType) => {
                         const file = e.target.files[0];
                         if (file) {
                             const reader = new FileReader();
@@ -219,7 +222,7 @@ export function useMobileFeatures(): MobileFeatures {
         const permission = await Notification.requestPermission();
         return permission === 'granted';
     };
-    const sendNotification = (title: string, body: string, options: any = {}) => {
+    const sendNotification = (title: string, body: string, options: SharedOptionsType = {}) => {
         if (Notification.permission !== 'granted') {
             console.log('Notification permission not granted');
             return;

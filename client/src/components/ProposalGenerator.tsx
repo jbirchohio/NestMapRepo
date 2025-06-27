@@ -1,3 +1,4 @@
+import SharedDataType from '@/types/SharedDataType';
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
         contactPhone: "",
         contactWebsite: ""
     });
-    const [selectedProposal, setSelectedProposal] = useState<any>(null);
+    const [selectedProposal, setSelectedProposal] = useState<any /** FIXANYERROR: Replace 'any' */>(null);
     const [signature, setSignature] = useState({ signedBy: "", signatureImage: "" });
     // Fetch real cost estimate from API
     const { data: costEstimate, isLoading: loadingCost } = useQuery({
@@ -53,7 +54,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
     });
     // Create proposal
     const createProposal = useMutation({
-        mutationFn: async (data: any) => {
+        mutationFn: async (data: SharedDataType) => {
             const response = await apiRequest("POST", `/api/proposals`, data);
             if (!response.ok)
                 throw new Error("Failed to save proposal");

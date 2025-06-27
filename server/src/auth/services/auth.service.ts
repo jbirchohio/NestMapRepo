@@ -76,7 +76,7 @@ export class AuthService implements IAuthService {
      * @param user - The user object from the database
      * @returns A properly formatted UserResponse object
      */
-    private formatUserResponse(user: any): UserResponse {
+    private formatUserResponse(user: any /** FIXANYERROR: Replace 'any' */): UserResponse {
         return {
             id: user.id,
             email: user.email,

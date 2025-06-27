@@ -24,7 +24,7 @@ export interface UserPreferences {
         push?: boolean;
         inApp?: boolean;
     };
-    [key: string]: any;
+    [key: string]: unknown;
 }
 export interface UserPermissions {
     permissions: string[];

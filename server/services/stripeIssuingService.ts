@@ -129,7 +129,7 @@ export class StripeIssuingService {
             if (!cardRecord) {
                 throw new Error('Card not found');
             }
-            const updateData: any = {};
+            const updateData: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {};
             if (request.spend_limit) {
                 updateData.spending_controls = {
                     spending_limits: [
@@ -329,7 +329,7 @@ export class StripeIssuingService {
         // Update card spending limits
         await this.updateCardSpendingLimits(cardRecord.id, transaction.amount);
     }
-    private async createExpenseFromTransaction(transaction: Stripe.Issuing.Transaction, cardRecord: any) {
+    private async createExpenseFromTransaction(transaction: Stripe.Issuing.Transaction, cardRecord: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         // Determine expense category based on merchant category
         const expenseCategory = this.categorizeExpense(transaction.merchant_data?.category || '', transaction.merchant_data?.name || '');
         await storage.createExpense({
@@ -403,7 +403,7 @@ export class StripeIssuingService {
     /**
      * Calculate risk score for authorization
      */
-    private calculateRiskScore(authorization: any): number {
+    private calculateRiskScore(authorization: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): number {
         let score = 0;
         // Basic risk factors
         if (authorization.amount > 100000)

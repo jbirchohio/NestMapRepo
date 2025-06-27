@@ -32,7 +32,7 @@ export class TokenManager {
     private isTokenRotationInProgress: boolean;
     private refreshPromise: Promise<AuthTokens | null> | null;
     private refreshPromiseResolve: ((value: AuthTokens | null) => void) | null;
-    private refreshPromiseReject: ((reason?: any) => void) | null;
+    private refreshPromiseReject: ((reason?: unknown) => void) | null;
 
     private constructor(navigate: NavigateFunction | null) {
         // Initialize all properties

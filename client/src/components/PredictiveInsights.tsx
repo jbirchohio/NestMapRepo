@@ -1,3 +1,9 @@
+import SharedAlternativeType from '@/types/SharedAlternativeType';
+import SharedDayType from '@/types/SharedDayType';
+import SharedOptionType from '@/types/SharedOptionType';
+import SharedTimeType from '@/types/SharedTimeType';
+import SharedDataType from '@/types/SharedDataType';
+import SharedActivitiesType from '@/types/SharedActivitiesType';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -14,7 +20,7 @@ interface PredictiveInsightsProps {
     destination: string;
     departureDate: string;
     returnDate?: string;
-    activities: any[];
+    activities: SharedActivitiesType[];
 }
 export default function PredictiveInsights({ tripId, destination, departureDate, returnDate, activities }: PredictiveInsightsProps) {
     const [selectedTab, setSelectedTab] = useState('pricing');
@@ -91,7 +97,7 @@ export default function PredictiveInsights({ tripId, destination, departureDate,
     </Card>);
 }
 function PricingInsights({ data }: {
-    data: any;
+    data: SharedDataType;
 }) {
     if (!data)
         return <div>No pricing data available</div>;
@@ -168,8 +174,8 @@ function PricingInsights({ data }: {
     </div>);
 }
 function CrowdInsights({ data, activities }: {
-    data: any;
-    activities: any[];
+    data: SharedDataType;
+    activities: SharedActivitiesType[];
 }) {
     if (!data)
         return <div>No crowd data available</div>;
@@ -210,7 +216,7 @@ function CrowdInsights({ data, activities }: {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {bestVisitTimes?.map((time: any, index: number) => (<div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              {bestVisitTimes?.map((time: SharedTimeType, index: number) => (<div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div>
                     <div className="font-medium">{time.time}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">{time.reason}</div>
@@ -245,7 +251,7 @@ function CrowdInsights({ data, activities }: {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {alternativeOptions.map((option: any, index: number) => (<div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+              {alternativeOptions.map((option: SharedOptionType, index: number) => (<div key={index} className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <div className="font-medium">{option.name}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">{option.distance} away</div>
@@ -263,7 +269,7 @@ function CrowdInsights({ data, activities }: {
     </div>);
 }
 function WeatherInsights({ data }: {
-    data: any;
+    data: SharedDataType;
 }) {
     if (!data)
         return <div>No weather data available</div>;
@@ -282,7 +288,7 @@ function WeatherInsights({ data }: {
     };
     return (<div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {weatherForecast?.map((day: any, index: number) => (<Card key={index}>
+        {weatherForecast?.map((day: SharedDayType, index: number) => (<Card key={index}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
                 <div className="font-medium">{new Date(day.date).toLocaleDateString()}</div>
@@ -305,7 +311,7 @@ function WeatherInsights({ data }: {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {indoorAlternatives.map((alternative: any, index: number) => (<div key={index} className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              {indoorAlternatives.map((alternative: SharedAlternativeType, index: number) => (<div key={index} className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="font-medium">{alternative.title}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-300">{alternative.reason}</div>
                 </div>))}
@@ -315,7 +321,7 @@ function WeatherInsights({ data }: {
     </div>);
 }
 function OptimizationInsights({ data }: {
-    data: any;
+    data: SharedDataType;
 }) {
     if (!data)
         return <div>No optimization data available</div>;

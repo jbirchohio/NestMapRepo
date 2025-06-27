@@ -1,3 +1,5 @@
+import SharedDeadlineType from '@/types/SharedDeadlineType';
+import SharedActivityType from '@/types/SharedActivityType';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -173,7 +175,7 @@ export default function EnterpriseDashboard() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="space-y-3">
-              {(displayStats?.recentActivity || []).map((activity: any, index: number) => (<div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              {(displayStats?.recentActivity || []).map((activity: SharedActivityType, index: number) => (<div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <div className={`w-2 h-2 rounded-full ${activity.status === 'success' ? 'bg-green-500' :
                 activity.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}`}/>
                   <div className="flex-1 min-w-0">
@@ -197,7 +199,7 @@ export default function EnterpriseDashboard() {
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="space-y-3">
-              {(displayStats?.upcomingDeadlines || []).map((deadline: any, index: number) => (<div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              {(displayStats?.upcomingDeadlines || []).map((deadline: SharedDeadlineType, index: number) => (<div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {deadline.title}

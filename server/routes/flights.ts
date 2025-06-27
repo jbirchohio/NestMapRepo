@@ -175,7 +175,7 @@ router.post('/search', asyncHandler(async (req: Request, res: Response) => {
                 source: 'duffel_api'
             });
         }
-        catch (duffelError: any) {
+        catch (duffelError: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
             console.error('Duffel API error:', duffelError.message);
             return res.status(503).json({
                 success: false,
@@ -185,7 +185,7 @@ router.post('/search', asyncHandler(async (req: Request, res: Response) => {
             });
         }
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Flight search error:', error);
         if (error instanceof z.ZodError) {
             return res.status(400).json({
@@ -205,7 +205,7 @@ router.post('/search', asyncHandler(async (req: Request, res: Response) => {
 router.get('/offers/:offerId', asyncHandler(async (req: Request, res: Response) => {
     try {
         const { offerId } = req.params;
-        let duffelService: any;
+        let duffelService: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
         try {
             const { duffelFlightService } = await import('../services/duffelFlightService.js');
             duffelService = duffelFlightService;
@@ -223,7 +223,7 @@ router.get('/offers/:offerId', asyncHandler(async (req: Request, res: Response) 
             data: offer
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Get offer error:', error);
         return res.status(500).json({
             success: false,
@@ -237,7 +237,7 @@ router.post('/book', asyncHandler(async (req: Request, res: Response) => {
     try {
         // Validate booking request
         const bookingData = bookingRequestSchema.parse(req.body);
-        let duffelService: any;
+        let duffelService: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
         try {
             const { duffelFlightService } = await import('../services/duffelFlightService.js');
             duffelService = duffelFlightService;
@@ -258,7 +258,7 @@ router.post('/book', asyncHandler(async (req: Request, res: Response) => {
             data: bookingResult
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Booking creation error:', error);
         if (error instanceof z.ZodError) {
             return res.status(400).json({
@@ -296,7 +296,7 @@ router.get('/bookings/:bookingId', asyncHandler(async (req: Request, res: Respon
             data: booking
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Get booking error:', error);
         return res.status(500).json({
             success: false,
@@ -327,7 +327,7 @@ router.delete('/bookings/:bookingId', asyncHandler(async (req: Request, res: Res
             data: result
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Booking cancellation error:', error);
         return res.status(500).json({
             success: false,
@@ -366,7 +366,7 @@ router.get('/airports/search', asyncHandler(async (req: Request, res: Response) 
             data: airports
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Airport search error:', error);
         return res.status(500).json({
             success: false,

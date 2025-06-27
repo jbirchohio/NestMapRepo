@@ -16,7 +16,7 @@ export interface AuthUser {
     // For backward compatibility with older code
     organization_id?: string;
     // Add index signature to allow dynamic property access
-    [key: string]: any;
+    [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
 }
 
 // Export a type that can be used for request.user

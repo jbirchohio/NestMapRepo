@@ -40,7 +40,7 @@ router.get('/oauth/callback', async (req, res) => {
         // Redirect back to the funding page with success
         res.redirect('/organization-funding?setup=success');
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('OAuth callback error:', error);
         res.redirect('/organization-funding?setup=error');
     }
@@ -78,7 +78,7 @@ router.post('/oauth/authorize', async (req, res) => {
         console.log('📤 Sending response...');
         res.json({ authUrl });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('❌ OAuth authorize error:', error);
         res.status(500).json({ error: 'Failed to generate authorization URL' });
     }

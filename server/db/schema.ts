@@ -6,28 +6,120 @@ import type { PgTableWithColumns, PgColumn } from 'drizzle-orm/pg-core';
 import type { ColumnBaseConfig, ColumnDataType } from 'drizzle-orm';
 import type { TableConfig } from 'drizzle-orm/table';
 
-// Type helpers for schema creation
-type ExtractColumnData<T> = T extends ColumnBaseConfig<infer U, string> ? U : never;
+/**
+ * Type utilities for schema creation
+ */
 
-type ExtractTableColumns<T> = T extends { columns: infer C } ? C : never;
+/** Extracts the data type from a column configuration */
+type ExtractColumnData<C extends ColumnBaseConfig> = C['data'];
 
-type ExtractTableData<C> = {
-  [K in keyof C]: C[K] extends PgColumn<infer T, any, any> ? ExtractColumnData<T> : never;
+/** Extracts the column types from a table configuration */
+type ExtractTableColumns<T> = T extends { _: { columns: infer C } } ? C : never;
+
+/** Maps table columns to their corresponding data types */
+type TableData<TColumns> = {
+  [K in keyof TColumns]: TColumns[K] extends PgColumn<infer C, any, any>
+    ? ExtractColumnData<C>
+    : never;
 };
 
-// Simplified schema creation with proper typing
-function createSchema<TTable extends PgTableWithColumns<any>>(table: TTable) {
-  type TableData = {
-    [K in keyof TTable['_']['columns']]: TTable['_']['columns'][K] extends PgColumn<infer C, any, any> 
-      ? C['data'] 
-      : never;
-  };
+/**
+ * Creates Zod schemas for a Drizzle table with proper type inference
+ * @param table The Drizzle table to create schemas for
+ * @returns Object containing insert and select Zod schemas
+ */
+function createSchema<TTable extends PgTableWithColumns<TableConfig>>(table: TTable) {
+  type Columns = TTable['_']['columns'];
+  type Data = TableData<Columns>;
+  
+  // Create base schemas with proper typing
+  const baseInsertSchema = createInsertSchema(table);
+  const baseSelectSchema = createSelectSchema(table);
 
   return {
-    insert: createInsertSchema(table as any) as unknown as z.ZodType<Partial<TableData>>,
-    select: createSelectSchema(table as any) as unknown as z.ZodType<TableData>
+    insert: baseInsertSchema as unknown as z.ZodType<Partial<Data>>,
+    select: baseSelectSchema as unknown as z.ZodType<Data>
   };
 }
+
+/**
+ * Type guard to check if a value is a valid JSON object
+ */
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && 
+         typeof value === 'object' && 
+         !Array.isArray(value) &&
+         !(value instanceof Date);
+}
+
+/**
+ * Type guard to check if a value is a valid JSON array
+ */
+function isJsonArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
+/**
+ * Type guard to check if a value is a valid JSON primitive
+ */
+function isJsonPrimitive(value: unknown): value is string | number | boolean | null {
+  return value === null || 
+         typeof value === 'string' || 
+         typeof value === 'number' || 
+         typeof value === 'boolean';
+}
+
+/**
+ * Validates that a value is a valid JSON value
+ */
+function isValidJsonValue(value: unknown): value is JsonValue {
+  return isJsonPrimitive(value) || 
+         isJsonArray(value) || 
+         isJsonObject(value);
+}
+
+/**
+ * Represents any valid JSON value
+ */
+type JsonValue = 
+  | string 
+  | number 
+  | boolean 
+  | null 
+  | JsonValue[] 
+  | { [key: string]: JsonValue };
+
+/**
+ * Type for metadata fields that can be stored in JSONB columns
+ */
+type Metadata = {
+  [key: string]: JsonValue;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+};
+
+/**
+ * Type for user preferences stored in JSONB columns
+ */
+type UserPreferences = {
+  theme?: 'light' | 'dark' | 'system';
+  language?: string;
+  timezone?: string;
+  dateFormat?: string;
+  timeFormat?: string;
+  notifications?: {
+    email?: boolean;
+    push?: boolean;
+    sms?: boolean;
+  };
+  privacy?: {
+    showEmail?: boolean;
+    showFullName?: boolean;
+    showLastActive?: boolean;
+  };
+} & Metadata;
 
 declare global {
     // This allows us to use the types before they're defined
@@ -735,7 +827,7 @@ export const approvalRules = pgTable("approval_rules", {
         destinationCountries?: string[];
         userRoles?: string[];
         expenseCategories?: string[];
-        [key: string]: any;
+        [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     }>().default(sql `'{}'::jsonb`),
     priority: integer("priority").default(10),
     autoApprove: boolean("auto_approve").default(false),

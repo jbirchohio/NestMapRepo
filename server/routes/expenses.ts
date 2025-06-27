@@ -450,7 +450,7 @@ router.get('/report', async (req, res) => {
     }
 });
 // Helper function to check if update requires approval
-async function checkUpdateRequiresApproval(existingExpense: any, updateData: any): Promise<boolean> {
+async function checkUpdateRequiresApproval(existingExpense: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, updateData: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<boolean> {
     // Significant changes that require approval
     const significantFields = ['amount', 'category', 'description'];
     for (const field of significantFields) {

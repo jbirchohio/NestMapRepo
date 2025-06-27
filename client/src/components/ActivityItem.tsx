@@ -1,52 +1,108 @@
-import { ClientActivity } from "@/lib/types";
-import TagBadge from "@/components/TagBadge";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import TagBadge from "@/components/TagBadge";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { API_ENDPOINTS } from "@/lib/constants";
+import type { ClientActivity, ApiResponse } from "@shared/types";
 interface ActivityItemProps {
     activity: ClientActivity;
     onClick: (activity: ClientActivity) => void;
     onDelete?: () => void;
-    onToggleComplete?: (activityId: string, completed: boolean) => void;
+    onToggleComplete?: (activityId: string | number, completed: boolean) => void;
 }
 export default function ActivityItem({ activity, onClick, onDelete, onToggleComplete }: ActivityItemProps) {
     const { toast } = useToast();
     // Delete activity mutation
-    const deleteActivity = useMutation({
-        mutationFn: async () => {
-            return apiRequest("DELETE", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`);
+    const deleteActivity = useMutation<ApiResponse<void>, Error>({
+        mutationFn: async (): Promise<ApiResponse<void>> => {
+            const response = await apiRequest("DELETE", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`);
+            return response as ApiResponse<void>;
         },
         onSuccess: () => {
             // Invalidate activities query to refresh the list
-            queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] });
+            queryClient.invalidateQueries({ 
+                queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] 
+            }).catch(console.error);
+            
             toast({
                 title: "Activity Deleted",
                 description: "The activity has been removed from your itinerary.",
             });
+            
             // Call parent component's onDelete if provided
-            if (onDelete)
-                onDelete();
+            onDelete?.();
         },
-        onError: (error) => {
+        onError: (error: Error) => {
             console.error("Error deleting activity:", error);
             toast({
                 title: "Error",
-                description: "Could not delete the activity. Please try again.",
+                description: error.message || "Could not delete the activity. Please try again.",
                 variant: "destructive",
             });
         },
     });
-    // Convert 24-hour time to 12-hour format
-    const formatTime = (time: string | undefined) => {
-        if (!time)
-            return "--:--";
-        const [hours, minutes] = time.split(':');
-        const hour = parseInt(hours);
-        const period = hour >= 12 ? 'PM' : 'AM';
-        const formattedHour = hour % 12 || 12;
-        return `${formattedHour}:${minutes} ${period}`;
+    // Toggle activity completion status
+    const toggleCompleteMutation = useMutation<ApiResponse<ClientActivity>, Error, boolean>({
+        mutationFn: async (completed: boolean): Promise<ApiResponse<ClientActivity>> => {
+            const response = await apiRequest("PATCH", `${API_ENDPOINTS.ACTIVITIES}/${activity.id}`, { 
+                completed 
+            });
+            return response as ApiResponse<ClientActivity>;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ 
+                queryKey: [API_ENDPOINTS.TRIPS, activity.tripId, "activities"] 
+            }).catch(console.error);
+            
+            toast({
+                title: `Activity ${activity.completed ? 'Marked Incomplete' : 'Completed'}`,
+                description: activity.completed 
+                    ? "Activity has been marked as incomplete." 
+                    : "Great job! Activity marked as complete.",
+            });
+            
+            onToggleComplete?.(activity.id, !activity.completed);
+        },
+        onError: (error: Error) => {
+            console.error("Error toggling activity completion:", error);
+            toast({
+                title: "Error",
+                description: error.message || "Could not update activity status. Please try again.",
+                variant: "destructive",
+            });
+        },
+    });
+
+    // Handle toggle complete
+    const handleToggleComplete = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        toggleCompleteMutation.mutate(!activity.completed);
+    };
+
+    // Handle delete click
+    const handleDeleteClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        deleteActivity.mutate();
+    };
+
+    // Format time from 24h to 12h format
+    const formatTime = (time: string | undefined): string => {
+        if (!time) return "--:--";
+        
+        try {
+            const [hours, minutes] = time.split(':');
+            const hour = parseInt(hours, 10);
+            
+            if (isNaN(hour)) return time; // Return original if not a number
+            
+            const period = hour >= 12 ? 'PM' : 'AM';
+            const formattedHour = hour % 12 || 12;
+            return `${formattedHour}:${minutes} ${period}`;
+        } catch (error) {
+            console.error("Error formatting time:", error);
+            return time || "--:--";
+        }
     };
     // Handle completion toggle
     // Handle delete action
@@ -73,46 +129,6 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
       {/* Timeline point */}
       <div className="flex items-center absolute left-0 timeline-point">
         <div className="h-6 w-6 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center text-xs font-medium">
-          <div className="h-2 w-2 bg-white rounded-full"></div>
-        </div>
-      </div>
-      
-      {/* Activity card with time header */}
-      <div className={`
-          bg-white dark:bg-[hsl(var(--card))] border rounded-lg shadow-sm hover:shadow cursor-pointer
-          ${activity.conflict ? 'border-[hsl(var(--destructive))]' : ''}
-          ${activity.completed ? 'opacity-60' : ''}
-          relative overflow-hidden
-        `}>
-        {/* Time header */}
-          <div className="bg-[hsl(var(--primary))] text-white p-2 text-center font-medium">
-            {formatTime(activity.time ?? '')}
-          </div>
-        
-        <div className="p-3 pt-6 relative">
-          {/* Auto-completion status indicator - read-only */}
-          {activity.completed && (<div className="absolute right-2 top-2 z-10 w-5 h-5 flex items-center justify-center bg-green-500 text-white rounded-full" title="Auto-completed based on next activity time">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-              </svg>
-            </div>)}
-        
-          {/* Delete button - only visible on hover */}
-          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="bg-[hsl(var(--destructive))] text-white p-1 rounded-full hover:bg-[hsl(var(--destructive))/90] cursor-pointer" onClick={handleDelete}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </div>
-          </div>
-          
-          {/* Activity content area */}
-          <div onClick={() => onClick(activity)}>
-            {/* Title and tag row */}
-            <div className="flex justify-between items-start">
-              <h3 className="font-medium">{activity.title}</h3>
-              {activity.tag && <TagBadge tag={activity.tag}/>}
-            </div>
             
             {/* Notes (if any) */}
             {activity.notes && (<div className="text-sm mt-2">{activity.notes}</div>)}

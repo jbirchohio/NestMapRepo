@@ -7,7 +7,7 @@ interface NotificationData {
     message: string;
     actionUrl?: string;
     actionText?: string;
-    data?: any;
+    data?: any /** FIXANYERROR: Replace 'any' */;
 }
 interface UserNotificationPreferences {
     emailNotifications: boolean;

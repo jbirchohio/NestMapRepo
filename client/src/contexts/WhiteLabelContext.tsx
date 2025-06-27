@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './auth/NewAuthContext';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/state/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api';
+import { useToast } from '@/components/ui/use-toast';
 export interface WhiteLabelConfig {
     // Branding
     companyName: string;
@@ -80,115 +82,135 @@ function hexToHsl(hex: string): string {
     l = Math.round(l * 100);
     return `${h} ${s}% ${l}%`;
 }
-const WhiteLabelContext = createContext<WhiteLabelContextType | undefined>(undefined);
-export function WhiteLabelProvider({ children }: {
-    children: React.ReactNode;
-}) {
-    const { user } = useAuth();
-    const [location] = useLocation();
-    const [isWhiteLabelActive, setIsWhiteLabelActive] = useState(false);
-    // Load branding configuration from database
-    const { data: brandingData } = useQuery<{
-        isWhiteLabelActive: boolean;
-        config: Partial<WhiteLabelConfig>;
-    }>({
-        queryKey: ['/api/white-label/config'],
-        enabled: !!user // Only fetch when user is authenticated
-    });
-    const [config, setConfig] = useState<WhiteLabelConfig>(defaultConfig);
-    // Update config when branding data loads from database
-    useEffect(() => {
-        if (brandingData && typeof brandingData === 'object') {
-            setIsWhiteLabelActive(brandingData.isWhiteLabelActive || false);
-            if (brandingData.config && typeof brandingData.config === 'object') {
-                setConfig({
-                    ...defaultConfig,
-                    ...brandingData.config
-                });
-            }
+const WhiteLabelContext = createContext<WhiteLabelContextType>({
+  config: defaultConfig,
+  updateConfig: () => {},
+  isWhiteLabelActive: false,
+  enableWhiteLabel: () => { },
+  disableWhiteLabel: () => { },
+});
+
+export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  const [location] = useLocation();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [config, setConfig] = useState<WhiteLabelConfig>(defaultConfig);
+  const [isWhiteLabelActive, setIsWhiteLabelActive] = useState<boolean>(false);
+
+  const loadConfig = async () => {
+    try {
+      setIsLoading(true);
+      if (user?.id) {
+        try {
+          const response = await apiClient.get('/white-label/config');
+          if (response.data) {
+            setConfig({ ...defaultConfig, ...response.data });
+            setIsWhiteLabelActive(true);
+            return;
+          }
+        } catch (error) {
+          console.error('Failed to load white label config from API', error);
         }
-    }, [brandingData]);
-    // Determine if we should be in white label mode
-    const shouldUseWhiteLabel = () => {
-        // Use white label when:
-        // 1. Organization has white label enabled (from database)
-        // 2. When on white label settings page for preview
-        // 3. When explicitly enabled by user for testing
-        return isWhiteLabelActive ||
-            location === '/white-label' ||
-            location.startsWith('/white-label/') ||
-            location === '/settings'; // Also apply on settings page for immediate preview
-    };
-    const updateConfig = (newConfig: Partial<WhiteLabelConfig>) => {
-        setConfig(prev => {
-            const updated = { ...prev, ...newConfig };
-            // Remove localStorage dependency - now saved to database via API
-            return updated;
-        });
-    };
-    const applyBranding = () => {
-        const root = document.documentElement;
-        const useWhiteLabel = shouldUseWhiteLabel();
-        // Applying branding configuration
-        if (useWhiteLabel) {
-            // Apply white label branding - convert hex to HSL for CSS variables
-            const primaryHsl = hexToHsl(config.primaryColor);
-            const secondaryHsl = hexToHsl(config.secondaryColor);
-            const accentHsl = hexToHsl(config.accentColor);
-            // Setting CSS variables for dynamic theming
-            root.style.setProperty('--primary', primaryHsl);
-            root.style.setProperty('--secondary', secondaryHsl);
-            root.style.setProperty('--accent', accentHsl);
-            root.style.setProperty('--foreground', primaryHsl);
-            root.style.setProperty('--muted-foreground', secondaryHsl);
-            // Also set the hex values for components that might expect them
-            root.style.setProperty('--primary-hex', config.primaryColor);
-            root.style.setProperty('--secondary-hex', config.secondaryColor);
-            root.style.setProperty('--accent-hex', config.accentColor);
-            document.title = `${config.companyName} - Travel Management`;
-            if (config.favicon) {
-                const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-                if (favicon) {
-                    favicon.href = config.favicon;
-                }
-            }
+      }
+
+      const savedConfig = localStorage.getItem('whiteLabelConfig');
+      if (savedConfig) {
+        try {
+          setConfig({ ...defaultConfig, ...JSON.parse(savedConfig) });
+          setIsWhiteLabelActive(localStorage.getItem('whiteLabelActive') === 'true');
+        } catch (e) {
+          console.error('Failed to parse saved white label config', e);
         }
-        else {
-            // Apply default NestMap branding
-            const defaultPrimaryHsl = hexToHsl(defaultConfig.primaryColor);
-            const defaultSecondaryHsl = hexToHsl(defaultConfig.secondaryColor);
-            const defaultAccentHsl = hexToHsl(defaultConfig.accentColor);
-            root.style.setProperty('--primary', defaultPrimaryHsl);
-            root.style.setProperty('--secondary', defaultSecondaryHsl);
-            root.style.setProperty('--accent', defaultAccentHsl);
-            root.style.setProperty('--foreground', defaultPrimaryHsl);
-            root.style.setProperty('--muted-foreground', defaultSecondaryHsl);
-            root.style.setProperty('--primary-hex', defaultConfig.primaryColor);
-            root.style.setProperty('--secondary-hex', defaultConfig.secondaryColor);
-            root.style.setProperty('--accent-hex', defaultConfig.accentColor);
-            document.title = `${defaultConfig.companyName} - Travel Management`;
-        }
-    };
-    const resetToDefault = () => {
-        setConfig(defaultConfig);
-        localStorage.removeItem('whiteLabelConfig');
-        setIsWhiteLabelActive(false);
-        applyBranding();
-    };
-    const enableWhiteLabel = () => {
-        setIsWhiteLabelActive(true);
-    };
-    const disableWhiteLabel = () => {
-        setIsWhiteLabelActive(false);
-    };
-    // Apply branding on mount and when relevant dependencies change
-    useEffect(() => {
-        applyBranding();
-    }, [config, isWhiteLabelActive, location]);
-    const forceApplyBranding = () => {
-        // Force applying branding with current configuration
-        applyBranding();
-    };
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadConfig();
+  }, [user?.id]);
+
+  const updateConfig = useCallback(async (newConfig: Partial<WhiteLabelConfig>) => {
+    const updatedConfig = { ...config, ...newConfig };
+    setConfig(updatedConfig);
+
+    try {
+      if (user?.id) {
+        await apiClient.put('/white-label/config', updatedConfig);
+      } else {
+        localStorage.setItem('whiteLabelConfig', JSON.stringify(updatedConfig));
+      }
+    } catch (error) {
+      console.error('Failed to save white label config', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save white label configuration',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  }, [config, user?.id, toast]);
+
+  const applyBranding = useCallback(() => {
+    if (!isWhiteLabelActive) return;
+
+    document.documentElement.style.setProperty('--primary', config.primaryColor);
+    document.documentElement.style.setProperty('--secondary', config.secondaryColor);
+    document.documentElement.style.setProperty('--accent', config.accentColor);
+
+    if (config.favicon) {
+      const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (link) {
+        link.href = config.favicon;
+      }
+    }
+
+    if (config.companyName && config.companyName !== 'NestMap') {
+      document.title = `${config.companyName} | Travel Management`;
+    }
+  }, [config, isWhiteLabelActive]);
+
+  const resetToDefault = useCallback(() => {
+    setConfig(defaultConfig);
+    localStorage.removeItem('whiteLabelConfig');
+    document.documentElement.style.removeProperty('--primary');
+    document.documentElement.style.removeProperty('--secondary');
+    document.documentElement.style.removeProperty('--accent');
+    document.title = 'NestMap | Travel Management';
+  }, []);
+
+  const enableWhiteLabel = useCallback(() => {
+    setIsWhiteLabelActive(true);
+    localStorage.setItem('whiteLabelActive', 'true');
+    applyBranding();
+  }, [applyBranding]);
+
+  const disableWhiteLabel = useCallback(() => {
+    setIsWhiteLabelActive(false);
+    localStorage.setItem('whiteLabelActive', 'false');
+    resetToDefault();
+  }, [resetToDefault]);
+
+  useEffect(() => {
+    applyBranding();
+  }, [config, isWhiteLabelActive, location]);
+
+  const forceApplyBranding = () => {
+    applyBranding();
+  };
+
+  return (
+    <WhiteLabelContext.Provider value={{
+      config,
+      updateConfig,
+      applyBranding: forceApplyBranding,
+      resetToDefault,
+      isWhiteLabelActive,
+      enableWhiteLabel,
+      disableWhiteLabel
+    }}>
     return (<WhiteLabelContext.Provider value={{
             config,
             updateConfig,

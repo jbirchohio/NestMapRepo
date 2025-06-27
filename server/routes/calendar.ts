@@ -111,7 +111,7 @@ router.post('/sync-trip/:tripId', async (req, res) => {
     }
 });
 // Helper function to generate iCal format
-function generateICalendar(trip: any, activities: any[]): string {
+function generateICalendar(trip: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, activities: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]): string {
     const startDate = new Date(trip.startDate);
     const endDate = new Date(trip.endDate);
     const ical = [
@@ -137,7 +137,7 @@ function generateICalendar(trip: any, activities: any[]): string {
     return ical.join('\r\n');
 }
 // Helper function to generate calendar events for API response
-async function generateCalendarEvents(trip: any, tripId: number, organizationId: number) {
+async function generateCalendarEvents(trip: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, tripId: number, organizationId: number) {
     const tripActivities = await db
         .select()
         .from(activities)

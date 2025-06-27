@@ -34,7 +34,7 @@ class TripService {
     // Get trips for the dashboard (simplified data)
     public async getDashboardTrips(params?: {
         limit?: number;
-        [key: string]: any;
+        [key: string]: unknown;
         status?: string[];
     }): Promise<TripCardDTO[]> {
         return apiClient.get<TripCardDTO[]>(`${this.basePath}/dashboard`, { params });

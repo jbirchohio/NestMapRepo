@@ -11,7 +11,7 @@ export interface FileMetadata {
     name?: string;
     description?: string;
     tags?: string[];
-    [key: string]: any;
+    [key: string]: unknown;
 }
 class FileService {
     private static instance: FileService;
@@ -93,5 +93,5 @@ type RequestConfig = {
     headers?: Record<string, string>;
     params?: Record<string, any>;
     responseType?: 'json' | 'blob' | 'arraybuffer' | 'document' | 'text' | 'stream';
-    [key: string]: any;
+    [key: string]: unknown;
 };

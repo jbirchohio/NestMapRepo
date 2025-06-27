@@ -30,7 +30,7 @@ export class UserRepository extends BaseRepositoryImpl<User, string, UserCreateI
     super('user', users, users.id);
   }
 
-  public async mapToModel(dbUser: any): Promise<User> {
+  public async mapToModel(dbUser: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<User> {
     if (!dbUser) {
       throw new Error('User data is required');
     }
@@ -298,7 +298,7 @@ export class UserRepository extends BaseRepositoryImpl<User, string, UserCreateI
 
       const hashedPassword = data.password ? await hash(data.password, 10) : null;
 
-      const newUser: any = {
+      const newUser: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {
         id: uuidv4(),
         email: data.email,
         username: data.username || data.email.split('@')[0],
@@ -338,7 +338,7 @@ export class UserRepository extends BaseRepositoryImpl<User, string, UserCreateI
         }
       }
 
-      const updateData: any = { updatedAt: new Date() };
+      const updateData: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = { updatedAt: new Date() };
       
       // Update standard fields
       const fieldsToUpdate: (keyof UserUpdateInput)[] = [

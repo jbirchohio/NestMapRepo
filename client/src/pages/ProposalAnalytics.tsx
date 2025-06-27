@@ -1,3 +1,4 @@
+import SharedProposalType from '@/types/SharedProposalType';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -128,7 +129,7 @@ export default function ProposalAnalytics() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Proposals</SelectItem>
-              {proposals?.map((proposal: any) => (<SelectItem key={proposal.id} value={proposal.id.toString()}>
+              {proposals?.map((proposal: SharedProposalType) => (<SelectItem key={proposal.id} value={proposal.id.toString()}>
                   {proposal.clientName} - {new Date(proposal.createdAt).toLocaleDateString()}
                 </SelectItem>))}
             </SelectContent>
@@ -366,7 +367,7 @@ export default function ProposalAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {proposals?.slice(0, 10).map((proposal: any) => (<div key={proposal.id} className="flex items-center justify-between p-4 border rounded-lg">
+                {proposals?.slice(0, 10).map((proposal: SharedProposalType) => (<div key={proposal.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex-1">
                       <h4 className="font-medium">{proposal.clientName}</h4>
                       <p className="text-sm text-gray-500">

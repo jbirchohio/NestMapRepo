@@ -121,7 +121,7 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
             if (!forecasts)
                 continue;
             // Take the forecast closest to midday for daily summary
-            const middayForecast = forecasts.reduce((closest: any, current: any) => {
+            const middayForecast = forecasts.reduce((closest: OpenWeatherResponse, current: OpenWeatherResponse) => {
                 const currentHour = new Date(current.dt * 1000).getHours();
                 const closestHour = new Date(closest.dt * 1000).getHours();
                 return Math.abs(currentHour - 12) < Math.abs(closestHour - 12) ? current : closest;
@@ -146,7 +146,12 @@ export async function getWeatherForecast(location: string, dates: string[]): Pro
 /**
  * Convert weather condition to simplified category for activity suggestions
  */
-export function getWeatherCategory(condition: string): string {
+/**
+ * Convert weather condition to a simplified category for activity suggestions
+ * @param condition - The weather condition string to categorize
+ * @returns A simplified weather category
+ */
+export function getWeatherCategory(condition: string): 'rainy' | 'cold' | 'sunny' | 'cloudy' | 'windy' | 'mild' {
     const conditionLower = condition.toLowerCase();
     if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
         return 'rainy';

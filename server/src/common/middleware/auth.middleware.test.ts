@@ -1,12 +1,16 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from 'express';
 import type { Logger } from '@nestjs/common';
+import { ErrorType } from '../types/error.types.js';
+
 // Define the user type
 export interface AuthUser {
     id: string;
-    organizationId: string | number;
-    role: string;
     email: string;
+    role: string;
+    organizationId?: string | null;
+    permissions?: string[];
 }
+
 // Extend the Express Request type to include user
 declare global {
     namespace Express {
@@ -15,19 +19,26 @@ declare global {
         }
     }
 }
-import { requireAuth, requireOrgContext, requireAdmin, requireSuperAdmin, requireOwnership } from './auth.middleware';
-import type { ErrorType } from '../types/error.types.ts';
+
+import { requireAuth, requireOrgContext, requireAdmin, requireSuperAdmin, requireOwnership } from './auth.middleware.js';
 describe('Auth Middleware', () => {
     // Base user for testing
     const baseUser: AuthUser = {
         id: 'test-user-id',
-        organizationId: 'test-org-id',
+        email: 'test@example.com',
         role: 'user',
-        email: 'test@example.com'
+        organizationId: 'test-org-id',
+        permissions: []
     };
-    let mockRequest: Partial<Request>;
+    let mockRequest: Partial<Request> & { user?: AuthUser };
     let mockResponse: Partial<Response>;
     let mockNext: jest.MockedFunction<NextFunction>;
+    
+    // Helper to create authenticated request
+    const createAuthenticatedRequest = (user: AuthUser): Request => ({
+        ...mockRequest,
+        user
+    } as unknown as Request);
     let mockLogger: Partial<Logger>;
     beforeEach(() => {
         // Mock request with user

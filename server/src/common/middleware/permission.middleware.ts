@@ -15,7 +15,7 @@ declare global {
         role: UserRole;
         organizationId: string | null;
         permissions?: string[];
-        [key: string]: any;
+        [key: string]: any /** FIXANYERROR: Replace 'any' */;
       };
     }
   }

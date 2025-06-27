@@ -6,7 +6,7 @@ export interface AuthUser {
   email: string;
   role: string;
   organizationId: string | null;
-  [key: string]: any;
+  [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
 }
 
 // Extend the Express Request type to include our user

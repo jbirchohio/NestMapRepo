@@ -1,11 +1,14 @@
+import SharedSnapshotType from '@/types/SharedSnapshotType';
+import SharedProvidedType from '@/types/SharedProvidedType';
+import SharedResultType from '@/types/SharedResultType';
 import React from 'react';
 export const DragDropContext: React.FC<{
-    onDragEnd?: (result: any) => void;
+    onDragEnd?: (result: SharedResultType) => void;
     children: React.ReactNode;
 }> = ({ children }) => (<div>{children}</div>);
 export const Droppable: React.FC<{
     droppableId: string;
-    children: (provided: any, snapshot: any) => React.ReactNode;
+    children: (provided: SharedProvidedType, snapshot: SharedSnapshotType) => React.ReactNode;
 }> = ({ children }) => {
     const provided = { 
         innerRef: React.createRef<HTMLDivElement>(), 
@@ -18,7 +21,7 @@ export const Droppable: React.FC<{
 export const Draggable: React.FC<{
     draggableId: string;
     index: number;
-    children: (provided: any, snapshot: any) => React.ReactNode;
+    children: (provided: SharedProvidedType, snapshot: SharedSnapshotType) => React.ReactNode;
 }> = ({ children }) => {
     const provided = { innerRef: React.createRef<HTMLDivElement>(), draggableProps: {}, dragHandleProps: {} };
     const snapshot = { isDragging: false, isDropAnimating: false, dropAnimation: null, mode: 'SNAP' as const };

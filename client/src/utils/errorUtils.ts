@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import { AxiosError } from 'axios';
 import { AuthError, AuthErrorCode } from '@shared/types/auth';
 
@@ -36,16 +37,16 @@ export class ApiClientError extends Error {
 }
 
 export function isAxiosError<T = any>(
-  error: unknown
+  error: SharedErrorType
 ): error is AxiosError<T> {
   return (error as AxiosError).isAxiosError === true;
 }
 
-export function isAuthError(error: unknown): error is AuthError {
+export function isAuthError(error: SharedErrorType): error is AuthError {
   return error instanceof AuthError;
 }
 
-export function isApiClientError(error: unknown): error is ApiClientError {
+export function isApiClientError(error: SharedErrorType): error is ApiClientError {
   return error instanceof ApiClientError;
 }
 

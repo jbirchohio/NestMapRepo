@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { AuthError, AuthErrorCode } from '@shared/types/auth/auth';
 
@@ -43,7 +44,7 @@ export interface RequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
   refreshOnUnauthorized?: boolean;
   maxRetryAttempts?: number;
-  metrics?: any;
+  metrics?: unknown;
 }
 
 export interface ApiClientConfig {
@@ -87,15 +88,15 @@ export interface PaginatedApiResponse<T> extends BaseApiResponse<T[]> {
 export type ApiResponse<T = unknown> = BaseApiResponse<T> | PaginatedApiResponse<T>;
 
 export function isAxiosError<T = any>(
-  error: unknown
+  error: SharedErrorType
 ): error is AxiosError<BaseApiResponse<T>> {
   return (error as AxiosError).isAxiosError === true;
 }
 
-export function isAuthError(error: unknown): error is AuthError {
+export function isAuthError(error: SharedErrorType): error is AuthError {
   return error instanceof AuthError;
 }
 
-export function isApiClientError(error: unknown): error is ApiClientError {
+export function isApiClientError(error: SharedErrorType): error is ApiClientError {
   return error instanceof ApiClientError;
 }

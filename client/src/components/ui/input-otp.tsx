@@ -31,7 +31,7 @@ interface OTPInputSlotProps {
 
 interface OTPInputContextValue {
     slots: OTPInputSlotProps[];
-    [key: string]: any; // For other context properties we might not be using
+    [key: string]: unknown; // For other context properties we might not be using
 }
 
 const InputOTPSlot = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div"> & {

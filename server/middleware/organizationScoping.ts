@@ -295,8 +295,8 @@ export function requireAnalyticsAccess(req: AuthenticatedRequest, res: Response,
  * Query helper to automatically add organization scoping
  */
 export function addOrganizationScope<T extends {
-    organizationId: any;
-}>(baseQuery: any, req: AuthenticatedRequest, table: T) {
+    organizationId: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+}>(baseQuery: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, req: AuthenticatedRequest, table: T) {
     if (!req.organizationId) {
         throw new Error('Organization context required for scoped queries');
     }

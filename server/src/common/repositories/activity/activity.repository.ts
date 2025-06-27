@@ -227,7 +227,7 @@ export class ActivityRepositoryImpl
     });
     
     try {
-      const updateData: any = { updatedAt: new Date() };
+      const updateData: any /** FIXANYERROR: Replace 'any' */ = { updatedAt: new Date() };
       
       // Map update fields to schema
       if (activityData.title) updateData.title = activityData.title;

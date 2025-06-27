@@ -47,7 +47,7 @@ export class AuthController {
     /**
      * Safely gets a property from an object, handling both snake_case and camelCase
      */
-    private getProperty<T>(obj: any, keys: string[], defaultValue: T): T {
+    private getProperty<T>(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, keys: string[], defaultValue: T): T {
         for (const key of keys) {
             if (obj && key in obj) {
                 return obj[key] as T;
@@ -133,7 +133,7 @@ export class AuthController {
                     user: sanitizedUser,
                     tokenType,
                     expiresIn
-                }
+                };
                 res.status(200).json(responseData);
             }
             catch (error) {
@@ -277,7 +277,7 @@ export class AuthController {
         } | {
             error: string;
         }> & {
-            user?: any; // This will be properly typed by the auth middleware
+            user?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */; // This will be properly typed by the auth middleware
         }, res: Response<{
             user: Omit<UserResponse, 'createdAt' | 'updatedAt'>;
         } | {

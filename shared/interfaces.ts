@@ -37,7 +37,7 @@ export interface Trip {
   completed: boolean;
   tripType: string;
   shareCode?: string;
-  collaborators?: any[];
+  collaborators?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
 }
 
 export interface ConflictDetection {
@@ -84,7 +84,7 @@ export interface BusinessTripRequest {
   companyInfo: {
     name: string;
     industry: string;
-    travelPolicy?: any;
+    travelPolicy?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
   };
   tripPurpose: string;
   groupSize: number;

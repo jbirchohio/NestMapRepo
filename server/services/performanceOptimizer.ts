@@ -4,7 +4,7 @@ import type { Request, Response, NextFunction } from '../../express-augmentation
  * Addresses memory spikes and slow request issues in development/production
  */
 interface CacheEntry {
-    data: any;
+    data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     timestamp: number;
     ttl: number;
 }
@@ -29,7 +29,7 @@ class PerformanceOptimizer {
             }
             // Intercept response to cache it
             const originalJson = res.json;
-            res.json = (body: any) => {
+            res.json = (body: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
                 if (res.statusCode === 200) {
                     this.setCache(cacheKey, body, ttl);
                 }
@@ -100,7 +100,7 @@ class PerformanceOptimizer {
         const orgId = (req as any).organization_id || 'no-org';
         return `${req.method}:${url}:${userId}:${orgId}`;
     }
-    private getFromCache(key: string): any | null {
+    private getFromCache(key: string): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ | null {
         const entry = this.cache.get(key);
         if (!entry)
             return null;
@@ -110,7 +110,7 @@ class PerformanceOptimizer {
         }
         return entry.data;
     }
-    private setCache(key: string, data: any, ttl: number): void {
+    private setCache(key: string, data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, ttl: number): void {
         // Prevent cache from growing too large
         if (this.cache.size >= this.MAX_CACHE_SIZE) {
             const oldestKey = this.cache.keys().next().value;

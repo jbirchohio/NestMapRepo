@@ -1,3 +1,6 @@
+import SharedOptionType from '@/types/SharedOptionType';
+import SharedRecType from '@/types/SharedRecType';
+import SharedActivitiesType from '@/types/SharedActivitiesType';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -56,7 +59,7 @@ interface OffsetOption {
 const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'] as const;
 interface CarbonExpenseTrackerProps {
   tripId: number;
-  activities: any[];
+  activities: SharedActivitiesType[];
   budget?: number;
 }
 
@@ -337,7 +340,7 @@ function CarbonTrackingTab({ carbonData }: CarbonTrackingTabProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {recommendations?.map((rec: any, index: number) => (<Alert key={index}>
+            {recommendations?.map((rec: SharedRecType, index: number) => (<Alert key={index}>
                 <Leaf className="w-4 h-4"/>
                 <AlertDescription>
                   <div className="flex justify-between items-start">
@@ -543,7 +546,7 @@ function CarbonOffsetsTab({ offsetOptions, carbonFootprint, onPurchaseOffset, is
       </Alert>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {offsetOptions?.map((option: any, index: number) => (<Card key={index} className="relative">
+        {offsetOptions?.map((option: SharedOptionType, index: number) => (<Card key={index} className="relative">
             <CardHeader>
               <CardTitle className="text-lg">{option.provider}</CardTitle>
               <CardDescription>{option.project}</CardDescription>

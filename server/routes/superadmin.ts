@@ -32,7 +32,7 @@ export const logSuperadminAction = async (adminUserId: string, action: string, r
 const typedMiddleware = (middleware: (req: AuthenticatedRequest, res: Response, next: NextFunction) => void | Promise<void | Response> | Response): RequestHandler => {
     return (req: Request, res: Response, next: NextFunction) => {
         // Call the middleware with proper typing
-        const result = middleware(req as unknown as AuthenticatedRequest, res, (err?: any) => {
+        const result = middleware(req as unknown as AuthenticatedRequest, res, (err?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
             if (err)
                 return next(err);
             next();
@@ -54,7 +54,7 @@ const createSuperadminRoutes = () => {
     const applyMiddleware = (middleware: Middleware) => {
         return (req: Request, res: Response, next: NextFunction) => {
             // Create a next function wrapper that properly handles errors
-            const nextWrapper = (err?: any) => {
+            const nextWrapper = (err?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
                 if (err)
                     return next(err);
                 next();

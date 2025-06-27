@@ -28,11 +28,11 @@ export class UserRepositoryImpl implements AuthUserRepository, BaseRepository<Us
     return this.userRepository.findAll();
   }
 
-  async create(data: any): Promise<User> {
+  async create(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<User> {
     return this.userRepository.create(data);
   }
 
-  async update(id: string, data: any): Promise<User | null> {
+  async update(id: string, data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<User | null> {
     return this.userRepository.update(id, data);
   }
 
@@ -49,12 +49,12 @@ export class UserRepositoryImpl implements AuthUserRepository, BaseRepository<Us
   }
 
   async withTransaction<R>(
-    fn: (tx: any) => Promise<R>
+    fn: (tx: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => Promise<R>
   ): Promise<R> {
     return this.userRepository.withTransaction(fn);
   }
 
-  mapToModel(data: any): User | Promise<User> {
+  mapToModel(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): User | Promise<User> {
     return this.userRepository.mapToModel(data);
   }
 

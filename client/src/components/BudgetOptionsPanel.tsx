@@ -1,3 +1,4 @@
+import SharedActivityType from '@/types/SharedActivityType';
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { ClientTrip } from "@/lib/types";
 import { BadgeDollarSign, Bookmark, Home, Utensils, Bus, Ticket } from "lucide-react";
 interface BudgetOptionsPanelProps {
     trip: ClientTrip;
-    onAddActivity?: (activity: any) => Promise<void>;
+    onAddActivity?: (activity: SharedActivityType) => Promise<void>;
 }
 type BudgetLevel = "low" | "medium" | "high";
 type ActivityType = "accommodation" | "food" | "transportation" | "activity" | "";

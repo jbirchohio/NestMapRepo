@@ -1,3 +1,6 @@
+import SharedValueType from '@/types/SharedValueType';
+import SharedErrorType from '@/types/SharedErrorType';
+import SharedDataType from '@/types/SharedDataType';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -47,7 +50,7 @@ interface AccountStatus {
         current_deadline: number | null;
         errors: VerificationError[];
     };
-    account?: any;
+    account?: unknown;
     reason?: string;
 }
 export default function OrganizationFunding() {
@@ -95,7 +98,7 @@ export default function OrganizationFunding() {
             console.log('Raw API response:', response);
             return response;
         },
-        onSuccess: (data: any) => {
+        onSuccess: (data: SharedDataType) => {
             console.log('OAuth response data:', data);
             console.log('Type of data:', typeof data);
             console.log('Data keys:', Object.keys(data || {}));
@@ -112,7 +115,7 @@ export default function OrganizationFunding() {
                 });
             }
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             console.error('Error connecting to Stripe:', error);
             toast({
                 title: "Error",
@@ -127,14 +130,14 @@ export default function OrganizationFunding() {
             returnUrl: `${window.location.origin}/organization-funding?tab=status`,
             refreshUrl: `${window.location.origin}/organization-funding?tab=onboarding`
         }),
-        onSuccess: (data: any) => {
+        onSuccess: (data: SharedDataType) => {
             window.open(data.onboardingUrl, '_blank');
             toast({
                 title: "Onboarding Started",
                 description: "Complete Stripe onboarding in the new window"
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to generate onboarding link",
@@ -153,7 +156,7 @@ export default function OrganizationFunding() {
             queryClient.invalidateQueries({ queryKey: ['/api/organization-funding/status'] });
             setActiveTab('status');
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to setup funding source",
@@ -472,7 +475,7 @@ export default function OrganizationFunding() {
                     </Alert>) : (<div className="space-y-4">
                       <div className="space-y-2">
                         <Label>Funding Source Type</Label>
-                        <Select value={fundingSource.type} onValueChange={(value: any) => setFundingSource(prev => ({ ...prev, type: value }))}>
+                        <Select value={fundingSource.type} onValueChange={(value: SharedValueType) => setFundingSource(prev => ({ ...prev, type: value }))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -496,7 +499,7 @@ export default function OrganizationFunding() {
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="accountType">Account Type</Label>
-                              <Select value={fundingSource.bankAccount.accountType} onValueChange={(value: any) => setFundingSource(prev => ({
+                              <Select value={fundingSource.bankAccount.accountType} onValueChange={(value: SharedValueType) => setFundingSource(prev => ({
                     ...prev,
                     bankAccount: { ...prev.bankAccount, accountType: value }
                 }))}>

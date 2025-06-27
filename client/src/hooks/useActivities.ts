@@ -1,3 +1,5 @@
+import SharedActivityType from '@/types/SharedActivityType';
+import SharedTripType from '@/types/SharedTripType';
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -5,14 +7,14 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientActivity } from "@/lib/types";
 export default function useActivities(tripId: string | number) {
     // Helper function to check if trip exists in localStorage (guest mode)
-    const getGuestTrip = (): any => {
+    const getGuestTrip = (): unknown => {
         if (typeof window === "undefined")
             return null;
         const stored = localStorage.getItem("nestmap_guest_trips");
         if (!stored)
             return null;
         const guestTrips = JSON.parse(stored);
-        return guestTrips.find((trip: any) => trip.id === tripId) || null;
+        return guestTrips.find((trip: SharedTripType) => trip.id === tripId) || null;
     };
     const { data: activities = [], isLoading, error, refetch, } = useQuery<ClientActivity[]>({
         queryKey: [API_ENDPOINTS.TRIPS, tripId, "activities"],
@@ -21,14 +23,14 @@ export default function useActivities(tripId: string | number) {
                 return [];
             // Check if this is guest mode by looking for trip in localStorage
             const guestTripsData = localStorage.getItem("nestmap_guest_trips");
-            const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
+            const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: SharedTripType) => trip.id === tripId);
             if (isGuestTrip) {
                 // For guest trips, get activities from localStorage
                 const guestActivities = localStorage.getItem(`guest_activities_${tripId}`);
                 if (guestActivities) {
                     const activities = JSON.parse(guestActivities);
                     // Convert date strings back to Date objects for consistency
-                    const processedActivities = activities.map((activity: any) => ({
+                    const processedActivities = activities.map((activity: SharedActivityType) => ({
                         ...activity,
                         date: new Date(activity.date)
                     }));

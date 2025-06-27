@@ -1,3 +1,6 @@
+import SharedTodoType from '@/types/SharedTodoType';
+import SharedNoteType from '@/types/SharedNoteType';
+import SharedActivityType from '@/types/SharedActivityType';
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -54,7 +57,7 @@ export default function SimpleShare() {
           </CardHeader>
           <CardContent>
             {(trip as any).activities?.length > 0 ? (<div className="space-y-3">
-                {(trip as any).activities.map((activity: any) => (<div key={activity.id} className="p-3 border rounded">
+                {(trip as any).activities.map((activity: SharedActivityType) => (<div key={activity.id} className="p-3 border rounded">
                     <div className="font-medium">{activity.title}</div>
                     <div className="text-sm text-muted-foreground">{activity.locationName}</div>
                     <div className="text-xs text-muted-foreground">
@@ -72,7 +75,7 @@ export default function SimpleShare() {
           </CardHeader>
           <CardContent>
             {(trip as any).notes?.length > 0 ? (<div className="space-y-2">
-                {(trip as any).notes.map((note: any) => (<div key={note.id} className="p-2 bg-muted rounded">
+                {(trip as any).notes.map((note: SharedNoteType) => (<div key={note.id} className="p-2 bg-muted rounded">
                     {note.content}
                   </div>))}
               </div>) : (<p className="text-muted-foreground">No notes yet</p>)}
@@ -86,7 +89,7 @@ export default function SimpleShare() {
           </CardHeader>
           <CardContent>
             {(trip as any).todos?.length > 0 ? (<div className="space-y-2">
-                {(trip as any).todos.map((todo: any) => (<div key={todo.id} className="flex items-center gap-2">
+                {(trip as any).todos.map((todo: SharedTodoType) => (<div key={todo.id} className="flex items-center gap-2">
                     <div className={`w-4 h-4 rounded border-2 ${todo.completed ? 'bg-primary' : ''}`}/>
                     <span className={todo.completed ? 'line-through text-muted-foreground' : ''}>
                       {todo.task}

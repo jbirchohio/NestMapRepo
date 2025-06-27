@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ interface ProposedData {
     amount?: number;
     type?: string;
     totalAmount?: number;
-    [key: string]: any; // For any other dynamic properties
+    [key: string]: unknown; // For any other dynamic properties
 }
 
 interface ApprovalRequest {
@@ -86,7 +87,7 @@ export default function Approvals() {
                 description: "The approval request has been processed successfully."
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to process approval request",

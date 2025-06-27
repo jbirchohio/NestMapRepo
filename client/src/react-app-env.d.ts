@@ -1,3 +1,4 @@
+import SharedErrType from '@/types/SharedErrType';
 /// <reference types="react-scripts" />
 
 // Add type definitions for JSX elements
@@ -28,15 +29,15 @@ declare namespace JSX {
 // Declare module for sonner
 declare module 'sonner' {
   export const toast: {
-    (message: string, options?: any): void;
-    success(message: string, options?: any): void;
-    error(message: string, options?: any): void;
-    warning(message: string, options?: any): void;
-    info(message: string, options?: any): void;
+    (message: string, options?: unknown): void;
+    success(message: string, options?: unknown): void;
+    error(message: string, options?: unknown): void;
+    warning(message: string, options?: unknown): void;
+    info(message: string, options?: unknown): void;
     promise<T>(promise: Promise<T>, msgs: {
       loading: string;
       success: string | ((data: T) => string);
-      error: string | ((err: any) => string);
-    }, opts?: any): Promise<T>;
+      error: string | ((err: SharedErrType) => string);
+    }, opts?: unknown): Promise<T>;
   };
 }

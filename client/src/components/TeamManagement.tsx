@@ -97,7 +97,7 @@ const getDefaultPermissions = (role: string) => {
 export default function TeamManagement() {
     const [isInviting, setIsInviting] = useState(false);
     const [showInviteForm, setShowInviteForm] = useState(false);
-    const [selectedMember, setSelectedMember] = useState<any>(null);
+    const [selectedMember, setSelectedMember] = useState<any /** FIXANYERROR: Replace 'any' */>(null);
     const [showMemberDetails, setShowMemberDetails] = useState(false);
     const [showEditPermissions, setShowEditPermissions] = useState(false);
     const { toast } = useToast();
@@ -289,7 +289,7 @@ export default function TeamManagement() {
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label>Edit All Trips</Label>
-                          <p className="text-xs text-muted-foreground">Modify any trip in organization</p>
+                          <p className="text-xs text-muted-foreground">Modify any /** FIXANYERROR: Replace 'any' */ trip in organization</p>
                         </div>
                         <Switch checked={currentPermissions.canEditAllTrips} onCheckedChange={(checked) => form.setValue("permissions.canEditAllTrips", checked)}/>
                       </div>
@@ -465,7 +465,7 @@ export default function TeamManagement() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                 { key: 'viewTrips', label: 'View All Trips', desc: 'Access to view organization trips' },
-                { key: 'editTrips', label: 'Edit All Trips', desc: 'Modify any trip in organization' },
+                { key: 'editTrips', label: 'Edit All Trips', desc: 'Modify any /** FIXANYERROR: Replace 'any' */ trip in organization' },
                 { key: 'createTrips', label: 'Create Trips', desc: 'Plan new business trips' },
                 { key: 'inviteMembers', label: 'Invite Members', desc: 'Send team invitations' },
                 { key: 'manageBudgets', label: 'Manage Budgets', desc: 'Set and track trip budgets' },

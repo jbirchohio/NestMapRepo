@@ -224,7 +224,7 @@ async function checkApprovalRequired(organizationId: number, entityType: string,
     return { required: false };
 }
 // Helper function to match rule conditions
-function matchesConditions(conditions: any, data: Record<string, any>): boolean {
+function matchesConditions(conditions: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, data: Record<string, any>): boolean {
     if (conditions.budgetThreshold && data.totalAmount) {
         if (data.totalAmount >= conditions.budgetThreshold * 100) { // Convert to cents
             return true;
@@ -244,7 +244,7 @@ function matchesConditions(conditions: any, data: Record<string, any>): boolean 
     return false;
 }
 // Helper function to calculate priority
-function calculatePriority(conditions: any, data: Record<string, any>): string {
+function calculatePriority(conditions: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, data: Record<string, any>): string {
     if (conditions.budgetThreshold && data.totalAmount) {
         if (data.totalAmount >= conditions.budgetThreshold * 300) { // 3x threshold
             return 'urgent';
@@ -268,7 +268,7 @@ async function findApprover(organizationId: number, entityType: string, proposed
     return manager || null;
 }
 // Helper function to apply approved changes
-async function applyApprovedChanges(request: any): Promise<void> {
+async function applyApprovedChanges(request: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<void> {
     try {
         switch (request.entityType) {
             case 'trip':

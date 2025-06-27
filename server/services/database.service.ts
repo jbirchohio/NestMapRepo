@@ -73,7 +73,7 @@ export class DatabaseService {
     /**
      * Execute a query with optional caching
      */
-    public async query<T = any>(text: string, params: any[] = [], options: CachedQueryOptions = { ttl: 60 * 5 } // Default 5 minutes TTL
+    public async query<T = any>(text: string, params: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] = [], options: CachedQueryOptions = { ttl: 60 * 5 } // Default 5 minutes TTL
     ): Promise<QueryResult<T>> {
         // Generate cache key if not provided
         const cacheKey = options.key || `query:${text}:${JSON.stringify(params)}`;
@@ -110,7 +110,7 @@ export class DatabaseService {
     /**
      * Execute a transaction
      */
-    public async transaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
+    public async transaction<T>(callback: (client: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => Promise<T>): Promise<T> {
         const client = await this.pool.connect();
         try {
             await client.query('BEGIN');

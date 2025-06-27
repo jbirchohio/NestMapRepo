@@ -130,7 +130,7 @@ export async function createCardholder(params: Omit<CreateCardholderParams, 'typ
         };
         return await stripe.issuing.cardholders.create(cardholderParams);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Stripe cardholder creation error:', error);
         throw error;
     }
@@ -151,7 +151,7 @@ export async function createCorporateCard(params: {
             metadata: params.metadata,
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Stripe card creation error:', error);
         throw error;
     }
@@ -188,7 +188,7 @@ export async function authorizeTransaction(params: {
             }
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Stripe authorization error:', error);
         throw new Error(`Failed to authorize transaction: ${error.message}`);
     }
@@ -230,7 +230,7 @@ export async function createTransaction(params: {
         // For now, we'll just return the created payment intent
         return paymentIntent;
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Stripe transaction error:', error);
         throw error;
     }
@@ -249,7 +249,7 @@ export async function getCardBalance(cardId: string): Promise<CardBalance> {
             currency: card.currency,
         };
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Error retrieving card balance:', error);
         throw error;
     }
@@ -271,7 +271,7 @@ export async function addFundsToCard(cardId: string, amount: number): Promise<St
             },
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Error adding funds to card:', error);
         throw error;
     }
@@ -282,7 +282,7 @@ export async function freezeCard(cardId: string): Promise<StripeCard> {
             status: 'inactive',
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Error freezing card:', error);
         throw error;
     }
@@ -293,7 +293,7 @@ export async function unfreezeCard(cardId: string): Promise<StripeCard> {
             status: 'active',
         });
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         console.error('Error unfreezing card:', error);
         throw error;
     }

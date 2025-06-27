@@ -30,7 +30,7 @@ export class BookingRepositoryImpl
     this.logger = winstonLogger.child({ component: 'BookingRepository' });
   }
 
-  protected mapToModel(data: any): Booking | null {
+  protected mapToModel(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Booking | null {
     if (!data) return null;
     
     return {
@@ -70,7 +70,7 @@ export class BookingRepositoryImpl
     }
   ): Promise<Booking | null> {
     try {
-      const updateData: any = {
+      const updateData: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {
         status: 'confirmed' as const,
         providerReference: confirmationDetails.providerReferenceId,
         reference: confirmationDetails.confirmationNumber,
@@ -438,7 +438,7 @@ export class BookingRepositoryImpl
   }
 
   // Implement other required methods from BaseRepository
-  async create(data: any): Promise<Booking> {
+  async create(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<Booking> {
     try {
       const [result] = await this.db
         .insert(bookings)
@@ -457,7 +457,7 @@ export class BookingRepositoryImpl
     }
   }
 
-  async update(id: string, data: any): Promise<Booking> {
+  async update(id: string, data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<Booking> {
     try {
       const [result] = await this.db
         .update(bookings)

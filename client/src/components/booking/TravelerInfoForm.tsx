@@ -129,7 +129,10 @@ export function TravelerInfoForm({ onSubmit, isSubmitting = false, initialValues
 
           <div className="space-y-2">
             <Label htmlFor="tripPurpose">Purpose of Trip *</Label>
-            <Select onValueChange={(value) => setValue("tripPurpose", value as any)} value={tripPurpose}>
+            <Select 
+              onValueChange={(value: TravelerInfoFormValues['tripPurpose']) => setValue("tripPurpose", value)} 
+              value={tripPurpose}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select trip purpose"/>
               </SelectTrigger>

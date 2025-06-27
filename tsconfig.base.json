@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "strict": true,
     "baseUrl": ".",
-    "composite": false,
+    "composite": true,
     "declaration": true,
     "declarationMap": true,
     "experimentalDecorators": true,

@@ -1,3 +1,9 @@
+import SharedTodoType from '@/types/SharedTodoType';
+import SharedNoteType from '@/types/SharedNoteType';
+import SharedActivityType from '@/types/SharedActivityType';
+import SharedTodosType from '@/types/SharedTodosType';
+import SharedNotesType from '@/types/SharedNotesType';
+import SharedActivitiesType from '@/types/SharedActivitiesType';
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -13,9 +19,9 @@ interface SharedTripData {
     endDate: string;
     city: string;
     sharePermission: "read-only" | "edit";
-    activities: any[];
-    notes: any[];
-    todos: any[];
+    activities: SharedActivitiesType[];
+    notes: SharedNotesType[];
+    todos: SharedTodosType[];
 }
 export default function SharedTrip() {
     const { shareCode } = useParams<{
@@ -113,7 +119,7 @@ export default function SharedTrip() {
           </CardHeader>
           <CardContent>
             {trip.activities?.length > 0 ? (<div className="space-y-4">
-                {trip.activities.map((activity: any, index: number) => (<div key={activity.id} className="flex gap-4 p-4 rounded-lg border">
+                {trip.activities.map((activity: SharedActivityType, index: number) => (<div key={activity.id} className="flex gap-4 p-4 rounded-lg border">
                     <div className="flex-shrink-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
                       {index + 1}
                     </div>
@@ -137,7 +143,7 @@ export default function SharedTrip() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {trip.notes.map((note: any) => (<div key={note.id} className="p-3 rounded-lg border">
+                {trip.notes.map((note: SharedNoteType) => (<div key={note.id} className="p-3 rounded-lg border">
                     <p>{note.content}</p>
                   </div>))}
               </div>
@@ -151,7 +157,7 @@ export default function SharedTrip() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {trip.todos.map((todo: any) => (<div key={todo.id} className="flex items-center gap-3 p-2">
+                {trip.todos.map((todo: SharedTodoType) => (<div key={todo.id} className="flex items-center gap-3 p-2">
                     <div className={`w-4 h-4 rounded border ${todo.completed ? 'bg-primary border-primary' : 'border-muted-foreground'}`}/>
                     <span className={todo.completed ? 'line-through text-muted-foreground' : ''}>{todo.task}</span>
                   </div>))}

@@ -260,7 +260,7 @@ async function handleCapabilityUpdated(capability: Stripe.Capability) {
             return;
         }
         // Update specific capability status
-        const updateData: any = { updated_at: new Date() };
+        const updateData: any /** FIXANYERROR: Replace 'any' */ = { updated_at: new Date() };
         switch (capability.id) {
             case 'card_issuing':
                 updateData.stripe_issuing_enabled = capability.status === 'active';

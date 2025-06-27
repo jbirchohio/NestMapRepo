@@ -114,7 +114,7 @@ export class ApprovalEngine {
             userRoles?: string[];
             expenseCategories?: string[];
             approverRoles?: string[];
-            [key: string]: any;
+            [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
         } = rule.conditions || {};
         const data = config.data;
         

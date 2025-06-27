@@ -1,3 +1,4 @@
+import SharedSettingsType from '@/types/SharedSettingsType';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,7 +34,7 @@ interface WhiteLabelStatus {
         active: boolean;
     };
     completionPercentage: number;
-    settings: any | null;
+    settings: SharedSettingsType | null;
     domains: Array<{
         id: number;
         domain: string;

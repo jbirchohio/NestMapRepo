@@ -7,8 +7,8 @@ export class AppError extends Error {
     public readonly statusCode: number;
     public readonly isOperational: boolean;
     public readonly code: AppErrorCode;
-    public readonly details?: any;
-    constructor(code: AppErrorCode, message: string, statusCode: number = 500, isOperational: boolean = true, details?: any) {
+    public readonly details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+    constructor(code: AppErrorCode, message: string, statusCode: number = 500, isOperational: boolean = true, details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(message);
         this.code = code;
         this.statusCode = statusCode;
@@ -20,55 +20,55 @@ export class AppError extends Error {
 }
 // 400 Bad Request
 export class BadRequestError extends AppError {
-    constructor(message: string = 'Bad Request', details?: any) {
+    constructor(message: string = 'Bad Request', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.BAD_REQUEST, message, 400, true, details);
     }
 }
 // 401 Unauthorized
 export class UnauthorizedError extends AppError {
-    constructor(message: string = 'Unauthorized', details?: any) {
+    constructor(message: string = 'Unauthorized', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.UNAUTHORIZED, message, 401, true, details);
     }
 }
 // 403 Forbidden
 export class ForbiddenError extends AppError {
-    constructor(message: string = 'Forbidden', details?: any) {
+    constructor(message: string = 'Forbidden', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.FORBIDDEN, message, 403, true, details);
     }
 }
 // 404 Not Found
 export class NotFoundError extends AppError {
-    constructor(message: string = 'Resource not found', details?: any) {
+    constructor(message: string = 'Resource not found', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.NOT_FOUND, message, 404, true, details);
     }
 }
 // 409 Conflict
 export class ConflictError extends AppError {
-    constructor(message: string = 'Conflict', details?: any) {
+    constructor(message: string = 'Conflict', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.CONFLICT, message, 409, true, details);
     }
 }
 // 422 Unprocessable Entity
 export class ValidationError extends AppError {
-    constructor(message: string = 'Validation failed', details?: any) {
+    constructor(message: string = 'Validation failed', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.VALIDATION_ERROR, message, 422, true, details);
     }
 }
 // 429 Too Many Requests
 export class RateLimitError extends AppError {
-    constructor(message: string = 'Too many requests', details?: any) {
+    constructor(message: string = 'Too many requests', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.TOO_MANY_REQUESTS, message, 429, true, details);
     }
 }
 // 500 Internal Server Error
 export class InternalServerError extends AppError {
-    constructor(message: string = 'Internal server error', details?: any) {
+    constructor(message: string = 'Internal server error', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.INTERNAL_SERVER_ERROR, message, 500, false, details);
     }
 }
 // 503 Service Unavailable
 export class ServiceUnavailableError extends AppError {
-    constructor(message: string = 'Service unavailable', details?: any) {
+    constructor(message: string = 'Service unavailable', details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(AppErrorCode.SERVICE_UNAVAILABLE, message, 503, true, details);
     }
 }

@@ -113,7 +113,7 @@ describe('CollaborationWebSocketServer', () => {
         }));
         // Client 2 should receive a notification that client 1 joined
         const joinMessage = await new Promise<any>((resolve) => {
-            const messageHandler = (data: any) => {
+            const messageHandler = (data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
                 const message = JSON.parse(data.toString());
                 if (message.type === 'user_joined' && message.userId === userId1) {
                     client2.off('message', messageHandler);
@@ -181,7 +181,7 @@ describe('CollaborationWebSocketServer', () => {
         }));
         // Client 2 should receive the update
         const updateMessage = await new Promise<any>((resolve) => {
-            const messageHandler = (data: any) => {
+            const messageHandler = (data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
                 const message = JSON.parse(data.toString());
                 if (message.type === 'trip_updated') {
                     client2.off('message', messageHandler);
@@ -241,7 +241,7 @@ describe('CollaborationWebSocketServer', () => {
         // Wait for join notifications to be processed
         await new Promise(resolve => setTimeout(resolve, 100));
         // Set up a message collector for client2
-        const client2Messages: any[] = [];
+        const client2Messages: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] = [];
         client2.on('message', (data) => {
             const message = JSON.parse(data.toString());
             if (message.type !== 'connected') {

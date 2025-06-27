@@ -52,7 +52,7 @@ export const db = drizzle(client, {
 
 // For backward compatibility
 export const pool = {
-  query: async (text: string, params?: any[]) => {
+  query: async (text: string, params?: any /** FIXANYERROR: Replace 'any' */[]) => {
     const result = await client.unsafe(text, params || []);
     return { rows: result };
   }

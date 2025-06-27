@@ -20,7 +20,7 @@ router.post('/', validateJWT, injectOrganizationContext, validateOrganizationAcc
             .returning();
         res.status(201).json(proposal[0]);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         res
             .status(500)
             .json({ message: 'Failed to create proposal', error: error.message });
@@ -36,7 +36,7 @@ router.get('/', validateJWT, injectOrganizationContext, validateOrganizationAcce
             .where(proposals.organizationId.eq(orgId));
         res.json(allProposals);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         res
             .status(500)
             .json({ message: 'Failed to fetch proposals', error: error.message });
@@ -57,7 +57,7 @@ router.get('/:id', validateJWT, injectOrganizationContext, validateOrganizationA
         }
         res.json(proposal[0]);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         res
             .status(500)
             .json({ message: 'Failed to fetch proposal', error: error.message });
@@ -80,7 +80,7 @@ router.patch('/:id/status', validateJWT, injectOrganizationContext, validateOrga
         }
         res.json(updated[0]);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         res
             .status(500)
             .json({ message: 'Failed to update status', error: error.message });
@@ -113,7 +113,7 @@ router.patch('/:id/sign', validateJWT, validateAndSanitizeRequest({
         }
         res.json(updated[0]);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         res
             .status(500)
             .json({ message: 'Failed to sign proposal', error: error.message });
@@ -136,7 +136,7 @@ router.patch('/:id/invoice', validateJWT, validateAndSanitizeRequest({ body: z.o
         }
         res.json(updated[0]);
     }
-    catch (error: any) {
+    catch (error: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         res
             .status(500)
             .json({ message: 'Failed to mark as invoiced', error: error.message });

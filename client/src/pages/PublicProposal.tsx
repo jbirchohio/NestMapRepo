@@ -1,3 +1,5 @@
+import SharedCostType from '@/types/SharedCostType';
+import SharedEventDataType from '@/types/SharedEventDataType';
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -82,7 +84,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
     });
     // Track analytics when proposal is viewed
     const trackView = useMutation({
-        mutationFn: (eventData: any) => apiRequest("POST", `/api/proposals/${proposalId}/analytics`, eventData),
+        mutationFn: (eventData: SharedEventDataType) => apiRequest("POST", `/api/proposals/${proposalId}/analytics`, eventData),
     });
     const trackSectionView = useMutation({
         mutationFn: (section: string) => apiRequest("POST", `/api/proposals/${proposalId}/analytics`, {
@@ -202,7 +204,7 @@ const typedProposal = proposal as Proposal;
         transportation: 400,
         miscellaneous: 200
     };
-    const totalCost = Object.values(costBreakdown).reduce((sum: number, cost: any) => sum + cost, 0);
+    const totalCost = Object.values(costBreakdown).reduce((sum: number, cost: SharedCostType) => sum + cost, 0);
     return (<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b shadow-sm">

@@ -1,11 +1,13 @@
+import SharedMessageType from '@/types/SharedMessageType';
+import SharedErrorType from '@/types/SharedErrorType';
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { bookingService } from '../services/bookingService';
 import type { Hotel, HotelSearchParams, HotelSearchResponse } from '../types';
 
 // Type guard to check if an error has a message property
-function isErrorWithMessage(error: unknown): error is { message: string } {
-    return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string';
+function isErrorWithMessage(error: SharedErrorType): error is { message: string } {
+    return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: SharedMessageType }).message === 'string';
 }
 
 interface UseHotelSearchProps {
@@ -102,8 +104,8 @@ export const useHotelSearch = ({
 
         if (roomId) {
             setSelectedRoom(roomId);
-        } else if (Array.isArray((hotel as any).rooms) && (hotel as any).rooms.length > 0) {
-            setSelectedRoom((hotel as any).rooms[0].id);
+        } else if (Array.isArray((hotel as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */).rooms) && (hotel as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */).rooms.length > 0) {
+            setSelectedRoom((hotel as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */).rooms[0].id);
         } else {
             setSelectedRoom(null);
         }

@@ -1,3 +1,7 @@
+import SharedSegmentType from '@/types/SharedSegmentType';
+import SharedSliceType from '@/types/SharedSliceType';
+import SharedErrorType from '@/types/SharedErrorType';
+import SharedBookingDataType from '@/types/SharedBookingDataType';
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -72,7 +76,7 @@ export default function FlightBooking() {
     });
     // Create booking mutation
     const createBookingMutation = useMutation({
-        mutationFn: (bookingData: any) => apiRequest('POST', '/api/flights/bookings', bookingData),
+        mutationFn: (bookingData: SharedBookingDataType) => apiRequest('POST', '/api/flights/bookings', bookingData),
         onSuccess: (data) => {
             toast({
                 title: 'Booking Confirmed',
@@ -80,7 +84,7 @@ export default function FlightBooking() {
             });
             setLocation(`/bookings/${data.data.id}`);
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: 'Booking Failed',
                 description: error.message || 'Unable to complete booking. Please try again.',
@@ -171,7 +175,7 @@ export default function FlightBooking() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {flight.slices.map((slice: any, sliceIndex: number) => (<div key={sliceIndex} className="space-y-4">
+                  {flight.slices.map((slice: SharedSliceType, sliceIndex: number) => (<div key={sliceIndex} className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-2 text-lg font-semibold">
@@ -190,7 +194,7 @@ export default function FlightBooking() {
                         </div>
                       </div>
 
-                      {slice.segments.map((segment: any, segmentIndex: number) => (<div key={segmentIndex} className="border rounded-lg p-4">
+                      {slice.segments.map((segment: SharedSegmentType, segmentIndex: number) => (<div key={segmentIndex} className="border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div>
                               <div className="font-semibold">

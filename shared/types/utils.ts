@@ -26,11 +26,11 @@ export type DeepRequired<T> = T extends object ? {
 /**
  * Type for constructor functions
  */
-export type Constructor<T = object> = new (...args: any[]) => T;
+export type Constructor<T = object, TArgs extends unknown[] = unknown[]> = new (...args: TArgs) => T;
 /**
  * Type for class constructors that might be abstract
  */
-export type AbstractConstructor<T = object> = abstract new (...args: any[]) => T;
+export type AbstractConstructor<T = object, TArgs extends unknown[] = unknown[]> = abstract new (...args: TArgs) => T;
 /**
  * Type for object with string keys and values of type T
  */
@@ -138,9 +138,9 @@ export type Creatable<T, TArgs extends any[] = any[]> = {
 /**
  * Type for a class with a static from method
  */
-export type Fromable<T, TFrom, TArgs extends any[] = any[]> = {
-    new (...args: TArgs): T;
-    from(source: TFrom, ...args: any[]): T;
+export type TypeGuardFromCreate<T, TFrom, TExtraArgs extends any[] = any[]> = {
+    from(source: TFrom, ...args: TExtraArgs): T;
+    is(value: unknown): value is TFrom & T;
 };
 /**
  * Type for a class with a static of method
@@ -191,6 +191,6 @@ export type TypeGuardCreate<T, TArgs extends any[] = any[]> = {
  * Type for a class with a static from method that acts as a type guard
  */
 export type TypeGuardFromCreate<T, TFrom> = {
-    from(source: TFrom, ...args: any[]): T;
+    from(source: TFrom, ...args: unknown[]): T;
     is(value: unknown): value is TFrom & T;
 };

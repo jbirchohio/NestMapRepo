@@ -996,7 +996,7 @@ var nativeBridge = (function (exports) {
                     });
                 });
             };
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+             
             cap.withPlugin = (_pluginId, _fn) => dummy;
             cap.Exception = CapacitorException;
             initEvents(win, cap);

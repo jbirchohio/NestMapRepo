@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -7,6 +8,89 @@ import { SessionLockout } from '@/utils/sessionLockout';
 import type { UserResponse, RegisterDto, LoginDto } from '@shared/types/auth/dto';
 import type { JwtPayload } from '@shared/types/auth/jwt';
 import type { AuthError, Permission, AuthUser, AuthTokens } from '@shared/types/auth/auth.types';
+
+// Types for API responses that might use snake_case
+interface UserResponseSnakeCase {
+  id?: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  email_verified?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  last_login_at?: string | null;
+  display_name?: string;
+  avatar_url?: string | null;
+  tenant_id?: string;
+  role?: string;
+  organization_id?: string | null;
+  permissions?: string[];
+}
+
+type UserResponseMixed = UserResponse | UserResponseSnakeCase;
+
+// Type guard for snake_case response
+function isSnakeCaseResponse(user: unknown): user is UserResponseSnakeCase {
+  if (!user || typeof user !== 'object') return false;
+  const u = user as Record<string, unknown>;
+  return 'first_name' in u || 'last_name' in u || 'email_verified' in u || 'created_at' in u;
+}
+
+// Type guard for AuthUser
+function isAuthUser(user: unknown): user is AuthUser {
+  if (!user || typeof user !== 'object') return false;
+  const u = user as Record<string, unknown>;
+  return 'id' in u && 'email' in u;
+}
+
+// Helper to safely get properties in either case
+function getProperty<T extends Record<string, unknown>>(
+  obj: T,
+  camelKey: keyof T,
+  snakeKey: string
+): T[keyof T] | undefined {
+  return obj[camelKey] ?? (obj as Record<string, unknown>)[snakeKey];
+}
+
+// Transform user data to AuthUser type
+function toAuthUser(userData: UserResponseMixed): AuthUser {
+  const isSnake = isSnakeCaseResponse(userData);
+  const id = String(userData.id || '');
+  const email = String(userData.email || '');
+  
+  // Handle both snake_case and camelCase properties
+  const firstName = isSnake ? userData.first_name : (userData as UserResponse).firstName;
+  const lastName = isSnake ? userData.last_name : (userData as UserResponse).lastName;
+  const emailVerified = isSnake ? userData.email_verified : (userData as UserResponse).emailVerified;
+  const createdAt = isSnake ? userData.created_at : (userData as UserResponse).createdAt;
+  const updatedAt = isSnake ? userData.updated_at : (userData as UserResponse).updatedAt;
+  const lastLoginAt = isSnake ? userData.last_login_at : (userData as UserResponse).lastLoginAt;
+  const displayName = isSnake ? userData.display_name : (userData as UserResponse).displayName;
+  const avatarUrl = isSnake ? userData.avatar_url : (userData as UserResponse).avatarUrl;
+  const tenantId = isSnake ? userData.tenant_id : (userData as UserResponse).tenantId;
+  
+  // Generate displayName if not provided
+  const finalDisplayName = displayName || 
+    [firstName, lastName].filter(Boolean).join(' ').trim() || 
+    email;
+
+  return {
+    id,
+    email,
+    firstName: firstName || null,
+    lastName: lastName || null,
+    emailVerified: emailVerified ?? false,
+    createdAt: createdAt || new Date().toISOString(),
+    updatedAt: updatedAt || new Date().toISOString(),
+    lastLoginAt: lastLoginAt || null,
+    displayName: finalDisplayName,
+    avatarUrl: avatarUrl || null,
+    tenantId: tenantId || '',
+    permissions: Array.isArray(userData.permissions) ? userData.permissions : [],
+    role: userData.role || 'user',
+    organizationId: userData.organization_id || null
+  };
+}
 
 // Use the shared JwtPayload type which already includes standard claims
 // and extend it with any custom claims if needed
@@ -87,24 +171,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set tokens in the token manager
     tokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
     
-    // Convert UserResponse to AuthUser
-    const authUser: AuthUser = {
-      ...userData,
-      permissions: [], // Permissions will be populated from the token
-      // Map UserResponse properties to AuthUser, handling both snake_case and camelCase
-      firstName: (userData as any).first_name || userData.firstName || null,
-      lastName: (userData as any).last_name || userData.lastName || null,
-      emailVerified: (userData as any).email_verified ?? userData.emailVerified ?? false,
-      createdAt: (userData as any).created_at || userData.createdAt,
-      updatedAt: (userData as any).updated_at || userData.updatedAt,
-      lastLoginAt: (userData as any).last_login_at || userData.lastLoginAt || null,
-      displayName: userData.displayName || 
-                 (userData as any).display_name || 
-                 `${(userData as any).first_name || userData.firstName || ''} ${(userData as any).last_name || userData.lastName || ''}`.trim() || 
-                 userData.email || '',
-      avatarUrl: (userData as any).avatar_url || userData.avatarUrl || null,
-      tenantId: (userData as any).tenant_id || (userData as any).tenantId || ''
-    };
+    // Convert UserResponse to AuthUser using our utility function
+    const authUser = toAuthUser(userData);
     
     setUser(authUser);
     setError(null);
@@ -123,7 +191,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sessionLockout, tokenManager]);
 
   // Handle authentication errors
-  const handleAuthError = useCallback((error: unknown, email: string = ''): AuthError => {
+  const handleAuthError = useCallback((error: SharedErrorType, email: string = ''): AuthError => {
     // Increment failed attempts on authentication error
     const clientIp = getClientIp();
     sessionLockout.recordFailedAttempt(clientIp, email);
@@ -178,21 +246,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Call the auth service to login
       const authUser = await authService.login(loginDto);
       
-      // Create a properly typed AuthUser object
-      const user: AuthUser = {
-        ...authUser,
-        // Ensure all required properties are set with proper fallbacks
-        firstName: (authUser as any).firstName ?? (authUser as any).first_name ?? null,
-        lastName: (authUser as any).lastName ?? (authUser as any).last_name ?? null,
-        emailVerified: (authUser as any).emailVerified ?? (authUser as any).email_verified ?? false,
-        createdAt: (authUser as any).createdAt ?? (authUser as any).created_at ?? new Date().toISOString(),
-        updatedAt: (authUser as any).updatedAt ?? (authUser as any).updated_at ?? new Date().toISOString(),
-        lastLoginAt: (authUser as any).lastLoginAt ?? (authUser as any).last_login_at ?? null,
-        displayName: (authUser as any).displayName ?? (authUser as any).display_name ?? 
-                    ((`${(authUser as any).firstName || (authUser as any).first_name || ''} ${(authUser as any).lastName || (authUser as any).last_name || ''}`.trim() || email) as string),
-        permissions: (authUser as any).permissions ?? [],
-        tenantId: (authUser as any).tenantId ?? (authUser as any).tenant_id ?? ''
-      };
+      // Convert the auth response to a properly typed AuthUser object
+      const user = toAuthUser(authUser);
       
       // Update the UI state with the authenticated user
       setUser(user);
@@ -234,21 +289,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Call the auth service to register
       const authUser = await authService.register(data);
       
-      // Create a properly typed AuthUser object
-      const user: AuthUser = {
-        ...authUser,
-        // Ensure all required properties are set with proper fallbacks
-        firstName: (authUser as any).firstName ?? (authUser as any).first_name ?? null,
-        lastName: (authUser as any).lastName ?? (authUser as any).last_name ?? null,
-        emailVerified: (authUser as any).emailVerified ?? (authUser as any).email_verified ?? false,
-        createdAt: (authUser as any).createdAt ?? (authUser as any).created_at ?? new Date().toISOString(),
-        updatedAt: (authUser as any).updatedAt ?? (authUser as any).updated_at ?? new Date().toISOString(),
-        lastLoginAt: (authUser as any).lastLoginAt ?? (authUser as any).last_login_at ?? null,
-        displayName: (authUser as any).displayName ?? (authUser as any).display_name ?? 
-                    ((`${(authUser as any).firstName || (authUser as any).first_name || ''} ${(authUser as any).lastName || (authUser as any).last_name || ''}`.trim() || data.email) as string),
-        permissions: (authUser as any).permissions ?? [],
-        tenantId: (authUser as any).tenantId ?? (authUser as any).tenant_id ?? ''
-      };
+      // Convert the auth response to a properly typed AuthUser object
+      const user = toAuthUser(authUser);
       
       // Update the UI state with the authenticated user
       setUser(user);
@@ -328,33 +370,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!isMounted) return undefined;
         
         if (currentUser) {
-          // Convert UserResponse to AuthUser
-          // Handle both snake_case and camelCase properties from the backend
-          const authUser: AuthUser = {
-            // Copy all properties from currentUser (UserResponse)
-            ...currentUser,
-            // Add required AuthUser properties
-            permissions: [], // Will be populated from the token
-            tenantId: (currentUser as any).tenantId || (currentUser as any).tenant_id || '',
-            
-            // Map snake_case to camelCase with fallbacks
-            displayName: (currentUser as any).displayName || (currentUser as any).display_name || '',
-            emailVerified: (currentUser as any).emailVerified ?? (currentUser as any).email_verified ?? false,
-            firstName: (currentUser as any).firstName || (currentUser as any).first_name || null,
-            lastName: (currentUser as any).lastName || (currentUser as any).last_name || null,
-            createdAt: (currentUser as any).createdAt || (currentUser as any).created_at || new Date().toISOString(),
-            updatedAt: (currentUser as any).updatedAt || (currentUser as any).updated_at || new Date().toISOString(),
-            lastLoginAt: (currentUser as any).lastLoginAt || (currentUser as any).last_login_at || null,
-            avatarUrl: (currentUser as any).avatarUrl || (currentUser as any).avatar_url || null
-          };
-          
-          // Set displayName if not already set
-          if (!authUser.displayName) {
-            const firstName = (authUser as any).first_name || (authUser as any).firstName || '';
-            const lastName = (authUser as any).last_name || (authUser as any).lastName || '';
-            const fullName = `${firstName} ${lastName}`.trim();
-            authUser.displayName = fullName || (authUser as any).email || '';
-          }
+          // Convert currentUser to AuthUser using our utility function
+          const authUser = toAuthUser(currentUser);
           
           if (isMounted) {
             setUser(authUser);

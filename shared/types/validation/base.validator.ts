@@ -28,7 +28,7 @@ export class IsValidTenantId implements ValidatorConstraintInterface {
  */
 @ValidatorConstraint({ name: 'isValidUserRole', async: false })
 export class IsValidUserRole implements ValidatorConstraintInterface {
-  validate(value: any) {
+  validate(value: any /** FIXANYERROR: Replace 'any' */) {
     return VALID_USER_ROLES.includes(value as UserRole);
   }
 

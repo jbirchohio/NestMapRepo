@@ -7,7 +7,7 @@ import type { Express } from '../../express-augmentations.ts';
  * API version middleware for deprecation warnings
  */
 export function apiVersionMiddleware(version: string) {
-    return (req: any, res: any, next: any) => {
+    return (req: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, res: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, next: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
         // Add version headers for API clients
         res.set('API-Version', version);
         res.set('API-Supported-Versions', 'v1');

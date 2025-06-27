@@ -10,15 +10,15 @@ declare global {
         email: string;
         organizationId: string;
         role: string;
-        [key: string]: any;
+        [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
       };
       organizationId?: string | null;
-      [key: string]: any;
+      [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     }
 
     // Augment the Express Response interface
     interface Response {
-      [key: string]: any;
+      [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     }
   }
 }

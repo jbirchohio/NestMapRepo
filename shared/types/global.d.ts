@@ -33,7 +33,7 @@ declare module '*.svg' {
 declare global {
   interface Window {
     __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: typeof compose;
-    __INITIAL_STATE__?: any;
+    __INITIAL_STATE__?: any /** FIXANYERROR: Replace 'any' */;
   }
 }
 

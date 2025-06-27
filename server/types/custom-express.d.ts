@@ -18,7 +18,7 @@ declare global {
       // Add missing Express request properties that we use
       params: Record<string, string>;
       query: Record<string, string | string[] | undefined>;
-      body: any;
+      body: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
       // Add other Express request methods we use
       get(name: string): string | undefined;
       header(name: string): string | undefined;
@@ -44,7 +44,7 @@ export interface CustomRequest extends ExpressRequest {
   };
   params: Record<string, string>;
   query: Record<string, string | string[] | undefined>;
-  body: any;
+  body: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
   method: string;
   url: string;
   headers: Record<string, string | string[] | undefined>;

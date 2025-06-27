@@ -1,14 +1,78 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plane, CheckCircle, ArrowRight, ArrowLeft, User, Clock, MapPin, CreditCard } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { Plane, CheckCircle, ArrowRight, CreditCard } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+
+// Helper functions
+const formatTime = (dateTime: string): string => {
+  return new Date(dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const formatDuration = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
+};
+
+const getAirportCode = (location: string | { code?: string; iataCode?: string }): string => {
+  if (!location) return '';
+  if (typeof location === 'string') return location;
+  return location.iataCode || location.code || '';
+};
+
+const getAirlineName = (airline: string | { name?: string; code?: string }): string => {
+  if (!airline) return 'Unknown Airline';
+  if (typeof airline === 'string') return airline;
+  return airline.name || airline.code || 'Unknown Airline';
+};
+
+const getFlightNumber = (segment?: { carrierCode?: string; number?: string; flightNumber?: string }): string => {
+  if (!segment) return '';
+  return segment.flightNumber || 
+         (segment.carrierCode && segment.number ? `${segment.carrierCode}${segment.number}` : '') ||
+         '';
+};
+
+const getPriceAmount = (price: number | { amount: number; currency: string }): number => {
+  if (typeof price === 'number') return price;
+  return price?.amount || 0;
+};
+
+const getPriceCurrency = (price: number | { amount: number; currency: string }): string => {
+  if (typeof price === 'number') return 'USD';
+  return price?.currency || 'USD';
+};
+
+const sortFlights = (
+  flights: FlightOffer[], 
+  sortBy: 'price' | 'duration' | 'departure'
+): FlightOffer[] => {
+  if (!flights) return [];
+  
+  return [...flights].sort((a, b) => {
+    switch (sortBy) {
+      case 'price':
+        return getPriceAmount(a.price) - getPriceAmount(b.price);
+      case 'duration': {
+        const durationA = typeof a.duration === 'string' ? parseInt(a.duration) : a.duration || 0;
+        const durationB = typeof b.duration === 'string' ? parseInt(b.duration) : b.duration || 0;
+        return durationA - durationB;
+      }
+      case 'departure':
+        return new Date(a.departure.time).getTime() - new Date(b.departure.time).getTime();
+      default:
+        return 0;
+    }
+  });
+};
+
 interface SequentialBookingData {
     tripId: string;
     tripDestination: string;
@@ -37,22 +101,40 @@ interface SequentialBookingData {
     selectedOutboundFlight?: FlightOffer;
     selectedReturnFlight?: FlightOffer;
 }
+
+interface FlightBookingState {
+    bookingData: SequentialBookingData | null;
+    currentStep: number;
+    flightOffers: FlightOffer[];
+    isSearching: boolean;
+    isBooking: boolean;
+    sortBy: 'price' | 'duration' | 'departure';
+    activeTab: 'outbound' | 'return';
+    outboundFlights: FlightOffer[];
+    returnFlights: FlightOffer[];
+    selectedOutbound: FlightOffer | null;
+    selectedReturn: FlightOffer | null;
+}
+
 interface Airline {
     name?: string;
     code?: string;
-    [key: string]: any; // Allow for additional properties
+    [key: string]: unknown;
 }
 
 interface FlightSegment {
+    id: string;
     departure: {
         iataCode: string;
         at: string;
+        terminal?: string;
         time?: string;
         airport?: string | { code?: string };
     };
     arrival: {
         iataCode: string;
         at: string;
+        terminal?: string;
         time?: string;
         airport?: string | { code?: string };
     };
@@ -65,7 +147,8 @@ interface FlightSegment {
     operating?: {
         carrierCode: string;
     };
-    duration?: string;
+    duration?: string | number;
+    stops?: number;
 }
 
 interface FlightOffer {
@@ -73,7 +156,7 @@ interface FlightOffer {
     airline: string | Airline;
     flightNumber: string;
     price: number | { amount: number; currency: string };
-    currency: string;
+    currency?: string;
     departure: {
         airport: string | { code?: string; iataCode?: string };
         time: string;
@@ -86,156 +169,129 @@ interface FlightOffer {
         date: string;
         iataCode?: string;
     };
-    duration: string;
+    duration: string | number;
     stops: number;
     type: string;
     validatingAirlineCodes: string[];
     segments?: FlightSegment[];
+    source?: string;
 }
+
 export default function SequentialBookingFlights() {
     const [, setLocation] = useLocation();
-    const [bookingData, setBookingData] = useState<SequentialBookingData | null>(null);
-    const [currentStep, setCurrentStep] = useState(0);
-    const [flightOffers, setFlightOffers] = useState<FlightOffer[]>([]);
-    const [selectedFlight, setSelectedFlight] = useState<FlightOffer | null>(null);
-    const [isSearching, setIsSearching] = useState(false);
-    const [isBooking, setIsBooking] = useState(false);
-    const [sortBy, setSortBy] = useState<'price' | 'duration' | 'departure'>('price');
-    const [activeTab, setActiveTab] = useState<'outbound' | 'return'>('outbound');
-    const [outboundFlights, setOutboundFlights] = useState<FlightOffer[]>([]);
-    const [returnFlights, setReturnFlights] = useState<FlightOffer[]>([]);
-    const [selectedOutbound, setSelectedOutbound] = useState<FlightOffer | null>(null);
-    const [selectedReturn, setSelectedReturn] = useState<FlightOffer | null>(null);
-    const formatTime = (timeString: string | undefined | null): string => {
-        if (!timeString) return '--:--';
-        try {
-            const date = new Date(timeString);
-            if (isNaN(date.getTime())) return '--:--';
-            return date.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-        }
-        catch {
-            return '--:--';
-        }
-    };
-    const formatDuration = (duration: string): string => {
-        const match = duration.match(/PT(\d+H)?(\d+M)?/);
-        const hours = match?.[1] ? match[1] : '';
-        const minutes = match?.[2] ? match[2] : '';
-        return `${hours} ${minutes}`.trim() || duration;
-    };
-    const getPriceAmount = (price: number | { amount: number; currency: string }): number => {
-        return typeof price === 'number' ? price : price.amount;
+    const { toast } = useToast();
+    const [state, setState] = useState<FlightBookingState>({
+        bookingData: null,
+        flightOffers: [],
+        outboundFlights: [],
+        returnFlights: [],
+        selectedOutbound: null,
+        selectedReturn: null,
+        activeTab: 'outbound',
+        sortBy: 'price',
+        isSearching: false,
+        isBooking: false,
+        currentStep: 0,
+    });
+
+    const updateState = (updates: Partial<FlightBookingState>) => {
+        setState(prev => ({
+            ...prev,
+            ...updates
+        }));
     };
 
-    const getPriceCurrency = (price: number | { amount: number; currency: string }, defaultCurrency: string = 'USD'): string => {
-        return typeof price === 'object' ? price.currency : defaultCurrency;
-    };
+    const currentTraveler = state.bookingData?.travelers[state.bookingData.currentTravelerIndex];
+    const totalSteps = state.bookingData?.travelers.length || 1;
+    const completedSteps = state.bookingData?.currentTravelerIndex || 0;
+    const progress = state.bookingData 
+        ? Math.round((completedSteps / totalSteps) * 100)
+        : 0;
 
-    const getAirlineName = (airline: string | Airline | undefined): string => {
-        if (!airline) return 'Unknown Airline';
-        if (typeof airline === 'string') return airline;
-        return airline.name || airline.code || 'Unknown Airline';
-    };
+    const {
+        bookingData,
+        currentStep,
+        
+        isSearching,
+        isBooking,
+        sortBy,
+        activeTab,
+        outboundFlights,
+        returnFlights,
+        selectedOutbound,
+        selectedReturn
+    } = state;
 
-    const getAirportCode = (airport: string | { code?: string; iataCode?: string } | undefined): string => {
-        if (!airport) return 'N/A';
-        if (typeof airport === 'string') return airport;
-        const code = 'iataCode' in airport ? airport.iataCode : 'code' in airport ? airport.code : undefined;
-        return code || 'N/A';
-    };
-
-    const getFlightNumber = (segment: {
-        carrierCode: string;
-        number: string;
-        operating?: { carrierCode: string };
-    }): string => {
-        const operatingCarrier = segment.operating?.carrierCode || segment.carrierCode;
-        return `${operatingCarrier} ${segment.number}`;
-    };
-
-    const sortFlights = (flights: FlightOffer[], sortBy: string): FlightOffer[] => {
-        return [...flights].sort((a, b) => {
-            switch (sortBy) {
-                case 'price':
-                    const priceA = getPriceAmount(a.price);
-                    const priceB = getPriceAmount(b.price);
-                    return priceA - priceB;
-                case 'duration':
-                    const getDurationMinutes = (duration: string) => {
-                        const match = duration.match(/PT(\d+H)?(\d+M)?/);
-                        const hours = match?.[1] ? parseInt(match[1]) : 0;
-                        const minutes = match?.[2] ? parseInt(match[2]) : 0;
-                        return hours * 60 + minutes;
-                    };
-                    return getDurationMinutes(a.duration) - getDurationMinutes(b.duration);
-                case 'departure':
-                    return new Date(a.departure.time).getTime() - new Date(b.departure.time).getTime();
-                default:
-                    return 0;
-            }
-        });
-    };
     useEffect(() => {
-        try {
-            const storedData = sessionStorage.getItem('sequentialBookingData');
-            if (storedData) {
-                const parsedData = JSON.parse(storedData) as SequentialBookingData;
-                setBookingData(parsedData);
-                if (parsedData.bookingStatus === 'flights' && parsedData.currentTravelerIndex < parsedData.travelers.length) {
-                    setCurrentStep(1);
-                    handleFlightSearch(parsedData);
+        const fetchBookingData = async () => {
+            try {
+                const storedData = sessionStorage.getItem('sequentialBookingData');
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData) as SequentialBookingData;
+                    updateState({ 
+                        bookingData: parsedData,
+                        selectedOutbound: parsedData.selectedOutboundFlight || null,
+                        selectedReturn: parsedData.selectedReturnFlight || null
+                    });
+                    
+                    if (parsedData.bookingStatus === 'flights' && parsedData.currentTravelerIndex < parsedData.travelers.length) {
+                        updateState({ currentStep: 1 });
+                        await handleFlightSearch(parsedData);
+                    } else if (parsedData.bookingStatus === 'payment') {
+                        updateState({ currentStep: 2 });
+                    } else if (parsedData.bookingStatus === 'complete') {
+                        updateState({ currentStep: 3 });
+                    }
+                } else {
+                    toast({
+                        title: "No booking data found",
+                        description: "Please start the booking process from the team management page.",
+                        variant: "destructive",
+                    });
+                    setLocation('/');
                 }
-                else if (parsedData.bookingStatus === 'payment') {
-                    setCurrentStep(2);
-                }
-                else if (parsedData.bookingStatus === 'complete') {
-                    setCurrentStep(3);
-                }
-            }
-            else {
+            } catch (error) {
+                console.error('Error in SequentialBookingFlights:', error);
                 toast({
-                    title: "No booking data found",
-                    description: "Please start the booking process from the team management page.",
+                    title: "Error",
+                    description: "Failed to load booking data. Please try again.",
                     variant: "destructive",
                 });
                 setLocation('/');
             }
-        }
-        catch (error) {
-            console.error('Critical error in SequentialBookingFlights useEffect:', error);
-            setLocation('/');
-        }
-    }, [setLocation]);
+        };
+
+        fetchBookingData();
+    }, [setLocation, toast]);
+
     const handleFlightSearch = async (data: SequentialBookingData) => {
-        const currentTraveler = data.travelers[data.currentTravelerIndex];
-        if (!currentTraveler)
-            return;
-        setIsSearching(true);
+        if (!currentTraveler) return;
+        
+        updateState({ isSearching: true });
+        
         try {
-            // Use API to get airport codes for current traveler's specific departure city
-            const departureCity = currentTraveler?.departureCity;
-            if (!departureCity) {
-                throw new Error('Departure city is required');
-            }
-            const destinationCity = data?.tripDestination?.split(',')[0];
-            if (!destinationCity) {
-                throw new Error('Destination city is required');
+            const departureCity = currentTraveler.departureCity;
+            const destinationCity = data.tripDestination.split(',')[0];
+            
+            if (!departureCity || !destinationCity) {
+                throw new Error('Missing departure or destination city');
             }
             
-            // Make API call to get airport codes
-            const [departureCode, destinationCode] = await Promise.all([
-                apiRequest('POST', '/api/locations/airport-code', { cityName: departureCity })
-                    .then(res => res.airportCode)
-                    .catch(() => 'JFK'), // Fallback to JFK if API fails
-                apiRequest('POST', '/api/locations/airport-code', { cityName: destinationCity })
-                    .then(res => res.airportCode)
-                    .catch(() => 'JFK')  // Fallback to JFK if API fails
-            ]);
-            console.log(`Flight search for ${currentTraveler.name}: ${currentTraveler.departureCity} (${departureCode}) → ${data.tripDestination.split(',')[0]} (${destinationCode})`);
+            updateState({
+                selectedOutbound: null,
+                selectedReturn: null,
+                activeTab: 'outbound',
+                flightOffers: []
+            });
+
+            const departureCode = await apiRequest('POST', '/api/locations/airport-code', { cityName: departureCity })
+                .then(res => res.airportCode)
+                .catch(() => 'JFK');
+                
+            const destinationCode = await apiRequest('POST', '/api/locations/airport-code', { cityName: destinationCity })
+                .then(res => res.airportCode)
+                .catch(() => 'JFK');
+            
             const searchParams = {
                 origin: departureCode,
                 destination: destinationCode,
@@ -244,15 +300,17 @@ export default function SequentialBookingFlights() {
                 passengers: 1,
                 class: currentTraveler.travelClass || 'economy'
             };
+
             const result = await apiRequest('POST', '/api/bookings/flights/search', searchParams);
-            console.log('Flight search response:', result);
-            // Separate outbound and return flights from the Duffel response
             const allFlights = result.flights || [];
-            // For round trips, Duffel returns combined flight options
-            // We need to handle both outbound and return separately
-            setOutboundFlights(allFlights);
-            setFlightOffers(allFlights);
-            // Search for return flights if it's a round trip
+            
+            updateState({
+                flightOffers: allFlights,
+                outboundFlights: allFlights,
+                returnFlights: [],
+                isSearching: false
+            });
+
             if (data.returnDate && data.returnDate !== data.departureDate) {
                 const returnSearchParams = {
                     origin: destinationCode,
@@ -261,17 +319,15 @@ export default function SequentialBookingFlights() {
                     passengers: 1,
                     class: currentTraveler.travelClass || 'economy'
                 };
-                console.log('Searching return flights:', returnSearchParams);
+
                 try {
                     const returnResult = await apiRequest('POST', '/api/bookings/flights/search', returnSearchParams);
-                    console.log('Return flight search response:', returnResult);
-                    setReturnFlights(returnResult.flights || []);
+                    updateState({ returnFlights: returnResult.flights || [] });
                     toast({
                         title: "Return Flights Found",
                         description: `Found ${returnResult.flights?.length || 0} return flight options`,
                     });
-                }
-                catch (error) {
+                } catch (error) {
                     console.error('Error searching return flights:', error);
                     toast({
                         title: "Return Flight Search Failed",
@@ -280,495 +336,435 @@ export default function SequentialBookingFlights() {
                     });
                 }
             }
+
             if (allFlights.length > 0) {
                 toast({
                     title: "Flights Found",
                     description: `Found ${allFlights.length} outbound flight options`,
                 });
-            }
-            else {
+            } else {
                 toast({
                     title: "No Flights Found",
                     description: "No flights available for the selected route and dates.",
                     variant: "destructive",
                 });
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Flight search error:', error);
             toast({
                 title: "Flight Search Failed",
                 description: "Unable to search for flights. Please try again.",
                 variant: "destructive",
             });
-        }
-        finally {
-            setIsSearching(false);
+        } finally {
+            updateState({ isSearching: false });
         }
     };
-    const handleFlightBooking = async () => {
-        if (!selectedOutbound || !selectedReturn || !bookingData)
-            return;
-        const currentTraveler = bookingData.travelers[bookingData.currentTravelerIndex];
-        setIsBooking(true);
-        try {
-            // Store both outbound and return flight selections for current traveler
-            const updatedTravelers = [...bookingData.travelers];
-            const updatedTraveler = {
-                ...currentTraveler,
-                selectedOutboundFlight: selectedOutbound,
-                selectedReturnFlight: selectedReturn
-            } as any; // Use type assertion since we're adding non-standard fields
-            updatedTravelers[bookingData.currentTravelerIndex] = updatedTraveler;
-            // Check if more travelers need flights
-            if (bookingData.currentTravelerIndex < bookingData.travelers.length - 1) {
-                // Move to next traveler
-                const updatedData = {
-                    ...bookingData,
-                    currentTravelerIndex: bookingData.currentTravelerIndex + 1,
-                    travelers: updatedTravelers
-                };
-                setBookingData(updatedData);
-                sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
-                // Clear previous selections for new traveler
-                setSelectedOutbound(null);
-                setSelectedReturn(null);
-                setOutboundFlights([]);
-                setReturnFlights([]);
-                // Search flights for the next traveler
-                await handleFlightSearch(updatedData);
-                toast({
-                    title: "Flight Selected",
-                    description: `Flight saved for ${currentTraveler?.name || 'traveler'}. Now selecting for next traveler.`,
-                });
-            }
-            else {
-                // All travelers done, move to payment
-                const updatedData = {
-                    ...bookingData,
-                    travelers: updatedTravelers,
-                    bookingStatus: 'payment' as const
-                };
-                setBookingData(updatedData);
-                sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
-                setCurrentStep(2);
-                toast({
-                    title: "All Flights Selected",
-                    description: "Ready to proceed with payment for all travelers.",
-                });
-            }
+
+    const handleSelectFlight = (flight: FlightOffer, isReturn: boolean = false) => {
+        if (isReturn) {
+            updateState({ 
+                selectedReturn: flight,
+                activeTab: 'outbound' // Switch back to outbound tab after selection
+            });
+        } else {
+            updateState({ 
+                selectedOutbound: flight,
+                activeTab: 'return' // Switch to return tab after selection
+            });
         }
-        catch (error) {
-            console.error('Flight booking error:', error);
+    };
+
+    const handleConfirmSelection = async () => {
+        if (!bookingData || !selectedOutbound) return;
+        
+        updateState({ isBooking: true });
+        
+        try {
+            // Update the booking data with selected flights
+            const updatedBookingData: SequentialBookingData = {
+                ...bookingData,
+                selectedOutboundFlight: selectedOutbound,
+                selectedReturnFlight: selectedReturn || undefined,
+                currentTravelerIndex: bookingData.currentTravelerIndex + 1,
+                bookingStatus: bookingData.currentTravelerIndex + 1 >= bookingData.travelers.length 
+                    ? 'payment' 
+                    : 'flights'
+            };
+
+            // Save to session storage
+            sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedBookingData));
+            
+            // If this was the last traveler, move to payment
+            if (bookingData.currentTravelerIndex + 1 >= bookingData.travelers.length) {
+                updateState({ 
+                    bookingData: updatedBookingData,
+                    currentStep: 2,
+                    isBooking: false
+                });
+            } else {
+                // Move to next traveler
+                updateState({ 
+                    bookingData: updatedBookingData,
+                    currentStep: 1,
+                    isBooking: false
+                });
+                await handleFlightSearch(updatedBookingData);
+            }
+        } catch (error) {
+            console.error('Error confirming flight selection:', error);
             toast({
-                title: "Booking Error",
+                title: "Error",
                 description: "Failed to save flight selection. Please try again.",
                 variant: "destructive",
             });
-        }
-        finally {
-            setIsBooking(false);
+            updateState({ isBooking: false });
         }
     };
-    const handlePayment = async () => {
-        if (!bookingData)
-            return;
-        setIsBooking(true);
-        try {
-            const bookingResponse = await apiRequest('POST', '/api/bookings/complete', {
-                tripId: bookingData.tripId,
-                travelers: bookingData.travelers,
-                bookingType: 'flights_only'
-            });
-            if (bookingResponse.ok) {
-                const result = await bookingResponse.json();
-                const updatedData = {
-                    ...bookingData,
-                    bookingStatus: 'complete' as const,
-                    confirmationNumber: result.confirmationNumber || `CONF${Date.now()}`,
-                    bookingDate: new Date().toISOString()
-                };
-                setBookingData(updatedData);
-                sessionStorage.setItem('sequentialBookingData', JSON.stringify(updatedData));
-                setCurrentStep(3);
-                toast({
-                    title: "Booking Complete",
-                    description: "Your flights have been successfully booked!",
-                });
-            }
-            else {
-                throw new Error('Payment processing failed');
-            }
-        }
-        catch (error) {
-            console.error('Payment error:', error);
-            toast({
-                title: "Payment Failed",
-                description: "Unable to process payment. Please try again.",
-                variant: "destructive",
-            });
-        }
-        finally {
-            setIsBooking(false);
-        }
-    };
-    const getAirportCodeFromCity = async (cityName: string): Promise<string> => {
-        try {
-            console.log(`Getting airport code for city: ${cityName}`);
-            // Check if it's already an airport code
-            if (cityName.length === 3 && /^[A-Z]{3}$/.test(cityName.toUpperCase())) {
-                return cityName.toUpperCase();
-            }
-            // Use AI to find the airport code for this city
-            const response = await fetch('/api/locations/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    searchQuery: `${cityName} airport`,
-                    cityContext: cityName
-                })
-            });
-            if (!response.ok) {
-                throw new Error('Failed to get airport code');
-            }
-            const aiData = await response.json();
-            console.log('AI airport search result:', aiData);
-            // Extract airport code from AI response
-            if (aiData.locations && Array.isArray(aiData.locations) && aiData.locations.length > 0) {
-                const location = aiData.locations[0];
-                // Look for airport code in the location data
-                const airportMatch = location.description?.match(/\b([A-Z]{3})\b/) ||
-                    location.name?.match(/\b([A-Z]{3})\b/);
-                if (airportMatch) {
-                    console.log(`Found airport code: ${airportMatch[1]}`);
-                    return airportMatch[1];
-                }
-            }
-            // Fallback to hardcoded mapping for common cities
-            const fallbackMap: Record<string, string> = {
-                'san francisco': 'SFO',
-                'new york': 'JFK',
-                'new york city': 'JFK',
-                'seattle': 'SEA',
-                'los angeles': 'LAX',
-                'chicago': 'ORD',
-                'miami': 'MIA',
-                'denver': 'DEN',
-                'atlanta': 'ATL',
-                'boston': 'BOS',
-                'washington': 'DCA',
-                'dallas': 'DFW',
-                'houston': 'IAH'
-            };
-            const normalizedCity = cityName.toLowerCase().trim();
-            const airportCode = fallbackMap[normalizedCity];
-            if (airportCode) {
-                console.log(`Using fallback mapping: ${cityName} -> ${airportCode}`);
-                return airportCode;
-            }
-            // Last resort - return original if no mapping found
-            console.log(`No airport code found for ${cityName}, using as-is`);
-            return cityName.toUpperCase();
-        }
-        catch (error) {
-            console.error('Error getting airport code:', error);
-            // Fallback to basic mapping
-            const basicMap: Record<string, string> = {
-                'new york': 'JFK',
-                'seattle': 'SEA',
-                'san francisco': 'SFO'
-            };
-            return basicMap[cityName.toLowerCase()] || 'JFK';
-        }
-    };
-    if (!bookingData) {
-        return (<div className="container mx-auto p-6">
-        <div className="text-center">Loading booking workflow...</div>
-      </div>);
-    }
-    const currentTraveler = bookingData.travelers?.[bookingData.currentTravelerIndex];
-    const totalSteps = bookingData.travelers?.length + 1;
-    const completedSteps = bookingData.bookingStatus === 'payment' ? bookingData.travelers.length :
-        bookingData.bookingStatus === 'complete' ? totalSteps :
-            bookingData.currentTravelerIndex;
-    const progress = (completedSteps / totalSteps) * 100;
-    return (<div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Sequential Flight Booking</h1>
-        <p className="text-muted-foreground">
-          Authentic flight data powered by Duffel API
-        </p>
-        <Progress value={progress} className="w-full mt-4"/>
-        <p className="text-sm text-muted-foreground mt-2">
-          Step {completedSteps + 1} of {totalSteps} • {Math.round(progress)}% Complete
-        </p>
-      </div>
 
-      {/* Flight Selection Step */}
-      {currentStep === 1 && bookingData.bookingStatus === 'flights' && currentTraveler && (<Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plane className="h-5 w-5"/>
-              Select Flight for {currentTraveler.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground">
-                {currentTraveler.departureCity} → {bookingData.tripDestination} • {flightOffers.length} options available
-              </p>
-            </div>
+    const renderFlightCard = (flight: FlightOffer, isSelected: boolean, isReturn: boolean = false) => {
+        const departureTime = flight.segments?.[0]?.departure.at || flight.departure.time;
+        const arrivalTime = flight.segments?.[flight.segments.length - 1]?.arrival.at || flight.arrival.time;
+        const duration = typeof flight.duration === 'number' 
+            ? formatDuration(flight.duration) 
+            : flight.duration || 'N/A';
 
-            {/* Flight Tabs for Outbound/Return */}
-            <div className="mb-6">
-              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'outbound' | 'return')}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="outbound">
-                    Outbound ({outboundFlights.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="return">
-                    Return ({returnFlights.length})
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {/* Sort Options */}
-            <div className="mb-4 flex gap-2">
-              <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'price' | 'duration' | 'departure')}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Sort by"/>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="price">Price</SelectItem>
-                  <SelectItem value="duration">Duration</SelectItem>
-                  <SelectItem value="departure">Departure</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {isSearching ? (<div className="text-center py-8">
-                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p>Searching authentic flight data...</p>
-              </div>) : (<div className="space-y-3">
-                {sortFlights(activeTab === 'outbound' ? outboundFlights : returnFlights, sortBy).map((flight) => {
-                  const isSelected = (activeTab === 'outbound' && selectedOutbound?.id === flight.id) ||
-                    (activeTab === 'return' && selectedReturn?.id === flight.id);
-                  
-                  return (
-                    <div 
-                      key={flight.id} 
-                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        isSelected 
-                          ? 'border-primary bg-primary/5' 
-                          : 'border-border hover:border-primary/50'
-                      }`} 
-                      onClick={() => {
-                        if (activeTab === 'outbound') {
-                            setSelectedOutbound(flight);
-                        }
-                        else {
-                            setSelectedReturn(flight);
-                        }
-                    }}>
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="font-medium">{getAirlineName(flight.airline)}</span>
-                          <Badge variant="outline">
-                            {flight.segments?.[0] 
-                              ? getFlightNumber(flight.segments[0])
-                              : (flight.flightNumber ? String(flight.flightNumber) : 'N/A')}
-                          </Badge>
-                          {flight.stops === 0 && (<Badge variant="secondary">Direct</Badge>)}
+        return (
+            <div 
+                key={flight.id}
+                className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                    isSelected ? 'border-primary bg-primary/5' : 'hover:shadow-md'
+                }`}
+                onClick={() => handleSelectFlight(flight, isReturn)}
+            >
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-muted p-2 rounded-lg">
+                            <Plane className="h-6 w-6 text-primary" />
                         </div>
-                        {/* Flight routing display with connections */}
-                        {flight.segments && flight.segments.length > 0 ? (
-                          <div className="space-y-2 text-sm">
-                            {flight.segments?.map((segment: FlightSegment, segmentIndex: number) => (
-                              <div key={segmentIndex} className="flex flex-col gap-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex-1 grid grid-cols-3 gap-4">
-                                    <div>
-                                      <p className="font-medium">
-                                        {formatTime(segment.departure?.at || segment.departure?.time || '')}
-                                      </p>
-                                      <p className="text-muted-foreground">
-                                        {getAirportCode(segment.departure)}
-                                      </p>
-                                    </div>
-                                    <div className="text-center">
-                                      <p className="text-muted-foreground">
-                                        {formatDuration(segment.duration || '')}
-                                      </p>
-                                      <div className="flex items-center justify-center">
-                                        <div className="w-8 h-px bg-border"></div>
-                                        <Plane className="h-3 w-3 mx-1 text-muted-foreground"/>
-                                        <div className="w-8 h-px bg-border"></div>
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <p className="font-medium">
-                                        {formatTime(segment.arrival?.at || segment.arrival?.time || '')}
-                                      </p>
-                                      <p className="text-muted-foreground">
-                                        {getAirportCode(segment.arrival)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                                {flight.segments && segmentIndex < flight.segments.length - 1 && (
-                                  <div className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded self-start">
-                                    Connection
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                            <div className="text-xs text-muted-foreground mt-2">
-                              Total journey: {formatDuration(flight.duration || '')} • {flight.stops} stop{flight.stops !== 1 ? 's' : ''}
-                            </div>
-                          </div>
-                        ) : (
-                    // Direct flight
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <p className="font-medium">{formatTime(flight.departure.time)}</p>
-                              <p className="text-muted-foreground">{getAirportCode(flight.departure)}</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-muted-foreground">{formatDuration(flight.duration)}</p>
-                              <div className="flex items-center justify-center">
-                                <div className="w-8 h-px bg-border"></div>
-                                <Plane className="h-3 w-3 mx-1 text-muted-foreground"/>
-                                <div className="w-8 h-px bg-border"></div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium">{formatTime(flight.arrival.time)}</p>
-                              <p className="text-muted-foreground">{getAirportCode(flight.arrival)}</p>
-                            </div>
-                          </div>)}
-                      </div>
-                      <div className="text-right ml-4">
-                        <p className="text-lg font-bold">${getPriceAmount(flight.price).toFixed(2)}</p>
-                        <p className="text-sm text-muted-foreground">{getPriceCurrency(flight.price, flight.currency)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {flightOffers.length === 0 && !isSearching && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No flights found for this route. Please try different dates.
-                  </div>
-                )}
-              </div>
-            )}
-            
-
-            {/* Flight Selection Summary */}
-            {(selectedOutbound || selectedReturn) && (<div className="mt-6 p-4 bg-muted/30 rounded-lg">
-                <h4 className="font-medium mb-3">Selected Flights</h4>
-                <div className="space-y-2 text-sm">
-                  {selectedOutbound && (<div className="flex justify-between">
-                      <span>Outbound: {getAirlineName(selectedOutbound.airline)} {selectedOutbound.segments?.[0] ? getFlightNumber(selectedOutbound.segments[0]) : selectedOutbound.flightNumber || 'N/A'}</span>
-                      <span className="font-medium">${getPriceAmount(selectedOutbound.price).toFixed(2)}</span>
-                    </div>)}
-                  {selectedReturn && (<div className="flex justify-between">
-                      <span>Return: {getAirlineName(selectedReturn.airline)} {selectedReturn.segments?.[0] ? getFlightNumber(selectedReturn.segments[0]) : selectedReturn.flightNumber || 'N/A'}</span>
-                      <span className="font-medium">${getPriceAmount(selectedReturn.price).toFixed(2)}</span>
-                    </div>)}
-                  {selectedOutbound && selectedReturn && (<div className="flex justify-between border-t pt-2 font-medium">
-                      <span>Total:</span>
-                      <span className="font-medium">${(getPriceAmount(selectedOutbound.price) + getPriceAmount(selectedReturn.price)).toFixed(2)}</span>
-                    </div>)}
-                </div>
-              </div>)}
-
-            <div className="flex justify-between pt-6">
-              <Button variant="outline" onClick={() => setLocation('/')}>
-                <ArrowLeft className="w-4 h-4 mr-2"/>
-                Cancel
-              </Button>
-              <Button onClick={handleFlightBooking} disabled={!selectedOutbound || !selectedReturn || isBooking}>
-                {isBooking ? 'Saving...' : 'Confirm Flight Selection'}
-                <ArrowRight className="w-4 h-4 ml-2"/>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>)}
-
-      {/* Payment Step */}
-      {currentStep === 2 && bookingData.bookingStatus === 'payment' && (<Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5"/>
-              Payment & Confirmation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 mb-6">
-              <h4 className="font-medium">Flight Summary</h4>
-              {bookingData.travelers.map((traveler, index) => (<div key={traveler.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">{traveler.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {traveler.departureCity} → {bookingData.tripDestination}
-                      </p>
+                        <div>
+                            <h4 className="font-medium">{getAirlineName(flight.airline)}</h4>
+                            <p className="text-sm text-muted-foreground">
+                                {getFlightNumber(flight.segments?.[0])}
+                            </p>
+                        </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium">$599</p>
-                      <p className="text-sm text-muted-foreground">Economy</p>
+                        <div className="font-medium">
+                            {getPriceAmount(flight.price).toLocaleString('en-US', {
+                                style: 'currency',
+                                currency: getPriceCurrency(flight.price)
+                            })}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                            {flight.stops === 0 ? 'Nonstop' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}
+                        </div>
                     </div>
-                  </div>
-                </div>))}
-              
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>Total</span>
-                  <span>${bookingData.travelers.length * 599}</span>
                 </div>
-              </div>
+                
+                <div className="mt-4 flex items-center justify-between">
+                    <div className="text-center">
+                        <div className="font-medium">{formatTime(departureTime)}</div>
+                        <div className="text-sm text-muted-foreground">
+                            {getAirportCode(flight.departure.airport)}
+                        </div>
+                    </div>
+                    
+                    <div className="flex-1 px-4">
+                        <div className="relative">
+                            <div className="h-px bg-border w-full absolute top-1/2"></div>
+                            <div className="relative flex justify-center">
+                                <span className="bg-background px-2 text-xs text-muted-foreground">
+                                    {duration}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="text-center">
+                        <div className="font-medium">{formatTime(arrivalTime)}</div>
+                        <div className="text-sm text-muted-foreground">
+                            {getAirportCode(flight.arrival.airport)}
+                        </div>
+                    </div>
+                </div>
+                
+                {isSelected && (
+                    <div className="mt-3 pt-3 border-t flex justify-end">
+                        <Badge variant="outline" className="bg-primary/10 text-primary">
+                            Selected
+                        </Badge>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderFlightSelection = () => {
+        const currentFlights = activeTab === 'outbound' ? outboundFlights : returnFlights;
+        const selectedFlight = activeTab === 'outbound' ? selectedOutbound : selectedReturn;
+        const isReturn = activeTab === 'return';
+        const hasFlights = currentFlights.length > 0;
+
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">
+                        {isReturn ? 'Return Flights' : 'Outbound Flights'}
+                    </h3>
+                    
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Sort by:</span>
+                        <Select
+                            value={sortBy}
+                            onValueChange={(value: 'price' | 'duration' | 'departure') => 
+                                updateState({ sortBy: value })
+                            }
+                        >
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="price">Price (Lowest)</SelectItem>
+                                <SelectItem value="duration">Duration (Shortest)</SelectItem>
+                                <SelectItem value="departure">Departure (Earliest)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                {isSearching ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                    </div>
+                ) : hasFlights ? (
+                    <div className="space-y-4">
+                        {sortFlights(currentFlights, sortBy).map(flight => 
+                            renderFlightCard(flight, selectedFlight?.id === flight.id, isReturn)
+                        )}
+                    </div>
+                ) : (
+                    <div className="text-center py-12">
+                        <p className="text-muted-foreground">
+                            {isReturn 
+                                ? 'No return flights found for the selected dates.' 
+                                : 'No outbound flights found for the selected dates.'}
+                        </p>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderSelectedFlights = () => {
+        if (!selectedOutbound && !selectedReturn) return null;
+
+        return (
+            <Card className="mt-6">
+                <CardHeader>
+                    <CardTitle>Selected Flights</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {selectedOutbound && (
+                        <div>
+                            <h4 className="font-medium mb-2">Outbound Flight</h4>
+                            {renderFlightCard(selectedOutbound, false)}
+                        </div>
+                    )}
+                    
+                    {selectedReturn && (
+                        <div>
+                            <h4 className="font-medium mb-2">Return Flight</h4>
+                            {renderFlightCard(selectedReturn, true)}
+                        </div>
+                    )}
+                    
+                    <div className="flex justify-end pt-4">
+                        <Button 
+                            onClick={handleConfirmSelection}
+                            disabled={isBooking || !selectedOutbound || (returnFlights.length > 0 && !selectedReturn)}
+                        >
+                            {isBooking ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    {bookingData?.currentTravelerIndex === (bookingData?.travelers?.length || 0) - 1
+                                        ? 'Continue to Payment' 
+                                        : 'Confirm Selection'}
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    };
+
+    const renderPaymentForm = () => {
+        if (!bookingData) return null;
+        
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Payment Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <div>
+                            <h4 className="font-medium mb-2">Traveler Details</h4>
+                            {bookingData.travelers.map((traveler, index) => (
+                                <div key={index} className="border rounded-lg p-4 mb-4">
+                                    <h5 className="font-medium">{traveler.name}</h5>
+                                    <div className="grid grid-cols-2 gap-4 mt-2 text-sm text-muted-foreground">
+                                        <div>Email: {traveler.email}</div>
+                                        <div>Phone: {traveler.phone}</div>
+                                        <div>Class: {traveler.travelClass}</div>
+                                        <div>Special Requests: {traveler.dietaryRequirements || 'None'}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="pt-4 border-t">
+                            <h4 className="font-medium mb-4">Payment Method</h4>
+                            <div className="space-y-4">
+                                <Button variant="outline" className="w-full justify-start">
+                                    <CreditCard className="mr-2 h-4 w-4" />
+                                    Credit or Debit Card
+                                </Button>
+                                <Button variant="outline" className="w-full justify-start">
+                                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                                    </svg>
+                                    Pay with PayPal
+                                </Button>
+                            </div>
+                        </div>
+                        
+                        <div className="pt-4 border-t">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h4 className="font-medium">Total</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        {bookingData.travelers.length} traveler{bookingData.travelers.length > 1 ? 's' : ''}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold">
+                                        {(() => {
+                                            const total = bookingData.travelers.reduce((sum, _, index) => {
+                                                const outboundPrice = getPriceAmount(bookingData.selectedOutboundFlight?.price || 0);
+                                                const returnPrice = getPriceAmount(bookingData.selectedReturnFlight?.price || 0);
+                                                return sum + outboundPrice + returnPrice;
+                                            }, 0);
+                                            
+                                            return total.toLocaleString('en-US', {
+                                                style: 'currency',
+                                                currency: getPriceCurrency(bookingData.selectedOutboundFlight?.price || 0)
+                                            });
+                                        })()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="pt-4">
+                            <Button className="w-full" size="lg">
+                                Complete Booking
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    };
+
+    const renderConfirmation = () => {
+        if (!bookingData) return null;
+        
+        return (
+            <div className="text-center py-12">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                    <CheckCircle className="h-10 w-10 text-green-600" />
+                </div>
+                <h2 className="mt-4 text-2xl font-bold">Booking Confirmed!</h2>
+                <p className="mt-2 text-muted-foreground">
+                    Your booking reference is: <span className="font-mono font-medium">{bookingData.confirmationNumber}</span>
+                </p>
+                <p className="mt-4">
+                    We've sent a confirmation email to {bookingData.travelers[0]?.email} with all the details.
+                </p>
+                <div className="mt-8">
+                    <Button onClick={() => setLocation('/')}>
+                        Back to Dashboard
+                    </Button>
+                </div>
+            </div>
+        );
+    };
+
+    if (!bookingData) {
+        return (
+            <div className="container mx-auto p-6">
+                <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="container mx-auto p-4 md:p-6 max-w-6xl">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold mb-2">Book Flights</h1>
+                <p className="text-muted-foreground">
+                    {currentTraveler 
+                        ? `Booking for ${currentTraveler.name} (${currentTraveler.departureCity} → ${bookingData.tripDestination.split(',')[0]})`
+                        : 'Loading traveler information...'}
+                </p>
+                
+                <div className="mt-6 mb-8">
+                    <div className="flex justify-between mb-2 text-sm">
+                        <span>Progress</span>
+                        <span>{completedSteps} of {totalSteps} travelers</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                </div>
             </div>
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentStep(1)}>
-                <ArrowLeft className="w-4 h-4 mr-2"/>
-                Back to Flights
-              </Button>
-              <Button onClick={handlePayment} disabled={isBooking} size="lg">
-                {isBooking ? 'Processing...' : 'Complete Booking'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>)}
+            {currentStep === 1 && (
+                <>
+                    <Tabs 
+                        value={state.activeTab} 
+                        onValueChange={(value) => {
+                            if (value === 'outbound' || value === 'return') {
+                                updateState({ activeTab: value });
+                            }
+                        }}
+                        className="mb-6"
+>
+                        <TabsList>
+                            <TabsTrigger value="outbound">Outbound</TabsTrigger>
+                            {returnFlights.length > 0 && (
+                                <TabsTrigger value="return">Return</TabsTrigger>
+                            )}
+                        </TabsList>
+                    </Tabs>
+                    
+                    {renderFlightSelection()}
+                    {renderSelectedFlights()}
+                </>
+            )}
 
-      {/* Completion Step */}
-      {currentStep === 3 && bookingData.bookingStatus === 'complete' && (<Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600"/>
-              Booking Complete
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4"/>
-              <h3 className="text-xl font-semibold mb-2">Flights Successfully Booked!</h3>
-              <p className="text-muted-foreground mb-4">
-                Confirmation: {bookingData.confirmationNumber}
-              </p>
-              <p className="text-sm text-muted-foreground mb-6">
-                Booking details have been sent to all travelers.
-              </p>
-              <Button onClick={() => setLocation('/')}>
-                Return to Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>)}
-    </div>);
+            {currentStep === 2 && renderPaymentForm()}
+            {currentStep === 3 && renderConfirmation()}
+        </div>
+    );
 }

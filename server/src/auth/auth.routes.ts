@@ -66,7 +66,7 @@ const createRouteHandler = (handler: (req: ExpressRequest, res: Response, next: 
 // Type for controller method that can be single or array of handlers
 type ControllerMethod = ((req: ExpressRequest, res: Response, next: NextFunction) => void | Promise<void>) | Array<(req: ExpressRequest, res: Response, next: NextFunction) => void | Promise<void>>;
 // Helper to create route handlers with validation
-const createValidatedRoute = (path: string, method: 'get' | 'post' | 'put' | 'delete', controllerMethod: ControllerMethod, validationSchema?: any) => {
+const createValidatedRoute = (path: string, method: 'get' | 'post' | 'put' | 'delete', controllerMethod: ControllerMethod, validationSchema?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
     const handlers = Array.isArray(controllerMethod)
         ? controllerMethod
         : [controllerMethod];

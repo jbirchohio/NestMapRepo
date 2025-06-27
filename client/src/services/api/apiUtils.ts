@@ -1,3 +1,6 @@
+import SharedParamsType from '@/types/SharedParamsType';
+import SharedArgsType from '@/types/SharedArgsType';
+import SharedErrorType from '@/types/SharedErrorType';
 import { apiClient } from './apiClient';
 import axios from 'axios';
 /**
@@ -9,7 +12,7 @@ import axios from 'axios';
  * @param defaultMessage Default error message if none is provided
  * @returns An object containing the error message and status code
  */
-export function handleApiError(error: unknown, defaultMessage = 'An unexpected error occurred'): {
+export function handleApiError(error: SharedErrorType, defaultMessage = 'An unexpected error occurred'): {
     message: string;
     status?: number;
 } {
@@ -18,7 +21,7 @@ export function handleApiError(error: unknown, defaultMessage = 'An unexpected e
     }
     const axiosError = error as {
         response?: {
-            data?: any;
+            data?: unknown;
             status?: number;
         };
     };
@@ -57,7 +60,7 @@ export function createCancellableRequest<T>(request: (signal: AbortSignal) => Pr
  * @param wait Time to wait in milliseconds
  * @returns Debounced function
  */
-export function debounceApi<T extends (...args: any[]) => ReturnType<T>>(func: T, wait: number): T {
+export function debounceApi<T extends (...args: SharedArgsType[]) => ReturnType<T>>(func: T, wait: number): T {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let pendingPromise: ReturnType<T> | null = null;
     
@@ -98,13 +101,13 @@ export function debounceApi<T extends (...args: any[]) => ReturnType<T>>(func: T
  * @param params Pagination parameters
  * @returns Paginated response with helper methods
  */
-export async function fetchPaginated<T>(fetchFunction: (params: any) => Promise<{
+export async function fetchPaginated<T>(fetchFunction: (params: SharedParamsType) => Promise<{
     data: T[];
     total: number;
 }>, params: {
     page: number;
     limit: number;
-    [key: string]: any;
+    [key: string]: unknown;
 } = { page: 1, limit: 10 }) {
     const response = await fetchFunction(params);
     return {

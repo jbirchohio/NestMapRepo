@@ -1,3 +1,4 @@
+import SharedItemType from '@/types/SharedItemType';
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -210,7 +211,7 @@ export default function InvoiceView() {
                     </tr>
                   </thead>
                   <tbody>
-                    {invoice.lineItems?.map((item: any, index: number) => (<tr key={index} className="border-t">
+                    {invoice.lineItems?.map((item: SharedItemType, index: number) => (<tr key={index} className="border-t">
                         <td className="p-3">
                           <p className="font-medium">{item.description}</p>
                           {item.quantity > 1 && (<p className="text-sm text-muted-foreground">

@@ -78,7 +78,7 @@ export const getOrganizationBilling = async (req: Request, res: Response) => {
             }
         }
         // Get payment methods
-        let paymentMethods: any[] = [];
+        let paymentMethods: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] = [];
         if (org.stripeCustomerId) {
             const methods = await stripe.paymentMethods.list({
                 customer: org.stripeCustomerId,
@@ -87,7 +87,7 @@ export const getOrganizationBilling = async (req: Request, res: Response) => {
             paymentMethods = methods.data;
         }
         // Get invoices
-        let invoices: any[] = [];
+        let invoices: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] = [];
         if (org.stripeCustomerId) {
             const invoiceList = await stripe.invoices.list({
                 customer: org.stripeCustomerId,

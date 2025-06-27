@@ -109,14 +109,17 @@ export async function findUserByEmail(email: string): Promise<AuthUser | null> {
  */
 function mapDbUserToAuthUser(dbUser: InferSelectModel<typeof users>): AuthUser {
     // Convert Date objects to ISO strings for fields that expect strings
-    const convertDateFields = (obj: any) => {
-        const result: Record<string, any> = { ...obj };
-        const dateFields = ['createdAt', 'updatedAt', 'lastLogin', 'emailVerificationExpires', 'passwordResetExpires'];
-        dateFields.forEach(field => {
-            if (result[field] instanceof Date) {
-                result[field] = result[field].toISOString();
+    const convertDateFields = <T extends Record<string, unknown>>(obj: T): T => {
+        const result = { ...obj };
+        const dateFields = ['createdAt', 'updatedAt', 'lastLogin', 'emailVerificationExpires', 'passwordResetExpires'] as const;
+        
+        for (const field of dateFields) {
+            const value = result[field];
+            if (value instanceof Date) {
+                result[field] = value.toISOString() as T[Extract<keyof T, string>];
             }
-        });
+        }
+        
         return result;
     };
     const processedUser = convertDateFields(dbUser);

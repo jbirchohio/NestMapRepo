@@ -175,7 +175,7 @@ router.get('/audit-summary', async (req: Request, res: Response) => {
             .orderBy(desc(adminAuditLog.timestamp))
             .limit(10);
         const summary = {
-            actionSummary: auditSummary.rows.map((row: any) => ({
+            actionSummary: auditSummary.rows.map((row: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => ({
                 action: row.action_type,
                 count: parseInt(row.count),
                 lastOccurrence: new Date(row.last_occurrence)

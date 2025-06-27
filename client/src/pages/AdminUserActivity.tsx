@@ -1,3 +1,4 @@
+import SharedDetailsType from '@/types/SharedDetailsType';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ interface UserActivityLog {
     user_name: string;
     user_email: string;
     action: string;
-    details: any;
+    details: SharedDetailsType;
     ip_address: string | null;
     created_at: string;
 }

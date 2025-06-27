@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -73,7 +74,7 @@ export default function CorporateCardsManagement() {
             setShowAddFunds(false);
             setAddFundsAmount("");
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to add funds",
@@ -91,7 +92,7 @@ export default function CorporateCardsManagement() {
                 description: "Card has been successfully frozen.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to freeze card",
@@ -109,7 +110,7 @@ export default function CorporateCardsManagement() {
                 description: "Card has been successfully activated.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to activate card",

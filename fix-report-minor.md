@@ -1,0 +1,4576 @@
+# Windsurf Minor ESLint Fix Report
+
+- 🕳️ Empty object types found in client\src\components\AITripGenerator.tsx
+- 💥 'any' usage flagged in client\src\components\AlertNotifications.tsx
+- 💥 'any' usage flagged in client\src\components\auth\SignupForm.tsx
+- 💥 'any' usage flagged in client\src\components\booking\hooks\useBookingForm.ts
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightCard.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightList.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightList.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightList.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightList.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightList.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightList.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightList.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightList.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSearchForm.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\FlightSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 🚫 Disabled prop-types rule in client\src\components\booking\steps\HotelSelectionStep.tsx
+- 💥 'any' usage flagged in client\src\components\booking\TravelerInfoForm.tsx
+- 🕳️ Empty object types found in client\src\components\CarbonExpenseTracker.tsx
+- 💥 'any' usage flagged in client\src\components\CollaborationPresence.tsx
+- 💥 'any' usage flagged in client\src\components\CorporateTripOptimizer.tsx
+- 💥 'any' usage flagged in client\src\components\EnhancedAIAssistantModal.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🕳️ Empty object types found in client\src\components\LazyComponentLoader.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MainNavigation.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MainNavigation.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MainNavigation.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MainNavigation.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MainNavigation.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MainNavigation.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\MobileMenu.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\NavigationLink.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\NavigationLink.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\NavigationLink.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\NavigationLink.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\NavigationLink.tsx
+- 🚫 Disabled prop-types rule in client\src\components\navigation\NavigationLink.tsx
+- 💥 'any' usage flagged in client\src\components\ProposalGenerator.tsx
+- 💥 'any' usage flagged in client\src\components\RoleManagement.tsx
+- 💥 'any' usage flagged in client\src\components\SwipeableTrip.tsx
+- 💥 'any' usage flagged in client\src\components\TravelMode.tsx
+- 🚫 Disabled prop-types rule in client\src\components\ui\calendar.tsx
+- 🚫 Disabled prop-types rule in client\src\components\ui\calendar.tsx
+- 🚫 Disabled prop-types rule in client\src\components\ui\table.tsx
+- 🚫 Disabled prop-types rule in client\src\components\ui\table.tsx
+- 🕳️ Empty object types found in client\src\components\ui\use-toast.ts
+- 🚫 Disabled prop-types rule in client\src\components\ui\use-toast.ts
+- 🚫 Disabled prop-types rule in client\src\components\ui\use-toast.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\contexts\auth\NewAuthContext.tsx
+- 💥 'any' usage flagged in client\src\hooks\useMobileFeatures.tsx
+- 💥 'any' usage flagged in client\src\hooks\useOptimizedQuery.ts
+- 💥 'any' usage flagged in client\src\lib\queryClient.ts
+- 💥 'any' usage flagged in client\src\pages\AdminUserActivity.tsx
+- 💥 'any' usage flagged in client\src\pages\Approvals.tsx
+- 💥 'any' usage flagged in client\src\pages\FlightResults.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 🚫 Disabled prop-types rule in client\src\pages\InvoiceCenter.tsx
+- 💥 'any' usage flagged in client\src\pages\PerformanceDashboard.tsx
+- 💥 'any' usage flagged in client\src\pages\PerformanceDashboard.tsx
+- 💥 'any' usage flagged in client\src\pages\PerformanceDashboard.tsx
+- 💥 'any' usage flagged in client\src\pages\ProposalTemplates.tsx
+- 💥 'any' usage flagged in client\src\pages\SequentialBooking.tsx
+- 💥 'any' usage flagged in client\src\pages\SequentialBooking.tsx
+- 💥 'any' usage flagged in client\src\pages\Settings.tsx
+- 💥 'any' usage flagged in client\src\pages\Settings.tsx
+- 💥 'any' usage flagged in client\src\pages\SharedTrip.tsx
+- 💥 'any' usage flagged in client\src\pages\SharedTrip.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\pages\SimpleShare.tsx
+- 💥 'any' usage flagged in client\src\services\api\aiService.ts
+- 💥 'any' usage flagged in client\src\services\api\aiService.ts
+- 💥 'any' usage flagged in client\src\services\api\aiService.ts
+- 💥 'any' usage flagged in client\src\services\api\aiService.ts
+- 💥 'any' usage flagged in client\src\services\api\aiService.ts
+- 💥 'any' usage flagged in client\src\services\api\aiService.ts
+- 💥 'any' usage flagged in client\src\services\api\analyticsService.ts
+- 💥 'any' usage flagged in client\src\services\api\analyticsService.ts
+- 💥 'any' usage flagged in client\src\services\api\apiUtils.ts
+- 💥 'any' usage flagged in client\src\services\api\apiUtils.ts
+- 💥 'any' usage flagged in client\src\services\api\apiUtils.ts
+- 💥 'any' usage flagged in client\src\services\api\fileService.ts
+- 💥 'any' usage flagged in client\src\services\api\fileService.ts
+- 💥 'any' usage flagged in client\src\services\api\locationService.ts
+- 💥 'any' usage flagged in client\src\services\api\metricsService.ts
+- 💥 'any' usage flagged in client\src\services\api\metricsService.ts
+- 💥 'any' usage flagged in client\src\services\api\notificationService.ts
+- 💥 'any' usage flagged in client\src\services\api\types.ts
+- 💥 'any' usage flagged in client\src\services\api\types.ts
+- 💥 'any' usage flagged in client\src\services\api\types.ts
+- 💥 'any' usage flagged in client\src\services\api\types.ts
+- 💥 'any' usage flagged in client\src\services\api\userService.ts
+- 💥 'any' usage flagged in client\src\services\api\utils\request.ts
+- 💥 'any' usage flagged in client\src\types\api-client.ts
+- 🕳️ Empty object types found in client\src\types\dtos\trip.ts
+- 💥 'any' usage flagged in client\src\utils\errorHandler.ts
+- 💥 'any' usage flagged in client\src\utils\errorHandler.ts
+- 💥 'any' usage flagged in client\src\utils\errorHandler.ts
+- 💥 'any' usage flagged in client\src\utils\errorLogger.ts
+- 💥 'any' usage flagged in client\src\utils\errorLogger.ts
+- 💥 'any' usage flagged in client\src\utils\errorLogger.ts
+- 💥 'any' usage flagged in client\src\utils\errorLogger.ts
+- 💥 'any' usage flagged in client\src\utils\errorUtils.ts
+- 💥 'any' usage flagged in client\src\utils\errorUtils.ts
+- 💥 'any' usage flagged in client\src\utils\logger.ts
+- 💥 'any' usage flagged in client\src\utils\memoization.ts
+- 💥 'any' usage flagged in client\src\utils\memoization.ts
+- 💥 'any' usage flagged in client\src\utils\memoization.ts
+- 💥 'any' usage flagged in client\src\utils\memoization.ts
+- 💥 'any' usage flagged in client\src\utils\memoization.ts
+- 💥 'any' usage flagged in client\src\utils\performance.ts
+- 💥 'any' usage flagged in client\src\utils\performance.ts
+- 💥 'any' usage flagged in client\src\utils\performance.ts
+- 💥 'any' usage flagged in client\src\utils\performance.ts
+- 💥 'any' usage flagged in client\src\utils\securityUtils.ts
+- 💥 'any' usage flagged in server\aiLocations.ts
+- 💥 'any' usage flagged in server\analytics.new.ts
+- 💥 'any' usage flagged in server\analytics.ts
+- 💥 'any' usage flagged in server\approvalEngine.ts
+- 💥 'any' usage flagged in server\approvalEngine.ts
+- 💥 'any' usage flagged in server\approvalEngine.ts
+- 💥 'any' usage flagged in server\approvalEngine.ts
+- 💥 'any' usage flagged in server\approvalEngine.ts
+- 💥 'any' usage flagged in server\approvalEngine.ts
+- 💥 'any' usage flagged in server\approvalEngine.ts
+- 💥 'any' usage flagged in server\approvalEngine.ts
+- 💥 'any' usage flagged in server\auditLogger.ts
+- 💥 'any' usage flagged in server\auditLogger.ts
+- 💥 'any' usage flagged in server\auditLogger.ts
+- 💥 'any' usage flagged in server\billing.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingEngine.ts
+- 💥 'any' usage flagged in server\bookingProviders.ts
+- 💥 'any' usage flagged in server\bookingProviders.ts
+- 💥 'any' usage flagged in server\bookingProviders.ts
+- 💥 'any' usage flagged in server\bookingProviders.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\businessTripGenerator.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\carbonTracker.ts
+- 💥 'any' usage flagged in server\controllers\trips.ts
+- 💥 'any' usage flagged in server\controllers\trips.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 💥 'any' usage flagged in server\dal\base.dal.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 🕳️ Empty object types found in server\db\auditLog.d.ts
+- 💥 'any' usage flagged in server\db\invoiceSchema.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 🕳️ Empty object types found in server\db\proposalSchema.d.ts
+- 💥 'any' usage flagged in server\db\redis.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 🕳️ Empty object types found in server\db\schema.d.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 💥 'any' usage flagged in server\db\schema.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 🕳️ Empty object types found in server\db\superadminSchema.d.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db\superadminSchema.ts
+- 💥 'any' usage flagged in server\db.ts
+- 💥 'any' usage flagged in server\disasterMonitor.ts
+- 💥 'any' usage flagged in server\disasterMonitor.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\duffelProvider.ts
+- 💥 'any' usage flagged in server\express-augmentations.ts
+- 💥 'any' usage flagged in server\express-augmentations.ts
+- 💥 'any' usage flagged in server\express-augmentations.ts
+- 💥 'any' usage flagged in server\index.ts
+- 💥 'any' usage flagged in server\index.ts
+- 💥 'any' usage flagged in server\index.ts
+- 💥 'any' usage flagged in server\index.ts
+- 💥 'any' usage flagged in server\index.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\kiwiProvider.ts
+- 💥 'any' usage flagged in server\loadBalancer.ts
+- 💥 'any' usage flagged in server\loadBalancer.ts
+- 💥 'any' usage flagged in server\loadBalancer.ts
+- 💥 'any' usage flagged in server\loadBalancer.ts
+- 💥 'any' usage flagged in server\loadBalancer.ts
+- 💥 'any' usage flagged in server\middleware\adminValidation.ts
+- 💥 'any' usage flagged in server\middleware\adminValidation.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\api-security.ts
+- 💥 'any' usage flagged in server\middleware\caseConverter.ts
+- 💥 'any' usage flagged in server\middleware\caseConverter.ts
+- 💥 'any' usage flagged in server\middleware\comprehensive-rate-limiting.ts
+- 💥 'any' usage flagged in server\middleware\comprehensive-rate-limiting.ts
+- 💥 'any' usage flagged in server\middleware\comprehensive-rate-limiting.ts
+- 💥 'any' usage flagged in server\middleware\comprehensive-rate-limiting.ts
+- 💥 'any' usage flagged in server\middleware\comprehensive-rate-limiting.ts
+- 💥 'any' usage flagged in server\middleware\comprehensive-rate-limiting.ts
+- 💥 'any' usage flagged in server\middleware\globalErrorHandler.ts
+- 💥 'any' usage flagged in server\middleware\globalErrorHandler.ts
+- 💥 'any' usage flagged in server\middleware\globalErrorHandler.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\inputValidation.ts
+- 💥 'any' usage flagged in server\middleware\organizationContext.ts
+- 💥 'any' usage flagged in server\middleware\organizationContext.ts
+- 💥 'any' usage flagged in server\middleware\organizationContext.ts
+- 💥 'any' usage flagged in server\middleware\organizationContext.ts
+- 💥 'any' usage flagged in server\middleware\organizationScoping.ts
+- 💥 'any' usage flagged in server\middleware\organizationScoping.ts
+- 💥 'any' usage flagged in server\middleware\performance.ts
+- 💥 'any' usage flagged in server\middleware\performance.ts
+- 💥 'any' usage flagged in server\middleware\performance.ts
+- 💥 'any' usage flagged in server\middleware\performance.ts
+- 💥 'any' usage flagged in server\middleware\performance.ts
+- 💥 'any' usage flagged in server\middleware\responseCoordinator.ts
+- 💥 'any' usage flagged in server\middleware\responseCoordinator.ts
+- 💥 'any' usage flagged in server\middleware\responseCoordinator.ts
+- 💥 'any' usage flagged in server\middleware\responseCoordinator.ts
+- 💥 'any' usage flagged in server\middleware\responseCoordinator.ts
+- 💥 'any' usage flagged in server\middleware\secureAuth.ts
+- 💥 'any' usage flagged in server\middleware\security.ts
+- 💥 'any' usage flagged in server\middleware\security.ts
+- 💥 'any' usage flagged in server\middleware\security.ts
+- 💥 'any' usage flagged in server\middleware\security.ts
+- 💥 'any' usage flagged in server\middleware\security.ts
+- 💥 'any' usage flagged in server\middleware\securityAuditLogger.ts
+- 💥 'any' usage flagged in server\middleware\securityAuditLogger.ts
+- 💥 'any' usage flagged in server\middleware\securityAuditLogger.ts
+- 💥 'any' usage flagged in server\middleware\securityAuditLogger.ts
+- 🕳️ Empty object types found in server\middleware\superadmin.ts
+- 💥 'any' usage flagged in server\middleware\superadmin.ts
+- 💥 'any' usage flagged in server\middleware\superadmin.ts
+- 💥 'any' usage flagged in server\middleware\superadmin.ts
+- 💥 'any' usage flagged in server\middleware\unified-monitoring.ts
+- 💥 'any' usage flagged in server\middleware\unified-monitoring.ts
+- 💥 'any' usage flagged in server\middleware\unified-monitoring.ts
+- 💥 'any' usage flagged in server\middleware\unified-monitoring.ts
+- 💥 'any' usage flagged in server\monitoring.ts
+- 💥 'any' usage flagged in server\monitoring.ts
+- 💥 'any' usage flagged in server\monitoring.ts
+- 💥 'any' usage flagged in server\notificationManager.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\openai.ts
+- 💥 'any' usage flagged in server\organizationContext.ts
+- 🕳️ Empty object types found in server\organizationContext.ts
+- 💥 'any' usage flagged in server\organizationContext.ts
+- 💥 'any' usage flagged in server\organizationContext.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\pdfExport.ts
+- 💥 'any' usage flagged in server\performance-monitor.ts
+- 💥 'any' usage flagged in server\performance-monitor.ts
+- 💥 'any' usage flagged in server\performance-monitor.ts
+- 💥 'any' usage flagged in server\performance-monitor.ts
+- 💥 'any' usage flagged in server\performance-monitor.ts
+- 💥 'any' usage flagged in server\performance-monitor.ts
+- 💥 'any' usage flagged in server\predictiveAI.ts
+- 💥 'any' usage flagged in server\predictiveAI.ts
+- 💥 'any' usage flagged in server\predictiveAI.ts
+- 💥 'any' usage flagged in server\predictiveAI.ts
+- 💥 'any' usage flagged in server\predictiveAI.ts
+- 💥 'any' usage flagged in server\predictiveAI.ts
+- 💥 'any' usage flagged in server\pushNotifications.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 🕳️ Empty object types found in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\activities.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-analytics.ts
+- 💥 'any' usage flagged in server\routes\admin-settings.ts
+- 💥 'any' usage flagged in server\routes\admin.ts
+- 💥 'any' usage flagged in server\routes\admin.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\ai.ts
+- 💥 'any' usage flagged in server\routes\alerts.ts
+- 💥 'any' usage flagged in server\routes\alerts.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\approvals.ts
+- 💥 'any' usage flagged in server\routes\billing.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\bookings.ts
+- 💥 'any' usage flagged in server\routes\calendar.ts
+- 💥 'any' usage flagged in server\routes\calendar.ts
+- 💥 'any' usage flagged in server\routes\calendar.ts
+- 💥 'any' usage flagged in server\routes\collaboration.ts
+- 💥 'any' usage flagged in server\routes\collaboration.ts
+- 🕳️ Empty object types found in server\routes\corporateCards.ts
+- 🕳️ Empty object types found in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 🕳️ Empty object types found in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\corporateCards.ts
+- 💥 'any' usage flagged in server\routes\customDomains.ts
+- 🕳️ Empty object types found in server\routes\domains.ts
+- 🕳️ Empty object types found in server\routes\domains.ts
+- 🕳️ Empty object types found in server\routes\domains.ts
+- 💥 'any' usage flagged in server\routes\domains.ts
+- 💥 'any' usage flagged in server\routes\expenses.ts
+- 💥 'any' usage flagged in server\routes\expenses.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\flights.ts
+- 💥 'any' usage flagged in server\routes\index.ts
+- 💥 'any' usage flagged in server\routes\organizationFunding.ts
+- 💥 'any' usage flagged in server\routes\organizationFunding.ts
+- 💥 'any' usage flagged in server\routes\organizationFunding.ts
+- 💥 'any' usage flagged in server\routes\organizationFunding.ts
+- 💥 'any' usage flagged in server\routes\organizationFunding.ts
+- 💥 'any' usage flagged in server\routes\organizationFunding.ts
+- 💥 'any' usage flagged in server\routes\organizationMembers.ts
+- 💥 'any' usage flagged in server\routes\organizationMembers.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\payments.ts
+- 💥 'any' usage flagged in server\routes\performance.ts
+- 💥 'any' usage flagged in server\routes\performance.ts
+- 💥 'any' usage flagged in server\routes\performance.ts
+- 💥 'any' usage flagged in server\routes\proposals.ts
+- 💥 'any' usage flagged in server\routes\proposals.ts
+- 💥 'any' usage flagged in server\routes\proposals.ts
+- 💥 'any' usage flagged in server\routes\proposals.ts
+- 💥 'any' usage flagged in server\routes\proposals.ts
+- 💥 'any' usage flagged in server\routes\proposals.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\reporting.ts
+- 💥 'any' usage flagged in server\routes\security.ts
+- 💥 'any' usage flagged in server\routes\security.ts
+- 💥 'any' usage flagged in server\routes\stripeOAuth.ts
+- 💥 'any' usage flagged in server\routes\stripeOAuth.ts
+- 💥 'any' usage flagged in server\routes\superadmin\audit-logs\audit-service.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\controllers.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\controllers.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\controllers.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\controllers.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\billing\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\feature-flags\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\middleware\organizationContext.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\organizations\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\controllers.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\controllers.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\controllers.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin\users\validators.ts
+- 💥 'any' usage flagged in server\routes\superadmin.new.ts
+- 💥 'any' usage flagged in server\routes\superadmin.ts
+- 💥 'any' usage flagged in server\routes\superadmin.ts
+- 💥 'any' usage flagged in server\routes\test.routes.ts
+- 💥 'any' usage flagged in server\routes\trips.ts
+- 💥 'any' usage flagged in server\routes\v1\index.ts
+- 💥 'any' usage flagged in server\routes\v1\index.ts
+- 💥 'any' usage flagged in server\routes\v1\index.ts
+- 💥 'any' usage flagged in server\routes\webhooks.ts
+- 💥 'any' usage flagged in server\services\conflictDetector.ts
+- 💥 'any' usage flagged in server\services\conflictDetector.ts
+- 💥 'any' usage flagged in server\services\conflictDetector.ts
+- 💥 'any' usage flagged in server\services\conflictDetector.ts
+- 💥 'any' usage flagged in server\services\conflictDetector.ts
+- 💥 'any' usage flagged in server\services\conflictDetector.ts
+- 💥 'any' usage flagged in server\services\conflictDetector.ts
+- 💥 'any' usage flagged in server\services\database.service.ts
+- 💥 'any' usage flagged in server\services\database.service.ts
+- 💥 'any' usage flagged in server\services\database.service.ts
+- 💥 'any' usage flagged in server\services\database.service.ts
+- 💥 'any' usage flagged in server\services\duffelFlightService.ts
+- 💥 'any' usage flagged in server\services\duffelFlightService.ts
+- 💥 'any' usage flagged in server\services\duffelFlightService.ts
+- 💥 'any' usage flagged in server\services\duffelFlightService.ts
+- 💥 'any' usage flagged in server\services\duffelFlightService.ts
+- 💥 'any' usage flagged in server\services\duffelFlightService.ts
+- 💥 'any' usage flagged in server\services\duffelHttpClient.ts
+- 💥 'any' usage flagged in server\services\duffelHttpClient.ts
+- 💥 'any' usage flagged in server\services\duffelHttpClient.ts
+- 💥 'any' usage flagged in server\services\duffelHttpClient.ts
+- 💥 'any' usage flagged in server\services\duffelHttpClient.ts
+- 💥 'any' usage flagged in server\services\duffelHttpClient.ts
+- 💥 'any' usage flagged in server\services\organizationFundingService.ts
+- 💥 'any' usage flagged in server\services\organizationFundingService.ts
+- 💥 'any' usage flagged in server\services\organizationFundingService.ts
+- 💥 'any' usage flagged in server\services\organizationFundingService.ts
+- 💥 'any' usage flagged in server\services\organizationFundingService.ts
+- 💥 'any' usage flagged in server\services\organizationFundingService.ts
+- 💥 'any' usage flagged in server\services\performanceOptimizer.ts
+- 💥 'any' usage flagged in server\services\performanceOptimizer.ts
+- 💥 'any' usage flagged in server\services\performanceOptimizer.ts
+- 💥 'any' usage flagged in server\services\performanceOptimizer.ts
+- 💥 'any' usage flagged in server\services\performanceOptimizer.ts
+- 💥 'any' usage flagged in server\services\performanceOptimizer.ts
+- 💥 'any' usage flagged in server\services\stripeIssuingService.ts
+- 💥 'any' usage flagged in server\services\stripeIssuingService.ts
+- 💥 'any' usage flagged in server\services\stripeIssuingService.ts
+- 💥 'any' usage flagged in server\services\stripeIssuingService.ts
+- 💥 'any' usage flagged in server\simple-server.ts
+- 💥 'any' usage flagged in server\simple-server.ts
+- 💥 'any' usage flagged in server\simple-server.ts
+- 💥 'any' usage flagged in server\simple-server.ts
+- 💥 'any' usage flagged in server\smartOptimizer.ts
+- 💥 'any' usage flagged in server\smartOptimizer.ts
+- 💥 'any' usage flagged in server\smartOptimizer.ts
+- 💥 'any' usage flagged in server\smartOptimizer.ts
+- 💥 'any' usage flagged in server\src\@types\express\index.d.ts
+- 💥 'any' usage flagged in server\src\auth\auth.routes.ts
+- 💥 'any' usage flagged in server\src\auth\auth.routes.ts
+- 💥 'any' usage flagged in server\src\auth\auth.routes.ts
+- 💥 'any' usage flagged in server\src\auth\controllers\auth.controller.ts
+- 💥 'any' usage flagged in server\src\auth\controllers\auth.controller.ts
+- 💥 'any' usage flagged in server\src\auth\controllers\auth.controller.ts
+- 💥 'any' usage flagged in server\src\auth\controllers\auth.controller.ts
+- 💥 'any' usage flagged in server\src\auth\controllers\__tests__\auth.controller.spec.ts
+- 💥 'any' usage flagged in server\src\auth\controllers\__tests__\auth.controller.spec.ts
+- 💥 'any' usage flagged in server\src\auth\controllers\__tests__\auth.controller.spec.ts
+- 💥 'any' usage flagged in server\src\auth\interfaces\user.interface.ts
+- 💥 'any' usage flagged in server\src\auth\interfaces\user.repository.interface.ts
+- 💥 'any' usage flagged in server\src\auth\jwt\utils.ts
+- 💥 'any' usage flagged in server\src\auth\jwt\utils.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\repositories\user.repository.ts
+- 💥 'any' usage flagged in server\src\auth\services\auth.service.ts
+- 💥 'any' usage flagged in server\src\auth\services\map-to-user.ts
+- 💥 'any' usage flagged in server\src\auth\services\map-to-user.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\errors.ts
+- 💥 'any' usage flagged in server\src\common\interfaces\booking.interfaces.ts
+- 💥 'any' usage flagged in server\src\common\middleware\auth.middleware.ts
+- 💥 'any' usage flagged in server\src\common\middleware\permission.middleware.ts
+- 💥 'any' usage flagged in server\src\common\middleware\standardized-error-handler.middleware.ts
+- 💥 'any' usage flagged in server\src\common\pipes\validation.pipe.ts
+- 💥 'any' usage flagged in server\src\common\pipes\validation.pipe.ts
+- 💥 'any' usage flagged in server\src\common\pipes\validation.pipe.ts
+- 💥 'any' usage flagged in server\src\common\pipes\validation.pipe.ts
+- 💥 'any' usage flagged in server\src\common\pipes\validation.pipe.ts
+- 💥 'any' usage flagged in server\src\common\pipes\validation.pipe.ts
+- 💥 'any' usage flagged in server\src\common\repositories\activity\activity.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\base.repository.interface.ts
+- 💥 'any' usage flagged in server\src\common\repositories\base.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\base.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\base.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\base.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\base.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\base.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\base.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.spec.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.spec.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.spec.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.spec.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\booking\booking.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\organization\organization.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\user.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\user.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\user.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\user.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\user.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\user.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\user.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\user.repository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\UserRepository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\UserRepository.ts
+- 💥 'any' usage flagged in server\src\common\repositories\user\UserRepository.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\services\booking.service.ts
+- 💥 'any' usage flagged in server\src\common\types\express.d.ts
+- 💥 'any' usage flagged in server\src\common\types\express.d.ts
+- 💥 'any' usage flagged in server\src\common\types\express.d.ts
+- 💥 'any' usage flagged in server\src\common\types\user.types.ts
+- 💥 'any' usage flagged in server\src\common\utils\async-handler.ts
+- 💥 'any' usage flagged in server\src\common\utils\async-handler.ts
+- 💥 'any' usage flagged in server\src\email\interfaces\email.service.interface.ts
+- 💥 'any' usage flagged in server\src\email\services\nodemailer-email.service.ts
+- 🕳️ Empty object types found in server\src\express-augmentations.d.ts
+- 💥 'any' usage flagged in server\src\express-augmentations.d.ts
+- 💥 'any' usage flagged in server\src\express-augmentations.d.ts
+- 💥 'any' usage flagged in server\src\express-augmentations.d.ts
+- 💥 'any' usage flagged in server\src\express-augmentations.d.ts
+- 💥 'any' usage flagged in server\src\express-augmentations.d.ts
+- 💥 'any' usage flagged in server\src\health\health.controller.ts
+- 💥 'any' usage flagged in server\src\middleware\authenticate.ts
+- 💥 'any' usage flagged in server\src\middleware\validation.middleware.ts
+- 💥 'any' usage flagged in server\src\middleware\validation.middleware.ts
+- 💥 'any' usage flagged in server\src\middleware\validation.middleware.ts
+- 💥 'any' usage flagged in server\src\middleware\validation.middleware.ts
+- 💥 'any' usage flagged in server\src\types\auth-user.ts
+- 💥 'any' usage flagged in server\src\types\auth-user.ts
+- 💥 'any' usage flagged in server\src\types\auth-user.ts
+- 💥 'any' usage flagged in server\src\types\auth-user.ts
+- 💥 'any' usage flagged in server\src\types\auth-user.ts
+- 🕳️ Empty object types found in server\src\types\express-augmentations.d.ts
+- 💥 'any' usage flagged in server\src\types\express-types.d.ts
+- 💥 'any' usage flagged in server\src\types\express-types.d.ts
+- 💥 'any' usage flagged in server\src\types\express-types.d.ts
+- 💥 'any' usage flagged in server\src\types\express-types.d.ts
+- 💥 'any' usage flagged in server\src\types\express-types.d.ts
+- 💥 'any' usage flagged in server\src\types\express-types.d.ts
+- 💥 'any' usage flagged in server\src\types\express-types.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\types\express.d.ts
+- 💥 'any' usage flagged in server\src\utils\redis.ts
+- 💥 'any' usage flagged in server\src\utils\redis.ts
+- 💥 'any' usage flagged in server\sslManager.ts
+- 💥 'any' usage flagged in server\sslManager.ts
+- 💥 'any' usage flagged in server\sslManager.ts
+- 💥 'any' usage flagged in server\ssoProvider.ts
+- 💥 'any' usage flagged in server\ssoProvider.ts
+- 💥 'any' usage flagged in server\ssoProvider.ts
+- 💥 'any' usage flagged in server\ssoProvider.ts
+- 💥 'any' usage flagged in server\ssoProvider.ts
+- 💥 'any' usage flagged in server\storage\implementations\MemStorage.ts
+- 💥 'any' usage flagged in server\storage\implementations\MemStorage.ts
+- 💥 'any' usage flagged in server\storage\implementations\MemStorage.ts
+- 💥 'any' usage flagged in server\storage\implementations\MemStorage.ts
+- 💥 'any' usage flagged in server\storage\implementations\MemStorage.ts
+- 🕳️ Empty object types found in server\storage\types\index.ts
+- 🕳️ Empty object types found in server\storage\types\index.ts
+- 🕳️ Empty object types found in server\storage\types\index.ts
+- 🕳️ Empty object types found in server\storage\types\index.ts
+- 💥 'any' usage flagged in server\storage\types\index.ts
+- 💥 'any' usage flagged in server\storage\types\index.ts
+- 💥 'any' usage flagged in server\storage\types\index.ts
+- 💥 'any' usage flagged in server\storage\types\index.ts
+- 💥 'any' usage flagged in server\stripe.ts
+- 💥 'any' usage flagged in server\stripe.ts
+- 💥 'any' usage flagged in server\stripe.ts
+- 💥 'any' usage flagged in server\stripe.ts
+- 💥 'any' usage flagged in server\stripe.ts
+- 💥 'any' usage flagged in server\stripe.ts
+- 💥 'any' usage flagged in server\stripe.ts
+- 💥 'any' usage flagged in server\stripe.ts
+- 💥 'any' usage flagged in server\test\stripe\stripe-core.test.ts
+- 💥 'any' usage flagged in server\test\stripe\stripe-issuing.test.ts
+- 💥 'any' usage flagged in server\test\stripe\stripe-issuing.test.ts
+- 💥 'any' usage flagged in server\test\stripe\stripe-issuing.test.ts
+- 💥 'any' usage flagged in server\test\stripe\stripe-issuing.test.ts
+- 💥 'any' usage flagged in server\test\stripe\stripe-webhooks.test.ts
+- 💥 'any' usage flagged in server\test\stripe\stripe-webhooks.test.ts
+- 💥 'any' usage flagged in server\test\websocket\collaboration.test.ts
+- 💥 'any' usage flagged in server\test\websocket\collaboration.test.ts
+- 💥 'any' usage flagged in server\test\websocket\collaboration.test.ts
+- 💥 'any' usage flagged in server\test\websocket\collaboration.test.ts
+- 💥 'any' usage flagged in server\test\websocket\collaboration.test.ts
+- 💥 'any' usage flagged in server\test\websocket\collaboration.test.ts
+- 💥 'any' usage flagged in server\test-app.ts
+- 💥 'any' usage flagged in server\types\activities.d.ts
+- 💥 'any' usage flagged in server\types\custom-express.d.ts
+- 💥 'any' usage flagged in server\types\custom-express.d.ts
+- 💥 'any' usage flagged in server\types\custom-request.d.ts
+- 💥 'any' usage flagged in server\types\custom-request.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express\index.d.ts
+- 🕳️ Empty object types found in server\types\express\index.d.ts
+- 💥 'any' usage flagged in server\types\express-request.d.ts
+- 💥 'any' usage flagged in server\types\express-request.d.ts
+- 💥 'any' usage flagged in server\types\express.d.ts
+- 💥 'any' usage flagged in server\types\express.d.ts
+- 💥 'any' usage flagged in server\types\express.d.ts
+- 💥 'any' usage flagged in server\types\express.d.ts
+- 💥 'any' usage flagged in server\types\invoice.ts
+- 💥 'any' usage flagged in server\types\invoice.ts
+- 🕳️ Empty object types found in server\types\jwt.d.ts
+- 💥 'any' usage flagged in server\types\ml-naivebayes.d.ts
+- 💥 'any' usage flagged in server\types\ml-naivebayes.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\stripe.d.ts
+- 💥 'any' usage flagged in server\types\winston.d.ts
+- 💥 'any' usage flagged in server\utils\activityLogger.ts
+- 💥 'any' usage flagged in server\utils\auth.ts
+- 💥 'any' usage flagged in server\utils\auth.ts
+- 💥 'any' usage flagged in server\utils\authContext.ts
+- 💥 'any' usage flagged in server\utils\authContext.ts
+- 💥 'any' usage flagged in server\utils\authContext.ts
+- 💥 'any' usage flagged in server\utils\authContext.ts
+- 💥 'any' usage flagged in server\utils\authContext.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\errorHandler.ts
+- 💥 'any' usage flagged in server\utils\exporters.ts
+- 💥 'any' usage flagged in server\utils\exporters.ts
+- 💥 'any' usage flagged in server\utils\exporters.ts
+- 💥 'any' usage flagged in server\utils\exporters.ts
+- 💥 'any' usage flagged in server\utils\pdfHelper.ts
+- 💥 'any' usage flagged in server\utils\pdfHelper.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\query-builder.ts
+- 💥 'any' usage flagged in server\utils\response.ts
+- 💥 'any' usage flagged in server\utils\response.ts
+- 💥 'any' usage flagged in server\utils\response.ts
+- 💥 'any' usage flagged in server\utils\response.ts
+- 💥 'any' usage flagged in server\utils\response.ts
+- 💥 'any' usage flagged in server\utils\response.ts
+- 💥 'any' usage flagged in server\utils\response.ts
+- 💥 'any' usage flagged in server\utils\response.ts
+- 💥 'any' usage flagged in server\utils\routeHelpers.ts
+- 💥 'any' usage flagged in server\utils\routeHelpers.ts
+- 💥 'any' usage flagged in server\utils\routeHelpers.ts
+- 💥 'any' usage flagged in server\utils\routeHelpers.ts
+- 💥 'any' usage flagged in server\utils\routeHelpers.ts
+- 💥 'any' usage flagged in server\utils\routeHelpers.ts
+- 💥 'any' usage flagged in server\utils\routeHelpers.ts
+- 💥 'any' usage flagged in server\utils\routeHelpers.ts
+- 💥 'any' usage flagged in server\utils\secureJwt.ts
+- 💥 'any' usage flagged in server\utils\tripCost.ts
+- 💥 'any' usage flagged in server\utils\tripCost.ts
+- 💥 'any' usage flagged in server\utils\tripCost.ts
+- 💥 'any' usage flagged in server\utils\tripCost.ts
+- 💥 'any' usage flagged in server\utils\tripCost.ts
+- 💥 'any' usage flagged in server\utils\tripCost.ts
+- 💥 'any' usage flagged in server\utils\tripCost.ts
+- 💥 'any' usage flagged in server\utils\tripCost.ts
+- 💥 'any' usage flagged in server\vite.ts
+- 💥 'any' usage flagged in server\weather.ts
+- 💥 'any' usage flagged in server\weather.ts
+- 💥 'any' usage flagged in server\websocket.ts
+- 💥 'any' usage flagged in server\websocket.ts
+- 💥 'any' usage flagged in server\websocket.ts
+- 💥 'any' usage flagged in server\websocket.ts
+- 💥 'any' usage flagged in server\websocket.ts
+- 💥 'any' usage flagged in server\whiteLabelValidation.ts
+- 💥 'any' usage flagged in shared\dist\src\fieldTransforms.d.ts
+- 💥 'any' usage flagged in shared\dist\src\fieldTransforms.d.ts
+- 💥 'any' usage flagged in shared\dist\src\fieldTransforms.d.ts
+- 💥 'any' usage flagged in shared\dist\src\fieldTransforms.d.ts
+- 💥 'any' usage flagged in shared\dist\src\fieldTransforms.d.ts
+- 💥 'any' usage flagged in shared\dist\src\fieldTransforms.d.ts
+- 💥 'any' usage flagged in shared\dist\src\fieldTransforms.d.ts
+- 💥 'any' usage flagged in shared\dist\src\fieldTransforms.d.ts
+- 🕳️ Empty object types found in shared\dist\src\schema.d.ts
+- 🕳️ Empty object types found in shared\dist\src\schema.d.ts
+- 💥 'any' usage flagged in shared\dist\types\api.d.ts
+- 💥 'any' usage flagged in shared\dist\types\api.d.ts
+- 💥 'any' usage flagged in shared\dist\types\api.d.ts
+- 🕳️ Empty object types found in shared\dist\types\api.d.ts
+- 💥 'any' usage flagged in shared\dist\types\auth\auth.d.ts
+- 💥 'any' usage flagged in shared\dist\types\auth\auth.d.ts
+- 💥 'any' usage flagged in shared\dist\types\auth\auth.d.ts
+- 💥 'any' usage flagged in shared\dist\types\auth\auth.d.ts
+- 💥 'any' usage flagged in shared\dist\types\auth\custom-request.d.ts
+- 💥 'any' usage flagged in shared\dist\types\auth\permissions.d.ts
+- 💥 'any' usage flagged in shared\dist\types\common.d.ts
+- 💥 'any' usage flagged in shared\dist\types\common.d.ts
+- 💥 'any' usage flagged in shared\dist\types\common.d.ts
+- 💥 'any' usage flagged in shared\dist\types\common.d.ts
+- 💥 'any' usage flagged in shared\dist\types\common.d.ts
+- 💥 'any' usage flagged in shared\dist\types\common.d.ts
+- 💥 'any' usage flagged in shared\dist\types\common.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\database.d.ts
+- 💥 'any' usage flagged in shared\dist\types\invoice.d.ts
+- 💥 'any' usage flagged in shared\dist\types\invoice.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\utils.d.ts
+- 💥 'any' usage flagged in shared\dist\types\validation\base.validator.d.ts
+- 💥 'any' usage flagged in shared\dist\utils\permissions.d.ts
+- 💥 'any' usage flagged in shared\dist\utils\permissions.d.ts
+- 💥 'any' usage flagged in shared\interfaces.d.ts
+- 💥 'any' usage flagged in shared\interfaces.d.ts
+- 💥 'any' usage flagged in shared\interfaces.ts
+- 💥 'any' usage flagged in shared\interfaces.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 💥 'any' usage flagged in shared\src\fieldTransforms.ts
+- 🕳️ Empty object types found in shared\src\schema.ts
+- 🕳️ Empty object types found in shared\src\schema.ts
+- 💥 'any' usage flagged in shared\types\api.ts
+- 💥 'any' usage flagged in shared\types\api.ts
+- 💥 'any' usage flagged in shared\types\api.ts
+- 🕳️ Empty object types found in shared\types\api.ts
+- 💥 'any' usage flagged in shared\types\auth\auth.ts
+- 💥 'any' usage flagged in shared\types\auth\auth.ts
+- 💥 'any' usage flagged in shared\types\auth\custom-request.ts
+- 💥 'any' usage flagged in shared\types\auth\permissions.ts
+- 💥 'any' usage flagged in shared\types\common.ts
+- 💥 'any' usage flagged in shared\types\common.ts
+- 💥 'any' usage flagged in shared\types\common.ts
+- 💥 'any' usage flagged in shared\types\common.ts
+- 💥 'any' usage flagged in shared\types\common.ts
+- 💥 'any' usage flagged in shared\types\common.ts
+- 💥 'any' usage flagged in shared\types\common.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 💥 'any' usage flagged in shared\types\database.ts
+- 🕳️ Empty object types found in shared\types\dist\api.d.ts
+- 💥 'any' usage flagged in shared\types\dist\auth\auth.d.ts
+- 💥 'any' usage flagged in shared\types\dist\auth\auth.d.ts
+- 💥 'any' usage flagged in shared\types\dist\auth\auth.d.ts
+- 💥 'any' usage flagged in shared\types\dist\auth\auth.d.ts
+- 💥 'any' usage flagged in shared\types\dist\auth\permissions.d.ts
+- 💥 'any' usage flagged in shared\types\dist\common.d.ts
+- 💥 'any' usage flagged in shared\types\dist\common.d.ts
+- 💥 'any' usage flagged in shared\types\dist\common.d.ts
+- 💥 'any' usage flagged in shared\types\dist\common.d.ts
+- 💥 'any' usage flagged in shared\types\dist\common.d.ts
+- 💥 'any' usage flagged in shared\types\dist\common.d.ts
+- 💥 'any' usage flagged in shared\types\dist\common.d.ts
+- 💥 'any' usage flagged in shared\types\dist\invoice.d.ts
+- 💥 'any' usage flagged in shared\types\dist\invoice.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\utils.d.ts
+- 💥 'any' usage flagged in shared\types\dist\validation\base.validator.d.ts
+- 💥 'any' usage flagged in shared\types\global.d.ts
+- 💥 'any' usage flagged in shared\types\invoice.ts
+- 💥 'any' usage flagged in shared\types\invoice.ts
+- 🕳️ Empty object types found in shared\types\SharedAction_dataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedActiveSessionsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedActivitiesType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedActivityType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedAlternativeType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedApiHotelType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedApprovalDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedArgsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedAType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedAuditLogsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedBackgroundJobsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedBagType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedBillingDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedBookingDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedBrandingType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedBType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedCardDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedCollaboratorType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedCollabType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedCompatibleHotelType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedConflictFlagsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedConflictIdsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedConflictType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedCostType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedCType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDateType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDayType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDeadlineType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDependenciesType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDepsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDetailsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDropAnimationType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedDType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedEncodingType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedErrorType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedErrType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedEType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedEventDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedEventType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedFeatureFlagsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedFlagType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedFlightType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedFormType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedItemDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedItemType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedJobType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedLocType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedLogType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedMemberType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedMessageType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedMetadataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedNotesType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedNoteType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedNotificationsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedOfflineDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedOptimizedActivitiesType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedOptionsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedOptionType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedOrganizationsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedOrgType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedParamsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedPassengerDetailsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedPassengerType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedProposalType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedProvidedType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedPType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedRecType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedResultType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedRType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedSampleType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedSegmentType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedSessionType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedSettingsType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedSliceType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedSnapshotType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedTimeType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedTodosType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedTodoType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedTravelerInfoType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedTravelerType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedTripType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedUpdateDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedUpdatesType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedUserDataType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedUsersType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedUserType.d.ts
+- 🕳️ Empty object types found in shared\types\SharedUtf8Type.d.ts
+- 🕳️ Empty object types found in shared\types\SharedValueType.d.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\utils.ts
+- 💥 'any' usage flagged in shared\types\validation\base.validator.ts
+- 💥 'any' usage flagged in shared\types\validation\decorators.ts
+- 💥 'any' usage flagged in shared\types\validation\decorators.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts
+- 💥 'any' usage flagged in shared\utils\permissions.ts

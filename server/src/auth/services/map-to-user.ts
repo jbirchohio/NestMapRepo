@@ -6,7 +6,7 @@ import type { UserResponse } from '@shared/types/auth/dto/user-response.dto.js';
  * @param user - The original user object from the database
  * @returns A User object with snake_case properties
  */
-export function mapToUser(userResponse: UserResponse, user: any): any {
+export function mapToUser(userResponse: UserResponse, user: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
     return {
         id: userResponse.id,
         email: userResponse.email,

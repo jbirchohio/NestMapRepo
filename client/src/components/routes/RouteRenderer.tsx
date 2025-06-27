@@ -16,7 +16,7 @@ export interface RouteMeta {
   /** Layout component to wrap the route */
   layout?: React.ComponentType<{ children: React.ReactNode }>;
   /** Additional metadata */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

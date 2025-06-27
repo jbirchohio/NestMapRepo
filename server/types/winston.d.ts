@@ -2,7 +2,7 @@ import type { Logger } from 'winston';
 
 declare module 'winston' {
   interface Logger {
-    stream: any;
+    stream: any /** FIXANYERROR: Replace 'any' */;
   }
 }
 

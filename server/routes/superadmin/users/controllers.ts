@@ -18,7 +18,7 @@ type UserWithOrg = {
     lastLoginAt: Date | null;
     createdAt: Date;
     name: string;
-    organization: any; // Replace 'any' with proper organization type if available
+    organization: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */; // Replace 'any' with proper organization type if available
     avatarUrl?: string | null; // Make avatarUrl optional since it's not in the schema
 };
 // Get all users with filtering and pagination
@@ -49,7 +49,7 @@ export const getUsers = async (req: Request, res: Response) => {
         // Conditions for filtering users
         // Get users with organization info
         // First get the user IDs with pagination
-        let userIds: any[] = [];
+        let userIds: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] = [];
         try {
             userIds = await db
                 .select({ id: users.id })
@@ -76,7 +76,7 @@ export const getUsers = async (req: Request, res: Response) => {
             });
         }
         // Get the full user data with organization info for the paginated user IDs
-        let usersList: any[] = [];
+        let usersList: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] = [];
         try {
             usersList = await db
                 .select({

@@ -29,11 +29,11 @@ export default function ShareTripModal({ isOpen, onClose, trip, onSave, }: Share
         if (trip) {
             setIsPublic(trip.isPublic || false);
             setSharingEnabled(trip.sharingEnabled || false);
-            setSharePermission((trip as any).sharePermission || "read-only");
+            setSharePermission((trip as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */).sharePermission || "read-only");
             // Generate share link with permission parameter
             const baseUrl = window.location.origin;
             const shareCode = trip.shareCode || '';
-            const permission = (trip as any).sharePermission || "read-only";
+            const permission = (trip as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */).sharePermission || "read-only";
             setShareLink(`${baseUrl}/share/${shareCode}?permission=${permission}`);
             // Set collaborators
             setCollaborators(trip.collaborators as string[] || []);

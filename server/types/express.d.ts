@@ -21,7 +21,7 @@ declare global {
       organization?: {
         id: string;
         name: string;
-        settings: any;
+        settings: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
       };
       organizationFilter?: (orgId: string | null) => boolean;
       isWhiteLabelDomain?: boolean;
@@ -38,8 +38,8 @@ declare global {
     interface Response<ResBody = any> {
       json: (body: ResBody) => this;
       status: (code: number) => this;
-      success: (data: any, message?: string) => this;
-      error: (message: string, code?: number, details?: any) => this;
+      success: (data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, message?: string) => this;
+      error: (message: string, code?: number, details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => this;
       send: (body: ResBody) => this;
     }
   }

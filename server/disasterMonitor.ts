@@ -47,7 +47,7 @@ export async function fetchEarthquakeAlerts(city: string, startDate: string, end
     const data = (await response.json()) as any;
     if (!data.features)
         return [];
-    return data.features.map((f: any) => ({
+    return data.features.map((f: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => ({
         id: f.id,
         magnitude: f.properties.mag,
         place: f.properties.place,

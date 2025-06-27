@@ -21,7 +21,7 @@ interface NotificationPayload {
     body: string;
     icon?: string;
     badge?: string;
-    data?: any;
+    data?: any /** FIXANYERROR: Replace 'any' */;
     actions?: Array<{
         action: string;
         title: string;

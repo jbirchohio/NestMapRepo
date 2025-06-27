@@ -1,3 +1,4 @@
+import SharedErrorType from '@/types/SharedErrorType';
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
@@ -53,7 +54,7 @@ export default function BrandingSetup() {
             queryClient.invalidateQueries({ queryKey: ['/api/organization/plan'] });
             queryClient.invalidateQueries({ queryKey: ['/api/white-label/permissions'] });
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Update Failed",
                 description: error.message || "Failed to update plan settings",

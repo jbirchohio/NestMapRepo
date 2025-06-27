@@ -1,3 +1,5 @@
+import SharedItemDataType from '@/types/SharedItemDataType';
+import SharedCollaboratorType from '@/types/SharedCollaboratorType';
 import { useState, useEffect } from 'react';
 import { useRealTimeCollaboration } from '@/hooks/useRealTimeCollaboration';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +15,7 @@ interface CollaborationPresenceProps {
 }
 export default function CollaborationPresence({ tripId, organizationId, userId, showCursors = true, showActivityFeed = true }: CollaborationPresenceProps) {
     const { collaborators, isConnected, connectionError, updateCursor, updateSection, totalCollaborators } = useRealTimeCollaboration({ tripId, organizationId, userId });
-    const [recentActivity, setRecentActivity] = useState<any[]>([]);
+    const [recentActivity, setRecentActivity] = useState<any /** FIXANYERROR: Replace 'any' */[]>([]);
     // Track mouse movement for cursor sharing
     useEffect(() => {
         if (!showCursors || !isConnected)
@@ -24,7 +26,7 @@ export default function CollaborationPresence({ tripId, organizationId, userId, 
         document.addEventListener('mousemove', handleMouseMove);
         return () => document.removeEventListener('mousemove', handleMouseMove);
     }, [showCursors, isConnected, updateCursor]);
-    const getPresenceText = (collaborator: any) => {
+    const getPresenceText = (collaborator: SharedCollaboratorType) => {
         const timeSince = Date.now() - new Date(collaborator.lastSeen).getTime();
         const minutesAgo = Math.floor(timeSince / 60000);
         if (minutesAgo < 1)
@@ -170,7 +172,7 @@ export function useCollaborationAwareness(sectionId: string) {
     const notifyView = (itemType: string, itemId: string) => {
         sendActivity('viewing', { sectionId, itemType, itemId });
     };
-    const notifyAdd = (itemType: string, itemData: any) => {
+    const notifyAdd = (itemType: string, itemData: SharedItemDataType) => {
         sendActivity('added', { sectionId, itemType, itemData });
     };
     const notifyDelete = (itemType: string, itemId: string) => {

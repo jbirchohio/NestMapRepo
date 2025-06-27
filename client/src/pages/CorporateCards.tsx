@@ -1,3 +1,8 @@
+import SharedUserType from '@/types/SharedUserType';
+import SharedApprovalDataType from '@/types/SharedApprovalDataType';
+import SharedUpdateDataType from '@/types/SharedUpdateDataType';
+import SharedErrorType from '@/types/SharedErrorType';
+import SharedCardDataType from '@/types/SharedCardDataType';
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -96,7 +101,7 @@ export default function CorporateCards() {
     });
     // Issue new card mutation
     const issueCardMutation = useMutation({
-        mutationFn: (cardData: any) => apiRequest("POST", "/api/corporate-cards/cards", cardData).then(res => res.json()),
+        mutationFn: (cardData: SharedCardDataType) => apiRequest("POST", "/api/corporate-cards/cards", cardData).then(res => res.json()),
         onSuccess: () => {
             toast({
                 title: "Card Issued Successfully",
@@ -105,7 +110,7 @@ export default function CorporateCards() {
             queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
             setIsIssueDialogOpen(false);
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Failed to Issue Card",
                 description: error.message || "Something went wrong",
@@ -140,7 +145,7 @@ export default function CorporateCards() {
                 });
             }
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to update card status",
@@ -152,7 +157,7 @@ export default function CorporateCards() {
     const updateCardMutation = useMutation({
         mutationFn: async ({ cardId, updateData }: {
             cardId: number;
-            updateData: any;
+            updateData: SharedUpdateDataType;
         }) => {
             const response = await apiRequest("PUT", `/api/corporate-cards/cards/${cardId}`, updateData);
             if (!response.ok) {
@@ -175,7 +180,7 @@ export default function CorporateCards() {
                 });
             }
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Update Failed",
                 description: error.message || "Failed to update card",
@@ -213,7 +218,7 @@ export default function CorporateCards() {
             setIsAddFundsDialogOpen(false);
             setAddFundsAmount("");
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Add Funds Failed",
                 description: error.message || "Failed to add funds to card",
@@ -240,7 +245,7 @@ export default function CorporateCards() {
             setSelectedCard(null);
             setIsManageDialogOpen(false);
         },
-        onError: (error: any) => {
+        onError: (error: SharedErrorType) => {
             toast({
                 title: "Error",
                 description: error.message || "Failed to delete card",
@@ -250,7 +255,7 @@ export default function CorporateCards() {
     });
     // Approve expense mutation
     const approveExpenseMutation = useMutation({
-        mutationFn: (approvalData: any) => apiRequest("POST", "/api/expenses/approve", approvalData).then(res => res.json()),
+        mutationFn: (approvalData: SharedApprovalDataType) => apiRequest("POST", "/api/expenses/approve", approvalData).then(res => res.json()),
         onSuccess: () => {
             toast({
                 title: "Expense Processed",
@@ -261,7 +266,7 @@ export default function CorporateCards() {
     });
     const handleIssueCard = (formData: FormData) => {
         const userId = parseInt(formData.get("user_id") as string);
-        const selectedUser = organizationUsers.find((user: any) => user.id === userId);
+        const selectedUser = organizationUsers.find((user: SharedUserType) => user.id === userId);
         const cardData = {
             user_id: userId,
             spend_limit: parseInt(formData.get("spend_limit") as string), // Already in dollars, don't multiply
@@ -575,7 +580,7 @@ export default function CorporateCards() {
                     <SelectValue placeholder="Choose a team member"/>
                   </SelectTrigger>
                   <SelectContent>
-                    {organizationUsers.map((user: any) => (<SelectItem key={user.id} value={user.id.toString()}>
+                    {organizationUsers.map((user: SharedUserType) => (<SelectItem key={user.id} value={user.id.toString()}>
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-electric-100 rounded-full flex items-center justify-center">
                             <span className="text-xs font-medium text-electric-600">

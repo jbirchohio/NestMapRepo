@@ -7,6 +7,17 @@ import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, AlertCircle, Info, CheckCircle, X, Bell, BellOff, Clock, Shield, Activity, Server, Network } from "lucide-react";
+interface AlertMetadata {
+  /** Additional context or data related to the alert */
+  details?: string;
+  /** Source of the alert (e.g., service name, component) */
+  source?: string;
+  /** Related resource IDs or references */
+  resourceIds?: string[];
+  /** Any additional dynamic properties */
+  [key: string]: unknown;
+}
+
 interface SystemAlert {
     id: string;
     type: 'critical' | 'warning' | 'info';
@@ -15,7 +26,8 @@ interface SystemAlert {
     message: string;
     timestamp: string;
     acknowledged: boolean;
-    metadata?: Record<string, any>;
+    /** Optional metadata containing additional alert details */
+    metadata?: AlertMetadata;
 }
 interface AlertsResponse {
     alerts: SystemAlert[];

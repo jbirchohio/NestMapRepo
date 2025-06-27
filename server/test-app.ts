@@ -76,7 +76,7 @@ app.use(session({
 // Mount API routes
 app.use('/api', apiRoutes);
 // Global error handling middleware
-app.use(((err: any, _req: Request, res: Response, next: NextFunction) => {
+app.use(((err: any /** FIXANYERROR: Replace 'any' */, _req: Request, res: Response, next: NextFunction) => {
     console.error('Test app error:', err.message);
     if (res.headersSent) {
         return next(err);

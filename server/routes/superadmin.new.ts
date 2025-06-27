@@ -12,7 +12,7 @@ import featureFlagsRouter from './superadmin/feature-flags/index.ts';
 import dashboardRouter from './superadmin/dashboard/index.ts';
 import auditLogsRouter from './superadmin/audit-logs/index.ts';
 // Audit logging function
-export const logSuperadminAction = async (adminUserId: number, action: string, targetType: string, targetId?: number, details?: any) => {
+export const logSuperadminAction = async (adminUserId: number, action: string, targetType: string, targetId?: number, details?: any /** FIXANYERROR: Replace 'any' */) => {
     try {
         await db.insert(superadminAuditLogs).values({
             adminUserId,

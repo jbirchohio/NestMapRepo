@@ -1,141 +1,64 @@
-import { useState, useEffect, useCallback } from 'react';
-/**
- * @deprecated This file is deprecated and will be removed in a future version.
- * Please use the new auth context at '@/contexts/auth/NewAuthContext' instead.
- */
+import { useCallback } from 'react';
 import { useLocation } from 'wouter';
-import { User } from '../types/user';
-interface AuthState {
-    user: User | null;
-    token: string | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    error: string | null;
-}
+import { useAuth as useAuthContext } from '@/state/contexts/AuthContext';
+import type { User } from '@/shared/types/user/User';
+
+/**
+ * @deprecated This hook is deprecated and will be removed in a future version.
+ * Please use the new auth context hook: `useAuth()` from '@/state/contexts/AuthContext' instead.
+ * 
+ * This is a compatibility layer that maps the old API to the new auth context.
+ */
 export function useAuth() {
-    const [state, setState] = useState<AuthState>({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: true,
-        error: null,
-    });
-    const [location, setLocation] = useLocation();
-    // Initialize auth state from localStorage
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        const user = localStorage.getItem('user');
-        if (token && user) {
-            try {
-                const parsedUser = JSON.parse(user);
-                setState({
-                    user: parsedUser,
-                    token,
-                    isAuthenticated: true,
-                    isLoading: false,
-                    error: null,
-                });
-            }
-            catch (error) {
-                console.error('Failed to parse user data', error);
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                setState(prev => ({
-                    ...prev,
-                    isLoading: false,
-                    error: 'Failed to load user data',
-                }));
-            }
-        }
-        else {
-            setState(prev => ({
-                ...prev,
-                isLoading: false,
-            }));
-        }
-    }, []);
+    // Use the new auth context
+    const {
+        isAuthenticated,
+        isLoading,
+        error,
+        user,
+        token,
+        login: loginContext,
+        logout: logoutContext,
+        register: registerContext,
+    } = useAuthContext();
+    
+    const [, setLocation] = useLocation();
+    
+    // Map the new context to the old API for backward compatibility
     const login = useCallback(async (email: string, password: string) => {
         try {
-            setState(prev => ({ ...prev, isLoading: true, error: null }));
-            // Replace with actual API call
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            });
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Login failed');
-            }
-            const { user, token } = await response.json();
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            setState({
-                user,
-                token,
-                isAuthenticated: true,
-                isLoading: false,
-                error: null,
-            });
-            return user;
-        }
-        catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Login failed';
-            setState(prev => ({
-                ...prev,
-                isLoading: false,
-                error: errorMessage,
-            }));
+            const result = await loginContext(email, password);
+            return result.user;
+        } catch (error) {
+            console.error('Login error:', error);
             throw error;
         }
-    }, []);
+    }, [loginContext]);
+    
     const logout = useCallback(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setState({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: null,
-        });
+        logoutContext();
         setLocation('/login');
-    }, [setLocation]);
-    const register = useCallback(async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
+    }, [logoutContext, setLocation]);
+    
+    const register = useCallback(async (userData: any) => {
         try {
-            setState(prev => ({ ...prev, isLoading: true, error: null }));
-            // Replace with actual API call
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userData),
-            });
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Registration failed');
-            }
-            return await response.json();
-        }
-        catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-            setState(prev => ({
-                ...prev,
-                isLoading: false,
-                error: errorMessage,
-            }));
+            const result = await registerContext(userData);
+            return result.user;
+        } catch (error) {
+            console.error('Registration error:', error);
             throw error;
         }
-        finally {
-            setState(prev => ({
-                ...prev,
-                isLoading: false,
-            }));
-        }
-    }, []);
+    }, [registerContext]);
+    
+    // Map the state to match the old API
+    const state = {
+        user: user as User | null,
+        token,
+        isAuthenticated,
+        isLoading,
+        error: error?.message || null,
+    };
+    
     return {
         ...state,
         login,
@@ -143,4 +66,5 @@ export function useAuth() {
         register,
     };
 }
+
 export default useAuth;

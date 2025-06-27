@@ -13,7 +13,7 @@
  * DO NOT create duplicate error handling implementations - extend this one if needed.
  */
 import type { Request, Response, NextFunction } from 'express';
-export function globalErrorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+export function globalErrorHandler(err: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, req: Request, res: Response, next: NextFunction) {
     // Log error with context
     console.error('Global Error:', {
         error: err.message,
@@ -98,8 +98,8 @@ export class OrganizationAccessError extends Error {
 export class ValidationError extends Error {
     status = 400;
     name = 'ValidationError';
-    details: any;
-    constructor(message: string, details?: any) {
+    details: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+    constructor(message: string, details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         super(message);
         this.details = details;
     }

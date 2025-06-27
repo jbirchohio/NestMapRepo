@@ -1,3 +1,6 @@
+import SharedFlightType from '@/types/SharedFlightType';
+import SharedTravelerType from '@/types/SharedTravelerType';
+import SharedDateType from '@/types/SharedDateType';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from '@/hooks/use-toast';
@@ -35,7 +38,7 @@ interface SequentialBookingData {
     roomsNeeded: number;
     roomConfiguration: 'shared' | 'separate' | null;
     bookingStatus: 'flights' | 'hotels' | 'room-preferences' | 'payment' | 'complete';
-    selectedHotel?: any; // Consider replacing 'any' with a proper Hotel type
+    selectedHotel?: unknown; // Consider replacing 'any' with a proper Hotel type
     confirmationNumber?: string;
     bookingDate?: string;
 }
@@ -265,7 +268,7 @@ export default function SequentialBooking() {
         const destinationCode = convertCityToAirportCode(bookingData.tripDestination);
         console.log(`Converting "${currentTraveler.departureCity}" to "${originCode}" and "${bookingData.tripDestination}" to "${destinationCode}"`);
         // Format dates properly for API
-        const formatDate = (date: unknown): string => {
+        const formatDate = (date: SharedDateType): string => {
             if (!date) return '';
             
             try {
@@ -858,9 +861,9 @@ export default function SequentialBooking() {
                 {/* Flight Bookings */}
                 <div className="mb-4">
                   <h4 className="font-medium mb-2">Flights</h4>
-                  {bookingData.travelers.map((traveler: any, index: number) => {
+                  {bookingData.travelers.map((traveler: SharedTravelerType, index: number) => {
                 const selectedFlights = traveler.selectedFlights || [];
-                const totalFlightCost = selectedFlights.reduce((sum: number, flight: any) => sum + parseFloat(flight.price), 0);
+                const totalFlightCost = selectedFlights.reduce((sum: number, flight: SharedFlightType) => sum + parseFloat(flight.price), 0);
                 return (<div key={index} className="flex justify-between items-center py-2 border-b">
                         <div>
                           <span className="font-medium">{traveler.name}</span>
@@ -897,9 +900,9 @@ export default function SequentialBooking() {
                   <div className="flex justify-between items-center text-lg font-bold">
                     <span>Total Amount</span>
                     <span>${(() => {
-                const flightTotal = bookingData.travelers.reduce((sum: number, traveler: any) => {
+                const flightTotal = bookingData.travelers.reduce((sum: number, traveler: SharedTravelerType) => {
                     const selectedFlights = traveler.selectedFlights || [];
-                    return sum + selectedFlights.reduce((flightSum: number, flight: any) => flightSum + parseFloat(flight.price), 0);
+                    return sum + selectedFlights.reduce((flightSum: number, flight: SharedFlightType) => flightSum + parseFloat(flight.price), 0);
                 }, 0);
                 const hotelTotal = bookingData.selectedHotel ? (bookingData.selectedHotel.price.amount * 3) : 0;
                 return (flightTotal + hotelTotal).toFixed(2);
@@ -1029,7 +1032,7 @@ export default function SequentialBooking() {
                 {/* Flight Confirmations */}
                 <div>
                   <h3 className="font-semibold text-lg mb-3">Flight Confirmations</h3>
-                  {bookingData.travelers.map((traveler: any, index: number) => (<div key={index} className="border rounded-lg p-3 mb-3">
+                  {bookingData.travelers.map((traveler: SharedTravelerType, index: number) => (<div key={index} className="border rounded-lg p-3 mb-3">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <span className="font-medium">{traveler.name}</span>
@@ -1077,9 +1080,9 @@ export default function SequentialBooking() {
                   <div className="flex justify-between items-center text-lg">
                     <span className="font-medium">Total Paid</span>
                     <span className="font-bold">${(() => {
-                const flightTotal = bookingData.travelers.reduce((sum: number, traveler: any) => {
+                const flightTotal = bookingData.travelers.reduce((sum: number, traveler: SharedTravelerType) => {
                     const selectedFlights = traveler.selectedFlights || [];
-                    return sum + selectedFlights.reduce((flightSum: number, flight: any) => flightSum + parseFloat(flight.price), 0);
+                    return sum + selectedFlights.reduce((flightSum: number, flight: SharedFlightType) => flightSum + parseFloat(flight.price), 0);
                 }, 0);
                 const hotelTotal = bookingData.selectedHotel ? (bookingData.selectedHotel.price.amount * 3) : 0;
                 return (flightTotal + hotelTotal).toFixed(2);

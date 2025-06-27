@@ -1,5 +1,6 @@
 import type { SignOptions } from 'jsonwebtoken';
-import { sign, verify, decode } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+const { sign, verify, decode } = jwt;
 import { redis } from '../db/redis.js';
 import { logger } from './logger.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -80,7 +81,11 @@ export const verifyToken = async (token: string, type: TokenType): Promise<Verif
             expired: false
         };
     }
-    catch (error: any) {
+    catch (error: unknown) {
+        if (!(error instanceof Error)) {
+            logger.error('Unknown error type in verifyToken', { error });
+            return null;
+        }
         if (error.name === 'TokenExpiredError') {
             const payload = decode(token) as TokenPayload;
             if (!payload)

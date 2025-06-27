@@ -7,8 +7,8 @@ import type { Trip, Activity } from '../db/schema.js';
 interface PdfGenerationData {
     trip: Trip;
     activities: Activity[];
-    todos?: any[];
-    notes?: any[];
+    todos?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
+    notes?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
 }
 export async function generatePdfBuffer(data: PdfGenerationData): Promise<Buffer> {
     const browser = await puppeteer.launch({

@@ -138,7 +138,7 @@ export class SSLManager {
         const authResponse = await this.sendACMERequest(authUrl, '', account.privateKey);
         const auth = await authResponse.json();
         // Find HTTP-01 challenge
-        const challenge = auth.challenges.find((c: any) => c.type === 'http-01');
+        const challenge = auth.challenges.find((c: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => c.type === 'http-01');
         if (!challenge) {
             throw new Error('HTTP-01 challenge not available');
         }
@@ -168,7 +168,7 @@ export class SSLManager {
     /**
      * Extract JWK (JSON Web Key) from public key
      */
-    private extractJWK(publicKey: string): any {
+    private extractJWK(publicKey: string): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
         // Convert PEM to JWK format
         const keyObject = crypto.createPublicKey(publicKey);
         const jwk = keyObject.export({ format: 'jwk' });
@@ -230,7 +230,7 @@ export class SSLManager {
     /**
      * Send signed ACME request
      */
-    private async sendACMERequest(url: string, payload: any, privateKey: string): Promise<Response> {
+    private async sendACMERequest(url: string, payload: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, privateKey: string): Promise<Response> {
         // This is a simplified ACME client
         // In production, implement proper JWS signing and ACME protocol
         const response = await fetch(url, {

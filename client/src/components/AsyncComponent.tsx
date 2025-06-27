@@ -49,7 +49,11 @@ const LoadingFallback: React.FC<{
     <LoadingSpinner />
     <p className="text-sm">{message}</p>
   </div>);
-type ImportFunc<T = any> = () => Promise<{
+/**
+ * Type for dynamic import function that returns a promise of a component
+ * @template T - The type of props the component expects (defaults to empty object)
+ */
+type ImportFunc<T = Record<string, unknown>> = () => Promise<{
     default: ComponentType<T>;
 }>;
 /**
@@ -58,14 +62,23 @@ type ImportFunc<T = any> = () => Promise<{
  * @param options Options for the async component
  * @returns A lazy-loaded component with error and loading boundaries
  */
-function asyncComponent<T = any>(importFunc: ImportFunc<T>, options: {
+/**
+ * Higher-order component for code-splitting with loading and error boundaries
+ * @template T - The type of props the wrapped component expects (defaults to empty object)
+ * @param importFunc - Function that returns a dynamic import()
+ * @param options - Options for the async component
+ * @returns A lazy-loaded component with error and loading boundaries
+ */
+function asyncComponent<T = Record<string, unknown>>(
+  importFunc: ImportFunc<T>,
+  options: {
     loading?: React.ReactNode;
     error?: React.ReactNode;
 } = {}) {
     const LazyComponent = lazy(importFunc);
     const AsyncComponent: React.FC<T> = (props) => (<ErrorBoundary fallback={options.error}>
       <Suspense fallback={options.loading || <LoadingFallback />}>
-        <LazyComponent {...(props as any)}/>
+        <LazyComponent {...(props as React.ComponentProps<typeof LazyComponent>)} />
       </Suspense>
     </ErrorBoundary>);
     // Set a display name for better debugging

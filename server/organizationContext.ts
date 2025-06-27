@@ -7,7 +7,7 @@ export interface BaseUser {
   organizationId: string | null;
   role: string;
   permissions: string[];
-  [key: string]: any; // Allow for additional properties
+  [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */; // Allow for additional properties
 }
 
 // Extend Express types to include our custom properties

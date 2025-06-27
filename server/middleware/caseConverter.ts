@@ -20,7 +20,7 @@ const toSnakeCase = (str: string): string => str.replace(/[A-Z]/g, (letter) => `
 const toCamelCase = (str: string): string => str.replace(/(_\w)/g, (m) => m[1].toUpperCase());
 // Recursively converts keys of an object or array of objects
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const convertKeys = (obj: any, converter: (key: string) => string): any => {
+const convertKeys = (obj: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, converter: (key: string) => string): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ => {
     if (Array.isArray(obj)) {
         return obj.map((v) => convertKeys(v, converter));
     }
@@ -30,7 +30,7 @@ const convertKeys = (obj: any, converter: (key: string) => string): any => {
             result[newKey] = convertKeys(obj[key], converter);
             return result;
         }, {} as {
-            [key: string]: any;
+            [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
         });
     }
     return obj;
@@ -42,7 +42,7 @@ export const caseConverterMiddleware: RequestHandler = (req: Request, res: Respo
     }
     // Monkey-patch res.json to convert outgoing response from snake_case to camelCase
     const originalJson = res.json;
-    res.json = function (body: any) {
+    res.json = function (body: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
         let newBody = body;
         if (newBody) {
             newBody = convertKeys(newBody, toCamelCase);

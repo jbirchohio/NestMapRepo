@@ -1,6 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ErrorType, type ApiError } from '../types/index.js';
-import { createApiError } from '../types/index.js';
+import { Injectable, Logger, type HttpException } from '@nestjs/common';
+import { ErrorType, type ApiError } from '../types/error.types.js';
+import { createApiError } from '../types/error.types.js';
+
+/**
+ * Type for error details that can be included in error responses
+ * Aligns with the ErrorDetails type from errorHandler.ts
+ */
+type ErrorDetails = Record<string, unknown> | Record<string, unknown>[] | string | number | boolean | null | undefined;
 /**
  * Centralized service for error handling and creation
  * Provides standardized methods for creating and throwing errors
@@ -14,7 +20,13 @@ export class ErrorService {
      * @param details Additional error details
      * @returns ApiError
      */
-    createUnauthorizedError(message = 'Authentication required', details?: Record<string, unknown>): ApiError {
+    /**
+     * Creates an unauthorized error (HTTP 401)
+     * @param message Error message (default: 'Authentication required')
+     * @param details Optional error details
+     * @returns ApiError instance
+     */
+    createUnauthorizedError(message = 'Authentication required', details?: ErrorDetails): ApiError {
         this.logger.warn(`[UNAUTHORIZED] ${message}`, details);
         return createApiError(ErrorType.UNAUTHORIZED, message, details);
     }
@@ -24,7 +36,13 @@ export class ErrorService {
      * @param details Additional error details
      * @returns ApiError
      */
-    createForbiddenError(message = 'Access denied', details?: Record<string, unknown>): ApiError {
+    /**
+     * Creates a forbidden error (HTTP 403)
+     * @param message Error message (default: 'Access denied')
+     * @param details Optional error details
+     * @returns ApiError instance
+     */
+    createForbiddenError(message = 'Access denied', details?: ErrorDetails): ApiError {
         this.logger.warn(`[FORBIDDEN] ${message}`, details);
         return createApiError(ErrorType.FORBIDDEN, message, details);
     }
@@ -34,7 +52,13 @@ export class ErrorService {
      * @param details Additional error details
      * @returns ApiError
      */
-    createNotFoundError(message = 'Resource not found', details?: Record<string, unknown>): ApiError {
+    /**
+     * Creates a not found error (HTTP 404)
+     * @param message Error message (default: 'Resource not found')
+     * @param details Optional error details
+     * @returns ApiError instance
+     */
+    createNotFoundError(message = 'Resource not found', details?: ErrorDetails): ApiError {
         this.logger.warn(`[NOT_FOUND] ${message}`, details);
         return createApiError(ErrorType.NOT_FOUND, message, details);
     }
@@ -44,9 +68,84 @@ export class ErrorService {
      * @param details Additional error details
      * @returns ApiError
      */
-    createBadRequestError(message = 'Invalid request', details?: Record<string, unknown>): ApiError {
+    /**
+     * Creates a bad request error (HTTP 400)
+     * @param message Error message (default: 'Invalid request')
+     * @param details Optional error details
+     * @returns ApiError instance
+     */
+    createBadRequestError(message = 'Invalid request', details?: ErrorDetails): ApiError {
         this.logger.warn(`[BAD_REQUEST] ${message}`, details);
         return createApiError(ErrorType.BAD_REQUEST, message, details);
+    }
+
+    /**
+     * Creates a validation error (HTTP 422)
+     * @param message Error message (default: 'Validation failed')
+     * @param details Optional validation error details
+     * @returns ApiError instance
+     */
+    createValidationError(message = 'Validation failed', details?: ErrorDetails): ApiError {
+        this.logger.warn(`[VALIDATION_ERROR] ${message}`, details);
+        return createApiError(ErrorType.BAD_REQUEST, message, details);
+    }
+
+    /**
+     * Creates a conflict error (HTTP 409)
+     * @param message Error message (default: 'Resource conflict')
+     * @param details Optional error details
+     * @returns ApiError instance
+     */
+    createConflictError(message = 'Resource conflict', details?: ErrorDetails): ApiError {
+        this.logger.warn(`[CONFLICT] ${message}`, details);
+        return createApiError(ErrorType.CONFLICT, message, details);
+    }
+
+    /**
+     * Creates an internal server error (HTTP 500)
+     * @param message Error message (default: 'Internal server error')
+     * @param details Optional error details
+     * @returns ApiError instance
+     */
+    createInternalError(message = 'Internal server error', details?: ErrorDetails): ApiError {
+        this.logger.error(`[INTERNAL_ERROR] ${message}`, details);
+        return createApiError(ErrorType.INTERNAL_SERVER_ERROR, message, details);
+    }
+
+    /**
+     * Converts an HTTP exception to an ApiError
+     * @param exception HTTP exception to convert
+     * @returns ApiError instance
+     */
+    fromHttpException(exception: HttpException): ApiError {
+        const response = exception.getResponse() as 
+            | string 
+            | { message?: string | string[]; error?: string; statusCode?: number };
+        
+        const message = typeof response === 'string' 
+            ? response 
+            : Array.isArray(response.message)
+                ? response.message.join(', ')
+                : response.message || response.error || 'An error occurred';
+                
+        const status = exception.getStatus();
+        
+        // Map HTTP status to error type
+        if (status >= 500) {
+            return this.createInternalError(message);
+        } else if (status === 401) {
+            return this.createUnauthorizedError(message);
+        } else if (status === 403) {
+            return this.createForbiddenError(message);
+        } else if (status === 404) {
+            return this.createNotFoundError(message);
+        } else if (status === 409) {
+            return this.createConflictError(message);
+        } else if (status === 400 || status === 422) {
+            return this.createValidationError(message);
+        }
+        
+        return this.createBadRequestError(message);
     }
     /**
      * Create a conflict error

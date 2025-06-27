@@ -1,3 +1,4 @@
+import SharedOptimizedActivitiesType from '@/types/SharedOptimizedActivitiesType';
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ interface ItineraryOptimizationModalProps {
     onOpenChange: (open: boolean) => void;
     trip: ClientTrip;
     activities: ClientActivity[];
-    onApplyOptimization?: (optimizedActivities: any[]) => void;
+    onApplyOptimization?: (optimizedActivities: SharedOptimizedActivitiesType[]) => void;
     autoApply?: boolean;
 }
 export function ItineraryOptimizationModal({ open, onOpenChange, trip, activities, onApplyOptimization, autoApply = false, }: ItineraryOptimizationModalProps) {
