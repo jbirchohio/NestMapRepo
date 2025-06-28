@@ -45,7 +45,7 @@ export default function CorporateTripOptimizer() {
     const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
     const [appliedChanges, setAppliedChanges] = useState<Set<number>>(new Set());
     // Fetch real corporate trips data from API
-    const { data: corporateTrips, isLoading: isLoadingTrips } = useQuery<any /** FIXANYERROR: Replace 'any' */[]>({
+    const { data: corporateTrips, isLoading: isLoadingTrips } = useQuery<OptimizedTrip[]>({
         queryKey: ['/api/trips/corporate']
     });
     const handleOptimizeTrips = async () => {

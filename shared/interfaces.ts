@@ -1,3 +1,5 @@
+import type { CollaboratorPresence } from './src/types/CollaboratorPresence';
+
 /**
  * Shared interface definitions used across the application
  * This file centralizes common types to eliminate redundancy
@@ -37,7 +39,8 @@ export interface Trip {
   completed: boolean;
   tripType: string;
   shareCode?: string;
-  collaborators?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
+  sharePermission?: 'read-only' | 'edit';
+  collaborators?: CollaboratorPresence[];
 }
 
 export interface ConflictDetection {
@@ -84,7 +87,7 @@ export interface BusinessTripRequest {
   companyInfo: {
     name: string;
     industry: string;
-    travelPolicy?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+    travelPolicy?: Record<string, unknown>;
   };
   tripPurpose: string;
   groupSize: number;

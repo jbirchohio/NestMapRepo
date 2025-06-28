@@ -16,6 +16,10 @@ interface ProposalGeneratorProps {
     tripId: number;
     tripTitle: string;
 }
+interface Proposal {
+    id: number;
+    status: string;
+}
 export default function ProposalGenerator({ tripId, tripTitle }: ProposalGeneratorProps) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -29,7 +33,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
         contactPhone: "",
         contactWebsite: ""
     });
-    const [selectedProposal, setSelectedProposal] = useState<any /** FIXANYERROR: Replace 'any' */>(null);
+    const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
     const [signature, setSignature] = useState({ signedBy: "", signatureImage: "" });
     // Fetch real cost estimate from API
     const { data: costEstimate, isLoading: loadingCost } = useQuery({
