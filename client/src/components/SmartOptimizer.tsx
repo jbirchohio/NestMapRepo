@@ -79,7 +79,10 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
         }
     });
     const hasConflicts = conflicts && Array.isArray(conflicts) && conflicts.length > 0;
-    const hasOptimizations = optimization && (optimization as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */' */).improvements && Array.isArray((optimization as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */' */).improvements);
+    const hasOptimizations = Boolean(
+        optimization?.improvements &&
+        Array.isArray(optimization.improvements.optimizedSchedule)
+    );
     if (optimizationLoading || conflictsLoading || remindersLoading) {
         return (<Card>
         <CardHeader>
@@ -116,7 +119,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
               <div>
                 <div className="font-medium">Optimization Score</div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {hasOptimizations ? `${Math.round((optimization as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */' */).improvements?.efficiencyGain || 0)}%` : 'N/A'}
+                  {hasOptimizations ? `${Math.round(optimization!.improvements.efficiencyGain)}%` : 'N/A'}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Efficiency gain</div>
               </div>
@@ -127,7 +130,7 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
               <div>
                 <div className="font-medium">Time Saved</div>
                 <div className="text-2xl font-bold text-green-600">
-                  {hasOptimizations ? `${(optimization as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */' */).improvements?.timeSaved || 0}m` : '0m'}
+                  {hasOptimizations ? `${optimization!.improvements.timeSaved || 0}m` : '0m'}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Travel time reduced</div>
               </div>

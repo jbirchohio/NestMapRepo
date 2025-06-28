@@ -39,7 +39,7 @@ export default function EnhancedAIAssistantModal({ isOpen, onClose, trip, activi
         }
     ]);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [foodSuggestions, setFoodSuggestions] = useState<any /** FIXANYERROR: Replace 'any' */[]>([]);
+    const [foodSuggestions, setFoodSuggestions] = useState<string[]>([]);
     const assistantMutation = useMutation({
         mutationFn: async (question: string) => {
             // Get current date activities

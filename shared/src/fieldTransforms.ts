@@ -1,6 +1,8 @@
+import type { Trip, Activity } from './schema';
+
 // Field transformation utilities for converting between camelCase and snake_case
 // Convert snake_case to camelCase
-export function snakeToCamel(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
+export function snakeToCamel<T>(obj: T): T {
     if (obj === null || obj === undefined || typeof obj !== 'object') {
         return obj;
     }
@@ -10,15 +12,15 @@ export function snakeToCamel(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXA
     if (obj instanceof Date) {
         return obj;
     }
-    const result: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {};
+    const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
         const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
         result[camelKey] = snakeToCamel(value);
     }
-    return result;
+    return result as unknown as T;
 }
 // Convert camelCase to snake_case
-export function camelToSnake(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
+export function camelToSnake<T>(obj: T): T {
     if (obj === null || obj === undefined || typeof obj !== 'object') {
         return obj;
     }
@@ -28,16 +30,16 @@ export function camelToSnake(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXA
     if (obj instanceof Date) {
         return obj;
     }
-    const result: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {};
+    const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
         const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
         result[snakeKey] = camelToSnake(value);
     }
-    return result;
+    return result as unknown as T;
 }
 // Transform frontend trip data to database format
-export function transformTripToDatabase(tripData: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
-    const result: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {};
+export function transformTripToDatabase(tripData: Partial<Trip>) {
+    const result: Record<string, unknown> = {};
     // Handle fields that need camelCase to snake_case transformation
     if (tripData.title !== undefined)
         result.title = tripData.title;
@@ -90,11 +92,11 @@ export function transformTripToDatabase(tripData: any /** FIXANYERROR: Replace '
         result.collaborators = tripData.collaborators;
     if (tripData.organization !== undefined)
         result.organization = tripData.organization;
-    return result;
+    return result as Record<string, unknown>;
 }
 // Transform frontend activity data to database format
-export function transformActivityToDatabase(activityData: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
-    const result: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {};
+export function transformActivityToDatabase(activityData: Partial<Activity>) {
+    const result: Record<string, unknown> = {};
     // Handle fields that need camelCase to snake_case transformation
     if (activityData.tripId !== undefined)
         result.trip_id = activityData.tripId;
@@ -125,5 +127,5 @@ export function transformActivityToDatabase(activityData: any /** FIXANYERROR: R
         result.notes = activityData.notes;
     if (activityData.tag !== undefined)
         result.tag = activityData.tag;
-    return result;
+    return result as Record<string, unknown>;
 }
