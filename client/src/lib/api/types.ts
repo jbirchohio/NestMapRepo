@@ -2,30 +2,33 @@ import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 import type { ApiSuccessResponse, ApiErrorResponse } from '@shared/types/api';
 
 export interface ApiConfig extends AxiosRequestConfig {
-  /** Whether to include auth token (default: true) */
-  auth?: boolean;
-  /** Whether to retry on auth failure (default: true) */
-  retryOnAuthFailure?: boolean;
+  /** Skip authentication for this request */
+  skipAuth?: boolean;
+  /** Skip error handling for this request */
+  skipErrorHandling?: boolean;
+  /** Custom headers */
+  headers?: Record<string, string>;
+  /** Additional metadata */
+  meta?: Record<string, unknown>;
 }
 
 export interface ApiError extends Error {
   status?: number;
   code?: string;
   details?: unknown;
+  config?: AxiosRequestConfig;
   response?: AxiosResponse<ApiErrorResponse>;
 }
 
-export interface ApiClientOptions {
+export interface ApiClientOptions extends AxiosRequestConfig {
   /** Base URL for all requests */
   baseURL: string;
   /** Default request timeout in milliseconds */
   timeout?: number;
-  /** Function to get auth token */
-  getAuthToken?: () => string | null;
-  /** Function to refresh auth token */
-  refreshToken?: () => Promise<string | null>;
+  /** Whether to include credentials with requests */
+  withCredentials?: boolean;
   /** Handler for unauthenticated requests */
   onUnauthenticated?: () => void;
   /** Global error handler */
-  onError?: (error: unknown) => void;
+  onError?: (error: ApiError) => void;
 }

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BellIcon } from '../icons';
 import type { NotificationsMenuProps } from './types';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import type { SharedNotificationType } from '@shared/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
@@ -19,6 +20,11 @@ const getSafeNotifications = (notifications: unknown[]): SharedNotificationType[
 import type { Notification as AppNotification } from '@shared/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
+=======
+import type { Notification as AppNotification } from '@shared/types/notification';
+
+// Helper function to safely cast notifications to AppNotification[]
+>>>>>>> Stashed changes
 const getSafeNotifications = (notifications: unknown[]): AppNotification[] => {
   return notifications.filter((item): item is AppNotification => {
     if (!item || typeof item !== 'object') return false;
@@ -38,6 +44,9 @@ const getSafeNotifications = (notifications: unknown[]): AppNotification[] => {
       typeof message === 'string' &&
       typeof read === 'boolean' &&
       typeof createdAt === 'string'
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     );
   });
