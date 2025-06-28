@@ -18,10 +18,10 @@ declare global {
     // Extend the Request interface with our custom properties
     interface Request<
       P = ParamsDictionary,
-      ResBody = any,
-      ReqBody = any,
+      ResBody = unknown,
+      ReqBody = unknown,
       ReqQuery = ParsedQs,
-      Locals extends Record<string, any> = Record<string, any>
+      Locals extends Record<string, unknown> = Record<string, unknown>
     > {
       /**
        * Authenticated user information
@@ -91,7 +91,7 @@ declare global {
       /**
        * Send a success response with data
        */
-      success: <T = any>(
+      success: <T = unknown>(
         data: T,
         message?: string,
         statusCode?: number
@@ -104,13 +104,13 @@ declare global {
         message: string,
         statusCode?: number,
         errorCode?: string,
-        details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */
+        details?: unknown
       ) => Response;
       
       /**
        * Send a paginated response
        */
-      paginate: <T = any>(
+      paginate: <T = unknown>(
         data: T[],
         total: number,
         page: number,
@@ -136,7 +136,7 @@ declare module 'express-serve-static-core' {
   }
   
   interface Response {
-    success: <T = any>(
+    success: <T = unknown>(
       data: T,
       message?: string,
       statusCode?: number
@@ -146,10 +146,10 @@ declare module 'express-serve-static-core' {
       message: string,
       statusCode?: number,
       errorCode?: string,
-      details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */
+      details?: unknown
     ) => Response;
     
-    paginate: <T = any>(
+    paginate: <T = unknown>(
       data: T[],
       total: number,
       page: number,
