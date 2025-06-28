@@ -1,26 +1,79 @@
 import { z } from 'zod';
 
+export const activityStatuses = [
+  'pending',
+  'confirmed',
+  'cancelled',
+  'in_progress',
+  'completed'
+] as const;
+
+/**
+ * Status of an activity
+ */
+export type ActivityStatus = typeof activityStatuses[number];
+
+export const activityTypes = [
+  'flight',
+  'hotel',
+  'restaurant',
+  'attraction',
+  'transport',
+  'event',
+  'other'
+] as const;
+
+/**
+ * Type of activity
+ */
+export type ActivityType = typeof activityTypes[number];
+
 /**
  * Base activity interface containing all common fields
  * This should be used as the source of truth for activity-related types
  */
 export interface Activity {
+  // Core identifiers
   /** Unique identifier for the activity */
   id: string;
   
+  /** ID of the trip this activity belongs to */
+  tripId: string;
+  
+  /** ID of the organization this activity belongs to */
+  organizationId: string;
+  
+  // Basic information
   /** Title or name of the activity */
   title: string;
   
+  /** Detailed description of the activity */
+  description?: string;
+  
+  /** Current status of the activity */
+  status: ActivityStatus;
+  
+  // Timing information
   /** Date of the activity in ISO string format */
   date: string;
   
-  /** Time of the activity in HH:mm format */
+  /** Time of the activity in HH:mm format (legacy, prefer startTime/endTime) */
   time: string;
   
+  /** Start time of the activity in HH:mm format */
+  startTime?: string;
+  
+  /** End time of the activity in HH:mm format */
+  endTime?: string;
+  
+  // Location information
   /** Display name of the location */
   locationName: string;
   
-  /** Optional unique identifier for the location */
+  /** Full address of the location */
+  location?: string;
+  
+  /** Unique identifier for the location */
   locationId?: string;
   
   /** Latitude coordinate (decimal degrees) */
@@ -29,35 +82,103 @@ export interface Activity {
   /** Longitude coordinate (decimal degrees) */
   longitude?: string;
   
-  /** Mode of transportation to this activity */
-  travelMode: string;
+  // Activity metadata
+  /** Cost of the activity in the smallest currency unit (e.g., cents) */
+  cost?: number;
   
+  /** Whether the activity has been completed */
+  completed: boolean;
+  
+  /** Order of the activity in the itinerary */
+  order: number;
+  
+  /** Type of activity */
+  type?: ActivityType;
+  
+  /** Mode of transportation to this activity */
+  travelMode?: string;
+  
+  // User assignments and metadata
+  /** ID of the user who created the activity */
+  createdBy: string;
+  
+  /** ID of the user assigned to this activity */
+  assignedTo?: string;
+  
+  /** When the activity was created */
+  createdAt: string | Date;
+  
+  /** When the activity was last updated */
+  updatedAt: string | Date;
+  
+  // Additional information
   /** Additional notes about the activity */
   notes?: string;
   
   /** Category or tag for grouping/organization */
   tag?: string;
   
-  /** User ID of the person this activity is assigned to */
-  assignedTo?: string;
+  /** External URL for more information */
+  url?: string;
+  
+  /** Whether the activity is private */
+  isPrivate?: boolean;
+  
+  /** Priority level (1-5) */
+  priority?: number;
+  
+  /** External ID if synced from another service */
+  externalId?: string;
+  
+  /** Custom metadata */
+  metadata?: Record<string, unknown>;
 }
 
 /**
  * Client-specific extensions to the base Activity type
- * Contains UI-specific or client-only fields
+ * Contains UI-specific or client-only fields that should not be sent to the server
  */
 export interface ClientActivity extends Activity {
-  /** Estimated travel time from previous activity */
+  // UI state fields
+  /** Whether the activity is currently being edited */
+  isEditing?: boolean;
+  
+  /** Whether the activity is currently loading */
+  isLoading?: boolean;
+  
+  /** Whether the activity is selected in the UI */
+  isSelected?: boolean;
+  
+  // Travel information
+  /** Estimated travel time from previous activity (formatted string) */
   travelTimeFromPrevious?: string;
   
-  /** Distance from previous activity */
+  /** Distance from previous activity (formatted string) */
   travelDistanceFromPrevious?: string;
   
-  /** Flag indicating if this activity has a scheduling conflict */
+  // Conflict detection
+  /** Whether there's a scheduling conflict */
   conflict?: boolean;
   
-  /** Flag indicating if this activity has a time conflict */
+  /** Whether there's a time conflict with other activities */
   timeConflict?: boolean;
+  
+  // UI state for expanded/collapsed views
+  /** Whether details are expanded in the UI */
+  isExpanded?: boolean;
+  
+  // Client-side only metadata
+  /** Client-side only metadata */
+  clientMetadata?: {
+    /** When the activity was last viewed by the user */
+    lastViewed?: Date;
+    
+    /** User preferences for this activity */
+    preferences?: Record<string, unknown>;
+    
+    /** Temporary UI state */
+    uiState?: Record<string, unknown>;
+  };
 }
 
 /**
@@ -77,6 +198,10 @@ export const activityFormSchema = z.object({
   latitude: z.string().optional(),
   longitude: z.string().optional(),
   assignedTo: z.string().optional(),
+  status: z.enum(activityStatuses).optional(),
+  type: z.enum(activityTypes).optional(),
+  tripId: z.string().optional(),
+  createdBy: z.string().optional(),
 });
 
 /**

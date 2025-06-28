@@ -8,7 +8,7 @@ import type { TablesRelationalConfig } from 'drizzle-orm/relations';
 /**
  * Base repository implementation with common CRUD operations
  */
-export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string, any>, UpdateData extends Record<string, any>> implements BaseRepository<T, ID, CreateData, UpdateData> {
+export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string, any>, UpdateData extends Record<string, any>> implements Omit<BaseRepository<T, ID, CreateData, UpdateData>, 'mapToModel'> {
     protected logger = logger;
     constructor(protected entityName: string, protected table: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, protected idColumn: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) { }
     
@@ -16,8 +16,9 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
      * Maps a database record to a domain model
      * @param data - Raw database record
      * @returns Promise that resolves to the mapped domain model
+     * @protected
      */
-    public async mapToModel(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<T> {
+    protected async mapToModel(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<T> {
         // Default implementation - can be overridden by child classes
         return data as T;
     }

@@ -1,10 +1,10 @@
 import type { 
-  Booking, 
+  BaseBooking, 
   BookingStatus, 
   BookingType, 
-  BookingSearchParams,
   AnyBooking
-} from '@shared/types/bookings.js';
+} from '@shared/types/booking/index.ts';
+import type { BookingSearchParams } from '@shared/src/types/booking/index.js';
 import type { BaseRepository } from '../base.repository.interface.js';
 
 /**
@@ -12,10 +12,10 @@ import type { BaseRepository } from '../base.repository.interface.js';
  * Extends the base repository with booking-specific methods
  */
 export interface BookingRepository extends BaseRepository<
-  Booking, 
+  BaseBooking, 
   string, 
-  Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'reference'>,
-  Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'reference'>>
+  Omit<BaseBooking, 'id' | 'createdAt' | 'updatedAt' | 'reference'>,
+  Partial<Omit<BaseBooking, 'id' | 'createdAt' | 'updatedAt' | 'reference'>>
 > {
   /**
    * Find bookings by user ID
@@ -28,7 +28,7 @@ export interface BookingRepository extends BaseRepository<
     type?: BookingType | BookingType[];
     startDate?: Date;
     endDate?: Date;
-  }): Promise<Booking[]>;
+  }): Promise<BaseBooking[]>;
 
   /**
    * Find bookings by trip ID
@@ -39,14 +39,14 @@ export interface BookingRepository extends BaseRepository<
   findByTripId(tripId: string, options?: {
     status?: BookingStatus | BookingStatus[];
     type?: BookingType | BookingType[];
-  }): Promise<Booking[]>;
+  }): Promise<BaseBooking[]>;
 
   /**
    * Find a booking by provider reference ID
    * @param providerReferenceId - The reference ID from the provider
    * @returns The booking if found, null otherwise
    */
-  findByProviderReferenceId(providerReferenceId: string): Promise<Booking | null>;
+  findByProviderReferenceId(providerReferenceId: string): Promise<BaseBooking | null>;
 
   /**
    * Find bookings by organization ID
@@ -54,14 +54,14 @@ export interface BookingRepository extends BaseRepository<
    * @param options - Search parameters
    * @returns Array of bookings for the organization
    */
-  findByOrganizationId(organizationId: string, options?: BookingSearchParams): Promise<Booking[]>;
+  findByOrganizationId(organizationId: string, options?: BookingSearchParams): Promise<BaseBooking[]>;
 
   /**
    * Search bookings based on criteria
    * @param params - Search parameters
    * @returns Array of bookings matching the criteria
    */
-  searchBookings(params: BookingSearchParams): Promise<Booking[]>;
+  searchBookings(params: BookingSearchParams): Promise<BaseBooking[]>;
 
   /**
    * Confirm a booking
@@ -74,7 +74,7 @@ export interface BookingRepository extends BaseRepository<
     confirmationNumber: string;
     confirmedAt: Date;
     details?: Record<string, unknown>;
-  }): Promise<Booking | null>;
+  }): Promise<BaseBooking | null>;
 
   /**
    * Cancel a booking
@@ -82,7 +82,7 @@ export interface BookingRepository extends BaseRepository<
    * @param cancellationReason - Reason for cancellation
    * @returns The updated booking or null if not found
    */
-  cancelBooking(id: string, cancellationReason: string): Promise<Booking | null>;
+  cancelBooking(id: string, cancellationReason: string): Promise<BaseBooking | null>;
 
   /**
    * Get booking statistics for a user
@@ -118,5 +118,5 @@ export interface BookingRepository extends BaseRepository<
    * @param notes - Optional notes about the status change
    * @returns The updated booking or null if not found
    */
-  updateStatus(id: string, status: BookingStatus, notes?: string): Promise<Booking | null>;
+  updateStatus(id: string, status: BookingStatus, notes?: string): Promise<BaseBooking | null>;
 }

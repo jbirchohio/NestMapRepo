@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import TagBadge from "@/components/TagBadge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
-import type { ClientActivity, ApiResponse } from "@shared/types";
+import type { ClientActivity, ApiResponse } from "@shared/types/activity/";
 interface ActivityItemProps {
     activity: ClientActivity;
     onClick: (activity: ClientActivity) => void;

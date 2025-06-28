@@ -7,8 +7,8 @@ import type {
   CreateOrganizationData,
   UpdateOrganizationData,
   OrganizationSettings
-} from '@shared/types/organizations.js';
-import type { User } from '@shared/types/users.js';
+} from '@shared/types/organizations';
+import type { User } from '@shared/types/users';
 /**
  * Interface for organization data access operations
  */

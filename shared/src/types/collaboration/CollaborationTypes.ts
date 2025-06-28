@@ -2,7 +2,7 @@
  * Types related to real-time collaboration features
  */
 
-import type { ActivityAction } from '../activity/ActivityTypes.js';
+import type { ActivityAction } from '../../constants/ActivityActions.js';
 
 export interface CollaborationPresenceProps {
     tripId: string;

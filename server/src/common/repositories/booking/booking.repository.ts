@@ -7,17 +7,19 @@ import { BOOKING_REPOSITORY, DB_CONNECTION } from './booking.tokens.js';
 import type { BookingRepository } from './booking.repository.interface.js';
 import { Logger } from 'winston';
 import type { 
-  Booking, 
+  BaseBooking, 
   BookingStatus, 
   BookingType, 
-  BookingSearchParams 
-} from '@shared/types/bookings.js';
+  BookingSearchParams,
+  CreateBookingData,
+  UpdateBookingData
+} from '@shared/src/types/booking/index.ts';
 
 type OrderBy = 'asc' | 'desc';
 
 @Injectable()
 export class BookingRepositoryImpl 
-  extends BaseRepositoryImpl<Booking, string, any, any> 
+  extends BaseRepositoryImpl<BaseBooking, string, any, any> 
   implements BookingRepository 
 {
   protected logger: Logger;
@@ -30,33 +32,34 @@ export class BookingRepositoryImpl
     this.logger = winstonLogger.child({ component: 'BookingRepository' });
   }
 
-  protected mapToModel(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Booking | null {
-    if (!data) return null;
+  protected async mapToModel(data: any): Promise<BaseBooking> {
+    if (!data) {
+      throw new Error('Booking data is required');
+    }
+    
+    // Ensure provider and providerReferenceId are always set
+    const provider = data.provider || 'internal';
+    const providerReferenceId = data.providerReferenceId || data.provider_reference_id || '';
+    
+    // For backward compatibility, generate a reference if not provided
+    const referenceNumber = data.referenceNumber || data.reference || '';
     
     return {
-      ...data,
-      // Map database fields to Booking type
       id: data.id,
-      reference: data.reference,
-      type: data.type,
-      status: data.status,
-      bookingDate: data.bookingDate || data.booking_date,
-      checkInDate: data.checkInDate || data.check_in_date,
-      checkOutDate: data.checkOutDate || data.check_out_date,
-      amount: data.amount,
-      currency: data.currency,
-      provider: data.provider,
-      providerBookingId: data.providerBookingId || data.provider_booking_id,
       userId: data.userId || data.user_id,
-      organizationId: data.organizationId || data.organization_id,
+      type: data.type || 'other',
+      provider,
+      providerReferenceId,
+      status: data.status || 'pending',
+      startDate: data.startDate || data.start_date || data.checkInDate || data.check_in_date || new Date().toISOString(),
+      endDate: data.endDate || data.end_date || data.checkOutDate || data.check_out_date || new Date().toISOString(),
+      totalPrice: data.totalPrice || data.amount || 0,
+      currency: data.currency || 'USD',
+      referenceNumber,
+      notes: data.notes || null,
       tripId: data.tripId || data.trip_id,
-      activityId: data.activityId || data.activity_id,
-      notes: data.notes,
-      cancellationPolicy: data.cancellationPolicy || data.cancellation_policy,
-      cancellationDeadline: data.cancellationDeadline || data.cancellation_deadline,
-      metadata: data.metadata || {},
-      createdAt: data.createdAt || data.created_at,
-      updatedAt: data.updatedAt || data.updated_at,
+      organizationId: data.organizationId || data.organization_id,
+      metadata: data.metadata || {}
     };
   }
 
@@ -68,7 +71,7 @@ export class BookingRepositoryImpl
       confirmedAt: Date;
       details?: Record<string, unknown>;
     }
-  ): Promise<Booking | null> {
+  ): Promise<BaseBooking | null> {
     try {
       const updateData: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {
         status: 'confirmed' as const,
@@ -89,7 +92,7 @@ export class BookingRepositoryImpl
         .where(eq(bookings.id, id))
         .returning();
 
-      return result as unknown as Booking;
+      return result as unknown as BaseBooking;
     } catch (error) {
       this.logger.error(`Error confirming booking ${id}:`, error);
       throw error;
@@ -206,7 +209,7 @@ export class BookingRepositoryImpl
     id: string, 
     status: BookingStatus, 
     notes?: string
-  ): Promise<Booking | null> {
+  ): Promise<BaseBooking | null> {
     try {
       const updateData: Record<string, any> = {
         status,
@@ -226,14 +229,14 @@ export class BookingRepositoryImpl
         .where(eq(bookings.id, id))
         .returning();
 
-      return result as unknown as Booking;
+      return result as unknown as BaseBooking;
     } catch (error) {
       this.logger.error(`Error updating status for booking ${id}:`, error);
       throw error;
     }
   }
 
-  async searchBookings(params: BookingSearchParams & { limit?: number; offset?: number }): Promise<Booking[]> {
+  async searchBookings(params: BookingSearchParams & { limit?: number; offset?: number }): Promise<BaseBooking[]> {
     try {
       // Build the base query
       const query = this.db.select().from(bookings);
@@ -282,7 +285,8 @@ export class BookingRepositoryImpl
       
       // Execute the query and map results
       const results = await query;
-      return results.map(booking => this.mapToModel(booking));
+      const mappedResults = await Promise.all(results.map(booking => this.mapToModel(booking)));
+      return mappedResults.filter((booking): booking is BaseBooking => booking !== null);
     } catch (error) {
       this.logger.error('Error searching bookings:', error);
       throw error;
@@ -290,27 +294,27 @@ export class BookingRepositoryImpl
   }
 
   async findByUserId(
-    userId: string | number, 
+    userId: string,
     options: Omit<BookingSearchParams, 'userId'> = {}
-  ): Promise<Booking[]> {
+  ): Promise<BaseBooking[]> {
     return this.searchBookings({ ...options, userId });
   }
 
   async findByTripId(
     tripId: string, 
     options: { status?: BookingStatus | BookingStatus[]; type?: BookingType | BookingType[] } = {}
-  ): Promise<Booking[]> {
+  ): Promise<BaseBooking[]> {
     return this.searchBookings({ ...options, tripId });
   }
 
   async findByOrganizationId(
     organizationId: string,
     options: Omit<BookingSearchParams, 'organizationId'> = {}
-  ): Promise<Booking[]> {
+  ): Promise<BaseBooking[]> {
     return this.searchBookings({ ...options, organizationId });
   }
 
-  async findByProviderReferenceId(providerReferenceId: string): Promise<Booking | null> {
+  async findByProviderReferenceId(providerReferenceId: string): Promise<BaseBooking | null> {
     try {
       const [booking] = await this.db
         .select()
@@ -324,7 +328,7 @@ export class BookingRepositoryImpl
     }
   }
 
-  async cancelBooking(id: string, reason?: string): Promise<Booking> {
+  async cancelBooking(id: string, reason?: string): Promise<BaseBooking> {
     try {
       const [updatedBooking] = await this.db
         .update(bookings)
@@ -340,7 +344,7 @@ export class BookingRepositoryImpl
         throw new NotFoundException(`Booking with ID ${id} not found`);
       }
 
-      return updatedBooking as unknown as Booking;
+      return updatedBooking as unknown as BaseBooking;
     } catch (error) {
       this.logger.error(`Error cancelling booking ${id}:`, error);
       throw error;
@@ -438,33 +442,65 @@ export class BookingRepositoryImpl
   }
 
   // Implement other required methods from BaseRepository
-  async create(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<Booking> {
+  async create(data: CreateBookingData & { userId: string }): Promise<BaseBooking> {
     try {
+      const now = new Date();
+      const reference = data.referenceNumber || `B${Math.floor(100000 + Math.random() * 900000)}`;
+      
+      const bookingData = {
+        id: crypto.randomUUID(),
+        type: data.type,
+        provider: data.provider,
+        providerReferenceId: data.providerReferenceId,
+        status: 'pending' as const, // Explicitly type as const to match the enum
+        bookingDate: now,
+        amount: data.totalPrice,
+        currency: data.currency,
+        reference,
+        checkInDate: new Date(data.startDate),
+        checkOutDate: data.endDate ? new Date(data.endDate) : undefined,
+        userId: data.userId,
+        organizationId: data.organizationId,
+        tripId: data.tripId,
+        notes: data.notes || null,
+        metadata: data.metadata || {},
+        createdAt: now,
+        updatedAt: now
+      };
+
+      // Validate provider reference ID is provided for non-internal providers
+      if (data.provider !== 'internal' && !data.providerReferenceId) {
+        throw new Error('providerReferenceId is required for external providers');
+      }
+
       const [result] = await this.db
         .insert(bookings)
-        .values({
-          ...data,
-          id: crypto.randomUUID(),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
+        .values(bookingData)
         .returning();
       
-      return result as unknown as Booking;
+      return this.mapToModel(result);
     } catch (error) {
       this.logger.error('Error creating booking:', error);
       throw error;
     }
   }
 
-  async update(id: string, data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<Booking> {
+  async update(id: string, data: UpdateBookingData): Promise<BaseBooking> {
     try {
+      const updateData: Record<string, unknown> = {
+        ...data,
+        updatedAt: new Date()
+      };
+
+      // Map fields to match database schema
+      if (data.startDate) updateData.checkInDate = new Date(data.startDate);
+      if (data.endDate) updateData.checkOutDate = new Date(data.endDate);
+      if (data.totalPrice !== undefined) updateData.amount = data.totalPrice;
+      if (data.referenceNumber) updateData.reference = data.referenceNumber;
+
       const [result] = await this.db
         .update(bookings)
-        .set({
-          ...data,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(bookings.id, id))
         .returning();
       
@@ -472,7 +508,7 @@ export class BookingRepositoryImpl
         throw new NotFoundException(`Booking with ID ${id} not found`);
       }
       
-      return result as unknown as Booking;
+      return this.mapToModel(result);
     } catch (error) {
       this.logger.error(`Error updating booking ${id}:`, error);
       throw error;

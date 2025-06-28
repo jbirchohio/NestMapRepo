@@ -1,35 +1,59 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { ActivityFormValues, ActivityModalProps } from './types';
+import type { ActivityFormValues, ActivityModalProps } from '@shared/types/activity';
 import { ActivityStatus } from '@shared/types/activity';
 import ActivityForm from './ActivityForm';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { apiRequest } from '@/lib/queryClient';
 import TripDatePicker from '@/components/TripDatePicker';
 import { Label } from '@/components/ui/label';
-export default function ActivityModal({ tripId, date, activity, onClose, onSave }: ActivityModalProps) {
+
+
+/**
+ * ActivityModal component for creating or editing an activity.
+ * 
+ * Props:
+ * - tripId: ID of the trip associated with the activity.
+ * - date: Optional date for the activity, defaults to current date.
+ * - activity: Existing activity data for editing, if available.
+ * - onClose: Callback function to handle modal close.
+ * - onSave: Callback function to handle successful activity save.
+ * 
+ * Features:
+ * - Initializes date state with a valid date string in YYYY-MM-DD format.
+ * - Handles form submission with mutation to create or update activity.
+ * - Displays success or error toast messages based on mutation result.
+ * - Uses TripDatePicker for selecting activity date.
+ * - Uses ActivityForm for inputting activity details.
+ */
+export default function ActivityModal({ tripId, date, activity, onClose, onSave }: ActivityModalProps & { date?: Date }) {
     const { toast } = useToast();
-    const [loading, setLoading] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(date);
-    const activityMutation = useMutation({
+    // Initialize with a valid date string in YYYY-MM-DD format
+    const [selectedDate, setSelectedDate] = useState<string>(
+      (date ? new Date(date) : new Date()).toISOString().split('T')[0] as string
+    );
+    
+    // Parse the date string back to a Date object when needed
+    const selectedDateObj = new Date(selectedDate);
+    const createActivity = useMutation({
         mutationFn: async (data: ActivityFormValues) => {
-            const endpoint = activity ? `${API_ENDPOINTS.ACTIVITIES}/${activity.id}` : API_ENDPOINTS.ACTIVITIES;
+            const endpoint = API_ENDPOINTS.ACTIVITIES;
             const apiData = {
                 ...data,
-                date: data.date, // Already a Date object from the form
                 tripId, // Ensure tripId is included
             };
-            const url = `${endpoint}`;
-            return apiRequest(activity ? "PUT" : "POST", url, apiData);
+            return apiRequest({
+                method: "POST",
+                url: endpoint,
+                data: apiData
+            });
         },
         onSuccess: () => {
             toast({
                 title: "Success",
-                description: activity ? "Activity updated" : "Activity created",
+                description: "Activity created",
             });
-            onClose();
-            onSave();
         },
         onError: (error: Error) => {
             toast({
@@ -39,9 +63,77 @@ export default function ActivityModal({ tripId, date, activity, onClose, onSave 
             });
         },
     });
-    const handleSubmit = (data: ActivityFormValues) => {
-        setLoading(true);
-        activityMutation.mutate(data);
+    const updateActivity = useMutation({
+        mutationFn: async (data: ActivityFormValues) => {
+            const endpoint = `${API_ENDPOINTS.ACTIVITIES}/${data.id}`;
+            const apiData = {
+                ...data,
+                tripId, // Ensure tripId is included
+            };
+            return apiRequest({
+                method: "PUT",
+                url: endpoint,
+                data: apiData
+            });
+        },
+        onSuccess: () => {
+            toast({
+                title: "Success",
+                description: "Activity updated",
+            });
+        },
+        onError: (error: Error) => {
+            toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive",
+            });
+        },
+    });
+    const handleSubmit = async (formData: ActivityFormValues) => {
+        try {
+            // Convert form data to match the API expected format
+            const activityData: Partial<ClientActivity> = {
+                ...formData,
+                tripId: tripId,
+                date: selectedDate,
+                // Ensure proper types for all fields
+                cost: formData.cost !== undefined ? Number(formData.cost) : 0,
+                order: formData.order || 0,
+                completed: formData.completed || false,
+                // Handle coordinates
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+                // Ensure timestamps are properly set
+                createdAt: formData.createdAt || new Date(),
+                updatedAt: new Date(),
+                // Set default values for required fields
+                organizationId: activity?.organizationId || '',
+                createdBy: activity?.createdBy || '',
+                status: (activity?.status as ActivityStatus) || 'pending'
+            };
+
+            if (activity?.id) {
+                // Update existing activity
+                await updateActivity.mutateAsync({
+                    ...activityData,
+                    id: activity.id,
+                });
+            } else {
+                // Create new activity
+                await createActivity.mutateAsync(activityData);
+            }
+            
+            onSave();
+            onClose();
+        } catch (error) {
+            console.error('Error saving activity:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to save activity. Please try again.',
+                variant: 'destructive',
+            });
+        }
     };
     return (<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-xl">
@@ -51,61 +143,46 @@ export default function ActivityModal({ tripId, date, activity, onClose, onSave 
           <div>
             <Label htmlFor="date">Date</Label>
             <TripDatePicker 
-              startDate={selectedDate} 
-              endDate={selectedDate} 
-              selectedDate={selectedDate.toISOString().split('T')[0]} 
-              onDateSelect={(sel: string) => {
-                if (sel) {
-                  setSelectedDate(new Date(sel));
-                }
-              }} 
+              startDate={selectedDateObj} 
+              endDate={selectedDateObj} 
+              selectedDate={selectedDate}
+              onDateSelect={setSelectedDate} 
             />
           </div>
 
-          <ActivityForm 
-            activity={activity ? {
-              ...activity,
-              id: activity.id || 'new',
-              tripId: activity.tripId || tripId.toString(),
-              organizationId: activity.organizationId || '',
-              title: activity.title || '',
-              date: selectedDate,
-              time: activity.time || '12:00',
-              locationName: activity.locationName || '',
-              completed: activity.completed || false,
-              status: (activity.status as ActivityStatus) || 'pending',
-              order: activity.order || 0,
-              createdBy: activity.createdBy || '',
-              createdAt: activity.createdAt ? new Date(activity.createdAt) : new Date(),
-              updatedAt: activity.updatedAt ? new Date(activity.updatedAt) : new Date(),
-              // Optional fields with defaults
-              travelMode: activity.travelMode || 'walking',
-              latitude: activity.latitude,
-              longitude: activity.longitude,
-              notes: activity.notes,
-              tag: activity.tag,
-              assignedTo: activity.assignedTo
-            } : { 
-              // New activity defaults
-              id: 'new',
-              tripId: tripId.toString(),
-              organizationId: '',
-              title: '',
-              date: selectedDate,
-              time: '12:00',
-              locationName: '',
-              completed: false,
-              status: 'pending',
-              order: 0,
-              createdBy: '',
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              // Optional fields with defaults
-              travelMode: 'walking'
-            }} 
-            tripId={tripId.toString()} 
-            onSubmit={handleSubmit}
-          />
+            <ActivityForm 
+              tripId={tripId}
+              onSubmit={handleSubmit}
+              activity={{
+                // Required fields with defaults
+                id: activity?.id || 'new',
+                tripId: tripId,
+                organizationId: activity?.organizationId || '',
+                title: activity?.title || '',
+                description: activity?.description || '',
+                status: (activity?.status as ActivityStatus) || 'pending',
+                startTime: activity?.startTime || '',
+                endTime: activity?.endTime || '',
+                location: activity?.location || '',
+                locationName: activity?.locationName || '',
+                cost: activity?.cost,
+                date: selectedDate,
+                time: activity?.time || '12:00',
+                completed: activity?.completed || false,
+                order: activity?.order || 0,
+                createdBy: activity?.createdBy || '',
+                createdAt: activity?.createdAt ? new Date(activity.createdAt) : new Date(),
+                updatedAt: activity?.updatedAt ? new Date(activity.updatedAt) : new Date(),
+                // Optional fields with defaults
+                travelMode: activity?.travelMode || 'walking',
+                // Optional fields that can be undefined
+                latitude: activity?.latitude,
+                longitude: activity?.longitude,
+                notes: activity?.notes,
+                tag: activity?.tag,
+                assignedTo: activity?.assignedTo
+              }}
+            />
         </div>
       </div>
     </div>);

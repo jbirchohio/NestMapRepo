@@ -4,25 +4,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { authService } from '@/services/authService';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionLockout } from '@/utils/sessionLockout';
-import type { 
-  AuthError, 
-  AuthUser, 
-  AuthTokens, 
-  JwtPayload, 
-  LoginDto, 
-  RegisterDto,
-  Permission
-} from '@shared/types/auth';
-type UserResponse = AuthUser;
+import { AuthUser, AuthError, AuthTokens, Permission, LoginDto, RegisterDto } from '@shared/types/auth';
+import type { JwtPayload } from '@shared/types/auth/jwt';
 
-// Extend the shared AuthUser type with any client-specific fields
-type ExtendedAuthUser = AuthUser & {
-  // Add any client-specific user fields here
-  displayName?: string | null;
-  avatarUrl?: string | null;
-  tenantId?: string;
-  lastLoginAt?: string | null;
-};
+type UserResponse = AuthUser;
 
 // Type for API responses that might use snake_case
 type UserResponseSnakeCase = {
@@ -49,22 +34,6 @@ function isSnakeCaseResponse(user: unknown): user is UserResponseSnakeCase {
   if (!user || typeof user !== 'object') return false;
   const u = user as Record<string, unknown>;
   return 'first_name' in u || 'last_name' in u || 'email_verified' in u || 'created_at' in u;
-}
-
-// Type guard for AuthUser
-function isAuthUser(user: unknown): user is AuthUser {
-  if (!user || typeof user !== 'object') return false;
-  const u = user as Record<string, unknown>;
-  return 'id' in u && 'email' in u;
-}
-
-// Helper to safely get properties in either case
-function getProperty<T extends Record<string, unknown>>(
-  obj: T,
-  camelKey: keyof T,
-  snakeKey: string
-): T[keyof T] | undefined {
-  return obj[camelKey] ?? (obj as Record<string, unknown>)[snakeKey];
 }
 
 // Transform user data to AuthUser type
@@ -106,16 +75,6 @@ function toAuthUser(userData: UserResponseMixed): AuthUser {
     organizationId: userData.organization_id || null
   };
 }
-
-// Use the shared JwtPayload type which already includes standard claims
-// and extend it with any custom claims if needed
-type ExtendedJwtPayload = JwtPayload & {
-  permissions?: string[];
-  tenantId?: string;
-  email?: string;
-  role?: string;
-  organization_id?: string | null;
-};
 
 // Constants
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -175,7 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user, tokenManager]);
 
   // Check if user has a specific permission
-  const checkUserPermission = useCallback((permission: Permission | string): boolean => {
+  const checkUserPermission = useCallback((permission: string | { resource: string; action: string }): boolean => {
     if (!user?.permissions) return false;
     const permissionStr = typeof permission === 'string' ? permission : `${permission.resource}:${permission.action}`;
     return user.permissions.includes(permissionStr);
@@ -206,7 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sessionLockout, tokenManager]);
 
   // Handle authentication errors
-  const handleAuthError = useCallback((error: SharedErrorType, email: string = ''): AuthError => {
+  const handleAuthError = useCallback((error: unknown, email: string = ''): AuthError => {
     // Increment failed attempts on authentication error
     const clientIp = getClientIp();
     sessionLockout.recordFailedAttempt(clientIp, email);
@@ -281,7 +240,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       navigate('/dashboard');
       
       // Show success message with safe property access
-      const displayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || email;
+      const displayName = user?.['displayName'] 
+        ?? `${user?.['firstName'] ?? ''} ${user?.['lastName'] ?? ''}`.trim() 
+        ?? email;
       toast({
         title: 'Login successful',
         children: `Welcome back, ${displayName}!`,
@@ -324,8 +285,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Redirect to onboarding
       navigate('/onboarding');
       
-      // Show success message
-      const displayName = user.displayName || data.email;
+      // Show success message with safe property access
+      const displayName = user['displayName'] || data.email;
       toast({
         title: 'Registration successful',
         children: `Welcome, ${displayName}! Your account has been created.`,
@@ -395,9 +356,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Get token expiration from TokenManager
           const token = tokenManager.getAccessToken();
           if (token) {
-            const decoded = tokenManager.decodeToken(token) as ExtendedJwtPayload;
-            if (decoded?.exp) {
-              const expiresAt = new Date(decoded.exp * 1000);
+            const decoded = tokenManager.decodeToken(token);
+            // Check if the decoded token is an access token with required fields
+            if (decoded && 'exp' in decoded && 'type' in decoded && decoded.type === 'access') {
+              const accessToken = decoded as JwtPayload;
+              const expiresAt = new Date(Number(accessToken.exp) * 1000);
               
               if (isMounted) {
                 setSessionExpiresAt(expiresAt);

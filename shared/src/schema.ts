@@ -1,9 +1,74 @@
-// Define base interfaces
+import { z } from 'zod';
+
+// ======================
+// Base Types
+// ======================
+
+
+type JsonPrimitive = string | number | boolean | null;
+type JsonObject = { [key: string]: JsonValue };
+type JsonArray = JsonValue[];
+
+export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+
+/**
+ * Base interface for all database entities
+ */
 export interface BaseEntity {
     id: string;
+    createdAt: string | Date;
+    updatedAt: string | Date;
+    deletedAt?: string | Date | null;
+}
+
+/**
+ * Base interface for database metadata fields
+ */
+export interface Metadata {
+    [key: string]: JsonValue | undefined;
     createdAt?: string;
     updatedAt?: string;
+    createdBy?: string;
+    updatedBy?: string;
 }
+
+// ======================
+// Common Database Types
+// ======================
+
+export type Timestamp = string | Date;
+
+export interface PaginationOptions {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedResult<T> {
+    data: T[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
+
+// ======================
+// Common Field Validations
+// ======================
+
+export const commonFieldValidations = {
+    id: () => z.string().uuid('Invalid UUID format'),
+    email: () => z.string().email('Invalid email address'),
+    timestamp: () => z.date().or(z.string().datetime()),
+    json: () => z.record(z.any()).or(z.array(z.any())).or(z.any()),
+    url: () => z.string().url('Invalid URL format'),
+} as const;
+
+// ======================
+// User Types
+// ======================
+
 export interface NewUser extends Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'emailVerified' | 'refreshTokens'> {
     password: string;
 }

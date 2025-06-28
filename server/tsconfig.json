@@ -20,7 +20,8 @@
             "@shared/types/*": ["../shared/types/*"],
             "@shared/src/*": ["../shared/src/*"],
             "@shared/src/types/auth/*": ["../shared/src/types/auth/*"],
-            "@shared/types/auth/*": ["../shared/src/types/auth/*"]
+            "@shared/types/auth/*": ["../shared/src/types/auth/*"],
+            "@shared/types/booking/*": ["../shared/src/types/booking/*"]
         },
         "lib": [
             "ES2022",

@@ -4,8 +4,28 @@ const { sign, verify, decode } = jwt;
 import { redis } from '../db/redis.js';
 import { logger } from './logger.js';
 import { v4 as uuidv4 } from 'uuid';
-import type { TokenPayload, TokenType, UserRole, VerifyTokenResult, AuthTokens, PasswordResetTokenResult } from '../types/jwt.js';
-// The JwtPayload interface is extended in jwtService.ts to avoid duplication
+import type { 
+  TokenType, 
+  AuthTokens, 
+  TokenVerificationResult, 
+  JwtPayload,
+  AccessTokenPayload,
+  RefreshTokenPayload,
+  PasswordResetTokenPayload
+} from '@shared/src/types/auth/jwt.js';
+import type { UserRole } from '@shared/src/types/user/index.js';
+// Type definitions for token verification results
+type VerifyTokenResult<T = JwtPayload> = TokenVerificationResult<T>;
+
+interface TokenGenerationResult {
+  token: string;
+  expiresAt: Date;
+}
+
+interface TokenStoreOptions {
+  ttl: number;
+  type: TokenType;
+}
 // Token secret keys from environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-256-bit-secret';
 const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
@@ -20,127 +40,178 @@ function generateTokenId(): string {
 /**
  * Generate a JWT token with the given payload and options
  */
-export const generateToken = async (userId: string, email: string, type: TokenType, expiresIn: string | number, additionalPayload: {
-    role?: UserRole;
-} = {}): Promise<{
-    token: string;
-    expiresAt: Date;
-}> => {
+async function storeToken(jti: string, userId: string, options: TokenStoreOptions): Promise<void> {
+  if (options.type === 'refresh') {
+    await redis.set(`refresh_token:${jti}`, userId, options.ttl);
+  }
+}
+
+export const generateToken = async <T extends TokenType>(
+  userId: string, 
+  email: string, 
+  type: T,
+  expiresIn: string | number,
+  role: UserRole = 'user' as UserRole
+): Promise<TokenGenerationResult> => {
     const jti = generateTokenId();
     const expiresInMs = typeof expiresIn === 'string'
-        ? parseInt(expiresIn) * 1000
-        : expiresIn * 1000;
+      ? this.parseTimeString(expiresIn) * 1000
+      : expiresIn * 1000;
+    
     const expiresAt = new Date(Date.now() + expiresInMs);
     const iat = Math.floor(Date.now() / 1000);
     const exp = Math.floor(expiresAt.getTime() / 1000);
-    const payload: TokenPayload = {
+    
+    // Create the appropriate payload based on token type
+    let payload: JwtPayload;
+    
+    if (type === 'access') {
+      payload = {
         jti,
-        type,
-        userId,
+        sub: userId,
         email,
-        role: (additionalPayload.role || 'user') as UserRole,
+        role,
+        permissions: [], // Add actual permissions based on role
         iat,
         exp,
-    };
-    const token = sign(payload, JWT_SECRET, { expiresIn: typeof expiresIn === 'string' ? expiresIn : `${expiresIn}s` } as SignOptions);
-    // Store the token in Redis if it's a refresh token
-    if (type === 'refresh') {
-        const ttl = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
-        await redis.set(`refresh_token:${jti}`, userId, ttl);
+        type: 'access'
+      } as AccessTokenPayload;
+    } else if (type === 'refresh') {
+      payload = {
+        jti,
+        sub: userId,
+        type: 'refresh',
+        iat,
+        exp
+      } as RefreshTokenPayload;
+    } else if (type === 'password_reset') {
+      payload = {
+        jti,
+        sub: userId,
+        email,
+        type: 'password_reset',
+        iat,
+        exp
+      } as PasswordResetTokenPayload;
+    } else {
+      throw new Error(`Unsupported token type: ${type}`);
     }
+    
+    const token = sign(payload, JWT_SECRET, { 
+      expiresIn: typeof expiresIn === 'string' ? expiresIn : `${expiresIn}s`,
+      algorithm: 'HS256'
+    } as SignOptions);
+    
+    // Store the token in Redis if needed
+    const ttl = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
+    await storeToken(jti, userId, { ttl, type });
     return { token, expiresAt };
 };
 /**
  * Verify and decode a JWT token with enhanced security checks
  */
-export const verifyToken = async (token: string, type: TokenType): Promise<VerifyTokenResult | null> => {
+export const verifyToken = async <T extends JwtPayload = JwtPayload>(
+  token: string, 
+  expectedType?: TokenType
+): Promise<VerifyTokenResult<T> | null> => {
     try {
-        const decoded = verify(token, JWT_SECRET) as TokenPayload;
-        // Verify token type
-        if (decoded.type !== type) {
-            throw new Error('Invalid token type');
+      const decoded = verify(token, JWT_SECRET) as unknown as JwtPayload;
+      
+      // Verify token type if expected type is provided
+      if (expectedType && decoded.type !== expectedType) {
+        throw new Error(`Invalid token type. Expected ${expectedType}, got ${decoded.type}`);
+      }
+      
+      // For refresh tokens, check if it's been revoked
+      if (decoded.type === 'refresh') {
+        const storedUserId = await redis.get(`refresh_token:${decoded.jti}`);
+        if (!storedUserId || storedUserId !== decoded.sub) {
+          throw new Error('Token has been revoked');
         }
-        // For refresh tokens, check if it's been revoked
-        if (type === 'refresh') {
-            const storedUserId = await redis.get(`refresh_token:${decoded.jti}`);
-            if (!storedUserId || storedUserId !== decoded.userId) {
-                throw new Error('Token has been revoked');
-            }
-        }
-        const { jti, userId, email, role, iat, exp } = decoded;
-        return {
-            payload: {
-                jti,
-                type,
-                userId,
-                email,
-                role,
-                iat: iat || 0,
-                exp: exp || 0
-            },
-            expired: false
-        };
+      }
+      
+      return {
+        payload: decoded as T,
+        expired: false
+      };
     }
     catch (error: unknown) {
-        if (!(error instanceof Error)) {
-            logger.error('Unknown error type in verifyToken', { error });
-            return null;
-        }
-        if (error.name === 'TokenExpiredError') {
-            const payload = decode(token) as TokenPayload;
-            if (!payload)
-                return null;
-            return {
-                payload: {
-                    jti: payload.jti,
-                    type: payload.type,
-                    userId: payload.userId,
-                    email: payload.email,
-                    role: payload.role,
-                    iat: payload.iat || 0,
-                    exp: payload.exp || 0
-                },
-                expired: true
-            };
-        }
-        logger.error('Token verification failed:', error);
+      if (!(error instanceof Error)) {
+        logger.error('Unknown error type in verifyToken', { error });
         return null;
+      }
+      
+      if (error.name === 'TokenExpiredError') {
+        const payload = decode(token) as JwtPayload;
+        if (!payload) return null;
+        
+        return {
+          payload: payload as T,
+          expired: true,
+          error: 'Token expired'
+        };
+      }
+      
+      logger.error('Token verification failed:', error);
+      return null;
     }
 };
 /**
  * Generate a new access/refresh token pair
  */
-export const generateAuthTokens = async (userId: string, email: string, role: UserRole = 'user' as UserRole): Promise<AuthTokens> => {
-    const accessToken = await generateToken(userId, email, 'access', JWT_ACCESS_EXPIRES_IN, { role });
-    const refreshToken = await generateToken(userId, email, 'refresh', JWT_REFRESH_EXPIRES_IN, { role });
+export const generateAuthTokens = async (userId: string, email: string, role: UserRole = 'user'): Promise<AuthTokens> => {
+    const accessToken = await generateToken(userId, email, 'access', JWT_ACCESS_EXPIRES_IN, role);
+    const refreshToken = await generateToken(userId, email, 'refresh', JWT_REFRESH_EXPIRES_IN, role);
+    
     return {
         accessToken: accessToken.token,
         refreshToken: refreshToken.token,
-        accessTokenExpiresAt: accessToken.expiresAt,
-        refreshTokenExpiresAt: refreshToken.expiresAt,
-        tokenType: 'Bearer' as const
+        expiresAt: accessToken.expiresAt.toISOString(),
+        tokenType: 'Bearer'
     };
 };
+
+// Helper to parse time strings like '15m', '1h', '7d' into seconds
+function parseTimeString(timeString: string): number {
+    const value = parseInt(timeString);
+    if (timeString.endsWith('s')) return value;
+    if (timeString.endsWith('m')) return value * 60;
+    if (timeString.endsWith('h')) return value * 60 * 60;
+    if (timeString.endsWith('d')) return value * 60 * 60 * 24;
+    return value; // Assume seconds if no unit specified
+}
 /**
  * Refresh an access token using a refresh token
  */
-export async function refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
-    // Verify the refresh token
-    const verified = await verifyToken(refreshToken, 'refresh');
-    if (!verified || verified.expired) {
-        return null;
-    }
-    const { payload } = verified;
-    // Revoke the old refresh token
+export const refreshAccessToken = async (refreshToken: string): Promise<AuthTokens | null> => {
+  // Verify the refresh token
+  const verified = await verifyToken<RefreshTokenPayload>(refreshToken, 'refresh');
+  if (!verified || !verified.payload || verified.expired) {
+    return null;
+  }
+  
+  const { payload } = verified;
+  const userId = payload.sub;
+  
+  // Revoke the old refresh token
+  if (payload.jti) {
     await redis.del(`refresh_token:${payload.jti}`);
-    // Generate new tokens
-    return generateAuthTokens(payload.userId, payload.email, payload.role);
+  }
+  
+  // In a real app, you'd fetch the user's email and role from the database
+  // For now, we'll use placeholder values
+  const userEmail = 'user@example.com'; // Fetch from DB in production
+  const userRole = 'user' as UserRole; // Fetch from DB in production
+  
+  // Generate new tokens
+  return generateAuthTokens(userId, userEmail, userRole);
 }
 /**
  * Generate a password reset token
  */
 export const generatePasswordResetToken = async (userId: string, email: string): Promise<{
-    token: string;
+  token: string;
+  expiresAt: Date;
     expiresAt: Date;
 }> => {
     return generateToken(userId, email, 'password_reset', JWT_PASSWORD_RESET_EXPIRES_IN);
@@ -148,15 +219,28 @@ export const generatePasswordResetToken = async (userId: string, email: string):
 /**
  * Verify a password reset token
  */
+interface PasswordResetTokenResult {
+  userId: string;
+  email: string;
+  jti: string;
+}
+
 export const verifyPasswordResetToken = async (token: string): Promise<PasswordResetTokenResult | null> => {
-    const result = await verifyToken(token, 'password_reset');
-    if (!result || result.expired)
-        return null;
-    return {
-        userId: result.payload.userId,
-        email: result.payload.email,
-        jti: result.payload.jti
-    };
+  const result = await verifyToken<PasswordResetTokenPayload>(token, 'password_reset');
+  if (!result || result.expired || !result.payload) {
+    return null;
+  }
+  
+  const payload = result.payload;
+  if (!('email' in payload)) {
+    return null;
+  }
+  
+  return {
+    userId: payload.sub,
+    email: payload.email,
+    jti: payload.jti
+  };
 };
 /**
  * Revoke a token by its ID

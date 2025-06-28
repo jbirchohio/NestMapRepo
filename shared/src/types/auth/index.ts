@@ -1,5 +1,4 @@
-import type { User } from '../user';
-import type { AuthTokens } from './jwt';
+import type { User } from '../user/index.js';
 
 /**
  * Standardized authentication error codes
@@ -98,10 +97,9 @@ export interface JwtPayload {
   sub: string; // User ID
   email: string;
   role: UserRole;
-  permissions?: string[];
+  permissions?: Permission[];
   tenantId?: string;
   organization_id?: string | null;
-  permissions?: Permission[];
   iat?: number; // Issued at
   exp?: number; // Expiration time
   [key: string]: unknown; // Allow additional claims
@@ -288,5 +286,6 @@ export function isAuthUser(user: unknown): user is AuthUser {
   );
 }
 
-export * from './jwt';
-export * from './custom-request';
+// Export types from submodules with explicit names to avoid conflicts
+export type { JwtPayload as AuthJwtPayload } from './jwt.js';
+export type { CustomRequest as AuthCustomRequest } from './custom-request.js';

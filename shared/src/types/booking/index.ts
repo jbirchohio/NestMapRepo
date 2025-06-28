@@ -11,6 +11,77 @@ export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' 
 export type BookingType = 'flight' | 'hotel' | 'car_rental' | 'activity' | 'other';
 
 /**
+ * Booking provider types
+ */
+export const bookingProviders = [
+  'internal',
+  'amadeus',
+  'sabre',
+  'booking_com',
+  'expedia',
+  'airbnb',
+  'viator',
+  'getyourguide',
+  'kayak',
+  'skyscanner',
+  'other'
+] as const;
+
+export type BookingProvider = typeof bookingProviders[number];
+
+/**
+ * Specific booking types for different booking categories
+ */
+
+export interface FlightBooking extends BaseBooking {
+  type: 'flight';
+  airline: string;
+  flightNumber: string;
+  departureAirport: string;
+  arrivalAirport: string;
+  departureTime: string;
+  arrivalTime: string;
+  seatNumber?: string | null;
+}
+
+export interface HotelBooking extends BaseBooking {
+  type: 'hotel';
+  hotelName: string;
+  roomType: string;
+  roomNumber?: string | null;
+  guestName: string;
+  numberOfGuests: number;
+  amenities?: string[];
+}
+
+export interface CarRentalBooking extends BaseBooking {
+  type: 'car_rental';
+  rentalCompany: string;
+  carModel: string;
+  licensePlate?: string | null;
+  pickupLocation: string;
+  dropoffLocation?: string | null;
+  driverName: string;
+  driverLicenseNumber?: string | null;
+}
+
+export interface ActivityBooking extends BaseBooking {
+  type: 'activity';
+  activityName: string;
+  location: string;
+  startTime: string;
+  endTime: string;
+  participantName: string;
+  numberOfParticipants: number;
+  guideName?: string | null;
+}
+
+/**
+ * Union type of all specific booking types
+ */
+export type AnyBooking = FlightBooking | HotelBooking | CarRentalBooking | ActivityBooking | BaseBooking;
+
+/**
  * Base booking interface containing all common fields
  * This should be used as the source of truth for booking-related types
  */
@@ -23,6 +94,12 @@ export interface BaseBooking {
   
   /** Type of booking */
   type: BookingType;
+  
+  /** Provider of the booking (e.g., 'internal', 'amadeus', 'booking_com') */
+  provider: BookingProvider;
+  
+  /** Reference ID from the provider's system */
+  providerReferenceId: string;
   
   /** Current status of the booking */
   status: BookingStatus;
@@ -96,6 +173,8 @@ export interface ServerBooking extends BaseBooking {
  */
 export interface CreateBookingData {
   type: BookingType;
+  provider: BookingProvider;
+  providerReferenceId: string;
   startDate: string;
   endDate: string;
   totalPrice: number;
@@ -136,6 +215,23 @@ export const bookingFormSchema = z.object({
  * Type inferred from the booking form schema
  */
 export type BookingFormValues = z.infer<typeof bookingFormSchema>;
+
+/**
+ * Parameters for searching/filtering bookings
+ */
+export interface BookingSearchParams {
+  type?: BookingType | BookingType[];
+  status?: BookingStatus | BookingStatus[];
+  userId?: string;
+  organizationId?: string;
+  tripId?: string;
+  startDate?: Date | string;
+  endDate?: Date | string;
+  search?: string;
+  provider?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
 
 /**
  * Type for the booking workflow steps

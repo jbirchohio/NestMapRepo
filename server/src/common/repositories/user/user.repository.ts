@@ -30,7 +30,7 @@ export class UserRepository extends BaseRepositoryImpl<User, string, UserCreateI
     super('user', users, users.id);
   }
 
-  public async mapToModel(dbUser: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<User> {
+  protected async mapToModel(dbUser: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): Promise<User> {
     if (!dbUser) {
       throw new Error('User data is required');
     }
@@ -591,31 +591,53 @@ export class UserRepository extends BaseRepositoryImpl<User, string, UserCreateI
   }
 
   async updatePreferences(userId: string, preferences: Record<string, any>): Promise<User | null> {
-    try {
-      const user = await this.findById(userId);
-      if (!user) return null;
+    const transaction = await db.transaction(async (tx) => {
+      try {
+        // First, get the current user settings
+        const [userSetting] = await tx
+          .select()
+          .from(userSettings)
+          .where(eq(userSettings.userId, userId));
 
-      const updatedSettings = {
-        ...(user.settings || {}),
-        preferences: {
-          ...(user.settings?.preferences || {}),
+        // Merge the new preferences with existing ones
+        const currentPreferences = userSetting?.preferences || {};
+        const updatedPreferences = {
+          ...currentPreferences,
           ...preferences,
-        },
-      };
+        };
 
-      const [updatedUser] = await db
-        .update(users)
-        .set({ 
-          settings: JSON.stringify(updatedSettings) as any | null, // Cast to any to handle JSONB type
-          updatedAt: new Date() 
-        })
-        .where(eq(users.id, userId))
-        .returning();
+        // Update or insert the user settings
+        if (userSetting) {
+          await tx
+            .update(userSettings)
+            .set({ 
+              preferences: updatedPreferences,
+              updatedAt: new Date()
+            })
+            .where(eq(userSettings.userId, userId));
+        } else {
+          await tx.insert(userSettings).values({
+            userId,
+            preferences: updatedPreferences,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
 
-      return updatedUser ? this.mapToModel(updatedUser) : null;
-    } catch (error) {
-      this.logger.error(`Error updating preferences for user ${userId}:`, error);
-      throw error;
-    }
+        // Return the updated user
+        const [updatedUser] = await tx
+          .select()
+          .from(users)
+          .where(eq(users.id, userId));
+
+        return updatedUser ? this.mapToModel(updatedUser) : null;
+      } catch (error) {
+        tx.rollback();
+        this.logger.error(`Error updating preferences for user ${userId}:`, error);
+        throw error;
+      }
+    });
+
+    return transaction;
   }
 }

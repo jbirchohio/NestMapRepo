@@ -2,28 +2,70 @@ import { Router, type Response, type NextFunction, type Request, type RequestHan
 import type { ParamsDictionary, Query } from 'express-serve-static-core';
 import { getAuthContext, requireAuth } from '../utils/authContext.js';
 import { logUserActivity } from '../utils/activityLogger.js';
-import type { JWTUser } from '../utils/authContext.js';
+import type { JWTUser, AuthUser } from '../utils/authContext.js';
 import { z } from 'zod';
-import type { Activity, ActivityType, ActivityStatus } from '@shared/types/activity';
-import { createActivitySchema, updateActivitySchema } from '../types/activity.js';
+import type { 
+  Activity as SharedActivity,
+  ClientActivity, 
+  ActivityFormValues,
+  ActivityStatus,
+  ActivityType,
+  Activity as SharedActivityType
+} from '@shared/src/types/activity/index.js';
+
+/**
+ * Extended Activity type that includes server-specific fields
+ */
+export type Activity = SharedActivityType & {
+  /** The ID of the trip this activity belongs to */
+  tripId: string;
+  
+  /** The ID of the user who created this activity */
+  createdBy: string;
+  
+  /** Optional user ID this activity is assigned to */
+  assignedTo?: string;
+  
+  /** The organization this activity belongs to */
+  organizationId?: string;
+  
+  /** When the activity was created */
+  createdAt?: Date;
+  
+  /** When the activity was last updated */
+  updatedAt?: Date;
+};
+
+import { activityFormSchema } from '@shared/src/types/activity/index.js';
 import activityService from '../services/activity.service.js';
 import { validateOrganizationAccess } from '../middleware/organization.js';
 
-// Type for authenticated user
-type AuthenticatedUser = JWTUser & { id: string };
+// Import the extended Request type from auth context
+import type { Request as AuthRequest } from 'express';
 
-// Type guard to check if user is valid with string ID
-function isValidUser(user: unknown): user is AuthenticatedUser {
+// Extend the Express Request type to include our custom properties
+type ActivitiesRequest = AuthRequest & {
+  organizationId?: string;
+  ip?: string;
+  user?: {
+    id: string | number;
+    email: string;
+    role?: string;
+    organizationId?: string | null;
+  };
+};
+
+// Type guard to check if user is valid with required properties
+function isValidUser(user: unknown): user is { id: string | number; email: string } {
   return (
     typeof user === 'object' && 
     user !== null &&
-    'id' in user && 
-    typeof (user as { id: unknown }).id === 'string' &&
-    'email' in user && 
-    'role' in user &&
-    'organizationId' in user
+    'id' in user &&
+    'email' in user
   );
 }
+
+
 
 // Helper to validate and parse UUID
 function validateUuid(id: unknown): string | null {
@@ -40,14 +82,7 @@ type TripIdParam = {
   tripId: string;
 };
 
-// Extend the Express Request type with our custom properties
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthenticatedUser;
-    }
-  }
-}
+// Request type with our custom properties
 
 // Custom request handler type with proper response typing
 type AsyncRequestHandler<
@@ -84,12 +119,15 @@ const createHandler = <
 };
 
 // Field transforms
-function transformActivityToFrontend(activity: Activity): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
+function transformActivityToFrontend(activity: Activity): ClientActivity {
   return {
     ...activity,
     // Convert any fields as needed for frontend
-    latitude: activity.latitude !== undefined ? Number(activity.latitude) : null,
-    longitude: activity.longitude !== undefined ? Number(activity.longitude) : null
+    latitude: activity.latitude,
+    longitude: activity.longitude,
+    // Add client-specific fields with defaults
+    conflict: false,
+    timeConflict: false
   };
 }
 
@@ -148,87 +186,87 @@ type ExtendedRequest<P = {}, ResBody = any, ReqBody = any> = Request<P, ResBody,
 // Get all activities for a trip
 router.get<{ tripId: string }>(
   '/trip/:tripId',
-  createHandler<{ tripId: string }, any, any>(async (req, res) => {
-    const result = tripIdParamSchema.safeParse({ tripId: req.params.tripId });
-    if (!result.success) {
+  createHandler<{ tripId: string }, any, any>(async (req: ActivitiesRequest, res) => {
+    const { tripId } = req.params;
+    const validationResult = tripIdParamSchema.safeParse({ tripId });
+    
+    if (!validationResult.success) {
       return res.status(400).json({
-        message: 'Invalid trip ID',
-        errors: result.error.errors,
+        message: 'Invalid trip ID format',
+        errors: validationResult.error.format()
       });
     }
-        const result = tripIdParamSchema.safeParse({ tripId: req.params.tripId });
-        if (!result.success) {
-            return res.status(400).json({
-                message: 'Invalid trip ID',
-                errors: result.error.errors,
-            });
-        }
+    
+    const authContext = getAuthContext(req);
+    const userId = authContext.userId ? String(authContext.userId) : null;
+    const organizationId = authContext.organizationId;
 
-        const { tripId } = result.data;
-        const { userId, organizationId } = getAuthContext(req);
+    if (!userId || !organizationId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
 
-        if (!userId || !organizationId) {
-            return res.status(401).json({ message: 'Authentication required' });
-        }
+    const activities = await activityService.findByTripId(tripId, { organizationId });
+    
+    // Log the activity
+    await logUserActivity(
+      userId,
+      organizationId,
+      'view_trip_activities',
+      { tripId },
+      req.ip || 'unknown',
+      req.get('user-agent') || 'unknown'
+    );
 
-        const activities = await activityService.findByTripId(tripId, { organizationId });
-        
-        // Log the activity
-        await logUserActivity(
-            userId,
-            organizationId,
-            'view_trip_activities',
-            { tripId },
-            req.ip || 'unknown',
-            req.get('user-agent') || 'unknown'
-        );
-
-        return res.json({
-            data: activities.map(transformActivityToFrontend),
-        });
-    })
+    return res.json({
+      data: activities.map(transformActivityToFrontend),
+    });
+  })
 );
+
 // Create a new activity
-router.post<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>(
+router.post<ParamsDictionary, any, ActivityFormValues>(
   '/',
-  createHandler<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>(
-    async (req, res) => {
-      const { userId, organizationId } = getAuthContext(req);
-      if (!userId || !organizationId) {
-        return res.status(401).json({ error: 'Unauthorized' });
+  createHandler<ParamsDictionary, any, ActivityFormValues>(
+    async (req: Request, res) => {
+      const authContext = getAuthContext(req);
+      const userId = authContext.userId ? String(authContext.userId) : null;
+      const organizationId = authContext.organizationId;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
       }
 
-      // Validate UUIDs
-      const tripId = validateUuid(req.body.tripId);
-      if (!tripId) {
-        return res.status(400).json({ error: 'Invalid trip ID format' });
+      // Ensure tripId is a string and validate it
+      const tripId = req.body?.tripId ? String(req.body.tripId) : null;
+      if (!tripId || !validateUuid(tripId)) {
+        return res.status(400).json({ error: 'Valid trip ID is required' });
       }
+      
+      // Type assertion for the request body
+      const body = req.body as ActivityFormValues;
 
-      // Prepare activity data with required fields matching the Activity interface
+      // Prepare the base activity data with required fields
       const now = new Date();
-      const activityData: Omit<Activity, 'id' | 'createdAt' | 'updatedAt'> = {
-        // Required fields with defaults
-        title: req.body.title || 'New Activity',
-        status: (req.body.status as ActivityStatus) || 'pending',
-        type: (req.body.type as ActivityType) || 'other',
-        startDate: req.body.startDate ? new Date(req.body.startDate).toISOString() : now.toISOString(),
-        
-        // Optional fields
-        description: req.body.description,
-        endDate: req.body.endDate ? new Date(req.body.endDate).toISOString() : undefined,
-        locationName: req.body.locationName,
-        location: req.body.location,
-        latitude: req.body.latitude !== undefined ? Number(req.body.latitude) : undefined,
-        longitude: req.body.longitude !== undefined ? Number(req.body.longitude) : undefined,
-        notes: req.body.notes,
-        
-        // System fields
+      const baseActivity = {
+        title: body.title || 'New Activity',
+        date: (body.date ? new Date(body.date) : now).toISOString().split('T')[0],
+        time: body.time || now.toTimeString().slice(0, 5),
+        locationName: body.locationName || '',
+        travelMode: body.travelMode || 'driving',
         tripId,
-        organizationId,
-        createdBy: userId
+        createdBy: userId,
+        // Optional fields with proper defaults
+        notes: body.notes || undefined,
+        tag: body.tag || undefined,
+        assignedTo: body.assignedTo || undefined,
+        status: body.status || 'pending',
+        type: body.type || 'other',
+        latitude: body.latitude ? String(body.latitude) : undefined,
+        longitude: body.longitude ? String(body.longitude) : undefined
       };
-
-      const result = createActivitySchema.safeParse(activityData);
+      
+      // Validate the request body against the schema
+      const result = activityFormSchema.safeParse(baseActivity);
 
       if (!result.success) {
         return res.status(400).json({
@@ -239,27 +277,22 @@ router.post<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedA
 
       try {
         // Create the activity with validated data
-        const now = new Date();
         const activityData: Omit<Activity, 'id'> = {
-          // Required fields with defaults
-          title: result.data.title || 'New Activity',
-          status: (result.data.status as ActivityStatus) || 'pending',
-          type: (result.data.type as ActivityType) || 'other',
-          startDate: result.data.startDate ? new Date(result.data.startDate).toISOString() : now.toISOString(),
+          // Required fields with proper type casting
+          title: String(result.data.title),
+          date: new Date(result.data.date).toISOString().split('T')[0],
+          time: String(result.data.time),
+          locationName: String(result.data.locationName),
+          travelMode: result.data.travelMode || 'driving',
+          tripId: String(result.data.tripId),
+          createdBy: String(result.data.createdBy),
           
-          // Optional fields
-          ...(result.data.description && { description: result.data.description }),
-          ...(result.data.endDate && { endDate: new Date(result.data.endDate).toISOString() }),
-          ...(result.data.locationName && { locationName: result.data.locationName }),
-          ...(result.data.location && { location: result.data.location }),
-          ...(result.data.latitude !== undefined && { latitude: Number(result.data.latitude) }),
-          ...(result.data.longitude !== undefined && { longitude: Number(result.data.longitude) }),
+          // Optional fields with proper type conversion
+          ...(result.data.latitude && { latitude: String(result.data.latitude) }),
+          ...(result.data.longitude && { longitude: String(result.data.longitude) }),
           ...(result.data.notes && { notes: result.data.notes }),
-          
-          // System fields
-          tripId,
-          organizationId,
-          createdBy: userId,
+          ...(result.data.tag && { tag: result.data.tag }),
+          ...(result.data.assignedTo && { assignedTo: result.data.assignedTo }),
           
           // Timestamps
           createdAt: now,
@@ -275,20 +308,23 @@ router.post<ParamsDictionary, any, Omit<Activity, 'id' | 'createdAt' | 'updatedA
     }
   )
 );
+
 // Get activity by ID
 router.get<{ activityId: string }>(
   '/:activityId',
-  createHandler<{ activityId: string }>(async (req, res) => {
+  createHandler<{ activityId: string }>(async (req: ActivitiesRequest, res) => {
     const { activityId } = req.params;
-    const { userId, organizationId } = getAuthContext(req);
+    const authContext = getAuthContext(req);
+    const userId = authContext.userId ? String(authContext.userId) : null;
+    const organizationId = authContext.organizationId;
     
     if (!userId || !organizationId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ message: 'Authentication required' });
     }
 
     // Validate activityId is a valid UUID
     if (!validateUuid(activityId)) {
-      return res.status(400).json({ error: 'Invalid activity ID format' });
+      return res.status(400).json({ message: 'Invalid activity ID format' });
     }
 
     const activity = await ensureActivityAccess(req, activityId);
@@ -299,65 +335,75 @@ router.get<{ activityId: string }>(
     return res.json(transformActivityToFrontend(activity));
   })
 );
+
+// Type for updating an activity
+type UpdateActivityBody = Partial<Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>> & {
+  date?: string | Date;
+};
+
 // Update activity
 router.put<{ activityId: string }, any, UpdateActivityBody>(
   '/:activityId',
   createHandler<{ activityId: string }, any, UpdateActivityBody>(
-    async (req, res) => {
+    async (req: ActivitiesRequest, res) => {
       const { activityId } = req.params;
-      const { userId, organizationId } = getAuthContext(req);
+      const authContext = getAuthContext(req);
+      const userId = authContext.userId ? String(authContext.userId) : null;
+      const organizationId = authContext.organizationId;
       
       if (!userId || !organizationId) {
-        return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).json({ message: 'Authentication required' });
       }
 
       // Validate activityId is a valid UUID
       if (!validateUuid(activityId)) {
-        return res.status(400).json({ error: 'Invalid activity ID format' });
+        return res.status(400).json({ message: 'Invalid activity ID format' });
       }
 
       const activity = await ensureActivityAccess(req, activityId);
       if (!activity) {
-        return res.status(404).json({ error: 'Activity not found' });
+        return res.status(404).json({ message: 'Activity not found' });
       }
 
-      const result = updateActivitySchema.safeParse(req.body);
+      // Validate the update data
+      const updateSchema = activityFormSchema.partial();
+      const result = updateSchema.safeParse({
+        ...req.body,
+        // Ensure required fields are present with proper types
+        date: req.body.date ? new Date(req.body.date).toISOString().split('T')[0] : activity.date,
+        time: req.body.time || activity.time || new Date().toTimeString().slice(0, 5),
+        locationName: req.body.locationName || activity.locationName,
+        travelMode: req.body.travelMode || activity.travelMode || 'driving',
+        title: req.body.title || activity.title
+      });
+      
       if (!result.success) {
         return res.status(400).json({
-          error: 'Invalid activity data',
-          details: result.error.format(),
+          message: 'Invalid activity data',
+          errors: result.error.format(),
         });
       }
 
       try {
         // Prepare update data with proper types
-        const updateData: Record<string, unknown> = {
-          ...result.data
+        const updateData: Record<string, any> = {
+          ...result.data,
+          updatedAt: new Date().toISOString(),
+          organizationId, // Ensure organization ID is always set
         };
         
-        // Convert date fields to proper format if they exist
-        if ('startDate' in updateData && updateData.startDate) {
-          updateData.startDate = new Date(updateData.startDate as string).toISOString();
-        }
-        if ('endDate' in updateData && updateData.endDate) {
-          updateData.endDate = new Date(updateData.endDate as string).toISOString();
-        }
-        
-        // Convert numeric fields if they exist
-        if ('latitude' in updateData && updateData.latitude !== undefined) {
-          updateData.latitude = Number(updateData.latitude);
-        }
-        if ('longitude' in updateData && updateData.longitude !== undefined) {
-          updateData.longitude = Number(updateData.longitude);
+        // Handle date conversion if present
+        if (result.data.date) {
+          const dateValue = new Date(result.data.date);
+          updateData.date = isNaN(dateValue.getTime()) 
+            ? new Date().toISOString().split('T')[0] 
+            : dateValue.toISOString().split('T')[0];
         }
         
-        // Set updatedAt timestamp
-        updateData.updatedAt = new Date();
-        
-        // Ensure organization ID is set if not provided
-        if (organizationId && !updateData.organizationId) {
-          updateData.organizationId = organizationId;
-        }
+        // Remove undefined values to avoid overwriting with undefined
+        Object.keys(updateData).forEach(key => 
+          updateData[key as keyof Activity] === undefined && delete updateData[key as keyof Activity]
+        );
         
         const updatedActivity = await activityService.update(activityId, updateData);
         
@@ -395,42 +441,57 @@ router.put<{ activityId: string }, any, UpdateActivityBody>(
 // Delete activity by ID
 router.delete<{ activityId: string }>(
   '/:activityId',
-  async (
-    req: ExtendedRequest<{ activityId: string }>,
-    res: Response,
-    next: NextFunction
-  ) => {
+  createHandler<{ activityId: string }>(async (req: ActivitiesRequest, res) => {
+    const { activityId } = req.params;
+    const authContext = getAuthContext(req);
+    const userId = authContext.userId ? String(authContext.userId) : null;
+    const organizationId = authContext.organizationId;
+    
+    if (!userId || !organizationId) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    // Validate activityId is a valid UUID
+    if (!validateUuid(activityId)) {
+      return res.status(400).json({ message: 'Invalid activity ID format' });
+    }
+
+    // Check if activity exists and user has access
+    const activity = await ensureActivityAccess(req, activityId);
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
+    }
+
     try {
-        const result = activityIdParamSchema.safeParse({ activityId: req.params.activityId });
-        if (!result.success) {
-            return res.status(400).json({
-                message: 'Validation error',
-                errors: result.error.format()
-            });
-        }
-        const activity = await ensureActivityAccess(req, req.params.activityId);
-        if (!activity) {
-            return res.status(404).json({ message: 'Activity not found' });
-        }
-        const { userId, organizationId } = getAuthContext(req);
-        if (!userId || !organizationId) {
-            return res.status(403).json({ message: 'Authentication required' });
-        }
-        await activityService.delete(req.params.activityId);
-        // Log the activity deletion
-        await logUserActivity(userId.toString(), organizationId.toString(), 'delete_activity', {
-            activityId: activity.id.toString(),
-            tripId: activity.tripId.toString(),
-            title: activity.title
-        }, req.ip || 'unknown', req.get('user-agent') || 'unknown');
-        return res.json({
-            success: true,
-            message: 'Activity deleted successfully'
-        });
+      // Delete the activity
+      const deleted = await activityService.delete(activityId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: 'Activity not found or already deleted' });
+      }
+
+      // Log the activity deletion
+      await logUserActivity(
+        userId,
+        organizationId,
+        'delete_activity',
+        {
+          activityId: activity.id.toString(),
+          tripId: activity.tripId.toString(),
+          title: activity.title
+        },
+        req.ip || 'unknown',
+        req.get('user-agent') || 'unknown'
+      );
+
+      return res.json({
+        success: true,
+        message: 'Activity deleted successfully'
+      });
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+      return res.status(500).json({ message: 'Failed to delete activity' });
     }
-    catch (error) {
-        console.error('Error deleting activity:', error);
-        return next(error);
-    }
-});
+  })
+);
 export default router;

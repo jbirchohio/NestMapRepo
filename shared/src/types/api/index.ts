@@ -1,4 +1,35 @@
 import { z } from 'zod';
+import type { AxiosRequestConfig, CancelToken, AxiosProgressEvent } from 'axios';
+
+/**
+ * Extended request configuration with custom options
+ * @template T - Expected response type
+ * @template D - Request data type
+ */
+export interface RequestConfig<T = any, D = any> extends Omit<AxiosRequestConfig<D>, 'cancelToken' | 'headers'> {
+  /** Request headers */
+  headers?: Record<string, string>;
+  /** Skip authentication for this request */
+  skipAuth?: boolean;
+  /** Skip global error handling for this request */
+  skipErrorHandling?: boolean;
+  /** Enable response caching */
+  useCache?: boolean;
+  /** Custom cache key */
+  cacheKey?: string;
+  /** Cache TTL in milliseconds */
+  cacheTTL?: number;
+  /** Cancel token or boolean to auto-generate one */
+  cancelToken?: CancelToken | boolean;
+  /** Request ID for cancellation */
+  requestId?: string;
+  /** On upload progress callback */
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
+  /** On download progress callback */
+  onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void;
+  /** Additional metadata */
+  meta?: Record<string, unknown>;
+}
 
 /**
  * Standard error codes used in API responses

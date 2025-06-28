@@ -15,8 +15,16 @@ export class ActivityRepositoryImpl
     super('activity', activities, activities.id);
   }
 
-  private mapToActivity(row: typeof activities.$inferSelect): Activity {
-    const activity: Activity = {
+  protected async mapToModel(row: any): Promise<Activity> {
+    if (!row) {
+      throw new Error('Activity data is required');
+    }
+    
+    if (!row.id || !row.tripId || !row.title || !row.date) {
+      throw new Error('Invalid activity data: missing required fields');
+    }
+    
+    return {
       id: row.id,
       tripId: row.tripId,
       organizationId: row.organizationId || '',
@@ -40,9 +48,8 @@ export class ActivityRepositoryImpl
       description: row.notes || undefined,
       type: (row.tag as ActivityType) || 'other',
       status: row.completed ? 'completed' : 'pending',
-      createdBy: 'system' // Default value, should be set by the service layer
+      createdBy: row.createdBy || 'system'
     };
-    return activity;
   }
   /**
    * Implementation of the ActivityRepository interface
@@ -64,7 +71,7 @@ export class ActivityRepositoryImpl
         return null;
       }
       
-      return this.mapToActivity(activity);
+      return this.mapToModel(activity);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error finding activity by id ${id}: ${errorMessage}`);
@@ -130,7 +137,14 @@ export class ActivityRepositoryImpl
         .where(and(...conditions))
         .orderBy(activities.date);
         
-      return results.map(this.mapToActivity);
+      const mapped = [];
+      for (const row of results) {
+        const mappedRow = await this.mapToModel(row);
+        if (mappedRow) {
+          mapped.push(mappedRow);
+        }
+      }
+      return mapped;
     } catch (error) {
       this.logger.error({
         message: 'Error finding activities by type',
@@ -170,7 +184,7 @@ export class ActivityRepositoryImpl
         })
         .returning();
         
-      return this.mapToActivity(newActivity);
+      return this.mapToModel(newActivity);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error creating activity for trip ${activityData.tripId}: ${errorMessage}`);
@@ -258,7 +272,7 @@ export class ActivityRepositoryImpl
         return null;
       }
       
-      return this.mapToActivity(result);
+      return this.mapToModel(result);
     } catch (error) {
       this.logger.error({
         message: 'Error updating activity',
@@ -386,7 +400,7 @@ export class ActivityRepositoryImpl
         return null;
       }
       
-      return this.mapToActivity(result);
+      return this.mapToModel(result);
     } catch (error) {
       this.logger.error({ 
         message: 'Error rescheduling activity', 
@@ -416,7 +430,7 @@ export class ActivityRepositoryImpl
         return null;
       }
       
-      return this.mapToActivity(result);
+      return this.mapToModel(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error updating status for activity ${id}: ${errorMessage}`);
