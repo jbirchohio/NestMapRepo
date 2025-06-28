@@ -1,10 +1,11 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import TagBadge from "@/components/TagBadge";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
-import type { ClientActivity, ApiResponse } from "@shared/types/activity/";
+import type { ClientActivity } from "@shared/types/activity";
+import type { ApiResponse } from "@shared/types/api";
 interface ActivityItemProps {
     activity: ClientActivity;
     onClick: (activity: ClientActivity) => void;
@@ -13,6 +14,8 @@ interface ActivityItemProps {
 }
 export default function ActivityItem({ activity, onClick, onDelete, onToggleComplete }: ActivityItemProps) {
     const { toast } = useToast();
+    const queryClient = useQueryClient();
+    
     // Delete activity mutation
     const deleteActivity = useMutation<ApiResponse<void>, Error>({
         mutationFn: async (): Promise<ApiResponse<void>> => {

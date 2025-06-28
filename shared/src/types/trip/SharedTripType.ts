@@ -5,19 +5,22 @@
 
 export interface SharedTripType {
   id: number;
-  title: string;
   userId: number;
-  userName?: string;
-  department: string;
-  city: string;
-  country: string;
+  title: string;
   startDate: string;
   endDate: string;
-  cost: number;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
-  createdAt: string;
+  organizationId: number;
+  collaborators: Record<string, string>;
   updatedAt: string;
-  // Add any additional fields that are shared between client and server
+  createdAt: string;
+  deletedAt: string | null;
+  department: string;
+  cost: number;
+  status: string;
+  city: string;
+  country: string;
+  location: string;
+  [key: string]: unknown;
 }
 
 export default SharedTripType;

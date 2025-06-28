@@ -8,7 +8,8 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Brain, DollarSign, Clock, AlertTriangle, TrendingUp, Download, Check, X, RefreshCw, Users, MapPin, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { api } from '@shared/api';
+
 interface OptimizedTrip {
     id: number;
     title: string;
@@ -59,12 +60,8 @@ export default function CorporateTripOptimizer() {
         }
         setIsOptimizing(true);
         try {
-            const result = await apiRequest<OptimizationResult>({
-                method: 'POST',
-                url: '/api/optimize-corporate-trips',
-                data: {
-                    trips: corporateTrips
-                }
+            const result = await api<OptimizationResult>('/api/optimize-corporate-trips', 'POST', {
+                trips: corporateTrips
             });
             setOptimizationResult(result);
             toast({

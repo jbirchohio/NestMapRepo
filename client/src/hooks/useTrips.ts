@@ -1,24 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
+import { apiClient } from '@shared/api';
 import { API_ENDPOINTS } from '@/lib/constants';
-import { useAuth } from '@/state/contexts/AuthContext';
-import type { Trip, CreateTripDTO, UpdateTripDTO } from '@/shared/types/trip';
+import { useAuth } from '@/contexts/auth/useAuth';
+import type { CreateTripDTO, UpdateTripDTO, TripQueryParams } from '@shared/types/trip/trip.dto';
 
-// Types
-export interface GetTripsParams {
-  status?: string[];
-  limit?: number;
-  page?: number;
-  pageSize?: number;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  [key: string]: unknown; // Allow additional filter params
+import type { SharedTripType } from '@shared/types/trip/SharedTripType';
+
+// Client-side trip type with additional properties
+export interface Trip extends SharedTripType {
+  // Client-only property for guest mode
+  isGuest?: boolean;
+  
+  // Client-side UI state
+  sharingEnabled: boolean;
+  completed: boolean;
+  isPublic: boolean;
+  sharePermission: 'view' | 'edit' | 'admin';
 }
 
-// Type guard to check if a trip has required details
-const hasRequiredTripDetails = (trip: Trip): trip is Required<Trip> => {
-  return 'title' in trip && 'startDate' in trip && 'endDate' in trip;
-};
+// Re-export the DTO types for consistency
+export type { CreateTripDTO, UpdateTripDTO, TripQueryParams };
 
 // Helper function to manage guest trips in localStorage
 const getGuestTrip = (tripId: string | number): Trip | null => {
@@ -60,7 +61,6 @@ const saveGuestTrips = (trips: Trip[]): void => {
 // Main hook for trip-related operations
 export function useTrip(tripId: string | number) {
   const { isAuthenticated, user } = useAuth();
-  const queryClient = useQueryClient();
 
   return useQuery<Trip | null, Error>({
     queryKey: ['trip', tripId],
@@ -77,9 +77,9 @@ export function useTrip(tripId: string | number) {
   });
 }
 
-export function useTrips(params: GetTripsParams = {}) {
+export function useTrips(params: TripQueryParams = {}) {
   const { isAuthenticated, user } = useAuth();
-  const isCorporate = user?.role === 'admin'; // Changed to match our UserRole type
+  const isCorporate = user?.role === 'admin'; // Matches UserRole type from shared types
 
   return useQuery<Trip[], Error>({
     queryKey: ['trips', { ...params, isCorporate }],
@@ -90,14 +90,20 @@ export function useTrips(params: GetTripsParams = {}) {
       }
 
       // Handle authenticated user
-      const endpoint = API_ENDPOINTS.TRIPS;
       const queryParams = new URLSearchParams();
       
-      // Add filter params
+      // Add filter params with type safety
       Object.entries(params).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        
         if (Array.isArray(value)) {
-          value.forEach(v => queryParams.append(key, v.toString()));
-        } else if (value !== undefined && value !== null) {
+          value.forEach(v => v !== undefined && v !== null && queryParams.append(key, v.toString()));
+        } else if (value instanceof Date) {
+          queryParams.append(key, value.toISOString());
+        } else if (typeof value === 'object') {
+          // Handle nested objects (e.g., sorting)
+          queryParams.append(key, JSON.stringify(value));
+        } else {
           queryParams.append(key, value.toString());
         }
       });
@@ -120,13 +126,38 @@ export function useCreateTrip() {
   return useMutation<Trip, Error, CreateTripDTO>({
     mutationFn: async (tripData) => {
       if (!isAuthenticated || !user) {
-        // Handle guest mode
+        // Create a new guest trip with all required fields and defaults
+        const now = new Date().toISOString();
+        const defaultEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        
+        // Create base trip data
+        const baseTrip: SharedTripType = {
+          id: Date.now(),
+          userId: 0,
+          title: tripData.title || 'New Trip',
+          startDate: tripData.startDate || now,
+          endDate: tripData.endDate || defaultEndDate,
+          organizationId: 0,
+          collaborators: {},
+          updatedAt: now,
+          createdAt: now,
+          deletedAt: null,
+          department: '',
+          cost: 0,
+          status: 'draft',
+          city: '',
+          country: '',
+          location: ''
+        };
+        
+        // Create the full trip with client properties
         const newTrip: Trip = {
-          ...tripData,
-          id: `guest-${Date.now()}`,
+          ...baseTrip,
           isGuest: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          sharingEnabled: false,
+          completed: false,
+          isPublic: false,
+          sharePermission: 'view'
         };
 
         const guestTrips = getGuestTrips();
@@ -160,10 +191,39 @@ export function useUpdateTrip(tripId: string | number) {
           throw new Error('Trip not found in guest trips');
         }
         
+        // Get current trip with all required fields
+        const currentTrip = guestTrips[tripIndex];
+        if (!currentTrip) {
+          throw new Error('Current trip not found');
+        }
+
+        // Create updated trip with all required fields
+        const now = new Date().toISOString();
         const updatedTrip: Trip = {
-          ...guestTrips[tripIndex],
+          ...currentTrip,
           ...tripData,
-          updatedAt: new Date().toISOString(),
+          // Ensure required fields are preserved with proper types
+          id: Number(currentTrip.id),
+          userId: Number(currentTrip.userId),
+          organizationId: Number(currentTrip.organizationId),
+          title: currentTrip.title || 'Updated Trip',
+          startDate: currentTrip.startDate || now,
+          endDate: currentTrip.endDate || now,
+          collaborators: currentTrip.collaborators || {},
+          updatedAt: now,
+          createdAt: currentTrip.createdAt || now,
+          deletedAt: currentTrip.deletedAt || null,
+          department: currentTrip.department || '',
+          cost: currentTrip.cost || 0,
+          status: currentTrip.status || 'draft',
+          city: currentTrip.city || '',
+          country: currentTrip.country || '',
+          location: currentTrip.location || '',
+          // Client-side properties
+          sharingEnabled: currentTrip.sharingEnabled ?? false,
+          completed: currentTrip.completed ?? false,
+          isPublic: currentTrip.isPublic ?? false,
+          sharePermission: currentTrip.sharePermission || 'view'
         };
         
         guestTrips[tripIndex] = updatedTrip;

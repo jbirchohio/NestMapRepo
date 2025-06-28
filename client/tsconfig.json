@@ -48,12 +48,6 @@
       "./node_modules/@types",
       "../node_modules/@types"
     ],
-    "include": [
-      "src/**/*",
-      "../shared/src/types/**/*",
-      "../shared/src/constants/**/*"
-    ],
-
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
 
     "sourceMap": true,
@@ -69,8 +63,10 @@
   },
 
   "include": [
-    "src",
-    "../shared/src/types",
+    "src/**/*",
+    "../shared/src/types/**/*",
+    "../shared/src/constants/**/*",
+    "../shared/src/api/**/*",
     "../vite.config.ts"
   ],
   "exclude": [

@@ -1,24 +1,30 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+<<<<<<< Updated upstream
 import { useAuth } from '@/state/contexts/AuthContext';
 import { api } from '@/lib/api';
 import type { SharedNotificationType as Notification } from '@shared/types/notification';
+=======
+import { useAuth } from '@/contexts/auth/useAuth';
+import { apiClient } from '@shared/api';
+import type { Notification as AppNotification } from '@shared/types/notification';
+>>>>>>> Stashed changes
 
 interface UseNotificationsReturn {
-  notifications: Notification[];
+  notifications: AppNotification[];
   unreadCount: number;
   isLoading: boolean;
   error: string | null;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   refetch: () => Promise<void>;
-  addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
+  addNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => void;
 }
 
 export function useNotifications(): UseNotificationsReturn {
   const { isAuthenticated, user } = useAuth();
   const queryClient = useQueryClient();
-  const [localNotifications, setLocalNotifications] = useState<Notification[]>([]);
+  const [localNotifications, setLocalNotifications] = useState<AppNotification[]>([]);
   
   // Fetch notifications query
   const {
@@ -26,13 +32,19 @@ export function useNotifications(): UseNotificationsReturn {
     isLoading,
     error,
     refetch,
-  } = useQuery<Notification[]>({
+  } = useQuery<AppNotification[]>({
     queryKey: ['notifications'],
     queryFn: async () => {
+<<<<<<< Updated upstream
       if (!isAuthenticated || !user?.id) return [];
       return await api(`/notifications?userId=${user.id}`, 'GET');
+=======
+      if (!isAuthenticated || !user?.['id']) return [];
+      const response = await apiClient.get(`/notifications?userId=${user['id']}`);
+      return response.data;
+>>>>>>> Stashed changes
     },
-    enabled: isAuthenticated && !!user?.id,
+    enabled: isAuthenticated && !!user?.['id'],
     refetchOnWindowFocus: true,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -85,8 +97,8 @@ export function useNotifications(): UseNotificationsReturn {
   }, [isAuthenticated, markAllAsReadMutation]);
 
   // Add a local notification (e.g., for client-side notifications)
-  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'read'>): void => {
-    const newNotification: Notification = {
+  const addNotification = useCallback((notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>): void => {
+    const newNotification: AppNotification = {
       ...notification,
       id: `local-${Date.now()}`,
       read: false,
@@ -96,7 +108,7 @@ export function useNotifications(): UseNotificationsReturn {
   }, []);
 
   // Combine server and local notifications
-  const allNotifications = [...serverNotifications, ...localNotifications];
+  const allNotifications: AppNotification[] = [...serverNotifications, ...localNotifications];
 
   return {
     notifications: allNotifications,

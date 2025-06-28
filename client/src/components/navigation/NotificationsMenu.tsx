@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellIcon } from '../icons';
 import type { NotificationsMenuProps } from './types';
+<<<<<<< Updated upstream
 import type { SharedNotificationType } from '@shared/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
@@ -14,6 +15,30 @@ const getSafeNotifications = (notifications: unknown[]): SharedNotificationType[
       'message' in item &&
       'read' in item &&
       'createdAt' in item
+=======
+import type { Notification as AppNotification } from '@shared/types/notification';
+
+// Helper function to safely cast notifications to AppNotification[]
+const getSafeNotifications = (notifications: unknown[]): AppNotification[] => {
+  return notifications.filter((item): item is AppNotification => {
+    if (!item || typeof item !== 'object') return false;
+    
+    const notification = item as Record<string, unknown>;
+    const id = notification['id'];
+    const message = notification['message'];
+    const read = notification['read'];
+    const createdAt = notification['createdAt'];
+    
+    return (
+      id !== undefined &&
+      message !== undefined &&
+      read !== undefined &&
+      createdAt !== undefined &&
+      typeof id === 'string' &&
+      typeof message === 'string' &&
+      typeof read === 'boolean' &&
+      typeof createdAt === 'string'
+>>>>>>> Stashed changes
     );
   });
 };

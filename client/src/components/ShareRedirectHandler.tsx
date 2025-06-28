@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import SharedTrip from '@/pages/SharedTrip';
 import type { ClientTrip } from '@/shared/types/trip';
 import type { ApiResponse } from '@/shared/types/api';
-import { apiClient } from '@/lib/api';
+import { apiClient } from '@shared/api';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 export default function ShareRedirectHandler() {
     const { shareCode } = useParams<{

@@ -1,9 +1,16 @@
 import { ReactNode } from 'react';
+<<<<<<< Updated upstream
 import type { User as ApiUser } from '@shared/types/user';
 import type { SharedNotificationType } from '@shared/types/notification';
 
 // Re-export for backward compatibility
 export type AppNotification = SharedNotificationType;
+=======
+import type { User as ApiUser } from '@shared/types/auth/user';
+import type { Notification as AppNotification } from '@shared/types/notification';
+// Export as AppNotification to avoid conflict with the browser's Notification type
+export type { AppNotification };
+>>>>>>> Stashed changes
 export interface NavigationItem {
     name: string;
     href: string;

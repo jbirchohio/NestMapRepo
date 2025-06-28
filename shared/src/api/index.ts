@@ -17,6 +17,7 @@ type ExtendedAxiosRequestConfig<D = any> = Omit<AxiosRequestConfig<D>, 'cancelTo
   requestId?: string;
 };
 
+<<<<<<< Updated upstream
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { ApiErrorCode, type ApiErrorResponse, type ApiSuccessResponse } from '../types/api';
 
@@ -48,11 +49,22 @@ export class ApiError<T = unknown> extends Error {
       response?: AxiosResponse<ApiErrorResponse<T>>;
     } = {}
   ) {
+=======
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+
+class ApiError extends Error {
+  status?: number;
+  code?: string;
+  details?: unknown;
+
+  constructor(message: string, options: { status?: number; code?: string; details?: unknown } = {}) {
+>>>>>>> Stashed changes
     super(message);
     this.name = 'ApiError';
     this.status = options.status;
     this.code = options.code;
     this.details = options.details;
+<<<<<<< Updated upstream
     this.config = options.config;
     this.response = options.response;
   }
@@ -244,6 +256,21 @@ const createApiClient = (baseURL: string, config: Omit<ApiClientConfig, 'baseURL
 export { createApiClient };
 
 export type { AxiosInstance, AxiosResponse, AxiosRequestConfig };
+=======
+  }
+}
+
+/**
+ * Create a configured axios instance
+ */
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,
+});
+>>>>>>> Stashed changes
 
 /**
  * Type-safe API request function
@@ -317,4 +344,8 @@ apiClient.interceptors.response.use(
   }
 );
 
+<<<<<<< Updated upstream
+=======
+export { apiClient };
+>>>>>>> Stashed changes
 export default api;
