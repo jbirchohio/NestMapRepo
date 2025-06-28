@@ -245,7 +245,7 @@ export function RoleManagement({ tripId, userRole }: RoleManagementProps) {
                       {config.description}
                     </div>
                   </div>
-                  <Badge variant={config.color as any /** FIXANYERROR: Replace 'any' */}>{config.label}</Badge>
+                  <Badge variant={config.color as 'destructive' | 'default' | 'secondary' | 'outline'}>{config.label}</Badge>
                 </div>))}
             </CardContent>
           </Card>

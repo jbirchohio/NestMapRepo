@@ -69,21 +69,24 @@ type ImportFunc<T = Record<string, unknown>> = () => Promise<{
  * @param options - Options for the async component
  * @returns A lazy-loaded component with error and loading boundaries
  */
-function asyncComponent<T = Record<string, unknown>>(
+function asyncComponent<T extends object = Record<string, unknown>>(
   importFunc: ImportFunc<T>,
   options: {
     loading?: React.ReactNode;
     error?: React.ReactNode;
-} = {}) {
-    const LazyComponent = lazy(importFunc);
-    const AsyncComponent: React.FC<T> = (props) => (<ErrorBoundary fallback={options.error}>
+  } = {}
+) {
+  const LazyComponent = lazy(importFunc);
+  const AsyncComponent: React.FC<T> = (props) => (
+    <ErrorBoundary fallback={options.error}>
       <Suspense fallback={options.loading || <LoadingFallback />}>
-        <LazyComponent {...(props as React.ComponentProps<typeof LazyComponent>)} />
+        <LazyComponent {...props} />
       </Suspense>
-    </ErrorBoundary>);
-    // Set a display name for better debugging
-    const name = importFunc.name || 'Component';
-    AsyncComponent.displayName = `Async(${name})`;
-    return AsyncComponent;
+    </ErrorBoundary>
+  );
+  // Set a display name for better debugging
+  const name = importFunc.name || 'Component';
+  AsyncComponent.displayName = `Async(${name})`;
+  return AsyncComponent;
 }
 export { asyncComponent, ErrorBoundary, LoadingFallback };

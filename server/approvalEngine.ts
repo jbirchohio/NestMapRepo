@@ -5,39 +5,45 @@ import {
   approvalLogs,
   users, 
   organizations,
+  type User,
+  userRoleEnum,
+  USER_ROLES
+} from './db/index.js';
+import type { UserRole } from './db/schema/enums.js';
+import type { ApprovalWorkflowData } from '../shared/src/types/approval/approval.types.js';
+import { organizationMembers } from './db/schema/organizations/organization-members.js';
+import { 
   type ApprovalStatus,
   type ApprovalPriority,
-  type ApprovalRequest as ApprovalRequestType,
-  type ApprovalRule as ApprovalRuleType,
-  type ApprovalLog as ApprovalLogType,
-  type User,
   approvalStatusEnum,
   approvalPriorityEnum,
-  userRoleEnum,
-  type UserRole
-} from './db/index.js';
+  type ApprovalRule,
+  type NewApprovalRule
+} from './db/schema/approvals/approval-rules.js';
+import type { 
+  ApprovalRequest,
+  NewApprovalRequest
+} from './db/schema/approvals/approval-requests.js';
+import type {
+  ApprovalLog,
+  NewApprovalLog
+} from './db/schema/approvals/approval-logs.js';
 import { eq, and, lte, inArray, sql } from 'drizzle-orm';
 import type { InferSelectModel, InferInsertModel, SQL } from 'drizzle-orm';
 import type { PgColumn, PgTableWithColumns } from 'drizzle-orm/pg-core';
-interface ApprovalWorkflowConfig {
+import type { ApprovalWorkflowConfig, ApprovalRuleConditions } from '../shared/src/types/approval/approval.types.js';
+
+// Type aliases for consistency with existing code
+type ApprovalRequestType = typeof approvalRequests.$inferSelect;
+type ApprovalRuleType = typeof approvalRules.$inferSelect;
+type ApprovalLogType = typeof approvalLogs.$inferSelect;
+
+// Helper type for a user with organization context and approver role
+type UserWithOrg = Omit<User, 'role'> & {
     organizationId: string;
-    entityType: string;
-    requestType: string;
-    data: Record<string, any> & {
-        totalAmount?: string | number;
-        startDate?: string | Date;
-        endDate?: string | Date;
-        country?: string;
-        departmentId?: string | number;
-        category?: string;
-    };
-    requesterId: string;
-    reason?: string;
-    businessJustification?: string;
-    dueDate?: Date;
-    priority?: ApprovalPriority;
-    entityId?: string | number;
-}
+    role: 'admin' | 'super_admin';
+};
+
 interface ApprovalResult {
     requiresApproval: boolean;
     autoApproved?: boolean;
@@ -106,16 +112,7 @@ export class ApprovalEngine {
      * Evaluate if a rule applies to the current request
      */
     private async evaluateRule(rule: ApprovalRuleType, config: ApprovalWorkflowConfig): Promise<boolean> {
-        const conditions: {
-            budgetThreshold?: number;
-            tripDuration?: number;
-            destinationCountries?: string[];
-            departmentIds?: string[];
-            userRoles?: string[];
-            expenseCategories?: string[];
-            approverRoles?: string[];
-            [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
-        } = rule.conditions || {};
+        const conditions: ApprovalRuleConditions = rule.conditions || {};
         const data = config.data;
         
         try {
@@ -181,7 +178,11 @@ export class ApprovalEngine {
      * Create approval request in database
      */
     private async createApprovalRequest(config: ApprovalWorkflowConfig, rule: ApprovalRuleType): Promise<ApprovalResult> {
-        const approver = await this.findApprover(config.organizationId, rule.conditions?.approverRoles || []);
+        const approver = await this.findApprover(
+            config.organizationId, 
+            rule, 
+            config.data
+        );
         const priority = this.calculatePriority(config.data, rule);
         const dueDate = config.dueDate || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Default 3 days
         const now = new Date();
@@ -228,28 +229,73 @@ export class ApprovalEngine {
         };
     }
     /**
-     * Find appropriate approver based on roles
+     * Find an appropriate approver based on the rule and data
      */
-    private async findApprover(organizationId: string, approverRoles: string[]) {
-        if (!approverRoles.length) {
-            approverRoles = ['admin', 'manager'];
+    // Define a type for users who can approve requests
+    private isValidApproverRole(role: string): role is 'admin' | 'super_admin' {
+        return ['admin', 'super_admin'].includes(role);
+    }
+
+    private async findApprover(
+        organizationId: string, 
+        rule: ApprovalRuleType, 
+        _data: ApprovalWorkflowData
+    ): Promise<UserWithOrg | null> {
+        // Define valid approver roles (only admin and super_admin can approve)
+        const validApproverRoles = ['admin', 'super_admin'] as const;
+        type ApproverRole = typeof validApproverRoles[number];
+        
+        // Get requested roles from rule or use default approver roles
+        const requestedRoles = rule.conditions?.approverRoles || [...validApproverRoles];
+        
+        // Filter to only include valid approver roles
+        const approverRoles = requestedRoles.filter(
+            (role: string): role is ApproverRole => 
+                this.isValidApproverRole(role)
+        );
+        
+        if (approverRoles.length === 0) {
+            return null;
         }
         
-        // Use Drizzle's inArray for type-safe array membership check
-        const approvers = await db
-            .select({ 
-                id: users.id, 
-                role: users.role 
-            })
-            .from(users)
-            .where(and(
-                eq(users.organizationId, organizationId),
-                inArray(users.role, approverRoles as any[])
-            ))
-            .orderBy(users.role) // Prefer higher roles first
-            .limit(1);
+        try {
+            // Find users with the required role in the organization
+            const approvers = await db
+                .select({
+                    user: users,
+                    organizationId: organizationMembers.organizationId,
+                    role: organizationMembers.role
+                })
+                .from(users)
+                .innerJoin(
+                    organizationMembers,
+                    eq(users.id, organizationMembers.userId)
+                )
+                .where(and(
+                    eq(organizationMembers.organizationId, organizationId),
+                    inArray(organizationMembers.role, approverRoles as UserRole[]),
+                    eq(organizationMembers.isActive, true)
+                ))
+                .limit(1);
+                
+            // Return the first approver with the organizationId and role attached
+            const approver = approvers[0];
+            if (!approver) return null;
             
-        return approvers[0] || null;
+            // Ensure the role is one of the valid approver roles
+            const role = this.isValidApproverRole(approver.role) 
+                ? approver.role 
+                : 'admin'; // Fallback to admin if somehow an invalid role got through
+                
+            return {
+                ...approver.user,
+                organizationId: approver.organizationId,
+                role
+            };
+        } catch (error) {
+            console.error('Error finding approver:', error);
+            return null;
+        }
     }
     /**
      * Calculate priority based on data and rule
@@ -294,14 +340,19 @@ export class ApprovalEngine {
      * Check if user can approve requests
      */
     async canUserApprove(userId: string, organizationId: string): Promise<boolean> {
-        const [user] = await db
-            .select({ role: users.role })
-            .from(users)
+        // Check if user has an active membership in the organization with an approver role
+        const membership = await db
+            .select()
+            .from(organizationMembers)
             .where(and(
-                eq(users.id, userId), 
-                eq(users.organizationId, organizationId)
-            ));
-        return user ? ['admin', 'manager'].includes(user.role as UserRole) : false;
+                eq(organizationMembers.userId, userId),
+                eq(organizationMembers.organizationId, organizationId),
+                eq(organizationMembers.isActive, true),
+                inArray(organizationMembers.role, [userRoleEnum.enumValues[0], userRoleEnum.enumValues[1]] as const) // Assuming first two roles are admin/manager
+            ))
+            .limit(1);
+            
+        return membership.length > 0;
     }
     /**
      * Get approval dashboard data for managers
@@ -350,13 +401,18 @@ export class ApprovalEngine {
      * Escalate request to higher authority
      */
     private async escalateRequest(request: ApprovalRequestType): Promise<void> {
-        // Find admin if current approver is manager
+        // Find admin in the same organization through organization_members
         const escalatedApprover = await db
             .select({ id: users.id })
             .from(users)
+            .innerJoin(
+                organizationMembers,
+                eq(users.id, organizationMembers.userId)
+            )
             .where(and(
-                eq(users.organizationId, request.organizationId),
-                eq(users.role, 'admin' as const)
+                eq(organizationMembers.organizationId, request.organizationId),
+                eq(users.role, 'admin' as const),
+                eq(organizationMembers.isActive, true)
             ))
             .limit(1);
             

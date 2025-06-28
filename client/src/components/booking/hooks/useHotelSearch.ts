@@ -1,146 +1,164 @@
-import SharedMessageType from '@/types/SharedMessageType';
-import SharedErrorType from '@/types/SharedErrorType';
-import { useState, useCallback, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { bookingService } from '../services/bookingService';
-import type { Hotel, HotelSearchParams, HotelSearchResponse } from '../types';
+import type { 
+    Hotel,
+    HotelSearchParams
+} from '../types';
 
-// Type guard to check if an error has a message property
-function isErrorWithMessage(error: SharedErrorType): error is { message: string } {
-    return typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: SharedMessageType }).message === 'string';
+// Define PriceRange type to match the one in hotel.ts
+type PriceRange = {
+    min?: number;
+    max?: number;
+    currency?: string;
+};
+
+// Local type for the filters to match HotelSearchParams
+interface HotelSearchFilters {
+    minStarRating?: number;
+    priceRange?: PriceRange;
+    amenities?: string[];
+    hotelChains?: string[];
+    freeCancellation?: boolean;
+    mealPlans?: string[];
+}
+
+// Define the response type for the hook
+interface UseHotelSearchResponse {
+    hotels: Hotel[];
+    isLoading: boolean;
+    error: string | null;
+    selectedHotel: Hotel | null;
+    selectedRoom: string | null;
+    filters: HotelSearchFilters;
+    searchHotels: () => Promise<void>;
+    selectHotel: (hotel: Hotel, roomId?: string) => void;
+    updateFilters: (newFilters: Partial<HotelSearchFilters>) => void;
+    clearSelection: () => void;
 }
 
 interface UseHotelSearchProps {
-    destination: string;
+    destination: string; 
     checkIn: string;
     checkOut: string;
-    guests: {
-        adults: number;
-        children?: number;
-        rooms?: number;
-    } | number;  // Allow number for backward compatibility
-    filters?: {
-        minStarRating?: number;
-        priceRange?: {
-            min: number;
-            max: number;
-            currency?: string;
-        };
-        amenities?: string[];
-        hotelChains?: string[];
-        freeCancellation?: boolean;
-        mealPlans?: string[];
-    };
+    guests: { adults: number; children?: number; rooms?: number };
+    initialFilters?: HotelSearchFilters;
+    onError?: (error: string) => void;
 }
 
-export const useHotelSearch = ({
+const useHotelSearch = ({
     destination,
     checkIn,
     checkOut,
-    guests: guestsProp,
-    filters
-}: UseHotelSearchProps) => {
-    const { toast } = useToast();
-    
-    // Normalize guests to always be an object
-    const guests = typeof guestsProp === 'number' 
-        ? { adults: guestsProp, children: 0, rooms: 1 }
-        : guestsProp;
+    guests,
+    initialFilters,
+    onError
+}: UseHotelSearchProps): UseHotelSearchResponse => {
+    // Normalize guests to match the expected type
+    const guestsProp = guests;
+
+    // Initialize filters with default values
+    const defaultFilters: HotelSearchFilters = {
+        minStarRating: 0,
+        priceRange: {
+            min: 0,
+            max: 1000,
+            currency: 'USD'
+        },
+        amenities: [],
+        freeCancellation: false
+    };
 
     const [hotels, setHotels] = useState<Hotel[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
     const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
-    const [searchFilters, setSearchFilters] = useState<{
-        minStarRating: number;
-        priceRange: { min: number; max: number; };
-        amenities: string[];
-        freeCancellation: boolean;
-    }>({
-        minStarRating: 0,
-        priceRange: { min: 0, max: 1000 },
-        amenities: [],
-        freeCancellation: false,
-    });
+    const [filters, setFilters] = useState<HotelSearchFilters>(initialFilters ?? defaultFilters);
+    
+    // Initialize with default values if needed
+    useEffect(() => {
+        setFilters(prev => ({
+            minStarRating: 3,
+            priceRange: {
+                min: 0,
+                max: 1000,
+                currency: 'USD'
+            },
+            ...prev
+        }));
+    }, []);
 
     const searchHotels = useCallback(async () => {
-        if (!destination || !checkIn || !checkOut) {
-            setError('Please fill in all required fields');
-            return;
-        }
-        setIsLoading(true);
-        setError(null);
-
         try {
-            const response = await bookingService.searchHotels({
+            setIsLoading(true);
+            setError(null);
+
+            // Prepare the search parameters according to HotelSearchParams interface
+            const searchParams: HotelSearchParams = {
                 destination,
                 checkIn,
                 checkOut,
-                guests,
-                filters: searchFilters,
-            });
+                rooms: guestsProp.rooms ?? 1, // Required at root level
+                guests: guestsProp.adults, // Just the number of adults as per the type
+                filters: {
+                    ...filters,
+                    priceRange: filters.priceRange ? {
+                        min: filters.priceRange.min ?? 0, // Provide default value
+                        max: filters.priceRange.max ?? 10000 // Provide default value
+                    } : undefined
+                }
+                // Only include properties that exist in HotelSearchParams
+            };
 
-            if (response.success && response.data) {
-                setHotels(response.data.hotels || []);
+            const response = await bookingService.searchHotels(searchParams);
+            
+            if (response.success && response.data?.hotels) {
+                setHotels(response.data.hotels);
             } else {
-                const errorMessage = response.error && isErrorWithMessage(response.error)
-                    ? response.error.message
-                    : 'No hotels found';
-                setError(errorMessage);
-                setHotels([]);
+                const errorMessage = typeof response === 'object' && response !== null && 'error' in response
+                    ? String((response as any).error?.message || 'Failed to fetch hotels')
+                    : 'Failed to fetch hotels';
+                throw new Error(errorMessage);
             }
         } catch (err) {
-            console.error('Hotel search error:', err);
-            setError('Failed to search for hotels. Please try again.');
-            setHotels([]);
+            setError(err instanceof Error ? err.message : String(err));
+            onError?.(err instanceof Error ? err.message : String(err));
         } finally {
             setIsLoading(false);
         }
-    }, [destination, checkIn, checkOut, guests, searchFilters]);
+    }, [destination, checkIn, checkOut, guestsProp, filters, onError]);
 
     const selectHotel = useCallback((hotel: Hotel, roomId?: string) => {
         setSelectedHotel(hotel);
-
-        if (roomId) {
-            setSelectedRoom(roomId);
-        } else if (Array.isArray((hotel as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */).rooms) && (hotel as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */).rooms.length > 0) {
-            setSelectedRoom((hotel as any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any /** FIXANYERROR: Replace 'any' */' */' */).rooms[0].id);
-        } else {
-            setSelectedRoom(null);
-        }
+        
+        // Since we can't guarantee the structure of the hotel object,
+        // we'll use the provided roomId or set to null
+        setSelectedRoom(roomId || null);
     }, []);
 
-    const updateFilters = useCallback((newFilters: Partial<{
-        minStarRating: number;
-        priceRange: { min: number; max: number; };
-        amenities: string[];
-        freeCancellation: boolean;
-    }>) => {
-        setSearchFilters(prev => {
-            if (!newFilters) return prev;
-            return {
-                ...prev,
-                ...newFilters,
-                priceRange: {
-                    ...prev.priceRange,
-                    ...(newFilters.priceRange || {})
-                }
-            };
-        });
+    const updateFilters = useCallback((newFilters: Partial<HotelSearchFilters>) => {
+        setFilters(prevFilters => ({
+            ...prevFilters,
+            ...newFilters
+        }));
     }, []);
 
     const clearSelection = useCallback(() => {
         setSelectedHotel(null);
         setSelectedRoom(null);
     }, []);
+
     // Auto-search when required fields change
     useEffect(() => {
         if (destination && checkIn && checkOut) {
-            searchHotels();
+            searchHotels().catch(error => {
+                setError(error instanceof Error ? error.message : String(error));
+                onError?.(error instanceof Error ? error.message : String(error));
+            });
         }
-    }, [destination, checkIn, checkOut, searchHotels]);
-    return {
+    }, [destination, checkIn, checkOut, searchHotels, onError]);
+
+    return useMemo(() => ({
         hotels,
         isLoading,
         error,
@@ -150,6 +168,19 @@ export const useHotelSearch = ({
         searchHotels,
         selectHotel,
         updateFilters,
-        clearSelection,
-    };
+        clearSelection
+    }), [
+        hotels,
+        isLoading,
+        error,
+        selectedHotel,
+        selectedRoom,
+        filters,
+        searchHotels,
+        selectHotel,
+        updateFilters,
+        clearSelection
+    ]);
 };
+
+export default useHotelSearch;

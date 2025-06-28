@@ -12,12 +12,12 @@ interface BookingParams {
     paymentMethod: string;
 }
 
-interface BookingProvider<TParams = unknown> {
+interface BookingProvider {
     name: string;
     type: 'flight' | 'hotel' | 'activity';
     enabled: boolean;
     requiresAuth: boolean;
-    book: (params: TParams) => Promise<BookingResult>;
+    book: (params: BookingParams) => Promise<BookingResult>;
     cancel: (bookingId: string) => Promise<CancellationResult>;
     getStatus: (bookingId: string) => Promise<BookingStatus>;
 }
@@ -70,17 +70,7 @@ class AmadeusFlightProvider implements BookingProvider {
         const data = await response.json();
         return data.access_token;
     }
-    async book(params: {
-        offer: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
-        passengers: Array<{
-            firstName: string;
-            lastName: string;
-            email: string;
-            phone?: string;
-            dateOfBirth?: string;
-        }>;
-        paymentMethod: string;
-    }): Promise<BookingResult> {
+    async book(params: BookingParams): Promise<BookingResult> {
         const accessToken = await this.getAccessToken();
         // Prepare booking request for Amadeus Flight Create Orders API
         const bookingRequest = {
@@ -140,7 +130,7 @@ class AmadeusFlightProvider implements BookingProvider {
             currency: order.flightOffers[0].price.currency,
             confirmationDetails: {
                 pnr: order.associatedRecords?.[0]?.reference,
-                ticketNumbers: order.travelers?.map((t: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => t.documents?.[0]?.number),
+                ticketNumbers: order.travelers?.map((t: any) => t.documents?.[0]?.number),
                 flightDetails: order.flightOffers[0].itineraries
             },
             cancellationPolicy: order.rules?.cancellation || {}
@@ -183,21 +173,21 @@ class AmadeusFlightProvider implements BookingProvider {
     }
 }
 // Booking.com Hotel Provider (placeholder for real integration)
-class BookingComHotelProvider implements BookingProvider<BookingParams> {
+class BookingComHotelProvider implements BookingProvider {
     name = 'Booking.com Hotels';
     type = 'hotel' as const;
     enabled = false; // Disabled until API access is configured
     requiresAuth = true;
     
-    async book(params: BookingParams): Promise<BookingResult> {
+    async book(_params: BookingParams): Promise<BookingResult> {
         throw new Error('Booking.com API integration requires partner credentials');
     }
     
-    async cancel(bookingId: string): Promise<CancellationResult> {
+    async cancel(_bookingId: string): Promise<CancellationResult> {
         throw new Error('Booking.com cancellation requires API access');
     }
     
-    async getStatus(bookingId: string): Promise<BookingStatus> {
+    async getStatus(): Promise<BookingStatus> {
         throw new Error('Booking.com status check requires API access');
     }
 }
@@ -239,7 +229,8 @@ export class StripePaymentProcessor {
         if (!this.stripe) {
             throw new Error('Stripe not configured');
         }
-        // Payment confirmation logic
+        // Use paymentIntentId to confirm the payment
+        return await this.stripe.paymentIntents.confirm(paymentIntentId);
     }
 }
 // Main booking engine

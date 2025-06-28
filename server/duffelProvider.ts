@@ -1,3 +1,35 @@
+import type { 
+  DuffelOffer, 
+  DuffelFlightSegment, 
+  DuffelPassenger, 
+  DuffelContactInfo, 
+  DuffelBookingResponse, 
+  FlightSearchResult, 
+  HotelSearchResult
+} from '../shared/src/types/trip/business-trip.types.js';
+
+interface HotelBookingParams {
+  searchResultId: string;
+  rateId: string;
+  guests: Array<{
+    given_name: string;
+    family_name: string;
+    born_on: string;
+  }>;
+  email: string;
+  phone_number: string;
+  special_requests?: string;
+}
+
+interface HotelBookingResult {
+  success: boolean;
+  status: string;
+  bookingReference?: string;
+  confirmationNumber?: string;
+  bookingDetails?: Record<string, unknown>;
+  error?: string;
+}
+
 interface DuffelFlightSearchParams {
     origin: string;
     destination: string;
@@ -184,61 +216,78 @@ export class DuffelProvider {
         const cityKey = Object.keys(cityMap).find(city => destination.toLowerCase().includes(city.toLowerCase()));
         return cityKey ? cityMap[cityKey] : { latitude: 37.7749, longitude: -122.4194 }; // Default to SF
     }
-    private transformHotelResults(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
-        if (!data.data?.search_results || !Array.isArray(data.data.search_results)) {
+    private transformHotelResults(data: any): { hotels: HotelSearchResult[] } {
+        if (!data?.data?.results || !Array.isArray(data.data.results)) {
             return { hotels: [] };
         }
-        const hotels = data.data.search_results.map((result: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, index: number) => {
-            const accommodation = result.accommodation;
-            const location = accommodation?.location;
-            return {
-                id: `duffel-hotel-${result.id || index}`,
-                name: accommodation?.name || 'Hotel',
-                starRating: accommodation?.star_rating || 0,
-                rating: {
-                    score: accommodation?.guest_rating || 0,
-                    reviews: accommodation?.review_count || 0
-                },
-                price: {
-                    amount: Math.round(parseFloat(result.cheapest_rate_total_amount) || 0),
-                    currency: result.cheapest_rate_total_currency || 'USD',
-                    per: 'stay'
-                },
-                address: location?.address || '',
-                location: {
-                    latitude: location?.geographic_coordinates?.latitude || 0,
-                    longitude: location?.geographic_coordinates?.longitude || 0
-                },
-                amenities: accommodation?.amenities?.map((a: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => a.name) || [],
-                images: accommodation?.photos?.map((photo: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => photo.url) || [],
-                description: accommodation?.description || '',
-                checkIn: data.data.check_in_date,
-                checkOut: data.data.check_out_date,
-                cancellation: 'Varies by rate',
-                searchResultId: result.id,
-                ratesAvailable: result.rates?.length || 0
-            };
-        });
+
+        const hotels = data.data.results.map((hotel: any) => ({
+            id: `hotel-${hotel.hotel_id || Math.random().toString(36).substr(2, 9)}`,
+            name: hotel.hotel_name || 'Unknown Hotel',
+            price: {
+                amount: hotel.min_daily_rate?.amount || 0,
+                currency: hotel.min_daily_rate?.currency || 'USD'
+            },
+            rating: hotel.star_rating || 0,
+            location: {
+                city: hotel.address?.city_name || 'Unknown City',
+                country: hotel.address?.country || 'Unknown Country',
+                address: [
+                    hotel.address?.line1,
+                    hotel.address?.line2,
+                    hotel.address?.city_name,
+                    hotel.address?.region,
+                    hotel.address?.postal_code,
+                    hotel.address?.country
+                ].filter(Boolean).join(', ')
+            },
+            amenities: hotel.amenities?.map((a: any) => ({
+                name: a.name || 'Unknown Amenity',
+                code: a.code || '',
+                isAvailable: a.available !== false
+            })) || [],
+            images: hotel.images?.map((img: any) => ({
+                url: img.url || '',
+                description: img.description || '',
+                isPrimary: img.is_primary || false
+            })) || [],
+            checkIn: hotel.check_in_time || '14:00',
+            checkOut: hotel.check_out_time || '12:00',
+            description: hotel.description || '',
+            phone: hotel.contact_numbers?.[0]?.number || '',
+            ratingCount: hotel.review_count || 0,
+            reviewScore: hotel.review_score || 0
+        }));
+
         return { hotels };
     }
-    async searchCars(params: {
-        pickUpLocation: string;
-        dropOffLocation: string;
-        pickUpDate: string;
-        dropOffDate: string;
-    }) {
-        // Duffel doesn't have car rentals API
-        console.log('Duffel car search not available - Duffel focuses on flights');
-        return { cars: [] };
-    }
-    private transformFlightResults(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
-        if (!data.data || !Array.isArray(data.data)) {
+
+    private transformFlightResults(data: { data: DuffelOffer[] }): { flights: FlightSearchResult[] } {
+        if (!data?.data || !Array.isArray(data.data)) {
             return { flights: [] };
         }
-        const flights = data.data.map((offer: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, index: number) => {
+
+        const flights = data.data.map((offer: DuffelOffer, index: number) => {
             const slice = offer.slices?.[0];
             const segment = slice?.segments?.[0];
-            return {
+            const airline = segment?.marketing_carrier || { iata_code: '', name: 'Unknown Airline' };
+            
+            // Format duration from ISO 8601 to human readable format (e.g., "2h 30m")
+            const formatDuration = (duration: string | undefined): string => {
+                if (!duration) return '0h 0m';
+                try {
+                    const match = duration.match(/PT(\d+H)?(\d+M)?/);
+                    if (!match) return duration;
+                    const hours = match[1] ? match[1].replace('H', 'h ') : '';
+                    const minutes = match[2] ? match[2].replace('M', 'm') : '0m';
+                    return `${hours}${minutes}`.trim();
+                } catch {
+                    return duration;
+                }
+            };
+
+            const flightNumber = segment?.marketing_carrier_flight_number || '';
+            const flightResult: FlightSearchResult = {
                 id: `duffel-${offer.id || index}`,
                 price: {
                     amount: Math.round(parseFloat(offer.total_amount) || 0),
@@ -247,120 +296,161 @@ export class DuffelProvider {
                 departure: {
                     airport: {
                         code: segment?.origin?.iata_code || '',
-                        name: segment?.origin?.name || '',
-                        city: segment?.origin?.city_name || '',
-                        country: segment?.origin?.country_name || ''
+                        name: segment?.origin?.name || 'Unknown Airport',
+                        city: segment?.origin?.city_name || 'Unknown City',
+                        country: segment?.origin?.country_name || 'Unknown Country'
                     },
                     time: segment?.departing_at || new Date().toISOString()
                 },
                 arrival: {
                     airport: {
                         code: segment?.destination?.iata_code || '',
-                        name: segment?.destination?.name || '',
-                        city: segment?.destination?.city_name || '',
-                        country: segment?.destination?.country_name || ''
+                        name: segment?.destination?.name || 'Unknown Airport',
+                        city: segment?.destination?.city_name || 'Unknown City',
+                        country: segment?.destination?.country_name || 'Unknown Country'
                     },
                     time: segment?.arriving_at || new Date().toISOString()
                 },
-                duration: segment?.duration || '0h 0m',
-                stops: (slice?.segments?.length || 1) - 1,
                 airline: {
-                    code: segment?.marketing_carrier?.iata_code || '',
-                    name: segment?.marketing_carrier?.name || 'Unknown Airline'
+                    code: airline.iata_code || '',
+                    name: airline.name || 'Unknown Airline'
                 },
-                segments: slice?.segments?.map((seg: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => ({
+                flightNumber: flightNumber,
+                duration: formatDuration(segment?.duration),
+                segments: (slice?.segments || []).map((seg: DuffelFlightSegment) => ({
                     departure: {
                         airport: {
-                            code: seg.origin?.iata_code,
-                            name: seg.origin?.name,
-                            city: seg.origin?.city_name,
-                            country: seg.origin?.country_name
+                            code: seg.origin?.iata_code || '',
+                            name: seg.origin?.name || 'Unknown Airport',
+                            city: seg.origin?.city_name || 'Unknown City',
+                            country: seg.origin?.country_name || 'Unknown Country'
                         },
-                        time: seg.departing_at
+                        time: seg.departing_at || new Date().toISOString()
                     },
                     arrival: {
                         airport: {
-                            code: seg.destination?.iata_code,
-                            name: seg.destination?.name,
-                            city: seg.destination?.city_name,
-                            country: seg.destination?.country_name
+                            code: seg.destination?.iata_code || '',
+                            name: seg.destination?.name || 'Unknown Airport',
+                            city: seg.destination?.city_name || 'Unknown City',
+                            country: seg.destination?.country_name || 'Unknown Country'
                         },
-                        time: seg.arriving_at
+                        time: seg.arriving_at || new Date().toISOString()
                     },
                     airline: {
-                        code: seg.marketing_carrier?.iata_code,
-                        name: seg.marketing_carrier?.name
+                        code: seg.marketing_carrier?.iata_code || '',
+                        name: seg.marketing_carrier?.name || 'Unknown Airline'
                     },
-                    flight_number: seg.marketing_carrier_flight_number,
-                    duration: seg.duration
-                })) || [],
-                bookingToken: offer.id,
-                validUntil: offer.expires_at
+                    flight_number: seg.marketing_carrier_flight_number || '',
+                    duration: formatDuration(seg.duration)
+                })),
+                bookingToken: offer.id || `offer-${index}`,
+                validUntil: offer.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
             };
+
+            return flightResult;
         });
+        
         return { flights };
     }
-    async bookFlight(params: {
+
+    async bookFlight(bookingParams: {
         bookingToken: string;
-        passengers: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
-        contactInfo: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
-    }) {
+        passengers: DuffelPassenger[];
+        contactInfo: DuffelContactInfo;
+    }): Promise<DuffelBookingResponse> {
         if (!this.apiKey) {
-            throw new Error('Duffel API key not configured');
+            return {
+                success: false,
+                status: 'error',
+                error: 'Duffel API key not configured',
+                bookingDetails: {}
+            };
         }
+        
         // Duffel booking requires creating an order
         try {
-            const bookingData = {
+            const bookingRequest = {
                 data: {
-                    selected_offers: [params.bookingToken],
-                    passengers: params.passengers,
-                    type: 'instant'
+                    selected_offers: [bookingParams.bookingToken],
+                    passengers: bookingParams.passengers,
+                    type: 'instant',
+                    payments: [{
+                        type: 'balance',
+                        amount: '0', // This will be replaced by the actual amount from the offer
+                        currency: 'USD'
+                    }],
+                    metadata: {
+                        contact_email: bookingParams.contactInfo.email,
+                        contact_phone: bookingParams.contactInfo.phone_number
+                    }
                 }
             };
+
             const response = await fetch(`${this.baseUrl}/air/orders`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'Duffel-Version': 'v2'
                 },
-                body: JSON.stringify(bookingData)
+                body: JSON.stringify(bookingRequest)
             });
+
             if (!response.ok) {
-                throw new Error(`Booking failed: ${response.status} ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                const errorMessage = errorData?.errors?.map((e: { message: string }) => e.message).join(', ') || 'Unknown error';
+                throw new Error(`Booking failed: ${response.status} ${response.statusText} - ${errorMessage}`);
             }
+
             const booking = await response.json();
-            return {
+            const bookingData = booking.data;
+            
+            // Transform the response to match our expected format
+            const result: DuffelBookingResponse = {
                 success: true,
-                bookingReference: booking.data?.booking_reference || booking.data?.id,
-                confirmationNumber: booking.data?.booking_reference || booking.data?.id,
                 status: 'confirmed',
-                bookingDetails: booking.data
+                bookingReference: bookingData.id,
+                confirmationNumber: bookingData.booking_reference || bookingData.id,
+                bookingDetails: {
+                    ...bookingData,
+                    passengers: Array.isArray(bookingData.passengers) ? bookingData.passengers.map((p: any) => ({
+                        id: p.id,
+                        name: `${p.given_name || ''} ${p.family_name || ''}`.trim(),
+                        type: p.type,
+                        passenger_id: p.passenger_id
+                    })) : [],
+                    slices: Array.isArray(bookingData.slices) ? bookingData.slices.map((s: any) => ({
+                        origin: s.origin || {},
+                        destination: s.destination || {},
+                        departure: s.departure || '',
+                        arrival: s.arrival || ''
+                    })) : []
+                }
             };
-        }
-        catch (error) {
+
+            return result;
+        } catch (error) {
             console.error('Duffel flight booking error:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Booking failed';
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Booking failed'
+                status: 'error',
+                error: errorMessage,
+                bookingDetails: { error: errorMessage }
             };
         }
     }
-    async bookHotel(params: {
-        searchResultId: string;
-        rateId: string;
-        guests: Array<{
-            given_name: string;
-            family_name: string;
-            born_on: string;
-        }>;
-        email: string;
-        phone_number: string;
-        special_requests?: string;
-    }) {
+
+    async bookHotel(bookingParams: HotelBookingParams): Promise<HotelBookingResult> {
         if (!this.apiKey) {
-            throw new Error('Duffel API key not configured. Please provide API key.');
+            return {
+                success: false,
+                status: 'error',
+                error: 'Duffel API key not configured. Please provide API key.'
+            };
         }
+
         try {
             // First, create a quote for the selected rate
             const quoteResponse = await fetch(`${this.baseUrl}/stays/quotes`, {
@@ -372,25 +462,40 @@ export class DuffelProvider {
                 },
                 body: JSON.stringify({
                     data: {
-                        rate_id: params.rateId
+                        rate_id: bookingParams.rateId
                     }
                 })
             });
+
             if (!quoteResponse.ok) {
-                throw new Error(`Quote creation failed: ${quoteResponse.status} ${quoteResponse.statusText}`);
+                const errorData = await quoteResponse.json().catch(() => ({}));
+                const errorMessage = errorData?.errors?.map((e: { message: string }) => e.message).join(', ') || 'Unknown error';
+                throw new Error(`Quote creation failed: ${quoteResponse.status} ${quoteResponse.statusText} - ${errorMessage}`);
             }
+
             const quoteData = await quoteResponse.json();
-            const quoteId = quoteData.data.id;
-            // Then create the booking using the quote
+            const quoteId = quoteData.data?.id;
+            
+            if (!quoteId) {
+                throw new Error('Invalid quote ID received from API');
+            }
             const bookingData = {
                 data: {
                     quote_id: quoteId,
-                    guests: params.guests,
-                    email: params.email,
-                    phone_number: params.phone_number,
-                    ...(params.special_requests && { stay_special_requests: params.special_requests })
+                    guests: bookingParams.guests,
+                    payment: {
+                        type: 'balance',
+                        amount: quoteData.data.total_amount,
+                        currency: quoteData.data.total_currency
+                    },
+                    metadata: {
+                        contact_email: bookingParams.email,
+                        contact_phone: bookingParams.phone_number,
+                        special_requests: bookingParams.special_requests || ''
+                    }
                 }
             };
+
             const bookingResponse = await fetch(`${this.baseUrl}/stays/bookings`, {
                 method: 'POST',
                 headers: {
@@ -400,31 +505,43 @@ export class DuffelProvider {
                 },
                 body: JSON.stringify(bookingData)
             });
+
             if (!bookingResponse.ok) {
-                throw new Error(`Hotel booking failed: ${bookingResponse.status} ${bookingResponse.statusText}`);
+                const errorData = await bookingResponse.json().catch(() => ({}));
+                const errorMessage = errorData?.errors?.map((e: { message: string }) => e.message).join(', ') || 'Unknown error';
+                throw new Error(`Booking failed: ${bookingResponse.status} ${bookingResponse.statusText} - ${errorMessage}`);
             }
+
             const booking = await bookingResponse.json();
+            
+            if (!booking.data?.id) {
+                throw new Error('Invalid booking response from API');
+            }
+
             return {
                 success: true,
-                bookingReference: booking.data.reference,
-                confirmationNumber: booking.data.reference,
                 status: 'confirmed',
+                bookingReference: booking.data.id,
+                confirmationNumber: booking.data.reference || booking.data.id,
                 bookingDetails: {
-                    id: booking.data.id,
-                    reference: booking.data.reference,
-                    status: booking.data.status,
-                    total_amount: booking.data.total_amount,
-                    total_currency: booking.data.total_currency,
-                    check_in_date: booking.data.check_in_date,
-                    check_out_date: booking.data.check_out_date
+                    ...booking.data,
+                    guests: booking.data.guests?.map((g: any) => ({
+                        given_name: g.given_name,
+                        family_name: g.family_name,
+                        type: g.type
+                    })) || [],
+                    check_in: booking.data.check_in,
+                    check_out: booking.data.check_out,
+                    status: booking.data.status
                 }
             };
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Error booking hotel:', error);
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Hotel booking failed'
+                status: 'error',
+                error: error instanceof Error ? error.message : 'Unknown error',
+                bookingDetails: {}
             };
         }
     }

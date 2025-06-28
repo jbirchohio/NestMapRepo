@@ -1,8 +1,11 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import { useAuth } from '@/state/contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { apiClient } from '@shared/api';
-import { useToast } from '@/components/ui/use-toast';
+// Update the import path below to the correct relative path if 'use-toast' exists in your project structure.
+// For example, if 'use-toast.ts' is in 'src/components/ui/', use:
+import { useToast } from '../components/ui/use-toast';
+// Or adjust the path as needed based on your actual file structure.
 export interface WhiteLabelConfig {
     // Branding
     companyName: string;
@@ -53,6 +56,8 @@ const defaultConfig: WhiteLabelConfig = {
 const WhiteLabelContext = createContext<WhiteLabelContextType>({
   config: defaultConfig,
   updateConfig: () => {},
+  applyBranding: () => {},
+  resetToDefault: () => {},
   isWhiteLabelActive: false,
   enableWhiteLabel: () => { },
   disableWhiteLabel: () => { },
@@ -179,17 +184,9 @@ export const WhiteLabelProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       enableWhiteLabel,
       disableWhiteLabel
     }}>
-    return (<WhiteLabelContext.Provider value={{
-            config,
-            updateConfig,
-            applyBranding: forceApplyBranding,
-            resetToDefault,
-            isWhiteLabelActive,
-            enableWhiteLabel,
-            disableWhiteLabel
-        }}>
       {children}
-    </WhiteLabelContext.Provider>);
+    </WhiteLabelContext.Provider>
+  );
 }
 export function useWhiteLabel() {
     const context = useContext(WhiteLabelContext);

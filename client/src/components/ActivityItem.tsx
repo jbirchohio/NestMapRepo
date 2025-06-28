@@ -128,48 +128,119 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
         </div>),
         });
     };
-    return (<div className="pl-8 relative timeline-item group">
-      {/* Timeline point */}
-      <div className="flex items-center absolute left-0 timeline-point">
-        <div className="h-6 w-6 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center text-xs font-medium">
-            
-            {/* Notes (if any) */}
-            {activity.notes && (<div className="text-sm mt-2">{activity.notes}</div>)}
-            
-            {/* Travel time indicator */}
-            {activity.travelTimeFromPrevious && (<div className="flex items-center text-xs text-[hsl(var(--muted-foreground))] mt-2">
-                {String(activity.travelMode).toLowerCase() === "walking" && (<svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M13 5c3 0 5 2 5 5 0 3-2 5-5 5M7 8l2 2M7 12l5 5M19 19l-5-5"/>
-                  </svg>)}
-                {String(activity.travelMode).toLowerCase() === "driving" && (<svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M7 17h10M5 11h14m-7-5h-2l-2 5H5l-2 3v2h18v-2l-2-3h-3l-2-5h-2zm2 8a1 1 0 11-2 0 1 1 0 012 0zm6 0a1 1 0 11-2 0 1 1 0 012 0z"/>
-                  </svg>)}
-                {String(activity.travelMode).toLowerCase() === "transit" && (<svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 5h-6a2 2 0 00-2 2v9a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2zm1 11h-8m8-5H8m4-5v10"></path>
-                  </svg>)}
-                {(!activity.travelMode || String(activity.travelMode).toLowerCase() === "null") && (<svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>)}
-                {activity.travelTimeFromPrevious} from previous stop
-              </div>)}
-
-            {/* Time conflict warning - for identical times */}
-            {activity.timeConflict && (<div className="flex items-center text-xs text-[hsl(var(--destructive))] mt-2 bg-red-50 dark:bg-red-950 p-2 rounded">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                TIME CONFLICT: Another activity is scheduled at the same time!
-              </div>)}
-
-            {/* Travel time conflict warning */}
-            {activity.conflict && (<div className="flex items-center text-xs text-[hsl(var(--destructive))] mt-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                Travel time may be too long
-              </div>)}
-          </div>
+    return (
+        <div className="pl-8 relative timeline-item group">
+            {/* Timeline point */}
+            <div className="flex items-center absolute left-0 timeline-point">
+                <div className="h-6 w-6 bg-[hsl(var(--primary))] text-white rounded-full flex items-center justify-center text-xs font-medium">
+                    {/* You may want to put a timeline icon or number here */}
+                </div>
+            </div>
+            {/* Main content */}
+            <div
+                className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 mb-4 cursor-pointer group-hover:bg-gray-50 dark:group-hover:bg-gray-800 transition"
+                onClick={() => onClick(activity)}
+            >
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className={`inline-block w-3 h-3 rounded-full ${activity.completed ? "bg-green-500" : "bg-gray-300"}`}></span>
+                        <span className={`font-semibold ${activity.completed ? "line-through text-gray-400" : ""}`}>
+                            {activity.title}
+                        </span>
+                        {activity.tags && activity.tags.map((tag) => (
+                            <TagBadge key={tag} tag={tag} />
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant={activity.completed ? "outline" : "success"}
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={handleToggleComplete}
+                            aria-label={activity.completed ? "Mark as incomplete" : "Mark as complete"}
+                        >
+                            {activity.completed ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            )}
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={handleDelete}
+                            aria-label="Delete activity"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </Button>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span>
+                        {formatTime(activity.time)}
+                    </span>
+                    {activity.location && (
+                        <span>
+                            {activity.location}
+                        </span>
+                    )}
+                </div>
+                {/* Notes (if any) */}
+                {activity.notes && (
+                    <div className="text-sm mt-2">{activity.notes}</div>
+                )}
+                {/* Travel time indicator */}
+                {activity.travelTimeFromPrevious && (
+                    <div className="flex items-center text-xs text-[hsl(var(--muted-foreground))] mt-2">
+                        {String(activity.travelMode).toLowerCase() === "walking" && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M13 5c3 0 5 2 5 5 0 3-2 5-5 5M7 8l2 2M7 12l5 5M19 19l-5-5"/>
+                            </svg>
+                        )}
+                        {String(activity.travelMode).toLowerCase() === "driving" && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M7 17h10M5 11h14m-7-5h-2l-2 5H5l-2 3v2h18v-2l-2-3h-3l-2-5h-2zm2 8a1 1 0 11-2 0 1 1 0 012 0zm6 0a1 1 0 11-2 0 1 1 0 012 0z"/>
+                            </svg>
+                        )}
+                        {String(activity.travelMode).toLowerCase() === "transit" && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M15 5h-6a2 2 0 00-2 2v9a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2zm1 11h-8m8-5H8m4-5v10"></path>
+                            </svg>
+                        )}
+                        {(!activity.travelMode || String(activity.travelMode).toLowerCase() === "null") && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        )}
+                        {activity.travelTimeFromPrevious} from previous stop
+                    </div>
+                )}
+                {/* Time conflict warning - for identical times */}
+                {activity.timeConflict && (
+                    <div className="flex items-center text-xs text-[hsl(var(--destructive))] mt-2 bg-red-50 dark:bg-red-950 p-2 rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        TIME CONFLICT: Another activity is scheduled at the same time!
+                    </div>
+                )}
+                {/* Travel time conflict warning */}
+                {activity.conflict && (
+                    <div className="flex items-center text-xs text-[hsl(var(--destructive))] mt-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Travel time may be too long
+                    </div>
+                )}
+            </div>
         </div>
-      </div>
-    </div>);
+    );
 }
