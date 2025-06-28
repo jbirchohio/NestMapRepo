@@ -3,9 +3,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { useAuth } from '@/state/contexts/AuthContext';
 import { api } from '@/lib/api';
 import type { SharedNotificationType as Notification } from '@shared/types/notification';
+=======
+import { useAuth } from '@/contexts/auth/useAuth';
+import { apiClient } from '@shared/api';
+import type { Notification as AppNotification } from '@shared/types/notification';
+>>>>>>> Stashed changes
 =======
 import { useAuth } from '@/contexts/auth/useAuth';
 import { apiClient } from '@shared/api';
@@ -50,9 +56,12 @@ export function useNotifications(): UseNotificationsReturn {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       if (!isAuthenticated || !user?.id) return [];
       return await api(`/notifications?userId=${user.id}`, 'GET');
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
