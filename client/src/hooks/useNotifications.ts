@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
 import { useAuth } from '@/contexts/auth/useAuth';
 import { apiClient } from '@shared/api';
 import type { Notification as AppNotification } from '@shared/types/notification';
@@ -30,10 +29,9 @@ export function useNotifications(): UseNotificationsReturn {
   } = useQuery<AppNotification[]>({
     queryKey: ['notifications'],
     queryFn: async () => {
-      // If not authenticated or user ID is not available, return empty array
-      if (!isAuthenticated || !user?.id) return [];
-      return await api(`/notifications?userId=${user.id}`, 'GET');
-
+      if (!isAuthenticated || !user?.['id']) return [];
+      const response = await apiClient.get(`/notifications?userId=${user['id']}`);
+      return response.data;
     },
     enabled: isAuthenticated && !!user?.['id'],
     refetchOnWindowFocus: true,

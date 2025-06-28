@@ -1,19 +1,31 @@
 import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellIcon } from '../icons';
-import type { Notification as AppNotification } from '@/types/notification';
-import { NotificationsMenuProps } from './types';
+import type { NotificationsMenuProps } from './types';
+import type { Notification as AppNotification } from '@shared/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
-const getSafeNotifications = (notifications: AppNotification[]): AppNotification[] => {
-  return notifications.filter((item): item is AppNotification => (
-    item &&
-    typeof item === 'object' &&
-    'id' in item &&
-    'message' in item &&
-    'read' in item &&
-    'createdAt' in item
-  ));
+const getSafeNotifications = (notifications: unknown[]): AppNotification[] => {
+  return notifications.filter((item): item is AppNotification => {
+    if (!item || typeof item !== 'object') return false;
+    
+    const notification = item as Record<string, unknown>;
+    const id = notification['id'];
+    const message = notification['message'];
+    const read = notification['read'];
+    const createdAt = notification['createdAt'];
+    
+    return (
+      id !== undefined &&
+      message !== undefined &&
+      read !== undefined &&
+      createdAt !== undefined &&
+      typeof id === 'string' &&
+      typeof message === 'string' &&
+      typeof read === 'boolean' &&
+      typeof createdAt === 'string'
+    );
+  });
 };
 
 export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
