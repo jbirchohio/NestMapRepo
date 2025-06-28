@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/state/contexts/AuthContext';
-import { apiClient } from '@/lib/api';
-import type { Notification } from '@/shared/types/notification';
+import { api } from '@/lib/api';
+import type { SharedNotificationType as Notification } from '@shared/types/notification';
 
 interface UseNotificationsReturn {
   notifications: Notification[];
@@ -30,8 +30,7 @@ export function useNotifications(): UseNotificationsReturn {
     queryKey: ['notifications'],
     queryFn: async () => {
       if (!isAuthenticated || !user?.id) return [];
-      const response = await apiClient.get(`/notifications?userId=${user.id}`);
-      return response.data;
+      return await api(`/notifications?userId=${user.id}`, 'GET');
     },
     enabled: isAuthenticated && !!user?.id,
     refetchOnWindowFocus: true,
@@ -41,7 +40,7 @@ export function useNotifications(): UseNotificationsReturn {
   // Mark notification as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiClient.patch(`/notifications/${id}/read`);
+      await api(`/notifications/${id}/read`, 'PATCH');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -51,7 +50,7 @@ export function useNotifications(): UseNotificationsReturn {
   // Mark all notifications as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      await apiClient.patch('/notifications/read-all');
+      await api('/notifications/read-all', 'PATCH');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });

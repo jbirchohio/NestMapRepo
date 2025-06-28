@@ -1,20 +1,21 @@
-import SharedNotificationsType from '@/types/SharedNotificationsType';
 import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellIcon } from '../icons';
 import type { NotificationsMenuProps } from './types';
-import type { Notification as AppNotification } from '@/types/notification';
+import type { SharedNotificationType } from '@shared/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
-const getSafeNotifications = (notifications: SharedNotificationsType[]): AppNotification[] => {
-  return notifications.filter((item): item is AppNotification => (
-    item &&
-    typeof item === 'object' &&
-    'id' in item &&
-    'message' in item &&
-    'read' in item &&
-    'createdAt' in item
-  ));
+const getSafeNotifications = (notifications: unknown[]): SharedNotificationType[] => {
+  return notifications.filter((item): item is SharedNotificationType => {
+    return Boolean(
+      item &&
+      typeof item === 'object' &&
+      'id' in item &&
+      'message' in item &&
+      'read' in item &&
+      'createdAt' in item
+    );
+  });
 };
 
 export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
@@ -49,7 +50,7 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
               {safeNotifications.length === 0 ? (
                 <div className="px-4 py-3 text-sm text-gray-500">No notifications</div>
               ) : (
-                safeNotifications.map((notification: AppNotification) => (
+                safeNotifications.map((notification) => (
                   <button 
                     key={notification.id} 
                     onClick={() => onNotificationClick(notification.id)} 

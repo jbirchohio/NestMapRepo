@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
-import type { User as ApiUser } from '@shared/types/auth/user';
-import type { Notification as AppNotification } from '@/types/notification';
-// Export as AppNotification to avoid conflict with the browser's Notification type
-export type { AppNotification };
+import type { User as ApiUser } from '@shared/types/user';
+import type { SharedNotificationType } from '@shared/types/notification';
+
+// Re-export for backward compatibility
+export type AppNotification = SharedNotificationType;
 export interface NavigationItem {
     name: string;
     href: string;
@@ -23,7 +24,7 @@ export type User = Omit<ApiUser, 'id'> & {
 export interface NavigationProps {
     isAuthenticated: boolean;
     user?: User | null;
-    notifications: AppNotification[];
+    notifications: SharedNotificationType[];
     onSignOut: () => Promise<void>;
     onNotificationClick: (id: string) => Promise<void>;
     onMarkAllAsRead: () => Promise<void>;
@@ -53,7 +54,7 @@ export interface UserMenuProps {
 export interface NotificationsMenuProps {
     isOpen: boolean;
     onClose: () => void;
-    notifications: AppNotification[];
+    notifications: SharedNotificationType[];
     onNotificationClick: (id: string) => Promise<void>;
     onMarkAllAsRead: () => Promise<void>;
     onNotificationsClick: () => void;
