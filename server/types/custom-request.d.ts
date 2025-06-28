@@ -1,10 +1,11 @@
 import { Request as ExpressRequest } from '../../express-augmentations';
 import type { AuthUser } from '@shared/src/types/auth/user.js';
+import type { JwtPayload } from '@shared/src/types/auth/jwt.js';
 
 declare module 'express-serve-static-core' {
   interface Request {
     user?: AuthUser;
-    auth?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+    auth?: JwtPayload;
     organizationId?: string | number;
     requestId?: string;
     startTime?: [number, number];
@@ -17,7 +18,7 @@ declare module 'express-serve-static-core' {
 
 export interface CustomRequestFields {
   user: AuthUser;
-  auth?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+  auth?: JwtPayload;
   organizationId?: string | number;
   requestId?: string;
   startTime?: [number, number];

@@ -21,7 +21,7 @@ declare global {
       organization?: {
         id: string;
         name: string;
-        settings: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+        settings: Record<string, unknown>;
       };
       organizationFilter?: (orgId: string | null) => boolean;
       isWhiteLabelDomain?: boolean;
@@ -35,11 +35,11 @@ declare global {
     }
     
     // Extend the Response interface
-    interface Response<ResBody = any> {
+    interface Response<ResBody = unknown> {
       json: (body: ResBody) => this;
       status: (code: number) => this;
-      success: (data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, message?: string) => this;
-      error: (message: string, code?: number, details?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => this;
+      success: (data: unknown, message?: string) => this;
+      error: (message: string, code?: number, details?: unknown) => this;
       send: (body: ResBody) => this;
     }
   }

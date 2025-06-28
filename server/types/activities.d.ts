@@ -35,7 +35,7 @@ export interface Activity {
 }
 
 export interface ActivityStorage {
-  getTrip: (tripId: string, organizationId: string) => Promise<any>;
+  getTrip: (tripId: string, organizationId: string) => Promise<unknown>;
   getActivity: (activityId: string) => Promise<Activity | null>;
   createActivity: (activity: Partial<Activity>) => Promise<Activity>;
   getActivitiesByTripId: (tripId: string) => Promise<Activity[]>;
