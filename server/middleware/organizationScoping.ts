@@ -2,6 +2,7 @@ import type { Request as ExpressRequest, Response, NextFunction } from 'express'
 import { db } from '../db/db.js';
 import { customDomains } from '../db/schema.js';
 import { and, eq, isNull } from 'drizzle-orm';
+import type { Column } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import type { AuthUser } from '../src/types/auth-user.js';
 import { UserRole } from '../src/types/auth-user.js';
@@ -295,8 +296,8 @@ export function requireAnalyticsAccess(req: AuthenticatedRequest, res: Response,
  * Query helper to automatically add organization scoping
  */
 export function addOrganizationScope<T extends {
-    organizationId: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
-}>(baseQuery: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, req: AuthenticatedRequest, table: T) {
+    organizationId: Column<any>;
+}>(baseQuery: { where: (condition: unknown) => unknown }, req: AuthenticatedRequest, table: T) {
     if (!req.organizationId) {
         throw new Error('Organization context required for scoped queries');
     }

@@ -2,11 +2,15 @@ import type { Request, Response, NextFunction } from 'express';
 import { endpointMonitor } from './api-security.ts';
 import { trackEndpointHealth } from '../routes/health.ts';
 import { trackRequest } from '../routes/system-metrics.ts';
+interface SlowQuery {
+    duration: number;
+    query: string;
+}
 interface UnifiedMetrics {
     startTime: bigint;
     dbQueries: number;
     dbTotalTime: number;
-    slowQueries: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
+    slowQueries: SlowQuery[];
     memoryBefore: number;
 }
 declare global {
@@ -51,7 +55,7 @@ export function unifiedMonitoringMiddleware(req: Request, res: Response, next: N
     // Single response interception point
     const originalEnd = res.end;
     let responseEnded = false;
-    res.end = function (chunk?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, encoding?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, cb?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
+    res.end = function (chunk?: unknown, encoding?: BufferEncoding, cb?: () => void) {
         if (responseEnded) {
             return originalEnd.call(this, chunk, encoding, cb);
         }

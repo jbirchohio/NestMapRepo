@@ -15,7 +15,7 @@ import express, { Request, Response, NextFunction } from '../../express-augmenta
 interface CustomRequest extends Request {
     user?: {
         id?: string | number;
-        [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+        [key: string]: unknown;
     };
     ip?: string;
     path: string;
@@ -399,7 +399,7 @@ export function endpointRateLimit(endpointType: string): express.RequestHandler 
 /**
  * Rate limit statistics endpoint (for monitoring)
  */
-export function getRateLimitStats(): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
+export function getRateLimitStats(): { totalBuckets: number; blockedIPs: number; highViolationKeys: string[] } {
     return comprehensiveRateLimit.getStats();
 }
 /**

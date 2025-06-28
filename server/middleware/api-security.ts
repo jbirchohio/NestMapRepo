@@ -29,7 +29,7 @@ declare global {
       };
       // Note: 'user' property is already defined in express-augmentations.d.ts
       // with a different type, so we'll use the existing one
-      [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+      [key: string]: unknown;
     }
   }
 }
@@ -47,7 +47,7 @@ type SecureRequest = Request & {
         organization_id?: number;
         subscription_tier?: 'free' | 'premium' | 'enterprise';
     };
-    [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+    [key: string]: unknown;
 };
 /**
  * API versioning and deprecation middleware
@@ -80,7 +80,7 @@ export function encryptSensitiveData(req: SecureRequest, res: Response, next: Ne
         return next();
     }
     const originalJson = res.json;
-    res.json = function (body: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
+    res.json = function (body: unknown) {
         // Encrypt sensitive fields in response
         if (body && typeof body === 'object') {
             const sensitiveFields = ['email', 'phone', 'ssn', 'creditCard', 'password'];
@@ -91,10 +91,10 @@ export function encryptSensitiveData(req: SecureRequest, res: Response, next: Ne
     };
     return next();
 }
-function encryptSensitiveFields(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, fields: string[]): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
+function encryptSensitiveFields(obj: unknown, fields: string[]): unknown {
     if (!obj || typeof obj !== 'object')
         return obj;
-    const result: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = Array.isArray(obj) ? [] : {};
+    const result: Record<string, unknown> | unknown[] = Array.isArray(obj) ? [] : {};
     for (const key in obj) {
         if (fields.includes(key.toLowerCase()) && typeof obj[key] === 'string') {
             // In production, implement proper encryption
@@ -292,17 +292,18 @@ export function tieredRateLimit(req: SecureRequest, res: Response, next: NextFun
 /**
  * API endpoint monitoring and alerting
  */
-class EndpointMonitor {
-    private metrics = new Map<string, {
+interface EndpointMetric {
+    requests: number;
+    errors: number;
+    totalResponseTime: number;
+    lastHour: {
         requests: number;
         errors: number;
-        totalResponseTime: number;
-        lastHour: {
-            requests: number;
-            errors: number;
-            timestamp: number;
-        }[];
-    }>();
+        timestamp: number;
+    }[];
+}
+class EndpointMonitor {
+    private metrics = new Map<string, EndpointMetric>();
     recordRequest(endpoint: string, responseTime: number, isError: boolean) {
         const metric = this.metrics.get(endpoint) || {
             requests: 0,
@@ -328,18 +329,9 @@ class EndpointMonitor {
         // Check for anomalies
         this.checkAnomalies(endpoint, metric);
     }
-    private checkAnomalies(endpoint: string, metric: {
-        requests: number;
-        errors: number;
-        totalResponseTime: number;
-        lastHour: {
-            requests: number;
-            errors: number;
-            timestamp: number;
-        }[];
-    }) {
-        const hourlyRequests = metric.lastHour.reduce((sum: number, m: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => sum + m.requests, 0);
-        const hourlyErrors = metric.lastHour.reduce((sum: number, m: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => sum + m.errors, 0);
+    private checkAnomalies(endpoint: string, metric: EndpointMetric) {
+        const hourlyRequests = metric.lastHour.reduce((sum: number, m) => sum + m.requests, 0);
+        const hourlyErrors = metric.lastHour.reduce((sum: number, m) => sum + m.errors, 0);
         const errorRate = hourlyErrors / hourlyRequests;
         const avgResponseTime = metric.totalResponseTime / metric.requests;
         // Alert conditions
@@ -353,7 +345,7 @@ class EndpointMonitor {
             console.warn('TRAFFIC_SPIKE:', { endpoint, hourlyRequests });
         }
     }
-    getMetrics(endpoint?: string): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
+    getMetrics(endpoint?: string): EndpointMetric | Record<string, EndpointMetric> | undefined {
         if (endpoint) {
             return this.metrics.get(endpoint);
         }
@@ -365,7 +357,7 @@ export function monitorEndpoints(req: SecureRequest, res: Response, next: NextFu
     const start = process.hrtime.bigint();
     const endpoint = `${req.method} ${req.route?.path || req.path}`;
     const originalEnd = res.end;
-    res.end = function (chunk?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, encoding?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, cb?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
+    res.end = function (chunk?: unknown, encoding?: BufferEncoding, cb?: () => void) {
         const end = process.hrtime.bigint();
         const responseTime = Number(end - start) / 1000000; // Convert to milliseconds
         const isError = res.statusCode >= 400;
