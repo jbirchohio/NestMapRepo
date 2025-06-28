@@ -441,5 +441,61 @@ export interface HotelSearchResult {
     ratesAvailable: number;
 }
 
+// Conflict type for trip conflicts
+export interface Conflict {
+  type: 'schedule' | 'budget' | 'policy' | 'preference';
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  resolution?: string;
+}
+
+// Search parameter interfaces
+export interface FlightSearchParams {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  passengers: number;
+  preferredAirlines?: string[];
+}
+
+export interface HotelSearchParams {
+  destination: string;
+  checkIn: string;
+  checkOut: string;
+  guests?: number;
+  rooms?: number;
+  maxPrice?: number;
+}
+
+export interface DateRange {
+  start: Date;
+  end: Date;
+}
+
+// Local extension for business trip with additional fields
+export interface LocalGeneratedBusinessTrip extends Omit<GeneratedBusinessTrip, 'activities' | 'conflicts' | 'recommendations'> {
+  activities: Activity[];
+  conflicts: Conflict[];
+  recommendations: string[];
+  tripSummary: {
+    title: string;
+    description: string;
+    totalCost: number;
+    carbonFootprint: number;
+    duration: number;
+    startDate: string;
+    endDate: string;
+    budgetBreakdown: {
+      flights: number;
+      hotels: number;
+      meals: number;
+      activities: number;
+      transportation: number;
+      other: number;
+    };
+  };
+}
+
 // Re-export all types through the index
 export * from './business-trip.types.js';

@@ -1,19 +1,23 @@
-import type { Trip, Activity } from './schema';
+import type { Trip, Activity } from './schema.js';
 
 // Field transformation utilities for converting between camelCase and snake_case
+
 // Convert snake_case to camelCase
 export function snakeToCamel<T>(obj: T): T {
     if (obj === null || obj === undefined || typeof obj !== 'object') {
         return obj;
     }
+    
     if (Array.isArray(obj)) {
-        return obj.map(item => snakeToCamel(item));
+        return obj.map(item => snakeToCamel(item)) as unknown as T;
     }
+    
     if (obj instanceof Date) {
         return obj;
     }
+    
     const result: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(obj)) {
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
         const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
         result[camelKey] = snakeToCamel(value);
     }
@@ -24,9 +28,11 @@ export function camelToSnake<T>(obj: T): T {
     if (obj === null || obj === undefined || typeof obj !== 'object') {
         return obj;
     }
+    
     if (Array.isArray(obj)) {
-        return obj.map(item => camelToSnake(item));
+        return obj.map(item => camelToSnake(item)) as unknown as T;
     }
+    
     if (obj instanceof Date) {
         return obj;
     }
@@ -49,8 +55,9 @@ export function transformTripToDatabase(tripData: Partial<Trip>) {
         result.end_date = tripData.endDate;
     if (tripData.userId !== undefined)
         result.user_id = tripData.userId;
-    if (tripData.organizationId !== undefined)
+    if (tripData.organizationId !== undefined) {
         result.organization_id = tripData.organizationId;
+    }
     if (tripData.isPublic !== undefined)
         result.is_public = tripData.isPublic;
     if (tripData.shareCode !== undefined)
@@ -90,8 +97,7 @@ export function transformTripToDatabase(tripData: Partial<Trip>) {
         result.budget = tripData.budget;
     if (tripData.collaborators !== undefined)
         result.collaborators = tripData.collaborators;
-    if (tripData.organization !== undefined)
-        result.organization = tripData.organization;
+    // Organization ID is already handled above
     return result as Record<string, unknown>;
 }
 // Transform frontend activity data to database format
