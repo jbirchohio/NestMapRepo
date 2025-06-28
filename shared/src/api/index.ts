@@ -19,6 +19,7 @@ type ExtendedAxiosRequestConfig<D = any> = Omit<AxiosRequestConfig<D>, 'cancelTo
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { ApiErrorCode, type ApiErrorResponse, type ApiSuccessResponse } from '../types/api';
 
@@ -53,6 +54,8 @@ export class ApiError<T = unknown> extends Error {
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 class ApiError extends Error {
@@ -62,6 +65,9 @@ class ApiError extends Error {
 
   constructor(message: string, options: { status?: number; code?: string; details?: unknown } = {}) {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -70,6 +76,7 @@ class ApiError extends Error {
     this.status = options.status;
     this.code = options.code;
     this.details = options.details;
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
     this.config = options.config;
@@ -266,6 +273,8 @@ export type { AxiosInstance, AxiosResponse, AxiosRequestConfig };
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
   }
 }
 
@@ -280,6 +289,9 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -358,6 +370,10 @@ apiClient.interceptors.response.use(
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+export { apiClient };
+>>>>>>> Stashed changes
 =======
 export { apiClient };
 >>>>>>> Stashed changes

@@ -4,6 +4,7 @@ import { BellIcon } from '../icons';
 import type { NotificationsMenuProps } from './types';
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import type { SharedNotificationType } from '@shared/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
@@ -20,6 +21,11 @@ const getSafeNotifications = (notifications: unknown[]): SharedNotificationType[
 import type { Notification as AppNotification } from '@shared/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
+=======
+import type { Notification as AppNotification } from '@shared/types/notification';
+
+// Helper function to safely cast notifications to AppNotification[]
+>>>>>>> Stashed changes
 =======
 import type { Notification as AppNotification } from '@shared/types/notification';
 
@@ -45,6 +51,9 @@ const getSafeNotifications = (notifications: unknown[]): AppNotification[] => {
       typeof read === 'boolean' &&
       typeof createdAt === 'string'
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
