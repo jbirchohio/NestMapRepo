@@ -17,48 +17,6 @@ type ExtendedAxiosRequestConfig<D = any> = Omit<AxiosRequestConfig<D>, 'cancelTo
   requestId?: string;
 };
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { ApiErrorCode, type ApiErrorResponse, type ApiSuccessResponse } from '../types/api';
-
-export interface ApiConfig extends Omit<AxiosRequestConfig, 'headers'> {
-  /** Skip authentication for this request */
-  skipAuth?: boolean;
-  /** Skip error handling for this request */
-  skipErrorHandling?: boolean;
-  /** Custom headers */
-  headers?: Record<string, string>;
-  /** Additional metadata */
-  meta?: Record<string, unknown>;
-}
-
-export class ApiError<T = unknown> extends Error {
-  status?: number;
-  code?: string;
-  details?: T;
-  config?: InternalAxiosRequestConfig;
-  response?: AxiosResponse<ApiErrorResponse<T>>;
-
-  constructor(
-    message: string,
-    options: {
-      status?: number;
-      code?: string;
-      details?: T;
-      config?: InternalAxiosRequestConfig;
-      response?: AxiosResponse<ApiErrorResponse<T>>;
-    } = {}
-  ) {
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 class ApiError extends Error {
@@ -67,223 +25,11 @@ class ApiError extends Error {
   details?: unknown;
 
   constructor(message: string, options: { status?: number; code?: string; details?: unknown } = {}) {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     super(message);
     this.name = 'ApiError';
     this.status = options.status;
     this.code = options.code;
     this.details = options.details;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    this.config = options.config;
-    this.response = options.response;
-  }
-}
-
-export interface ApiClientConfig extends AxiosRequestConfig {
-  baseURL: string;
-  timeout?: number;
-  withCredentials?: boolean;
-  headers?: Record<string, string>;
-  onUnauthenticated?: () => void;
-  onError?: (error: ApiError) => void;
-}
-
-export class ApiClient {
-  private client: AxiosInstance;
-  private config: ApiClientConfig;
-
-  constructor(config: ApiClientConfig) {
-    this.config = {
-      timeout: 30000, // 30 seconds
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      ...config,
-    };
-
-    this.client = axios.create({
-      ...this.config,
-      headers: {
-        ...this.config.headers,
-      },
-    });
-
-    this.setupInterceptors();
-  }
-
-  private setupInterceptors(): void {
-    // Request interceptor
-    this.client.interceptors.request.use(
-      (config) => {
-        // Add auth token if available
-        const token = this.getAuthToken();
-        if (token && !config.headers?.Authorization) {
-          config.headers = {
-            ...config.headers,
-            Authorization: `Bearer ${token}`,
-          };
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
-
-    // Response interceptor
-    this.client.interceptors.response.use(
-      (response) => response,
-      async (error: AxiosError<ApiErrorResponse>) => {
-        const { response, config } = error;
-        const originalRequest = config as InternalAxiosRequestConfig & { _retry?: boolean };
-
-        // Handle 401 Unauthorized
-        if (response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-          
-          try {
-            // Try to refresh token
-            const newToken = await this.refreshToken();
-            if (newToken) {
-              this.setAuthToken(newToken);
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
-              return this.client(originalRequest);
-            }
-          } catch (refreshError) {
-            // If refresh fails, log out user
-            this.handleUnauthenticated();
-            return Promise.reject(refreshError);
-          }
-        }
-
-        // Create a proper ApiError from the response
-        const apiError = new ApiError(
-          response?.data?.message || error.message,
-          {
-            status: response?.status,
-            code: response?.data?.code,
-            details: response?.data?.details,
-            config: error.config,
-            response,
-          }
-        );
-
-        // Global error handler
-        if (this.config.onError && !originalRequest.skipErrorHandling) {
-          this.config.onError(apiError);
-        }
-
-        return Promise.reject(apiError);
-      }
-    );
-  }
-
-  // Abstract methods to be implemented by the client
-  protected getAuthToken(): string | null {
-    // To be implemented by the client
-    return null;
-  }
-
-  protected setAuthToken(token: string): void {
-    // To be implemented by the client
-  }
-
-  protected async refreshToken(): Promise<string | null> {
-    // To be implemented by the client
-    return null;
-  }
-
-  protected handleUnauthenticated(): void {
-    if (this.config.onUnauthenticated) {
-      this.config.onUnauthenticated();
-    }
-  }
-
-  // HTTP Methods
-  public async get<T = any>(
-    url: string,
-    config: ApiConfig = {}
-  ): Promise<ApiSuccessResponse<T>> {
-    const response = await this.client.get<ApiSuccessResponse<T>>(url, config);
-    return response.data;
-  }
-
-  public async post<T = any, D = any>(
-    url: string,
-    data?: D,
-    config: ApiConfig = {}
-  ): Promise<ApiSuccessResponse<T>> {
-    const response = await this.client.post<ApiSuccessResponse<T>>(url, data, config);
-    return response.data;
-  }
-
-  public async put<T = any, D = any>(
-    url: string,
-    data?: D,
-    config: ApiConfig = {}
-  ): Promise<ApiSuccessResponse<T>> {
-    const response = await this.client.put<ApiSuccessResponse<T>>(url, data, config);
-    return response.data;
-  }
-
-  public async patch<T = any, D = any>(
-    url: string,
-    data?: D,
-    config: ApiConfig = {}
-  ): Promise<ApiSuccessResponse<T>> {
-    const response = await this.client.patch<ApiSuccessResponse<T>>(url, data, config);
-    return response.data;
-  }
-
-  public async delete<T = any>(
-    url: string,
-    config: ApiConfig = {}
-  ): Promise<ApiSuccessResponse<T>> {
-    const response = await this.client.delete<ApiSuccessResponse<T>>(url, config);
-    return response.data;
-  }
-
-  // Create a scoped API client with a base URL
-  public createScoped(baseURL: string): ApiClient {
-    return new ApiClient({
-      ...this.config,
-      baseURL: `${this.config.baseURL}${baseURL}`,
-    });
-  }
-}
-
-// Default API client instance
-const createApiClient = (baseURL: string, config: Omit<ApiClientConfig, 'baseURL'> = {}) => {
-  return new ApiClient({
-    baseURL,
-    ...config,
-  });
-};
-
-export { createApiClient };
-
-export type { AxiosInstance, AxiosResponse, AxiosRequestConfig };
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
   }
 }
 
@@ -297,16 +43,6 @@ const apiClient = axios.create({
   },
   withCredentials: true,
 });
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 /**
  * Type-safe API request function
@@ -380,20 +116,5 @@ apiClient.interceptors.response.use(
   }
 );
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
 export { apiClient };
->>>>>>> Stashed changes
-=======
-export { apiClient };
->>>>>>> Stashed changes
-=======
-export { apiClient };
->>>>>>> Stashed changes
-=======
-export { apiClient };
->>>>>>> Stashed changes
 export default api;
