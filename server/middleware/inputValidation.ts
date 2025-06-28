@@ -20,7 +20,7 @@ import { z } from 'zod';
 // Extend the Express Request type to include common properties
 // Extend Express Request with custom properties
 interface CustomRequest extends Request {
-    body: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */; // Consider replacing 'any' with a more specific type
+    body: Record<string, unknown>;
     query: {
         [key: string]: string | string[] | undefined;
     };
@@ -32,7 +32,7 @@ interface CustomRequest extends Request {
         [fieldname: string]: Express.Multer.File[];
     } | Express.Multer.File[] | undefined;
     ip?: string;
-    [key: string]: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */; // Allow additional properties
+    [key: string]: unknown; // Allow additional properties
 }
 import DOMPurify from 'isomorphic-dompurify';
 // Common validation patterns
@@ -86,15 +86,15 @@ export function sanitizeUrl(input: string): string {
     }
     return '';
 }
-export function sanitizeNumber(input: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): number | null {
+export function sanitizeNumber(input: unknown): number | null {
     const num = parseFloat(input);
     return isNaN(num) || !isFinite(num) ? null : num;
 }
-export function sanitizeInteger(input: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): number | null {
+export function sanitizeInteger(input: unknown): number | null {
     const num = parseInt(input, 10);
     return isNaN(num) ? null : num;
 }
-export function sanitizeBoolean(input: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): boolean {
+export function sanitizeBoolean(input: unknown): boolean {
     if (typeof input === 'boolean')
         return input;
     if (typeof input === 'string') {
@@ -102,10 +102,10 @@ export function sanitizeBoolean(input: any /** FIXANYERROR: Replace 'any' */ /**
     }
     return Boolean(input);
 }
-export function sanitizeArray(input: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, itemSanitizer: (item: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => any): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[] {
+export function sanitizeArray<T>(input: unknown, itemSanitizer: (item: unknown) => T): T[] {
     if (!Array.isArray(input))
         return [];
-    return input.map(itemSanitizer).filter(item => item !== null && item !== undefined);
+    return (input as unknown[]).map(itemSanitizer).filter(item => item !== null && item !== undefined);
 }
 // Validation schemas for different content types
 export const tripValidationSchema = z.object({
@@ -221,7 +221,7 @@ export function validateAndSanitizeBody(schema: z.ZodSchema) {
     };
 }
 // Recursive object sanitization
-function sanitizeObject(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ {
+function sanitizeObject(obj: unknown): unknown {
     if (obj === null || obj === undefined)
         return obj;
     if (typeof obj === 'string') {
@@ -237,7 +237,7 @@ function sanitizeObject(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERR
         return obj.map(item => sanitizeObject(item)).filter(item => item !== null);
     }
     if (typeof obj === 'object') {
-        const sanitized: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {};
+        const sanitized: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(obj)) {
             const sanitizedKey = sanitizeText(key);
             if (sanitizedKey) {
@@ -252,7 +252,7 @@ function sanitizeObject(obj: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERR
 export function validateQueryParams(allowedParams: string[]) {
     return (req: CustomRequest, res: Response, next: NextFunction) => {
         try {
-            const sanitizedQuery: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ = {};
+            const sanitizedQuery: Record<string, unknown> = {};
             for (const param of allowedParams) {
                 if (req.query[param] !== undefined) {
                     const value = req.query[param];
@@ -381,7 +381,7 @@ export function validateAndSanitizeRequest(schemas: {
             }
             // Sanitize and Validate Query Parameters
             if (schemas.query && req.query && typeof req.query === 'object') {
-                const sanitizedQuery: Record<string, any> = {};
+                const sanitizedQuery: Record<string, unknown> = {};
                 for (const key in req.query) {
                     if (Object.prototype.hasOwnProperty.call(req.query, key)) {
                         const value = req.query[key];
@@ -411,7 +411,7 @@ export function validateAndSanitizeRequest(schemas: {
             }
             // Sanitize and Validate Route Parameters
             if (schemas.params && req.params && typeof req.params === 'object') {
-                const sanitizedParams: Record<string, any> = {};
+                const sanitizedParams: Record<string, unknown> = {};
                 for (const key in req.params) {
                     if (Object.prototype.hasOwnProperty.call(req.params, key)) {
                         const value = req.params[key];

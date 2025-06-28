@@ -168,9 +168,12 @@ export function validateOrganizationAccess(req: ExpressRequest, res: Response, n
  * Query helper to automatically add organization scoping to database queries
  * This ensures all database operations are properly scoped to the user's organization
  */
+interface QueryWithWhere {
+    where: (condition: unknown) => unknown;
+}
 export function addOrganizationScope<T extends {
     organizationId: Column<any>;
-}>(baseQuery: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, req: ExpressRequest, table: T) {
+}>(baseQuery: QueryWithWhere, req: ExpressRequest, table: T) {
     if (!req.organizationId) {
         throw new Error('Organization context required for scoped queries');
     }
@@ -181,7 +184,7 @@ export function addOrganizationScope<T extends {
  * Validation helper for organization-scoped inserts
  * Automatically injects organization ID into create operations
  */
-export function validateOrganizationData(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, req: ExpressRequest) {
+export function validateOrganizationData(data: Record<string, unknown>, req: ExpressRequest) {
     if (!req.organizationId) {
         throw new Error('Organization context required');
     }
@@ -280,7 +283,7 @@ export async function resolveDomainOrganization(
         const { eq } = await import('drizzle-orm');
         
         // Dynamic schema import with better error handling
-        let customDomains: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+        let customDomains: typeof import('../db/schema.js').customDomains;
         try {
             const schema = await import('../db/schema.js');
             if (!schema?.customDomains) {
