@@ -12,8 +12,14 @@ declare global {
             cacheStatus?: 'hit' | 'miss' | 'skip';
             dbQueries?: number;
             dbAvgTime?: number;
-            slowQueries?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
-            endpointStats?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+            slowQueries?: Array<{
+                name: string;
+                duration: number;
+                timestamp: string;
+            }>;
+            endpointStats?: {
+                recordRequest(endpoint: string, responseTime: number, isError: boolean): void;
+            };
         }
         
         interface Request {
@@ -40,7 +46,7 @@ export function responseCoordinator(req: Request, res: Response, next: NextFunct
     // Single point of response interception
     const originalEnd = res.end;
     let endCalled = false;
-    res.end = function (chunk?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, encoding?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, cb?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
+    res.end = function (chunk?: string | Buffer, encoding?: BufferEncoding, cb?: () => void) {
         // Prevent multiple calls
         if (endCalled) {
             return originalEnd.call(this, chunk, encoding, cb);
