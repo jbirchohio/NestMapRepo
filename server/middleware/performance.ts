@@ -39,7 +39,7 @@ export const performanceMonitor: RequestHandler = (req: PerformanceRequest, res:
     const dbQueries = 0; // Will be incremented by database middleware
     (req as any).dbQueryCount = dbQueries;
     const originalEnd = res.end;
-    res.end = function (chunk?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, encoding?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, cb?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
+    res.end = function (chunk?: string | Buffer, encoding?: BufferEncoding, cb?: () => void) {
         const end = process.hrtime.bigint();
         const endMemory = process.memoryUsage();
         const duration = Number(end - start) / 1000000; // Convert to milliseconds

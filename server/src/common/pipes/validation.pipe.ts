@@ -1,9 +1,9 @@
-import { type PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
-import { validate } from 'class-validator';
+import { type PipeTransform, Injectable, BadRequestException, type ArgumentMetadata } from '@nestjs/common';
+import { validate, ValidationError } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 import { Logger } from '@nestjs/common';
 
-type Constructor<T = any> = new (...args: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]) => T;
+type Constructor<T = unknown> = new (...args: unknown[]) => T;
 
 @Injectable()
 export class ValidationPipe implements PipeTransform<any> {
@@ -11,7 +11,7 @@ export class ValidationPipe implements PipeTransform<any> {
 
   constructor(private readonly metatype?: Constructor) {}
 
-  async transform(value: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */, metadata: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) {
+  async transform(value: unknown, metadata: ArgumentMetadata) {
     if (!this.metatype || !this.toValidate(metadata.metatype || this.metatype)) {
       return value;
     }
@@ -45,7 +45,7 @@ export class ValidationPipe implements PipeTransform<any> {
     return !types.includes(metatype);
   }
 
-  private flattenValidationErrors(errors: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[]): Record<string, string[]> {
+  private flattenValidationErrors(errors: ValidationError[]): Record<string, string[]> {
     return errors.reduce((acc, err) => {
       if (err.constraints) {
         acc[err.property] = Object.values(err.constraints);
