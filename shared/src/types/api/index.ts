@@ -186,7 +186,7 @@ export function createPaginatedResponse<T = unknown>(
 /**
  * Creates an error API response
  */
-export function createErrorResponse(
+export function createApiError(
   code: ApiErrorCode | string,
   message: string,
   options: {
@@ -195,14 +195,23 @@ export function createErrorResponse(
     stack?: string;
   } = {}
 ): ApiResponse<never> {
-  return {
+  const apiError: Partial<ApiResponse<never>> = {
     success: false,
     code,
     message,
-    ...(options.details && { details: options.details }),
-    ...(options.errors && { errors: options.errors }),
-    ...(process.env.NODE_ENV === 'development' && options.stack && { stack: options.stack }),
   };
+
+  if (options.details) {
+    apiError.details = options.details;
+  }
+  if (options.errors) {
+    apiError.errors = options.errors;
+  }
+  if (process.env.NODE_ENV === 'development' && options.stack) {
+    apiError.stack = options.stack;
+  }
+
+  return apiError as ApiResponse<never>;
 }
 
 /**

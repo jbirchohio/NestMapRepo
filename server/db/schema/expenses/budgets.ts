@@ -1,12 +1,12 @@
-import { pgTable, uuid, text, timestamp, numeric, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, numeric, jsonb, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { organizations } from '../organizations/organizations';
-import { users } from '../users';
-import { trips } from '../trips/trips';
-import { withBaseColumns } from '../base';
-import type { Metadata } from '../shared/types';
+import { organizations } from '../organizations/organizations.js';
+import { users } from '../users/users.js';
+import { trips } from '../trips/trips.js';
+import { withBaseColumns } from '../base.js';
+import type { Metadata } from '../shared/types.js';
 
 export const budgets = pgTable('budgets', {
   ...withBaseColumns,
@@ -30,10 +30,10 @@ export const budgets = pgTable('budgets', {
 
 // Schema for creating/updating a budget
 export const insertBudgetSchema = createInsertSchema(budgets, {
-  name: (schema) => schema.name.min(1).max(200),
-  description: (schema) => schema.description.max(1000).optional(),
-  amount: (schema) => schema.amount.min(0.01),
-  currency: (schema) => schema.currency.length(3),
+  name: (schema: any) => schema.name.pipe(z.string().min(1).max(200)),
+  description: (schema: any) => schema.description.pipe(z.string().max(1000).optional()),
+  amount: (schema: any) => schema.amount.pipe(z.number().min(0.01)),
+  currency: (schema: any) => schema.currency.pipe(z.string().length(3)),
 }).refine(
   (data) => !data.endDate || !data.startDate || data.endDate >= data.startDate,
   {

@@ -1,5 +1,5 @@
-import type { Booking as DbBooking } from '../../db/bookingSchema.ts';
-import type { BaseBooking, ServerBooking, AnyBooking } from '@shared/types/booking';
+import type { Booking as DbBooking } from '../../db/schema/index.js';
+import type { BaseBooking, ServerBooking, AnyBooking } from '@shared/types/booking/index.js';
 /**
  * Maps a database booking to a server booking
  */

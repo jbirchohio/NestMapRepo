@@ -1,7 +1,7 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, integer, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
 
 // Enums
 export const approvalStatusEnum = ['pending', 'approved', 'rejected', 'escalated', 'cancelled'] as const;
@@ -39,13 +39,13 @@ export const approvalRules = pgTable('approval_rules', {
 
 // Schema for creating/updating an approval rule
 export const insertApprovalRuleSchema = createInsertSchema(approvalRules, {
-  name: (schema) => schema.name.min(1).max(255),
-  description: (schema) => schema.description.optional(),
-  entityType: (schema) => schema.entityType.min(1).max(100),
-  conditions: (schema) => schema.conditions.optional(),
-  autoApprove: (schema) => schema.autoApprove.default(false),
-  isActive: (schema) => schema.isActive.default(true),
-  priority: (schema) => schema.priority.min(0).default(0),
+  name: (schema) => (schema as typeof approvalRules.$inferInsert).name.min(1).max(255),
+  description: (schema) => (schema as typeof approvalRules.$inferInsert).description.optional(),
+  entityType: (schema) => (schema as typeof approvalRules.$inferInsert).entityType.min(1).max(100),
+  conditions: (schema) => (schema as typeof approvalRules.$inferInsert).conditions.optional(),
+  autoApprove: (schema) => (schema as typeof approvalRules.$inferInsert).autoApprove.default(false),
+  isActive: (schema) => (schema as typeof approvalRules.$inferInsert).isActive.default(true),
+  priority: (schema) => (schema as typeof approvalRules.$inferInsert).priority.min(0).default(0),
 });
 
 // Schema for selecting an approval rule

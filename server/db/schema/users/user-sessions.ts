@@ -1,8 +1,9 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from './users';
-import type { Metadata } from '../shared/types';
+import { z } from 'zod';
+import { users } from './users.js';
+import type { Metadata } from '../shared/types.js';
 
 export const userSessions = pgTable('user_sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -10,7 +11,7 @@ export const userSessions = pgTable('user_sessions', {
   refreshToken: text('refresh_token').notNull().unique(),
   userAgent: text('user_agent'),
   ipAddress: text('ip_address'),
-  deviceId: text('device_id'),
+  deviceId: text('device'),
   expiresAt: timestamp('expires_at').notNull(),
   revoked: boolean('revoked').notNull().default(false),
   metadata: jsonb('metadata').$type<Metadata>().default({}),

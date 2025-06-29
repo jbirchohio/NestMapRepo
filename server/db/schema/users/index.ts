@@ -1,5 +1,5 @@
 // Re-export all user-related schemas
-export * from './users';
-export * from './user-settings';
-export * from './user-sessions';
+export * from './users.js';
+export * from './user-settings.js';
+export * from './user-sessions.js';
 // Add other user-related exports here

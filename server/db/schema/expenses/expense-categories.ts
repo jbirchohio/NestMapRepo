@@ -1,9 +1,9 @@
-import { pgTable, uuid, text, timestamp, jsonb, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, unique, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
-import type { Metadata } from '../shared/types';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
+import type { Metadata } from '../shared/types.js';
 
 export const expenseCategories = pgTable('expense_categories', {
   ...withBaseColumns,
@@ -27,10 +27,10 @@ export const expenseCategories = pgTable('expense_categories', {
 
 // Schema for creating/updating an expense category
 export const insertExpenseCategorySchema = createInsertSchema(expenseCategories, {
-  name: (schema) => schema.name.min(1).max(100),
-  description: (schema) => schema.description.max(500).optional(),
-  icon: (schema) => schema.icon.optional(),
-  color: (schema) => schema.color.regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/).optional(),
+  name: (schema) => (schema as typeof expenseCategories.$inferInsert).name.min(1).max(100),
+  description: (schema) => (schema as typeof expenseCategories.$inferInsert).description.max(500).optional(),
+  icon: (schema) => (schema as typeof expenseCategories.$inferInsert).icon.optional(),
+  color: (schema) => (schema as typeof expenseCategories.$inferInsert).color.regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/).optional(),
 });
 
 // Schema for selecting an expense category

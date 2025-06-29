@@ -1,8 +1,9 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, integer, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { users } from '../users';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { organizations } from '../organizations/organizations.js';
+import { users } from '../users/users.js';
+import { withBaseColumns } from '../base.js';
 
 // Corporate Cards Table
 export const corporateCards = pgTable('corporate_cards', {
@@ -23,7 +24,7 @@ export const corporateCards = pgTable('corporate_cards', {
   // Status
   status: text('status').notNull().default('active'), // 'active', 'suspended', 'cancelled', 'expired'
   isVirtual: boolean('is_virtual').default(false),
-  isDefault: boolean('is_default').default(false),
+  is_default: boolean('is_default').default(false),
   
   // Limits and balances
   spendingLimit: integer('spending_limit'), // in cents
@@ -59,19 +60,19 @@ export const corporateCards = pgTable('corporate_cards', {
 
 // Schema for creating/updating a corporate card
 export const insertCorporateCardSchema = createInsertSchema(corporateCards, {
-  lastFourDigits: (schema) => schema.lastFourDigits.length(4),
-  expiryMonth: (schema) => schema.expiryMonth.min(1).max(12),
-  expiryYear: (schema) => schema.expiryYear.min(2000).max(2100),
-  cardholderName: (schema) => schema.cardholderName.min(1).max(255),
-  cardType: (schema) => schema.cardType.optional(),
-  status: (schema) => schema.status.default('active'),
-  isVirtual: (schema) => schema.isVirtual.default(false),
-  isDefault: (schema) => schema.isDefault.default(false),
-  spendingLimit: (schema) => schema.spendingLimit.optional(),
-  currentBalance: (schema) => schema.currentBalance.default(0),
-  availableBalance: (schema) => schema.availableBalance.default(0),
-  metadata: (schema) => schema.metadata.optional(),
-  context: (schema) => schema.context.optional(),
+  lastFourDigits: (schema) => (schema as typeof corporateCards.$inferInsert).lastFourDigits.length(4),
+  expiryMonth: (schema) => (schema as typeof corporateCards.$inferInsert).expiryMonth.min(1).max(12),
+  expiryYear: (schema) => (schema as typeof corporateCards.$inferInsert).expiryYear.min(2000).max(2100),
+  cardholderName: (schema) => (schema as typeof corporateCards.$inferInsert).cardholderName.min(1).max(255),
+  cardType: (schema) => (schema as typeof corporateCards.$inferInsert).cardType.optional(),
+  status: (schema) => (schema as typeof corporateCards.$inferInsert).status.default('active'),
+  isVirtual: (schema) => (schema as typeof corporateCards.$inferInsert).isVirtual.default(false),
+  is_default: (schema) => (schema as typeof corporateCards.$inferInsert).is_default.default(false),
+  spendingLimit: (schema) => (schema as typeof corporateCards.$inferInsert).spendingLimit.optional(),
+  currentBalance: (schema) => (schema as typeof corporateCards.$inferInsert).currentBalance.default(0),
+  availableBalance: (schema) => (schema as typeof corporateCards.$inferInsert).availableBalance.default(0),
+  metadata: (schema) => (schema as typeof corporateCards.$inferInsert).metadata.optional(),
+  context: (schema) => (schema as typeof corporateCards.$inferInsert).context.optional(),
 });
 
 // Schema for selecting a corporate card

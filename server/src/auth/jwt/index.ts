@@ -32,7 +32,6 @@ import type {
   PasswordResetTokenPayload,
   EmailVerificationTokenPayload,
   TokenType,
-  TokenPayload,
   TokenVerificationResult as JwtTokenVerificationResult
 } from '../../../../shared/src/types/auth/jwt.js';
 

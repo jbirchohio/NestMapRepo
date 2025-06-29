@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Put, Body, Param, Delete, Inject, Logger } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
 import { BookingService } from '../services/booking.service.js';
-import type { Booking } from '../../../db/schema.js';
 import { ErrorService } from '../services/error.service.js';
-import type { CreateBookingDto, UpdateBookingDto } from './dto/booking.dto.js';
+import { CreateBookingDto, UpdateBookingDto } from '@shared/types/booking/dto.js';
+import { Booking } from '../../../db/schema/index.js';
+import logger from '../../utils/logger.js';
 /**
  * Controller for booking endpoints
  * Demonstrates how to use services and repositories through dependency injection

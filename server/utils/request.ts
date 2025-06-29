@@ -1,5 +1,5 @@
 import type { Response, NextFunction } from 'express';
-import { UserRole } from '@shared/src/types/auth/permissions.js';
+import { UserRole } from '@shared/types/user/index.js';
 import type { AuthenticatedRequest } from '@shared/src/types/auth/custom-request.js';
 // Re-export the types for convenience
 export type { AuthenticatedRequest } from '@shared/src/types/auth/custom-request.js';

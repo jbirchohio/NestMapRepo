@@ -1,10 +1,11 @@
-import { pgTable, uuid, text, timestamp, jsonb, unique } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, unique, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { files } from './files';
-import { users } from '../users';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { files } from './files.js';
+import { users } from '../users/users.js';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
 
 // Define permission types
 export const filePermissionTypes = [
@@ -47,7 +48,7 @@ export const filePermissions = pgTable('file_permissions', {
 
 // Schema for creating/updating a file permission
 export const insertFilePermissionSchema = createInsertSchema(filePermissions, {
-  permission: (schema) => schema.permission.oneOf([...filePermissionTypes]),
+  permission: (schema) => z.enum(filePermissionTypes),
   // Ensure either userId or organizationId is provided, but not both
 }).refine(
   (data) => (data.userId === null) !== (data.organizationId === null),

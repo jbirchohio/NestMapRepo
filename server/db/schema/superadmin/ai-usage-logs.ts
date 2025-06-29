@@ -1,8 +1,9 @@
 import { pgTable, uuid, text, timestamp, jsonb, integer, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { users } from '../users/users.js';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
 
 // Schema for AI usage logs
 export const aiUsageLogs = pgTable('ai_usage_logs', {
@@ -60,20 +61,20 @@ export const aiUsageLogs = pgTable('ai_usage_logs', {
 
 // Schema for creating/updating an AI usage log
 export const insertAiUsageLogSchema = createInsertSchema(aiUsageLogs, {
-  endpoint: (schema) => schema.endpoint.min(1).max(255),
-  model: (schema) => schema.model.min(1).max(100),
-  provider: (schema) => schema.provider.min(1).max(100),
-  promptTokens: (schema) => schema.promptTokens.min(0).optional(),
-  completionTokens: (schema) => schema.completionTokens.min(0).optional(),
-  totalTokens: (schema) => schema.totalTokens.min(0).optional(),
-  cost: (schema) => schema.cost.min(0).optional(),
-  rateLimit: (schema) => schema.rateLimit.min(0).optional(),
-  rateLimitRemaining: (schema) => schema.rateLimitRemaining.min(0).optional(),
-  latencyMs: (schema) => schema.latencyMs.min(0).optional(),
-  responseStatus: (schema) => schema.responseStatus.optional(),
-  ipAddress: (schema) => schema.ipAddress.ip().optional(),
-  userAgent: (schema) => schema.userAgent.max(512).optional(),
-  metadata: (schema) => schema.metadata.optional(),
+  endpoint: (schema: any) => schema.endpoint.min(1).max(255),
+  model: (schema: any) => schema.model.min(1).max(100),
+  provider: (schema: any) => schema.provider.min(1).max(100),
+  promptTokens: (schema: any) => schema.promptTokens.min(0).optional(),
+  completionTokens: (schema: any) => schema.completionTokens.min(0).optional(),
+  totalTokens: (schema: any) => schema.totalTokens.min(0).optional(),
+  cost: (schema: any) => schema.cost.min(0).optional(),
+  rateLimit: (schema: any) => schema.rateLimit.min(0).optional(),
+  rateLimitRemaining: (schema: any) => schema.rateLimitRemaining.min(0).optional(),
+  latencyMs: (schema: any) => schema.latencyMs.min(0).optional(),
+  responseStatus: (schema: any) => schema.responseStatus.optional(),
+  ipAddress: (schema: any) => schema.ipAddress.ip().optional(),
+  userAgent: (schema: any) => schema.userAgent.max(512).optional(),
+  metadata: (schema: any) => schema.metadata.optional(),
 });
 
 // Schema for selecting an AI usage log

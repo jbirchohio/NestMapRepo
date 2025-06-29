@@ -1,5 +1,5 @@
-import type { Trip, User } from '../../../db/schema.js';
-import type { CorporateTripDto } from './trip.service.interface.ts';
+import type { Trip, User } from '../../../db/schema/index.js';
+import type { CorporateTripDto } from './trip.service.interface.js';
 import type { BaseRepository } from '../../common/repositories/base.repository.interface.ts';
 /**
  * Trip repository interface that extends the base repository interface

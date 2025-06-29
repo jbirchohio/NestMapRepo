@@ -1,4 +1,3 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
 // Import shared types
@@ -8,13 +7,13 @@ import type {
   BookingType,
   Booking as SharedBookingType,
   AnyBooking
-} from '../../../../shared/types/bookings.js';
+} from '@shared/types/booking/index.js';
 
 // Import database types
 import type { 
   Booking as DbBooking,
   InsertBooking as DbInsertBooking
-} from '../../../db/bookingSchema.js';
+} from '../../../db/schema/index.js';
 
 type DbUpdateBooking = Partial<DbInsertBooking>;
 
@@ -24,6 +23,7 @@ import { BOOKING_REPOSITORY } from '../repositories/repository.tokens.js';
 import type { 
   BookingRepository as IBookingRepository
 } from '../repositories/booking/booking.repository.interface.js';
+import logger from '../../utils/logger.js';
 
 // Extend the base booking type with required fields for creation
 // Extend the base booking type with required fields for creation
@@ -73,9 +73,8 @@ type DatabaseBooking = Omit<DbBooking, 'providerReferenceId'> & {
  * Service for managing bookings
  * Demonstrates how to use repositories through dependency injection
  */
-@Injectable()
 export class BookingService {
-    private readonly logger = new Logger(BookingService.name);
+    private readonly logger = logger;
 
     /**
      * Normalize a date input to a Date object

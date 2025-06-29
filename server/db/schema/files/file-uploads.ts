@@ -1,10 +1,11 @@
-import { pgTable, uuid, text, timestamp, jsonb, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, boolean, index, integer } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
-import type { Metadata } from '../shared/types';
+import { z } from 'zod';
+import { users } from '../users/users.js';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
+import type { Metadata } from '../shared/types.js';
 
 export const fileUploads = pgTable('file_uploads', {
   ...withBaseColumns,
@@ -42,12 +43,12 @@ export const fileUploads = pgTable('file_uploads', {
 
 // Schema for creating/updating a file upload
 export const insertFileUploadSchema = createInsertSchema(fileUploads, {
-  fileName: (schema) => schema.fileName.min(1).max(255),
-  fileType: (schema) => schema.fileType.min(1).max(100).optional(),
-  fileSize: (schema) => schema.fileSize.min(0).optional(),
-  status: (schema) => schema.status.regex(/^(pending|uploading|completed|failed)$/),
-  progress: (schema) => schema.progress.min(0).max(100),
-  storageKey: (schema) => schema.storageKey.min(1).max(255).optional(),
+  fileName: (schema) => (schema as typeof fileUploads.$inferInsert).fileName.min(1).max(255),
+  fileType: (schema) => (schema as typeof fileUploads.$inferInsert).fileType.min(1).max(100).optional(),
+  fileSize: (schema) => (schema as typeof fileUploads.$inferInsert).fileSize.min(0).optional(),
+  status: (schema) => (schema as typeof fileUploads.$inferInsert).status.regex(/^(pending|uploading|completed|failed)$/),
+  progress: (schema) => (schema as typeof fileUploads.$inferInsert).progress.min(0).max(100),
+  storageKey: (schema) => (schema as typeof fileUploads.$inferInsert).storageKey.min(1).max(255).optional(),
 });
 
 // Schema for selecting a file upload

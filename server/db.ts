@@ -4,7 +4,7 @@ import postgres from 'postgres';
 
 // Import schemas from db directory
 import * as schema from './db/schema.js';
-import * as superadminSchema from './db/superadminSchema.js';
+import * as superadminSchema from './db/schema/superadmin/index.js';
 
 // Export database schema type
 export type DatabaseSchema = typeof schema & typeof superadminSchema;

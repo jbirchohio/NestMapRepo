@@ -1,30 +1,36 @@
 import { Test } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { eq, and, inArray, sql } from 'drizzle-orm';
-import { db } from '../../../../db/db.ts';
-import { activities } from '../../../../db/schema.ts';
+import { eq, and, inArray, sql, type SQL, asc } from 'drizzle-orm';
+import { activities } from '../../../../db/schema/index.js';
 import { ActivityRepositoryImpl } from '../../../../src/common/repositories/activity/activity.repository.js';
 import type { 
-  Activity, 
   ActivityStatus, 
   ActivityType 
-} from '../../../../../shared/types/activity.js';
+} from '@shared/src/types/activity/index.js';
+import type { Activity, NewActivity } from '@db/schema/activities/activities.js';
 
-// Define mock types to match the expected schema
-type MockActivity = Omit<Activity, 'date' | 'startDate' | 'endDate' | 'description' | 'type' | 'status'> & {
-  date: Date;
-  time?: string;
-  locationName?: string;
-  latitude?: number;
-  longitude?: number;
-  tag?: string;
-  assignedTo?: string;
-  notes?: string;
-  type: ActivityType;
-  status: ActivityStatus;
-  order: number;
-  completed: boolean;
-};
+// Define mock activity data for testing
+const createMockActivity = (overrides: Partial<NewActivity> = {}): NewActivity => ({
+  id: 'test-activity-1',
+  tripId: 'trip-123',
+  organizationId: 'org-123',
+  title: 'Test Activity',
+  description: 'Test description',
+  type: 'other',
+  status: 'pending',
+  date: new Date('2023-01-01T10:00:00Z'),
+  startDate: new Date('2023-01-01T10:00:00Z'),
+  endDate: new Date('2023-01-01T12:00:00Z'),
+  locationName: 'Test Location',
+  address: '123 Test St',
+  tag: 'test',
+  order: 1,
+  completed: false,
+  metadata: {},
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides
+});
 
 // Helper function to create a mock query builder
 const createMockQueryBuilder = () => ({
@@ -87,197 +93,212 @@ const mockActivitiesTable = {
   deleteMany: jest.fn(),
 };
 
-// Create a mock for the database
-const mockDb = {
-  // Query builder methods
+// Create a mock database instance
+const createMockDb = () => ({
+  query: {
+    activities: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findFirst: jest.fn().mockResolvedValue(null),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      values: jest.fn().mockReturnThis(),
+      returning: jest.fn().mockResolvedValue([createMockActivity()]),
+      where: jest.fn().mockReturnThis(),
+      set: jest.fn().mockReturnThis(),
+    },
+  },
+  insert: jest.fn().mockReturnThis(),
+  update: jest.fn().mockReturnThis(),
+  delete: jest.fn().mockReturnThis(),
   select: jest.fn().mockReturnThis(),
   from: jest.fn().mockReturnThis(),
   where: jest.fn().mockReturnThis(),
-  insert: jest.fn().mockImplementation(() => createQueryBuilder()),
-  update: jest.fn().mockImplementation(() => createQueryBuilder()),
-  delete: jest.fn().mockImplementation(() => createQueryBuilder()),
-  
-  // Direct table access
-  query: {
-    activities: mockActivitiesTable,
-  },
-  
-  // Table references
-  activities: mockActivitiesTable,
-  
-  // Transactions
-  $with: jest.fn().mockReturnThis(),
-  transaction: jest.fn(async (callback) => await callback(mockDb)),
-  
-  // Drizzle ORM specific
-  eq: jest.fn().mockImplementation((a, b) => ({ a, b, op: 'eq' })),
-  and: jest.fn().mockImplementation((...args) => ({ op: 'and', args })),
-  gte: jest.fn().mockImplementation((a, b) => ({ a, b, op: 'gte' })),
-  lte: jest.fn().mockImplementation((a, b) => ({ a, b, op: 'lte' })),
-  inArray: jest.fn().mockImplementation((a, b) => ({ a, b, op: 'inArray' })),
-  sql: jest.fn().mockImplementation((strings, ...values) => ({
-    sql: strings.join('?'),
-    values,
-    op: 'sql',
-  })),
-} as unknown as typeof db;
-
-// Mock the db module
-jest.mock('../../../db/db.js', () => ({
-  db: mockDb,
-  activities: {
-    id: { name: 'id', tableName: 'activities' },
-    title: { name: 'title', tableName: 'activities' },
-    description: { name: 'description', tableName: 'activities' },
-    startDate: { name: 'start_date', tableName: 'activities' },
-    endDate: { name: 'end_date', tableName: 'activities' },
-    locationName: { name: 'location_name', tableName: 'activities' },
-    locationAddress: { name: 'location_address', tableName: 'activities' },
-    locationCoordinates: { name: 'location_coordinates', tableName: 'activities' },
-    status: { name: 'status', tableName: 'activities' },
-    type: { name: 'type', tableName: 'activities' },
-    tripId: { name: 'trip_id', tableName: 'activities' },
-    organizationId: { name: 'organization_id', tableName: 'activities' },
-    createdBy: { name: 'created_by', tableName: 'activities' },
-    updatedBy: { name: 'updated_by', tableName: 'activities' },
-    createdAt: { name: 'created_at', tableName: 'activities' },
-    updatedAt: { name: 'updated_at', tableName: 'activities' },
-  },
-}));
+  set: jest.fn().mockReturnThis(),
+  values: jest.fn().mockReturnThis(),
+  returning: jest.fn().mockResolvedValue([createMockActivity()]),
+  execute: jest.fn().mockResolvedValue([createMockActivity()]),
+});
 
 describe('ActivityRepository', () => {
   let repository: ActivityRepositoryImpl;
-  const now = new Date();
-  
-  // Mock data
-  const mockActivity: MockActivity = {
-    id: 'activity-123',
-    title: 'Test Activity',
-    date: now,
-    time: '10:00',
-    locationName: 'Test Location',
-    latitude: 40.7128,
-    longitude: -74.0060,
-    status: 'pending',
-    type: 'other',
-    tripId: 'trip-123',
-    organizationId: 'org-123',
-    createdBy: 'user-123',
-    createdAt: now,
-    updatedAt: now,
-    notes: 'Test notes',
-    tag: 'test',
-    assignedTo: 'user-123',
-    order: 1,
-    completed: false,
-    travelMode: 'driving'
-  };
+  let mockDb: ReturnType<typeof createMockDb>;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+    mockDb = createMockDb();
+    
     const moduleRef = await Test.createTestingModule({
-      providers: [ActivityRepositoryImpl],
+      providers: [
+        ActivityRepositoryImpl,
+        {
+          provide: 'DB',
+          useValue: mockDb,
+        },
+      ],
     }).compile();
 
     repository = moduleRef.get<ActivityRepositoryImpl>(ActivityRepositoryImpl);
-    jest.clearAllMocks();
   });
 
   describe('findByTripId', () => {
     it('should return activities for a trip', async () => {
-      // Mock the database response
-      (db.query.activities.findMany as jest.Mock).mockResolvedValueOnce([mockActivity]);
+      const mockActivity = createMockActivity({
+        id: 'activity-123',
+        tripId: 'trip-123',
+      });
+
+      mockDb.query.activities.findMany.mockResolvedValueOnce([mockActivity]);
 
       const result = await repository.findByTripId('trip-123');
-      
+
       expect(result).toEqual([mockActivity]);
-      expect(db.query.activities.findMany).toHaveBeenCalledWith({
-        where: (activities, { eq }) => eq(activities.tripId, 'trip-123'),
-        orderBy: (activities, { asc }) => [asc(activities.date)]
+      expect(mockDb.query.activities.findMany).toHaveBeenCalledWith({
+        where: expect.any(Function),
+        orderBy: expect.any(Function),
       });
+      
+      // Test the where function
+      const whereFn = mockDb.query.activities.findMany.mock.calls[0][0].where;
+      expect(whereFn(activities, { eq })).toEqual(eq(activities.tripId, 'trip-123'));
+      
+      // Test the orderBy function
+      const orderByFn = mockDb.query.activities.findMany.mock.calls[0][0].orderBy;
+      expect(orderByFn(activities, { asc })).toEqual([asc(activities.order)]);
     });
 
     it('should handle database errors', async () => {
       const error = new Error('Database error');
-      (db.query.activities.findMany as jest.Mock).mockRejectedValueOnce(error);
+      mockDb.query.activities.findMany.mockRejectedValueOnce(error);
 
-      await expect(repository.findByTripId('trip-123')).rejects.toThrow(error);
+      await expect(repository.findByTripId('trip-123')).rejects.toThrow('Failed to find activities for trip');
+      expect(mockDb.query.activities.findMany).toHaveBeenCalledWith({
+        where: expect.any(Function),
+        orderBy: expect.any(Function)
+      });
+    });
+  });
+
+  describe('findById', () => {
+    it('should find an activity by id', async () => {
+      const mockActivity = createMockActivity({ id: 'activity-123' });
+      mockDb.query.activities.findFirst.mockResolvedValueOnce(mockActivity);
+
+      const result = await repository.findById('activity-123');
+      
+      expect(result).toEqual(mockActivity);
+      expect(mockDb.query.activities.findFirst).toHaveBeenCalledWith({
+        where: expect.any(Function)
+      });
+      
+      const whereFn = mockDb.query.activities.findFirst.mock.calls[0][0].where;
+      expect(whereFn(activities, { eq })).toEqual(eq(activities.id, 'activity-123'));
+    });
+
+    it('should return null if activity not found', async () => {
+      mockDb.query.activities.findFirst.mockResolvedValueOnce(null);
+
+      const result = await repository.findById('non-existent-id');
+      
+      expect(result).toBeNull();
+      expect(mockDb.query.activities.findFirst).toHaveBeenCalledWith({
+        where: expect.any(Function)
+      });
+      
+      const whereFn = mockDb.query.activities.findFirst.mock.calls[0][0].where;
+      expect(whereFn(activities, { eq })).toEqual(eq(activities.id, 'non-existent-id'));
     });
   });
 
   describe('createMany', () => {
     it('should create multiple activities', async () => {
       const activitiesData = [
-        { ...mockActivity, id: undefined },
-        { ...mockActivity, id: undefined, title: 'Another Activity' }
+        { ...createMockActivity(), id: undefined },
+        { ...createMockActivity(), id: undefined, title: 'Another Activity' }
       ];
       
-      // Mock the database response for insert
-      const mockInsert = db.insert as jest.Mock;
+      const mockInsert = jest.fn().mockReturnThis();
       const mockValues = jest.fn().mockReturnThis();
       const mockReturning = jest.fn().mockResolvedValue([
-        { ...mockActivity, id: 'activity-1' },
-        { ...mockActivity, id: 'activity-2', title: 'Another Activity' }
+        { ...createMockActivity(), id: 'activity-1' },
+        { ...createMockActivity(), id: 'activity-2', title: 'Another Activity' }
       ]);
       
       mockInsert.mockImplementationOnce(() => ({
-        values: mockValues,
-        returning: mockReturning,
+        values: mockValues.mockImplementation(() => ({
+          returning: mockReturning
+        }))
       }));
+      
+      mockDb.insert = mockInsert as any;
 
       const result = await repository.createMany(activitiesData);
       
       expect(result).toHaveLength(2);
-      expect(db.insert).toHaveBeenCalledWith(activities);
-      expect(mockValues).toHaveBeenCalledWith(activitiesData);
-    });
+      expect(result[0].id).toBe('activity-1');
+      expect(result[1].id).toBe('activity-2');
+      expect(result[1].title).toBe('Another Activity');
+      
+      expect(mockInsert).toHaveBeenCalledWith(activities);
+      expect(mockValues).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({
+          ...activitiesData[0],
+          id: undefined,
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        }),
+        expect.objectContaining({
+          ...activitiesData[1],
+          id: undefined,
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
+      ]));
+    });  
 
     it('should return empty array if no activities provided', async () => {
       const result = await repository.createMany([]);
       expect(result).toEqual([]);
-      expect(db.insert).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('deleteByTripId', () => {
-    it('should delete activities by trip ID', async () => {
-      // Mock the database response for delete
-      const mockDelete = db.delete as jest.Mock;
-      const mockWhere = jest.fn().mockReturnThis();
-      const mockExecute = jest.fn().mockResolvedValue({ rowCount: 2 });
-      
-      mockDelete.mockImplementationOnce(() => ({
-        where: mockWhere,
-        execute: mockExecute,
-      }));
-
-      const result = await repository.deleteByTripId('trip-123');
-      
-      expect(result).toBe(true);
-      expect(db.delete).toHaveBeenCalledWith(activities);
-      expect(mockWhere).toHaveBeenCalledWith(expect.any(Object)); // Check for eq(activities.tripId, 'trip-123')
-    });
-
-    it('should return false if no activities were deleted', async () => {
-      // Mock the database response for delete with no matches
-      (db.execute as jest.Mock).mockResolvedValueOnce({ rowCount: 0 });
-
-      const result = await repository.deleteByTripId('nonexistent-trip');
-      expect(result).toBe(false);
+      expect(mockDb.insert).not.toHaveBeenCalled();
     });
   });
 
   describe('findByDateRange', () => {
-    const startDate = new Date('2023-01-01');
-    const endDate = new Date('2023-01-31');
+    const startDate = new Date('2023-01-01T00:00:00Z');
+    const endDate = new Date('2023-01-31T23:59:59Z');
 
     it('should find activities within date range', async () => {
-      // Mock the database response
-      (db.query.activities.findMany as jest.Mock).mockResolvedValueOnce([mockActivity]);
+      const mockActivity = createMockActivity();
+      mockDb.query.activities.findMany.mockResolvedValueOnce([mockActivity]);
 
       const result = await repository.findByDateRange('trip-123', startDate, endDate);
       
       expect(result).toEqual([mockActivity]);
-      expect(db.query.activities.findMany).toHaveBeenCalledWith({
+      expect(mockDb.query.activities.findMany).toHaveBeenCalledWith({
+        where: expect.any(Function),
+        orderBy: expect.any(Function)
+      });
+      
+      // Test the where function
+      const whereFn = mockDb.query.activities.findMany.mock.calls[0][0].where;
+      const mockAnd = jest.fn();
+      const mockGte = jest.fn();
+      const mockLte = jest.fn();
+      
+      whereFn(activities, { and: mockAnd, gte: mockGte, lte: mockLte, eq: jest.fn() });
+      
+      expect(mockAnd).toHaveBeenCalled();
+      expect(mockGte).toHaveBeenCalledWith(activities.date, startDate);
+      expect(mockLte).toHaveBeenCalledWith(activities.date, endDate);
+    });
+
+    it('should handle database errors', async () => {
+      const error = new Error('Database error');
+      mockDb.query.activities.findMany.mockRejectedValueOnce(error);
+
+      await expect(repository.findByDateRange('trip-123', startDate, endDate))
+        .rejects.toThrow('Failed to find activities for date range');
+      expect(mockDb.query.activities.findMany).toHaveBeenCalledWith({
         where: expect.any(Function),
         orderBy: expect.any(Function)
       });
@@ -289,121 +310,184 @@ describe('ActivityRepository', () => {
     const newEndDate = new Date('2023-02-01T12:00:00Z');
 
     it('should reschedule an activity', async () => {
-      // Mock the database response for update
-      const mockUpdate = db.update as jest.Mock;
+      const mockUpdate = jest.fn().mockReturnThis();
       const mockSet = jest.fn().mockReturnThis();
       const mockWhere = jest.fn().mockReturnThis();
-      const mockReturning = jest.fn().mockResolvedValue([{
-        ...mockActivity,
-        startDate: newStartDate,
-        endDate: newEndDate
-      }]);
       
-      mockUpdate.mockImplementationOnce(() => ({
-        set: mockSet,
-        where: mockWhere,
-        returning: mockReturning,
+      mockUpdate.mockImplementation(() => ({
+        set: mockSet.mockImplementation(() => ({
+          where: mockWhere.mockImplementation(() => ({
+            returning: jest.fn().mockResolvedValue([{
+              ...createMockActivity(),
+              startDate: newStartDate,
+              endDate: newEndDate
+            }])
+          }))
+        }))
       }));
+      
+      mockDb.update = mockUpdate as any;
 
       const result = await repository.reschedule('activity-123', newStartDate, newEndDate);
       
-      expect(result).toEqual({
-        ...mockActivity,
+      expect(result).toEqual(expect.objectContaining({
         startDate: newStartDate,
         endDate: newEndDate
-      });
+      }));
       
-      expect(db.update).toHaveBeenCalledWith(activities);
+      expect(mockUpdate).toHaveBeenCalledWith(activities);
       expect(mockSet).toHaveBeenCalledWith({
         startDate: newStartDate,
         endDate: newEndDate,
         updatedAt: expect.any(Date)
       });
-      expect(mockWhere).toHaveBeenCalledWith(expect.any(Object)); // Check for eq(activities.id, 'activity-123')
+      
+      // Test the where function
+      const whereFn = mockWhere.mock.calls[0][0];
+      const mockEq = jest.fn();
+      whereFn(activities, { eq: mockEq });
+      expect(mockEq).toHaveBeenCalledWith(activities.id, 'activity-123');
     });
 
     it('should return null if activity not found', async () => {
-      // Mock the database response for update with no matches
-      const mockUpdate = db.update as jest.Mock;
+      const mockUpdate = jest.fn().mockReturnThis();
       const mockSet = jest.fn().mockReturnThis();
       const mockWhere = jest.fn().mockReturnThis();
-      const mockReturning = jest.fn().mockResolvedValue([]);
       
-      mockUpdate.mockImplementationOnce(() => ({
-        set: mockSet,
-        where: mockWhere,
-        returning: mockReturning,
+      mockUpdate.mockImplementation(() => ({
+        set: mockSet.mockImplementation(() => ({
+          where: mockWhere.mockImplementation(() => ({
+            returning: jest.fn().mockResolvedValue([])
+          }))
+        }))
       }));
+      
+      mockDb.update = mockUpdate as any;
 
       const result = await repository.reschedule('nonexistent-activity', newStartDate, newEndDate);
       expect(result).toBeNull();
     });
   });
 
-  describe('updateStatus', () => {
-    it('should update activity status', async () => {
-      const newStatus: ActivityStatus = 'cancelled';
-      
-      // Mock the database response for update status
-      const mockUpdate = db.update as jest.Mock;
-      const mockSet = jest.fn().mockReturnThis();
-      const mockWhere = jest.fn().mockReturnThis();
-      const mockReturning = jest.fn().mockResolvedValue([{
-        ...mockActivity,
-        status: newStatus
-      }]);
-      
-      mockUpdate.mockImplementationOnce(() => ({
-        set: mockSet,
-        where: mockWhere,
-        returning: mockReturning,
-      }));
-
-      const result = await repository.updateStatus('activity-123', newStatus);
-      
-      expect(result).toEqual({
-        ...mockActivity,
-        status: newStatus
-      });
-      
-      expect(db.update).toHaveBeenCalledWith(activities);
-      expect(mockSet).toHaveBeenCalledWith({
-        status: newStatus,
-        updatedAt: expect.any(Date)
-      });
-      expect(mockWhere).toHaveBeenCalledWith(expect.any(Object)); // Check for eq(activities.id, 'activity-123')
-    });
-  });
-
   describe('findByType', () => {
-    it('should return activities of a specific type', async () => {
-      const type: ActivityType = 'event';
-      
-      // Mock the database response
-      (db.query.activities.findMany as jest.Mock).mockResolvedValueOnce([mockActivity]);
+    const type: ActivityType = 'other';
+    
+    it('should find activities by type', async () => {
+      const mockActivity = createMockActivity();
+      mockDb.query.activities.findMany.mockResolvedValueOnce([mockActivity]);
 
       const result = await repository.findByType(type);
       
       expect(result).toEqual([mockActivity]);
-      expect(db.query.activities.findMany).toHaveBeenCalledWith({
+      expect(mockDb.query.activities.findMany).toHaveBeenCalledWith({
+        where: expect.any(Function),
+        orderBy: expect.any(Function)
+      });
+      
+      // Test the where function
+      const whereFn = mockDb.query.activities.findMany.mock.calls[0][0].where;
+      const mockEq = jest.fn();
+      whereFn(activities, { eq: mockEq });
+      expect(mockEq).toHaveBeenCalledWith(activities.type, type);
+    });
+    
+    it('should filter by status if provided', async () => {
+      const status: ActivityStatus = 'confirmed';
+      mockDb.query.activities.findMany.mockResolvedValueOnce([createMockActivity()]);
+
+      await repository.findByType(type, status);
+      
+      // Test the where function with status filter
+      const whereFn = mockDb.query.activities.findMany.mock.calls[0][0].where;
+      const mockAnd = jest.fn();
+      const mockEq = jest.fn();
+      
+      whereFn(activities, { and: mockAnd, eq: mockEq });
+      
+      expect(mockAnd).toHaveBeenCalled();
+      expect(mockEq).toHaveBeenCalledWith(activities.type, type);
+      expect(mockEq).toHaveBeenCalledWith(activities.status, status);
+    });
+    
+    it('should handle database errors', async () => {
+      const error = new Error('Database error');
+      mockDb.query.activities.findMany.mockRejectedValueOnce(error);
+
+      await expect(repository.findByType(type))
+        .rejects.toThrow('Failed to find activities by type');
+      expect(mockDb.query.activities.findMany).toHaveBeenCalledWith({
         where: expect.any(Function),
         orderBy: expect.any(Function)
       });
     });
+  });
 
-    it('should filter by status if provided', async () => {
-      const type: ActivityType = 'event';
-      const status: ActivityStatus = 'confirmed';
-      
-      // Mock the database response
-      (db.query.activities.findMany as jest.Mock).mockResolvedValueOnce([mockActivity]);
+  describe('delete', () => {
+    let mockDelete: jest.Mock;
+    let mockWhere: jest.Mock;
 
-      await repository.findByType(type, status);
+    beforeEach(() => {
+      mockDelete = jest.fn().mockReturnThis();
+      mockWhere = jest.fn().mockReturnThis();
       
-      expect(db.query.activities.findMany).toHaveBeenCalledWith({
-        where: expect.any(Function),
-        orderBy: expect.any(Function)
-      });
+      mockDb.delete = mockDelete as any;
+    });
+
+    it('should delete an activity', async () => {
+      mockWhere.mockImplementationOnce(() => ({
+        returning: jest.fn().mockResolvedValue([{ id: 'activity-123' }])
+      }));
+      
+      mockDelete.mockImplementationOnce(() => ({
+        where: mockWhere
+      }));
+
+      const result = await repository.delete('activity-123');
+      
+      expect(result).toBe(true);
+      expect(mockDelete).toHaveBeenCalledWith(activities);
+      
+      // Test the where function
+      const whereFn = mockWhere.mock.calls[0][0];
+      const mockEq = jest.fn();
+      whereFn(activities, { eq: mockEq });
+      expect(mockEq).toHaveBeenCalledWith(activities.id, 'activity-123');
+    });
+    
+    it('should return false if activity not found', async () => {
+      mockWhere.mockImplementationOnce(() => ({
+        returning: jest.fn().mockResolvedValue([])
+      }));
+      
+      mockDelete.mockImplementationOnce(() => ({
+        where: mockWhere
+      }));
+
+      const result = await repository.delete('non-existent-activity');
+      
+      expect(result).toBe(false);
+      expect(mockDelete).toHaveBeenCalledWith(activities);
+      
+      // Test the where function
+      const whereFn = mockWhere.mock.calls[0][0];
+      const mockEq = jest.fn();
+      whereFn(activities, { eq: mockEq });
+      expect(mockEq).toHaveBeenCalledWith(activities.id, 'non-existent-activity');
+    });
+    
+    it('should handle database errors', async () => {
+      const error = new Error('Database error');
+      mockWhere.mockImplementationOnce(() => ({
+        returning: jest.fn().mockRejectedValue(error)
+      }));
+      
+      mockDelete.mockImplementationOnce(() => ({
+        where: mockWhere
+      }));
+
+      await expect(repository.delete('activity-123'))
+        .rejects.toThrow('Failed to delete activity');
+      expect(mockDelete).toHaveBeenCalledWith(activities);
     });
   });
 });

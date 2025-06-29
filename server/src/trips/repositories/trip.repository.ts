@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../../../db/db.js';
-import { trips as tripsTable, users as usersTable } from '../../../db/schema.js';
-import type { Trip, User } from '../../../db/schema.js';
+import { trips as tripsTable, users as usersTable } from '../../../db/schema/index.js';
+import type { Trip, User } from '../../../db/schema/index.js';
 import type { TripRepository } from '../interfaces/trip.repository.interface.js';
 import type { CorporateTripDto } from '../interfaces/trip.service.interface.js';
-import type { UnauthorizedError } from '../../common/errors.js';
 import { BaseRepositoryImpl } from '../../common/repositories/base.repository.js';
+import logger from '../../../utils/logger.js';
 @Injectable()
 export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {
     constructor() {

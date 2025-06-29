@@ -17,23 +17,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { Multer } from 'multer';
 import { z } from 'zod';
-// Extend the Express Request type to include common properties
-// Extend Express Request with custom properties
-interface CustomRequest extends Request {
-    body: Record<string, unknown>;
-    query: {
-        [key: string]: string | string[] | undefined;
-    };
-    params: {
-        [key: string]: string;
-    };
-    file?: Express.Multer.File;
-    files?: {
-        [fieldname: string]: Express.Multer.File[];
-    } | Express.Multer.File[] | undefined;
-    ip?: string;
-    [key: string]: unknown; // Allow additional properties
-}
 import DOMPurify from 'isomorphic-dompurify';
 // Common validation patterns
 const PATTERNS = {
@@ -87,11 +70,11 @@ export function sanitizeUrl(input: string): string {
     return '';
 }
 export function sanitizeNumber(input: unknown): number | null {
-    const num = parseFloat(input);
+    const num = typeof input === 'string' ? parseFloat(input) : (typeof input === 'number' ? input : NaN);
     return isNaN(num) || !isFinite(num) ? null : num;
 }
 export function sanitizeInteger(input: unknown): number | null {
-    const num = parseInt(input, 10);
+    const num = typeof input === 'string' ? parseInt(input, 10) : (typeof input === 'number' ? input : NaN);
     return isNaN(num) ? null : num;
 }
 export function sanitizeBoolean(input: unknown): boolean {
@@ -193,14 +176,14 @@ export const commentValidationSchema = z.object({
 });
 // Middleware for request body validation and sanitization
 export function validateAndSanitizeBody(schema: z.ZodSchema) {
-    return (req: CustomRequest, res: Response, next: NextFunction) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Sanitize the request body first
             if (req.body && typeof req.body === 'object') {
                 req.body = sanitizeObject(req.body);
             }
             // Validate against schema
-            const validationResult = schema.safeParse(req.body);
+            const validationResult = await schema.safeParseAsync(req.body);
             if (!validationResult.success) {
                 return res.status(400).json({
                     error: 'Validation failed',
@@ -250,9 +233,9 @@ function sanitizeObject(obj: unknown): unknown {
 }
 // Middleware for query parameter validation
 export function validateQueryParams(allowedParams: string[]) {
-    return (req: CustomRequest, res: Response, next: NextFunction) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const sanitizedQuery: Record<string, unknown> = {};
+            const sanitizedQuery: Record<string, string | string[] | undefined> = {};
             for (const param of allowedParams) {
                 if (req.query[param] !== undefined) {
                     const value = req.query[param];
@@ -263,7 +246,7 @@ export function validateQueryParams(allowedParams: string[]) {
                         sanitizedQuery[param] = value.map(v => typeof v === 'string' ? sanitizeText(v) : v);
                     }
                     else {
-                        sanitizedQuery[param] = value;
+                        sanitizedQuery[param] = value as string | string[] | undefined;
                     }
                 }
             }
@@ -290,7 +273,7 @@ export function contentCreationRateLimit() {
     }>();
     const LIMIT = 10; // 10 content creations per hour
     const WINDOW = 60 * 60 * 1000; // 1 hour
-    return (req: CustomRequest, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
         const identifier = req.ip || 'unknown';
         const now = Date.now();
         let userAttempts = attempts.get(identifier);
@@ -311,7 +294,7 @@ export function contentCreationRateLimit() {
 }
 // Content length validation middleware
 export function validateContentLength(maxSize: number = 1024 * 1024) {
-    return (req: CustomRequest, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
         const contentLength = req.get('content-length');
         if (contentLength && parseInt(contentLength) > maxSize) {
             return res.status(413).json({
@@ -324,7 +307,7 @@ export function validateContentLength(maxSize: number = 1024 * 1024) {
 }
 // File upload validation for images and documents  
 export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 * 1024 * 1024) {
-    return (req: CustomRequest, res: Response, next: NextFunction) => {
+    return (req: Request, res: Response, next: NextFunction) => {
         if (!req.file) {
             return next();
         }
@@ -362,7 +345,7 @@ export function validateAndSanitizeRequest(schemas: {
     query?: z.ZodSchema;
     params?: z.ZodSchema;
 }) {
-    return async (req: CustomRequest, res: Response, next: NextFunction) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Sanitize and Validate Body
             if (schemas.body && req.body && typeof req.body === 'object') {

@@ -1,8 +1,9 @@
 import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { withBaseColumns } from '../base';
+import { users } from '../users/users.js';
+import { withBaseColumns } from '../base.js';
 
 export const adminAuditLogs = pgTable('admin_audit_logs', {
   ...withBaseColumns,
@@ -28,12 +29,43 @@ export const adminAuditLogs = pgTable('admin_audit_logs', {
   adminIdIdx: index('admin_audit_admin_id_idx').on(table.adminId),
 }));
 
-// Schema for creating an admin audit log
-export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLogs, {
-  action: (schema) => schema.action.min(1).max(100),
-  targetType: (schema) => schema.targetType.min(1).max(100).optional(),
-  ipAddress: (schema) => schema.ipAddress.ip().optional(),
-});
+// Create base schema with drizzle-zod
+const baseInsertSchema = createInsertSchema(adminAuditLogs);
+
+// Define validation for admin audit logs
+export const insertAdminAuditLogSchema = z.object({
+  // Required fields
+  action: z.string({
+    required_error: 'Action is required',
+    invalid_type_error: 'Action must be a string',
+  }).min(1, 'Action is required')
+    .max(100, 'Action is too long'),
+    
+  // Optional fields
+  targetType: z.string({
+    invalid_type_error: 'Target type must be a string',
+  })
+    .min(1, 'Target type is required')
+    .max(100, 'Target type is too long')
+    .optional()
+    .nullable(),
+    
+  // IP address validation
+  ipAddress: z.union([
+    z.string().regex(
+      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
+      { message: 'Invalid IP address format' }
+    ),
+    z.null()
+  ]).optional(),
+  
+  // Include other fields from base schema
+  ...Object.fromEntries(
+    Object.entries(baseInsertSchema.shape)
+      .filter(([key]) => !['action', 'targetType', 'ipAddress'].includes(key))
+      .map(([key, value]) => [key, value.optional()])
+  )
+}).strict();
 
 // Schema for selecting an admin audit log
 export const selectAdminAuditLogSchema = createSelectSchema(adminAuditLogs);

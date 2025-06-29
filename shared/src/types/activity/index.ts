@@ -1,4 +1,5 @@
 import { z } from 'zod';
+export * from './ActivityTypes.js';
 
 export const activityStatuses = [
   'pending',

@@ -1,6 +1,5 @@
-import type { User } from '../../../db/schema.js';
-import { Inject, Injectable } from '@nestjs/common';
-import { logger } from '../../../utils/logger.js';
+import { users, type User } from '../../../db/schema/index.js';
+import logger from '../../../utils/logger.js';
 import type { UserRepository as AuthUserRepository } from '../interfaces/user.repository.interface.js';
 import type { UserRepository as CommonUserRepository } from '../../common/repositories/user/user.repository.interface.js';
 import type { BaseRepository } from '../../common/repositories/base.repository.interface.js';
@@ -9,12 +8,10 @@ import type { BaseRepository } from '../../common/repositories/base.repository.i
  * Auth-specific user repository that wraps the main user repository
  * and adds auth-specific functionality
  */
-@Injectable()
 export class UserRepositoryImpl implements AuthUserRepository, BaseRepository<User, string, any, any> {
   private readonly logger = logger;
 
   constructor(
-    @Inject('UserRepository')
     private readonly userRepository: CommonUserRepository & BaseRepository<User, string, any, any>
   ) {}
 
@@ -54,7 +51,7 @@ export class UserRepositoryImpl implements AuthUserRepository, BaseRepository<Us
     return this.userRepository.withTransaction(fn);
   }
 
-  mapToModel(data: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */): User | Promise<User> {
+  mapToModel(data: any): User {
     return this.userRepository.mapToModel(data);
   }
 
@@ -66,17 +63,17 @@ export class UserRepositoryImpl implements AuthUserRepository, BaseRepository<Us
 
   // Authentication related
   async incrementFailedLoginAttempts(userId: string): Promise<void> {
-    this.logger.log({ message: `Incrementing failed login attempts for user ${userId}` });
+    this.logger.log(`Incrementing failed login attempts for user ${userId}`);
     // Implementation would go here
   }
 
   async resetFailedLoginAttempts(userId: string): Promise<void> {
-    this.logger.log({ message: `Resetting failed login attempts for user ${userId}` });
+    this.logger.log(`Resetting failed login attempts for user ${userId}`);
     // Implementation would go here
   }
 
   async lockAccount(userId: string, lockedUntil: Date): Promise<void> {
-    this.logger.log({ message: `Locking account for user ${userId} until ${lockedUntil}` });
+    this.logger.log(`Locking account for user ${userId} until ${lockedUntil}`);
     // Implementation would go here
   }
 
@@ -118,26 +115,26 @@ export class UserRepositoryImpl implements AuthUserRepository, BaseRepository<Us
 
   // Email verification
   async verifyEmail(userId: string): Promise<boolean> {
-    this.logger.log({ message: `Verifying email for user ${userId}` });
+    this.logger.log(`Verifying email for user ${userId}`);
     // Implementation would go here
     return true;
   }
 
   // Password management
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
-    this.logger.log({ message: `Changing password for user ${userId}` });
+    this.logger.log(`Changing password for user ${userId}`);
     // Implementation would go here
     return true;
   }
 
   async setPassword(userId: string, newPassword: string): Promise<boolean> {
-    this.logger.log({ message: `Setting new password for user ${userId}` });
+    this.logger.log(`Setting new password for user ${userId}`);
     // Implementation would go here
     return true;
   }
 
   async updatePassword(userId: string, newPassword: string): Promise<boolean> {
-    this.logger.log({ message: `Updating password for user ${userId}` });
+    this.logger.log(`Updating password for user ${userId}`);
     // Implementation would go here
     return true;
   }
@@ -154,7 +151,7 @@ export class UserRepositoryImpl implements AuthUserRepository, BaseRepository<Us
 
   // Password reset
   async findByResetToken(token: string): Promise<User | null> {
-    this.logger.log({ message: 'Finding user by reset token' });
+    this.logger.log('Finding user by reset token');
     // Implementation would go here
     return null;
   }

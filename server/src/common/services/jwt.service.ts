@@ -1,24 +1,20 @@
 import { sign, verify, decode } from 'jsonwebtoken';
 import type { SignOptions, VerifyOptions, JwtPayload as RawJwtPayload } from 'jsonwebtoken';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
 import redisClient from '../../utils/redis.js';
 import logger from '../../utils/logger.js';
 
-// Import shared types from the correct path
-import type { 
-  JwtPayload, 
-  AuthTokens, 
-  AccessTokenPayload, 
-  RefreshTokenPayload, 
+// Import shared types and values from the correct path
+import { AuthError, AuthErrorCode } from '@shared/types/auth/auth.js';
+import type {
+  JwtPayload,
+  AuthTokens,
+  AccessTokenPayload,
+  RefreshTokenPayload,
   TokenType,
   TokenVerificationResult,
-  User
-} from '../../../../shared/src/types/auth/index.js';
-
-// Import AuthError and AuthErrorCode as values
-import { AuthError } from '../../../../shared/src/types/auth/auth.js';
-import { AuthErrorCode } from '../../../../shared/src/types/auth/auth.js';
-import { UserRole } from '../../../../shared/src/types/auth/permissions.js';
+} from '@shared/types/auth/jwt.js';
+import type { User, UserRole } from '@shared/types/auth/index.js';
 
 // Extend User type to include all required fields
 interface UserWithPermissions extends Omit<User, 'email_verified'> {
@@ -123,7 +119,7 @@ export class JwtService {
       // Check if token is blacklisted
       const isBlacklisted = await this.isTokenBlacklisted(token);
       if (isBlacklisted) {
-        throw new AuthError(AuthErrorCode.TOKEN_REVOKED, 'Token has been revoked');
+        throw new AuthErrorException(AuthErrorCode.TOKEN_REVOKED, 'Token has been revoked');
       }
 
       // Verify token signature and decode
@@ -148,7 +144,7 @@ export class JwtService {
         expired: false
       };
     } catch (error: unknown) {
-      if (error instanceof AuthError) {
+      if (error instanceof AuthErrorException) {
         return {
           valid: false,
           error: error.message,
@@ -195,7 +191,7 @@ export class JwtService {
     const result = await this.verifyToken<RefreshTokenPayload>(refreshToken, 'refresh');
     
     if (!result.valid) {
-      throw new AuthError(
+      throw new AuthErrorException(
         result.code as AuthErrorCode || AuthErrorCode.INVALID_TOKEN, 
         result.error || 'Invalid refresh token'
       );
@@ -206,13 +202,13 @@ export class JwtService {
     // Check if refresh token is valid in Redis
     const isValid = await this.validateRefreshToken(payload.sub, payload.jti);
     if (!isValid) {
-      throw new AuthError(AuthErrorCode.TOKEN_REVOKED, 'Refresh token has been revoked');
+      throw new AuthErrorException(AuthErrorCode.TOKEN_REVOKED, 'Refresh token has been revoked');
     }
 
     // Get user data from database (you'll need to implement this)
     const user = await this.getUserById(payload.sub);
     if (!user) {
-      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found');
+      throw new AuthErrorException(AuthErrorCode.USER_NOT_FOUND, 'User not found');
     }
 
     // Invalidate the used refresh token
@@ -245,7 +241,7 @@ export class JwtService {
       );
     } catch (error) {
       logger.error('Error revoking token:', error);
-      throw new AuthError(AuthErrorCode.UNKNOWN_ERROR, 'Failed to revoke token');
+      throw new AuthErrorException(AuthErrorCode.UNKNOWN_ERROR, 'Failed to revoke token');
     }
   }
 
@@ -257,7 +253,7 @@ export class JwtService {
       await redisClient.del(`user:${userId}:refresh_tokens`);
     } catch (error) {
       logger.error('Error invalidating user tokens:', error);
-      throw new AuthError(AuthErrorCode.UNKNOWN_ERROR, 'Failed to invalidate user tokens');
+      throw new AuthErrorException(AuthErrorCode.UNKNOWN_ERROR, 'Failed to invalidate user tokens');
     }
   }
 
@@ -312,7 +308,7 @@ export class JwtService {
       await redisClient.expire(`user:${userId}:refresh_tokens`, ttl);
     } catch (error) {
       logger.error('Error storing refresh token:', error);
-      throw new AuthError(AuthErrorCode.UNKNOWN_ERROR, 'Failed to store refresh token');
+      throw new AuthErrorException(AuthErrorCode.UNKNOWN_ERROR, 'Failed to store refresh token');
     }
   }
 

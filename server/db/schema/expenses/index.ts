@@ -1,5 +1,5 @@
 // Re-export all expense-related schemas
-export * from './expenses';
-export * from './budgets';
-export * from './receipts';
-export * from './expense-categories';
+export * from './expenses.js';
+export * from './budgets.js';
+export * from './receipts.js';
+export * from './expense-categories.js';

@@ -1,11 +1,10 @@
-import { and, eq, lte } from 'drizzle-orm';
-import type { Injectable, Logger } from '@nestjs/common';
-import { db } from '../../../db.ts';
-import { refreshTokens, type RefreshToken } from '../../../db/schema.js';
+import { and, eq, lte, gte } from 'drizzle-orm';
+import { db } from '../../../db/db.js';
+import { refreshTokens, type RefreshToken } from '../../../db/schema/index.js';
 import type { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.ts';
-@Injectable()
+import logger from '../../utils/logger.js';
 export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
-    private readonly logger = new Logger(RefreshTokenRepositoryImpl.name);
+    private readonly logger = logger;
     async create(tokenData: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken> {
         try {
             const [token] = await db
@@ -52,7 +51,7 @@ export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
             const [refreshToken] = await db
                 .select()
                 .from(refreshTokens)
-                .where(and(eq(refreshTokens.token, token), eq(refreshTokens.revoked, false), lte(refreshTokens.expiresAt, new Date())))
+                .where(and(eq(refreshTokens.token, token), eq(refreshTokens.revoked, false), gte(refreshTokens.expiresAt, new Date())))
                 .limit(1);
             return refreshToken;
         }
@@ -74,7 +73,7 @@ export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
                 revokedAt: new Date()
             })
                 .where(eq(refreshTokens.id, id));
-            if (result.rowCount === 0) {
+            if (result.count === 0) {
                 throw new Error(`Token with id ${id} not found`);
             }
         }
@@ -107,8 +106,8 @@ export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
             const result = await db
                 .delete(refreshTokens)
                 .where(and(lte(refreshTokens.expiresAt, new Date()), eq(refreshTokens.revoked, true)));
-            this.logger.log(`Deleted ${result.rowCount} expired refresh tokens`);
-            return result.rowCount || 0;
+            this.logger.log(`Deleted ${result.count} expired refresh tokens`);
+            return result.count || 0;
         }
         catch (error) {
             this.logger.error(`Failed to delete expired tokens: ${error instanceof Error ? error.message : 'Unknown error'}`);

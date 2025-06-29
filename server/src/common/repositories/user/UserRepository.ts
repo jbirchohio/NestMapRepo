@@ -1,114 +1,23 @@
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { and, asc, desc, eq, gte, ilike, lte, or, SQL, sql } from 'drizzle-orm';
 import { db } from '../../../../db/db.js';
-import { users } from '../../../../db/schema.js';
-import type { User as DbUser } from '../../../../db/schema.js';
+import { users, userSettings, superadminAuditLogs as auditLogs } from '../../../../db/schema/index.js';
 import { hash, compare } from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-
-// Types
-export type UserRole = 'admin' | 'manager' | 'member' | 'guest';
-
-export interface UserSettings {
-  theme?: 'light' | 'dark' | 'system';
-  notifications?: {
-    email?: boolean;
-    push?: boolean;
-    sms?: boolean;
-  };
-  preferences?: Record<string, any>;
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  avatarUrl: string | null;
-  role: UserRole;
-  organizationId: string | null;
-  emailVerified: boolean;
-  isActive: boolean;
-  lastLoginAt: Date | null;
-  timezone: string;
-  locale: string;
-  settings: UserSettings;
-  isSuspended: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface UserStats {
-  totalUsers: number;
-  activeUsers: number;
-  usersByRole: Record<string, number>;
-  usersByOrganization: Record<string, number>;
-  signupsOverTime: Record<string, number>;
-  updatedAt: Date;
-}
-
-export interface UserActivity {
-  id: string;
-  userId: string;
-  action: string;
-  metadata: Record<string, any>;
-  timestamp: Date;
-}
-
-export interface UserCreateInput {
-  email: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  password?: string;
-  role?: UserRole;
-  organizationId?: string | null;
-  emailVerified?: boolean;
-  isActive?: boolean;
-  settings?: UserSettings;
-}
-
-export interface UserUpdateInput {
-  email?: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  role?: UserRole;
-  organizationId?: string | null;
-  emailVerified?: boolean;
-  isActive?: boolean;
-  settings?: UserSettings;
-}
-
-export interface PaginationParams {
-  page?: number;
-  limit?: number;
-  offset?: number;
-}
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
-}
-
-export interface UserListParams extends PaginationParams {
-  search?: string;
-  role?: UserRole;
-  organizationId?: string;
-  isActive?: boolean;
-  emailVerified?: boolean;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-  includeInactive?: boolean;
-}
+import logger from '../../../utils/logger.js';
+import { AuthError, AuthErrorCode } from '@shared/types/auth/auth.js';
+import type { 
+  User, 
+  UserCreateInput, 
+  UserListParams, 
+  UserUpdateInput, 
+  UserRole, 
+  UserSettings, 
+  UserProfile,
+  UserStats,
+  UserActivity,
+  PaginatedResponse,
+  PaginationParams
+} from '@shared/types/users/index.js';
 
 // Default user settings
 const DEFAULT_USER_SETTINGS: UserSettings = {
@@ -121,9 +30,7 @@ const DEFAULT_USER_SETTINGS: UserSettings = {
   preferences: {},
 };
 
-@Injectable()
 export class UserRepository {
-  private readonly logger = new Logger(UserRepository.name);
 
   /**
    * Maps a database user to a domain user

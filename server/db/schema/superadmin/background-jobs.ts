@@ -1,6 +1,7 @@
 import { pgTable, uuid, text, timestamp, jsonb, integer, index, boolean } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { withBaseColumns } from '../base.js';
 
 type JobStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' | 'retrying';
 type JobPriority = 'low' | 'normal' | 'high' | 'critical';
@@ -87,9 +88,7 @@ export const jobDependencies = pgTable('job_dependencies', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
   // Unique constraint to prevent duplicate dependencies
-  jobDependencyIdx: index('job_dependencies_unique_idx')
-    .on(table.jobId, table.dependsOnJobId)
-    .unique(),
+  jobDependencyIdx: unique('job_dependencies_unique_idx').on(table.jobId, table.dependsOnJobId),
   // Indexes for common query patterns
   jobIdIdx: index('job_dependencies_job_id_idx').on(table.jobId),
   dependsOnJobIdIdx: index('job_dependencies_depends_on_job_id_idx').on(table.dependsOnJobId),
@@ -97,28 +96,28 @@ export const jobDependencies = pgTable('job_dependencies', {
 
 // Schema for creating/updating a background job
 export const insertSuperadminBackgroundJobSchema = createInsertSchema(superadminBackgroundJobs, {
-  name: (schema) => schema.name.min(1).max(100),
-  queue: (schema) => schema.queue.min(1).max(50),
-  status: (schema) => schema.status.oneOf([
+  name: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).name.min(1).max(100),
+  queue: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).queue.min(1).max(50),
+  status: (schema) => z.enum([
     'pending', 'processing', 'completed', 'failed', 'cancelled', 'retrying'
-  ] as const).default('pending'),
-  priority: (schema) => schema.priority.oneOf([
+  ]).default('pending'),
+  priority: (schema) => z.enum([
     'low', 'normal', 'high', 'critical'
-  ] as const).default('normal'),
-  progress: (schema) => schema.progress.min(0).max(100).optional(),
-  progressMessage: (schema) => schema.progressMessage.optional(),
-  retryCount: (schema) => schema.retryCount.min(0).optional(),
-  maxRetries: (schema) => schema.maxRetries.min(0).optional(),
-  timeout: (schema) => schema.timeout.min(0).optional(),
-  duration: (schema) => schema.duration.min(0).optional(),
-  tags: (schema) => schema.tags.optional(),
-  metadata: (schema) => schema.metadata.optional(),
+  ]).default('normal'),
+  progress: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).progress.min(0).max(100).optional(),
+  progressMessage: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).progressMessage.optional(),
+  retryCount: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).retryCount.min(0).optional(),
+  maxRetries: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).maxRetries.min(0).optional(),
+  timeout: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).timeout.min(0).optional(),
+  duration: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).duration.min(0).optional(),
+  tags: (schema) => z.array(z.string()).optional(),
+  metadata: (schema) => (schema as typeof superadminBackgroundJobs.$inferInsert).metadata.optional(),
 });
 
 // Schema for creating a job dependency
 export const insertJobDependencySchema = createInsertSchema(jobDependencies, {
-  jobId: (schema) => schema.jobId.uuid(),
-  dependsOnJobId: (schema) => schema.dependsOnJobId.uuid(),
+  jobId: (schema) => (schema as typeof jobDependencies.$inferInsert).jobId.uuid(),
+  dependsOnJobId: (schema) => (schema as typeof jobDependencies.$inferInsert).dependsOnJobId.uuid(),
 });
 
 // Schema for selecting background jobs

@@ -1,17 +1,8 @@
 {
-  "compilerOptions": {
-    "rootDir": "../",
-    "skipLibCheck": true
-  },
-  "include": [
-      "vite.config.ts",
-      "server/**/*.ts"
-  ],
   "files": [],
   "references": [
     { "path": "./client" },
     { "path": "./server" },
     { "path": "./shared" }
-  ],
-  "exclude": ["**/node_modules", "**/dist"]
+  ]
 }

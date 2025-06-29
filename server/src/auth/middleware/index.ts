@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../jwt/index.ts';
-import type { TokenVerificationResult, AuthUser } from '@shared/src/types/auth/index.js';
-import { logger } from '@server/utils/logger.ts';
-import { redis } from '@server/db/redis.js';
+import { verifyToken } from '../jwt/index.js';
+import type { TokenVerificationResult } from '../../../../shared/src/types/auth/jwt.js';
+import type { AuthUser } from '../../../../shared/src/types/auth/index.js';
+import { logger } from '../../utils/logger.js';
+import { redisClient as redis } from '../../utils/redis.js';
 // Extend Express Request type
 declare global {
     namespace Express {

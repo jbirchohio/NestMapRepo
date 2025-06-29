@@ -1,65 +1,20 @@
 {
-    "extends": "../tsconfig.base.json",
-    "compilerOptions": {
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
-        "esModuleInterop": true,
-        "strict": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true,
-        "allowSyntheticDefaultImports": true,
-        "allowImportingTsExtensions": true,
-        "outDir": "../dist/server",
-        "rootDir": "..",
-        "baseUrl": ".",
-        "paths": {
-            "@server/*": ["./src/*"],
-            "@db/*": ["./db/*"],
-            "@shared/*": ["../shared/*"],
-            "@shared/types/*": ["../shared/types/*"],
-            "@shared/src/*": ["../shared/src/*"],
-            "@shared/src/types/auth/*": ["../shared/src/types/auth/*"],
-            "@shared/types/auth/*": ["../shared/src/types/auth/*"],
-            "@shared/types/booking/*": ["../shared/src/types/booking/*"]
-        },
-        "lib": [
-            "ES2022",
-            "DOM"
-        ],
-        "types": [
-            "jest",
-            "node"
-        ],
-        "typeRoots": [
-            "./node_modules/@types",
-            "../node_modules/@types",
-            "./src/types",
-            "./types",
-            "./src/@types"
-        ],
-        "noUnusedParameters": true,
-        "strictFunctionTypes": true,
-        "strictBindCallApply": true,
-        "noImplicitReturns": true,
-        "composite": true,
-        "declaration": true,
-                            "declarationMap":  true,
-                            "target":  "ES2022",
-                            "moduleDetection":  "force",
-                            "verbatimModuleSyntax":  true,
-                            "tsBuildInfoFile":  "./node_modules/.cache/tsbuildinfo/server.tsbuildinfo",
-                            "emitDeclarationOnly": true
-                        },
-    "references":  [
-                       {
-                           "path":  "../shared"
-                       }
-                   ],
-    "include":  [
-                    "src/**/*.ts",
-                    "db/**/*.ts",
-                    "**/*.ts",
-                    "../vite.config.ts"
-                ]
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "../",
+    "baseUrl": "../",
+    "paths": {
+      "@server/*": ["server/src/*"],
+      "@db/*": ["server/db/*"],
+      "@shared/*": ["shared/dist/*"]
+    },
+    "types": ["jest", "node"],
+    
+    "allowImportingTsExtensions": true,
+    "emitDeclarationOnly": true
+  },
+  "references": [{ "path": "../shared" }],
+  "include": ["src", "db"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "../shared"]
 }

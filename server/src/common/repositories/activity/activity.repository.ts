@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
 import { and, eq, gte, lte, inArray, SQL } from 'drizzle-orm';
-import { db } from '@shared/../server/db/db.js';
-import { activities } from '@shared/../server/db/schema.js'; // Using path alias with .js extension
+import { db } from '../../../db/db.js';
+import { activities } from '../../../db/schema/index.js'; // Using path alias with .js extension
 import { BaseRepositoryImpl } from '../base.repository.js';
 import type { ActivityRepository } from './activity.repository.interface.js';
 import type { Activity, ActivityStatus, ActivityType } from '@shared/types/activity.js';
+import logger from '../../utils/logger.js';
 
 @Injectable()
 export class ActivityRepositoryImpl 

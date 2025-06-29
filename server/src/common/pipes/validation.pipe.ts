@@ -1,73 +1,24 @@
-import { type PipeTransform, Injectable, BadRequestException, type ArgumentMetadata } from '@nestjs/common';
-import { validate, ValidationError } from 'class-validator';
-import { plainToClass } from 'class-transformer';
-import { Logger } from '@nestjs/common';
+import { z } from 'zod';
+import { Request, Response, NextFunction } from 'express';
+import logger from '../../utils/logger.js';
+import { createApiError, ErrorType } from '../types/index.js';
 
-type Constructor<T = unknown> = new (...args: unknown[]) => T;
-
-@Injectable()
-export class ValidationPipe implements PipeTransform<any> {
-  private readonly logger = new Logger(ValidationPipe.name);
-
-  constructor(private readonly metatype?: Constructor) {}
-
-  async transform(value: unknown, metadata: ArgumentMetadata) {
-    if (!this.metatype || !this.toValidate(metadata.metatype || this.metatype)) {
-      return value;
-    }
-
-    const object = plainToClass(metadata.metatype || this.metatype, value, {
-      enableImplicitConversion: true,
-    });
-
-    const errors = await validate(object, {
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      forbidUnknownValues: true,
-      transform: true,
-      validationError: { target: false },
-    });
-
-    if (errors.length > 0) {
-      this.logger.warn(`Validation failed: ${JSON.stringify(this.flattenValidationErrors(errors))}`);
-      throw new BadRequestException({
-        statusCode: 400,
-        message: 'Validation failed',
-        errors: this.flattenValidationErrors(errors),
-      });
-    }
-
-    return object;
-  }
-
-  private toValidate(metatype: Function): boolean {
-    const types: Function[] = [String, Boolean, Number, Array, Object];
-    return !types.includes(metatype);
-  }
-
-  private flattenValidationErrors(errors: ValidationError[]): Record<string, string[]> {
-    return errors.reduce((acc, err) => {
-      if (err.constraints) {
-        acc[err.property] = Object.values(err.constraints);
+export const validateSchema = (schema: z.ZodSchema) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const parsedBody = await schema.parseAsync(req.body);
+      req.body = parsedBody;
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        logger.warn(`Validation error: ${error.errors.map(e => e.message).join(', ')}`);
+        return res.status(400).json({
+          message: 'Validation failed',
+          errors: error.errors.map(e => ({ path: e.path.join('.'), message: e.message }))
+        });
       }
-      if (err.children && err.children.length > 0) {
-        acc[err.property] = this.flattenValidationErrors(err.children);
-      }
-      return acc;
-    }, {});
-  }
-}
-
-// Global validation pipe configuration
-export const globalValidationPipeOptions = {
-  transform: true,
-  whitelist: true,
-  forbidNonWhitelisted: true,
-  transformOptions: {
-    enableImplicitConversion: true,
-  },
-  validationError: {
-    target: false,
-    value: false,
-  },
+      logger.error('Unexpected validation error:', error);
+      next(createApiError(ErrorType.INTERNAL_SERVER_ERROR, 'An unexpected error occurred during validation'));
+    }
+  };
 };

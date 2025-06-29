@@ -130,7 +130,7 @@ export interface WeatherInfo {
   recommendations: string[];
 }
 
-import type { UserRole } from './types/auth/permissions.js';
+import type { UserRole } from './src/types/auth/index.js';
 
 export interface User {
   id: number;

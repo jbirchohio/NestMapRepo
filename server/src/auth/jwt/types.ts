@@ -5,7 +5,6 @@ import type {
   PasswordResetTokenPayload, 
   EmailVerificationTokenPayload,
   TokenType,
-  TokenPayload,
   TokenVerificationResult as SharedTokenVerificationResult
 } from '../../../../shared/src/types/auth/jwt.js';
 import type { UserRole } from '../../../../shared/src/types/auth/permissions.js';
@@ -18,7 +17,6 @@ export type {
   PasswordResetTokenPayload, 
   EmailVerificationTokenPayload,
   TokenType,
-  TokenPayload,
   SharedTokenVerificationResult as TokenVerificationResult
 };
 

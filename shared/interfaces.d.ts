@@ -1,3 +1,4 @@
+import type { CollaboratorPresence } from './src/types/CollaboratorPresence';
 /**
  * Shared interface definitions used across the application
  * This file centralizes common types to eliminate redundancy
@@ -35,7 +36,8 @@ export interface Trip {
     completed: boolean;
     tripType: string;
     shareCode?: string;
-    collaborators?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */[];
+    sharePermission?: 'read-only' | 'edit';
+    collaborators?: CollaboratorPresence[];
 }
 export interface ConflictDetection {
     type: 'time_overlap' | 'location_conflict' | 'capacity_issue' | 'schedule_gap';
@@ -79,7 +81,7 @@ export interface BusinessTripRequest {
     companyInfo: {
         name: string;
         industry: string;
-        travelPolicy?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
+        travelPolicy?: Record<string, unknown>;
     };
     tripPurpose: string;
     groupSize: number;
@@ -118,7 +120,7 @@ export interface WeatherInfo {
     precipitation: number;
     recommendations: string[];
 }
-import type { UserRole } from './types/auth/permissions.js';
+import type { UserRole } from './src/types/auth/index.js';
 export interface User {
     id: number;
     auth_id: string;

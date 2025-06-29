@@ -1,9 +1,9 @@
 import type { Request } from 'express';
-import type { AuthUser } from './index';
+import type { User } from '../user/index.js';
 
 /** Additional fields injected into Express requests */
 export interface CustomRequestFields {
-  user: AuthUser;
+  user: User;
   auth?: unknown;
   organizationId?: string | number;
   requestId?: string;

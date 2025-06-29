@@ -46,6 +46,37 @@ async function storeToken(jti: string, userId: string, options: TokenStoreOption
   }
 }
 
+/**
+ * Parses a time string like '15m', '7d', '1h' into seconds.
+ * @param timeString The time string to parse.
+ * @returns The number of seconds.
+ */
+function parseTimeString(timeString: string): number {
+    const value = parseInt(timeString.slice(0, -1), 10);
+    const unit = timeString.slice(-1).toLowerCase();
+
+    if (isNaN(value)) {
+        throw new Error(`Invalid time value in time string: "${timeString}"`);
+    }
+
+    switch (unit) {
+        case 's':
+            return value;
+        case 'm':
+            return value * 60;
+        case 'h':
+            return value * 3600;
+        case 'd':
+            return value * 86400;
+        default:
+            // Support for number-only strings (assumed to be seconds)
+            if (!isNaN(parseInt(timeString, 10))) {
+                return parseInt(timeString, 10);
+            }
+            throw new Error(`Unsupported time unit in time string: "${timeString}"`);
+    }
+}
+
 export const generateToken = async <T extends TokenType>(
   userId: string, 
   email: string, 
@@ -55,7 +86,7 @@ export const generateToken = async <T extends TokenType>(
 ): Promise<TokenGenerationResult> => {
     const jti = generateTokenId();
     const expiresInMs = typeof expiresIn === 'string'
-      ? this.parseTimeString(expiresIn) * 1000
+      ? parseTimeString(expiresIn) * 1000
       : expiresIn * 1000;
     
     const expiresAt = new Date(Date.now() + expiresInMs);
@@ -131,6 +162,7 @@ export const verifyToken = async <T extends JwtPayload = JwtPayload>(
       }
       
       return {
+        valid: true,
         payload: decoded as T,
         expired: false
       };
@@ -146,6 +178,7 @@ export const verifyToken = async <T extends JwtPayload = JwtPayload>(
         if (!payload) return null;
         
         return {
+          valid: false,
           payload: payload as T,
           expired: true,
           error: 'Token expired'
@@ -171,15 +204,7 @@ export const generateAuthTokens = async (userId: string, email: string, role: Us
     };
 };
 
-// Helper to parse time strings like '15m', '1h', '7d' into seconds
-function parseTimeString(timeString: string): number {
-    const value = parseInt(timeString);
-    if (timeString.endsWith('s')) return value;
-    if (timeString.endsWith('m')) return value * 60;
-    if (timeString.endsWith('h')) return value * 60 * 60;
-    if (timeString.endsWith('d')) return value * 60 * 60 * 24;
-    return value; // Assume seconds if no unit specified
-}
+
 /**
  * Refresh an access token using a refresh token
  */
@@ -212,7 +237,6 @@ export const refreshAccessToken = async (refreshToken: string): Promise<AuthToke
 export const generatePasswordResetToken = async (userId: string, email: string): Promise<{
   token: string;
   expiresAt: Date;
-    expiresAt: Date;
 }> => {
     return generateToken(userId, email, 'password_reset', JWT_PASSWORD_RESET_EXPIRES_IN);
 };

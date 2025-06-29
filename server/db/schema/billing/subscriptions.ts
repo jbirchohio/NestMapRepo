@@ -1,10 +1,10 @@
-import { pgTable, uuid, text, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, boolean, integer } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
-import { enums } from '../enums';
-import type { Metadata } from '../shared/types';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
+import { enums } from '../enums.js';
+import type { Metadata } from '../shared/types.js';
 
 export const subscriptions = pgTable('subscriptions', {
   ...withBaseColumns,
@@ -33,8 +33,8 @@ export const subscriptions = pgTable('subscriptions', {
 
 // Schema for creating/updating a subscription
 export const insertSubscriptionSchema = createInsertSchema(subscriptions, {
-  status: (schema) => schema.status.regex(/^(incomplete|incomplete_expired|trialing|active|past_due|canceled|unpaid)$/),
-  quantity: (schema) => schema.quantity.min(1).optional(),
+  status: (schema) => (schema as typeof subscriptions.$inferInsert).status.regex(/^(incomplete|incomplete_expired|trialing|active|past_due|canceled|unpaid)$/),
+  quantity: (schema) => (schema as typeof subscriptions.$inferInsert).quantity.min(1).optional(),
 });
 
 // Schema for selecting a subscription

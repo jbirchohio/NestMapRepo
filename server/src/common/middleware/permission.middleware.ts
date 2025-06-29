@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../../types.js';
-import { Logger } from '@nestjs/common';
-import { createApiError, ErrorType } from '../types';
-import { PermissionManager, checkPermission } from '@shared/utils/permissions';
-import { UserRole, ResourceType, PermissionAction, PermissionLevel } from '@shared/src/types/auth/permissions';
+import { AppErrorCode } from '@shared/types/error-codes.js';
+import { UserRole, ResourceType, PermissionAction, PermissionLevel } from '../../../db/schema/index.js';
+import logger from '../../utils/logger.js';
+import { checkPermission } from '@shared/utils/permissions.js';
 
 declare global {
   namespace Express {

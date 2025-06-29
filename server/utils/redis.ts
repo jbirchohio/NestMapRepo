@@ -82,7 +82,7 @@ export class RedisWithFallback {
           key,
           JSON.stringify(value),
           'PX',
-          ttlMs || ''
+          ttlMs
         );
         return;
       } catch (error) {

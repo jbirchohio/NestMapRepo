@@ -1,4 +1,4 @@
-import type { Request, ParamsDictionary, Query } from '../../express-augmentations';
+import type { Request, ParamsDictionary, Query } from 'express';
 
 // Define the user type that will be attached to the request
 export interface AuthUser {

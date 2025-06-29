@@ -52,20 +52,18 @@ const extractToken = (req: Request): string | null => {
 
 // Convert TokenPayload to Express.User
 const toUser = (payload: TokenPayload): Express.User => {
-    // Extract organizationId if it exists on the payload (it's not in the TokenPayload type but might be present at runtime)
-    const organizationId = 'organizationId' in payload ? (payload as any).organizationId : null;
-    
     return {
-        id: payload.userId,           // For compatibility with Express.User interface
-        userId: payload.userId,       // Required by Express.User interface
+        id: payload.userId,
         email: payload.email,
         role: payload.role,
-        organizationId,               // Will be null if not present in payload
-        displayName: payload.email.split('@')[0],
-        jti: payload.jti,
-        iat: payload.iat,
-        exp: payload.exp,
-        permissions: []
+        organizationId: payload.organizationId || null,
+        sessionId: payload.jti,
+        // Add other properties from TokenPayload that are part of Express.User
+        // For example, if your Express.User has a 'permissions' array:
+        permissions: payload.permissions || [],
+        // Add hasRole and hasPermission methods if they are part of Express.User
+        hasRole: (role: string) => payload.role === role,
+        hasPermission: (permission: string) => (payload.permissions || []).includes(permission),
     };
 };
 
@@ -183,11 +181,11 @@ export const rateLimitAuth = (req: Request, res: Response, next: NextFunction): 
     const key = `auth:${ip}`;
     
     // Allow 5 failed attempts per 15 minutes
-    redis.incr(key)
+    redis.client.incr(key)
         .then((count) => {
             if (count === 1) {
                 // Set expiration on first attempt
-                redis.expire(key, 900); // 15 minutes
+                redis.client.expire(key, 900); // 15 minutes
             }
             if (count > 5) {
                 logger.warn(`Rate limit exceeded for IP: ${ip}`);
@@ -213,7 +211,7 @@ export const resetAuthRateLimit = (req: Request, _res: Response, next: NextFunct
     const key = `auth:${ip}`;
     
     // Delete the rate limit key on successful authentication
-    redis.del(key)
+    redis.client.del(key)
         .catch((error) => {
             logger.error('Failed to reset rate limit:', error);
         });

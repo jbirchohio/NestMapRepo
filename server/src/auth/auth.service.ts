@@ -8,7 +8,7 @@ import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 
 // Runtime imports
 import { AuthError, AuthErrorCode } from '@shared/src/types/auth/auth.js';
-import { users, refreshTokens, auditLogsTableDefinition as auditLogs } from '../../db/schema.js';
+import { users, refreshTokens, superadminAuditLogs as auditLogs } from '../../db/schema/index.js';
 import logger from '../../utils/logger.js';
 import { redisClient } from '../../utils/redis.js';
 import { jwtService } from '../common/services/jwt.service.js';
@@ -128,7 +128,7 @@ export class AuthService implements IAuthService {
                     id: true,
                     email: true,
                     isActive: true,
-                    tokenVersion: true,
+                    token_version: true,
                     role: true,
                     organizationId: true
                 }
@@ -244,7 +244,7 @@ export class AuthService implements IAuthService {
                 role: registerDto.role || 'member',
                 isActive: true,
                 emailVerified: false,
-                tokenVersion: 0,
+                token_version: 0,
                 organizationId: registerDto.organizationId || null
             }).returning();
 
@@ -254,7 +254,7 @@ export class AuthService implements IAuthService {
                 email: newUser.email,
                 role: newUser.role as UserRole,
                 organizationId: newUser.organizationId || null, // Ensure null instead of undefined
-                tokenVersion: newUser.tokenVersion
+                tokenVersion: newUser.token_version
             });
 
             // Map user to AuthUser interface
@@ -314,8 +314,6 @@ export class AuthService implements IAuthService {
             await this.db.update(users)
                 .set({ 
                     lastLoginAt: new Date(),
-                    lastLoginIp: ip,
-                    // Note: lastLoginUserAgent field is not in the schema, so we'll log it instead
                     updatedAt: new Date()
                 })
                 .where(eq(users.id, user.id));
@@ -334,7 +332,7 @@ export class AuthService implements IAuthService {
                 email: user.email,
                 role: user.role as UserRole,
                 organizationId: user.organizationId || null, // Ensure null instead of undefined
-                tokenVersion: user.tokenVersion
+                tokenVersion: user.token_version
             });
 
             // Map user to AuthUser interface
@@ -348,8 +346,7 @@ export class AuthService implements IAuthService {
                 created_at: user.createdAt.toISOString(),
                 updated_at: user.updatedAt.toISOString(),
                 is_active: user.isActive,
-                last_login_at: new Date().toISOString(),
-                last_login_ip: ip,
+                last_login_at: user.lastLoginAt?.toISOString() || null,
                 permissions: []
             };
 
@@ -724,7 +721,6 @@ export class AuthService implements IAuthService {
                     id: true,
                     email: true,
                     passwordHash: true,
-                    tokenVersion: true,
                     isActive: true
                 }
             });
@@ -774,13 +770,13 @@ export class AuthService implements IAuthService {
             // Start a transaction to ensure atomicity
             await this.db.transaction(async (tx) => {
                 // Update the password and increment token version to invalidate existing sessions
-                await tx.update(users)
-                    .set({ 
-                        passwordHash: hashedPassword,
-                        tokenVersion: sql`${users.tokenVersion} + 1`,
-                        updatedAt: new Date()
-                    })
-                    .where(eq(users.id, userId));
+                await this.db.update(users)
+                .set({ 
+                    passwordHash: hashedPassword,
+                    token_version: sql`${users.token_version} + 1`,
+                    updatedAt: new Date()
+                })
+                .where(eq(users.id, userId));
                 
                 // Revoke all existing sessions
                 await this.revokeAllSessions(userId);
@@ -983,7 +979,7 @@ export class AuthService implements IAuthService {
             // Increment token version to invalidate all existing tokens
             await this.db.update(users)
                 .set({ 
-                    tokenVersion: sql`${users.tokenVersion} + 1`,
+                    token_version: sql`${users.token_version} + 1`,
                     updatedAt: new Date()
                 })
                 .where(eq(users.id, userId));

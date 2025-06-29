@@ -1,7 +1,8 @@
 import { pgTable, uuid, text, timestamp, jsonb, boolean, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
 
 // Schema for superadmin feature flags (global flags)
 export const superadminFeatureFlags = pgTable('superadmin_feature_flags', {
@@ -23,10 +24,7 @@ export const superadminFeatureFlags = pgTable('superadmin_feature_flags', {
   updatedBy: text('updated_by'),
 }, (table) => ({
   // Indexes for common query patterns
-  nameIdx: index('superadmin_feature_flags_name_idx')
-    .on(table.name)
-    .using('btree')
-    .nullsLast(),
+  nameIdx: index('superadmin_feature_flags_name_idx').on(table.name),
   isEnabledIdx: index('superadmin_feature_flags_is_enabled_idx').on(table.isEnabled),
 }));
 
@@ -46,9 +44,7 @@ export const organizationFeatureFlags = pgTable('organization_feature_flags', {
   metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
 }, (table) => ({
   // Unique constraint on organization + feature flag
-  orgFeatureFlagIdx: index('organization_feature_flags_unique_idx')
-    .on(table.organizationId, table.featureFlagId)
-    .unique(),
+  orgFeatureFlagIdx: unique('organization_feature_flags_unique_idx').on(table.organizationId, table.featureFlagId),
   // Indexes for common query patterns
   orgIdx: index('organization_feature_flags_org_idx').on(table.organizationId),
   featureFlagIdx: index('organization_feature_flags_feature_flag_idx').on(table.featureFlagId),
@@ -57,20 +53,20 @@ export const organizationFeatureFlags = pgTable('organization_feature_flags', {
 
 // Schema for creating/updating a superadmin feature flag
 export const insertSuperadminFeatureFlagSchema = createInsertSchema(superadminFeatureFlags, {
-  name: (schema) => schema.name.min(1).max(100).regex(/^[a-z0-9_]+$/),
-  description: (schema) => schema.description.optional(),
-  isEnabled: (schema) => schema.isEnabled.optional(),
-  allowOrganizationOverride: (schema) => schema.allowOrganizationOverride.optional(),
-  defaultValue: (schema) => schema.defaultValue.optional(),
-  metadata: (schema) => schema.metadata.optional(),
-  updatedBy: (schema) => schema.updatedBy.email().optional(),
+  name: (schema) => (schema as typeof superadminFeatureFlags.$inferInsert).name.min(1).max(100).regex(/^[a-z0-9_]+$/),
+  description: (schema) => (schema as typeof superadminFeatureFlags.$inferInsert).description.optional(),
+  isEnabled: (schema) => (schema as typeof superadminFeatureFlags.$inferInsert).isEnabled.optional(),
+  allowOrganizationOverride: (schema) => (schema as typeof superadminFeatureFlags.$inferInsert).allowOrganizationOverride.optional(),
+  defaultValue: (schema) => (schema as typeof superadminFeatureFlags.$inferInsert).defaultValue.optional(),
+  metadata: (schema) => (schema as typeof superadminFeatureFlags.$inferInsert).metadata.optional(),
+  updatedBy: (schema) => (schema as typeof superadminFeatureFlags.$inferInsert).updatedBy.email().optional(),
 });
 
 // Schema for creating/updating an organization feature flag override
 export const insertOrganizationFeatureFlagSchema = createInsertSchema(organizationFeatureFlags, {
-  isEnabled: (schema) => schema.isEnabled.required(),
-  metadata: (schema) => schema.metadata.optional(),
-  updatedBy: (schema) => schema.updatedBy.email().optional(),
+  isEnabled: (schema) => (schema as typeof organizationFeatureFlags.$inferInsert).isEnabled,
+  metadata: (schema) => (schema as typeof organizationFeatureFlags.$inferInsert).metadata.optional(),
+  updatedBy: (schema) => (schema as typeof organizationFeatureFlags.$inferInsert).updatedBy.email().optional(),
 });
 
 // Schema for selecting feature flags

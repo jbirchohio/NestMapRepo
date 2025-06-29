@@ -7,7 +7,7 @@ import { subscriptions } from './subscriptions.js';
 import { withBaseColumns } from '../base.js';
 import type { Metadata } from '../shared/types.js';
 
-interface InvoiceLineItem {
+export interface InvoiceLineItem {
   id: string;
   amount: number;
   currency: string;

@@ -1,4 +1,5 @@
-import type { User, UserRole } from '../user';
+import type { User, UserRole } from '../user/index.js';
+import type { AuthErrorCode } from './auth.js';
 
 /** Supported JWT token types */
 export type TokenType =
@@ -17,6 +18,9 @@ export interface BaseJwtPayload {
   type: TokenType;
   /** Legacy field for backward compatibility */
   userId?: string;
+  organizationId?: string | null;
+  permissions?: string[];
+  email?: string;
 }
 
 /** Access token specific claims */
@@ -51,37 +55,39 @@ export interface EmailVerificationTokenPayload extends BaseJwtPayload {
   email: string;
 }
 
-/** Union of all JWT payload variants */
+/** Union of all possible JWT payload types */
 export type JwtPayload =
   | AccessTokenPayload
   | RefreshTokenPayload
   | PasswordResetTokenPayload
   | EmailVerificationTokenPayload;
 
-/** Alias maintained for legacy imports */
-export type TokenPayload = JwtPayload;
+/** The structure of the authentication tokens returned to the client */
+export interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+  expires_at: string; // ISO 8601 format
+  token_type: 'Bearer';
+  accessTokenExpiresAt: Date;
+  refreshTokenExpiresAt: Date;
+}
 
 /** Result returned from token verification helpers */
-export interface TokenVerificationResult<T = JwtPayload> {
-  valid: boolean;
-  payload?: T;
-  error?: string;
-  expired?: boolean;
-  code?: string;
-}
-
-/** Token pair returned after successful authentication */
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
-  tokenType: string;
-  /** Legacy snake_case fields */
-  access_token?: string;
-  refresh_token?: string;
-  expires_at?: string;
-  token_type?: string;
-}
+export type TokenVerificationResult<T extends BaseJwtPayload> =
+  | {
+      valid: true;
+      payload: T;
+      expired: false;
+      error?: never;
+      code?: never;
+    }
+  | {
+      valid: false;
+      payload?: never;
+      expired: boolean;
+      error: string;
+      code: AuthErrorCode;
+    };
 
 /** Response object returned during authentication */
 export interface AuthResponse {

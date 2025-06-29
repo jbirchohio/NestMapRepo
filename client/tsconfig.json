@@ -8,10 +8,26 @@
 
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/src/*"],
       "@client/*": ["./src/*"],
       "@/*": ["./src/*"],
-      "@shared/constants/*": ["../shared/src/constants/*"]
+      "@shared/types/activity": ["../shared/dist/types/activity/index.d.ts"],
+      "@shared/types/api": ["../shared/dist/types/api/index.d.ts"],
+      "@shared/types/auth": ["../shared/dist/types/auth/index.d.ts"],
+      "@shared/types/auth/jwt": ["../shared/dist/types/auth/jwt.d.ts"],
+      "@shared/types/auth/permissions": ["../shared/dist/types/auth/permissions.d.ts"],
+      "@shared/types/auth/user/index": ["../shared/dist/types/auth/user/index.d.ts"],
+      "@shared/types/booking": ["../shared/dist/types/booking/index.d.ts"],
+      "@shared/types/flight": ["../shared/dist/types/flight/flight.d.ts"],
+      "@shared/types/hotel": ["../shared/dist/types/hotel/hotel.d.ts"],
+      "@shared/types/notification": ["../shared/dist/types/notification/index.d.ts"],
+      "@shared/types/trip": ["../shared/dist/types/trip/index.d.ts"],
+      "@shared/types/WebSocketMessageTypes": ["../shared/dist/types/WebSocketMessageTypes.d.ts"],
+      "@shared/types/SharedCollaboratorType": ["../shared/dist/types/SharedCollaboratorType.d.ts"],
+      "@shared/types/index": ["../shared/dist/types/index.d.ts"],
+      "@shared/constants/ActivityActions.js": ["../shared/dist/constants/ActivityActions.d.ts"],
+      "@shared/constants/WebSocketMessageTypes.js": ["../shared/dist/constants/WebSocketMessageTypes.d.ts"],
+      "@shared/api": ["../shared/dist/api/index.d.ts"],
+      "@shared/schema": ["../shared/dist/index.d.ts"]
     },
 
 

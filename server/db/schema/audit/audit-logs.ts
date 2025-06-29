@@ -1,9 +1,10 @@
 import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
+import { users } from '../users/users.js';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
 
 export const auditLogs = pgTable('audit_logs', {
   ...withBaseColumns,
@@ -33,11 +34,17 @@ export const auditLogs = pgTable('audit_logs', {
   orgIdIdx: index('audit_org_id_idx').on(table.organizationId),
 }));
 
-// Schema for creating an audit log
-export const insertAuditLogSchema = createInsertSchema(auditLogs, {
-  action: (schema) => schema.action.min(1).max(100),
-  entityType: (schema) => schema.entityType.min(1).max(100),
-  ipAddress: (schema) => schema.ipAddress.ip().optional(),
+// Base schema without validations
+const baseInsertSchema = createInsertSchema(auditLogs);
+
+// Schema for creating an audit log with additional validations
+export const insertAuditLogSchema = baseInsertSchema.extend({
+  action: baseInsertSchema.shape.action.min(1).max(100),
+  entityType: baseInsertSchema.shape.entityType.min(1).max(100),
+  ipAddress: baseInsertSchema.shape.ipAddress.nullable().refine(
+    (val) => !val || /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/.test(val),
+    { message: 'Invalid IP address format' }
+  ),
 });
 
 // Schema for selecting an audit log

@@ -13,8 +13,6 @@ export * from './billing/index.js';
 // Third-party integrations
 export * from './third-party/stripe.js';
 
-// Express type extensions
-export * from './express/index.js';
 
 // API types
 export * from './api/index.js';

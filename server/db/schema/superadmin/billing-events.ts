@@ -1,7 +1,7 @@
 import { pgTable, uuid, text, timestamp, jsonb, integer, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
 
 type BillingEventType = 
   | 'subscription_created'
@@ -69,9 +69,7 @@ export const billingEvents = pgTable('billing_events', {
   metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
 }, (table) => ({
   // Indexes for common query patterns
-  eventIdIdx: index('billing_events_event_id_idx')
-    .on(table.eventId)
-    .unique(),
+  eventIdIdx: index('billing_events_event_id_idx').on(table.eventId),
   eventTypeIdx: index('billing_events_event_type_idx').on(table.eventType),
   statusIdx: index('billing_events_status_idx').on(table.status),
   orgIdx: index('billing_events_org_idx').on(table.organizationId),
@@ -95,23 +93,23 @@ export const billingEvents = pgTable('billing_events', {
 
 // Schema for creating/updating a billing event
 export const insertBillingEventSchema = createInsertSchema(billingEvents, {
-  eventId: (schema) => schema.eventId.min(1).max(255),
-  eventType: (schema) => schema.eventType.oneOf([
+  eventId: (schema) => (schema as typeof billingEvents.$inferInsert).eventId.min(1).max(255),
+  eventType: (schema) => z.enum([
     'subscription_created', 'subscription_updated', 'subscription_cancelled', 'subscription_reactivated',
     'payment_succeeded', 'payment_failed', 'invoice_created', 'invoice_paid', 'invoice_payment_failed',
     'invoice_upcoming', 'invoice_updated', 'customer_created', 'customer_updated', 'customer_deleted',
     'payment_method_attached', 'payment_method_updated', 'refund_created', 'refund_updated',
     'charge_succeeded', 'charge_failed', 'charge_refunded'
-  ] as const),
-  status: (schema) => schema.status.oneOf([
+  ]),
+  status: (schema) => z.enum([
     'pending', 'processed', 'failed', 'retrying'
-  ] as const).default('pending'),
-  amount: (schema) => schema.amount.min(0).optional(),
-  currency: (schema) => schema.currency.length(3).optional(),
-  processingAttempts: (schema) => schema.processingAttempts.min(0).optional(),
-  rawEvent: (schema) => schema.rawEvent.optional(),
-  error: (schema) => schema.error.optional(),
-  metadata: (schema) => schema.metadata.optional(),
+  ]).default('pending'),
+  amount: (schema) => (schema as typeof billingEvents.$inferInsert).amount.min(0).optional(),
+  currency: (schema) => (schema as typeof billingEvents.$inferInsert).currency.length(3).optional(),
+  processingAttempts: (schema) => (schema as typeof billingEvents.$inferInsert).processingAttempts.min(0).optional(),
+  rawEvent: (schema) => (schema as typeof billingEvents.$inferInsert).rawEvent.optional(),
+  error: (schema) => (schema as typeof billingEvents.$inferInsert).error.optional(),
+  metadata: (schema) => (schema as typeof billingEvents.$inferInsert).metadata.optional(),
 });
 
 // Schema for selecting a billing event

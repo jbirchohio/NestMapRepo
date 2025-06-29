@@ -9,8 +9,8 @@ import type {
   UserActivity,
   PaginationParams,
   PaginatedResponse 
-} from '@shared/types/users';
-import type { BaseRepository } from '../base.repository.interface';
+} from '@shared/types/users/index.js';
+import type { BaseRepository } from '../base.repository.interface.js';
 
 /**
  * Extended user type that includes password hash for internal use

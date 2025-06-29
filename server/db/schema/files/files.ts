@@ -1,10 +1,11 @@
-import { pgTable, uuid, text, timestamp, jsonb, integer, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, integer, index, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
-import type { Metadata } from '../shared/types';
+import { z } from 'zod';
+import { users } from '../users/users.js';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
+import type { Metadata } from '../shared/types.js';
 
 export const files = pgTable('files', {
   ...withBaseColumns,
@@ -38,11 +39,11 @@ export const files = pgTable('files', {
 
 // Schema for creating/updating a file
 export const insertFileSchema = createInsertSchema(files, {
-  name: (schema) => schema.name.min(1).max(255),
-  key: (schema) => schema.key.min(1).max(255),
-  mimeType: (schema) => schema.mimeType.min(1).max(100).optional(),
-  size: (schema) => schema.size.min(0),
-  entityType: (schema) => schema.entityType.min(1).max(100).optional(),
+  name: (schema) => (schema as typeof files.$inferInsert).name.min(1).max(255),
+  key: (schema) => (schema as typeof files.$inferInsert).key.min(1).max(255),
+  mimeType: (schema) => (schema as typeof files.$inferInsert).mimeType.min(1).max(100).optional(),
+  size: (schema) => (schema as typeof files.$inferInsert).size.min(0),
+  entityType: (schema) => (schema as typeof files.$inferInsert).entityType.min(1).max(100).optional(),
 });
 
 // Schema for selecting a file

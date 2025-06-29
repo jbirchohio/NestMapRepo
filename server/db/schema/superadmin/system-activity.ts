@@ -1,6 +1,7 @@
-import { pgTable, uuid, timestamp, integer, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, integer, jsonb, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { withBaseColumns } from '../base.js';
 
 // Schema for system activity summaries
 export const systemActivitySummary = pgTable('system_activity_summary', {
@@ -57,37 +58,35 @@ export const systemActivitySummary = pgTable('system_activity_summary', {
   // Indexes for common query patterns
   dateIdx: index('system_activity_summary_date_idx').on(table.date),
   periodIdx: index('system_activity_summary_period_idx').on(table.period),
-  datePeriodIdx: index('system_activity_summary_date_period_idx')
-    .on(table.date, table.period)
-    .unique(),
+  datePeriodIdx: unique('system_activity_summary_date_period_idx').on(table.date, table.period),
   createdAtIdx: index('system_activity_summary_created_at_idx').on(table.createdAt),
 }));
 
 // Schema for creating/updating a system activity summary
 export const insertSystemActivitySummarySchema = createInsertSchema(systemActivitySummary, {
-  date: (schema) => schema.date.optional(),
-  period: (schema) => schema.period.oneOf(['hourly', 'daily', 'weekly', 'monthly'] as const),
-  totalUsers: (schema) => schema.totalUsers.min(0).optional(),
-  activeUsers: (schema) => schema.activeUsers.min(0).optional(),
-  newUsers: (schema) => schema.newUsers.min(0).optional(),
-  returningUsers: (schema) => schema.returningUsers.min(0).optional(),
-  totalOrganizations: (schema) => schema.totalOrganizations.min(0).optional(),
-  activeOrganizations: (schema) => schema.activeOrganizations.min(0).optional(),
-  newOrganizations: (schema) => schema.newOrganizations.min(0).optional(),
-  totalSessions: (schema) => schema.totalSessions.min(0).optional(),
-  avgSessionDuration: (schema) => schema.avgSessionDuration.min(0).optional(),
-  apiCalls: (schema) => schema.apiCalls.min(0).optional(),
-  apiErrors: (schema) => schema.apiErrors.min(0).optional(),
-  aiCalls: (schema) => schema.aiCalls.min(0).optional(),
-  aiTokensUsed: (schema) => schema.aiTokensUsed.min(0).optional(),
-  aiCost: (schema) => schema.aiCost.min(0).optional(),
-  revenue: (schema) => schema.revenue.min(0).optional(),
-  mrr: (schema) => schema.mrr.min(0).optional(),
-  arr: (schema) => schema.arr.min(0).optional(),
-  churnRate: (schema) => schema.churnRate.min(0).max(10000).optional(),
-  uptime: (schema) => schema.uptime.min(0).max(10000).optional(),
-  errorRate: (schema) => schema.errorRate.min(0).max(10000).optional(),
-  metadata: (schema) => schema.metadata.optional(),
+  date: (schema) => (schema as typeof systemActivitySummary.$inferInsert).date.optional(),
+  period: (schema) => (schema as typeof systemActivitySummary.$inferInsert).period.regex(/^(hourly|daily|weekly|monthly)$/),
+  totalUsers: (schema) => (schema as typeof systemActivitySummary.$inferInsert).totalUsers.min(0).optional(),
+  activeUsers: (schema) => (schema as typeof systemActivitySummary.$inferInsert).activeUsers.min(0).optional(),
+  newUsers: (schema) => (schema as typeof systemActivitySummary.$inferInsert).newUsers.min(0).optional(),
+  returningUsers: (schema) => (schema as typeof systemActivitySummary.$inferInsert).returningUsers.min(0).optional(),
+  totalOrganizations: (schema) => (schema as typeof systemActivitySummary.$inferInsert).totalOrganizations.min(0).optional(),
+  activeOrganizations: (schema) => (schema as typeof systemActivitySummary.$inferInsert).activeOrganizations.min(0).optional(),
+  newOrganizations: (schema) => (schema as typeof systemActivitySummary.$inferInsert).newOrganizations.min(0).optional(),
+  totalSessions: (schema) => (schema as typeof systemActivitySummary.$inferInsert).totalSessions.min(0).optional(),
+  avgSessionDuration: (schema) => (schema as typeof systemActivitySummary.$inferInsert).avgSessionDuration.min(0).optional(),
+  apiCalls: (schema) => (schema as typeof systemActivitySummary.$inferInsert).apiCalls.min(0).optional(),
+  apiErrors: (schema) => (schema as typeof systemActivitySummary.$inferInsert).apiErrors.min(0).optional(),
+  aiCalls: (schema) => (schema as typeof systemActivitySummary.$inferInsert).aiCalls.min(0).optional(),
+  aiTokensUsed: (schema) => (schema as typeof systemActivitySummary.$inferInsert).aiTokensUsed.min(0).optional(),
+  aiCost: (schema) => (schema as typeof systemActivitySummary.$inferInsert).aiCost.min(0).optional(),
+  revenue: (schema) => (schema as typeof systemActivitySummary.$inferInsert).revenue.min(0).optional(),
+  mrr: (schema) => (schema as typeof systemActivitySummary.$inferInsert).mrr.min(0).optional(),
+  arr: (schema) => (schema as typeof systemActivitySummary.$inferInsert).arr.min(0).optional(),
+  churnRate: (schema) => (schema as typeof systemActivitySummary.$inferInsert).churnRate.min(0).max(10000).optional(),
+  uptime: (schema) => (schema as typeof systemActivitySummary.$inferInsert).uptime.min(0).max(10000).optional(),
+  errorRate: (schema) => (schema as typeof systemActivitySummary.$inferInsert).errorRate.min(0).max(10000).optional(),
+  metadata: (schema) => (schema as typeof systemActivitySummary.$inferInsert).metadata.optional(),
 });
 
 // Schema for selecting a system activity summary

@@ -1,4 +1,4 @@
-import { Injectable, Logger, type HttpException } from '@nestjs/common';
+import logger from '../../utils/logger.js';
 import { ErrorType, type ApiError } from '../types/error.types.js';
 import { createApiError } from '../types/error.types.js';
 
@@ -11,9 +11,8 @@ type ErrorDetails = Record<string, unknown> | Record<string, unknown>[] | string
  * Centralized service for error handling and creation
  * Provides standardized methods for creating and throwing errors
  */
-@Injectable()
 export class ErrorService {
-    private readonly logger = new Logger(ErrorService.name);
+    private readonly logger = logger;
     /**
      * Create an unauthorized error
      * @param message Error message
@@ -147,30 +146,8 @@ export class ErrorService {
         
         return this.createBadRequestError(message);
     }
-    /**
-     * Create a conflict error
-     * @param message Error message
-     * @param details Additional error details
-     * @returns ApiError
-     */
-    createConflictError(message = 'Resource conflict', details?: Record<string, unknown>): ApiError {
-        this.logger.warn(`[CONFLICT] ${message}`, details);
-        return createApiError(ErrorType.CONFLICT, message, details);
-    }
-    /**
-     * Create an internal server error
-     * @param message Error message
-     * @param details Additional error details
-     * @returns ApiError
-     */
-    createInternalServerError(message = 'Internal server error', details?: Record<string, unknown>, stack?: string): ApiError {
-        const error = createApiError(ErrorType.INTERNAL_SERVER_ERROR, message, details);
-        if (process.env.NODE_ENV !== 'production' && stack) {
-            error.stack = stack;
-        }
-        this.logger.error(`[INTERNAL_SERVER_ERROR] ${message}`, stack);
-        return error;
-    }
+    
+    
     /**
      * Convert a standard Error to an ApiError
      * @param error Standard Error

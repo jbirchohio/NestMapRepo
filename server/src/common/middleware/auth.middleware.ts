@@ -1,7 +1,7 @@
 import type { Response, NextFunction, Request, RequestHandler } from 'express';
 import { AppErrorCode } from '@shared/types/error-codes.js';
-import { UserRole } from '@shared/src/types/auth/permissions.js';
-import type { Logger } from '@nestjs/common';
+import { UserRole } from '../../../db/schema/index.js';
+import logger from '../../utils/logger.js';
 
 // Helper type for authenticated requests
 type AuthenticatedRequest = Request & {

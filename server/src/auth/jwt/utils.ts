@@ -105,7 +105,7 @@ export function verifyJwtToken<T extends JwtPayload>(
   secret: string,
   options: {
     issuer?: string;
-    audience?: string | string[];
+    audience?: string | string[] | RegExp | (string | RegExp)[];
     subject?: string;
     algorithms?: string[];
   } = {}
@@ -113,7 +113,7 @@ export function verifyJwtToken<T extends JwtPayload>(
   try {
     const decoded = verify(token, secret, {
       ...options,
-      algorithms: options.algorithms as any, // Type assertion since jsonwebtoken's types are more restrictive
+      algorithms: options.algorithms,
       ignoreExpiration: false,
     }) as T;
     

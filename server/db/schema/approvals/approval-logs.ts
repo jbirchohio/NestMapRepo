@@ -1,9 +1,10 @@
 import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { users } from '../users';
-import { approvalRequests } from './approval-requests';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { organizations } from '../organizations/organizations.js';
+import { users } from '../users/users.js';
+import { approvalRequests } from './approval-requests.js';
+import { withBaseColumns } from '../base.js';
 
 // Approval Logs Table
 export const approvalLogs = pgTable('approval_logs', {
@@ -40,16 +41,16 @@ export const approvalLogs = pgTable('approval_logs', {
   userIdIdx: index('approval_logs_user_id_idx').on(table.userId),
   actionIdx: index('approval_logs_action_idx').on(table.action),
   statusIdx: index('approval_logs_status_idx').on(table.status),
-  createdAtIdx: index('approval_logs_created_at_idx').on(table.createdAt),
+  createdAtIdx: index('approval_logs_created_at_idx').on(table.created_at),
 }));
 
 // Schema for creating an approval log
 export const insertApprovalLogSchema = createInsertSchema(approvalLogs, {
-  action: (schema) => schema.action.min(1).max(100),
-  status: (schema) => schema.status.min(1).max(50),
-  message: (schema) => schema.message.optional(),
-  metadata: (schema) => schema.metadata.optional(),
-  context: (schema) => schema.context.optional(),
+  action: (schema) => (schema as typeof approvalLogs.$inferInsert).action.min(1).max(100),
+  status: (schema) => (schema as typeof approvalLogs.$inferInsert).status.min(1).max(50),
+  message: (schema) => (schema as typeof approvalLogs.$inferInsert).message.optional(),
+  metadata: (schema) => (schema as typeof approvalLogs.$inferInsert).metadata.optional(),
+  context: (schema) => (schema as typeof approvalLogs.$inferInsert).context.optional(),
 });
 
 // Schema for selecting an approval log

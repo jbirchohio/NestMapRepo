@@ -1,22 +1,22 @@
-import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from '../../express-augmentations.ts';
+import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { AuthUser } from '../types/auth-user.js';
 import { ConfigService } from '@nestjs/config';
-import { AuthController } from './controllers/auth.controller.js';
-import { JwtAuthService } from './services/jwtAuthService.js';
-import { UserRepositoryImpl } from './repositories/user.repository.js';
-import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js';
-import { NodemailerEmailService } from '../email/services/nodemailer-email.service.js';
-import { ErrorService } from '../common/services/error.service.js';
-import { validateAndSanitizeRequest } from '../../middleware/inputValidation.js';
-import { authenticate } from '../../middleware/secureAuth.js';
+import { AuthController } from './controllers/auth.controller';
+import { JwtAuthService } from './services/jwtAuthService';
+import { UserRepositoryImpl } from './repositories/user.repository';
+import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository';
+import { NodemailerEmailService } from '../email/services/nodemailer-email.service';
+import { ErrorService } from '../common/services/error.service';
+import { validateAndSanitizeRequest } from '../../middleware/inputValidation';
+import { authenticate } from '../../middleware/secureAuth';
 import { 
   LoginDto,
   RegisterDto,
   RequestPasswordResetDto,
   ResetPasswordDto,
   ChangePasswordDto
-} from '@shared/src/types/auth/dto';
+} from '@shared/types/auth/dto';
 // Helper type to make certain properties required
 type WithRequired<T, K extends keyof T> = T & {
     [P in K]-?: T[P];
@@ -41,7 +41,7 @@ const ensureRequestProperties = (req: ExpressRequest): ExpressRequest => {
     return req;
 };
 // Type for controller methods that return an array of handlers
-type ControllerMethod = Array<RequestHandler>;
+
 // Use the existing type declarations from @types/express
 const router = Router();
 // Initialize services and controllers
@@ -51,35 +51,19 @@ const refreshTokenRepository = new RefreshTokenRepositoryImpl();
 const emailService = new NodemailerEmailService(configService, new ErrorService());
 const authService = new JwtAuthService(userRepository, refreshTokenRepository, configService, emailService);
 const authController = new AuthController(authService);
-// Helper function to properly type our route handlers
-const createRouteHandler = (handler: (req: ExpressRequest, res: Response, next: NextFunction) => void | Promise<void>): RequestHandler => {
-    return (async (req: ExpressRequest, res: Response, next: NextFunction) => {
-        try {
-            const processedReq = ensureRequestProperties(req);
-            await handler(processedReq, res, next);
-        }
-        catch (error) {
-            next(error);
-        }
-    });
-};
-// Type for controller method that can be single or array of handlers
-type ControllerMethod = ((req: ExpressRequest, res: Response, next: NextFunction) => void | Promise<void>) | Array<(req: ExpressRequest, res: Response, next: NextFunction) => void | Promise<void>>;
 // Helper to create route handlers with validation
-const createValidatedRoute = (path: string, method: 'get' | 'post' | 'put' | 'delete', controllerMethod: ControllerMethod, validationSchema?: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */) => {
-    const handlers = Array.isArray(controllerMethod)
-        ? controllerMethod
-        : [controllerMethod];
+const createValidatedRoute = (path: string, method: 'get' | 'post' | 'put' | 'delete', handler: RequestHandler | RequestHandler[], validationSchema?: any) => {
+    const handlers = Array.isArray(handler) ? handler : [handler];
     const routeHandlers: RequestHandler[] = [];
+
     // Add validation middleware if schema is provided
     if (validationSchema) {
-        routeHandlers.push((req, res, next) => {
-            const processedReq = ensureRequestProperties(req);
-            return validateAndSanitizeRequest(validationSchema)(processedReq, res, next);
-        });
+        routeHandlers.push(validateAndSanitizeRequest(validationSchema));
     }
+
     // Add the controller handlers
-    routeHandlers.push(...handlers.map(handler => createRouteHandler(handler)));
+    routeHandlers.push(...handlers);
+
     // Apply the route with all handlers
     router[method](path, ...routeHandlers);
 };

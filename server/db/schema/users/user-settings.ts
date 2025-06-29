@@ -1,8 +1,8 @@
 import { pgTable, uuid, text, jsonb, timestamp } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from './users';
-import type { UserPreferences, Metadata } from '../shared/types';
+import { users } from './users.js';
+import type { UserPreferences, Metadata } from '../shared/types.js';
 
 export const userSettings = pgTable('user_settings', {
   id: uuid('id').primaryKey().defaultRandom(),

@@ -2,12 +2,12 @@ import { pgTable, uuid, text, timestamp, numeric, jsonb } from 'drizzle-orm/pg-c
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { organizations } from '../organizations/organizations';
-import { users } from '../users';
-import { trips } from '../trips/trips';
-import { withBaseColumns } from '../base';
-import { enums } from '../enums';
-import type { Metadata } from '../shared/types';
+import { organizations } from '../organizations/organizations.js';
+import { users } from '../users/users.js';
+import { trips } from '../trips/trips.js';
+import { withBaseColumns } from '../base.js';
+import { enums } from '../enums.js';
+import type { Metadata } from '../shared/types.js';
 
 export const expenses = pgTable('expenses', {
   ...withBaseColumns,
@@ -33,12 +33,12 @@ export const expenses = pgTable('expenses', {
 
 // Schema for creating/updating an expense
 export const insertExpenseSchema = createInsertSchema(expenses, {
-  title: (schema) => schema.title.min(1).max(200),
-  description: (schema) => schema.description.max(1000).optional(),
-  amount: (schema) => schema.amount.min(0.01),
-  currency: (schema) => schema.currency.length(3),
-  status: (schema) => schema.status.regex(/^(pending|approved|rejected|paid|reimbursed)$/),
-  paymentMethod: (schema) => schema.paymentMethod.optional(),
+  title: (schema) => (schema as typeof expenses.$inferInsert).title.min(1).max(200),
+  description: (schema) => (schema as typeof expenses.$inferInsert).description.max(1000).optional(),
+  amount: (schema) => (schema as typeof expenses.$inferInsert).amount.min(0.01),
+  currency: (schema) => (schema as typeof expenses.$inferInsert).currency.length(3),
+  status: (schema) => (schema as typeof expenses.$inferInsert).status.regex(/^(pending|approved|rejected|escalated|cancelled)$/),
+  paymentMethod: (schema) => (schema as typeof expenses.$inferInsert).paymentMethod.optional(),
 });
 
 // Schema for selecting an expense

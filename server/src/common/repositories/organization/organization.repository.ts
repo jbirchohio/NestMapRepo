@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
-import { db } from '@shared/../server/db/db.js';
-import { organizations, organizationMembers } from '@shared/../server/db/schema.js';
+import { db } from '../../../db/db.js';
+import { organizations, organizationMembers, users } from '../../../db/schema/index.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 import type { OrganizationRepository } from './organization.repository.interface.js';
 import type { 
@@ -12,8 +11,8 @@ import type {
   CreateOrganizationData,
   UpdateOrganizationData,
   OrganizationSettings
-} from '@shared/types/organizations.js';
-import { users } from '@shared/../server/db/schema.js';
+} from '@shared/types/organizations/index.js';
+import { UserRole } from '../../../db/schema/index.js';
 
 @Injectable()
 export class OrganizationRepositoryImpl 

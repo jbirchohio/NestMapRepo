@@ -1,8 +1,8 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
-import type { Logger } from '@nestjs/common';
-import type { ApiError, ErrorType } from '../types/index.js';
-import { createApiError } from '../types/index.js';
+import type { Request, Response, NextFunction } from 'express';
+import type { ApiError } from '../types/index.js';
+import { ErrorType, createApiError } from '../types/index.js';
 import { AppErrorCode } from '@shared/types/error-codes.js';
+import logger from '../../utils/logger.js';
 /**
  * Maps error types to HTTP status codes
  */

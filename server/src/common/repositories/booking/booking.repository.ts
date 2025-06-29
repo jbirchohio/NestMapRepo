@@ -1,11 +1,10 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, gte, lte, sql, count, sum, inArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { bookings } from '../../../../db/bookingSchema.js';
+import { bookings } from '../../../db/schema/index.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 import { BOOKING_REPOSITORY, DB_CONNECTION } from './booking.tokens.js';
 import type { BookingRepository } from './booking.repository.interface.js';
-import { Logger } from 'winston';
+import logger from '../../utils/logger.js';
 import type { 
   BaseBooking, 
   BookingStatus, 
@@ -13,7 +12,7 @@ import type {
   BookingSearchParams,
   CreateBookingData,
   UpdateBookingData
-} from '@shared/src/types/booking/index.ts';
+} from '@shared/types/booking/index.js';
 
 type OrderBy = 'asc' | 'desc';
 

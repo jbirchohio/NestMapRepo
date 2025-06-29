@@ -1,19 +1,79 @@
-import { 
-  UserRole, 
-  PermissionDefinition, 
-  PermissionLevel, 
-  PermissionCondition, 
-  ResourceType,
-  PermissionAction,
-  PermissionScope
-} from '../types/auth/permissions.js'; // Added .js extension for ESM
+// Define UserRole type based on the auth types
+export type UserRole = 'user' | 'admin' | 'moderator' | 'superadmin';
+
+// Helper function to create a role hierarchy
+const createRoleHierarchy = (): Map<UserRole, UserRole[]> => {
+  const hierarchy = new Map<UserRole, UserRole[]>();
+  
+  // Define roles with their inherited roles
+  const roles: Record<UserRole, UserRole[]> = {
+    superadmin: ['admin', 'moderator', 'user'],
+    admin: ['moderator', 'user'],
+    moderator: ['user'],
+    user: []
+  };
+  
+  // Initialize the map with type safety
+  (Object.entries(roles) as [UserRole, UserRole[]][]).forEach(([role, inheritedRoles]) => {
+    hierarchy.set(role, inheritedRoles);
+  });
+  
+  return hierarchy;
+};
+
+// Permission level types
+type PermissionLevel = 'none' | 'read' | 'write' | 'admin' | 'manage' | 'own' | 'organization' | 'user';
+
+// Permission action types
+type PermissionAction = 'create' | 'read' | 'update' | 'delete' | 'manage';
+
+// Resource type (can be expanded based on your needs)
+type ResourceType = string;
+
+// Permission scope types
+type PermissionScope = 'own' | 'team' | 'organization' | 'global' | 'user';
+
+// Permission condition type
+type PermissionCondition = {
+  (context: Record<string, unknown>): boolean;
+  field?: string;
+  operator?: string;
+  value?: unknown;
+};
+
+// Permission definition interface
+interface PermissionDefinition {
+  id: string;
+  name: string;
+  description?: string;
+  resource: ResourceType;
+  action: PermissionAction;
+  level: PermissionLevel | 'organization' | 'user';
+  scope?: PermissionScope;
+  condition?: PermissionCondition;
+  conditions?: PermissionCondition[];
+  allowedRoles?: string[];
+  allowedPermissions?: string[];
+  defaultRoles?: string[];
+  metadata?: Record<string, unknown>;
+  [key: string]: unknown; // Allow additional properties
+}
+
+// Permission level values with numeric weights
+type PermissionLevelValue = 'read' | 'write' | 'admin' | 'manage';
+const PermissionLevelValues: Record<PermissionLevelValue, number> = {
+  read: 1,
+  write: 2,
+  admin: 3,
+  manage: 4
+} as const;
 
 /**
  * Permission Manager class for handling role-based access control
  */
 export class PermissionManager {
   private permissions: Map<string, PermissionDefinition> = new Map();
-  private roleHierarchy: Map<UserRole, UserRole[]> = new Map();
+  private roleHierarchy: Map<UserRole, UserRole[]> = createRoleHierarchy();
 
   constructor(permissions: PermissionDefinition[] = []) {
     this.initializeRoleHierarchy();
@@ -24,22 +84,7 @@ export class PermissionManager {
    * Initialize the role hierarchy
    */
   private initializeRoleHierarchy(): void {
-    // Use the UserRole enum values directly to ensure type safety
-    const { SUPER_ADMIN, ADMIN, MANAGER, MEMBER, GUEST } = UserRole;
-    
-    // Explicitly type the role hierarchy to ensure type safety
-    const hierarchy: Record<UserRole, UserRole[]> = {
-      [SUPER_ADMIN]: [ADMIN, MANAGER, MEMBER, GUEST],
-      [ADMIN]: [MANAGER, MEMBER, GUEST],
-      [MANAGER]: [MEMBER, GUEST],
-      [MEMBER]: [GUEST],
-      [GUEST]: []
-    };
-
-    // Convert the record to a map
-    (Object.entries(hierarchy) as [UserRole, UserRole[]][]).forEach(([role, roles]) => {
-      this.roleHierarchy.set(role, roles);
-    });
+    // Role hierarchy is already set up by createRoleHierarchy
   }
 
   /**
@@ -55,7 +100,7 @@ export class PermissionManager {
    * Register a single permission
    */
   public registerPermission(permission: PermissionDefinition): void {
-    this.permissions.set(permission.key, permission);
+    this.permissions.set(permission.id, permission);
   }
 
   /**
@@ -66,10 +111,10 @@ export class PermissionManager {
     resource: ResourceType,
     action: PermissionAction,
     level: PermissionLevel = 'own',
-    context: Record<string, any> = {}
+    context: Record<string, unknown> = {}
   ): boolean {
     // Super admin has all permissions
-    if (role === UserRole.SUPER_ADMIN) return true;
+    if (role === 'superadmin') return true;
 
     // Check direct permissions first
     const permissions = this.getPermissionsForRole(role);
@@ -100,10 +145,28 @@ export class PermissionManager {
    */
   public getPermissionsForRole(role: UserRole): PermissionDefinition[] {
     const permissions: PermissionDefinition[] = [];
-    const rolesToCheck = this.getInheritedRoles(role);
     
+    // Get all roles including inherited ones
+    const rolesToCheck = this.getInheritedRoles(role);
+    const validRoles: UserRole[] = ['user', 'admin', 'moderator', 'superadmin'];
+    
+    // Find all permissions that include any of the roles in allowedRoles or defaultRoles
     for (const permission of this.permissions.values()) {
-      if (rolesToCheck.some(r => permission.defaultRoles.includes(r))) {
+      // Safely filter and type guard the roles
+      const filterValidRoles = (roles: (string | UserRole)[] | undefined): UserRole[] => 
+        roles?.filter((r): r is UserRole => 
+          typeof r === 'string' && validRoles.includes(r as UserRole)
+        ) || [];
+      
+      const allowedRoles = filterValidRoles(permission.allowedRoles);
+      const defaultRoles = filterValidRoles(permission.defaultRoles);
+      
+      // Check if any of the user's roles match the permission's roles
+      const hasMatchingRole = [...allowedRoles, ...defaultRoles].some(
+        r => rolesToCheck.includes(r)
+      );
+      
+      if (hasMatchingRole) {
         permissions.push(permission);
       }
     }
@@ -127,64 +190,71 @@ export class PermissionManager {
    * Get all roles that inherit from the given role
    */
   private getInheritedRoles(role: UserRole): UserRole[] {
-    const roles: UserRole[] = [role];
-    const inheritedRoles = this.roleHierarchy.get(role) || [];
-    
-    for (const inheritedRole of inheritedRoles) {
-      roles.push(inheritedRole);
-      roles.push(...this.getInheritedRoles(inheritedRole));
-    }
-    
-    return [...new Set(roles)]; // Remove duplicates
+    const roles = new Set<UserRole>([role]);
+    const addInherited = (r: UserRole) => {
+      const inherited = this.roleHierarchy.get(r) || [];
+      for (const ir of inherited) {
+        if (!roles.has(ir)) {
+          roles.add(ir);
+          addInherited(ir);
+        }
+      }
+    };
+    addInherited(role);
+    return Array.from(roles);
   }
 
   /**
    * Check if permission level matches the required level
    */
-  private matchesLevel(permissionLevel: PermissionLevel, requiredLevel: PermissionLevel): boolean {
-    const levelOrder: Record<PermissionLevel, number> = {
-      'own': 1,
-      'team': 2,
-      'organization': 3,
-      'all': 4
+  private matchesLevel(
+    requiredLevel: PermissionLevel,
+    userLevel: PermissionLevel
+  ): boolean {
+    // Convert aliases to standard permission levels
+    const resolveLevel = (level: PermissionLevel): PermissionLevelValue => {
+      switch (level) {
+        case 'organization':
+        case 'write':
+          return 'write';
+        case 'user':
+        case 'own':
+        case 'read':
+          return 'read';
+        case 'admin':
+          return 'admin';
+        case 'manage':
+          return 'manage';
+        default:
+          return 'read'; // Default to read access
+      }
     };
+
+    const resolvedUserLevel = resolveLevel(userLevel);
+    const resolvedRequiredLevel = resolveLevel(requiredLevel);
     
-    return levelOrder[permissionLevel] >= levelOrder[requiredLevel];
+    return (PermissionLevelValues[resolvedUserLevel] || 0) >= 
+           (PermissionLevelValues[resolvedRequiredLevel] || 0);
   }
 
   /**
-   * Evaluate a permission condition against the current context
+   * Get a value from context using dot notation
    */
-  private checkCondition(
-    condition: PermissionCondition | boolean | ((context: Record<string, any>, resourceId?: string) => boolean) | { condition: PermissionCondition },
-    context: Record<string, any>,
-    resourceId?: string
-  ): boolean {
-    if (typeof condition === 'boolean') {
-      return condition;
-    }
+  private getValueFromContext(field: string, context: Record<string, any>): any {
+    return field.split('.').reduce((obj, key) => (obj && obj[key] !== undefined ? obj[key] : undefined), context);
+  }
 
-    if (typeof condition === 'function') {
-      return condition(context, resourceId);
-    }
-
-    // Check if it's an object with a 'condition' property
-    if (condition && 
-        typeof condition === 'object' && 
-        condition !== null && 
-        'condition' in condition) {
-      const conditionObj = condition as { condition: PermissionCondition };
-      return this.checkCondition(conditionObj.condition, context, resourceId);
-    }
-
-    // If it's a standard PermissionCondition object
-    if (condition && 
-        typeof condition === 'object' && 
-        'field' in condition && 
-        'operator' in condition) {
-      return this.evaluateCondition(condition as PermissionCondition, context);
-    }
-
+  /**
+   * Compare values based on operator
+   */
+  private compareValues(fieldValue: any, operator: string, value: any): boolean {
+    if (operator === 'equals') return fieldValue === value;
+    if (operator === 'notEquals') return fieldValue !== value;
+    if (operator === 'in') return Array.isArray(value) && value.includes(fieldValue);
+    if (operator === 'notIn') return Array.isArray(value) && !value.includes(fieldValue);
+    if (operator === 'contains') return typeof fieldValue === 'string' && fieldValue.includes(value);
+    if (operator === 'startsWith') return typeof fieldValue === 'string' && fieldValue.startsWith(value);
+    if (operator === 'endsWith') return typeof fieldValue === 'string' && fieldValue.endsWith(value);
     return false;
   }
 
@@ -194,6 +264,12 @@ export class PermissionManager {
   private evaluateCondition(condition: PermissionCondition, context: Record<string, any>): boolean {
     try {
       const { field, operator, value } = condition;
+      
+      // If field is not provided, we can't evaluate the condition
+      if (!field) {
+        return false;
+      }
+      
       const fieldValue = this.getNestedField(context, field);
       
       // Handle different operators safely
@@ -274,12 +350,18 @@ export class PermissionManager {
    * Get a nested field from an object using dot notation
    */
   private getNestedField(obj: Record<string, unknown>, path: string): unknown {
-    return path.split('.').reduce<unknown>((acc, part) => {
-      if (acc && typeof acc === 'object' && part in (acc as Record<string, unknown>)) {
-        return (acc as Record<string, unknown>)[part];
-      }
+    if (!path) return undefined;
+    
+    try {
+      return path.split('.').reduce<unknown>((acc, part) => {
+        if (acc && typeof acc === 'object' && part in (acc as Record<string, unknown>)) {
+          return (acc as Record<string, unknown>)[part];
+        }
+        return undefined;
+      }, obj);
+    } catch (error) {
       return undefined;
-    }, obj);
+    }
   }
 
   /**
@@ -316,39 +398,50 @@ export class PermissionManager {
 /**
  * Default system permissions
  */
+// Default system permissions with proper typing
 export const defaultSystemPermissions: PermissionDefinition[] = [
   // User management permissions
   {
-    key: 'user:create:organization',
+    id: 'user:create:organization',
     name: 'Create Users',
     description: 'Create new user accounts in the organization',
     resource: 'user',
     action: 'create',
     scope: 'user',
     level: 'organization',
-    defaultRoles: [UserRole.ADMIN, UserRole.MANAGER],
+    defaultRoles: ['admin', 'moderator'],
     isSystem: true
   },
   {
-    key: 'user:read:organization',
+    id: 'user:read:own',
+    name: 'Read Own User',
+    description: 'Read own user profile',
+    resource: 'user',
+    action: 'read',
+    level: 'read',
+    scope: 'user',
+    allowedRoles: ['user', 'admin', 'moderator', 'superadmin'],
+  },
+  {
+    id: 'user:read:organization',
     name: 'View Users',
     description: 'View user profiles in the organization',
     resource: 'user',
     action: 'read',
     scope: 'user',
     level: 'organization',
-    defaultRoles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.MEMBER],
+    defaultRoles: ['admin', 'moderator', 'user'],
     isSystem: true
   },
   {
-    key: 'user:update:organization',
+    id: 'user:update:organization',
     name: 'Edit Users',
     description: 'Edit user profiles in the organization',
     resource: 'user',
     action: 'update',
     scope: 'user',
     level: 'organization',
-    defaultRoles: [UserRole.ADMIN, UserRole.MANAGER],
+    defaultRoles: ['admin', 'manager'],
     isSystem: true
   },
   // Add more default permissions as needed

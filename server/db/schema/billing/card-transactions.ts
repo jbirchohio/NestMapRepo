@@ -1,10 +1,10 @@
 import { pgTable, uuid, text, timestamp, jsonb, integer, decimal, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { users } from '../users';
-import { trips } from '../trips/trips';
-import { corporateCards } from './corporate-cards';
-import { withBaseColumns } from '../base';
+import { organizations } from '../organizations/organizations.js';
+import { users } from '../users/users.js';
+import { trips } from '../trips/trips.js';
+import { corporateCards } from './corporate-cards.js';
+import { withBaseColumns } from '../base.js';
 
 // Card Transactions Table
 export const cardTransactions = pgTable('card_transactions', {
@@ -81,14 +81,14 @@ export const cardTransactions = pgTable('card_transactions', {
 
 // Schema for creating/updating a card transaction
 export const insertCardTransactionSchema = createInsertSchema(cardTransactions, {
-  merchantName: (schema) => schema.merchantName.min(1).max(255),
-  amount: (schema) => schema.amount.min(0),
-  currency: (schema) => schema.currency.length(3),
-  originalAmount: (schema) => schema.originalAmount.optional(),
-  originalCurrency: (schema) => schema.originalCurrency.length(3).optional(),
-  status: (schema) => schema.status.default('pending'),
-  metadata: (schema) => schema.metadata.optional(),
-  context: (schema) => schema.context.optional(),
+  merchantName: (schema) => (schema as typeof cardTransactions.$inferInsert).merchantName.min(1).max(255),
+  amount: (schema) => (schema as typeof cardTransactions.$inferInsert).amount.min(0),
+  currency: (schema) => (schema as typeof cardTransactions.$inferInsert).currency.length(3),
+  originalAmount: (schema) => (schema as typeof cardTransactions.$inferInsert).originalAmount.optional(),
+  originalCurrency: (schema) => (schema as typeof cardTransactions.$inferInsert).originalCurrency.length(3).optional(),
+  status: (schema) => (schema as typeof cardTransactions.$inferInsert).status.default('pending'),
+  metadata: (schema) => (schema as typeof cardTransactions.$inferInsert).metadata.optional(),
+  context: (schema) => (schema as typeof cardTransactions.$inferInsert).context.optional(),
 });
 
 // Schema for selecting a card transaction

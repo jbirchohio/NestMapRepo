@@ -1,8 +1,9 @@
 import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { users } from '../users/users.js';
+import { withBaseColumns } from '../base.js';
 
 export const userActivityLogs = pgTable('user_activity_logs', {
   ...withBaseColumns,
@@ -39,13 +40,13 @@ export const userActivityLogs = pgTable('user_activity_logs', {
   userIdIdx: index('user_activity_user_id_idx').on(table.userId),
   actionIdx: index('user_activity_action_idx').on(table.action),
   entityIdx: index('user_activity_entity_idx').on(table.entityType, table.entityId),
-  createdAtIdx: index('user_activity_created_at_idx').on(table.createdAt),
+  createdAtIdx: index('user_activity_created_at_idx').on(table.created_at),
 }));
 
 // Schema for creating a user activity log
 export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs, {
-  action: (schema) => schema.action.min(1).max(100),
-  entityType: (schema) => schema.entityType.min(1).max(100).optional(),
+  action: (schema) => (schema as typeof userActivityLogs.$inferInsert).action.min(1).max(100),
+  entityType: (schema) => (schema as typeof userActivityLogs.$inferInsert).entityType.min(1).max(100).optional(),
 });
 
 // Schema for selecting a user activity log

@@ -1,4 +1,4 @@
-import type { Trip } from '../../../db/schema.js';
+import type { Trip, User } from '../../../db/schema/index.js';
 
 // Define the ServiceUser interface to match what the controller provides
 export interface ServiceUser {

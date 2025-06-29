@@ -1,9 +1,9 @@
 import { pgTable, uuid, timestamp, boolean, unique } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { organizations } from './organizations';
-import { enums } from '../enums';
+import { users } from '../users/users.js';
+import { organizations } from './organizations.js';
+import { enums } from '../enums.js';
 
 export const organizationMembers = pgTable('organization_members', {
   id: uuid('id').primaryKey().defaultRandom(),

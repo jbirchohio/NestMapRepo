@@ -1,8 +1,8 @@
 import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { organizations } from '../organizations/organizations';
-import { withBaseColumns } from '../base';
+import { users } from '../users.js';
+import { organizations } from '../organizations/organizations.js';
+import { withBaseColumns } from '../base.js';
 
 export type AuditLogSeverity = 'info' | 'warning' | 'error' | 'critical';
 
@@ -38,13 +38,13 @@ export const superadminAuditLogs = pgTable('superadmin_audit_logs', {
 
 // Schema for creating/updating an audit log
 export const insertSuperadminAuditLogSchema = createInsertSchema(superadminAuditLogs, {
-  action: (schema) => schema.action.min(1).max(255),
-  entityType: (schema) => schema.entityType.min(1).max(100),
-  entityId: (schema) => schema.entityId.uuid().optional(),
-  details: (schema) => schema.details.optional(),
-  ipAddress: (schema) => schema.ipAddress.ip().optional(),
-  userAgent: (schema) => schema.userAgent.max(512).optional(),
-  severity: (schema) => schema.severity.oneOf(['info', 'warning', 'error', 'critical'] as const).default('info'),
+  action: (schema) => (schema as typeof superadminAuditLogs.$inferInsert).action.min(1).max(255),
+  entityType: (schema) => (schema as typeof superadminAuditLogs.$inferInsert).entityType.min(1).max(100),
+  entityId: (schema) => (schema as typeof superadminAuditLogs.$inferInsert).entityId.uuid().optional(),
+  details: (schema) => (schema as typeof superadminAuditLogs.$inferInsert).details.optional(),
+  ipAddress: (schema) => (schema as typeof superadminAuditLogs.$inferInsert).ipAddress.ip().optional(),
+  userAgent: (schema) => (schema as typeof superadminAuditLogs.$inferInsert).userAgent.max(512).optional(),
+  severity: (schema) => (schema as typeof superadminAuditLogs.$inferInsert).severity.default('info'),
 });
 
 // Schema for selecting an audit log

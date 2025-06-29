@@ -1,7 +1,8 @@
 import { pgTable, text, uuid, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { users } from '../users/users.js';
+import { withBaseColumns } from '../base.js';
 
 // Schema for active sessions
 export const activeSessions = pgTable('active_sessions', {
@@ -34,14 +35,14 @@ export const activeSessions = pgTable('active_sessions', {
 
 // Schema for creating/updating a session
 export const insertActiveSessionSchema = createInsertSchema(activeSessions, {
-  username: (schema) => schema.username.min(1).max(100),
-  email: (schema) => schema.email.email(),
-  role: (schema) => schema.role.min(1).max(50),
-  organizationName: (schema) => schema.organizationName.optional(),
-  ipAddress: (schema) => schema.ipAddress.ip().optional(),
-  userAgent: (schema) => schema.userAgent.max(512).optional(),
-  isActive: (schema) => schema.isActive.optional(),
-  metadata: (schema) => schema.metadata.optional(),
+  username: (schema) => (schema as typeof activeSessions.$inferInsert).username.min(1).max(100),
+  email: (schema) => (schema as typeof activeSessions.$inferInsert).email.email(),
+  role: (schema) => (schema as typeof activeSessions.$inferInsert).role.min(1).max(50),
+  organizationName: (schema) => (schema as typeof activeSessions.$inferInsert).organizationName.optional(),
+  ipAddress: (schema) => (schema as typeof activeSessions.$inferInsert).ipAddress.ip().optional(),
+  userAgent: (schema) => (schema as typeof activeSessions.$inferInsert).userAgent.max(512).optional(),
+  isActive: (schema) => (schema as typeof activeSessions.$inferInsert).isActive.optional(),
+  metadata: (schema) => (schema as typeof activeSessions.$inferInsert).metadata.optional(),
 });
 
 // Schema for selecting a session

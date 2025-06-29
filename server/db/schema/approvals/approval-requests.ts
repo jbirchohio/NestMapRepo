@@ -1,13 +1,14 @@
-import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, integer, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from '../organizations/organizations';
-import { users } from '../users';
-import { approvalRules } from './approval-rules';
-import { withBaseColumns } from '../base';
+import { z } from 'zod';
+import { organizations } from '../organizations/organizations.js';
+import { users } from '../users/users.js';
+import { approvalRules } from './approval-rules.js';
+import { withBaseColumns } from '../base.js';
 
 // Re-export enums from approval-rules
-export { approvalStatusEnum, approvalPriorityEnum } from './approval-rules';
-export type { ApprovalStatus, ApprovalPriority } from './approval-rules';
+export { approvalStatusEnum, approvalPriorityEnum } from './approval-rules.js';
+export type { ApprovalStatus, ApprovalPriority } from './approval-rules.js';
 
 // Approval Requests Table
 export const approvalRequests = pgTable('approval_requests', {
@@ -62,15 +63,13 @@ export const approvalRequests = pgTable('approval_requests', {
 
 // Schema for creating/updating an approval request
 export const insertApprovalRequestSchema = createInsertSchema(approvalRequests, {
-  entityType: (schema) => schema.entityType.min(1).max(100),
-  entityId: (schema) => schema.entityId.min(1).max(255),
-  status: (schema) => schema.status.optional(),
-  priority: (schema) => schema.priority.optional(),
-  currentStep: (schema) => schema.currentStep.min(1).default(1),
-  totalSteps: (schema) => schema.totalSteps.min(1).default(1),
-  requestData: (schema) => schema.requestData.default({}),
-  decisionData: (schema) => schema.decisionData.optional(),
-  metadata: (schema) => schema.metadata.optional(),
+  entityType: (schema) => (schema as typeof approvalRequests.$inferInsert).entityType.min(1).max(100),
+  entityId: (schema) => (schema as typeof approvalRequests.$inferInsert).entityId.min(1).max(255),
+  currentStep: (schema) => (schema as typeof approvalRequests.$inferInsert).currentStep.coerce.number().min(1).default(1),
+  totalSteps: (schema) => (schema as typeof approvalRequests.$inferInsert).totalSteps.coerce.number().min(1).default(1),
+  requestData: (schema) => (schema as typeof approvalRequests.$inferInsert).requestData.default({}),
+  decisionData: (schema) => (schema as typeof approvalRequests.$inferInsert).decisionData.optional(),
+  metadata: (schema) => (schema as typeof approvalRequests.$inferInsert).metadata.optional(),
 });
 
 // Schema for selecting an approval request

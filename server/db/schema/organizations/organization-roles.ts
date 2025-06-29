@@ -1,8 +1,9 @@
 import { pgTable, uuid, text, jsonb, timestamp, boolean, unique } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { organizations } from './organizations';
-import type { Metadata } from '../shared/types';
+import { z } from 'zod';
+import { organizations } from './organizations.js';
+import type { Metadata } from '../shared/types.js';
 
 export const organizationRoles = pgTable('organization_roles', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -24,8 +25,8 @@ export const organizationRoles = pgTable('organization_roles', {
 
 // Schema for creating/updating an organization role
 export const insertOrganizationRoleSchema = createInsertSchema(organizationRoles, {
-  name: (schema) => schema.name.min(1).max(50),
-  description: (schema) => schema.description.max(255).optional(),
+  name: (schema) => (schema as typeof organizationRoles.$inferInsert).name.min(1).max(50),
+  description: (schema) => (schema as typeof organizationRoles.$inferInsert).description.max(255).optional(),
 });
 
 // Schema for selecting an organization role

@@ -1,9 +1,10 @@
 import { pgTable, uuid, text, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users } from '../users';
-import { withBaseColumns } from '../base';
-import type { Metadata } from '../shared/types';
+import { z } from 'zod';
+import { users } from '../users/users.js';
+import { withBaseColumns } from '../base.js';
+import type { Metadata } from '../shared/types.js';
 
 export const notifications = pgTable('notifications', {
   ...withBaseColumns,
@@ -25,10 +26,10 @@ export const notifications = pgTable('notifications', {
 
 // Schema for creating/updating a notification
 export const insertNotificationSchema = createInsertSchema(notifications, {
-  type: (schema) => schema.type.min(1).max(100),
-  title: (schema) => schema.title.min(1).max(200),
-  message: (schema) => schema.message.min(1),
-  actionUrl: (schema) => schema.actionUrl.url().optional(),
+  type: (schema) => (schema as typeof notifications.$inferInsert).type.min(1).max(100),
+  title: (schema) => (schema as typeof notifications.$inferInsert).title.min(1).max(200),
+  message: (schema) => (schema as typeof notifications.$inferInsert).message.min(1),
+  actionUrl: (schema) => (schema as typeof notifications.$inferInsert).actionUrl.url().optional(),
 });
 
 // Schema for selecting a notification
