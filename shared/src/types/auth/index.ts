@@ -1,10 +1,12 @@
 /**
  * This barrel file re-exports all of the types and interfaces for the auth module.
+ * We use explicit exports to avoid duplicate exports and maintain clarity.
  */
 
-// Re-export all definitions from the new, authoritative files.
+// Export auth-specific types
 export * from './auth.js';
-export * from './user.js';
+
+// Export JWT and response types
 export type { AuthResponse } from './jwt.js';
 
 // Express type augmentations

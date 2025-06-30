@@ -1,7 +1,7 @@
 // Re-export schema and types
 export * from './fieldTransforms.js';
 
-// Export database types
+// Export database types and schema
 export * from './schema.js';
 
 // Export API client
@@ -23,8 +23,8 @@ export type {
   NewTrip 
 } from './schema.js';
 
-// Export all types
-export * from './types.js';
+// Export all types from the types directory
+export * from './types/index.js';
 
 // Explicitly export job types
 export * from './types/job/index.js';

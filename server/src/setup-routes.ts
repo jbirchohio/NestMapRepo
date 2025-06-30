@@ -7,34 +7,34 @@ import type { Container } from './common/container.js';
  * @param app Express application instance
  * @param container Dependency injection container
  */
-export function setupRoutes(app: Express, container: Container): void {
+export async function setupRoutes(app: Express, container: Container): Promise<void> {
   const router = createRouter();
   
   // Import route modules
   const { authRouter } = await import('./auth/auth.routes.js');
-  const proposalsRoutes = (await import('../routes/proposals.js')).default;
-  const tripRoutes = (await import('../routes/trips.js')).default;
-  const activityRoutes = (await import('../routes/activities.js')).default;
-  const organizationRoutes = (await import('../routes/organizations.js')).default;
-  const analyticsRoutes = (await import('../routes/analytics.js')).default;
-  const paymentsRoutes = (await import('../routes/payments.js')).default;
-  const adminRoutes = (await import('../routes/admin.js')).default;
-  const invoicesRoutes = (await import('../routes/invoices.js')).default;
-  const calendarRoutes = (await import('../routes/calendar.js')).default;
-  const approvalRoutes = (await import('../routes/approvals.js')).default;
-  const expenseRoutes = (await import('../routes/expenses.js')).default;
-  const reportingRoutes = (await import('../routes/reporting.js')).default;
-  const superadminRoutes = (await import('../routes/superadmin/index.js')).default;
-  const webhookRoutes = (await import('../routes/webhooks.js')).default;
-  const subscriptionStatusRoutes = (await import('../routes/subscription-status.js')).default;
-  const aiRoutes = (await import('../routes/ai.js')).default;
-  const billingRoutes = (await import('../routes/billing.js')).default;
-  const securityRoutes = (await import('../routes/security.js')).default;
-  const healthRoutes = (await import('../routes/health.js')).default;
-  const notificationsRoutes = (await import('../routes/notifications.js')).default;
-  const flightRoutes = (await import('../routes/flights.js')).default;
-  const exportRoutes = (await import('../routes/export.js')).default;
-  const testRoutes = (await import('../routes/test.routes.js')).default;
+  const { default: proposalsRoutes } = await import('../routes/proposals.js');
+  const { default: tripRoutes } = await import('../routes/trips.js');
+  const { default: activityRoutes } = await import('../routes/activities.js');
+  const { default: organizationRoutes } = await import('../routes/organizations.js');
+  const { default: analyticsRoutes } = await import('../routes/analytics.js');
+  const { default: paymentsRoutes } = await import('../routes/payments.js');
+  const { default: adminRoutes } = await import('../routes/admin.js');
+  const { default: invoicesRoutes } = await import('../routes/invoices.js');
+  const { default: calendarRoutes } = await import('../routes/calendar.js');
+  const { default: approvalRoutes } = await import('../routes/approvals.js');
+  const { default: expenseRoutes } = await import('../routes/expenses.js');
+  const { default: reportingRoutes } = await import('../routes/reporting.js');
+  const { default: superadminRoutes } = await import('../routes/superadmin/index.js');
+  const { default: webhookRoutes } = await import('../routes/webhooks.js');
+  const { default: subscriptionStatusRoutes } = await import('../routes/subscription-status.js');
+  const { default: aiRoutes } = await import('../routes/ai.js');
+  const { default: billingRoutes } = await import('../routes/billing.js');
+  const { default: securityRoutes } = await import('../routes/security.js');
+  const { default: healthRoutes } = await import('../routes/health.js');
+  const { default: notificationsRoutes } = await import('../routes/notifications.js');
+  const { default: flightRoutes } = await import('../routes/flights.js');
+  const { default: exportRoutes } = await import('../routes/export.js');
+  const { default: testRoutes } = await import('../routes/test.routes.js');
 
   // Mount all route modules with authentication where needed
   router.use('/auth', authRouter);

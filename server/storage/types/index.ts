@@ -1,4 +1,4 @@
-import type { User, Trip, Activity, BaseEntity } from '@shared/src/schema.js';
+import type { User, Trip, Activity, BaseEntity } from '@shared/schema';
 type NewActivity = Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>;
 interface Todo {
 }

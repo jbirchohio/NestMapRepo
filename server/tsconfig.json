@@ -24,7 +24,7 @@
     },
     "types": ["node", "jest"]
   },
-  "include": ["src", "db"],
+  "include": ["src", "db", "storage"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
   "ts-node": {
     "esm": true,

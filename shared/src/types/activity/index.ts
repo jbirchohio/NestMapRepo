@@ -1,5 +1,18 @@
 import { z } from 'zod';
-export * from './ActivityTypes.js';
+
+// Import specific types from ActivityTypes to avoid conflicts
+import type {
+  ActivityData,
+  ActivityFilterOptions,
+  ActivityPaginationOptions,
+  PaginatedActivityResponse,
+  CreateActivityPayload,
+  CollaborationEventType,
+  CollaborationEvent,
+  ActivityCreatedPayload,
+  UserPresencePayload,
+  SectionLockPayload
+} from './ActivityTypes.js';
 
 export const activityStatuses = [
   'pending',
@@ -8,6 +21,20 @@ export const activityStatuses = [
   'in_progress',
   'completed'
 ] as const;
+
+// Re-export specific types from ActivityTypes
+export type { 
+  ActivityData, 
+  ActivityFilterOptions, 
+  ActivityPaginationOptions, 
+  PaginatedActivityResponse, 
+  CreateActivityPayload, 
+  CollaborationEventType, 
+  CollaborationEvent, 
+  ActivityCreatedPayload, 
+  UserPresencePayload, 
+  SectionLockPayload 
+} from './ActivityTypes.js';
 
 /**
  * Status of an activity
@@ -30,8 +57,8 @@ export const activityTypes = [
 export type ActivityType = typeof activityTypes[number];
 
 /**
- * Base activity interface containing all common fields
- * This should be used as the source of truth for activity-related types
+ * Activity interface containing all common fields
+ * This is the main interface for activity-related types
  */
 export interface Activity {
   // Core identifiers

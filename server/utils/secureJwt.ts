@@ -11,11 +11,14 @@ import type {
   JwtPayload,
   AccessTokenPayload,
   RefreshTokenPayload,
-  PasswordResetTokenPayload
-} from '@shared/src/types/auth/jwt.js';
-import type { UserRole } from '@shared/src/types/user/index.js';
+  PasswordResetTokenPayload,
+  BaseJwtPayload,
+} from '@shared/schema/types/auth/jwt.js';
+import type { UserRole } from '@shared/schema/types/user/index.js';
 // Type definitions for token verification results
-type VerifyTokenResult<T = JwtPayload> = TokenVerificationResult<T>;
+
+
+type VerifyTokenResult<T extends BaseJwtPayload = JwtPayload> = TokenVerificationResult<T>;
 
 interface TokenGenerationResult {
   token: string;
@@ -179,9 +182,9 @@ export const verifyToken = async <T extends JwtPayload = JwtPayload>(
         
         return {
           valid: false,
-          payload: payload as T,
           expired: true,
-          error: 'Token expired'
+          error: 'Token expired',
+          code: 'auth/expired-token'  // Using the correct error code from AuthErrorCode
         };
       }
       
@@ -193,15 +196,17 @@ export const verifyToken = async <T extends JwtPayload = JwtPayload>(
  * Generate a new access/refresh token pair
  */
 export const generateAuthTokens = async (userId: string, email: string, role: UserRole = 'user'): Promise<AuthTokens> => {
-    const accessToken = await generateToken(userId, email, 'access', JWT_ACCESS_EXPIRES_IN, role);
-    const refreshToken = await generateToken(userId, email, 'refresh', JWT_REFRESH_EXPIRES_IN, role);
-    
-    return {
-        accessToken: accessToken.token,
-        refreshToken: refreshToken.token,
-        expiresAt: accessToken.expiresAt.toISOString(),
-        tokenType: 'Bearer'
-    };
+  const accessToken = await generateToken(userId, email, 'access', JWT_ACCESS_EXPIRES_IN, role);
+  const refreshToken = await generateToken(userId, email, 'refresh', JWT_REFRESH_EXPIRES_IN, role);
+  
+  return {
+      accessToken: accessToken.token,
+      refreshToken: refreshToken.token,
+      expiresAt: accessToken.expiresAt.toISOString(),
+      tokenType: 'Bearer',
+      accessTokenExpiresAt: accessToken.expiresAt,
+      refreshTokenExpiresAt: refreshToken.expiresAt
+  };
 };
 
 

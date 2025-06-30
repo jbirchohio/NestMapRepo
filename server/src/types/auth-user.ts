@@ -1,14 +1,12 @@
-// Import UserRole from shared to maintain consistency
 import type { Request as ExpressRequest, Response, NextFunction } from 'express';
-import type { UserRole } from '../../../shared/src/types/user/index.js';
+import type { UserProfile, UserRole } from '@shared/schema/types/auth/user';
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  role: UserRole;
+/**
+ * Represents the authenticated user object attached to a request (e.g., from a JWT).
+ * It contains a subset of the UserProfile and additional auth-specific data.
+ */
+export interface AuthUser extends Pick<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'isActive'> {
   permissions: string[];
-  organizationId?: string | null;
-  [key: string]: unknown; // Allow additional properties
 }
 
 // Type guard to check if a user has a specific role

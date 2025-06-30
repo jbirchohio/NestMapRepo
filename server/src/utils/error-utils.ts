@@ -117,7 +117,7 @@ export function formatErrorResponse(error: Error): FormattedError {
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     };
 }
-import logger from './logger.ts';
+import logger from './logger.js';
 export function logAndFormatError(error: unknown): FormattedError {
     const err = toErrorWithMessage(error);
     logger.error(err.message, err);

@@ -78,12 +78,15 @@ export class RedisWithFallback {
 
     if (!this.useMemoryStore && this.client) {
       try {
-        await this.client!.set(
-          key,
-          JSON.stringify(value),
-          'PX',
-          ttlMs
-        );
+        if (ttlMs) {
+          await this.client!.setex(
+            key,
+            Math.ceil(ttlMs / 1000), // Convert milliseconds to seconds
+            JSON.stringify(value)
+          );
+        } else {
+          await this.client!.set(key, JSON.stringify(value));
+        }
         return;
       } catch (error) {
         logger.warn('Redis set failed, falling back to memory store:', error);

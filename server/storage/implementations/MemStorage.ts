@@ -1,7 +1,7 @@
 import type { IStorage } from '../types/index.js';
 import  { InMemoryTripTravelerRepository } from '../repositories/TripTravelerRepository.js';
 import * as crypto from 'crypto';
-import type { Activity, TripTraveler, NewTripTraveler, User, NewUser, Trip, NewTrip } from '@shared/src/schema.ts';
+import type { Activity, TripTraveler, NewTripTraveler, User, NewUser, Trip, NewTrip } from '@shared/schema';
 type InsertUser = NewUser;
 type InsertTrip = NewTrip;
 export class MemStorage implements IStorage {

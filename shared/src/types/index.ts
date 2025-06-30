@@ -1,32 +1,41 @@
 // Core types
-export * from './auth/index.js';
-export * from './user/index.js';
+export type { AuthErrorCode, AuthError, AuthErrorException } from './auth/auth.js';
 
-// Feature-specific types
-export * from './activity/index.js';
-export * from './trip/index.js';
-export * from './booking/index.js';
+// User types
+export type {
+  UserRole,
+  User,
+  UserPreferences,
+  isUser,
+  isUserRole
+} from './user/index.js';
 
-// Billing & payments
-export * from './billing/index.js';
+// Activity types
+export type {
+  Activity,
+  ActivityStatus,
+  ActivityType,
+  ActivityData,
+  ActivityFilterOptions,
+  ActivityPaginationOptions,
+  PaginatedActivityResponse,
+  CreateActivityPayload,
+  ClientActivity,
+  isActivity,
+  isClientActivity
+} from './activity/index.js';
 
-// Third-party integrations
-export * from './third-party/stripe.js';
+// Trip types
+export type {
+  SharedTripType,
+  SharedConflictFlagsType
+} from './trip/index.js';
 
 // API types
-export * from './api/index.js';
-
-// AI-related types
-export * from './ai/index.js';
-
-// Collaboration types
-export * from './collaboration/index.js';
-
-// Form types
-export * from './forms/index.js';
-
-// Map-related types
-export * from './map/index.js';
+export type {
+  ApiResponse,
+  ApiErrorResponse
+} from './api/index.js';
 
 // Job types
 export * from './job/index.js';

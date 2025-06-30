@@ -1,6 +1,7 @@
-import SharedErrorType from '@/types/SharedErrorType';
 import { AxiosError } from 'axios';
-import { AuthError, AuthErrorCode } from '@shared/schema/types/auth';
+import { AuthErrorException, AuthErrorCode } from '@shared/schema/types/auth';
+
+type SharedErrorType = Error | AuthErrorException | AxiosError | string | null | undefined;
 
 export interface ApiClientErrorOptions {
   isAuthError?: boolean;
@@ -42,8 +43,8 @@ export function isAxiosError<T = any>(
   return (error as AxiosError).isAxiosError === true;
 }
 
-export function isAuthError(error: SharedErrorType): error is AuthError {
-  return error instanceof AuthError;
+export function isAuthError(error: SharedErrorType): error is AuthErrorException {
+  return error instanceof AuthErrorException;
 }
 
 export function isApiClientError(error: SharedErrorType): error is ApiClientError {
@@ -62,6 +63,6 @@ export function createAuthError(
   message: string,
   code: AuthErrorCode = AuthErrorCode.UNKNOWN_ERROR,
   details?: Record<string, any>
-): AuthError {
-  return new AuthError(code, message, details);
+): AuthErrorException {
+  return new AuthErrorException(code, message, details);
 }

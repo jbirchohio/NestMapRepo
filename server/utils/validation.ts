@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Response, NextFunction } from 'express';
-import type { AuthenticatedRequest } from '@shared/src/types/auth/custom-request.js';
+import type { AuthenticatedRequest } from '@shared/schema/types/auth/custom-request';
+
 // Common validation schemas
 export const paginationSchema = z.object({
     page: z.preprocess((val) => (typeof val === 'string' ? parseInt(val, 10) : val), z.number().int().positive().default(1)),

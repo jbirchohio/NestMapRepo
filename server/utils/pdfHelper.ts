@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
-import type { Trip, Activity } from '../db/schema.js';
+import type { Activity } from '@shared/schema/types/trip/TripActivityTypes';
+import type { Trip } from '@shared/schema/types/trip/TripTypes';
 /**
  * Enterprise-ready PDF generation utility
  * Generates actual PDF binary data instead of HTML
@@ -213,7 +214,7 @@ function generatePdfHtml(data: PdfGenerationData): string {
         ${activitiesByDay.map(day => `
             <div class="day-section">
                 <div class="day-header">
-                    ${String(day.dayName)} - ${day.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    ${String(day.dayName)}
                 </div>
                 
                 ${day.activities.map((activity: Activity) => `
@@ -242,19 +243,18 @@ function generatePdfHtml(data: PdfGenerationData): string {
 }
 function groupActivitiesByDay(activities: Activity[]) {
     const grouped = activities.reduce((acc, activity) => {
-        const date = new Date(activity.date);
-        const dateKey = date.toDateString();
-        if (!acc[dateKey]) {
-            acc[dateKey] = {
-                date: date,
-                dayName: getDayName(date),
+        const dayKey = `Day ${activity.day}`;
+        if (!acc[dayKey]) {
+            acc[dayKey] = {
+                day: activity.day,
+                dayName: `Day ${activity.day}`,
                 activities: []
             };
         }
-        acc[dateKey].activities.push(activity);
+        acc[dayKey].activities.push(activity);
         return acc;
     }, {} as Record<string, {
-        date: Date;
+        day: number;
         dayName: string;
         activities: Activity[];
     }>);
@@ -266,13 +266,10 @@ function groupActivitiesByDay(activities: Activity[]) {
             return timeA.localeCompare(timeB);
         });
     });
-    // Return sorted days
-    return Object.values(grouped).sort((a: {
-        date: Date;
-    }, b: {
-        date: Date;
-    }) => a.date.getTime() - b.date.getTime());
+    // Return sorted days by day number
+    return Object.values(grouped).sort((a, b) => a.day - b.day);
 }
+// Helper function to get day name (keeping for potential future use)
 function getDayName(date: Date): string {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days[date.getDay()];

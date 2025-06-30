@@ -1,4 +1,4 @@
-import { User } from '@shared/types/user';
+import { User } from '../../user/index.js';
 
 export interface AuthTokens {
   /** JWT access token */

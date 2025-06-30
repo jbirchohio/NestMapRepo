@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { UserRole } from './types/user/index.js';
 
 // ======================
 // Base Types
@@ -86,19 +87,9 @@ export interface TripTraveler extends BaseEntity {
 export interface NewTripTraveler {
     tripId: string;
     userId: string;
-    role: string;
+    role: UserRole;
     status?: 'pending' | 'accepted' | 'declined' | 'removed';
 }
-export const USER_ROLES = {
-    SUPERADMIN_OWNER: 'superadmin_owner',
-    SUPERADMIN_STAFF: 'superadmin_staff',
-    SUPERADMIN_AUDITOR: 'superadmin_auditor',
-    ADMIN: 'admin',
-    MANAGER: 'manager',
-    MEMBER: 'member',
-    USER: 'user',
-    GUEST: 'guest',
-} as const;
 export const TRIP_ROLES = {
     ADMIN: 'admin',
     EDITOR: 'editor',
@@ -125,10 +116,11 @@ export const ORGANIZATION_PERMISSIONS = {
     MANAGE_ORGANIZATION: 'manage_organization',
     BILLING_ACCESS: 'billing_access',
 } as const;
-export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
 export type TripRole = typeof TRIP_ROLES[keyof typeof TRIP_ROLES];
 export type OrganizationPlan = typeof ORGANIZATION_PLANS[keyof typeof ORGANIZATION_PLANS];
+
 export interface User extends BaseEntity {
+    id: string;
     email: string;
     username: string;
     firstName: string | null;
@@ -146,6 +138,9 @@ export interface User extends BaseEntity {
     passwordResetToken?: string | null;
     passwordResetExpires?: string | null;
     refreshTokens?: string[];
+    createdAt: string | Date;
+    updatedAt: string | Date;
+    deletedAt?: string | Date | null;
 }
 export interface Trip extends BaseEntity {
     title: string;
