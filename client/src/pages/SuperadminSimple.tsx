@@ -11,7 +11,7 @@ import { apiRequest } from '@/lib/queryClient';
 import type { Organization } from '@shared/schema/types/organization';
 import type { User } from '@shared/schema/types/user';
 import type { Session } from '@shared/schema/types/session';
-import type { Job } from '@shared/types/job';
+import type { Job } from '@shared/schema/types/job';
 import type { LogEntry } from '@shared/schema/types/log';
 import type { Event } from '@shared/schema/types/event';
 import type { Flag } from '@shared/schema/types/flag';

@@ -1,7 +1,7 @@
-import type { SharedCollaboratorType } from '@shared/types/SharedCollaboratorType';
-import type { CollaborationPresenceProps, RecentActivityItem } from '@shared/types/collaboration/CollaborationTypes';
+import type { SharedCollaboratorType } from '@shared/schema/types/SharedCollaboratorType';
+import type { CollaborationPresenceProps, RecentActivityItem } from '@shared/schema/types/collaboration/CollaborationTypes';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { ActivityData } from '@shared/types/activity/ActivityTypes';
+import type { ActivityData } from '@shared/schema/types/activity/ActivityTypes';
 import { ActivityAction } from '@shared/constants/ActivityActions.js';
 import { useRealTimeCollaboration } from '@/hooks/useRealTimeCollaboration';
 import { ACTIVITY_ACTIONS } from '@shared/constants/ActivityActions.js';

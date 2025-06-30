@@ -5,7 +5,7 @@ import { authService } from '@/services/authService';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionLockout } from '@/utils/sessionLockout';
 import { AuthUser, AuthError, AuthTokens, Permission, LoginDto, RegisterDto } from '@shared/schema/types/auth';
-import type { JwtPayload } from '@shared/types/auth/jwt';
+import type { JwtPayload } from '@shared/schema/types/auth/jwt';
 
 type UserResponse = AuthUser;
 

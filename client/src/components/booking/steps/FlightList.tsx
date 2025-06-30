@@ -1,4 +1,4 @@
-import { Flight } from '@shared/types/flight';
+import { Flight } from '@shared/schema/types/flight';
 import { FlightCard } from './FlightCard';
 
 interface FlightListProps {

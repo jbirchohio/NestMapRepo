@@ -1,6 +1,6 @@
 import SharedErrorType from '@/types/SharedErrorType';
 import type { AxiosError } from 'axios';
-import type { RequestConfig, ApiErrorResponse } from '@shared/types/api';
+import type { RequestConfig, ApiErrorResponse } from '@shared/schema/types/api';
 
 /**
  * Custom error class for API errors

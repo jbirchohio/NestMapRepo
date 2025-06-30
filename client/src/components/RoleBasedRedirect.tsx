@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/contexts/auth/useAuth';
 import { userService } from '@/services/api/userService';
-import { UserRole } from '@shared/types/auth/permissions';
+import { UserRole } from '@shared/schema/types/auth/permissions';
 // Super admin role types for type safety
 const SUPER_ADMIN_ROLES: UserRole[] = [
     UserRole.SUPER_ADMIN

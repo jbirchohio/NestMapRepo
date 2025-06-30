@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { FlightSearchParams } from '@shared/types/flight';
+import { FlightSearchParams } from '@shared/schema/types/flight';
 import { MOCK_AIRPORTS, CABIN_CLASSES } from '@/utils/mockFlights';
 
 interface FlightSearchFormProps {

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@shared/schema/api';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { useAuth } from '@/contexts/auth/useAuth';
-import type { CreateTripDTO, UpdateTripDTO, TripQueryParams } from '@shared/types/trip/trip.dto';
+import type { CreateTripDTO, UpdateTripDTO, TripQueryParams } from '@shared/schema/types/trip/trip.dto';
 
 import type { SharedTripType } from '@shared/schema/types/trip/SharedTripType';
 

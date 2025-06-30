@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import type { WebSocketMessage } from '@shared/types/WebSocketMessageTypes';
-import type { CollaboratorPresence } from '@shared/types/CollaboratorPresence';
-import type { UseRealTimeCollaborationProps, ActivityData } from '@shared/types/activity/ActivityTypes';
+import type { WebSocketMessage } from '@shared/schema/types/WebSocketMessageTypes';
+import type { CollaboratorPresence } from '@shared/schema/types/CollaboratorPresence';
+import type { UseRealTimeCollaborationProps, ActivityData } from '@shared/schema/types/activity/ActivityTypes';
 import { ACTIVITY_ACTIONS } from '@shared/constants/ActivityActions.js';
 // Import base message types
 import { WS_MESSAGE_TYPES as BASE_WS_MESSAGE_TYPES } from '@shared/schema/constants/WebSocketMessageTypes.js';
