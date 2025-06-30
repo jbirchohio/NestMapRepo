@@ -1,5 +1,5 @@
 import type { AxiosResponse } from 'axios';
-import type { RequestConfig, ApiResponse } from '@shared/types/api';
+import type { RequestConfig, ApiResponse } from '@shared/schema/types/api';
 
 // Request cache entry
 interface RequestCacheEntry<T = any> {

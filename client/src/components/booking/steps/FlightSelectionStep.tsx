@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Plane, ArrowRight } from 'lucide-react';
 import { FlightSearchForm } from './FlightSearchForm';
 import { FlightList } from './FlightList';
-import { Flight } from '@shared/types/flight';
-import { FlightSearchParams } from '@shared/types/flight';
+import { Flight } from '@shared/schema/types/flight';
+import { FlightSearchParams } from '@shared/schema/types/flight';
 import { flightService } from '@/services/api/flightService';
 import { BookingFormData } from '../types';
 

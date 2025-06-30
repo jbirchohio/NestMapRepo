@@ -4,7 +4,7 @@ import { MenuIcon, XIcon, BarChartIcon, CheckIcon, FileTextIcon, HomeIcon } from
 import { MobileMenu } from './MobileMenu';
 import { DesktopNavigation } from './DesktopNavigation';
 import type { NavigationItem, User } from './types';
-import type { Notification as AppNotification } from '@shared/types/notification';
+import type { Notification as AppNotification } from '@shared/schema/types/notification';
 interface MainNavigationProps {
     isAuthenticated: boolean;
     user: User | null;

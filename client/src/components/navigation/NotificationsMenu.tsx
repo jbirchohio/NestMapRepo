@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BellIcon } from '../icons';
 import type { NotificationsMenuProps } from './types';
-import type { Notification as AppNotification } from '@shared/types/notification';
+import type { Notification as AppNotification } from '@shared/schema/types/notification';
 
 // Helper function to safely cast notifications to AppNotification[]
 const getSafeNotifications = (notifications: unknown[]): AppNotification[] => {

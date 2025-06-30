@@ -1,7 +1,7 @@
 import { format, differenceInMinutes, parseISO } from 'date-fns';
 import { Plane, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Flight, FlightSegment } from '@shared/types/flight';
+import { Flight, FlightSegment } from '@shared/schema/types/flight';
 
 interface FlightCardProps {
   flight: Flight;

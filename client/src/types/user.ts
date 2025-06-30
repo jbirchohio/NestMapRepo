@@ -1,6 +1,6 @@
 // Re-export types from shared location
 // This file is maintained for backward compatibility
-// New code should import directly from '@shared/types/user'
+// New code should import directly from '@shared/schema/types/user'
 
 export {
   type User,
@@ -14,10 +14,10 @@ export {
   createUserSchema,
   isUser,
   isUserRole
-} from '@shared/types/user';
+} from '@shared/schema/types/user';
 
 // Note: The following types are kept for backward compatibility
-// but should be considered deprecated. Use the ones from @shared/types/user instead
+// but should be considered deprecated. Use the ones from @shared/schema/types/user instead
 
 declare module '@shared/schema/types/user' {
   export interface User {
