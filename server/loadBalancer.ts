@@ -1,8 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { db } from './db-connection.js';
-import { customDomains, organizations } from '../shared/src/schema.js';
-import { whiteLabelSettings } from './db/schema';
-import { eq, and } from 'drizzle-orm';
+import prisma from './prisma';
+import { CustomDomain, Organization, WhiteLabelSetting } from '@prisma/client';
 
 export interface DomainConfig {
     domain: string;
@@ -72,47 +70,39 @@ export async function domainRoutingMiddleware(req: Request, res: Response, next:
  */
 async function getDomainConfig(domain: string): Promise<DomainConfig | null> {
     try {
-        // Graceful fallback for database schema migration
-        const result = await db
-            .select({
-            domain: customDomains.domain,
-            organizationId: customDomains.organization_id,
-            dns_verified: customDomains.dns_verified,
-            status: customDomains.status,
-            companyName: whiteLabelSettings.companyName,
-            companyLogo: whiteLabelSettings.companyLogo,
-            primaryColor: whiteLabelSettings.primaryColor,
-            secondaryColor: whiteLabelSettings.secondaryColor,
-            accentColor: whiteLabelSettings.accentColor,
-            customDomain: whiteLabelSettings.customDomain,
-            supportEmail: whiteLabelSettings.supportEmail,
-            helpUrl: whiteLabelSettings.helpUrl,
-            footerText: whiteLabelSettings.footerText,
-        })
-            .from(customDomains)
-            .leftJoin(whiteLabelSettings, eq(customDomains.organization_id, whiteLabelSettings.organizationId))
-            .where(eq(customDomains.domain, domain))
-            .limit(1);
-        if (!result.length) {
+        const result = await prisma.customDomain.findUnique({
+            where: { domain },
+            include: {
+                organization: {
+                    include: {
+                        whiteLabelSetting: true,
+                    },
+                },
+            },
+        });
+
+        if (!result || !result.organization) {
             return null;
         }
-        const row = result[0];
+
+        const brandingSettings = result.organization.whiteLabelSetting;
+
         return {
-            domain: row.domain,
-            organizationId: row.organizationId,
-            ssl_verified: row.dns_verified || false, // Use dns_verified as fallback
-            status: row.status || 'pending',
-            branding: row.companyName ? {
-                companyName: row.companyName,
-                companyLogo: row.companyLogo || undefined,
-                primaryColor: row.primaryColor || '#3B82F6',
-                secondaryColor: row.secondaryColor || '#64748B',
-                accentColor: row.accentColor || '#10B981',
-                customDomain: row.customDomain || undefined,
-                supportEmail: row.supportEmail || undefined,
-                helpUrl: row.helpUrl || undefined,
-                footerText: row.footerText || undefined,
-            } : null
+            domain: result.domain,
+            organizationId: result.organizationId,
+            ssl_verified: result.sslVerified || false,
+            status: result.status,
+            branding: brandingSettings ? {
+                companyName: brandingSettings.companyName,
+                companyLogo: brandingSettings.companyLogo || undefined,
+                primaryColor: brandingSettings.primaryColor || '#3B82F6',
+                secondaryColor: brandingSettings.secondaryColor || '#64748B',
+                accentColor: brandingSettings.accentColor || '#10B981',
+                customDomain: brandingSettings.customDomain || undefined,
+                supportEmail: brandingSettings.supportEmail || undefined,
+                helpUrl: brandingSettings.helpUrl || undefined,
+                footerText: brandingSettings.footerText || undefined,
+            } : null,
         };
     }
     catch (error) {
@@ -239,20 +229,22 @@ server {
 export async function updateLoadBalancerConfig(): Promise<void> {
     try {
         // Get all active domains
-        const domains = await db
-            .select({
-            domain: customDomains.domain,
-            organizationId: customDomains.organization_id,
-            ssl_verified: customDomains.ssl_verified,
-            status: customDomains.status,
-        })
-            .from(customDomains)
-            .where(eq(customDomains.status, 'active'));
+        const domains = await prisma.customDomain.findMany({
+            where: {
+                status: 'active',
+            },
+            select: {
+                domain: true,
+                organizationId: true,
+                sslVerified: true,
+                status: true,
+            },
+        });
         const domainConfigs: DomainConfig[] = domains.map(d => ({
             domain: d.domain,
             organizationId: d.organizationId,
-            ssl_verified: d.ssl_verified || false,
-            status: d.status || 'pending',
+            ssl_verified: d.sslVerified || false,
+            status: d.status,
             branding: null
         }));
         // Generate Nginx configuration

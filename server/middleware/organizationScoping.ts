@@ -1,8 +1,6 @@
 import type { Request as ExpressRequest, Response, NextFunction } from 'express';
-import { db } from '../db/db.js';
-import { customDomains } from '../db/schema.js';
-import { and, eq, isNull } from 'drizzle-orm';
-import type { Column } from 'drizzle-orm';
+import prisma from '../prisma';
+import { CustomDomain } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import type { AuthUser } from '../src/types/auth-user.js';
 import { UserRole } from '../src/types/auth-user.js';
@@ -231,15 +229,14 @@ export async function resolveDomainOrganization(req: CustomRequest, res: Respons
             return next();
         }
         // Look up organization by custom domain
-        const [domainConfig] = await db
-            .select({
-            organizationId: customDomains.organizationId,
-            status: customDomains.status,
-            domain: customDomains.domainName
-        })
-            .from(customDomains)
-            .where(eq(customDomains.domainName, String(host)))
-            .limit(1);
+        const domainConfig = await prisma.customDomain.findUnique({
+            where: { domain: String(host) },
+            select: {
+                organizationId: true,
+                status: true,
+                domain: true,
+            },
+        });
         if (domainConfig) {
             // Verify domain is active
             if (domainConfig.status !== 'active') {
@@ -292,33 +289,4 @@ export function requireAnalyticsAccess(req: AuthenticatedRequest, res: Response,
     };
     return next();
 }
-/**
- * Query helper to automatically add organization scoping
- */
-export function addOrganizationScope<T extends {
-    organizationId: Column<any>;
-}>(baseQuery: { where: (condition: unknown) => unknown }, req: AuthenticatedRequest, table: T) {
-    if (!req.organizationId) {
-        throw new Error('Organization context required for scoped queries');
-    }
-    if (!validateUuid(req.organizationId)) {
-        throw new Error('Invalid organization ID format');
-    }
-    // Add organization_id filter to the query
-    return baseQuery.where(eq(table.organizationId, req.organizationId));
-}
-/**
- * Validation helper for organization-scoped inserts
- */
-export function validateOrganizationData<T extends {
-    organizationId?: string;
-}>(data: T, req: AuthenticatedRequest): T {
-    if (!req.organizationId) {
-        throw new Error('Organization context required');
-    }
-    // Automatically inject organization ID into create operations
-    return {
-        ...data,
-        organizationId: req.organizationId
-    };
-}
+

@@ -1,6 +1,5 @@
-import { db } from "./db.js";
-import { trips, users, activities } from "./db/schema.js";
-import { eq, and, count, sql } from "drizzle-orm";
+import prisma from './prisma';
+import { Prisma } from '@prisma/client';
 export interface SimpleAnalyticsData {
     overview: {
         totalTrips: number;
@@ -54,51 +53,42 @@ export interface SimpleAnalyticsData {
 export async function getSimpleAnalytics(organizationId?: string): Promise<SimpleAnalyticsData> {
     try {
         // Build filters based on organization
-        const tripFilter = organizationId
-            ? eq(trips.organizationId, organizationId)
-            : sql `1=1`;
-        const userFilter = organizationId
-            ? eq(users.organizationId, organizationId)
-            : sql `1=1`;
+        const tripFilter = organizationId ? { organizationId } : {};
+        const userFilter = organizationId ? { organizationMemberships: { some: { organizationId } } } : {};
+
         // Get basic counts
-        const [tripCountResult] = await db
-            .select({ count: count() })
-            .from(trips)
-            .where(tripFilter);
-        const [userCountResult] = await db
-            .select({ count: count() })
-            .from(users)
-            .where(userFilter);
-        const [activityCountResult] = await db
-            .select({ count: count() })
-            .from(activities)
-            .innerJoin(trips, eq(activities.tripId, trips.id))
-            .where(tripFilter);
+        const totalTrips = await prisma.trip.count({
+            where: tripFilter,
+        });
+        const totalUsers = await prisma.user.count({
+            where: userFilter,
+        });
+        const totalActivities = await prisma.activity.count({
+            where: tripFilter, // Activities are linked to trips, so use tripFilter
+        });
         // Get destination data
-        const destinationsData = await db
-            .select({
-            city: trips.city,
-            country: trips.country,
-            count: count()
-        })
-            .from(trips)
-            .where(and(tripFilter, sql `${trips.city} IS NOT NULL`))
-            .groupBy(trips.city, trips.country)
-            .orderBy(sql `count(*) DESC`)
-            .limit(10);
-        const totalTrips = tripCountResult.count;
-        const totalUsers = userCountResult.count;
-        const totalActivities = activityCountResult.count;
+        const destinationsData = await prisma.trip.groupBy({
+            by: ['city', 'country'],
+            where: {
+                ...tripFilter,
+                city: { not: null },
+            },
+            _count: {
+                id: true,
+            },
+            orderBy: {
+                _count: {
+                    id: 'desc',
+                },
+            },
+            take: 10,
+        });
         // Calculate percentages for destinations
-        const destinations = destinationsData.map((dest: {
-            city: string | null;
-            country: string | null;
-            count: number;
-        }) => ({
+        const destinations = destinationsData.map((dest) => ({
             city: dest.city || 'Unknown',
             country: dest.country || 'Unknown',
-            tripCount: dest.count,
-            percentage: totalTrips > 0 ? Math.round((dest.count / totalTrips) * 100) : 0
+            tripCount: dest._count.id,
+            percentage: totalTrips > 0 ? Math.round((dest._count.id / totalTrips) * 100) : 0
         }));
         // Generate sample trip durations based on actual trip count
         const tripDurations = [

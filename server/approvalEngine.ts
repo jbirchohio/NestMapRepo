@@ -1,42 +1,6 @@
-import { db } from './db.js';
-import { 
-  approvalRequests, 
-  approvalRules, 
-  approvalLogs,
-  users, 
-  organizations,
-  type User,
-  userRoleEnum,
-  USER_ROLES
-} from './db/index.js';
-import type { UserRole } from './db/schema/enums.js';
-import type { ApprovalWorkflowData } from '../shared/src/types/approval/approval.types.js';
-import { organizationMembers } from './db/schema/organizations/organization-members.js';
-import { 
-  type ApprovalStatus,
-  type ApprovalPriority,
-  approvalStatusEnum,
-  approvalPriorityEnum,
-  type ApprovalRule,
-  type NewApprovalRule
-} from './db/schema/approvals/approval-rules.js';
-import type { 
-  ApprovalRequest,
-  NewApprovalRequest
-} from './db/schema/approvals/approval-requests.js';
-import type {
-  ApprovalLog,
-  NewApprovalLog
-} from './db/schema/approvals/approval-logs.js';
-import { eq, and, lte, inArray, sql } from 'drizzle-orm';
-import type { InferSelectModel, InferInsertModel, SQL } from 'drizzle-orm';
-import type { PgColumn, PgTableWithColumns } from 'drizzle-orm/pg-core';
-import type { ApprovalWorkflowConfig, ApprovalRuleConditions } from '../shared/src/types/approval/approval.types.js';
-
-// Type aliases for consistency with existing code
-type ApprovalRequestType = typeof approvalRequests.$inferSelect;
-type ApprovalRuleType = typeof approvalRules.$inferSelect;
-type ApprovalLogType = typeof approvalLogs.$inferSelect;
+import prisma from './prisma';
+import { Prisma, ApprovalRequest, ApprovalRule, ApprovalLog, User, Organization, OrganizationMember, ApprovalStatus, ApprovalPriority, UserRole } from '@prisma/client';
+import type { ApprovalWorkflowData, ApprovalWorkflowConfig, ApprovalRuleConditions } from '../shared/src/types/approval/approval.types.js';
 
 // Helper type for a user with organization context and approver role
 type UserWithOrg = Omit<User, 'role'> & {
@@ -86,23 +50,24 @@ export class ApprovalEngine {
      * Get applicable approval rules for organization and entity type
      */
     private async getApplicableRules(organizationId: string, entityType: string) {
-        const rules = await db
-            .select()
-            .from(approvalRules)
-            .where(and(
-                eq(approvalRules.organizationId, organizationId), 
-                eq(approvalRules.entityType, entityType), 
-                eq(approvalRules.isActive, true)
-            ))
-            .orderBy(approvalRules.priority);
-            
+        const rules = await prisma.approvalRule.findMany({
+            where: {
+                organizationId,
+                entityType,
+                isActive: true,
+            },
+            orderBy: {
+                priority: 'asc',
+            },
+        });
+
         // Ensure all rules have required properties
         return rules.map(rule => ({
             ...rule,
             active: rule.isActive,
             conditions: {
-                ...rule.conditions,
-                approverRoles: rule.conditions?.approverRoles || ['admin'] // Default to admin if not specified
+                ...rule.conditions as Prisma.JsonObject,
+                approverRoles: (rule.conditions as any)?.approverRoles || ['admin'] // Default to admin if not specified
             },
             createdAt: rule.createdAt || new Date(),
             updatedAt: rule.updatedAt || new Date()
@@ -152,12 +117,11 @@ export class ApprovalEngine {
             }
             // User role check
             if (conditions.userRoles && conditions.userRoles.length) {
-                const requester = await db
-                    .select({ role: users.role })
-                    .from(users)
-                    .where(eq(users.id, config.requesterId))
-                    .limit(1);
-                if (requester[0]?.role && conditions.userRoles.includes(requester[0].role as UserRole)) {
+                const requester = await prisma.user.findUnique({
+                    where: { id: config.requesterId },
+                    select: { role: true },
+                });
+                if (requester?.role && conditions.userRoles.includes(requester.role as UserRole)) {
                     return true;
                 }
             }
@@ -215,10 +179,31 @@ export class ApprovalEngine {
             updatedAt: now
         };
 
-        const [request] = await db
-            .insert(approvalRequests)
-            .values(requestData)
-            .returning();
+        const request = await prisma.approvalRequest.create({
+            data: {
+                organizationId: config.organizationId,
+                requesterId: config.requesterId,
+                approverId: approver?.id || null,
+                ruleId: rule.id,
+                entityType: config.entityType,
+                entityId: String(config.data.id || ''),
+                status: 'pending',
+                priority,
+                dueDate,
+                proposedData: config.data as Prisma.InputJsonValue,
+                reason: config.reason || null,
+                comment: null,
+                businessJustification: config.businessJustification || null,
+                submittedAt: now,
+                approvedAt: null,
+                rejectedAt: null,
+                cancelledAt: null,
+                approvedData: null,
+                requestType: config.requestType || 'general',
+                escalationLevel: 0,
+                rejectionReason: null,
+            },
+        });
 
         return {
             requiresApproval: true,
@@ -260,23 +245,19 @@ export class ApprovalEngine {
         
         try {
             // Find users with the required role in the organization
-            const approvers = await db
-                .select({
-                    user: users,
-                    organizationId: organizationMembers.organizationId,
-                    role: organizationMembers.role
-                })
-                .from(users)
-                .innerJoin(
-                    organizationMembers,
-                    eq(users.id, organizationMembers.userId)
-                )
-                .where(and(
-                    eq(organizationMembers.organizationId, organizationId),
-                    inArray(organizationMembers.role, approverRoles as UserRole[]),
-                    eq(organizationMembers.isActive, true)
-                ))
-                .limit(1);
+            const approvers = await prisma.organizationMember.findMany({
+                where: {
+                    organizationId: organizationId,
+                    role: {
+                        in: approverRoles,
+                    },
+                    status: 'active', // Assuming 'active' status for active members
+                },
+                include: {
+                    user: true,
+                },
+                take: 1,
+            });
                 
             // Return the first approver with the organizationId and role attached
             const approver = approvers[0];
@@ -341,18 +322,18 @@ export class ApprovalEngine {
      */
     async canUserApprove(userId: string, organizationId: string): Promise<boolean> {
         // Check if user has an active membership in the organization with an approver role
-        const membership = await db
-            .select()
-            .from(organizationMembers)
-            .where(and(
-                eq(organizationMembers.userId, userId),
-                eq(organizationMembers.organizationId, organizationId),
-                eq(organizationMembers.isActive, true),
-                inArray(organizationMembers.role, [userRoleEnum.enumValues[0], userRoleEnum.enumValues[1]] as const) // Assuming first two roles are admin/manager
-            ))
-            .limit(1);
+        const membership = await prisma.organizationMember.findFirst({
+            where: {
+                userId,
+                organizationId,
+                status: 'active',
+                role: {
+                    in: ['admin', 'super_admin'], // Assuming these are the approver roles
+                },
+            },
+        });
             
-        return membership.length > 0;
+        return !!membership;
     }
     /**
      * Get approval dashboard data for managers
@@ -364,13 +345,12 @@ export class ApprovalEngine {
         }
         
         const now = new Date();
-        const pending = await db
-            .select()
-            .from(approvalRequests)
-            .where(and(
-                eq(approvalRequests.organizationId, organizationId), 
-                eq(approvalRequests.status, 'pending' as ApprovalStatus)
-            ));
+        const pending = await prisma.approvalRequest.findMany({
+            where: {
+                organizationId,
+                status: 'pending',
+            },
+        });
             
         return {
             pendingCount: pending.length,
@@ -385,13 +365,14 @@ export class ApprovalEngine {
      */
     async processEscalations(): Promise<void> {
         const now = new Date();
-        const overdueRequests = await db
-            .select()
-            .from(approvalRequests)
-            .where(and(
-                eq(approvalRequests.status, 'pending' as ApprovalStatus),
-                lte(approvalRequests.dueDate, now)
-            ));
+        const overdueRequests = await prisma.approvalRequest.findMany({
+            where: {
+                status: 'pending',
+                dueDate: {
+                    lte: now,
+                },
+            },
+        });
             
         for (const request of overdueRequests) {
             await this.escalateRequest(request);
@@ -402,52 +383,46 @@ export class ApprovalEngine {
      */
     private async escalateRequest(request: ApprovalRequestType): Promise<void> {
         // Find admin in the same organization through organization_members
-        const escalatedApprover = await db
-            .select({ id: users.id })
-            .from(users)
-            .innerJoin(
-                organizationMembers,
-                eq(users.id, organizationMembers.userId)
-            )
-            .where(and(
-                eq(organizationMembers.organizationId, request.organizationId),
-                eq(users.role, 'admin' as const),
-                eq(organizationMembers.isActive, true)
-            ))
-            .limit(1);
+        const escalatedApprover = await prisma.organizationMember.findFirst({
+            where: {
+                organizationId: request.organizationId,
+                role: 'admin',
+                status: 'active',
+            },
+            include: {
+                user: true,
+            },
+        });
             
-        if (escalatedApprover[0]) {
+        if (escalatedApprover?.user) {
             const now = new Date();
-            const updateData = {
-                ...request, // Include all existing request data
-                approverId: escalatedApprover[0].id,
-                priority: (request.priority === 'urgent' ? 'urgent' : 'high') as ApprovalPriority,
-                status: 'escalated' as const,
-                updatedAt: now,
-                comment: (request as any).comment || 'Escalated to admin',
-                // Ensure all required fields are included
-                rejectionReason: (request as any).rejectionReason || null,
-                requestType: (request as any).requestType || 'general',
-                escalationLevel: ((request as any).escalationLevel || 0) + 1
-            };
-
-            await db
-                .update(approvalRequests)
-                .set(updateData)
-                .where(eq(approvalRequests.id, request.id));
+            await prisma.approvalRequest.update({
+                where: { id: request.id },
+                data: {
+                    approverId: escalatedApprover.user.id,
+                    priority: (request.priority === 'urgent' ? 'urgent' : 'high'),
+                    status: 'escalated',
+                    updatedAt: now,
+                    comment: (request.comment || 'Escalated to admin'),
+                    rejectionReason: request.rejectionReason || null,
+                    requestType: request.requestType || 'general',
+                    escalationLevel: (request.escalationLevel || 0) + 1,
+                },
+            });
                 
             // Log the escalation
-            await db.insert(approvalLogs).values({
-                requestId: request.id,
-                userId: request.requesterId,
-                action: 'escalated',
-                comment: 'Request escalated due to overdue',
-                metadata: {
-                    fromApprover: request.approverId,
-                    toApprover: escalatedApprover[0].id,
-                    timestamp: new Date().toISOString()
+            await prisma.approvalLog.create({
+                data: {
+                    requestId: request.id,
+                    userId: request.requesterId,
+                    action: 'escalated',
+                    comment: 'Request escalated due to overdue',
+                    metadata: {
+                        fromApprover: request.approverId,
+                        toApprover: escalatedApprover.user.id,
+                        timestamp: new Date().toISOString()
+                    },
                 },
-                createdAt: new Date()
             });
         }
     }

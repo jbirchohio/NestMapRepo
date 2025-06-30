@@ -1,15 +1,33 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { insertOrganizationSchema } from '@shared/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.ts';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation.ts';
 import { storage } from '../storage.ts';
 import { getOrganizationAnalytics } from '../analytics.ts';
-import { db } from '../db.ts';
-import { users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import prisma from '../prisma';
+import { z } from 'zod';
+
+const insertOrganizationSchema = z.object({
+    name: z.string().min(1, 'Organization name is required'),
+    slug: z.string().min(1, 'Organization slug is required').optional(),
+    description: z.string().optional().nullable(),
+    logoUrl: z.string().url('Invalid URL format').optional().nullable(),
+    website: z.string().url('Invalid URL format').optional().nullable(),
+    industry: z.string().optional().nullable(),
+    size: z.string().optional().nullable(),
+    plan: z.enum(['free', 'basic', 'pro', 'enterprise', 'custom']).optional(),
+    billingEmail: z.string().email('Invalid email format').optional().nullable(),
+    billingPhone: z.string().optional().nullable(),
+    billingAddress: z.any().optional().nullable(), // Consider a more specific schema for address
+    shippingAddress: z.any().optional().nullable(), // Consider a more specific schema for address
+    metadata: z.any().optional().nullable(), // Consider a more specific schema for metadata
+    isActive: z.boolean().optional(),
+    trialEndsAt: z.string().datetime().optional().nullable(),
+    billingCycleStart: z.number().int().min(1).max(31).optional().nullable(),
+    billingCycleEnd: z.number().int().min(1).max(31).optional().nullable(),
+});
 const router = Router();
 // Apply authentication to all organization routes
 router.use(validateJWT);
@@ -40,13 +58,19 @@ router.get('/users', async (req: Request, res: Response) => {
         }
         else if (req.user?.userId) {
             // Fallback: get organization from database
-            const [userWithOrg] = await db
-                .select({ organization_id: users.organization_id })
-                .from(users)
-                .where(eq(users.id, req.user.userId))
-                .limit(1);
-            if (userWithOrg?.organization_id) {
-                targetOrgId = userWithOrg.organization_id;
+            const userWithOrg = await prisma.user.findUnique({
+                where: { id: req.user.userId },
+                select: {
+                    organizationMemberships: {
+                        select: {
+                            organizationId: true,
+                        },
+                        take: 1,
+                    },
+                },
+            });
+            if (userWithOrg?.organizationMemberships[0]?.organizationId) {
+                targetOrgId = userWithOrg.organizationMemberships[0].organizationId;
             }
         }
         // If no organization found, return error
@@ -56,18 +80,27 @@ router.get('/users', async (req: Request, res: Response) => {
                 message: 'User must be associated with an organization to access this endpoint'
             });
         }
-        const organizationUsers = await db
-            .select({
-            id: users.id,
-            display_name: users.display_name,
-            email: users.email,
-            role: users.role,
-            organization_id: users.organization_id,
-            username: users.username
-        })
-            .from(users)
-            .where(eq(users.organization_id, targetOrgId))
-            .orderBy(users.display_name);
+        const organizationUsers = await prisma.user.findMany({
+            where: {
+                organizationMemberships: {
+                    some: {
+                        organizationId: targetOrgId,
+                    },
+                },
+            },
+            select: {
+                id: true,
+                firstName: true, // Assuming display_name is firstName in Prisma
+                lastName: true, // Assuming display_name is a combination of first and last name
+                email: true,
+                role: true,
+                // organization_id is not directly on User in Prisma, it's via OrganizationMember
+                // username is not directly on User in Prisma
+            },
+            orderBy: {
+                firstName: 'asc', // Assuming display_name is firstName in Prisma
+            },
+        });
         console.log(`Found ${organizationUsers.length} users for organization ${targetOrgId}`);
         res.json(organizationUsers);
     }
@@ -85,7 +118,7 @@ router.get("/:id", validateAndSanitizeRequest({ params: orgIdParamSchema }), asy
         if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
             return res.status(403).json({ message: "Access denied: Cannot access this organization" });
         }
-        const organization = await storage.getOrganization(orgId);
+        const organization = await storage.getOrganization(String(orgId));
         if (!organization) {
             return res.status(404).json({ message: "Organization not found" });
         }
@@ -99,7 +132,7 @@ router.get("/:id", validateAndSanitizeRequest({ params: orgIdParamSchema }), asy
 // Update organization (admin only)
 router.put("/:id", requireOrgPermission('manage_organization'), validateAndSanitizeRequest({ params: orgIdParamSchema, body: insertOrganizationSchema.partial() }), async (req: Request, res: Response) => {
     try {
-        const orgId = req.params.id;
+        const orgId = String(req.params.id);
         const updateData = req.body;
         // Verify user can modify this organization
         const userOrgId = req.user?.organizationId;
@@ -123,7 +156,7 @@ router.put("/:id", requireOrgPermission('manage_organization'), validateAndSanit
 // Get organization members
 router.get("/:id/members", requireOrgPermission('view_members'), validateAndSanitizeRequest({ params: orgIdParamSchema }), async (req: Request, res: Response) => {
     try {
-        const orgId = req.params.id;
+        const orgId = String(req.params.id);
         // Verify user can access this organization
         const userOrgId = req.user?.organizationId;
         if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
@@ -140,7 +173,7 @@ router.get("/:id/members", requireOrgPermission('view_members'), validateAndSani
 // Invite member to organization
 router.post("/:id/invite", requireOrgPermission('invite_members'), validateAndSanitizeRequest({ params: orgIdParamSchema, body: inviteMemberBodySchema }), async (req: Request, res: Response) => {
     try {
-        const orgId = req.params.id;
+        const orgId = String(req.params.id);
         const { email, org_role = 'member' } = req.body;
         // Verify user can invite to this organization
         const userOrgId = req.user?.organizationId;
@@ -166,8 +199,8 @@ router.post("/:id/invite", requireOrgPermission('invite_members'), validateAndSa
 // Update member role
 router.put("/:id/members/:userId", requireOrgPermission('manage_members'), validateAndSanitizeRequest({ params: orgAndUserIdParamsSchema, body: updateMemberBodySchema }), async (req: Request, res: Response) => {
     try {
-        const orgId = req.params.id;
-        const userId = req.params.userId;
+        const orgId = String(req.params.id);
+        const userId = String(req.params.userId);
         const { org_role, permissions } = req.body;
         // Verify user can manage this organization
         const userOrgId = req.user?.organizationId;
@@ -191,8 +224,8 @@ router.put("/:id/members/:userId", requireOrgPermission('manage_members'), valid
 // Remove member from organization
 router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), validateAndSanitizeRequest({ params: orgAndUserIdParamsSchema }), async (req: Request, res: Response) => {
     try {
-        const orgId = req.params.id;
-        const userId = req.params.userId;
+        const orgId = String(req.params.id);
+        const userId = String(req.params.userId);
         // Verify user can manage this organization
         const userOrgId = req.user?.organizationId;
         if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
@@ -216,7 +249,7 @@ router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), va
 // Get organization analytics
 router.get("/:id/analytics", requireOrgPermission('access_analytics'), validateAndSanitizeRequest({ params: orgIdParamSchema }), async (req: Request, res: Response) => {
     try {
-        const orgId = req.params.id;
+        const orgId = String(req.params.id);
         // Verify user can access this organization's analytics
         const userOrgId = req.user?.organizationId;
         if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
@@ -237,25 +270,37 @@ router.get('/members', async (req: Request, res: Response) => {
         if (!userOrgId) {
             return res.status(400).json({ message: "Organization context required" });
         }
-        const members = await db
-            .select({
-            id: users.id,
-            display_name: users.display_name,
-            email: users.email,
-            role: users.role,
-            organization_id: users.organization_id,
-            created_at: users.created_at,
-            avatar_url: users.avatar_url
-        })
-            .from(users)
-            .where(eq(users.organization_id, userOrgId))
-            .orderBy(users.display_name);
-        res.json(members);
-    }
-    catch (error) {
-        console.error('Error fetching organization members:', error);
-        res.status(500).json({ message: "Failed to fetch organization members" });
-    }
-});
+        const members = await prisma.organizationMember.findMany({
+            where: {
+                organizationId: userOrgId,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        role: true,
+                        createdAt: true,
+                        avatarUrl: true,
+                    },
+                },
+            },
+            orderBy: {
+                user: {
+                    firstName: 'asc',
+                },
+            },
+        });
+        res.json(members.map(member => ({
+            id: member.user.id,
+            display_name: `${member.user.firstName} ${member.user.lastName}`.trim(),
+            email: member.user.email,
+            role: member.user.role,
+            organization_id: member.organizationId,
+            created_at: member.user.createdAt,
+            avatar_url: member.user.avatarUrl,
+        })));
 // Export the router
 export default router;

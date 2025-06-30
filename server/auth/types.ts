@@ -1,13 +1,7 @@
-import { users } from '../db/schema.ts';
-import type { InferSelectModel } from 'drizzle-orm';
-export type AuthUser = Omit<InferSelectModel<typeof users>, 'password_hash' | 'auth_id' | 'organization_id'> & {
-    password_hash: string | null;
-    auth_id: string;
-    organization_id: number | null;
-    email_verified?: boolean;
-    is_active?: boolean;
-    failed_login_attempts?: number | null;
-    last_failed_login?: Date | null;
+import { User } from '@prisma/client';
+
+export type AuthUser = User & {
+    organizationId?: string | null;
 };
 export interface JwtUser {
     id: string;

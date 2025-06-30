@@ -1,8 +1,7 @@
 import type { Request, Response, NextFunction, RequestHandler, Express } from 'express';
 import { Router } from 'express';
-import { db } from '../db/db.js';
-import { users, trips, activities, organizations } from '../db/schema.js';
-import { eq, desc, sql, and, gte, lte, count, isNotNull } from 'drizzle-orm';
+import prisma from '../prisma';
+import { User, Organization, Trip, Activity, Prisma } from '@prisma/client';
 
 // Import middleware with type assertions to avoid module resolution issues
 const { validateJWT } = require('../middleware/validateJWT');
@@ -178,85 +177,72 @@ export function setupAdminAnalyticsRoutes(expressApp: Express): void {
       
       try {
         // Get total counts
-        const [totalUsersResult] = await db.select({ count: count() }).from(users);
-        const [totalOrgsResult] = await db.select({ count: count() }).from(organizations);
-        const [totalTripsResult] = await db.select({ count: count() }).from(trips);
+        const totalUsers = await prisma.user.count();
+        const totalOrganizations = await prisma.organization.count();
+        const totalTrips = await prisma.trip.count();
         
         // Get active users (users who logged in within last 30 days)
         const { startDate, endDate } = getDateRange(30);
-        const [activeUsersResult] = await db
-          .select({ count: count() })
-          .from(users)
-          .where(gte(users.lastLoginAt, startDate));
+        const activeUsers = await prisma.user.count({
+          where: {
+            lastLoginAt: {
+              gte: startDate,
+            },
+          },
+        });
         
         // Get new users from today
         const { startDate: todayStartDate, endDate: todayEndDate } = getDateRange(1);
         todayStartDate.setHours(0, 0, 0, 0);
         todayEndDate.setHours(23, 59, 59, 999);
-        const [newUsersTodayResult] = await db
-          .select({ count: count() })
-          .from(users)
-          .where(and(gte(users.createdAt, todayStartDate), lte(users.createdAt, todayEndDate)));
-        
-        const totalUsers = totalUsersResult?.count || 0;
-        const totalOrganizations = totalOrgsResult?.count || 0;
-        const totalTrips = totalTripsResult?.count || 0;
-        const activeUsers = activeUsersResult?.count || 0;
-        const newUsersToday = newUsersTodayResult?.count || 0;
-        
-        // Get recent users
-        const recentUsers = await db
-          .select({
-            id: users.id,
-            email: users.email,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            createdAt: users.createdAt,
-            lastLoginAt: users.lastLoginAt
-          })
-          .from(users)
-          .orderBy(desc(users.createdAt))
-          .limit(5);
+        const newUsersToday = await prisma.user.count({
+          where: {
+            createdAt: {
+              gte: todayStartDate,
+              lte: todayEndDate,
+            },
+          },
+        });
 
-        // Get recent activities
-        const recentActivities = await db
-          .select({
-            id: activities.id,
-            title: activities.title,
-            description: activities.notes,
-            date: activities.date,
-            tripId: activities.tripId,
-            organizationId: activities.organizationId,
-            createdAt: activities.createdAt,
-            // Only include existing properties from the activities table
-            locationName: activities.locationName,
-            notes: activities.notes,
-            assignedTo: activities.assignedTo
-          })
-          .from(activities)
-          .orderBy(desc(activities.createdAt))
-          .limit(10);
+        const newOrganizationsToday = await prisma.organization.count({
+          where: {
+            createdAt: {
+              gte: todayStartDate,
+              lte: todayEndDate,
+            },
+          },
+        });
 
-        // Get popular destinations - using Drizzle query builder for type safety
-        const popularDestinations = await db
-          .select({
-            destination: trips.city,
-            country: trips.country,
-            city: trips.city,
-            count: sql<number>`count(*)::int`
-          })
-          .from(trips)
-          .where(isNotNull(trips.city))
-          .groupBy(trips.city, trips.country)
-          .orderBy(desc(sql<number>`count(*)::int`))
-          .limit(5);
+        const recentUsers = await prisma.user.findMany({
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 5,
+        });
 
-        // Get total activities count
-        const [totalActivitiesResult] = await db
-          .select({ count: count() })
-          .from(activities);
-        
-        // Prepare response
+        const recentActivities = await prisma.activity.findMany({
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 10,
+        });
+
+        const popularDestinations = await prisma.trip.groupBy({
+          by: ['city', 'country'],
+          where: {
+            city: { not: null },
+          },
+          _count: {
+            id: true,
+          },
+          orderBy: {
+            _count: {
+              id: 'desc',
+            },
+          },
+          take: 5,
+        });
+
         const analyticsData: AdminAnalytics = {
           overview: {
             totalUsers,
@@ -264,7 +250,7 @@ export function setupAdminAnalyticsRoutes(expressApp: Express): void {
             totalTrips,
             activeUsers,
             newUsersToday,
-            newOrganizationsToday: 0, // Initialize with 0, will be updated if data exists
+            newOrganizationsToday,
           },
           userGrowth: [],
           organizationTiers: [],
@@ -272,23 +258,23 @@ export function setupAdminAnalyticsRoutes(expressApp: Express): void {
             id: activity.id,
             type: 'activity' as const,
             name: activity.title || 'Untitled Activity',
-            description: activity.notes || undefined,
+            description: activity.description || undefined,
             timestamp: activity.createdAt || new Date(),
-            date: activity.date,
-            tripId: activity.tripId,
+            startDate: activity.startTime || undefined,
+            endDate: activity.endTime || undefined,
+            // Assuming locationName and assignedTo are directly on the Activity model in Prisma
+            location: (activity as any).locationName || undefined,
+            userId: (activity as any).assignedTo || undefined,
             organizationId: activity.organizationId || null,
-            location: activity.locationName || undefined,
-            assignedTo: activity.assignedTo || undefined
           })),
           popularDestinations: popularDestinations.map((dest) => ({
-            destination: dest.destination || 'Unknown',
+            destination: dest.city || 'Unknown',
             country: dest.country || 'Unknown',
             city: dest.city || 'Unknown',
-            count: dest.count || 0
-          }))
+            count: dest._count.id || 0,
+          })),
         };
 
-        // Return the analytics data
         return res.status(200).json(analyticsData);
       } catch (error) {
         console.error("Error fetching admin analytics:", error);
@@ -324,31 +310,38 @@ export function setupAdminAnalyticsRoutes(expressApp: Express): void {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
-        const userActivity = await db
-          .select({
-            userId: users.id,
-            email: users.email,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            lastLogin: users.lastLoginAt,
-            tripCount: sql<number>`COUNT(DISTINCT ${trips.id})`
-          })
-          .from(users)
-          .leftJoin(trips, eq(users.id, trips.userId))
-          .groupBy(users.id, users.email, users.firstName, users.lastName, users.lastLoginAt)
-          .orderBy(desc(sql<number>`COUNT(DISTINCT ${trips.id})`))
-          .limit(50);
+        const userActivity = await prisma.user.findMany({
+          where: {
+            lastLoginAt: {
+              gte: sevenDaysAgo,
+            },
+          },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            lastLoginAt: true,
+            _count: {
+              select: { createdTrips: true },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 50,
+        });
 
         return res.json({
           success: true,
           data: userActivity.map(user => ({
-            id: String(user.userId),
-            email: String(user.email || ''),
+            id: user.id,
+            email: user.email,
             firstName: user.firstName || undefined,
             lastName: user.lastName || undefined,
-            lastLogin: user.lastLogin ? new Date(user.lastLogin).toISOString() : null,
-            tripCount: Number(user.tripCount || 0)
-          }))
+            lastLogin: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+            tripCount: user._count.createdTrips || 0,
+          })),
         });
       } catch (error) {
         console.error('Error fetching user activity metrics:', error);

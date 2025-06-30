@@ -1,81 +1,61 @@
-import { dbService } from '../services/database.service';
-import { users } from '@shared/schema';
-import type { BaseDAL } from './base.dal';
-import { sql } from 'drizzle-orm';
-export interface User {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    passwordHash: string;
-    organizationId: string;
-    role: string;
-    isActive: boolean;
-    lastLoginAt?: Date | null;
-    createdAt: Date;
-    updatedAt: Date;
-    deletedAt?: Date | null;
-}
-export class UserDAL extends BaseDAL<User> {
-    protected table = users;
-    protected cacheTtl = 300; // 5 minutes
-    // Define schema relationships
-    protected schema = {
-        relations: {
-            organization: {
-                table: 'organizations',
-                foreignKey: 'organizationId',
-                fields: ['id', 'name', 'domain']
-            }
-        }
-    };
+import prisma from '../prisma';
+import { User } from '@prisma/client';
+
+export class UserDAL {
     /**
      * Find a user by email
      */
     public async findByEmail(email: string): Promise<User | null> {
-        return this.findOne({ email });
+        return prisma.user.findUnique({
+            where: { email },
+        });
     }
+
     /**
      * Find active users in an organization
      */
     public async findActiveByOrganization(organizationId: string): Promise<User[]> {
-        return this.findAll({
-            organizationId,
-            isActive: true
-        }, {
-            orderBy: [{ column: 'lastName', direction: 'asc' }],
-            relations: ['organization']
+        return prisma.user.findMany({
+            where: {
+                organizationMemberships: {
+                    some: {
+                        organizationId: organizationId,
+                        status: 'active', // Assuming 'active' status for active users
+                    },
+                },
+            },
+            orderBy: {
+                lastName: 'asc',
+            },
         });
     }
+
     /**
      * Update user's last login timestamp
      */
     public async updateLastLogin(userId: string): Promise<void> {
-        await dbService.getDrizzle()
-            .update(users)
-            .set({
-            lastLoginAt: new Date(),
-            updatedAt: new Date()
-        })
-            .where(sql `${users.id}::text = ${userId}`);
-        // Invalidate cache for this user
-        await this.invalidateCache(`*:${userId}:*`);
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                lastLoginAt: new Date(),
+                updatedAt: new Date(),
+            },
+        });
     }
+
     /**
      * Soft delete a user
      */
     public async softDelete(userId: string): Promise<void> {
-        await dbService.getDrizzle()
-            .update(users)
-            .set({
-            isActive: false,
-            deletedAt: new Date(),
-            updatedAt: new Date()
-        })
-            .where(sql `${users.id}::text = ${userId}`);
-        // Invalidate cache for this user
-        await this.invalidateCache(`*:${userId}:*`);
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                status: 'deleted', // Assuming a 'deleted' status in Prisma User model
+                updatedAt: new Date(),
+            },
+        });
     }
 }
+
 // Export a singleton instance
 export const userDAL = new UserDAL();

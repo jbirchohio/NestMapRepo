@@ -1,8 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
-import { and, eq, count } from 'drizzle-orm';
-import { db } from '../db.ts';
-import { organizations, users, trips } from '../db/schema.js';
-import { logger } from '../utils/logger.ts';
+import prisma from '../prisma';
+import { Organization, User, Trip } from '@prisma/client';
+
 // Import JWTUser type from jwtAuth
 interface JWTUser {
     id: string;
@@ -70,13 +69,12 @@ function getOrganizationId(user: {
 
 // Get organization tier and limits
 export async function getOrganizationLimits(organizationId: string) {
-    const [org] = await db
-        .select({
-            plan: organizations.plan
-        })
-        .from(organizations)
-        .where(eq(organizations.id, organizationId))
-        .limit(1);
+    const org = await prisma.organization.findUnique({
+        where: { id: organizationId },
+        select: {
+            plan: true,
+        },
+    });
 
     const tier = (org?.plan as Tier) || 'free';
     return {
@@ -89,12 +87,11 @@ export async function getOrganizationLimits(organizationId: string) {
 export async function checkTripLimit(organizationId: string) {
     const { tier, maxTrips } = await getOrganizationLimits(organizationId);
     
-    const tripCount = await db
-        .select({ count: count() })
-        .from(trips)
-        .where(eq(trips.organizationId, organizationId));
-    
-    const currentTrips = Number(tripCount[0]?.count) || 0;
+    const currentTrips = await prisma.trip.count({
+        where: {
+            organizationId,
+        },
+    });
     
     return {
         allowed: currentTrips < maxTrips,
@@ -108,15 +105,12 @@ export async function checkTripLimit(organizationId: string) {
 export async function checkUserLimit(organizationId: string) {
     const { tier, maxUsers } = await getOrganizationLimits(organizationId);
     
-    const userCount = await db
-        .select({ count: count() })
-        .from(users)
-        .where(and(
-            eq(users.organizationId, organizationId),
-            eq(users.isActive, true)
-        ));
-    
-    const currentUsers = Number(userCount[0]?.count) || 0;
+    const currentUsers = await prisma.organizationMember.count({
+        where: {
+            organizationId,
+            status: 'active',
+        },
+    });
     
     return {
         allowed: currentUsers < maxUsers,
@@ -277,22 +271,23 @@ export function enforceAnalyticsAccess() {
 export async function getSubscriptionStatus(organizationId: string) {
     const { tier, ...limits } = await getOrganizationLimits(organizationId);
     
-    const [tripCount, userCount] = await Promise.all([
-        db.select({ count: count() })
-            .from(trips)
-            .where(eq(trips.organizationId, organizationId)),
-        db.select({ count: count() })
-            .from(users)
-            .where(and(
-                eq(users.organizationId, organizationId),
-                eq(users.isActive, true)
-            )),
-    ]);
+    const currentTrips = await prisma.trip.count({
+        where: {
+            organizationId,
+        },
+    });
+
+    const currentUsers = await prisma.organizationMember.count({
+        where: {
+            organizationId,
+            status: 'active',
+        },
+    });
     
     return {
         tier,
         ...limits,
-        currentTrips: Number(tripCount[0]?.count) || 0,
-        currentUsers: Number(userCount[0]?.count) || 0,
+        currentTrips,
+        currentUsers,
     };
 }

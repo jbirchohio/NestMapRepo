@@ -1,8 +1,33 @@
 import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
-import { db } from 'db-connection.js';
-import { users, tripCollaborators, trips } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
-import { USER_ROLES, TRIP_ROLES, type UserRole, type TripRole } from '@shared/schema';
+import prisma from './prisma';
+import { User, Trip, TripCollaborator, UserRole, TripCollaboratorRole } from '@prisma/client';
+// Permission definitions
+export const USER_ROLES = {
+    SUPER_ADMIN: 'super_admin',
+    ADMIN: 'admin',
+    MANAGER: 'manager',
+    MEMBER: 'member',
+    GUEST: 'guest',
+} as const;
+
+export const TRIP_ROLES = {
+    OWNER: 'owner',
+    EDITOR: 'editor',
+    VIEWER: 'viewer',
+    COMMENTER: 'commenter',
+} as const;
+
+export interface AuthenticatedUser {
+    id: string;
+    email: string;
+    role: UserRole;
+    organizationId?: string | null;
+}
+
+export interface UserWithTripRole extends AuthenticatedUser {
+    tripRole?: TripCollaboratorRole | null;
+}
+
 // Permission definitions
 export const PERMISSIONS = {
     // System-wide permissions
@@ -24,21 +49,28 @@ export const PERMISSIONS = {
 } as const;
 // Role-based permission mapping
 export const ROLE_PERMISSIONS = {
-    [USER_ROLES.ADMIN]: [
+    [UserRole.ADMIN]: [
         PERMISSIONS.MANAGE_USERS,
         PERMISSIONS.MANAGE_ORGANIZATIONS,
         PERMISSIONS.VIEW_ANALYTICS,
         PERMISSIONS.EXPORT_DATA,
     ],
-    [USER_ROLES.MANAGER]: [
+    [UserRole.MANAGER]: [
         PERMISSIONS.VIEW_ANALYTICS,
         PERMISSIONS.EXPORT_DATA,
     ],
-    [USER_ROLES.USER]: [],
-    [USER_ROLES.GUEST]: [],
+    [UserRole.MEMBER]: [],
+    [UserRole.GUEST]: [],
+    [UserRole.SUPER_ADMIN]: [
+        PERMISSIONS.MANAGE_USERS,
+        PERMISSIONS.MANAGE_ORGANIZATIONS,
+        PERMISSIONS.VIEW_ANALYTICS,
+        PERMISSIONS.EXPORT_DATA,
+    ],
 };
+
 export const TRIP_ROLE_PERMISSIONS = {
-    [TRIP_ROLES.ADMIN]: [
+    [TripCollaboratorRole.OWNER]: [
         PERMISSIONS.VIEW_TRIP,
         PERMISSIONS.EDIT_TRIP,
         PERMISSIONS.DELETE_TRIP,
@@ -50,7 +82,7 @@ export const TRIP_ROLE_PERMISSIONS = {
         PERMISSIONS.EDIT_NOTES,
         PERMISSIONS.EXPORT_TRIP,
     ],
-    [TRIP_ROLES.EDITOR]: [
+    [TripCollaboratorRole.EDITOR]: [
         PERMISSIONS.VIEW_TRIP,
         PERMISSIONS.EDIT_TRIP,
         PERMISSIONS.ADD_ACTIVITIES,
@@ -59,25 +91,20 @@ export const TRIP_ROLE_PERMISSIONS = {
         PERMISSIONS.EDIT_NOTES,
         PERMISSIONS.EXPORT_TRIP,
     ],
-    [TRIP_ROLES.VIEWER]: [
+    [TripCollaboratorRole.VIEWER]: [
         PERMISSIONS.VIEW_TRIP,
         PERMISSIONS.EXPORT_TRIP,
     ],
-    [TRIP_ROLES.COMMENTER]: [
-        PERMISSIONS.VIEW_TRIP,
-        PERMISSIONS.ADD_NOTES,
-    ],
 };
+
 export interface AuthenticatedUser {
-    id: number;
-    auth_id: string;
-    username: string;
+    id: string;
     email: string;
     role: UserRole;
-    organization_id?: number;
+    organizationId?: string | null;
 }
 export interface UserWithTripRole extends AuthenticatedUser {
-    tripRole?: TripRole;
+    tripRole?: TripCollaboratorRole | null;
 }
 // Check if user has system-wide permission
 export function hasSystemPermission(user: AuthenticatedUser, permission: string): boolean {
@@ -90,22 +117,28 @@ export function hasTripPermission(tripRole: TripRole, permission: string): boole
     return rolePermissions.includes(permission);
 }
 // Get user's role for a specific trip
-export async function getUserTripRole(userId: number, tripId: number): Promise<TripRole | null> {
+export async function getUserTripRole(userId: string, tripId: string): Promise<TripCollaboratorRole | null> {
     try {
         // Check if user owns the trip (implicit admin role)
-        const [trip] = await db
-            .select()
-            .from(trips)
-            .where(eq(trips.id, tripId));
-        if (trip && trip.user_id === userId) {
-            return TRIP_ROLES.ADMIN;
+        const trip = await prisma.trip.findUnique({
+            where: { id: tripId },
+            select: { createdById: true },
+        });
+        if (trip && trip.createdById === userId) {
+            return TripCollaboratorRole.OWNER;
         }
         // Check collaborator role
-        const [collaborator] = await db
-            .select()
-            .from(tripCollaborators)
-            .where(and(eq(tripCollaborators.trip_id, tripId), eq(tripCollaborators.user_id, userId), eq(tripCollaborators.status, 'accepted')));
-        return collaborator?.role as TripRole || null;
+        const collaborator = await prisma.tripCollaborator.findUnique({
+            where: {
+                tripId_userId: {
+                    tripId,
+                    userId,
+                },
+                status: 'accepted',
+            },
+            select: { role: true },
+        });
+        return collaborator?.role || null;
     }
     catch (error) {
         console.error('Error getting user trip role:', error);
@@ -165,20 +198,17 @@ export function requireTripPermission(permission: string) {
 // Utility function to get user with role info
 export async function getUserWithRole(authId: string): Promise<AuthenticatedUser | null> {
     try {
-        const [user] = await db
-            .select()
-            .from(users)
-            .where(eq(users.auth_id, authId));
+        const user = await prisma.user.findUnique({
+            where: { id: authId }, // Assuming authId is the user's ID in Prisma
+        });
         if (!user) {
             return null;
         }
         return {
             id: user.id,
-            auth_id: user.auth_id,
-            username: user.username,
             email: user.email,
-            role: (user.role as UserRole) || USER_ROLES.USER,
-            organization_id: user.organization_id || undefined,
+            role: user.role,
+            organizationId: user.organizationMemberships[0]?.organizationId || null, // Assuming user has one organization membership
         };
     }
     catch (error) {
@@ -187,31 +217,59 @@ export async function getUserWithRole(authId: string): Promise<AuthenticatedUser
     }
 }
 // Check if user can access trip (any level of access)
-export async function canAccessTrip(userId: number, tripId: number): Promise<boolean> {
+export async function canAccessTrip(userId: string, tripId: string): Promise<boolean> {
     const tripRole = await getUserTripRole(userId, tripId);
     return tripRole !== null;
 }
 // Get all trips user has access to with their roles
-export async function getUserTripsWithRoles(userId: number) {
+export async function getUserTripsWithRoles(userId: string) {
     try {
         // Get trips user owns
-        const ownedTrips = await db
-            .select({
-            ...trips,
-            userRole: 'admin' as const,
-        })
-            .from(trips)
-            .where(eq(trips.user_id, userId));
+        const ownedTrips = await prisma.trip.findMany({
+            where: { createdById: userId },
+            select: {
+                id: true,
+                organizationId: true,
+                createdById: true,
+                title: true,
+                description: true,
+                status: true,
+                startDate: true,
+                endDate: true,
+                timezone: true,
+                location: true,
+                latitude: true,
+                longitude: true,
+                isBusiness: true,
+                isPersonal: true,
+                isGroup: true,
+                isPublic: true,
+                metadata: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
+
         // Get trips user collaborates on
-        const collaboratedTrips = await db
-            .select({
-            ...trips,
-            userRole: tripCollaborators.role,
-        })
-            .from(trips)
-            .innerJoin(tripCollaborators, eq(trips.id, tripCollaborators.trip_id))
-            .where(and(eq(tripCollaborators.user_id, userId), eq(tripCollaborators.status, 'accepted')));
-        return [...ownedTrips, ...collaboratedTrips];
+        const collaboratedTrips = await prisma.tripCollaborator.findMany({
+            where: {
+                userId,
+                status: 'accepted',
+            },
+            include: {
+                trip: true,
+            },
+        });
+
+        const combinedTrips = [
+            ...ownedTrips.map(trip => ({ ...trip, userRole: TripCollaboratorRole.OWNER })),
+            ...collaboratedTrips.map(collab => ({ ...collab.trip, userRole: collab.role })),
+        ];
+
+        // Remove duplicates based on trip ID
+        const uniqueTrips = Array.from(new Map(combinedTrips.map(trip => [trip.id, trip])).values());
+
+        return uniqueTrips;
     }
     catch (error) {
         console.error('Error getting user trips with roles:', error);

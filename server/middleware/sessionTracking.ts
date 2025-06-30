@@ -1,7 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { db } from '../db-connection.js';
-import { userSessions } from '../db/schema.js';
-import { eq, and } from 'drizzle-orm';
+
 
 // Using the main User type from express-augmentations.d.ts
 // In-memory session tracking as fallback until database is updated
