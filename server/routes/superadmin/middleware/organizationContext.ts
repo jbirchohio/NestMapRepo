@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from '../../express-augmentations.js';
 export function injectOrganizationContext(req: Request, _res: Response, next: NextFunction) {
     // Add organization context to the request if needed
     // This is a placeholder - implement based on your actual requirements

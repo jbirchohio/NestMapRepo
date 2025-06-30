@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation.ts';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
-import { exportTripToCSV, exportTripToICS } from '../utils/exporters.ts';
-import { getTripById } from '../services/tripService.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { exportTripToCSV, exportTripToICS } from '../utils/exporters.js';
+import { getTripById } from '../services/tripService.js';
 const router = Router();
 router.use(validateJWT);
 router.use(injectOrganizationContext);

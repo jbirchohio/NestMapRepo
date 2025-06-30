@@ -1,4 +1,4 @@
-import type { Router, Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Router, Request, Response, NextFunction } from '../../express-augmentations.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';

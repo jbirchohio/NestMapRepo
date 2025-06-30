@@ -1,14 +1,14 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
-import { db } from '../../../db.ts';
+import type { Request, Response, NextFunction } from '../../express-augmentations.js';
+import { db } from '../../../db.js';
 import { organizations } from '../../../db/schema.js';
-import { auditLogs } from '../../../db/schema/auditLogs.ts';
+import { auditLogs } from '../../../db/schema/auditLogs.js';
 import { eq, sql } from 'drizzle-orm';
 import Stripe from 'stripe';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
     apiVersion: '2025-05-28.basil',
 });
-import { logSuperadminAction } from '../audit-logs/audit-service.ts';
-import type { AuthenticatedRequest } from '../../../middleware/superadmin.ts';
+import { logSuperadminAction } from '../audit-logs/audit-service.js';
+import type { AuthenticatedRequest } from '../../../middleware/superadmin.js';
 // Get billing overview across all organizations
 export const getBillingOverview = async (req: Request, res: Response) => {
     try {

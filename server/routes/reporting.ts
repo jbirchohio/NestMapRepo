@@ -1,8 +1,8 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from '../../express-augmentations.js';
 import { eq, and, desc, gte, lte, sql, count } from 'drizzle-orm';
-import { db } from '../db.ts';
+import { db } from '../db.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { trips, expenses, bookings, users, organizations, approvalRequests, activities } from '@shared/schema';
 const router = Router();
 // Apply middleware to all routes

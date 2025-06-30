@@ -1,4 +1,4 @@
-import type { Request as ExpressRequest, Response } from './express-augmentations.ts';
+import type { Request as ExpressRequest, Response } from './express-augmentations.js';
 
 interface ACMEChallenge {
     token: string;

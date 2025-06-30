@@ -1,16 +1,16 @@
-import { Router, type Request, type Response, type NextFunction } from '../../express-augmentations.ts';
+import { Router, type Request, type Response, type NextFunction } from '../../express-augmentations.js';
 import type Stripe from 'stripe';
-import { db } from '../db/db.ts';
-import { stripe } from '../stripe.ts';
-import { invoices } from '../db/invoiceSchema.ts';
+import { db } from '../db/db.js';
+import { stripe } from '../stripe.js';
+import { invoices } from '../db/invoiceSchema.js';
 import { billingEvents } from '../db/superadminSchema.js';
 import { eq } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
 import { authenticate as authenticateJWT } from '../middleware/secureAuth.js';
 import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
-import { logger } from '../utils/logger.ts';
-import type { Invoice } from '../db/db.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { logger } from '../utils/logger.js';
+import type { Invoice } from '../db/db.js';
 const router = Router();
 // Apply middleware to all routes
 router.use(authenticateJWT);

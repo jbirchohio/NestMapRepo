@@ -1,5 +1,5 @@
-import type { Request, Response, NextFunction } from './express-augmentations.ts';
-import { storage } from './storage.ts';
+import type { Request, Response, NextFunction } from './express-augmentations.js';
+import { storage } from './storage.js';
 
 // Define a base interface for the User that can be extended
 export interface BaseUser {

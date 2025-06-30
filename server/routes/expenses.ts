@@ -1,12 +1,12 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from '../../express-augmentations.js';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { desc } from 'drizzle-orm';
-import { db } from '../db.ts';
+import { db } from '../db.js';
 import { expenses, trips, users } from '@shared/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';
-import { approvalEngine } from '../approvalEngine.ts';
+import { approvalEngine } from '../approvalEngine.js';
 // Validation schemas
 const insertExpenseSchema = z.object({
     amount: z.union([

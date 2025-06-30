@@ -1,7 +1,7 @@
-import type { QueryBuilder } from '../utils/query-builder.ts';
-import { createQueryBuilder } from '../utils/query-builder.ts';
+import type { QueryBuilder } from '../utils/query-builder.js';
+import { createQueryBuilder } from '../utils/query-builder.js';
 import { dbService } from '../services/database.service';
-import { logger } from '../utils/logger.ts';
+import { logger } from '../utils/logger.js';
 export abstract class BaseDAL<T> {
     protected abstract table: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;
     protected abstract schema: any /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */ /** FIXANYERROR: Replace 'any' */;

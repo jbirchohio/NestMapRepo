@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
-import { endpointMonitor } from './api-security.ts';
-import { trackEndpointHealth } from '../routes/health.ts';
-import { trackRequest } from '../routes/system-metrics.ts';
+import { endpointMonitor } from './api-security.js';
+import { trackEndpointHealth } from '../routes/health.js';
+import { trackRequest } from '../routes/system-metrics.js';
 interface SlowQuery {
     duration: number;
     query: string;

@@ -1,10 +1,10 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from '../../express-augmentations.js';
 import { eq, and, desc, isNull } from 'drizzle-orm';
-import { db } from '../db.ts';
+import { db } from '../db.js';
 import { tripComments, activityLog, trips, users, insertTripCommentSchema } from '@shared/schema';
 import { z } from 'zod';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 const router = Router();
 // Get comments for a trip (organization-scoped)
 router.get('/trips/:tripId/comments', validateJWT, injectOrganizationContext, validateOrganizationAccess, async (req, res) => {

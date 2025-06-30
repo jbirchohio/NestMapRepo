@@ -1,4 +1,4 @@
-import express from '../../express-augmentations.ts';
+import express from '../../express-augmentations.js';
 import http from 'http';
 import { authenticate } from './middleware/secureAuth.js';
 const app = express();

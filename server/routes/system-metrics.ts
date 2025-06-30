@@ -1,8 +1,8 @@
-import type { Express } from '../../express-augmentations.ts';
+import type { Express } from '../../express-augmentations.js';
 import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from "../middleware/organizationContext.ts";
+import { injectOrganizationContext, validateOrganizationAccess } from "../middleware/organizationContext.js";
 const requireSuperadminRole = requireRole('superadmin');
-import { checkSystemHealthAndGenerateAlerts } from "./alerts.ts";
+import { checkSystemHealthAndGenerateAlerts } from "./alerts.js";
 import os from "os";
 import process from "process";
 interface SystemMetrics {

@@ -1,9 +1,9 @@
 import type { Router, Request, Response } from 'express';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.ts';
-import { injectOrganizationContext, requireAnalyticsAccess } from '../middleware/organizationContext.ts';
-import { enforceAnalyticsAccess } from '../middleware/subscription-limits.ts';
-import { getSimpleAnalytics } from '../analytics-simple.ts';
+import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
+import { injectOrganizationContext, requireAnalyticsAccess } from '../middleware/organizationContext.js';
+import { enforceAnalyticsAccess } from '../middleware/subscription-limits.js';
+import { getSimpleAnalytics } from '../analytics-simple.js';
 const router = Router();
 // Apply authentication to all analytics routes
 router.use(validateJWT);

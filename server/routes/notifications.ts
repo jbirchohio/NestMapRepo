@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { db } from '../db.ts';
+import { db } from '../db.js';
 import { notifications } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 const router = Router();
 // Apply authentication to all notification routes
 router.use(validateJWT);

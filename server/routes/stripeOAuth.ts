@@ -1,6 +1,6 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from '../../express-augmentations.js';
 import Stripe from 'stripe';
-import { db } from '../db.ts';
+import { db } from '../db.js';
 import { organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 const router = Router();

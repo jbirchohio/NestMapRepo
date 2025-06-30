@@ -1,10 +1,10 @@
 import type { Express, Response } from 'express';
-import { db } from "../db.ts";
+import { db } from "../db.js";
 import { organizations, whiteLabelSettings, customDomains } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
-import { enforceWhiteLabelAccess } from '../middleware/subscription-limits.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { enforceWhiteLabelAccess } from '../middleware/subscription-limits.js';
 import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 export function registerWhiteLabelStatusRoutes(app: Express) {
     // Apply middleware to all white label status routes

@@ -1,4 +1,4 @@
-import { db } from '../../../db.ts';
+import { db } from '../../../db.js';
 import { superadminAuditLogs } from '../../../db/schema.js';
 /**
  * Logs an admin action to the audit log

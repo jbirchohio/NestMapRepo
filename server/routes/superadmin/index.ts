@@ -1,4 +1,4 @@
-import express, { Request, Response, RequestHandler } from '../../express-augmentations.ts';
+import express, { Request, Response, RequestHandler } from '../../express-augmentations.js';
 import { authenticate } from '../../middleware/secureAuth.js';
 import { requireSuperadmin } from './middleware/superadmin.js';
 import { injectOrganizationContext } from './middleware/organizationContext.js';

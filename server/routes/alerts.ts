@@ -1,8 +1,8 @@
-import type { Express } from '../../express-augmentations.ts';
+import type { Express } from '../../express-augmentations.js';
 import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
 const requireSuperadminRole = requireRole('superadmin');
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
-import { db } from "../db.ts";
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { db } from "../db.js";
 import { adminAuditLog } from "@shared/schema";
 import { desc, eq, and, gte } from "drizzle-orm";
 interface SystemAlert {

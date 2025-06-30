@@ -1,7 +1,7 @@
-import type { Router } from '../../express-augmentations.ts';
-import { db } from '../../../db.ts';
+import type { Router } from '../../express-augmentations.js';
+import { db } from '../../../db.js';
 import { users, organizations } from '../../../db/schema.js';
-import { logSuperadminAction } from '../superadmin.ts';
+import { logSuperadminAction } from '../superadmin.js';
 import { eq, sql } from 'drizzle-orm';
 const router = Router();
 // Get dashboard analytics

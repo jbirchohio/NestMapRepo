@@ -1,5 +1,5 @@
 import type { User } from '../../../db/schema.js';
-import type { BaseRepository } from '../../common/repositories/base.repository.interface.ts';
+import type { BaseRepository } from '../../common/repositories/base.repository.interface.js';
 /**
  * User repository interface that extends the base repository interface
  * Adds user-specific operations to the common CRUD operations

@@ -1,4 +1,4 @@
-import type { User } from './user.interface.ts';
+import type { User } from './user.interface.js';
 export enum TokenType {
     ACCESS = 'access',
     REFRESH = 'refresh',

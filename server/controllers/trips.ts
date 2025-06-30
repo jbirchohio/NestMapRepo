@@ -1,9 +1,9 @@
-import type { Request, Response } from '../../express-augmentations.ts';
-import { storage } from "../storage.ts";
-import { insertTripSchema } from "../db/schema.ts";
+import type { Request, Response } from '../../express-augmentations.js';
+import { storage } from "../storage.js";
+import { insertTripSchema } from "../db/schema.js";
 import { z } from "zod";
-import { validateAndSanitizeBody, validateContentLength, contentCreationRateLimit, validationSchemas } from "../middleware/inputValidation.ts";
-import { logOrganizationAccess, setOrganizationId } from "../organizationContext.ts";
+import { validateAndSanitizeBody, validateContentLength, contentCreationRateLimit, validationSchemas } from "../middleware/inputValidation.js";
+import { logOrganizationAccess, setOrganizationId } from "../organizationContext.js";
 export async function deleteTrip(req: Request, res: Response) {
     try {
         const tripId = Number(req.params.id);

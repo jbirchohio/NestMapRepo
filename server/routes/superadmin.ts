@@ -1,16 +1,16 @@
-import express, { Request, Response, NextFunction, RequestHandler } from '../../express-augmentations.ts';
-import { db } from '../db.ts';
+import express, { Request, Response, NextFunction, RequestHandler } from '../../express-augmentations.js';
+import { db } from '../db.js';
 import { auditLogs } from '../db/auditLog.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin.ts';
-import { injectOrganizationContext } from '../middleware/organizationContext.ts';
+import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin.js';
+import { injectOrganizationContext } from '../middleware/organizationContext.js';
 // Import route modules
-import organizationsRouter from './superadmin/organizations/index.ts';
-import usersRouter from './superadmin/users/index.ts';
-import billingRouter from './superadmin/billing/index.ts';
-import featureFlagsRouter from './superadmin/feature-flags/index.ts';
-import dashboardRouter from './superadmin/dashboard/index.ts';
-import auditLogsRouter from './superadmin/audit-logs/index.ts';
+import organizationsRouter from './superadmin/organizations/index.js';
+import usersRouter from './superadmin/users/index.js';
+import billingRouter from './superadmin/billing/index.js';
+import featureFlagsRouter from './superadmin/feature-flags/index.js';
+import dashboardRouter from './superadmin/dashboard/index.js';
+import auditLogsRouter from './superadmin/audit-logs/index.js';
 // Audit logging function
 export const logSuperadminAction = async (adminUserId: string, action: string, resource: string, resourceId?: string, metadata?: Record<string, unknown>) => {
     try {

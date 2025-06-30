@@ -1,6 +1,6 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from '../../express-augmentations.js';
 import { USER_ROLES } from '../db/schema.js';
-import type { AuthUser } from '../src/types/auth-user.ts';
+import type { AuthUser } from '../src/types/auth-user.js';
 // Create a type that represents the custom properties we're adding to the request
 type CustomRequestProps = {
     user?: AuthUser;

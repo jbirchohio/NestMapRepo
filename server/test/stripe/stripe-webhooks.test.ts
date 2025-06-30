@@ -1,14 +1,14 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from '../../express-augmentations.js';
 import Stripe from 'stripe';
-import { db } from '../../db.ts';
+import { db } from '../../db.js';
 import request from 'supertest';
-import express, { Application } from '../../express-augmentations.ts';
+import express, { Application } from '../../express-augmentations.js';
 import bodyParser from 'body-parser';
 // Mock the required dependencies
 jest.mock('stripe');
 jest.mock('../../db');
 // Import the webhook router
-import webhookRouter from '../../routes/webhooks.ts';
+import webhookRouter from '../../routes/webhooks.js';
 // Create a test Express app
 const createTestApp = (): Application => {
     const app = express();

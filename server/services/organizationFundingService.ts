@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { db } from '../db.ts';
+import { db } from '../db.js';
 import { organizations } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 if (!process.env.STRIPE_SECRET_KEY) {

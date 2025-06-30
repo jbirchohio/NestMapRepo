@@ -1,12 +1,12 @@
-import type { Router, Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Router, Request, Response, NextFunction } from '../../express-augmentations.js';
 import Stripe from 'stripe';
-import { db } from '../db.ts';
+import { db } from '../db.js';
 import { eq } from 'drizzle-orm';
-import type { NodemailerEmailService } from '../src/email/services/nodemailer-email.service.ts';
+import type { NodemailerEmailService } from '../src/email/services/nodemailer-email.service.js';
 import type { ConfigService } from '@nestjs/config';
-import { invoices } from '../db/invoiceSchema.ts';
+import { invoices } from '../db/invoiceSchema.js';
 import { organizations } from '../db/schema.js';
-import { stripe } from '../stripe.ts';
+import { stripe } from '../stripe.js';
 // Extend the Express Request type to include rawBody
 declare global {
     namespace Express {

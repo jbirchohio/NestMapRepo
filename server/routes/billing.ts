@@ -1,4 +1,4 @@
-import type { Router, Request, Response } from '../../express-augmentations.ts';
+import type { Router, Request, Response } from '../../express-augmentations.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { stripe, SUBSCRIPTION_PLANS, createStripeCustomer, createSubscription, updateSubscription } from '../stripe.js';

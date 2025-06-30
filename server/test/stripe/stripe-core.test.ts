@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { createStripeCustomer, createSubscription, updateSubscription, cancelSubscription, getSubscriptionDetails, SUBSCRIPTION_PLANS } from '../../stripe.ts';
+import { createStripeCustomer, createSubscription, updateSubscription, cancelSubscription, getSubscriptionDetails, SUBSCRIPTION_PLANS } from '../../stripe.js';
 // Mock Stripe SDK
 jest.mock('stripe');
 describe('Stripe Core Functionality', () => {

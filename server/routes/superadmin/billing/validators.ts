@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from '../../express-augmentations.js';
 import { z } from 'zod';
 // Organization ID param schema
 export const organizationIdParamSchema = z.object({

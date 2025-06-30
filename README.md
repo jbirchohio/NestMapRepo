@@ -43,6 +43,11 @@ npm run db:push
 npm run dev
 ```
 
+### ESM Import Conventions
+The project uses Node.js ESM with `moduleResolution` set to `NodeNext`. Always
+use `.js` extensions for relative imports inside TypeScript files. This keeps
+build output consistent across `client`, `server`, and `shared` packages.
+
 The application will be available at `http://localhost:5000`
 
 ## Environment Variables

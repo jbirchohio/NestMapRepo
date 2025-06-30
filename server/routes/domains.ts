@@ -1,11 +1,11 @@
-import type { Express, Request, Response } from '../../express-augmentations.ts';
-import { db } from "../db.ts";
+import type { Express, Request, Response } from '../../express-augmentations.js';
+import { db } from "../db.js";
 import { customDomains, organizations, whiteLabelSettings } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import { promises as dns } from 'dns';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 interface Domain {
     id: number;

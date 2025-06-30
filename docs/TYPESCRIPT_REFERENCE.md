@@ -290,6 +290,13 @@ export interface ClientUser extends User {
 - Use project references
 - Exclude `node_modules` and `dist` directories
 
+### 4. ESM Import Extensions
+**Issue**: Node.js cannot resolve TypeScript files without `.js` extensions when using the `module` and `moduleResolution` set to `NodeNext`.
+**Solution**:
+- Use `.js` in all relative import paths within `*.ts` files.
+- Enable `allowImportingTsExtensions` only when absolutely necessary.
+- Keep the same convention across `client`, `server`, and `shared` packages to avoid flip-flopping.
+
 ## Migration Guide
 
 ### Moving to New Import System

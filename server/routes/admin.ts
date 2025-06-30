@@ -1,16 +1,16 @@
-import type { Router, Request, Response, NextFunction, RequestHandler } from '../../express-augmentations.ts';
-import { RequestHandler as ExpressRequestHandler } from '../../express-augmentations.ts';
+import type { Router, Request, Response, NextFunction, RequestHandler } from '../../express-augmentations.js';
+import { RequestHandler as ExpressRequestHandler } from '../../express-augmentations.js';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { pgTable, pgSchema, uuid, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 import { sql, eq, and, or, desc, gte, lte } from 'drizzle-orm';
-import { db } from '../db/db.ts';
+import { db } from '../db/db.js';
 import type { OrganizationRole } from '../db/schema.js';
 import { users, organizations, customDomains, userActivityLogs } from '../db/schema.js';
 import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
-import { validateAndSanitizeRequest } from '../middleware/validation.ts';
-import { auditLogger } from '../auditLogger.ts';
-import type { AuthenticatedRequest, AuthenticatedUser } from '../types/auth.ts';
+import { validateAndSanitizeRequest } from '../middleware/validation.js';
+import { auditLogger } from '../auditLogger.js';
+import type { AuthenticatedRequest, AuthenticatedUser } from '../types/auth.js';
 // Type guard for authenticated requests
 function isAuthenticatedRequest(req: Request): req is AuthenticatedRequest {
     return !!(req as AuthenticatedRequest).user;

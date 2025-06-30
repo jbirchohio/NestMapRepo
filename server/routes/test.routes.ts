@@ -1,6 +1,6 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from '../../express-augmentations.js';
 import { z } from 'zod';
-import { validate } from '../utils/validation.ts';
+import { validate } from '../utils/validation.js';
 const router = Router();
 // Test validation schema
 const testSchema = z.object({

@@ -11,7 +11,7 @@
  *
  * DO NOT create duplicate rate limiting implementations - extend this one if needed.
  */
-import express, { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import express, { Request, Response, NextFunction } from '../../express-augmentations.js';
 interface CustomRequest extends Request {
     user?: {
         id?: string | number;

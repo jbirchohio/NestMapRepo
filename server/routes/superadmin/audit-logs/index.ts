@@ -1,6 +1,6 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from '../../express-augmentations.js';
 import { requireSuperadmin } from '../../../middleware/superadmin.js';
-import { getAuditLogs } from './audit-service.ts';
+import { getAuditLogs } from './audit-service.js';
 const router = Router();
 /**
  * @route GET /api/superadmin/audit-logs

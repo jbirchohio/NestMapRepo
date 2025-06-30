@@ -1,11 +1,11 @@
-import type { Router, Request, Response } from '../../express-augmentations.ts';
-import { db } from '../db-connection.ts';
+import type { Router, Request, Response } from '../../express-augmentations.js';
+import { db } from '../db-connection.js';
 import { users, adminAuditLog, organizations, userSessions } from '@shared/schema';
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
-import { getActiveUserCount } from '../middleware/sessionTracking.ts';
+import { getActiveUserCount } from '../middleware/sessionTracking.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 const router = Router();
 // Apply middleware to all security routes
 router.use(validateJWT);

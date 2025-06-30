@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
-import { db } from '../../../db.ts';
+import { db } from '../../../db.js';
 import { users, organizations, userSessions } from '../../../db/schema.js';
 import { eq, and, desc, sql, isNull, inArray } from 'drizzle-orm';
-import { logSuperadminAction } from '../audit-logs/audit-service.ts';
-import { hashPassword } from '../../../utils/auth.ts';
+import { logSuperadminAction } from '../audit-logs/audit-service.js';
+import { hashPassword } from '../../../utils/auth.js';
 import { v4 as uuidv4 } from 'uuid';
 // Define UserWithOrg type at the top level
 type UserWithOrg = {

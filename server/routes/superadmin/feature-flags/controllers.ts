@@ -1,8 +1,8 @@
-import type { Request, Response } from '../../express-augmentations.ts';
-import { db } from '../../../db.ts';
+import type { Request, Response } from '../../express-augmentations.js';
+import { db } from '../../../db.js';
 import { superadminFeatureFlags, organizationFeatureFlags, organizations } from '../../../db/schema.js';
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { logSuperadminAction } from '../audit-logs/audit-service.ts';
+import { logSuperadminAction } from '../audit-logs/audit-service.js';
 // Get all feature flags
 export const getFeatureFlags = async (req: Request, res: Response) => {
     try {

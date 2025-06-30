@@ -1,4 +1,4 @@
-import { Router } from '../../express-augmentations.ts';
+import { Router } from '../../express-augmentations.js';
 import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express-serve-static-core';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';

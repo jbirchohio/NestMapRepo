@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import fs from 'fs/promises';
-import { db } from '../db/db.ts';
+import { db } from '../db/db.js';
 import { trips, activities, expenses } from '../db/schema.js';
 import { eq, sql } from 'drizzle-orm';
 import { GaussianNB } from 'ml-naivebayes';

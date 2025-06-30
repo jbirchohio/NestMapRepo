@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireSuperadmin } from '../../../middleware/superadmin.js';
-import * as usersController from './controllers.ts';
-import * as usersValidators from './validators.ts';
+import * as usersController from './controllers.js';
+import * as usersValidators from './validators.js';
 const router = Router();
 // Get all users with filtering and pagination
 router.get('/', requireSuperadmin, usersController.getUsers);

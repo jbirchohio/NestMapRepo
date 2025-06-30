@@ -1,4 +1,4 @@
-import express from '../../express-augmentations.ts';
+import express from '../../express-augmentations.js';
 const router = express.Router();
 // Get all billing records
 router.get('/', (_req, res) => {

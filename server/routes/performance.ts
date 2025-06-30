@@ -2,10 +2,10 @@
  * Performance Analytics API Routes - Phase 3 Optimization
  * Real-time performance monitoring and optimization endpoints
  */
-import type { Express } from '../../express-augmentations.ts';
-import { performanceMonitor } from "../performance-monitor.ts";
+import type { Express } from '../../express-augmentations.js';
+import { performanceMonitor } from "../performance-monitor.js";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 export function registerPerformanceRoutes(app: Express): void {
     // Apply middleware to all admin performance routes
     app.use('/api/admin/performance', validateJWT);

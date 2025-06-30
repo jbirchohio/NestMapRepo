@@ -1,4 +1,4 @@
-import type { Router, Request, Response } from '../../express-augmentations.ts';
+import type { Router, Request, Response } from '../../express-augmentations.js';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
 import { z } from 'zod';
 import { insertTripSchema } from '../db/schema.js';

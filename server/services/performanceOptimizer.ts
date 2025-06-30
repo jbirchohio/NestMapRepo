@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from '../../express-augmentations.js';
 /**
  * Performance optimization service for acquisition-ready deployment
  * Addresses memory spikes and slow request issues in development/production

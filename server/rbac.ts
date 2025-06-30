@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from '../../express-augmentations.js';
 import prisma from './prisma';
 import { User, Trip, TripCollaborator, UserRole, TripCollaboratorRole } from '@prisma/client';
 // Permission definitions

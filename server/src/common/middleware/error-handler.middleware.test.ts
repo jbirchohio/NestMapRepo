@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from '../../express-augmentations.ts';
+import type { Request, Response, NextFunction } from '../../express-augmentations.js';
 import type { Logger } from '@nestjs/common';
 import type { ErrorType } from './error-handler.middleware';
 import { errorHandlerMiddleware, createApiError, asyncHandler } from './error-handler.middleware';

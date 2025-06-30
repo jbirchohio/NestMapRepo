@@ -1,4 +1,4 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from '../../express-augmentations.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { organizationFundingService } from "../services/organizationFundingService.js";
 import { z } from "zod";

@@ -1,4 +1,4 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from '../../express-augmentations.js';
 import { requireSuperadmin } from '../../../middleware/superadmin.js';
 import * as billingController from './controllers.js';
 import * as billingValidators from './validators.js';

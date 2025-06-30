@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.ts';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.ts';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation.ts';
-import { storage } from '../storage.ts';
-import { getOrganizationAnalytics } from '../analytics.ts';
+import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
+import { storage } from '../storage.js';
+import { getOrganizationAnalytics } from '../analytics.js';
 import prisma from '../prisma';
 import { z } from 'zod';
 
@@ -293,14 +293,22 @@ router.get('/members', async (req: Request, res: Response) => {
                 },
             },
         });
-        res.json(members.map(member => ({
-            id: member.user.id,
-            display_name: `${member.user.firstName} ${member.user.lastName}`.trim(),
-            email: member.user.email,
-            role: member.user.role,
-            organization_id: member.organizationId,
-            created_at: member.user.createdAt,
-            avatar_url: member.user.avatarUrl,
-        })));
+        res.json(
+            members.map((member) => ({
+                id: member.user.id,
+                display_name: `${member.user.firstName} ${member.user.lastName}`.trim(),
+                email: member.user.email,
+                role: member.user.role,
+                organization_id: member.organizationId,
+                created_at: member.user.createdAt,
+                avatar_url: member.user.avatarUrl,
+            }))
+        );
+    } catch (error) {
+        console.error('Error fetching organization members:', error);
+        res.status(500).json({ message: 'Could not fetch organization members' });
+    }
+});
+
 // Export the router
 export default router;

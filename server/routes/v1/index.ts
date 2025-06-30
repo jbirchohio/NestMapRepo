@@ -2,7 +2,7 @@
  * API v1 Routes - Enterprise Acquisition Ready
  * Centralized routing with proper versioning for long-term stability
  */
-import type { Express } from '../../express-augmentations.ts';
+import type { Express } from '../../express-augmentations.js';
 /**
  * API version middleware for deprecation warnings
  */
