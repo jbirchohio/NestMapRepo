@@ -6,7 +6,7 @@ export {
   type ActivityStatus,
   type ActivityType,
   type Activity,
-} from '@shared/types/activity';
+} from '@shared/schema/types/activity';
 export const activitySchema = z.object({
     id: z.string().uuid(),
     title: z.string().min(1, 'Title is required'),

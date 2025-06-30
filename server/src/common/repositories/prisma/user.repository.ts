@@ -1,8 +1,8 @@
 import { prisma } from '@db';
 import type { User as PrismaUser } from '@prisma/client';
 import type { UserRepository } from '../user.repository.interface';
-import type { UserResponse } from '@shared/src/types/auth/dto/response';
-import { UserRole } from '@shared/src/types/auth/permissions';
+import type { UserResponse } from '@shared/schema/types/auth/dto/response';
+import { UserRole } from '@shared/schema/types/auth/permissions';
 import { logger } from '../../../utils/logger.js';
 
 export class PrismaUserRepository implements UserRepository {

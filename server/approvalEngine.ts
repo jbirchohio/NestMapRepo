@@ -1,6 +1,6 @@
 import prisma from './prisma';
 import { Prisma, ApprovalRequest, ApprovalRule, ApprovalLog, User, Organization, OrganizationMember, ApprovalStatus, ApprovalPriority, UserRole } from '@prisma/client';
-import type { ApprovalWorkflowData, ApprovalWorkflowConfig, ApprovalRuleConditions } from '../shared/src/types/approval/approval.types.js';
+import type { ApprovalWorkflowData, ApprovalWorkflowConfig, ApprovalRuleConditions } from '@shared/schema/types/approval/approval.types.js';
 
 // Helper type for a user with organization context and approver role
 type UserWithOrg = Omit<User, 'role'> & {

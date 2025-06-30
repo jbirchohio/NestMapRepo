@@ -4,7 +4,7 @@
  */
 
 import type { Request as ExpressRequest } from 'express';
-import type { JwtPayload, UserRole, Permission } from '@shared/types';
+import type { JwtPayload, UserRole, Permission } from '@shared/schema/types';
 
 declare global {
   namespace Express {

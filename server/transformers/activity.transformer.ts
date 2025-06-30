@@ -1,4 +1,4 @@
-import { Activity } from '../../shared/types/activity';
+import { Activity } from '@shared/schema/types/activity';
 
 type ActivityInput = Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>;
 

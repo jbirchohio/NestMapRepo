@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from '../../express-augmentations';
-import type { JwtPayload } from '@shared/src/types/auth';
-import type { User } from '@shared/src/types/auth';
+import type { JwtPayload } from '@shared/schema/types/auth';
+import type { User } from '@shared/schema/types/auth';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { ParsedQs } from 'qs';
 

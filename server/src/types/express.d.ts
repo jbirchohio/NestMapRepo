@@ -1,4 +1,4 @@
-import type { AuthUser as SharedAuthUser, UserRole as SharedUserRole } from '../../../shared/src/types/auth/index.js';
+import type { AuthUser as SharedAuthUser, UserRole as SharedUserRole } from '@shared/schema/types/auth/index.js';
 
 // This file extends the Express Request type to include our custom properties
 

@@ -1,6 +1,6 @@
 import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient.js";
 import { detectTripConflicts } from "./services/conflictDetector.js";
-import type { Activity, OptimizedSchedule } from '../shared/interfaces.js';
+import type { Activity, OptimizedSchedule } from '@shared/schema/types/trip/TripActivityTypes.js';
 interface ConflictDetection {
     type: 'time_overlap' | 'location_conflict' | 'capacity_issue' | 'schedule_gap';
     severity: 'low' | 'medium' | 'high';

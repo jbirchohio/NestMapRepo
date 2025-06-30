@@ -1,6 +1,6 @@
 import { PrismaClient, User as PrismaUser, UserRole as PrismaUserRole } from '@prisma/client';
 import { UserRepository, UserListParams } from '../user/user.repository.interface.js';
-import { User, UserProfile, UserSettings, UserStats, UserActivity } from '@shared/types/auth/user.js';
+import { User, UserProfile, UserSettings, UserStats, UserActivity } from '@shared/schema/types/auth/user.js';
 import { UserRole } from '@shared/schema/types/auth/permissions';
 import { hash, compare } from 'bcrypt';
 

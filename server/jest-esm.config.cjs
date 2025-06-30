@@ -14,7 +14,7 @@ module.exports = {
   
   // Module name mapper for path aliases
   moduleNameMapper: {
-    '^@shared/(.*)\.js$': '<rootDir>/../shared/src/$1',
+    '^@shared/schema/(.*)\.js$': '<rootDir>/../shared/src/$1',
     '^@server/(.*)\.js$': '<rootDir>/src/$1',
     '^@db/(.*)\.js$': '<rootDir>/db/$1',
   },

@@ -1,4 +1,4 @@
-import type { AuthUser } from '@shared/types/auth/user.js';
+import type { AuthUser } from '@shared/schema/types/auth/user.js';
 import type { 
   Trip, 
   CreateTripDto, 

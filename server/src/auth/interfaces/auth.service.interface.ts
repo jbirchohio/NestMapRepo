@@ -7,7 +7,7 @@ import type {
   UserResponse,
   AuthResponse,
   UserRole
-} from '@shared/types';
+} from '@shared/schema/types/auth/index.js';
 
 export interface IAuthService {
   /**

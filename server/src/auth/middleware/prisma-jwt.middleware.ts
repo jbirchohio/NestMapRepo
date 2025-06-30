@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { prismaAuthService } from '../services/prisma-auth.service.js';
 import { PrismaUserRepository } from '../../common/database/index.js';
-import { AuthErrorCode, AuthErrorException } from '@shared/types/auth/auth.js';
+import { AuthErrorCode, AuthErrorException } from '@shared/schema/types/auth/auth.js';
 import { logger } from '../../../utils/logger.js';
 import type { UserRole as PrismaUserRole } from '@prisma/client';
 import { hasRole as checkRole, hasPermission as checkPermission } from '../../types/auth-user.js';

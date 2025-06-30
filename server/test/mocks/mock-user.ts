@@ -1,4 +1,4 @@
-import type { AuthUser, UserRole } from '../../../shared/src/types/auth/index.js';
+import type { AuthUser, UserRole } from '@shared/schema/types/auth/index.js';
 
 // Create a complete mock user that satisfies both AuthUser and Express.User
 export const mockUser: AuthUser & {

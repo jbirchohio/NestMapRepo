@@ -1,5 +1,5 @@
 import { Trip as PrismaTrip } from '@prisma/client';
-import { User } from '../../../shared/src/types/auth';
+import { User } from '@shared/schema/types/auth';
 
 export interface Trip extends Omit<PrismaTrip, 'createdAt' | 'updatedAt'> {
   id: string;

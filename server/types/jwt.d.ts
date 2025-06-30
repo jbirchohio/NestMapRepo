@@ -6,7 +6,7 @@ import type {
   User,
   TokenPayload,
   UserRole
-} from '@shared/src/types/auth';
+} from '@shared/schema/types/auth';
 
 export type { TokenType, TokenPayload, UserRole };
 

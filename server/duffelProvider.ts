@@ -6,7 +6,7 @@ import type {
   DuffelBookingResponse, 
   FlightSearchResult, 
   HotelSearchResult
-} from '../shared/src/types/trip/business-trip.types.js';
+} from '@shared/schema/types/trip/business-trip.types.js';
 
 interface HotelBookingParams {
   searchResultId: string;
