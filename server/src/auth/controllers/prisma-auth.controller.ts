@@ -42,10 +42,10 @@ import {
   ResetPasswordDto, 
   ChangePasswordDto,
   AuthTokens
-} from '@shared/types/auth/index.js';
+} from '@shared/schema/types/auth/index.js';
 import { UserRole } from '@prisma/client';
 // Import shared auth types
-import { AuthErrorCode } from '@shared/types/auth/auth.js';
+import { AuthErrorCode } from '@shared/schema/types/auth/auth.js';
 import type { AuthenticatedRequest } from '@shared/schema/types/auth/custom-request';
 
 // Import services

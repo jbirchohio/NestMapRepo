@@ -31,14 +31,14 @@ import type { ApiSuccessResponse } from '../../common/utils/response-formatter.u
 import { isErrorWithMessage } from '../../utils/error-utils.js';
 
 import type { IAuthService } from '../interfaces/auth.service.interface.js';
-import type { AuthenticatedRequest } from '@shared/types/auth/custom-request.js';
+import type { AuthenticatedRequest } from '@shared/schema/types/auth/custom-request.js';
 import { 
   LoginDto, 
   RequestPasswordResetDto, 
   ResetPasswordDto,
   AuthResponse as SharedAuthResponse,
   AuthTokens
-} from '@shared/types/auth/index.js';
+} from '@shared/schema/types/auth/index.js';
 import type { User as PrismaUser } from '@prisma/client';
 import type { User as SharedUser } from '@shared/schema/types/user';
 

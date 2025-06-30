@@ -1,6 +1,6 @@
 import type { Request, Response } from './express-augmentations.js';
 // Import types directly from the shared directory
-import type { Activity, Trip } from '../shared/src/schema.js';
+import type { Activity, Trip } from '@shared/schema';
 // Generate iCal format content for calendar export
 export function generateICalContent(trip: Trip, activities: Activity[]): string {
     const events = activities.map(activity => {

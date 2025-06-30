@@ -86,7 +86,7 @@ import type {
   Meal,
   Transportation,
   TravelPolicy
-} from '@shared/src/types/trip/business-trip.types.js';
+} from '@shared/schema/types/trip/business-trip.types.js';
 
 // Extended FlightSegment with price information and baggage allowance
 interface FlightSegmentWithPrice extends Omit<SharedFlightSegment, 'id'> {

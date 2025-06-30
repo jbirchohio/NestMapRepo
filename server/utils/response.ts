@@ -1,5 +1,5 @@
 import type { Response, Request, NextFunction } from 'express';
-import type { ApiResponse } from '@shared/types/api/index.js';
+import type { ApiResponse } from '@shared/schema/types/api/index.js';
 
 /**
  * Response utility for sending standardized API responses

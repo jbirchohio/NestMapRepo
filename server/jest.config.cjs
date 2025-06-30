@@ -3,7 +3,7 @@ module.exports = {
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
-    '^@shared/(.*)\.js$': '<rootDir>/../shared/src/$1',
+    '^@shared/schema/(.*)\.js$': '<rootDir>/../shared/src/$1',
     '^@server/(.*)\.js$': '<rootDir>/src/$1',
     '^@db/(.*)\.js$': '<rootDir>/db/$1',
   },

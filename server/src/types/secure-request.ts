@@ -1,6 +1,6 @@
 import type { Request as ExpressRequest, Response, NextFunction, RequestHandler } from 'express';
 import type { AuthUser } from './auth-user.js';
-import type { UserRole } from '../../../shared/src/types/user/index.js';
+import type { UserRole } from '@shared/schema/types/user/index.js';
 
 // Re-export AuthUser for convenience
 export type { AuthUser };

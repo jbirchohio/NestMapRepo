@@ -11,7 +11,7 @@ import type {
   ActivityStatus,
   ActivityType,
   Activity as SharedActivityType
-} from '@shared/src/types/activity/index.js';
+} from '@shared/schema/types/activity/index.js';
 
 /**
  * Extended Activity type that includes server-specific fields
@@ -36,7 +36,7 @@ export type Activity = SharedActivityType & {
   updatedAt?: Date;
 };
 
-import { activityFormSchema } from '@shared/src/types/activity/index.js';
+import { activityFormSchema } from '@shared/schema/types/activity/index.js';
 import activityService from '../services/activity.service.js';
 import { validateOrganizationAccess } from '../middleware/organization.js';
 

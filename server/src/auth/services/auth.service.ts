@@ -30,11 +30,11 @@ import type {
   AuthTokens,
   AccessTokenPayload,
   RefreshTokenPayload
-} from '@shared/types/auth/index.js';
+} from '@shared/schema/types/auth/index.js';
 import type { 
   User as SharedUser, 
   UserRole as SharedUserRole 
-} from '@shared/types/user/index.js';
+} from '@shared/schema/types/user/index.js';
 
 // Helper to create a slug from a string
 const slugify = (str: string) => str.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');

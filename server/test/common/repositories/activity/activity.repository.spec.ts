@@ -3,10 +3,10 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { eq, and, inArray, sql, type SQL, asc } from 'drizzle-orm';
 import { activities } from '../../../../db/schema/index.js';
 import { ActivityRepositoryImpl } from '../../../../src/common/repositories/activity/activity.repository.js';
-import type { 
-  ActivityStatus, 
-  ActivityType 
-} from '@shared/src/types/activity/index.js';
+import type {
+  ActivityStatus,
+  ActivityType
+} from '@shared/schema/types/activity/index.js';
 import type { Activity, NewActivity } from '@db/schema/activities/activities.js';
 
 // Define mock activity data for testing

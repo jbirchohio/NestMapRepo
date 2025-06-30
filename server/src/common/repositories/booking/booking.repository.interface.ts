@@ -3,7 +3,7 @@ import type {
   BookingStatus, 
   BookingType, 
   AnyBooking
-} from '@shared/types/booking/index.ts';
+} from '@shared/schema/types/booking/index.js';
 import type { BookingSearchParams } from '@shared/schema/types/booking';
 import type { BaseRepository } from '../base.repository.interface.js';
 

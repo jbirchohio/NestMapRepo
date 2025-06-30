@@ -6,7 +6,7 @@ const config: Config.InitialOptions = {
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^@server/(.*)\.js$': '<rootDir>/src/$1',
-    '^@shared/(.*)\.js$': '<rootDir>/../shared/src/$1',
+    '^@shared/schema/(.*)\.js$': '<rootDir>/../shared/src/$1',
     '^(\.{1,2}/.*)\.js$': '$1',
   },
   transform: {

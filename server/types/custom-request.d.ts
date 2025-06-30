@@ -1,6 +1,6 @@
 import { Request as ExpressRequest } from '../../express-augmentations';
-import type { AuthUser } from '@shared/src/types/auth/user.js';
-import type { JwtPayload } from '@shared/src/types/auth/jwt.js';
+import type { AuthUser } from '@shared/schema/types/auth/user.js';
+import type { JwtPayload } from '@shared/schema/types/auth/jwt.js';
 
 declare module 'express-serve-static-core' {
   interface Request {

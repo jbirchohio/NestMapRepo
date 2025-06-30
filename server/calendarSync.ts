@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { Activity, Trip } from '../../shared/src/schema'; // Updated path to match project structure
+import type { Activity, Trip } from '@shared/schema';
 import crypto from "crypto";
 
 // Define response types for calendar sync operations

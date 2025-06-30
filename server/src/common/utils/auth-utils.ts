@@ -1,4 +1,4 @@
-import { UserRole } from '../../../shared/src/types/auth/user.js';
+import { UserRole } from '@shared/schema/types/auth/user.js';
 
 /**
  * Check if a user has any of the specified roles

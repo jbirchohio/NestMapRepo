@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware, ForbiddenException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { JwtPayload } from '../../shared/src/types/auth/jwt';
+import { JwtPayload } from '@shared/schema/types/auth/jwt';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

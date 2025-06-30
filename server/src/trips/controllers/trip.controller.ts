@@ -31,7 +31,7 @@ import {
 import { BaseController } from '../../common/controllers/base.controller.js';
 import type { TripService } from '../interfaces/trip.service.interface.js';
 import type { Trip, PaginationOptions } from '../interfaces/trip.interface.js';
-import type { AuthUser } from '@shared/types/auth/user.js';
+import type { AuthUser } from '@shared/schema/types/auth/user.js';
 import { isAdminOrManager } from '@server/common/utils/auth-utils.js';
 
 // Response DTOs for Swagger documentation
