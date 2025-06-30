@@ -5,7 +5,7 @@ import type { CollaboratorPresence } from '@shared/types/CollaboratorPresence';
 import type { UseRealTimeCollaborationProps, ActivityData } from '@shared/types/activity/ActivityTypes';
 import { ACTIVITY_ACTIONS } from '@shared/constants/ActivityActions.js';
 // Import base message types
-import { WS_MESSAGE_TYPES as BASE_WS_MESSAGE_TYPES } from '@shared/constants/WebSocketMessageTypes.js';
+import { WS_MESSAGE_TYPES as BASE_WS_MESSAGE_TYPES } from '@shared/schema/constants/WebSocketMessageTypes.js';
 
 // Define our own message types that include section_updated
 type ExtendedMessageTypes = {

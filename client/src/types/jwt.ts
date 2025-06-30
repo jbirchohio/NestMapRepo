@@ -1,1 +1,1 @@
-export * from '@shared/types/auth/jwt';
+export * from '@shared/schema/types/auth/jwt';

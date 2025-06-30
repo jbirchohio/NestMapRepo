@@ -1,6 +1,6 @@
 // Import UserRole from shared to maintain consistency
 import type { Request as ExpressRequest, Response, NextFunction } from 'express';
-import type { UserRole } from '../../../shared/src/types/auth/index.js';
+import type { UserRole } from '../../../shared/src/types/user/index.js';
 
 export interface AuthUser {
   id: string;
@@ -8,7 +8,6 @@ export interface AuthUser {
   role: UserRole;
   permissions: string[];
   organizationId?: string | null;
-  organization_id?: string | null; // Legacy support
   [key: string]: unknown; // Allow additional properties
 }
 

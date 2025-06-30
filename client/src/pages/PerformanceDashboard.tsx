@@ -1,4 +1,4 @@
-import SharedSampleType from '@/types/SharedSampleType';
+import SharedSampleType from '@shared/schema/types/SharedSampleType';
 /**
  * Performance Dashboard - Phase 3 Optimization Complete
  * Real-time monitoring and optimization insights for administrators

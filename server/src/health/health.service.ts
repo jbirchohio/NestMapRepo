@@ -6,25 +6,19 @@ import {
   type HealthIndicatorResult
 } from '@nestjs/terminus';
 import { DatabaseHealthIndicator } from './database.health.js';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { sql } from 'drizzle-orm';
-import { Pool } from 'pg';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class HealthService {
   private readonly logger = new Logger(HealthService.name);
 
-  private readonly db: ReturnType<typeof drizzle>;
-  private readonly pool: Pool;
+  private readonly prisma: PrismaClient;
 
   constructor(
     private health: HealthCheckService,
     private databaseHealth: DatabaseHealthIndicator,
   ) {
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-    });
-    this.db = drizzle(this.pool);
+    this.prisma = new PrismaClient();
   }
 
   @HealthCheck()
@@ -38,7 +32,7 @@ export class HealthService {
   async checkDbConnection(): Promise<HealthIndicatorResult> {
     try {
       // Simple query to check database connection
-      await this.db.execute(sql`SELECT 1`);
+      await this.prisma.$queryRaw`SELECT 1`;
       return {
         database: { status: 'up' }
       };
@@ -50,6 +44,6 @@ export class HealthService {
   }
 
   async onModuleDestroy() {
-    await this.pool.end();
+    await this.prisma.$disconnect();
   }
 }

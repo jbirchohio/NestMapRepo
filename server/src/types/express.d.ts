@@ -10,7 +10,6 @@ declare global {
       role: SharedUserRole | string;
       // Add any additional properties that might be needed
       organizationId?: string | null;
-      organization_id?: string | number | null;
       sessionId?: string;
       isInOrganization?: (orgId: string) => boolean;
     }

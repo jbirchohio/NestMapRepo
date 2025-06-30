@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth/useAuth';
 import { apiClient } from '@shared/api';
-import type { Notification as AppNotification } from '@shared/types/notification';
+import type { Notification as AppNotification } from '@shared/schema/types/notification';
 
 interface UseNotificationsReturn {
   notifications: AppNotification[];

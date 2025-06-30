@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
 import { Activity, Cpu, HardDrive, MemoryStick, Network, Server, AlertTriangle, CheckCircle, XCircle, RefreshCw, Zap, Clock, TrendingUp, AlertCircle } from "lucide-react";
 import { AlertNotifications } from "@/components/AlertNotifications";
-import { UserRole } from "@shared/types/index";
+import { UserRole } from '@shared/schema/types/user';
 interface SystemMetrics {
     server: {
         uptime: number;

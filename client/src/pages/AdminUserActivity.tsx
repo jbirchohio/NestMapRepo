@@ -1,8 +1,7 @@
-import SharedDetailsType from '@/types/SharedDetailsType';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -10,19 +9,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { apiRequest } from '@/lib/queryClient';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/auth/NewAuthContext';
-import { Users, Search, Filter, Download, RefreshCw, Clock, FilePlus, Edit, Trash2 } from 'lucide-react';
+import { Users, Filter, RefreshCw, FilePlus, Edit, Trash2 } from 'lucide-react';
+import type { ActivityData } from '@shared/schema/types/activity';
+
 interface UserActivityLog {
     id: number;
     user_name: string;
     user_email: string;
     action: string;
-    details: SharedDetailsType;
+    details: ActivityData;
     ip_address: string | null;
     created_at: string;
 }
 export default function AdminUserActivity() {
     const { user } = useAuth();
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage] = useState(1);
     const [filterAction, setFilterAction] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     // Access organization ID from the user object

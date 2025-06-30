@@ -1,4 +1,4 @@
-import SharedItemType from '@/types/SharedItemType';
+import SharedItemType from '@shared/schema/types/SharedItemType';
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

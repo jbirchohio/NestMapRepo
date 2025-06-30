@@ -4,7 +4,7 @@ import SharedLogType from '@/types/SharedLogType';
 import SharedJobType from '@/types/SharedJobType';
 import SharedSessionType from '@/types/SharedSessionType';
 import SharedUserType from '@/types/SharedUserType';
-import SharedOrgType from '@/types/SharedOrgType';
+import SharedOrgType from '@shared/schema/types/SharedOrgType';
 // UNUSED - legacy superadmin page
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'wouter';

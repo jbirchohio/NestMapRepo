@@ -26,7 +26,7 @@ type AnalyticsData = {
   activeClients: number;
 };
 import { TripDTO } from '@/types/dtos/trip';
-import { AgencyAnalyticsDTO, CorporateAnalyticsDTO } from '@/types/dtos/analytics';
+import { AgencyAnalyticsDTO, CorporateAnalyticsDTO } from '@shared/schema/types/analytics';
 import OnboardingProgress from '@/components/OnboardingProgress';
 const AnimatedCard = motion(Card);
 export default function Dashboard() {

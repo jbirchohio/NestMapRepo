@@ -1,5 +1,8 @@
 import type { User, UserRole } from '../user/index.js';
+import type { AuthTokens } from './dto/auth-response.dto.js';
 import type { AuthErrorCode } from './auth.js';
+
+export type { AuthTokens } from './dto/auth-response.dto.js';
 
 /** Supported JWT token types */
 export type TokenType =
@@ -12,8 +15,8 @@ export type TokenType =
 export interface BaseJwtPayload {
   jti: string;
   sub: string;
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
   nbf?: number;
   type: TokenType;
   /** Legacy field for backward compatibility */
@@ -62,16 +65,6 @@ export type JwtPayload =
   | PasswordResetTokenPayload
   | EmailVerificationTokenPayload;
 
-/** The structure of the authentication tokens returned to the client */
-export interface AuthTokens {
-  access_token: string;
-  refresh_token: string;
-  expires_at: string; // ISO 8601 format
-  token_type: 'Bearer';
-  accessTokenExpiresAt: Date;
-  refreshTokenExpiresAt: Date;
-}
-
 /** Result returned from token verification helpers */
 export type TokenVerificationResult<T extends BaseJwtPayload> =
   | {
@@ -96,4 +89,3 @@ export interface AuthResponse {
   requiresTwoFactor?: boolean;
   tempToken?: string;
 }
-

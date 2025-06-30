@@ -1,5 +1,5 @@
 import SharedCostType from '@/types/SharedCostType';
-import SharedEventDataType from '@/types/SharedEventDataType';
+import SharedEventDataType from '@shared/schema/types/SharedEventDataType';
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

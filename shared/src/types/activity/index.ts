@@ -78,10 +78,10 @@ export interface Activity {
   locationId?: string;
   
   /** Latitude coordinate (decimal degrees) */
-  latitude?: string;
+  latitude?: number | string;
   
   /** Longitude coordinate (decimal degrees) */
-  longitude?: string;
+  longitude?: number | string;
   
   // Activity metadata
   /** Cost of the activity in the smallest currency unit (e.g., cents) */
@@ -186,6 +186,7 @@ export interface ClientActivity extends Activity {
  * Schema for validating activity form data
  */
 export const activityFormSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1, 'Title is required'),
   date: z.date({
     required_error: 'Date is required',
@@ -193,16 +194,24 @@ export const activityFormSchema = z.object({
   }),
   time: z.string().min(1, 'Time is required'),
   locationName: z.string().min(1, 'Location is required'),
+  location: z.string().optional(),
+  description: z.string().optional(),
+  status: z.enum(activityStatuses).optional(),
+  cost: z.number().optional(),
+  completed: z.boolean().optional(),
+  order: z.number().optional(),
+  type: z.enum(activityTypes).optional(),
   travelMode: z.string().min(1, 'Travel mode is required'),
+  createdBy: z.string().optional(),
+  assignedTo: z.string().optional(),
+  createdAt: z.union([z.date(), z.string()]).optional(),
+  updatedAt: z.union([z.date(), z.string()]).optional(),
   notes: z.string().optional(),
   tag: z.string().optional(),
-  latitude: z.string().optional(),
-  longitude: z.string().optional(),
-  assignedTo: z.string().optional(),
-  status: z.enum(activityStatuses).optional(),
-  type: z.enum(activityTypes).optional(),
+  latitude: z.union([z.number(), z.string()]).optional(),
+  longitude: z.union([z.number(), z.string()]).optional(),
+  organizationId: z.string().optional(),
   tripId: z.string().optional(),
-  createdBy: z.string().optional(),
 });
 
 /**

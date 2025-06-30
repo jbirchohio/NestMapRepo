@@ -1,46 +1,72 @@
-import type { Trip, User } from '../../../db/schema/index.js';
+import type { AuthUser } from '@shared/types/auth/user.js';
+import type { 
+  Trip, 
+  CreateTripDto, 
+  UpdateTripDto, 
+  TripFilterOptions, 
+  PaginatedResult, 
+  PaginationOptions 
+} from './trip.interface.js';
 
-// Define the ServiceUser interface to match what the controller provides
-export interface ServiceUser {
-  id: string;
-  email: string;
-  username: string;
-  firstName: string | null;
-  lastName: string | null;
-  organizationId: string | null;
-  role: string;
-  passwordHash: string;
-  passwordChangedAt: Date | null;
-  tokenVersion: number;
-  passwordResetToken?: string | null;
-  passwordResetExpires?: Date | null;
-  resetToken?: string | null;
-  resetTokenExpires?: Date | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-  lastLogin?: Date | null;
-  isActive?: boolean;
-  emailVerified?: boolean;
-}
 // A DTO for the transformed corporate trip data
 export interface CorporateTripDto {
-    id: string; // Changed from number to string to match UUID
-    title: string;
-    startDate: string;
-    endDate: string;
-    userId: string;
-    city: string | null;
-    country: string | null;
-    budget: number | null;
-    completed: boolean;
-    trip_type: 'business' | 'leisure' | 'bleisure' | null;
-    client_name: string | null;
-    project_type: string | null;
-    userName: string;
-    userEmail: string;
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  userId: string;
+  city: string | null;
+  country: string | null;
+  budget: number | null;
+  completed: boolean;
+  tripType: 'business' | 'leisure' | 'bleisure' | null;
+  clientName: string | null;
+  projectType: string | null;
+  userName: string;
+  userEmail: string;
 }
+
 export interface TripService {
-    getTripsByUserId(userId: string, orgId: string, user: ServiceUser): Promise<Trip[]>;
-    getCorporateTrips(orgId: string, user: ServiceUser): Promise<CorporateTripDto[]>;
-    getTripById(tripId: string, user: ServiceUser): Promise<Trip | null>;
+  // Get trips for a specific user
+  getTripsByUserId(
+    userId: string, 
+    orgId: string, 
+    status?: string,
+    pagination?: PaginationOptions
+  ): Promise<Trip[]>;
+
+  // Get trips for an organization (admin/manager only)
+  getTripsByOrganizationId(
+    orgId: string, 
+    status?: string,
+    pagination?: PaginationOptions
+  ): Promise<Trip[]>;
+
+  // Get corporate trips (filtered view for business users)
+  getCorporateTrips(orgId: string): Promise<CorporateTripDto[]>;
+  
+  // Get a single trip by ID with access control
+  getTripById(tripId: string, user: AuthUser): Promise<Trip | null>;
+  
+  // Create a new trip
+  createTrip(createTripDto: CreateTripDto): Promise<Trip>;
+  
+  // Update an existing trip
+  updateTrip(
+    tripId: string, 
+    updateTripDto: UpdateTripDto, 
+    user: AuthUser
+  ): Promise<Trip>;
+  
+  // Delete a trip
+  deleteTrip(tripId: string, user: AuthUser): Promise<boolean>;
+  
+  // Check if a user has access to a trip
+  checkTripAccess(tripId: string, user: AuthUser): Promise<boolean>;
+  
+  // Search trips with filters and pagination
+  searchTrips(
+    filters: TripFilterOptions,
+    pagination: PaginationOptions
+  ): Promise<PaginatedResult<Trip>>;
 }

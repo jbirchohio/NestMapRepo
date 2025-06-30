@@ -2,19 +2,33 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "../",
-    "baseUrl": "../",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "target": "ES2022",
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
     "paths": {
-      "@server/*": ["server/src/*"],
-      "@db/*": ["server/db/*"],
-      "@shared/*": ["shared/dist/*"]
+      "@server/*": ["./src/*"],
+      "@db/*": ["./db/*"],
+      "@shared/schema/*": ["../shared/dist/*"]
     },
-    "types": ["jest", "node"],
-    
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true
+    "types": ["node", "jest"]
   },
-  "references": [{ "path": "../shared" }],
   "include": ["src", "db"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "../shared"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+  "references": [{ "path": "../shared" }]
 }

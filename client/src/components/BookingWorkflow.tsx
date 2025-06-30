@@ -459,7 +459,7 @@ export default function BookingWorkflow() {
                 searchHotels(clientInfo);
             }
         }
-    };
+    }, [clientInfo, currentTravelerIndex, getAllTravelers, searchHotels, selectedDepartureFlight, selectedReturnFlight, travelerBookings, totalTravelers]);
 
     const handleCreateTrip = async (): Promise<void> => {
         if (!clientInfo || !user) {

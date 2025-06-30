@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppErrorCode } from '@shared/types/error-codes.js';
-import { UserRole, ResourceType, PermissionAction, PermissionLevel } from '../../../db/schema/index.js';
+import { AppErrorCode } from '@shared/schema/types/error-codes';
+import { UserRole, ResourceType, PermissionAction, PermissionLevel } from '@prisma/client';
 import logger from '../../utils/logger.js';
 import { checkPermission } from '@shared/utils/permissions.js';
 

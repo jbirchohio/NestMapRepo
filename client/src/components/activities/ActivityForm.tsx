@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { activitySchema, type ActivityFormValues } from "./types";
-import type { ClientActivity } from "@shared/types/activity";
+import type { ClientActivity } from "@shared/schema/types/activity/index";
 import { parseISO } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,8 +47,8 @@ export default function ActivityForm({
           cost: activity?.cost ? Number(activity.cost) : undefined,
           order: activity?.order ? Number(activity.order) : 0,
           location: activity?.location || '',
-          latitude: activity?.latitude ? Number(activity.latitude) : undefined,
-          longitude: activity?.longitude ? Number(activity.longitude) : undefined,
+          latitude: activity?.latitude !== undefined ? (typeof activity.latitude === 'string' ? parseFloat(activity.latitude) : activity.latitude) : undefined,
+          longitude: activity?.longitude !== undefined ? (typeof activity.longitude === 'string' ? parseFloat(activity.longitude) : activity.longitude) : undefined,
           notes: activity?.notes || '',
           tag: activity?.tag || '',
           assignedTo: activity?.assignedTo || '',
@@ -86,8 +86,8 @@ export default function ActivityForm({
       // Update form values with new location data
       const updates = {
         locationName: location.name,
-        latitude: location.lat,
-        longitude: location.lng,
+        latitude: String(location.lat),
+        longitude: String(location.lng),
         ...(location.address && { location: location.address })
       };
       

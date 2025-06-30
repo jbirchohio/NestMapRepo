@@ -1,6 +1,6 @@
 import SharedErrorType from '@/types/SharedErrorType';
 import { AxiosError } from 'axios';
-import { AuthError, AuthErrorCode } from '@shared/types/auth';
+import { AuthError, AuthErrorCode } from '@shared/schema/types/auth';
 
 export interface ApiClientErrorOptions {
   isAuthError?: boolean;

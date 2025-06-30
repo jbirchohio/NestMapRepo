@@ -3,7 +3,7 @@ import SharedNoteType from '@/types/SharedNoteType';
 import SharedActivityType from '@/types/SharedActivityType';
 import SharedTodosType from '@/types/SharedTodosType';
 import SharedNotesType from '@/types/SharedNotesType';
-import SharedActivitiesType from '@/types/SharedActivitiesType';
+import SharedActivitiesType from '@shared/schema/types/SharedActivitiesType';
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";

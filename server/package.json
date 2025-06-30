@@ -18,9 +18,11 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "rimraf dist",
-    "dev": "NODE_ENV=development tsx watch src/index.ts",
+    "dev": "set NODE_ENV=development && tsx watch src/index.ts",
     "start": "node dist/server/index.js",
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest-esm.config.cjs",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch --config=jest-esm.config.cjs",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --config=jest-esm.config.cjs",
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import type { ActivityFormValues, ActivityModalProps } from '@shared/types/activity';
-import { ActivityStatus } from '@shared/types/activity';
+import type { ActivityFormValues, ActivityModalProps, ClientActivity } from '@shared/schema/types/activity/index';
+import { ActivityStatus } from '@shared/schema/types/activity/index';
 import ActivityForm from './ActivityForm';
 import { API_ENDPOINTS } from '@/lib/constants';
 import { apiRequest } from '@/lib/queryClient';
@@ -70,11 +70,7 @@ export default function ActivityModal({ tripId, date, activity, onClose, onSave 
                 ...data,
                 tripId, // Ensure tripId is included
             };
-            return apiRequest({
-                method: "PUT",
-                url: endpoint,
-                data: apiData
-            });
+            return apiRequest({ method: "PUT", url: endpoint, data: apiData });
         },
         onSuccess: () => {
             toast({
@@ -95,22 +91,28 @@ export default function ActivityModal({ tripId, date, activity, onClose, onSave 
             // Convert form data to match the API expected format
             const activityData: Partial<ClientActivity> = {
                 ...formData,
+                id: formData.id,
                 tripId: tripId,
                 date: selectedDate,
-                // Ensure proper types for all fields
-                cost: formData.cost !== undefined ? Number(formData.cost) : 0,
-                order: formData.order || 0,
-                completed: formData.completed || false,
-                // Handle coordinates
-                latitude: formData.latitude,
-                longitude: formData.longitude,
-                // Ensure timestamps are properly set
-                createdAt: formData.createdAt || new Date(),
+                title: activity?.title || '',
+                locationName: activity?.locationName || '',
+                time: activity?.time || '',
+                description: activity?.description || '',
+                status: (activity?.status as ActivityStatus) || 'pending',
+                cost: activity?.cost,
+                order: activity?.order || 0,
+                completed: activity?.completed || false,
+                location: activity?.location || '',
+                latitude: activity?.latitude,
+                longitude: activity?.longitude,
+                notes: activity?.notes,
+                tag: activity?.tag,
+                assignedTo: activity?.assignedTo,
+                travelMode: activity?.travelMode || 'walking',
+                organizationId: activity?.organizationId ?? '',
+                createdBy: activity?.createdBy ?? '',
+                createdAt: formData.createdAt ?? new Date(),
                 updatedAt: new Date(),
-                // Set default values for required fields
-                organizationId: activity?.organizationId || '',
-                createdBy: activity?.createdBy || '',
-                status: (activity?.status as ActivityStatus) || 'pending'
             };
 
             if (activity?.id) {
@@ -158,29 +160,21 @@ export default function ActivityModal({ tripId, date, activity, onClose, onSave 
                 id: activity?.id || 'new',
                 tripId: tripId,
                 organizationId: activity?.organizationId || '',
-                title: activity?.title || '',
-                description: activity?.description || '',
-                status: (activity?.status as ActivityStatus) || 'pending',
-                startTime: activity?.startTime || '',
-                endTime: activity?.endTime || '',
-                location: activity?.location || '',
-                locationName: activity?.locationName || '',
-                cost: activity?.cost,
-                date: selectedDate,
-                time: activity?.time || '12:00',
-                completed: activity?.completed || false,
-                order: activity?.order || 0,
-                createdBy: activity?.createdBy || '',
-                createdAt: activity?.createdAt ? new Date(activity.createdAt) : new Date(),
-                updatedAt: activity?.updatedAt ? new Date(activity.updatedAt) : new Date(),
-                // Optional fields with defaults
-                travelMode: activity?.travelMode || 'walking',
-                // Optional fields that can be undefined
-                latitude: activity?.latitude,
-                longitude: activity?.longitude,
-                notes: activity?.notes,
-                tag: activity?.tag,
-                assignedTo: activity?.assignedTo
+                title: formData.title,
+                locationName: formData.locationName,
+                time: formData.time,
+                description: formData.description,
+                status: formData.status,
+                cost: formData.cost,
+                order: formData.order,
+                completed: formData.completed,
+                location: formData.location,
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+                notes: formData.notes,
+                tag: formData.tag,
+                assignedTo: formData.assignedTo,
+                travelMode: formData.travelMode,
               }}
             />
         </div>

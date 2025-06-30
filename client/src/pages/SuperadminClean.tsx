@@ -1,7 +1,7 @@
 import SharedFlagType from '@/types/SharedFlagType';
 import SharedJobType from '@/types/SharedJobType';
 import SharedEventType from '@/types/SharedEventType';
-import SharedLogType from '@/types/SharedLogType';
+import SharedLogType from '@shared/schema/types/SharedLogType';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'wouter';

@@ -1,6 +1,6 @@
 import SharedFlightType from '@/types/SharedFlightType';
 import SharedTravelerType from '@/types/SharedTravelerType';
-import SharedDateType from '@/types/SharedDateType';
+import SharedDateType from '@shared/schema/types/SharedDateType';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from '@/hooks/use-toast';

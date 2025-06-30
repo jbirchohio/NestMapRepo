@@ -1,4 +1,4 @@
-import type { Activity, ActivityStatus, ActivityType } from '@shared/types/activity.js';
+import type { Activity, ActivityStatus, ActivityType } from '@shared/schema/types/activity';
 
 /**
  * Interface for Activity repository operations

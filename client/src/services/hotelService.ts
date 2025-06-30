@@ -1,4 +1,4 @@
-import SharedTravelerInfoType from '@/types/SharedTravelerInfoType';
+import SharedTravelerInfoType from '@shared/schema/types/SharedTravelerInfoType';
 import { apiClient } from './api/apiClient';
 import { Hotel, HotelSearchParams, RoomType } from '@/components/booking/types';
 

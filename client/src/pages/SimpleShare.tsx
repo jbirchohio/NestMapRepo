@@ -1,6 +1,6 @@
 import SharedTodoType from '@/types/SharedTodoType';
 import SharedNoteType from '@/types/SharedNoteType';
-import SharedActivityType from '@/types/SharedActivityType';
+import SharedActivityType from '@shared/schema/types/SharedActivityType';
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";

@@ -1,5 +1,5 @@
 import SharedErrorType from '@/types/SharedErrorType';
-import SharedDataType from '@/types/SharedDataType';
+import SharedDataType from '@shared/schema/types/SharedDataType';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/auth/NewAuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

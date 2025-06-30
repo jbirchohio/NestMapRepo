@@ -19,7 +19,7 @@ export {
 // Note: The following types are kept for backward compatibility
 // but should be considered deprecated. Use the ones from @shared/types/user instead
 
-declare module '@shared/types/user' {
+declare module '@shared/schema/types/user' {
   export interface User {
     // This ensures compatibility with existing code
     [key: string]: unknown;

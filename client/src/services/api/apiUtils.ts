@@ -1,6 +1,6 @@
 import SharedParamsType from '@/types/SharedParamsType';
 import SharedArgsType from '@/types/SharedArgsType';
-import SharedErrorType from '@/types/SharedErrorType';
+import SharedErrorType from '@shared/schema/types/SharedErrorType';
 import { apiClient } from './apiClient';
 import axios from 'axios';
 /**

@@ -1,4 +1,4 @@
-import type { ApiConfig, ApiError } from '@shared/types/api';
+import type { ApiConfig, ApiError } from '@shared/schema/types/api';
 import { API_ENDPOINTS } from '../../constants/api-endpoints.js';
 
 export { API_ENDPOINTS };

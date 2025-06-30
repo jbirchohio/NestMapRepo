@@ -1,7 +1,7 @@
-import SharedMemberType from '@/types/SharedMemberType';
-import SharedUserDataType from '@/types/SharedUserDataType';
-import SharedErrorType from '@/types/SharedErrorType';
-import SharedUpdatesType from '@/types/SharedUpdatesType';
+import type { Member } from '@shared/schema/types/collaboration/CollaborationTypes';
+import type { User } from '@shared/schema/types/user';
+import type { Error as ApiError } from '@shared/schema/types/error';
+import type { Updates } from '@shared/schema/types/api';
 import { useParams, Link } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2, Key, Users, Building, CreditCard, Settings, DollarSign, RefreshCw, Ban, CheckCircle, Shield, Save, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Key, Users, Building, CreditCard, Settings, DollarSign, RefreshCw, Ban, CheckCircle, Shield, Save } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
 export default function SuperadminOrganizationDetail() {
@@ -50,7 +50,7 @@ export default function SuperadminOrganizationDetail() {
     console.log('Organization query state:', { organization, isLoading, error });
     // Update organization mutation
     const updateOrganization = useMutation({
-        mutationFn: async (updates: SharedUpdatesType) => {
+        mutationFn: async (updates: Updates) => {
             const res = await apiRequest('PUT', `/api/superadmin/organizations/${id}`, updates);
             return res.json();
         },
@@ -81,7 +81,7 @@ export default function SuperadminOrganizationDetail() {
     const updateUser = useMutation({
         mutationFn: async ({ userId, updates }: {
             userId: number;
-            updates: SharedUpdatesType;
+            updates: Updates;
         }) => {
             return await apiRequest('PUT', `/api/superadmin/users/${userId}`, updates);
         },
@@ -92,7 +92,7 @@ export default function SuperadminOrganizationDetail() {
                 description: `Role changed to ${data.role}`
             });
         },
-        onError: (error: SharedErrorType) => {
+        onError: (error: ApiError) => {
             console.error('User update error:', error);
             toast({
                 title: 'Failed to update user',
@@ -117,7 +117,7 @@ export default function SuperadminOrganizationDetail() {
     });
     // Create user mutation
     const createUser = useMutation({
-        mutationFn: async (userData: SharedUserDataType) => {
+        mutationFn: async (userData: User) => {
             const res = await apiRequest('POST', '/api/superadmin/users', {
                 ...userData,
                 organization_id: parseInt(id as string)
@@ -741,7 +741,7 @@ export default function SuperadminOrganizationDetail() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {organization.members.map((member: SharedMemberType) => (<TableRow key={member.id}>
+                  {organization.members.map((member: Member) => (<TableRow key={member.id}>
                       <TableCell>
                         <div>
                           <div className="font-medium text-navy-900 dark:text-white">{member.display_name || member.username}</div>

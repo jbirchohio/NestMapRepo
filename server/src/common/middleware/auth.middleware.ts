@@ -1,6 +1,6 @@
 import type { Response, NextFunction, Request, RequestHandler } from 'express';
-import { AppErrorCode } from '@shared/types/error-codes.js';
-import { UserRole } from '../../../db/schema/index.js';
+import { AppErrorCode } from '@shared/schema/types/error-codes';
+import { UserRole } from '@prisma/client';
 import logger from '../../utils/logger.js';
 
 // Helper type for authenticated requests

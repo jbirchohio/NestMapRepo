@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import TagBadge from "@/components/TagBadge";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
-import type { ClientActivity } from "@shared/types/activity";
-import type { ApiResponse } from "@shared/types/api";
+import type { ClientActivity } from "@shared/schema/types/activity/index";
+import type { ApiResponse } from "@shared/schema/types/api/index";
 interface ActivityItemProps {
     activity: ClientActivity;
     onClick: (activity: ClientActivity) => void;
@@ -147,9 +147,9 @@ export default function ActivityItem({ activity, onClick, onDelete, onToggleComp
                         <span className={`font-semibold ${activity.completed ? "line-through text-gray-400" : ""}`}>
                             {activity.title}
                         </span>
-                        {activity.tags && activity.tags.map((tag) => (
-                            <TagBadge key={tag} tag={tag} />
-                        ))}
+                        {activity.tag && (
+                            <TagBadge key={activity.tag} tag={activity.tag} />
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
                         <Button

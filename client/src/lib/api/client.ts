@@ -1,4 +1,4 @@
-import { ApiClient } from '@shared/api';
+import { ApiClient } from '@shared/schema/api';
 import { useAuth } from '@/state/contexts/AuthContext';
 import type { ApiConfig, ApiClientOptions } from './types';
 

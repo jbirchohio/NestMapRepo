@@ -1,6 +1,6 @@
 import SharedPassengerDetailsType from '@/types/SharedPassengerDetailsType';
 import { ApiClient } from './apiClient';
-import type { Flight, FlightSearchParams, Airport } from '@shared/types/flight';
+import type { Flight, FlightSearchParams, Airport } from '@shared/schema/types/flight';
 
 // Create an instance of ApiClient
 const apiClient = new ApiClient({

@@ -2,7 +2,7 @@ import SharedUserType from '@/types/SharedUserType';
 import SharedApprovalDataType from '@/types/SharedApprovalDataType';
 import SharedUpdateDataType from '@/types/SharedUpdateDataType';
 import SharedErrorType from '@/types/SharedErrorType';
-import SharedCardDataType from '@/types/SharedCardDataType';
+import SharedCardDataType from '@shared/schema/types/SharedCardDataType';
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";

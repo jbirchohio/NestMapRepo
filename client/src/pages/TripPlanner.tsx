@@ -1,4 +1,4 @@
-import SharedUpdatesType from '@/types/SharedUpdatesType';
+import SharedUpdatesType from '@shared/schema/types/SharedUpdatesType';
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { useToast } from "@/hooks/use-toast";

@@ -63,23 +63,41 @@ Ensure your users table has these columns:
    - Automatically managed via HTTP-only cookies
    - Implement automatic token refresh on 401 responses
 
-### Example Axios Interceptor
-```typescript
-import axios from 'axios';
+### API Client Setup
 
-const api = axios.create({
-  baseURL: '/api',
-  withCredentials: true
+Update your API client to handle JWT tokens using the shared types:
+
+```typescript
+// src/lib/api.ts
+import axios, { AxiosRequestConfig } from 'axios';
+import { getToken, clearTokens } from '../utils/auth';
+import type { ApiError } from '@shared/schema/errors';
+
+export const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
-// Add request interceptor for auth token
-api.interceptors.request.use(config => {
-  const token = /* get token from your state management */;
+// Request interceptor to add auth token
+api.interceptors.request.use((config) => {
+  const token = getToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized errors
+      clearTokens();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Add response interceptor for token refresh
 api.interceptors.response.use(
@@ -116,6 +134,17 @@ api.interceptors.response.use(
 );
 ```
 
+### Auth Context
+Create an authentication context to manage user state:
+
+```typescript
+// src/contexts/AuthContext.tsx
+import { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { User } from '@shared/schema/types/user';
+import { useQueryClient } from 'react-query';
+```
+
 ## Security Considerations
 
 1. **Rate Limiting**
@@ -129,6 +158,29 @@ api.interceptors.response.use(
 3. **CORS Configuration**
    - Configure CORS to only allow your frontend domains
    - Set appropriate CORS headers
+
+4. **Token Storage**
+   - Store tokens in HTTP-only cookies
+   - Set `Secure` and `SameSite` attributes
+   - Implement CSRF protection
+   - Use types from `@shared/schema/auth` for token handling
+
+## Type Safety
+
+All authentication-related types are available in the shared package:
+
+```typescript
+// User and auth types
+import type { 
+  User, 
+  AuthTokens,
+  LoginRequest,
+  RefreshTokenRequest
+} from '@shared/schema/auth';
+
+// Error types
+import type { AuthError } from '@shared/schema/errors';
+```
 
 ## Testing
 

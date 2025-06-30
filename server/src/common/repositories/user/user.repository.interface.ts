@@ -1,7 +1,7 @@
 import type { 
-  User, 
-  UserRole, 
-  UserCreateInput, 
+  User,
+  UserRole,
+  UserCreateInput,
   UserUpdateInput,
   UserSettings,
   UserProfile,
@@ -9,7 +9,7 @@ import type {
   UserActivity,
   PaginationParams,
   PaginatedResponse 
-} from '@shared/types/users/index.js';
+} from '@shared/schema/types/user';
 import type { BaseRepository } from '../base.repository.interface.js';
 
 /**

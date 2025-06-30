@@ -4,12 +4,16 @@ import { z } from 'zod';
  * User roles in the application
  */
 // Support legacy roles while keeping the newer ones
+/**
+ * User roles in the application
+ * Uses camelCase to follow TypeScript/JavaScript conventions
+ */
 export type UserRole =
   | 'user'
   | 'admin'
   | 'moderator'
-  | 'superadmin'
-  | 'super_admin'
+  | 'superadmin'  // Legacy alias for superAdmin
+  | 'superAdmin'  // Preferred camelCase
   | 'manager'
   | 'member'
   | 'guest';
@@ -96,9 +100,10 @@ export const userSchema = z.object({
   id: z.string().uuid('Invalid user ID format'),
   email: z.string().email('Invalid email address'),
   firstName: z.string().min(1, 'First name is required').optional(),
-  lastName: z.string().min(1, 'Last name is required').optional(),
+  lastName: z.string().optional(),
+    organizationId: z.string().uuid('Invalid organization ID format').optional(),
   avatar: z.string().url('Invalid avatar URL').optional(),
-  role: z.enum(['user', 'admin', 'moderator']),
+  role: z.enum(['user', 'admin', 'moderator', 'superadmin', 'superAdmin', 'manager', 'member', 'guest']),
   emailVerified: z.boolean(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -171,7 +176,8 @@ export function isUserRole(role: unknown): role is UserRole {
       'admin',
       'moderator',
       'superadmin',
-      'super_admin',
+      'superAdmin',  // Using camelCase
+      'super_admin',  // Keeping for backward compatibility
       'manager',
       'member',
       'guest',

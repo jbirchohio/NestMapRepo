@@ -1,4 +1,4 @@
-import SharedErrorType from '@/types/SharedErrorType';
+import SharedErrorType from '@shared/schema/types/SharedErrorType';
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";

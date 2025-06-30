@@ -1,44 +1,59 @@
 import type { Provider } from '@nestjs/common';
-import { TripRepositoryImpl } from '../../trips/repositories/trip.repository.ts';
-import { OrganizationRepositoryImpl } from './organization/organization.repository.ts';
-import { ActivityRepositoryImpl } from './activity/activity.repository.ts';
-import { BookingRepositoryImpl } from './booking/booking.repository.ts';
-import { UserRepositoryImpl as AuthUserRepositoryImpl } from '../../auth/repositories/user.repository.ts';
-import { RefreshTokenRepositoryImpl } from '../../auth/repositories/refresh-token.repository.ts';
+import { PrismaTripRepository } from '../../trips/repositories/prisma-trip.repository.js';
+import { PrismaOrganizationRepository } from './prisma/organization.prisma.repository.js';
+import { PrismaActivityRepository } from './prisma/activity.prisma.repository.js';
+import { PrismaBookingRepository } from './prisma/booking.prisma.repository.js';
+import { PrismaUserRepository } from './prisma/user.prisma.repository.js';
+import { PrismaRefreshTokenRepository } from './prisma/refresh-token.prisma.repository.js';
+import { PrismaService } from '../database/prisma.service.js';
 /**
  * Provider definitions for all repositories
  * These can be imported and used in any module that needs repository access
  */
+// Import the singleton instance of PrismaService
+import { prismaService } from '../database/prisma.service.js';
+
+// Factory function to create repository instances with Prisma client
+const createRepository = <T>(repository: new (prisma: any) => T): T => {
+  return new repository(prismaService.client);
+};
+
 export const TripRepositoryProvider: Provider = {
-    provide: 'TripRepository',
-    useClass: TripRepositoryImpl,
+  provide: 'TripRepository',
+  useFactory: () => createRepository(PrismaTripRepository),
 };
+
 export const OrganizationRepositoryProvider: Provider = {
-    provide: 'OrganizationRepository',
-    useClass: OrganizationRepositoryImpl,
+  provide: 'OrganizationRepository',
+  useFactory: () => createRepository(PrismaOrganizationRepository),
 };
+
 export const ActivityRepositoryProvider: Provider = {
-    provide: 'ActivityRepository',
-    useClass: ActivityRepositoryImpl,
+  provide: 'ActivityRepository',
+  useFactory: () => createRepository(PrismaActivityRepository),
 };
+
 export const BookingRepositoryProvider: Provider = {
-    provide: 'BookingRepository',
-    useClass: BookingRepositoryImpl,
+  provide: 'BookingRepository',
+  useFactory: () => createRepository(PrismaBookingRepository),
 };
+
 export const AuthUserRepositoryProvider: Provider = {
-    provide: 'AuthUserRepository',
-    useClass: AuthUserRepositoryImpl,
+  provide: 'AuthUserRepository',
+  useFactory: () => createRepository(PrismaUserRepository),
 };
+
 export const RefreshTokenRepositoryProvider: Provider = {
-    provide: 'RefreshTokenRepository',
-    useClass: RefreshTokenRepositoryImpl,
+  provide: 'RefreshTokenRepository',
+  useFactory: () => createRepository(PrismaRefreshTokenRepository),
 };
 // Combine all repository providers for easy import
 export const RepositoryProviders = [
-    TripRepositoryProvider,
-    OrganizationRepositoryProvider,
-    ActivityRepositoryProvider,
-    BookingRepositoryProvider,
-    AuthUserRepositoryProvider,
-    RefreshTokenRepositoryProvider,
+  TripRepositoryProvider,
+  OrganizationRepositoryProvider,
+  ActivityRepositoryProvider,
+  BookingRepositoryProvider,
+  AuthUserRepositoryProvider,
+  RefreshTokenRepositoryProvider,
+  PrismaService, // Make sure PrismaService is provided
 ];

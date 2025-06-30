@@ -13,7 +13,6 @@ export * from './billing/index.js';
 // Third-party integrations
 export * from './third-party/stripe.js';
 
-
 // API types
 export * from './api/index.js';
 
@@ -28,3 +27,6 @@ export * from './forms/index.js';
 
 // Map-related types
 export * from './map/index.js';
+
+// Job types
+export * from './job/index.js';

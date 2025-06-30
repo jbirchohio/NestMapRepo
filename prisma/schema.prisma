@@ -1,0 +1,555 @@
+// Clean schema with unique enums and models
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+  
+  // Disable extension management since Supabase handles this
+  extensions  = []
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+
+// =============================================
+// ENUMS
+// =============================================
+
+// User & Organization Enums
+enum UserRole {
+  super_admin
+  admin
+  manager
+  member
+  guest
+}
+
+enum UserStatus {
+  pending
+  active
+  inactive
+  suspended
+  deleted
+}
+
+enum OrganizationPlan {
+  free
+  basic
+  pro
+  enterprise
+  custom
+}
+
+// Guest Type Enum
+enum GuestType {
+  adult
+  child
+  infant
+  senior
+  student
+  military
+}
+
+// File & Media Enums
+enum FileUploadStatus {
+  pending
+  processing
+  completed
+  failed
+  canceled
+}
+
+enum FilePermissionType {
+  read
+  write
+  admin
+}
+
+// Trip & Booking Enums
+enum TripStatus {
+  draft
+  planning
+  confirmed
+  in_progress
+  completed
+  cancelled
+}
+
+enum TripCollaboratorRole {
+  owner
+  editor
+  viewer
+}
+
+enum ActivityType {
+  flight
+  hotel
+  car_rental
+  restaurant
+  meeting
+  event
+  other
+}
+
+enum ActivityStatus {
+  pending
+  confirmed
+  cancelled
+  completed
+}
+
+// Booking & Payment Enums
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  completed
+  failed
+  refunded
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  completed
+  failed
+  refunded
+  partially_refunded
+  cancelled
+}
+
+enum PaymentType {
+  credit_card
+  debit_card
+  bank_transfer
+  paypal
+  other
+}
+
+enum PaymentMethodType {
+  card
+  bank_account
+  wallet
+  other
+}
+
+enum RefundStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+// Notification & Webhook Enums
+enum NotificationType {
+  info
+  success
+  warning
+  error
+  system
+  booking
+  payment
+  approval
+}
+
+enum NotificationStatus {
+  unread
+  read
+  archived
+}
+
+enum NotificationPriority {
+  low
+  normal
+  high
+  urgent
+}
+
+// Approval & Workflow Enums
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+  cancelled
+  expired
+}
+
+enum ApprovalPriority {
+  low
+  normal
+  high
+  critical
+}
+
+// =============================================
+// MODELS
+// =============================================
+
+// Core Models
+model User {
+  id                    String              @id @default(uuid())
+  email                 String              @unique
+  emailVerified         Boolean             @default(false) @map("email_verified")
+  password              String?
+  firstName             String?             @map("first_name")
+  lastName              String?             @map("last_name")
+  phone                 String?
+  avatarUrl             String?             @map("avatar_url")
+  timezone              String?             @default("UTC")
+  locale                String?             @default("en-US")
+  role                  UserRole            @default(member)
+  status                UserStatus          @default(active)
+  lastLoginAt           DateTime?           @map("last_login_at") @db.Timestamptz
+  lastActiveAt          DateTime?           @map("last_active_at") @db.Timestamptz
+  lastIpAddress         String?             @map("last_ip_address")
+  metadata              Json?               @default("{}")
+  createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+  
+  // Relations
+  organizations         Organization[]      @relation("OrganizationMembers")
+  organizationMemberships OrganizationMember[]
+  ownedOrganizations    Organization[]      @relation("OrganizationOwners")
+  createdTrips          Trip[]              @relation("TripCreators")
+  tripCollaborations    TripCollaborator[]
+  createdActivities     Activity[]          @relation("ActivityCreators")
+  memberInvitations    OrganizationMember[] @relation("MemberInvitations")
+  userPayments         Payment[]           @relation("PaymentUser")
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  createdBookings       Booking[]           @relation("BookingUser")
+  
+  @@index([email], name: "user_email_idx")
+  @@index([status], name: "user_status_idx")
+  @@index([createdAt], name: "user_created_at_idx")
+  @@map("users")
+}
+
+model Organization {
+  id                   String            @id @default(uuid())
+  name                 String
+  slug                 String            @unique
+  description          String?
+  logoUrl              String?           @map("logo_url")
+  website              String?
+  industry             String?
+  size                 String?
+  plan                 OrganizationPlan  @default(free)
+  billingEmail         String?           @map("billing_email")
+  billingPhone         String?           @map("billing_phone")
+  billingAddress       Json?             @default("{}") @map("billing_address")
+  shippingAddress      Json?             @default("{}") @map("shipping_address")
+  metadata             Json?             @default("{}")
+  isActive             Boolean           @default(true) @map("is_active")
+  trialEndsAt          DateTime?         @map("trial_ends_at") @db.Timestamptz
+  billingCycleStart    Int?             @map("billing_cycle_start")
+  billingCycleEnd      Int?             @map("billing_cycle_end")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+  
+  // Relations
+  owner                User?             @relation("OrganizationOwners", fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId              String?           @map("owner_id")
+  members              User[]            @relation("OrganizationMembers")
+  trips                Trip[]
+  activities           Activity[]
+  organizationMembers  OrganizationMember[]
+  bookings             Booking[]
+  payments             Payment[]
+  notifications        Notification[]
+  webhooks             Webhook[]
+  auditLogs            AuditLog[]        @relation("OrganizationAuditLogs")
+  createdAuditLogs     AuditLog[]        @relation("OrganizationCreatedAuditLogs")
+  
+  @@index([slug], name: "organization_slug_idx")
+  @@index([ownerId], name: "organization_owner_id_idx")
+  @@index([isActive], name: "organization_is_active_idx")
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id              String          @id @default(uuid())
+  organizationId  String          @map("organization_id")
+  userId          String          @map("user_id")
+  role            UserRole        @default(member)
+  status          UserStatus      @default(active)
+  invitedById     String?         @map("invited_by_id")
+  invitedAt       DateTime?       @map("invited_at") @db.Timestamptz
+  acceptedAt      DateTime?       @map("accepted_at") @db.Timestamptz
+  metadata        Json?           @default("{}")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitedBy       User?           @relation("MemberInvitations", fields: [invitedById], references: [id], onDelete: SetNull)
+  
+  @@unique([organizationId, userId], name: "organization_member_unique")
+  @@index([organizationId], name: "organization_member_org_id_idx")
+  @@index([userId], name: "organization_member_user_id_idx")
+  @@index([invitedById], name: "organization_member_invited_by_idx")
+  @@map("organization_members")
+}
+
+// Trip Related Models
+model Trip {
+  id              String          @id @default(uuid())
+  organizationId  String          @map("organization_id")
+  createdById     String?         @map("created_by_id")
+  title           String
+  description     String?
+  status          TripStatus      @default(draft)
+  startDate       DateTime?       @map("start_date") @db.Timestamptz
+  endDate         DateTime?       @map("end_date") @db.Timestamptz
+  timezone        String?
+  location        String?
+  latitude        Float?
+  longitude       Float?
+  isBusiness      Boolean         @default(false) @map("is_business")
+  isPersonal      Boolean         @default(true) @map("is_personal")
+  isGroup         Boolean         @default(false) @map("is_group")
+  isPublic        Boolean         @default(false) @map("is_public")
+  metadata        Json            @default("{}")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  // Relations
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy     User?           @relation("TripCreators", fields: [createdById], references: [id], onDelete: SetNull)
+  collaborators  TripCollaborator[]
+  bookings      Booking[]       @relation("TripBookings")
+  activities    Activity[]      @relation("TripActivities")
+  
+  @@index([organizationId], name: "trip_org_id_idx")
+  @@index([createdById], name: "trip_created_by_idx")
+  @@index([status], name: "trip_status_idx")
+  @@index([startDate, endDate], name: "trip_date_range_idx")
+  @@map("trips")
+}
+
+model Activity {
+  id              String          @id @default(uuid())
+  organizationId  String          @map("organization_id")
+  tripId          String?         @map("trip_id")
+  createdById     String?         @map("created_by_id")
+  title           String
+  description     String?
+  type            ActivityType
+  status          ActivityStatus  @default(pending)
+  startTime       DateTime?       @map("start_time") @db.Timestamptz
+  endTime         DateTime?       @map("end_time") @db.Timestamptz
+  location        String?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  timezone        String?
+  isAllDay        Boolean         @default(false) @map("is_all_day")
+  isRecurring     Boolean         @default(false) @map("is_recurring")
+  recurrenceRule  String?         @map("recurrence_rule")
+  metadata        Json            @default("{}")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  // Relations
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  trip          Trip?           @relation("TripActivities", fields: [tripId], references: [id], onDelete: Cascade)
+  createdBy     User?           @relation("ActivityCreators", fields: [createdById], references: [id], onDelete: SetNull)
+  bookings      Booking[]       @relation("ActivityBookings")
+  
+  @@index([organizationId], name: "activity_org_id_idx")
+  @@index([tripId], name: "activity_trip_id_idx")
+  @@index([createdById], name: "activity_created_by_idx")
+  @@index([startTime, endTime], name: "activity_time_range_idx")
+  @@map("activities")
+}
+
+model TripCollaborator {
+  id              String              @id @default(uuid())
+  tripId          String              @map("trip_id")
+  userId          String              @map("user_id")
+  role            TripCollaboratorRole @default(viewer)
+  isOwner         Boolean             @default(false) @map("is_owner")
+  isOrganizer     Boolean             @default(false) @map("is_organizer")
+  metadata        Json                @default("{}")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  
+  trip          Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([tripId, userId], name: "trip_collaborator_unique")
+  @@index([tripId], name: "trip_collaborator_trip_id_idx")
+  @@index([userId], name: "trip_collaborator_user_id_idx")
+  @@map("trip_collaborators")
+}
+
+// Booking & Payment Models
+model Booking {
+  id              String          @id @default(uuid())
+  organizationId  String          @map("organization_id")
+  tripId          String?         @map("trip_id")
+  activityId      String?         @map("activity_id")
+  createdById     String?         @map("created_by_id")
+  referenceNumber String          @unique @map("reference_number")
+  status          BookingStatus   @default(pending)
+  type            String          // e.g., "flight", "hotel", "car_rental"
+  provider        String?         // e.g., "duffel", "expedia", "direct"
+  providerData    Json?           @map("provider_data") @default("{}")
+  startDate       DateTime?       @map("start_date") @db.Timestamptz
+  endDate         DateTime?       @map("end_date") @db.Timestamptz
+  timezone        String?
+  location        String?
+  notes           String?
+  metadata        Json            @default("{}")
+  cancellationPolicy String?       @map("cancellation_policy")
+  cancellationDeadline DateTime?    @map("cancellation_deadline") @db.Timestamptz
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  // Relations
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  trip          Trip?           @relation("TripBookings", fields: [tripId], references: [id], onDelete: SetNull)
+  activity      Activity?       @relation("ActivityBookings", fields: [activityId], references: [id], onDelete: SetNull)
+  createdBy     User?           @relation("BookingUser", fields: [createdById], references: [id], onDelete: SetNull)
+  payments      Payment[]
+  
+  @@index([organizationId], name: "booking_org_id_idx")
+  @@index([tripId], name: "booking_trip_id_idx")
+  @@index([activityId], name: "booking_activity_id_idx")
+  @@index([createdById], name: "booking_created_by_idx")
+  @@index([status], name: "booking_status_idx")
+  @@index([referenceNumber], name: "booking_reference_number_idx")
+  @@map("bookings")
+}
+
+model Payment {
+  id              String          @id @default(uuid())
+  organizationId  String          @map("organization_id")
+  bookingId       String?         @map("booking_id")
+  userId          String?         @map("user_id")
+  amount          Decimal         @default(0)
+  currency        String          @default("USD")
+  status          PaymentStatus   @default(pending)
+  type            PaymentType
+  method          PaymentMethodType
+  transactionId   String?         @map("transaction_id")
+  processor       String?         // e.g., "stripe", "paypal"
+  processorData   Json?           @map("processor_data") @default("{}")
+  description     String?
+  notes           String?
+  metadata        Json            @default("{}")
+  processedAt     DateTime?       @map("processed_at") @db.Timestamptz
+  refundedAt      DateTime?       @map("refunded_at") @db.Timestamptz
+  refundedAmount  Decimal?        @map("refunded_amount")
+  refundReason    String?         @map("refund_reason")
+  refundStatus    RefundStatus?   @map("refund_status")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  // Relations
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  booking       Booking?        @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  user          User?           @relation("PaymentUser", fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([organizationId], name: "payment_org_id_idx")
+  @@index([bookingId], name: "payment_booking_id_idx")
+  @@index([userId], name: "payment_user_id_idx")
+  @@index([status], name: "payment_status_idx")
+  @@index([transactionId], name: "payment_transaction_id_idx")
+  @@map("payments")
+}
+
+// Notification & Webhook Models
+model Notification {
+  id              String              @id @default(uuid())
+  organizationId  String?             @map("organization_id")
+  userId          String?             @map("user_id")
+  type            NotificationType
+  title           String
+  message         String
+  data            Json?               @default("{}")
+  status          NotificationStatus  @default(unread)
+  priority        NotificationPriority @default(normal)
+  actionUrl       String?             @map("action_url")
+  readAt          DateTime?           @map("read_at") @db.Timestamptz
+  expiresAt       DateTime?           @map("expires_at") @db.Timestamptz
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  
+  // Relations
+  organization  Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user          User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([organizationId], name: "notification_org_id_idx")
+  @@index([userId], name: "notification_user_id_idx")
+  @@index([status], name: "notification_status_idx")
+  @@index([type], name: "notification_type_idx")
+  @@index([createdAt], name: "notification_created_at_idx")
+  @@map("notifications")
+}
+
+model Webhook {
+  id              String          @id @default(uuid())
+  organizationId  String          @map("organization_id")
+  name            String
+  url             String
+  events          String[]        // Array of event types to listen for
+  secret          String?         // For verifying webhook signatures
+  isActive        Boolean         @default(true) @map("is_active")
+  metadata        Json?           @default("{}")
+  lastFiredAt     DateTime?       @map("last_fired_at") @db.Timestamptz
+  lastError       String?         @map("last_error")
+  retryCount      Int             @default(0) @map("retry_count")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  @@index([organizationId], name: "webhook_org_id_idx")
+  @@index([isActive], name: "webhook_is_active_idx")
+  @@map("webhooks")
+}
+
+// Audit & System Models
+model AuditLog {
+  id              String        @id @default(uuid())
+  organizationId  String        @map("organization_id")
+  createdByOrgId  String?       @map("created_by_org_id")
+  userId          String?       @map("user_id")
+  action          String
+  entityType      String        @map("entity_type")
+  entityId        String?       @map("entity_id")
+  oldData         Json?         @map("old_data") @default("{}")
+  newData         Json?         @map("new_data") @default("{}")
+  ipAddress       String?       @map("ip_address")
+  userAgent       String?       @map("user_agent")
+  metadata        Json?         @default("{}")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  
+  // Relations
+  organization  Organization    @relation("OrganizationAuditLogs", fields: [organizationId], references: [id], onDelete: Cascade)
+  createdByOrg  Organization?   @relation("OrganizationCreatedAuditLogs", fields: [createdByOrgId], references: [id], onDelete: SetNull)
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([organizationId], name: "audit_log_org_id_idx")
+  @@index([userId], name: "audit_log_user_id_idx")
+  @@index([entityType, entityId], name: "audit_log_entity_idx")
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id              String          @id @default(uuid())
+  key             String          @unique
+  value           Json?           @default("{}")
+  description     String?
+  isPublic        Boolean         @default(false) @map("is_public")
+  updatedBy       String?         @map("updated_by")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  @@map("system_settings")
+}
+
+// Indexes and relations should be added to each model as needed.

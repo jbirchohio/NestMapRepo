@@ -10,7 +10,7 @@ export enum ErrorType {
     INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR'
 }
 
-import { AppErrorCode } from '@shared/types/error-codes.js';
+import { AppErrorCode } from '@shared/schema/types/error-codes';
 /**
  * Standard API error structure
  */

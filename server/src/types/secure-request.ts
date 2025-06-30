@@ -1,14 +1,14 @@
 import type { Request as ExpressRequest, Response, NextFunction, RequestHandler } from 'express';
-import type { AuthUser, UserRole } from './auth-user.js';
+import type { AuthUser } from './auth-user.js';
+import type { UserRole } from '../../../shared/src/types/user/index.js';
 
 // Re-export AuthUser for convenience
 export type { AuthUser };
 
 // Define our custom properties that we'll add to the request
-export interface SecureRequest extends ExpressRequest {
+export interface SecureRequest extends Omit<ExpressRequest, 'organizationId'> {
   user?: AuthUser;
-  organizationId?: string | null;
-  organization_id?: string | null; // Legacy support
+  organizationId?: string;
   apiVersion?: string;
   apiKeyAuth?: {
     organizationId: string;

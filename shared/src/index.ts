@@ -22,3 +22,15 @@ export type {
   NewUser, 
   NewTrip 
 } from './schema.js';
+
+// Export all types
+export * from './types.js';
+
+// Explicitly export job types
+export * from './types/job/index.js';
+
+// Export API utilities
+export * from './api/index.js';
+
+export * from './queryClient.js';
+export * from './fieldTransforms.js';

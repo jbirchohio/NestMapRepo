@@ -1,7 +1,7 @@
 import SharedSegmentType from '@/types/SharedSegmentType';
 import SharedSliceType from '@/types/SharedSliceType';
 import SharedErrorType from '@/types/SharedErrorType';
-import SharedBookingDataType from '@/types/SharedBookingDataType';
+import SharedBookingDataType from '@shared/schema/types/SharedBookingDataType';
 import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -40,7 +40,7 @@ interface PaymentDetails {
 }
 export default function FlightBooking() {
     const { offerId } = useParams();
-    const [location, setLocation] = useLocation();
+    const [, setLocation] = useLocation();
     const { toast } = useToast();
     const [passengers, setPassengers] = useState<PassengerDetails[]>([{
             given_name: '',
@@ -65,9 +65,8 @@ export default function FlightBooking() {
             country: ''
         }
     });
-    const [selectedSeats, setSelectedSeats] = useState<{
-        [key: string]: string;
-    }>({});
+    // TODO: Implement seat selection
+    const [selectedSeats] = useState<{[key: string]: string}>({});
     // Get offer details
     const { data: offer, isLoading: offerLoading } = useQuery({
         queryKey: ['flight-offer', offerId],

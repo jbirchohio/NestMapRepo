@@ -1,5 +1,5 @@
 import SharedDeadlineType from '@/types/SharedDeadlineType';
-import SharedActivityType from '@/types/SharedActivityType';
+import SharedActivityType from '@shared/schema/types/SharedActivityType';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";

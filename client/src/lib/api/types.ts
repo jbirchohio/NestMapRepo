@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
-import type { ApiSuccessResponse, ApiErrorResponse } from '@shared/types/api';
+import type { ApiSuccessResponse, ApiErrorResponse } from '@shared/schema/types/api';
 
 export interface ApiConfig extends AxiosRequestConfig {
   /** Skip authentication for this request */

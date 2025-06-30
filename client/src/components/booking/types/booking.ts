@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Flight } from './flight';
-import type { Hotel } from '@shared/types/hotel';
+import type { Hotel } from '@shared/schema/types/hotel';
 
 export const clientInfoSchema = z.object({
     // Travel Details

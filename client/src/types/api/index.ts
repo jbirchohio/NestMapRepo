@@ -1,1 +1,1 @@
-export * from '@shared/types/api';
+export * from '@shared/schema/types/api';

@@ -4,7 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { authService } from '@/services/authService';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionLockout } from '@/utils/sessionLockout';
-import { AuthUser, AuthError, AuthTokens, Permission, LoginDto, RegisterDto } from '@shared/types/auth';
+import { AuthUser, AuthError, AuthTokens, Permission, LoginDto, RegisterDto } from '@shared/schema/types/auth';
 import type { JwtPayload } from '@shared/types/auth/jwt';
 
 type UserResponse = AuthUser;

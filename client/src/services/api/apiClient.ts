@@ -1,4 +1,4 @@
-import SharedErrorType from '@/types/SharedErrorType';
+import SharedErrorType from '@shared/schema/types/SharedErrorType';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
 import { AbortController } from 'abort-controller';
 import { SecurityUtils } from '@/utils/securityUtils';

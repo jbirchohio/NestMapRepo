@@ -1,4 +1,4 @@
-import type { BookingStatus, BookingType } from '@shared/types/bookings.js';
+import type { BookingStatus, BookingType } from '@shared/schema/types/booking';
 
 /**
  * Data Transfer Object for creating a booking

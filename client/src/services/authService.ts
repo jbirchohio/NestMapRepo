@@ -4,9 +4,10 @@ import type {
   LoginDto, 
   RegisterDto,
   ResetPasswordDto,
-} from '@shared/types/auth/dto';
-import type { AuthResponse, AuthUser } from '@shared/types/auth';
-import { AuthError, AuthErrorCode } from '@shared/types/auth/auth';
+} from '@shared/schema/types/auth/dto';
+import type { AuthResponse } from '@shared/schema/types/auth/jwt';
+import type { AuthUser } from '@shared/schema/types/auth/user';
+import { AuthError, AuthErrorCode } from '@shared/schema/types/auth/auth';
 import { TokenManager } from '@/utils/tokenManager';
 
 
@@ -378,7 +379,7 @@ export class AuthService {
         );
       }
       
-      const { user } = response;
+      const { user } = response.data;
 
       if (!user) {
         throw new AuthError(
@@ -387,14 +388,14 @@ export class AuthService {
         );
       }
 
-      // Ensure the user has required AuthUser properties
-      const authUser: AuthUser = {
-        ...user,
-        permissions: user.permissions || [],
-        is_active: user.is_active ?? true
-      };
+      if (!isAuthUser(user)) {
+        throw new AuthError(
+          AuthErrorCode.VALIDATION_ERROR,
+          'Invalid user data received from server'
+        );
+      }
 
-      return authUser;
+      return user;
     } catch (error) {
       console.error('Password reset failed:', error);
       
@@ -426,6 +427,6 @@ export class AuthService {
 export const authService = new AuthService();
 
 // Re-export types for convenience
-export type { AuthError, AuthErrorCode } from '@shared/types/auth/auth';
-export type { AuthUser, AuthResponse } from '@shared/types/auth';
-export type { LoginDto, RegisterDto, RequestPasswordResetDto, ResetPasswordDto } from '@shared/types/auth/dto';
+export type { AuthError, AuthErrorCode } from '@shared/schema/types/auth/auth';
+export type { AuthUser, AuthResponse } from '@shared/schema/types/auth';
+export type { LoginDto, RegisterDto, RequestPasswordResetDto, ResetPasswordDto } from '@shared/schema/types/auth/dto';

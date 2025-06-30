@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import type { User as ApiUser } from '@shared/types/user';
-import type { Notification as AppNotification } from '@shared/types/notification';
+import type { User as ApiUser } from '@shared/schema/types/user';
+import type { Notification as AppNotification } from '@shared/schema/types/notification';
 
 // Re-export for backward compatibility
 // Export as AppNotification to avoid conflict with the browser's Notification type

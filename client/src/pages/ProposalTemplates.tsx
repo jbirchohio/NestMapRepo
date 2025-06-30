@@ -1,4 +1,4 @@
-import SharedFormType from '@/types/SharedFormType';
+import SharedFormType from '@shared/schema/types/SharedFormType';
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";

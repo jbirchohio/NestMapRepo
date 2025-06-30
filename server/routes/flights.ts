@@ -3,7 +3,7 @@ import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';
 import { asyncHandler } from '../utils/routeHelpers.js';
-import type { FlightSearchParams } from '@shared/types/flight.js';
+import type { FlightSearchParams } from '@shared/schema/types/flight';
 // Define types for Duffel API responses
 interface DuffelOffer {
     id: string;

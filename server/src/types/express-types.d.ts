@@ -13,7 +13,6 @@ declare global {
       // Add any server-specific user properties here
       sessionId?: string;
       displayName?: string;
-      organization_id?: string; // Keep for backward compatibility
       analyticsScope?: AnalyticsScope;
       
       // Add type-safe authentication methods

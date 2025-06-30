@@ -1,15 +1,10 @@
-
 import { QueryClient } from '@tanstack/react-query';
 import { apiClient } from './api/client';
 
 export const queryClient = new QueryClient();
 
-export const apiRequest = async (method: string, url: string, data?: any) => {
-  const response = await apiClient.request({
-    method,
-    url,
-    data,
-  });
+export const apiRequest = async (config: any) => {
+  const response = await apiClient.request(config);
   return response.data;
 };
 

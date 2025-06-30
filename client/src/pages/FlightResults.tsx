@@ -1,4 +1,4 @@
-import SharedBagType from '@/types/SharedBagType';
+import SharedBagType from '@shared/schema/types/SharedBagType';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';

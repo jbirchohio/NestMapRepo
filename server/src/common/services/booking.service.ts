@@ -7,7 +7,7 @@ import type {
   BookingType,
   Booking as SharedBookingType,
   AnyBooking
-} from '@shared/types/booking/index.js';
+} from '@shared/schema/types/booking';
 
 // Import database types
 import type { 

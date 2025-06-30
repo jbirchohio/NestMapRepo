@@ -1,6 +1,6 @@
-import type { Router } from '../../express-augmentations.ts';
+import type { Router } from 'express';
 // Core routes
-import { authRouter as authRoutes } from '../src/auth/auth.routes.js';
+import prismaAuthRoutes from '../src/auth/routes/prisma-auth.routes.js';
 import proposalsRoutes from './proposals.js';
 import tripRoutes from './trips.js';
 import activityRoutes from './activities.js';
@@ -31,11 +31,14 @@ import healthRoutes from './health.js';
 import notificationsRoutes from './notifications.js';
 import flightRoutes from './flights.js';
 import exportRoutes from './export.js';
+// Import Prisma authentication middleware
+import { prismaAuthAdapter } from '../src/auth/prisma-auth.adapter.js';
 // Test routes (development only)
 import testRoutes from './test.routes.js';
 const router = Router();
 // Mount all route modules
-router.use('/auth', authRoutes);
+// Use the new Prisma-based authentication routes
+router.use('/auth', prismaAuthRoutes);
 router.use('/proposals', proposalsRoutes);
 router.use('/trips', tripRoutes);
 router.use('/activities', activityRoutes);
@@ -88,11 +91,10 @@ router.get('/templates', async (_req, res) => {
     }
 });
 // User permissions endpoint - requires authentication
-router.get('/user/permissions', async (req, res) => {
+router.get('/user/permissions', 
+  prismaAuthAdapter.authenticate(),
+  async (req, res) => {
     try {
-        if (!req.user) {
-            return res.status(401).json({ message: 'Authentication required' });
-        }
         // Get user's actual permissions from database based on role
         const { getUserPermissionsByRole } = await import('../permissions.js');
         let parsedOrganizationId: number | undefined;
@@ -175,7 +177,10 @@ router.get('/dashboard-stats', (req, res) => {
     return;
 });
 // Team members endpoint for JonasCo
-router.get('/organizations/members', async (_req, res) => {
+router.get('/organizations/members', 
+  prismaAuthAdapter.authenticate(),
+  prismaAuthAdapter.requireRole(['ADMIN', 'SUPER_ADMIN']),
+  async (_req, res) => {
     try {
         // Return JonasCo team members data
         const teamMembers = [

@@ -28,6 +28,29 @@ The API client provides a type-safe way to interact with the backend API. It's b
 
 ## API Client
 
+The API client provides a type-safe way to interact with the backend API. It's built on top of `fetch` and includes:
+
+- TypeScript support for all requests and responses using `@shared/schema` types
+- Consistent error handling
+- Request/response interceptors
+- Support for query parameters and request configuration
+- Integration with React Query for data fetching and caching
+
+### Type Definitions
+
+All API types are defined in the shared package and should be imported from `@shared/schema`:
+
+```typescript
+// Request/response types
+import type { 
+  CreateUserRequest, 
+  UserResponse 
+} from '@shared/schema/api/users';
+
+// Query parameter types
+import type { UserQueryParams } from '@shared/schema/types/query-params';
+```
+
 ### Basic Usage
 
 Import the `api` function from `@/lib/api`:
@@ -187,6 +210,26 @@ function TodoList() {
 ```
 
 ## Best Practices
+
+1. **Type Safety**
+   - Always use types from `@shared/schema` for API requests/responses
+   - Define request/response types in the shared package
+   - Use `import type` for type-only imports
+
+2. **Error Handling**
+   - Use the centralized error handling from `@shared/schema/errors`
+   - Include proper error boundaries
+   - Log errors consistently
+
+3. **API Client**
+   - Use the typed API client methods
+   - Handle loading states appropriately
+   - Cancel requests when components unmount
+
+4. **React Query**
+   - Use proper query keys
+   - Implement proper cache invalidation
+   - Handle optimistic updates
 
 1. **Use Resource Hooks**
    - Prefer `createResourceHooks` for standard CRUD operations

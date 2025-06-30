@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
 import type { ApiResponse } from '@/types/api';
 import type { ClientActivity } from '@/lib/types';
-import type { ActivityStatus, ActivityType } from '@shared/types/activity';
+import type { ActivityStatus, ActivityType } from '@shared/schema/types/activity';
 
 // Server-side activity type (uses string dates for API)
 export interface Activity {

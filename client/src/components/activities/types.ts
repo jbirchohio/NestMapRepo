@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ClientActivity } from '@shared/types/activity';
+import type { ClientActivity } from '@shared/schema/types/activity/index';
 
 /**
  * Schema for validating activity form data

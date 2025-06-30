@@ -1,5 +1,5 @@
 import { lazy, ComponentType, ReactElement, Suspense } from 'react';
-import { UserRole } from '@shared/types/auth';
+import { UserRole } from '@shared/schema/types/auth';
 
 // Type for components that can be imported with dynamic imports
 type ImportedComponent = {

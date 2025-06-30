@@ -1,4 +1,4 @@
-import { Flight, FlightSegment, Airport, FlightPrice } from '@shared/types/flight';
+import { Flight, FlightSegment, Airport, FlightPrice } from '@shared/schema/types/flight';
 
 // Helper function to create airport data
 const createAirport = (iataCode: string, name: string, city: string, isOrigin: boolean): Airport => ({

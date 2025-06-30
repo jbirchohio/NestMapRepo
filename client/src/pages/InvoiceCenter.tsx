@@ -1,5 +1,5 @@
 import SharedProposalType from '@/types/SharedProposalType';
-import SharedPType from '@/types/SharedPType';
+import SharedPType from '@shared/schema/types/SharedPType';
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";

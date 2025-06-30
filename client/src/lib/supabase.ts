@@ -1,6 +1,6 @@
 import SharedSessionType from '@/types/SharedSessionType';
-import SharedEventType from '@/types/SharedEventType';
-import SharedMetadataType from '@/types/SharedMetadataType';
+import SharedEventType from '@shared/schema/types/SharedEventType';
+import SharedMetadataType from '@shared/schema/types/SharedMetadataType';
 import { createClient } from '@supabase/supabase-js';
 // Supabase connection details from environment variables
 const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'];

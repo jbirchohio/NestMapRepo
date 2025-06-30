@@ -7,8 +7,9 @@ export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' 
 
 /**
  * Type of booking
+ * Uses camelCase to follow TypeScript/JavaScript conventions
  */
-export type BookingType = 'flight' | 'hotel' | 'car_rental' | 'activity' | 'other';
+export type BookingType = 'flight' | 'hotel' | 'carRental' | 'activity' | 'other';
 
 /**
  * Booking provider types
@@ -17,7 +18,7 @@ export const bookingProviders = [
   'internal',
   'amadeus',
   'sabre',
-  'booking_com',
+  'bookingCom',
   'expedia',
   'airbnb',
   'viator',
@@ -55,7 +56,7 @@ export interface HotelBooking extends BaseBooking {
 }
 
 export interface CarRentalBooking extends BaseBooking {
-  type: 'car_rental';
+  type: 'carRental';
   rentalCompany: string;
   carModel: string;
   licensePlate?: string | null;
@@ -199,7 +200,7 @@ export type UpdateBookingData = Partial<Omit<CreateBookingData, 'type' | 'organi
  * Schema for validating booking form data
  */
 export const bookingFormSchema = z.object({
-  type: z.enum(['flight', 'hotel', 'car_rental', 'activity', 'other']),
+  type: z.enum(['flight', 'hotel', 'carRental', 'activity', 'other']),
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   totalPrice: z.number().min(0, 'Price must be a positive number'),
@@ -291,7 +292,7 @@ export function isBookingType(type: unknown): type is BookingType {
   return [
     'flight',
     'hotel',
-    'car_rental',
+    'carRental',
     'activity',
     'other',
   ].includes(type as string);

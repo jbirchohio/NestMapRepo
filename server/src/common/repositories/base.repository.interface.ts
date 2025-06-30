@@ -1,22 +1,40 @@
-import type { NodePgTransaction } from 'drizzle-orm/node-postgres';
-import type { TablesRelationalConfig } from 'drizzle-orm/relations';
-
 /**
- * Base repository interface defining common CRUD operations
+ * Base repository interface that defines common CRUD operations
  */
-export interface BaseRepository<T, ID, CreateData, UpdateData> {
-    findById(id: ID): Promise<T | null>;
-    findAll(): Promise<T[]>;
-    create(data: CreateData): Promise<T>;
-    update(id: ID, data: UpdateData): Promise<T | null>;
-    delete(id: ID): Promise<boolean>;
-    count(filter?: Partial<T>): Promise<number>;
-    exists(id: ID): Promise<boolean>;
-    /**
-     * Execute multiple operations within a single database transaction.
-     *
-     * @param fn - Callback containing transactional operations using the
-     *   provided transaction instance.
-     */
-    withTransaction<R>(fn: (tx: NodePgTransaction<Record<string, unknown>, TablesRelationalConfig>) => Promise<R>): Promise<R>;
+export interface BaseRepository<T, ID, CreateInput, UpdateInput> {
+  /**
+   * Find a single entity by its ID
+   */
+  findById(id: ID): Promise<T | null>;
+  
+  /**
+   * Find all entities with optional pagination and filtering
+   */
+  findAll(params?: {
+    skip?: number;
+    take?: number;
+    cursor?: any;
+    where?: any;
+    orderBy?: any;
+  }): Promise<T[]>;
+  
+  /**
+   * Create a new entity
+   */
+  create(data: CreateInput): Promise<T>;
+  
+  /**
+   * Update an existing entity
+   */
+  update(id: ID, data: UpdateInput): Promise<T | null>;
+  
+  /**
+   * Delete an entity by ID
+   */
+  delete(id: ID): Promise<boolean>;
+  
+  /**
+   * Count entities matching the given filter
+   */
+  count(where?: any): Promise<number>;
 }

@@ -1,4 +1,4 @@
-import SharedProposalType from '@/types/SharedProposalType';
+import SharedProposalType from '@shared/schema/types/SharedProposalType';
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

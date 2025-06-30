@@ -5,7 +5,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import MainNavigation from '@/components/MainNavigation';
 import BrandedFooter from '@/components/BrandedFooter';
 import { useToast } from '@/components/ui/use-toast';
-import type { User } from '@/shared/types/user/User';
+import type { User } from '@shared/schema/types/user';
 interface MainLayoutProps {
     children: React.ReactNode;
     hideNav?: boolean;

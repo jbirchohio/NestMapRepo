@@ -1,4 +1,4 @@
-import SharedDataType from '@/types/SharedDataType';
+import SharedDataType from '@shared/schema/types/SharedDataType';
 import apiClient from './apiClient'; // Default import
 import { EventEmitter } from 'events';
 export interface Notification {

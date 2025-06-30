@@ -1,6 +1,6 @@
 // Re-export shared types
-export { default as SharedTripType } from './SharedTripType.js';
-export { default as SharedConflictFlagsType } from './SharedConflictFlagsType.js';
+export type { default as SharedTripType } from './SharedTripType.js';
+export type { default as SharedConflictFlagsType } from './SharedConflictFlagsType.js';
 
 // Re-export DTOs
 export * from './trip.dto.js';

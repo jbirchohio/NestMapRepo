@@ -1,5 +1,5 @@
 import SharedValueType from '@/types/SharedValueType';
-import SharedErrorType from '@/types/SharedErrorType';
+import SharedErrorType from '@shared/schema/types/SharedErrorType';
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";

@@ -4,7 +4,7 @@ import type {
   BookingType, 
   AnyBooking
 } from '@shared/types/booking/index.ts';
-import type { BookingSearchParams } from '@shared/src/types/booking/index.js';
+import type { BookingSearchParams } from '@shared/schema/types/booking';
 import type { BaseRepository } from '../base.repository.interface.js';
 
 /**

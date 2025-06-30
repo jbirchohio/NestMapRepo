@@ -158,3 +158,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 .geminiignore
+
+/src/generated/prisma

@@ -2,7 +2,7 @@ import { pgTable, uuid, text, timestamp, jsonb, pgEnum, integer, boolean, index 
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import type { ActivityStatus, ActivityType } from '@shared/types/activity.js';
+import type { ActivityStatus, ActivityType } from '@shared/schema/types/activity';
 
 // Define enums for activity status and type
 const activityStatus = pgEnum('activity_status', [

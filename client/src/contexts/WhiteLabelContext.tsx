@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import { useAuth } from '@/state/contexts/AuthContext';
 import { useLocation } from 'wouter';
-import { apiClient } from '@shared/api';
+import { apiClient } from '@shared/schema/api';
 // Update the import path below to the correct relative path if 'use-toast' exists in your project structure.
 // For example, if 'use-toast.ts' is in 'src/components/ui/', use:
 import { useToast } from '../components/ui/use-toast';
