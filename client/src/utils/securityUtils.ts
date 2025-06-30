@@ -1,22 +1,15 @@
-import { TokenManager } from './tokenManager';
-import { SessionSecurity } from './sessionSecurity';
-import { SecurityContext, SecurityHeaders, SanitizedError, SessionDetails } from './types';
-import { TokenError, CSRFError, SessionError } from './errors';
+import { TokenManager } from './tokenManager.js';
+import { SessionSecurity } from './sessionSecurity.js';
+import { SecurityHeaders, SanitizedError, SessionDetails } from './types.js';
+import { TokenError, CSRFError, SessionError } from './errors.js';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 export class SecurityUtils {
     private static instance: SecurityUtils;
-    private securityContext: SecurityContext;
     private tokenManager: TokenManager;
     private sessionSecurity: SessionSecurity;
     private constructor() {
         this.tokenManager = TokenManager.getInstance();
         this.sessionSecurity = SessionSecurity.getInstance();
-        this.securityContext = {
-            headers: {},
-            session: null,
-            token: null,
-            errors: []
-        };
     }
     public static getInstance(): SecurityUtils {
         if (!SecurityUtils.instance) {
@@ -97,7 +90,7 @@ export class SecurityUtils {
             }
             // Validate token if present
             if (config.headers?.Authorization) {
-                const token = config.headers.Authorization.replace('Bearer ', '');
+                // The token manager already validates the stored token
                 if (!this.tokenManager.hasValidToken()) {
                     throw new TokenError('Invalid token');
                 }

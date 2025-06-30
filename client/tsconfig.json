@@ -10,16 +10,19 @@
     "paths": {
       "@client/*": ["./src/*"],
       "@/*": ["./src/*"],
-      "@shared/schema/*": ["../shared/dist/*"]
+      "@shared/schema/*": ["../shared/dist/*.js"],
+      "@/types/*": ["./src/types/*"],
+      "@components/*": ["./src/components/*"],
+      "@hooks/*": ["./src/hooks/*"],
     },
 
 
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
 

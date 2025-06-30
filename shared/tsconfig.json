@@ -3,8 +3,6 @@
   "compilerOptions": {
     "composite": true,
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "target": "ES2020",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -16,9 +14,9 @@
     "rootDir": "src",
     "baseUrl": ".",
     "paths": {
-      "@shared/schema/*": ["src/*"],
-      "@shared/constants": ["src/constants/index.ts"],
-      "@shared/constants/*": ["src/constants/*"]
+      "@shared/schema/*": ["./src/*"],
+      "@shared/constants": ["./src/constants/index"],
+      "@shared/constants/*": ["./src/constants/*"]
     },
     "allowImportingTsExtensions": true,
     "emitDeclarationOnly": true

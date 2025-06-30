@@ -42,44 +42,110 @@ This document provides context and guidelines for AI assistants working with the
 4. Write unit tests for new features
 5. Document complex business logic with JSDoc
 
-## TypeScript Configuration
+## TypeScript Architecture
 
 ### Project Structure
+
 ```
 project-root/
 ├── client/               # Frontend application
 │   └── src/
-│       └── types/       # Client-specific types (minimal)
+│       ├── types/       # Client-specific types (minimal)
+│       └── ...
 ├── server/               # Backend application
 │   └── src/
 │       └── types/       # Server-specific types (minimal)
 └── shared/               # Shared code between client and server
     └── src/
-        └── types/       # Shared type definitions
+        ├── types/       # Shared type definitions
+        │   ├── activity/  # Activity-related types
+        │   ├── ai/        # AI-related types
+        │   ├── api/       # API contract types
+        │   ├── approval/  # Approval workflow types
+        │   ├── auth/      # Authentication types
+        │   ├── billing/   # Billing-related types
+        │   ├── booking/   # Booking-related types
+        │   ├── collaboration/ # Collaboration types
+        │   ├── forms/     # Form-related types
+        │   ├── job/       # Job-related types
+        │   ├── map/       # Map-related types
+        │   ├── notification/ # Notification types
+        │   ├── trip/      # Trip-related types
+        │   └── user/      # User-related types
+        └── api/         # Shared API client code
 ```
+
+### Configuration Files
+
+#### Base Configuration (`tsconfig.base.json`)
+- Target: ES2022
+- Module: NodeNext
+- Strict mode enabled
+- Source maps and declaration files
+- Composite build support
+
+#### Client Configuration (`client/tsconfig.json`)
+- Extends base config
+- Module: ESNext
+- JSX support for React
+- Path aliases for `@client/*` and `@shared/*`
+- References shared package
+
+#### Server Configuration (`server/tsconfig.json`)
+- Extends base config
+- Node.js environment
+- Path aliases for server-specific imports
+- Database type definitions
+- References shared package
+
+#### Shared Configuration (`shared/tsconfig.json`)
+- Composite build enabled
+- Strict type checking
+- Path aliases for shared code
+- Separate compilation for shared modules
 
 ### Import/Export Patterns
 
-#### Shared Types
+#### Shared Package Imports
 ```typescript
-// Good - Using path aliases
-import { User } from '@shared/types/auth/user';
+// Types
+import { User } from '@shared/schema/types/user';
+import type { ApiResponse } from '@shared/schema/api';
 
-// Avoid - Relative paths
-import { User } from '../../../shared/src/types/auth/user';
+// Auth
+import { authService } from '@shared/schema/auth';
+
+// Utils
+import { formatDate } from '@shared/schema/utils/date';
 ```
 
-#### Type Organization
-- Keep shared types in `shared/src/types`
-- Group related types in feature-based directories
-- Use barrel files (`index.ts`) for clean imports
-- Export types at the highest appropriate level
+#### Client-Side Imports
+```typescript
+// Components
+import { Button } from '@/components/ui/button';
+import { UserProfile } from '@client/features/user';
 
-#### Configuration Files
-- Base config: `tsconfig.base.json` (shared settings)
-- Client config: `client/tsconfig.json` (React-specific settings)
-- Server config: `server/tsconfig.json` (Node.js-specific settings)
-- Shared config: `shared/tsconfig.json` (shared library settings)
+// Hooks
+import { useAuth } from '@/hooks/useAuth';
+```
+
+#### Server-Side Imports
+```typescript
+// Controllers
+import { UserController } from '@server/controllers/user';
+
+// Database
+import { db } from '@db';
+```
+
+### Type Organization
+- **Shared Types**: In `shared/src/types` organized by feature
+- **Barrel Files**: Use `index.ts` for clean exports
+- **Type Safety**:
+  - Use `import type` for type-only imports
+  - Avoid `any` - prefer proper types or `unknown` with type guards
+  - Use interfaces for public API contracts
+  - Prefer union types over enums for better tree-shaking
 
 ## Common Patterns
 - API responses follow the format: `{ data: T, error: string | null }`

@@ -1,18 +1,17 @@
-import { TokenManager } from './tokenManager';
-import { SecureCookie } from './SecureCookie';
-import { handleError, SessionError } from './errorHandler';
-interface SessionState {
-    sessionId: string;
-    userId: string;
+import { TokenManager } from './tokenManager.js';
+import { SecureCookie } from './SecureCookie.js';
+import { handleError, SessionError } from './errorHandler.js';
+export interface SessionState {
+    sessionId: string | null;
+    userId: string | null;
     createdAt: number;
     lastActivity: number;
-    userAgent: string;
-    ip: string;
+    userAgent: string | null;
+    ip: string | null;
 }
 // Constants
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes
-const MAX_SESSION_AGE = 24 * 60 * 60 * 1000; // 24 hours
 export class SessionSecurity {
     private static instance: SessionSecurity | null = null;
     private sessionId: string | null = null;
@@ -23,14 +22,7 @@ export class SessionSecurity {
     private userId: string | null = null;
     private userAgent: string | null = null;
     private ip: string | null = null;
-    private sessionState: {
-        sessionId: string | null;
-        userId: string | null;
-        createdAt: number;
-        lastActivity: number;
-        userAgent: string | null;
-        ip: string | null;
-    } | null = null;
+    private sessionState: SessionState | null = null;
 
     private constructor() {
         this.sessionTimeout = 30 * 60 * 1000; // 30 minutes

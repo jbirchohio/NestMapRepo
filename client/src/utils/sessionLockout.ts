@@ -1,5 +1,4 @@
-import { SecureCookie } from './SecureCookie';
-import { SessionSecurity } from './sessionSecurity';
+import { SecureCookie } from './SecureCookie.js';
 export interface SessionLockoutConfig {
     maxAttempts: number;
     lockoutDuration: number; // in milliseconds
@@ -15,11 +14,10 @@ export class SessionLockout {
         timestamp: number;
     }>;
     private config: SessionLockoutConfig;
-    private sessionSecurity: SessionSecurity;
+
     private constructor(config?: SessionLockoutConfig) {
         this.attempts = new Map();
         this.lockouts = new Map();
-        this.sessionSecurity = SessionSecurity.getInstance();
         this.config = {
             maxAttempts: 5,
             lockoutDuration: 15 * 60 * 1000, // 15 minutes
