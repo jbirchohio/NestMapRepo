@@ -13,6 +13,8 @@ import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import type { UserPreferences, Metadata } from '../shared/types.js';
 import { type BaseTable } from '../base.js';
+import { organizations } from '../organizations/organizations.js';
+import { enums, type UserRole } from '../enums.js';
 
 // Define the user table with snake_case column names for the database
 export const users = pgTable('users', {
@@ -24,7 +26,10 @@ export const users = pgTable('users', {
   
   // User-specific columns with unique constraint on email
   email: text('email').notNull().unique(),
+  username: text('username').notNull().unique(),
   email_verified: boolean('email_verified').notNull().default(false),
+  role: enums.userRole('role').notNull().default('member'),
+  organization_id: uuid('organization_id').references(() => organizations.id, { onDelete: 'set null' }),
   first_name: text('first_name'),
   last_name: text('last_name'),
   password_hash: text('password_hash'),
@@ -42,7 +47,10 @@ export const users = pgTable('users', {
 // TypeScript types
 export interface User extends BaseTable {
   email: string;
+  username: string;
   email_verified: boolean;
+  role: UserRole;
+  organization_id: string | null;
   first_name: string | null;
   last_name: string | null;
   password_hash: string | null;
@@ -66,9 +74,12 @@ const baseSelectSchema = createSelectSchema(users);
 // Create validation schema for required fields
 export const insertUserSchema = baseInsertSchema.pick({
   email: true,
+  username: true,
   first_name: true,
   last_name: true,
   password_hash: true,
+  role: true,
+  organization_id: true,
   is_active: true,
   metadata: true,
   preferences: true
@@ -77,6 +88,9 @@ export const insertUserSchema = baseInsertSchema.pick({
   first_name: z.string().min(1, 'First name is required').max(100, 'First name is too long'),
   last_name: z.string().min(1, 'Last name is required').max(100, 'Last name is too long'),
   password_hash: z.string().min(8, 'Password must be at least 8 characters').optional(),
+  username: z.string().min(3, 'Username is required').max(50),
+  role: z.enum(enums.userRole.enumValues).default('member'),
+  organization_id: z.string().uuid().optional(),
   is_active: z.boolean().default(true),
   metadata: z.record(z.unknown()).optional(),
   preferences: z.record(z.unknown()).optional()
@@ -90,8 +104,11 @@ export const selectUserSchema = baseSelectSchema.extend({
   updated_at: z.date(),
   deleted_at: z.date().nullable(),
   email: z.string().email(),
+  username: z.string(),
   first_name: z.string().nullable(),
   last_name: z.string().nullable(),
+  role: z.enum(enums.userRole.enumValues),
+  organization_id: z.string().uuid().nullable(),
   password_hash: z.string().nullable(),
   last_login_at: z.date().nullable(),
   last_active_at: z.date().nullable(),
@@ -107,7 +124,10 @@ export const selectUserSchema = baseSelectSchema.extend({
 export interface UserWithCamelCase {
   id: string;
   email: string;
+  username: string;
   emailVerified: boolean;
+  role: UserRole;
+  organizationId: string | null;
   firstName: string | null;
   lastName: string | null;
   passwordHash: string | null;
