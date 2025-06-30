@@ -1,4 +1,5 @@
 import 'express-serve-static-core';
+import { UserRole } from '@prisma/client';
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -8,9 +9,11 @@ declare module 'express-serve-static-core' {
     user?: {
       id: string;
       email: string;
-      role: string;
-      organizationId?: string | null;
+      role: UserRole;
+      organizationId: string | null;
+      permissions?: string[];
     };
+    organizationId?: string | null;
   }
 }
 

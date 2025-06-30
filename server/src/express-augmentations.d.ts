@@ -2,8 +2,14 @@ import type { AuthUser } from '@shared/src/types/auth/user.js';
 
 declare global {
   namespace Express {
-    // Extend the User interface to match our AuthUser type
-    interface User extends AuthUser {}
+    // Extend the User interface to match our AuthUser type and add additional properties
+    interface User extends AuthUser {
+      id: string;
+      email: string;
+      role: UserRole;
+      organizationId: string | null;
+      permissions?: string[];
+    }
 
     // Response metrics interface
     interface ResponseMetrics {
@@ -19,6 +25,8 @@ declare global {
     interface Request {
       // The user property is now properly typed from the User interface above
       user?: User;
+      // Organization context for multi-tenancy
+      organizationId?: string | null;
       // Standard Express properties
       method: string;
       originalUrl: string;

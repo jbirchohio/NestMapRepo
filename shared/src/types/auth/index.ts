@@ -4,8 +4,11 @@
 
 // Re-export all definitions from the new, authoritative files.
 export * from './auth.js';
+export * from './user.js';
 export type { AuthResponse } from './jwt.js';
-export * from './custom-request.js';
+
+// Express type augmentations
+import './express.js';
 
 // Re-export DTOs
 export * from './dto/index.js';

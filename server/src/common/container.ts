@@ -1,7 +1,7 @@
 import { PrismaUserRepository } from './repositories/prisma/user.repository.js';
 import { UserContextService } from './services/user-context.service.js';
 import { logger } from '../utils/logger.js';
-import { createAuthMiddleware } from './middleware/prisma-auth.middleware.js';
+import { createAuthzMiddleware } from './middleware/index.js';
 
 // Initialize repositories
 const userRepository = new PrismaUserRepository();
@@ -9,17 +9,8 @@ const userRepository = new PrismaUserRepository();
 // Initialize services
 const userContextService = new UserContextService(userRepository);
 
-// Initialize middleware
-const { 
-  requireAuth, 
-  requireOrgContext, 
-  requireAdmin, 
-  requireSuperAdmin, 
-  requireOwnership 
-} = createAuthMiddleware({ 
-  userContextService, 
-  logger 
-});
+// Initialize authz middleware
+const authz = createAuthzMiddleware(logger, userContextService);
 
 // Export all dependencies
 export const container = {
@@ -30,11 +21,14 @@ export const container = {
   userContextService,
   
   // Middleware
-  requireAuth,
-  requireOrgContext,
-  requireAdmin,
-  requireSuperAdmin,
-  requireOwnership,
+  authz,
+  
+  // For backward compatibility (deprecated, will be removed in future)
+  requireAuth: authz.requireAuth.bind(authz),
+  requireOrgContext: authz.requireOrgContext.bind(authz),
+  requireAdmin: authz.requireRole.bind(authz, 'admin'),
+  requireSuperAdmin: authz.requireRole.bind(authz, 'super_admin'),
+  requireOwnership: authz.requireOwnership.bind(authz, 'resource'),
 };
 
 export type Container = typeof container;

@@ -19,6 +19,14 @@ generator client {
 // =============================================
 
 // User & Organization Enums
+enum PermissionLevel {
+  none
+  read
+  write
+  admin
+  owner
+}
+
 enum UserRole {
   super_admin
   admin
