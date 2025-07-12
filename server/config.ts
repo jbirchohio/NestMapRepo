@@ -19,7 +19,7 @@ export const SERVER_CONFIG = {
 
 // Secure CORS origin configuration - no insecure defaults in production
 function getCorsOrigin(): string | string[] {
-  const env = process.env.NODE_ENV || 'development.js';
+  const env = process.env.NODE_ENV || 'development';
   
   if (env === 'production') {
     if (!process.env.CORS_ORIGIN) {
@@ -36,7 +36,7 @@ function getCorsOrigin(): string | string[] {
 
 // Secure session secret configuration - no insecure defaults in production  
 function getSessionSecret(): string {
-  const env = process.env.NODE_ENV || 'development.js';
+  const env = process.env.NODE_ENV || 'development';
   
   if (env === 'production') {
     if (!process.env.SESSION_SECRET) {
@@ -96,7 +96,7 @@ export const SERVICES_CONFIG = {
 
 // Validation - check required environment variables
 export function validateConfig() {
-  const env = process.env.NODE_ENV || 'development.js';
+  const env = process.env.NODE_ENV || 'development';
   
   const requiredVars = [
     { name: 'DATABASE_URL', value: DB_CONFIG.url },

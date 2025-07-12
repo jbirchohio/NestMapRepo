@@ -42,7 +42,7 @@ const env = envVars.data;
 
 interface ServerConfig {
   port: number;
-  env: 'development' | 'production' | 'test.js';
+  env: 'development' | 'production' | 'test';
   host: string;
   baseUrl: string;
   logLevel: string;
