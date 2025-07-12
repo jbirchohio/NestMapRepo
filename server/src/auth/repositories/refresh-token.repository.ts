@@ -1,9 +1,9 @@
-import { eq, sql } from 'drizzle-orm';
-import { db } from '../../../db/db.js';
-import { users } from '../../../db/schema.js';
-import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
-import { logger } from '../../../utils/logger.js';
-import type { RefreshToken } from '../interfaces/refresh-token.repository.interface.js';
+import { eq, sql } from 'drizzle-orm.js';
+import { db } from '../../../db/db.js.js';
+import { users } from '../../../db/schema.js.js';
+import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js.js';
+import { logger } from '../../../utils/logger.js.js';
+import type { RefreshToken } from '../interfaces/refresh-token.repository.interface.js.js';
 
 export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
   private readonly logger = logger;

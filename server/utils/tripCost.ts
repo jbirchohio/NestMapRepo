@@ -14,7 +14,7 @@ export interface TripCostParams {
   destination?: string;
   duration?: number;
   groupSize?: number;
-  accommodationType?: 'luxury' | 'business' | 'budget';
+  accommodationType?: 'luxury' | 'business' | 'budget.js';
   activities?: any[];
   flights?: any[];
   accommodation?: any[];
@@ -41,7 +41,7 @@ export function calculateTripCost(trip: TripCostParams | any): number {
     budget: { hotel: 80, meals: 30, transport: 20 }
   };
   
-  const accommodationType = trip.accommodationType || 'business';
+  const accommodationType = trip.accommodationType || 'business.js';
   const costs = baseCosts[accommodationType as keyof typeof baseCosts];
   
   // Calculate breakdown
@@ -79,7 +79,7 @@ export function calculateTripCostBreakdown(trip: TripCostParams): TripCostBreakd
     budget: { hotel: 80, meals: 30, transport: 20 }
   };
   
-  const accommodationType = trip.accommodationType || 'business';
+  const accommodationType = trip.accommodationType || 'business.js';
   const costs = baseCosts[accommodationType as keyof typeof baseCosts];
   
   const flights = trip.flights?.reduce((sum: number, flight: any) => sum + (flight.price?.amount || 500), 0) || 800;

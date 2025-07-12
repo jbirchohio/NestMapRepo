@@ -1,5 +1,5 @@
 // User role type and constants
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest.js';
 
 export const UserRoles = {
   SUPER_ADMIN: 'super_admin' as const,

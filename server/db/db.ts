@@ -1,9 +1,9 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import * as schema from './schema.js';
-import * as invoiceSchema from './invoiceSchema.js';
-import * as proposalSchema from './proposalSchema.js';
-import * as superadminSchema from './superadminSchema.js';
+import { drizzle } from 'drizzle-orm/node-postgres.js';
+import { Pool } from 'pg.js';
+import * as schema from './schema.js.js';
+import * as invoiceSchema from './invoiceSchema.js.js';
+import * as proposalSchema from './proposalSchema.js.js';
+import * as superadminSchema from './superadminSchema.js.js';
 
 // Create a connection pool
 const pool = new Pool({

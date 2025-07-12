@@ -1,4 +1,4 @@
-import type { Activity } from '../types/activity';
+import type { Activity } from '../types/activity.js';
 
 type ActivityInput = Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>;
 

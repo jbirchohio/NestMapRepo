@@ -23,8 +23,8 @@ interface CarbonReduction {
   category: string;
   action: string;
   potentialSaving: number; // kg CO2
-  implementation: 'easy' | 'moderate' | 'difficult';
-  costImpact: 'none' | 'low' | 'medium' | 'high';
+  implementation: 'easy' | 'moderate' | 'difficult.js';
+  costImpact: 'none' | 'low' | 'medium' | 'high.js';
 }
 
 interface ExpenseReport {
@@ -51,7 +51,7 @@ interface ExpenseCategory {
   budgeted: number;
   actual: number;
   variance: number;
-  status: 'under' | 'on-track' | 'over';
+  status: 'under' | 'on-track' | 'over.js';
 }
 
 interface Receipt {
@@ -392,8 +392,8 @@ async function calculateFlightEmissions(flight: any): Promise<number> {
     flight.bookingData?.destination
   );
   
-  const aircraftType = flight.bookingData?.aircraftType || 'A320';
-  const cabinClass = flight.bookingData?.cabinClass || 'economy';
+  const aircraftType = flight.bookingData?.aircraftType || 'A320.js';
+  const cabinClass = flight.bookingData?.cabinClass || 'economy.js';
   
   // Emission factors (kg CO2 per km per passenger)
   const emissionFactors = {
@@ -677,7 +677,7 @@ function generateExpenseBreakdown(expenses: any[]): any {
   };
 
   expenses.forEach(expense => {
-    const category = expense.category || 'miscellaneous';
+    const category = expense.category || 'miscellaneous.js';
     if (breakdown.hasOwnProperty(category)) {
       breakdown[category as keyof typeof breakdown] += expense.amount || 0;
     } else {

@@ -1,8 +1,8 @@
-import { Router } from 'express';
-import { db } from '../../../db';
-import { users, organizations } from '../../../db/schema';
-import { logSuperadminAction } from '../superadmin';
-import { eq, sql } from 'drizzle-orm';
+import { Router } from 'express.js';
+import { db } from '../../../db.js';
+import { users, organizations } from '../../../db/schema.js';
+import { logSuperadminAction } from '../superadmin.js';
+import { eq, sql } from 'drizzle-orm.js';
 
 const router = Router();
 

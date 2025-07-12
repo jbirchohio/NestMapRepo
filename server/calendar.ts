@@ -15,7 +15,7 @@ export function generateICalContent(trip: Trip, activities: Activity[]): string 
     const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
     
     const formatDateForICal = (date: Date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z.js';
     };
     
     return `BEGIN:VEVENT
@@ -52,7 +52,7 @@ export function generateGoogleCalendarUrls(trip: Trip, activities: Activity[]): 
     const endDate = new Date(startDate.getTime() + (2 * 60 * 60 * 1000));
     
     const formatDateForGoogle = (date: Date) => {
-      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z.js';
     };
     
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(activity.title)}&dates=${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}&details=${encodeURIComponent(`${activity.notes || ''}\n\nLocation: ${activity.locationName || ''}\n\nPart of trip: ${trip.title}\nCreated with NestMap`)}&location=${encodeURIComponent(activity.locationName || '')}`;

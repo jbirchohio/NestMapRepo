@@ -1,5 +1,5 @@
-import { Request as ExpressRequest } from 'express';
-import { AuthUser } from '../src/types/auth-user';
+import { Request as ExpressRequest } from 'express.js';
+import { AuthUser } from '../src/types/auth-user.js';
 
 declare module 'express-serve-static-core' {
   interface Request {

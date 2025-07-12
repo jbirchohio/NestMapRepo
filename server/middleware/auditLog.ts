@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { db } from '../db.js';
-import { auditLogs } from '../db/auditLog.js';
-import { AuthUser } from '../src/types/auth-user.js';
+import { Request, Response, NextFunction } from 'express.js';
+import { db } from '../db.js.js';
+import { auditLogs } from '../db/auditLog.js.js';
+import { AuthUser } from '../src/types/auth-user.js.js';
 
 type AuditRequest = Request & {
   user?: AuthUser;
@@ -24,7 +24,7 @@ export async function auditLogMiddleware(
   // Capture method, path, and optionally resourceId from params
   const { method, originalUrl, params, body } = req;
   const action = `${method} ${originalUrl}`;
-  const resource = originalUrl.split('/')[1] || 'unknown';
+  const resource = originalUrl.split('/')[1] || 'unknown.js';
   const resourceId = params.id || params.tripId || params.userId || null;
 
   // Attach after response sent

@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
-import { db } from '../../../../db';
-import { bookings, type Booking } from '../../../../db/bookingSchema.js';
-import { BookingRepository } from './booking.repository.interface';
-import { BaseRepositoryImpl } from '../base.repository';
-import { BookingConfirmationDetails } from '../../interfaces/booking.interfaces';
+import { Injectable } from '@nestjs/common.js';
+import { eq } from 'drizzle-orm.js';
+import { db } from '../../../../db.js';
+import { bookings, type Booking } from '../../../../db/bookingSchema.js.js';
+import { BookingRepository } from './booking.repository.interface.js';
+import { BaseRepositoryImpl } from '../base.repository.js';
+import { BookingConfirmationDetails } from '../../interfaces/booking.interfaces.js';
 
 /**
  * Implementation of the booking repository

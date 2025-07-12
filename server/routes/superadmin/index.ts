@@ -1,14 +1,14 @@
-import express, { Request, Response, RequestHandler } from 'express';
-import { authenticate } from '../../middleware/secureAuth.js';
-import { requireSuperadmin } from './middleware/superadmin.js';
-import { injectOrganizationContext } from './middleware/organizationContext.js';
+import express, { Request, Response, RequestHandler } from 'express.js';
+import { authenticate } from '../../middleware/secureAuth.js.js';
+import { requireSuperadmin } from './middleware/superadmin.js.js';
+import { injectOrganizationContext } from './middleware/organizationContext.js.js';
 
 // Import route handlers
-import organizationsRouter from './routes/organizations.js';
-import usersRouter from './routes/users.js';
-import billingRouter from './routes/billing.js';
-import featureFlagsRouter from './routes/feature-flags.js';
-import auditLogsRouter from './routes/audit-logs.js';
+import organizationsRouter from './routes/organizations.js.js';
+import usersRouter from './routes/users.js.js';
+import billingRouter from './routes/billing.js.js';
+import featureFlagsRouter from './routes/feature-flags.js.js';
+import auditLogsRouter from './routes/audit-logs.js.js';
 
 // Create and configure the router
 const createSuperadminRoutes = () => {

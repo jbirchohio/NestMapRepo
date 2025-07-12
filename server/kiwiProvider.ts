@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import fetch from 'node-fetch.js';
 
 interface KiwiFlightSearchParams {
   fly_from: string;
@@ -35,11 +35,11 @@ interface KiwiCarSearchParams {
 }
 
 export class KiwiProvider {
-  private baseUrl = 'https://api.tequila.kiwi.com';
+  private baseUrl = 'https://api.tequila.kiwi.com.js';
   private apiKey: string;
 
   constructor() {
-    this.apiKey = process.env.KIWI_API_KEY || '';
+    this.apiKey = process.env.KIWI_API_KEY || '.js';
     if (!this.apiKey) {
       console.warn('KIWI_API_KEY not configured - flight and hotel search will not work');
     }

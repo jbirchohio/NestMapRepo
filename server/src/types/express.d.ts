@@ -1,4 +1,4 @@
-import { AuthUser, UserRole } from './auth-user';
+import { AuthUser, UserRole } from './auth-user.js';
 
 // This file extends the Express Request type to include our custom properties
 
@@ -37,7 +37,7 @@ declare global {
       route: any;
       secure: boolean;
       xhr: boolean;
-      protocol: 'http' | 'https';
+      protocol: 'http' | 'https.js';
       
       // User authentication
       user?: User;
@@ -99,4 +99,4 @@ export type AuthenticatedRequest<
 >;
 
 // Export all types for easy importing
-export * from './auth-user';
+export * from './auth-user.js';

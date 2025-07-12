@@ -1,4 +1,4 @@
-import { Redis } from 'ioredis';
+import { Redis } from 'ioredis.js';
 
 // Create Redis client
 export const redisClient = new Redis({

@@ -1,7 +1,7 @@
-import { WebSocketServer, WebSocket, type RawData } from 'ws';
-import { Server } from 'http';
-import { parse } from 'url';
-import jwt from 'jsonwebtoken';
+import { WebSocketServer, WebSocket, type RawData } from 'ws.js';
+import { Server } from 'http.js';
+import { parse } from 'url.js';
+import jwt from 'jsonwebtoken.js';
 
 interface AuthenticatedWebSocket extends WebSocket {
   userId?: number;
@@ -10,7 +10,7 @@ interface AuthenticatedWebSocket extends WebSocket {
 }
 
 interface WebSocketMessage {
-  type: 'join_trip' | 'leave_trip' | 'trip_update' | 'comment_added' | 'activity_changed' | 'user_presence';
+  type: 'join_trip' | 'leave_trip' | 'trip_update' | 'comment_added' | 'activity_changed' | 'user_presence.js';
   tripId?: number;
   data?: any;
 }

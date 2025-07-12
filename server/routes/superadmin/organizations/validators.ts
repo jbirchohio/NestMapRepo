@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod.js';
 
 // Common organization schema
 export const organizationBaseSchema = z.object({

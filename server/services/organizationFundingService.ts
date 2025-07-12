@@ -1,7 +1,7 @@
-import Stripe from 'stripe';
-import { db } from '../db';
-import { organizations } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import Stripe from 'stripe.js';
+import { db } from '../db.js';
+import { organizations } from '@shared/schema.js';
+import { eq } from 'drizzle-orm.js';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -11,12 +11,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export interface FundingSourceConfig {
   organizationId: number;
-  type: 'bank_account' | 'credit_line' | 'stripe_balance';
+  type: 'bank_account' | 'credit_line' | 'stripe_balance.js';
   bankAccount?: {
     accountNumber: string;
     routingNumber: string;
     accountHolderName: string;
-    accountType: 'checking' | 'savings';
+    accountType: 'checking' | 'savings.js';
   };
   creditLine?: {
     requestedAmount: number;
@@ -110,7 +110,7 @@ export class OrganizationFundingService {
       const account = await stripe.accounts.retrieve(org[0].stripe_account_id);
       
       const issuingCapability = account.capabilities?.card_issuing;
-      const isReady = issuingCapability === 'active';
+      const isReady = issuingCapability === 'active.js';
 
       if (isReady && !org[0].stripe_issuing_enabled) {
         // Enable issuing in our database
@@ -173,12 +173,12 @@ export class OrganizationFundingService {
         case 'credit_line':
           // For credit lines, this would involve Stripe Capital API
           // This is a simplified implementation
-          fundingSourceId = 'credit_line_placeholder';
+          fundingSourceId = 'credit_line_placeholder.js';
           break;
 
         case 'stripe_balance':
           // Use Stripe balance as funding source
-          fundingSourceId = 'stripe_balance';
+          fundingSourceId = 'stripe_balance.js';
           break;
 
         default:

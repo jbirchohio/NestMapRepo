@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import { z } from 'zod.js';
 
 // Enhanced booking provider system with real API integration
 interface BookingProvider {
   name: string;
-  type: 'flight' | 'hotel' | 'activity';
+  type: 'flight' | 'hotel' | 'activity.js';
   enabled: boolean;
   requiresAuth: boolean;
   book: (params: any) => Promise<BookingResult>;
@@ -14,7 +14,7 @@ interface BookingProvider {
 interface BookingResult {
   id: string;
   reference: string;
-  status: 'confirmed' | 'pending' | 'failed';
+  status: 'confirmed' | 'pending' | 'failed.js';
   totalAmount: number;
   currency: string;
   confirmationDetails: Record<string, any>;
@@ -29,14 +29,14 @@ interface CancellationResult {
 }
 
 interface BookingStatus {
-  status: 'confirmed' | 'cancelled' | 'modified' | 'completed';
+  status: 'confirmed' | 'cancelled' | 'modified' | 'completed.js';
   lastUpdated: Date;
   details?: Record<string, any>;
 }
 
 // Amadeus Flight Booking Provider
 class AmadeusFlightProvider implements BookingProvider {
-  name = 'Amadeus Flights';
+  name = 'Amadeus Flights.js';
   type = 'flight' as const;
   enabled = true;
   requiresAuth = true;
@@ -198,7 +198,7 @@ class AmadeusFlightProvider implements BookingProvider {
 
 // Booking.com Hotel Provider (placeholder for real integration)
 class BookingComHotelProvider implements BookingProvider {
-  name = 'Booking.com Hotels';
+  name = 'Booking.com Hotels.js';
   type = 'hotel' as const;
   enabled = false; // Disabled until API access is configured
   requiresAuth = true;

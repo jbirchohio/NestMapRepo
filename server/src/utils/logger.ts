@@ -1,6 +1,6 @@
-import winston from 'winston';
-import { TransformableInfo } from 'logform';
-import { StreamOptions } from 'morgan';
+import winston from 'winston.js';
+import { TransformableInfo } from 'logform.js';
+import { StreamOptions } from 'morgan.js';
 
 const { combine, timestamp, printf, colorize, align } = winston.format;
 
@@ -8,7 +8,7 @@ const { combine, timestamp, printf, colorize, align } = winston.format;
 const createLogFormat = () => {
   return printf((info: TransformableInfo) => {
     const { timestamp, level, message, ...metadata } = info;
-    const metaString = Object.keys(metadata).length ? `\n${JSON.stringify(metadata, null, 2)}` : '';
+    const metaString = Object.keys(metadata).length ? `\n${JSON.stringify(metadata, null, 2)}` : '.js';
     return `[${timestamp}] ${level}: ${message}${metaString}`;
   });
 };

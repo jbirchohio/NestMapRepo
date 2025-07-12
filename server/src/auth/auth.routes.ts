@@ -1,23 +1,23 @@
-import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
-import type { ParamsDictionary, Query } from 'express-serve-static-core';
-import type { AuthUser } from '../types/auth-user.js';
-import type { CustomRequest } from '../../types/custom-express.js';
-import { ConfigService } from '@nestjs/config';
-import { AuthController } from './controllers/auth.controller.js';
-import { JwtAuthService } from './services/jwtAuthService.js';
-import { UserRepositoryImpl } from './repositories/user.repository.js';
-import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js';
-import { NodemailerEmailService } from '../email/services/nodemailer-email.service.js';
-import { ErrorService } from '../common/services/error.service.js';
-import { validateAndSanitizeRequest } from '../../middleware/inputValidation.js';
-import { loginSchema, requestPasswordResetSchema, resetPasswordSchema, refreshTokenSchema, logoutSchema } from './dtos/auth.dto.js';
-import { authenticate } from '../../middleware/secureAuth.js';
+import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express.js';
+import type { ParamsDictionary, Query } from 'express-serve-static-core.js';
+import type { AuthUser } from '../types/auth-user.js.js';
+import type { CustomRequest } from '../../types/custom-express.js.js';
+import { ConfigService } from '@nestjs/config.js';
+import { AuthController } from './controllers/auth.controller.js.js';
+import { JwtAuthService } from './services/jwtAuthService.js.js';
+import { UserRepositoryImpl } from './repositories/user.repository.js.js';
+import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js.js';
+import { NodemailerEmailService } from '../email/services/nodemailer-email.service.js.js';
+import { ErrorService } from '../common/services/error.service.js.js';
+import { validateAndSanitizeRequest } from '../../middleware/inputValidation.js.js';
+import { loginSchema, requestPasswordResetSchema, resetPasswordSchema, refreshTokenSchema, logoutSchema } from './dtos/auth.dto.js.js';
+import { authenticate } from '../../middleware/secureAuth.js.js';
 
 // Helper type to make certain properties required
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
 // Import ParsedQs from express-serve-static-core
-import { type ParsedQs } from 'qs';
+import { type ParsedQs } from 'qs.js';
 
 // Use a more flexible type for query parameters that's compatible with Express
 type QueryParams = ParsedQs & {

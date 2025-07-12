@@ -4,23 +4,23 @@
 
 export interface UserBookingPreferences {
   preferredAirlines?: string[];
-  seatPreference?: 'window' | 'aisle' | 'middle';
-  mealPreference?: 'standard' | 'vegetarian' | 'vegan' | 'kosher' | 'halal';
+  seatPreference?: 'window' | 'aisle' | 'middle.js';
+  mealPreference?: 'standard' | 'vegetarian' | 'vegan' | 'kosher' | 'halal.js';
   frequentFlyerNumbers?: Record<string, string>;
   hotelPreferences?: {
-    roomType?: 'standard' | 'deluxe' | 'suite';
+    roomType?: 'standard' | 'deluxe' | 'suite.js';
     amenities?: string[];
   };
   carRentalPreferences?: {
     preferredVendors?: string[];
-    carType?: 'economy' | 'compact' | 'midsize' | 'fullsize' | 'luxury' | 'suv';
+    carType?: 'economy' | 'compact' | 'midsize' | 'fullsize' | 'luxury' | 'suv.js';
   };
 }
 
 export interface BookingDetails {
   id: string;
-  type: 'flight' | 'hotel' | 'car' | 'activity';
-  status: 'pending' | 'confirmed' | 'cancelled';
+  type: 'flight' | 'hotel' | 'car' | 'activity.js';
+  status: 'pending' | 'confirmed' | 'cancelled.js';
   confirmation?: string;
   price?: number;
   currency?: string;
@@ -30,7 +30,7 @@ export interface BookingDetails {
 }
 
 export interface FlightBooking extends BookingDetails {
-  type: 'flight';
+  type: 'flight.js';
   airline: string;
   flightNumber: string;
   departure: {
@@ -42,11 +42,11 @@ export interface FlightBooking extends BookingDetails {
     time: Date;
   };
   seatNumber?: string;
-  class: 'economy' | 'premium_economy' | 'business' | 'first';
+  class: 'economy' | 'premium_economy' | 'business' | 'first.js';
 }
 
 export interface HotelBooking extends BookingDetails {
-  type: 'hotel';
+  type: 'hotel.js';
   hotelName: string;
   checkIn: Date;
   checkOut: Date;
@@ -56,7 +56,7 @@ export interface HotelBooking extends BookingDetails {
 }
 
 export interface CarRentalBooking extends BookingDetails {
-  type: 'car';
+  type: 'car.js';
   vendor: string;
   carModel: string;
   pickupLocation: string;
@@ -66,7 +66,7 @@ export interface CarRentalBooking extends BookingDetails {
 }
 
 export interface ActivityBooking extends BookingDetails {
-  type: 'activity';
+  type: 'activity.js';
   activityName: string;
   location: string;
   duration?: number;

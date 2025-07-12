@@ -1,5 +1,5 @@
-import { Request } from 'express';
-import { AuthUser } from '../src/types/auth-user.js';
+import { Request } from 'express.js';
+import { AuthUser } from '../src/types/auth-user.js.js';
 
 /**
  * Gets the organization ID from the request user object

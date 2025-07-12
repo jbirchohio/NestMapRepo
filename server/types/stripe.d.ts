@@ -24,7 +24,7 @@ declare module 'stripe' {
   export interface RefundCreateParams {
     payment_intent: string;
     amount?: number;
-    reason?: 'requested_by_customer' | 'duplicate' | 'fraudulent' | 'expired_uncaptured_charge';
+    reason?: 'requested_by_customer' | 'duplicate' | 'fraudulent' | 'expired_uncaptured_charge.js';
     [key: string]: any;
   }
 
@@ -71,7 +71,7 @@ declare module 'stripe' {
   }
 
   export interface BaseCreateCardholderParams {
-    type: 'individual' | 'company';
+    type: 'individual' | 'company.js';
     name: string;
     email: string;
     phone_number?: string;
@@ -88,19 +88,19 @@ declare module 'stripe' {
     name: string;
     email: string | null;
     phone_number: string | null;
-    status: 'active' | 'inactive' | 'blocked';
+    status: 'active' | 'inactive' | 'blocked.js';
     [key: string]: any;
   }
 
   // Issuing Card Types
-  export type CardType = 'virtual' | 'physical';
+  export type CardType = 'virtual' | 'physical.js';
 
   export interface CardSpendingControls {
     allowed_categories?: string[];
     blocked_categories?: string[];
     spending_limits?: Array<{
       amount: number;
-      interval: 'per_authorization' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all_time';
+      interval: 'per_authorization' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all_time.js';
     }>;
     [key: string]: any;
   }
@@ -119,12 +119,12 @@ declare module 'stripe' {
     type: CardType;
     cardholder: StripeCardholder;
     currency: string;
-    status: 'active' | 'inactive' | 'canceled' | 'stolen' | 'lost';
+    status: 'active' | 'inactive' | 'canceled' | 'stolen' | 'lost.js';
     [key: string]: any;
   }
 
   export interface UpdateCardParams {
-    status?: 'active' | 'inactive' | 'canceled';
+    status?: 'active' | 'inactive' | 'canceled.js';
     spending_controls?: CardSpendingControls;
     metadata?: Record<string, string>;
     [key: string]: any;
@@ -132,7 +132,7 @@ declare module 'stripe' {
 
   export interface SpendingLimit {
     amount: number;
-    interval: 'all_time' | 'daily' | 'monthly' | 'per_authorization' | 'weekly' | 'yearly';
+    interval: 'all_time' | 'daily' | 'monthly' | 'per_authorization' | 'weekly' | 'yearly.js';
   }
 
   export interface CardSpendingControls {
@@ -147,7 +147,7 @@ declare module 'stripe' {
     type: CardType;
     cardholder: StripeCardholder;
     currency: string;
-    status: 'active' | 'inactive' | 'canceled' | 'stolen' | 'lost';
+    status: 'active' | 'inactive' | 'canceled' | 'stolen' | 'lost.js';
     spending_controls?: {
       spending_limits?: SpendingLimit[];
       [key: string]: any;
@@ -175,7 +175,7 @@ declare module 'stripe' {
     amount: number;
     currency: string;
     payment_method_types?: string[];
-    capture_method?: 'automatic' | 'manual';
+    capture_method?: 'automatic' | 'manual.js';
     metadata?: Record<string, string>;
     [key: string]: any;
   }
@@ -218,7 +218,7 @@ declare module 'stripe' {
 
   interface SubscriptionUpdateParams {
     items: Array<{ id: string; price: string }>;
-    proration_behavior?: 'create_prorations' | 'none' | 'always_invoice';
+    proration_behavior?: 'create_prorations' | 'none' | 'always_invoice.js';
     [key: string]: any;
   }
 

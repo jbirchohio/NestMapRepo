@@ -1,6 +1,6 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import { z } from 'zod';
+import dotenv from 'dotenv.js';
+import path from 'path.js';
+import { z } from 'zod.js';
 
 // Load environment variables from .env file
 const envPath = path.resolve(process.cwd(), '.env');
@@ -42,7 +42,7 @@ const env = envVars.data;
 
 interface ServerConfig {
   port: number;
-  env: 'development' | 'production' | 'test';
+  env: 'development' | 'production' | 'test.js';
   host: string;
   baseUrl: string;
   logLevel: string;

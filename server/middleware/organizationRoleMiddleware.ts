@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { getUserPermissionsByRole } from '../permissions';
+import { Request, Response, NextFunction } from 'express.js';
+import { getUserPermissionsByRole } from '../permissions.js';
 
 /**
  * Organization RBAC middleware. Checks if user has required org permission.

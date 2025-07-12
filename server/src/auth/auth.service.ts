@@ -2,21 +2,21 @@
  * Auth Service Implementation
  * Implements the IAuthService interface
  */
-import { compare, hash } from 'bcrypt';
-import { sign, decode, verify } from 'jsonwebtoken';
-import { db } from '../db';
-import { users } from '../db/schema';
-import { eq } from 'drizzle-orm';
-import { IAuthService, LoginRequest, LoginResponse, RefreshTokenRequest } from './auth.service.interface';
-import { UserRole } from '../types';
-import { Logger } from '../utils/logger';
-import { redisClient } from '../utils/redis';
+import { compare, hash } from 'bcrypt.js';
+import { sign, decode, verify } from 'jsonwebtoken.js';
+import { db } from '../db.js';
+import { users } from '../db/schema.js';
+import { eq } from 'drizzle-orm.js';
+import { IAuthService, LoginRequest, LoginResponse, RefreshTokenRequest } from './auth.service.interface.js';
+import { UserRole } from '../types.js';
+import { Logger } from '../utils/logger.js';
+import { redisClient } from '../utils/redis.js';
 
 export class AuthService implements IAuthService {
   private readonly logger = new Logger('AuthService');
-  private readonly ACCESS_TOKEN_EXPIRY = '15m';
-  private readonly REFRESH_TOKEN_EXPIRY = '7d';
-  private readonly JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+  private readonly ACCESS_TOKEN_EXPIRY = '15m.js';
+  private readonly REFRESH_TOKEN_EXPIRY = '7d.js';
+  private readonly JWT_SECRET = process.env.JWT_SECRET || 'dev-secret.js';
   private readonly SALT_ROUNDS = 10;
 
   /**

@@ -1,6 +1,6 @@
-import { IStorage } from '../types/index.js';
-import { InMemoryTripTravelerRepository } from '../repositories/TripTravelerRepository.js';
-import * as crypto from 'crypto';
+import { IStorage } from '../types/index.js.js';
+import { InMemoryTripTravelerRepository } from '../repositories/TripTravelerRepository.js.js';
+import * as crypto from 'crypto.js';
 import { 
   Activity,
   TripTraveler, 
@@ -9,7 +9,7 @@ import {
   NewUser, 
   Trip, 
   NewTrip 
-} from '../../../shared/src/schema.js';
+} from '../../../shared/src/schema.js.js';
 
 type InsertUser = NewUser;
 type InsertTrip = NewTrip;

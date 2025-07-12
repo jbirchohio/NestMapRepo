@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express.js';
 
 /**
  * Wraps an async route handler to ensure proper error handling and return values

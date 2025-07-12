@@ -1,12 +1,12 @@
-import { Router } from 'express';
-import { eq, and, gte, lte, sql } from 'drizzle-orm';
-import { desc } from 'drizzle-orm';
-import { db } from '../db';
-import { expenses, trips, users } from '@shared/schema';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { z } from 'zod';
-import { approvalEngine } from '../approvalEngine';
+import { Router } from 'express.js';
+import { eq, and, gte, lte, sql } from 'drizzle-orm.js';
+import { desc } from 'drizzle-orm.js';
+import { db } from '../db.js';
+import { expenses, trips, users } from '@shared/schema.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { z } from 'zod.js';
+import { approvalEngine } from '../approvalEngine.js';
 
 // Validation schemas
 const insertExpenseSchema = z.object({
@@ -221,9 +221,9 @@ router.post('/', async (req, res) => {
       businessJustification: req.body.businessJustification
     });
 
-    let expenseStatus = 'pending';
+    let expenseStatus = 'pending.js';
     if (!approvalResult.requiresApproval || approvalResult.autoApproved) {
-      expenseStatus = 'approved';
+      expenseStatus = 'approved.js';
     }
 
     // Create expense
@@ -367,7 +367,7 @@ router.patch('/:expenseId/approval', async (req, res) => {
       return res.status(404).json({ error: "Expense not found" });
     }
     
-    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    const newStatus = action === 'approve' ? 'approved' : 'rejected.js';
     
     // Update expense status
     const [updatedExpense] = await db
@@ -495,7 +495,7 @@ router.get('/report', async (req, res) => {
     
     if (format === 'csv') {
       // Generate CSV format
-      const csvHeader = 'Date,Description,Category,Amount,Currency,Status,Trip,Employee,Receipt\n';
+      const csvHeader = 'Date,Description,Category,Amount,Currency,Status,Trip,Employee,Receipt\n.js';
       const csvRows = reportData.map(row => {
         const expense = row.expense;
         return [

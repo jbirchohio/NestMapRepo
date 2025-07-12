@@ -1,5 +1,5 @@
-import { users } from '../db/schema';
-import { InferSelectModel } from 'drizzle-orm';
+import { users } from '../db/schema.js';
+import { InferSelectModel } from 'drizzle-orm.js';
 
 export type AuthUser = Omit<InferSelectModel<typeof users>, 'password_hash' | 'auth_id' | 'organization_id'> & {
   password_hash: string | null;
@@ -16,11 +16,11 @@ export interface JwtUser {
   email: string;
   role: string;
   organization_id: string | null;
-  tokenType: 'access' | 'refresh';
+  tokenType: 'access' | 'refresh.js';
 }
 
 export interface ApiResponse<T = unknown> {
-  status: 'success' | 'error';
+  status: 'success' | 'error.js';
   data?: T;
   message?: string;
   error?: {

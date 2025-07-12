@@ -1,4 +1,4 @@
-import { Request as ExpressRequest } from 'express';
+import { Request as ExpressRequest } from 'express.js';
 
 declare module 'express-serve-static-core' {
   interface Request {

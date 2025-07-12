@@ -1,5 +1,5 @@
-import { RequestHandler } from 'express';
-import { z } from 'zod';
+import { RequestHandler } from 'express.js';
+import { z } from 'zod.js';
 
 declare module './validators' {
   export const userBaseSchema: z.ZodObject<{

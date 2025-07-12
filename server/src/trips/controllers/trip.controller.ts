@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { TripService } from '../interfaces/trip.service.interface.js';
-import { ResponseFormatter } from '../../common/utils/response-formatter.util.js';
-import { requireAuth, requireOrgContext } from '../../common/middleware/auth.middleware.js';
+import { Request, Response, NextFunction, RequestHandler } from 'express.js';
+import { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common.js';
+import { TripService } from '../interfaces/trip.service.interface.js.js';
+import { ResponseFormatter } from '../../common/utils/response-formatter.util.js.js';
+import { requireAuth, requireOrgContext } from '../../common/middleware/auth.middleware.js.js';
 
 // Define the AuthUser interface to match the expected User type from the service
 interface AuthUser {
@@ -12,7 +12,7 @@ interface AuthUser {
   passwordHash: string;
   firstName: string | null;
   lastName: string | null;
-  role: 'admin' | 'super_admin' | 'manager' | 'member' | 'guest';
+  role: 'admin' | 'super_admin' | 'manager' | 'member' | 'guest.js';
   emailVerified: boolean;
   emailVerificationToken: string | null;
   emailVerificationExpires: Date | null;

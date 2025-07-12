@@ -1,2 +1,2 @@
-export * from './interfaces/email.service.interface';
-export * from './services/nodemailer-email.service';
+export * from './interfaces/email.service.interface.js';
+export * from './services/nodemailer-email.service.js';

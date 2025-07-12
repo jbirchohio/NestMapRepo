@@ -1,10 +1,10 @@
 
-import { createClient } from '@supabase/supabase-js';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import { createClient } from '@supabase/supabase-js.js';
+import { drizzle } from 'drizzle-orm/node-postgres.js';
+import { Pool } from 'pg.js';
 import * as schema from "@shared/schema";
-import config from './config.js';
-import { logger } from './utils/logger.js';
+import config from './config.js.js';
+import { logger } from './utils/logger.js.js';
 
 // Check if Supabase credentials are provided
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.SUPABASE_DB_PASSWORD) {

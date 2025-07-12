@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import { Request, Response, NextFunction } from 'express.js';
+import { z } from 'zod.js';
 
 // Organization ID param schema
 export const organizationIdParamSchema = z.object({

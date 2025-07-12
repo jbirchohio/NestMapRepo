@@ -1,6 +1,6 @@
-import { User } from '../../../db/schema.js';
-import { BaseRepository } from '../base.repository.interface';
-import { UserBookingPreferences } from '../../interfaces/booking.interfaces';
+import { User } from '../../../db/schema.js.js';
+import { BaseRepository } from '../base.repository.interface.js';
+import { UserBookingPreferences } from '../../interfaces/booking.interfaces.js';
 
 export interface UserRepository extends BaseRepository<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> {
   // User retrieval

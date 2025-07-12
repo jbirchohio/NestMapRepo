@@ -1,5 +1,5 @@
-import { MailService } from '@sendgrid/mail';
-import { getBrandingConfig } from '../branding.js';
+import { MailService } from '@sendgrid/mail.js';
+import { getBrandingConfig } from '../branding.js.js';
 
 let mailService: MailService | null = null;
 
@@ -32,7 +32,7 @@ interface NotificationEmailParams {
   message: string;
   actionUrl?: string;
   actionText?: string;
-  type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system';
+  type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system.js';
 }
 
 export async function sendNotificationEmail(params: NotificationEmailParams): Promise<boolean> {

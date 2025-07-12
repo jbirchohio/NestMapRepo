@@ -20,7 +20,7 @@ interface BusinessTripRequest {
   };
   preferences: {
     foodTypes: string[];
-    accommodationType: 'luxury' | 'business' | 'budget';
+    accommodationType: 'luxury' | 'business' | 'budget.js';
     activityTypes: string[];
     dietaryRestrictions?: string[];
     accessibility?: string[];

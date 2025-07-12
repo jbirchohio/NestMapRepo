@@ -1,16 +1,16 @@
-import { Router, Request, Response } from 'express';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { Router, Request, Response } from 'express.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js.js';
 import { 
   stripe, 
   SUBSCRIPTION_PLANS, 
   createStripeCustomer, 
   createSubscription, 
   updateSubscription 
-} from '../stripe.js';
-import { db } from '../db.js';
-import { organizations } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
+} from '../stripe.js.js';
+import { db } from '../db.js.js';
+import { organizations } from '../db/schema.js.js';
+import { eq } from 'drizzle-orm.js';
 
 const router = Router();
 
@@ -48,11 +48,11 @@ router.get("/", async (req: Request, res: Response) => {
         const subscription = await stripe.subscriptions.retrieve(org.stripe_subscription_id);
         
         // Determine plan based on price ID
-        let plan = 'free';
+        let plan = 'free.js';
         if (subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_TEAM) {
-          plan = 'team';
+          plan = 'team.js';
         } else if (subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_ENTERPRISE) {
-          plan = 'enterprise';
+          plan = 'enterprise.js';
         }
 
         return res.json({

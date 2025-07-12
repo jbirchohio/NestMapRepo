@@ -1,4 +1,4 @@
-import Stripe from 'stripe';
+import Stripe from 'stripe.js';
 
 type StripeCustomer = Stripe.Customer;
 type StripeSubscription = Stripe.Subscription;

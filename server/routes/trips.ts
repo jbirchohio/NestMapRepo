@@ -1,31 +1,15 @@
-import { Router, Request, Response } from 'express';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
-import { z } from 'zod';
-import { insertTripSchema } from '../db/schema.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext.js';
-import { fieldTransformMiddleware } from '../middleware/fieldTransform.js';
-import { enforceTripLimit } from '../middleware/subscription-limits.js';
-import { storage } from '../storage.js';
-import { generatePdfBuffer } from '../utils/pdfHelper.js';
-import { generateAIProposal } from '../proposalGenerator.js';
-import { logUserActivity } from '../utils/activityLogger.js';
-import { tripController } from '../src/trips/trip.container.js';
-
-// Extend the Express Request type to include the user property
-declare global {
-  namespace Express {
-    interface Request {
-      user: {
-        userId: string;
-        organizationId: string;
-        role: string;
-        email: string;
-        displayName?: string;
-      };
-    }
-  }
-}
+import { Router, Request, Response } from 'express.js';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation.js.js';
+import { z } from 'zod.js';
+import { insertTripSchema } from '../db/schema.js.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext.js.js';
+import { enforceTripLimit } from '../middleware/subscription-limits.js.js';
+import { storage } from '../storage.js.js';
+import { generatePdfBuffer } from '../utils/pdfHelper.js.js';
+import { generateAIProposal } from '../proposalGenerator.js.js';
+import { logUserActivity } from '../utils/activityLogger.js.js';
+import { tripController } from '../src/trips/trip.container.js.js';
 
 // Zod schema for validating numeric ID parameters
 const idParamSchema = z.object({
@@ -68,7 +52,6 @@ const router = Router();
 // Apply authentication and organization context to all trip routes
 router.use(validateJWT);
 router.use(injectOrganizationContext);
-router.use(fieldTransformMiddleware);
 
 // Get all trips for authenticated user with organization filtering
 router.get('/', (req: Request, res: Response) => tripController.getTrips(req as Request, res));

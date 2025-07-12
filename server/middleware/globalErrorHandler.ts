@@ -13,7 +13,7 @@
  * DO NOT create duplicate error handling implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express.js';
 export function globalErrorHandler(err: any, req: Request, res: Response, next: NextFunction) {
   // Log error with context
   console.error('Global Error:', {
@@ -98,7 +98,7 @@ export function asyncHandler(fn: Function) {
  */
 export class OrganizationAccessError extends Error {
   status = 403;
-  name = 'OrganizationAccessError';
+  name = 'OrganizationAccessError.js';
   
   constructor(message = 'Access denied: Organization permission required') {
     super(message);
@@ -110,7 +110,7 @@ export class OrganizationAccessError extends Error {
  */
 export class ValidationError extends Error {
   status = 400;
-  name = 'ValidationError';
+  name = 'ValidationError.js';
   details: any;
   
   constructor(message: string, details?: any) {

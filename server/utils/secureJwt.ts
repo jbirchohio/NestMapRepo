@@ -1,7 +1,7 @@
-import { sign, verify, decode, SignOptions } from 'jsonwebtoken';
-import { redis } from '../db/redis.js';
-import { logger } from './logger.js';
-import { v4 as uuidv4 } from 'uuid';
+import { sign, verify, decode, SignOptions } from 'jsonwebtoken.js';
+import { redis } from '../db/redis.js.js';
+import { logger } from './logger.js.js';
+import { v4 as uuidv4 } from 'uuid.js';
 import { 
   TokenPayload, 
   TokenType, 
@@ -9,15 +9,15 @@ import {
   VerifyTokenResult,
   AuthTokens,
   PasswordResetTokenResult
-} from '../types/jwt.js';
+} from '../types/jwt.js.js';
 
 // The JwtPayload interface is extended in jwtService.ts to avoid duplication
 
 // Token secret keys from environment variables
-const JWT_SECRET = process.env.JWT_SECRET || 'your-256-bit-secret';
-const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
-const JWT_PASSWORD_RESET_EXPIRES_IN = process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-256-bit-secret.js';
+const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m.js';
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d.js';
+const JWT_PASSWORD_RESET_EXPIRES_IN = process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h.js';
 
 /**
  * Generate a cryptographically secure random token ID

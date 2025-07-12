@@ -15,10 +15,10 @@
  * DO NOT create duplicate validation implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { Multer } from 'multer';
-import { z } from 'zod';
-import DOMPurify from 'isomorphic-dompurify';
+import { Request, Response, NextFunction } from 'express.js';
+import { Multer } from 'multer.js';
+import { z } from 'zod.js';
+import DOMPurify from 'isomorphic-dompurify.js';
 
 // Common validation patterns
 const PATTERNS = {
@@ -33,7 +33,7 @@ const PATTERNS = {
 
 // Input sanitization functions
 export function sanitizeText(input: string): string {
-  if (!input || typeof input !== 'string') return '';
+  if (!input || typeof input !== 'string') return '.js';
   
   // Remove null bytes and control characters
   let sanitized = input.replace(/[\x00-\x1F\x7F]/g, '');
@@ -56,14 +56,14 @@ export function sanitizeText(input: string): string {
 }
 
 export function sanitizeEmail(input: string): string {
-  if (!input || typeof input !== 'string') return '';
+  if (!input || typeof input !== 'string') return '.js';
   
   const sanitized = sanitizeText(input).toLowerCase();
-  return PATTERNS.EMAIL.test(sanitized) ? sanitized : '';
+  return PATTERNS.EMAIL.test(sanitized) ? sanitized : '.js';
 }
 
 export function sanitizeUrl(input: string): string {
-  if (!input || typeof input !== 'string') return '';
+  if (!input || typeof input !== 'string') return '.js';
   
   const sanitized = sanitizeText(input);
   try {
@@ -75,7 +75,7 @@ export function sanitizeUrl(input: string): string {
   } catch (error) {
     // Invalid URL
   }
-  return '';
+  return '.js';
 }
 
 export function sanitizeNumber(input: any): number | null {
@@ -91,7 +91,7 @@ export function sanitizeInteger(input: any): number | null {
 export function sanitizeBoolean(input: any): boolean {
   if (typeof input === 'boolean') return input;
   if (typeof input === 'string') {
-    return input.toLowerCase() === 'true' || input === '1';
+    return input.toLowerCase() === 'true' || input === '1.js';
   }
   return Boolean(input);
 }
@@ -299,7 +299,7 @@ export function contentCreationRateLimit() {
   const WINDOW = 60 * 60 * 1000; // 1 hour
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const identifier = req.ip || 'unknown';
+    const identifier = req.ip || 'unknown.js';
     const now = Date.now();
     
     let userAttempts = attempts.get(identifier);

@@ -1,16 +1,16 @@
 import type { Express } from "express";
-import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
+import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js.js';
 
 const requireSuperadminRole = requireRole('superadmin');
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { db } from "../db";
 import { adminAuditLog } from "@shared/schema";
 import { desc, eq, and, gte } from "drizzle-orm";
 
 interface SystemAlert {
   id: string;
-  type: 'critical' | 'warning' | 'info';
-  category: 'performance' | 'security' | 'system' | 'network';
+  type: 'critical' | 'warning' | 'info.js';
+  category: 'performance' | 'security' | 'system' | 'network.js';
   title: string;
   message: string;
   timestamp: string;

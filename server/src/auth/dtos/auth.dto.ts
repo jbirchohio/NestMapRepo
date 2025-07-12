@@ -16,7 +16,7 @@ export interface ResetPasswordDto {
   newPassword: string;
 }
 
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest.js';
 
 export interface UserResponse {
   id: string;

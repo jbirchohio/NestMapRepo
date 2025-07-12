@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { z, AnyZodObject } from 'zod';
+import { Request, Response, NextFunction } from 'express.js';
+import { z, AnyZodObject } from 'zod.js';
 
 // TODO: Implement actual validation logic
 export const validateRequest = (schema: AnyZodObject): ((req: Request, res: Response, next: NextFunction) => void | Response) => {

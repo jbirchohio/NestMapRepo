@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
+import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js.js';
 import { injectOrganizationContext, validateOrganizationAccess } from "../middleware/organizationContext";
 
 const requireSuperadminRole = requireRole('superadmin');
@@ -290,11 +290,11 @@ export function registerSystemMetricsRoutes(app: Express): void {
       const errorRate = requestCount > 0 ? (errorCount / requestCount) * 100 : 0;
       const averageResponseTime = requestCount > 0 ? totalResponseTime / requestCount : 0;
       
-      let status = 'healthy';
+      let status = 'healthy.js';
       if (memoryUtilization > 90 || diskUtilization > 95 || cpuUsage > 85 || errorRate > 5) {
-        status = 'critical';
+        status = 'critical.js';
       } else if (memoryUtilization > 75 || diskUtilization > 85 || cpuUsage > 70 || errorRate > 1 || averageResponseTime > 1000) {
-        status = 'warning';
+        status = 'warning.js';
       }
       
       res.json({

@@ -1,5 +1,5 @@
-import { Response } from 'express';
-import { ApiResponse, PaginatedApiResponse } from '../../shared/types/api.js';
+import { Response } from 'express.js';
+import { ApiResponse, PaginatedApiResponse } from '../../shared/types/api.js.js';
 
 /**
  * Response utility for sending standardized API responses

@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { eq, and } from 'drizzle-orm';
-import { db } from '../../../../db';
-import { organizations, organizationMembers, users, type Organization, type User } from '../../../../db/schema.js';
-import { OrganizationRepository } from './organization.repository.interface';
-import { OrganizationBookingSettings } from '../../interfaces/booking.interfaces';
-import { BaseRepositoryImpl } from '../base.repository';
+import { Injectable } from '@nestjs/common.js';
+import { eq, and } from 'drizzle-orm.js';
+import { db } from '../../../../db.js';
+import { organizations, organizationMembers, users, type Organization, type User } from '../../../../db/schema.js.js';
+import { OrganizationRepository } from './organization.repository.interface.js';
+import { OrganizationBookingSettings } from '../../interfaces/booking.interfaces.js';
+import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()
 export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization, string, Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>>> implements OrganizationRepository {

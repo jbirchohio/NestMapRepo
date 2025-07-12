@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express.js';
 
 export function injectOrganizationContext(req: Request, _res: Response, next: NextFunction) {
   // Add organization context to the request if needed

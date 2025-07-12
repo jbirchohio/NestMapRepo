@@ -3,7 +3,7 @@ import {
   Trip, 
   Activity,
   BaseEntity 
-} from '../../../shared/src/schema.js';
+} from '../../../shared/src/schema.js.js';
 
 // Define types that are used but not yet in the shared schema
 type NewActivity = Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>;
@@ -18,7 +18,7 @@ export interface TripTraveler extends BaseEntity {
   tripId: string;
   userId: string;
   role: string;
-  status: 'pending' | 'accepted' | 'declined' | 'removed';
+  status: 'pending' | 'accepted' | 'declined' | 'removed.js';
   createdAt: string;
   updatedAt: string;
 }
@@ -27,7 +27,7 @@ export interface NewTripTraveler {
   tripId: string;
   userId: string;
   role: string;
-  status?: 'pending' | 'accepted' | 'declined' | 'removed';
+  status?: 'pending' | 'accepted' | 'declined' | 'removed.js';
 }
 
 type InsertUser = any; // Define or import the correct type

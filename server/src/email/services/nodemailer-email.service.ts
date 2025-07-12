@@ -1,18 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { createTransport, Transporter } from 'nodemailer';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { ErrorService } from '../../common/services/error.service';
+import { Injectable, Logger } from '@nestjs/common.js';
+import { ConfigService } from '@nestjs/config.js';
+import { createTransport, Transporter } from 'nodemailer.js';
+import { readFileSync } from 'fs.js';
+import { join, dirname } from 'path.js';
+import { fileURLToPath } from 'url.js';
+import { ErrorService } from '../../common/services/error.service.js';
 import { 
   EmailService, 
   EmailOptions, 
   PasswordResetEmailOptions, 
   PasswordResetConfirmationOptions,
   PaymentReceiptEmailOptions
-} from '../interfaces/email.service.interface';
-import handlebars from 'handlebars';
+} from '../interfaces/email.service.interface.js';
+import handlebars from 'handlebars.js';
 const { compile } = handlebars;
 type TemplateDelegate = handlebars.TemplateDelegate;
 
@@ -74,7 +74,7 @@ export class NodemailerEmailService implements EmailService {
       
       this.logger.log(`Email sent to ${to} with subject: ${subject}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error.js';
       this.logger.error(`Failed to send email to ${to}: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
       this.errorService.throwInternalServerError(`Failed to send email: ${errorMessage}`, { recipient: to }, error instanceof Error ? error.stack : undefined);
     }
@@ -86,8 +86,8 @@ export class NodemailerEmailService implements EmailService {
   ): Promise<void> {
     const { name, resetUrl, expiryHours } = options;
     
-    const subject = 'Password Reset Request';
-    const template = 'password-reset';
+    const subject = 'Password Reset Request.js';
+    const template = 'password-reset.js';
     const context = {
       name,
       resetUrl,

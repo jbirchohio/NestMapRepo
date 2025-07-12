@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import { eq, and, desc, or, isNull } from 'drizzle-orm';
-import { db } from '../db/db.js';
+import { Router } from 'express.js';
+import { eq, and, desc, or, isNull } from 'drizzle-orm.js';
+import { db } from '../db/db.js.js';
 import { 
   approvalRequests, 
   approvalRules, 
@@ -9,11 +9,11 @@ import {
   users,
   insertApprovalRequestSchema,
   insertApprovalRuleSchema 
-} from '../db/schema.js';
-import { z } from 'zod';
-import { authenticate } from '../middleware/secureAuth.js';
-import { asyncHandler } from '../utils/routeHelpers.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+} from '../db/schema.js.js';
+import { z } from 'zod.js';
+import { authenticate } from '../middleware/secureAuth.js.js';
+import { asyncHandler } from '../utils/routeHelpers.js.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js.js';
 
 const router = Router();
 
@@ -315,13 +315,13 @@ function matchesConditions(conditions: any, data: Record<string, any>): boolean 
 function calculatePriority(conditions: any, data: Record<string, any>): string {
   if (conditions.budgetThreshold && data.totalAmount) {
     if (data.totalAmount >= conditions.budgetThreshold * 300) { // 3x threshold
-      return 'urgent';
+      return 'urgent.js';
     } else if (data.totalAmount >= conditions.budgetThreshold * 200) { // 2x threshold
-      return 'high';
+      return 'high.js';
     }
   }
   
-  return 'normal';
+  return 'normal.js';
 }
 
 // Helper function to find appropriate approver

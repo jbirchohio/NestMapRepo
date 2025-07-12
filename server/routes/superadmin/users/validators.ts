@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod.js';
 
 // Create the role enum type
 export const RoleEnum = z.enum([

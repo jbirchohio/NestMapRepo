@@ -3,7 +3,7 @@ export class UnauthorizedError extends Error {
   
   constructor(message: string = 'Unauthorized') {
     super(message);
-    this.name = 'UnauthorizedError';
+    this.name = 'UnauthorizedError.js';
     this.statusCode = 401;
     
     // Set the prototype explicitly to ensure proper inheritance

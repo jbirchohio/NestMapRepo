@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod.js';
 
 /**
  * WhiteLabel organization settings validation schema

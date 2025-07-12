@@ -15,8 +15,8 @@
  * DO NOT create duplicate security implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
+import { Request, Response, NextFunction } from 'express.js';
+import crypto from 'crypto.js';
 
 type SecureRequest = Request & {
   apiVersion?: string;
@@ -29,7 +29,7 @@ type SecureRequest = Request & {
     id: string | number;
     role: string;
     organization_id?: number;
-    subscription_tier?: 'free' | 'premium' | 'enterprise';
+    subscription_tier?: 'free' | 'premium' | 'enterprise.js';
   };
   [key: string]: any;
 };
@@ -42,7 +42,7 @@ export function apiVersioning(
   res: Response,
   next: NextFunction
 ): Response | void {
-  const version = req.headers['api-version'] || req.query.v || 'v1';
+  const version = req.headers['api-version'] || req.query.v || 'v1.js';
   const supportedVersions = ['v1', 'v2'];
   const deprecatedVersions = ['v1'];
 
@@ -99,7 +99,7 @@ function encryptSensitiveFields(obj: any, fields: string[]): any {
   for (const key in obj) {
     if (fields.includes(key.toLowerCase()) && typeof obj[key] === 'string') {
       // In production, implement proper encryption
-      result[key] = '***ENCRYPTED***';
+      result[key] = '***ENCRYPTED***.js';
     } else if (typeof obj[key] === 'object') {
       result[key] = encryptSensitiveFields(obj[key], fields);
     } else {
@@ -316,8 +316,8 @@ export function tieredRateLimit(
   res: Response,
   next: NextFunction
 ): Response | void {
-  const key = req.ip || 'unknown';
-  const tier = req.user?.subscription_tier || 'free';
+  const key = req.ip || 'unknown.js';
+  const tier = req.user?.subscription_tier || 'free.js';
   
   const result = advancedRateLimit.checkLimit(key, tier as any);
   

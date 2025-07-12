@@ -1,7 +1,7 @@
-import { Router } from 'express';
-import { requireSuperadmin } from '../../../middleware/superadmin.js';
-import * as billingController from './controllers.js';
-import * as billingValidators from './validators.js';
+import { Router } from 'express.js';
+import { requireSuperadmin } from '../../../middleware/superadmin.js.js';
+import * as billingController from './controllers.js.js';
+import * as billingValidators from './validators.js.js';
 
 const router = Router();
 

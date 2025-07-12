@@ -1,8 +1,8 @@
-import { Module, Global } from '@nestjs/common';
-import { ErrorService } from './services/error.service';
-import { BookingService } from './services/booking.service';
-import { BookingController } from './controllers/booking.controller';
-import { RepositoriesModule } from './repositories/repositories.module';
+import { Module, Global } from '@nestjs/common.js';
+import { ErrorService } from './services/error.service.js';
+import { BookingService } from './services/booking.service.js';
+import { BookingController } from './controllers/booking.controller.js';
+import { RepositoriesModule } from './repositories/repositories.module.js';
 
 /**
  * Common module providing shared services and utilities

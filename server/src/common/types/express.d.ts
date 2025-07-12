@@ -1,4 +1,4 @@
-import { Request, ParamsDictionary, Query } from 'express';
+import { Request, ParamsDictionary, Query } from 'express.js';
 
 // Define the user type that will be attached to the request
 export interface AuthUser {

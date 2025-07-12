@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod.js';
 export declare const proposalStatusEnum: import("drizzle-orm/pg-core").PgEnum<["draft", "sent", "viewed", "signed", "rejected", "expired", "invoiced", "cancelled"]>;
 export declare const proposals: import("drizzle-orm/pg-core").PgTableWithColumns<{
     name: "proposals";

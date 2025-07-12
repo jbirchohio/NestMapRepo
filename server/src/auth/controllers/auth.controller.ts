@@ -1,6 +1,6 @@
-import { Response, NextFunction, RequestHandler } from 'express';
-import { Request } from '../../types/express/index.js';
-import { IAuthService } from '../interfaces/auth.service.interface.js';
+import { Response, NextFunction, RequestHandler } from 'express.js';
+import { Request } from '../../types/express/index.js.js';
+import { IAuthService } from '../interfaces/auth.service.interface.js.js';
 import { 
   AuthResponse,
   LoginDto, 
@@ -8,10 +8,10 @@ import {
   RequestPasswordResetDto, 
   ResetPasswordDto,
   UserRole
-} from '../dtos/auth.dto.js';
-import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware.js';
-import { isErrorWithMessage } from '../../utils/error-utils.js';
-import { Logger } from '@nestjs/common';
+} from '../dtos/auth.dto.js.js';
+import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware.js.js';
+import { isErrorWithMessage } from '../../utils/error-utils.js.js';
+import { Logger } from '@nestjs/common.js';
 
 // Response type that excludes the refresh token when sending to client
 type AuthResponseWithoutRefreshToken = Omit<AuthResponse, 'refreshToken'> & {
@@ -56,8 +56,8 @@ export class AuthController {
     rateLimiterMiddleware as unknown as RequestHandler,
     async (req: Request<LoginDto, AuthResponseWithoutRefreshToken | { error: string }>, res: Response<AuthResponseWithoutRefreshToken | { error: string }>, next: NextFunction): Promise<void> => {
       try {
-        const ip = req.ip || req.socket.remoteAddress || 'unknown';
-        const userAgent = req.headers['user-agent'] || '';
+        const ip = req.ip || req.socket.remoteAddress || 'unknown.js';
+        const userAgent = req.headers['user-agent'] || '.js';
         
         const loginData: LoginDto = req.body;
         const response = await this.authService.login(loginData, ip, userAgent);
@@ -106,8 +106,8 @@ export class AuthController {
       try {
         // Try to get refresh token from cookie first, then from body
         const refreshToken = (req.cookies?.refreshToken || req.body.refreshToken) as string | undefined;
-        const ip = req.ip || req.socket.remoteAddress || 'unknown';
-        const userAgent = req.headers['user-agent'] || '';
+        const ip = req.ip || req.socket.remoteAddress || 'unknown.js';
+        const userAgent = req.headers['user-agent'] || '.js';
 
         if (!refreshToken) {
           res.status(400).json({ error: 'Refresh token is required' });

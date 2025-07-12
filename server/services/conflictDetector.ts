@@ -2,18 +2,18 @@
 
 export interface TripConflict {
   trips: number[];
-  type: 'date_overlap' | 'geo_clustering' | 'resource_conflict';
+  type: 'date_overlap' | 'geo_clustering' | 'resource_conflict.js';
   users?: number[];
   departments?: string[];
   city?: string;
   potentialSavings?: number;
-  severity: 'low' | 'medium' | 'high';
+  severity: 'low' | 'medium' | 'high.js';
   description: string;
 }
 
 export interface ActivityConflict {
-  type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict';
-  severity: 'high' | 'medium' | 'low';
+  type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict.js';
+  severity: 'high' | 'medium' | 'low.js';
   activities: any[];
   description: string;
   suggestedFix: string;

@@ -1,16 +1,16 @@
-import { Router, type Request, type Response, type NextFunction } from 'express';
-import type Stripe from 'stripe';
-import { db } from '../db/db';
-import { stripe } from '../stripe';
-import { invoices } from '../db/invoiceSchema';
-import { billingEvents } from '../db/superadminSchema';
-import { eq } from 'drizzle-orm';
-import nodemailer from 'nodemailer';
-import { authenticate as authenticateJWT } from '../middleware/secureAuth.js';
-import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { logger } from '../utils/logger';
-import type { Invoice } from '../db/db';
+import { Router, type Request, type Response, type NextFunction } from 'express.js';
+import type Stripe from 'stripe.js';
+import { db } from '../db/db.js';
+import { stripe } from '../stripe.js';
+import { invoices } from '../db/invoiceSchema.js';
+import { billingEvents } from '../db/superadminSchema.js';
+import { eq } from 'drizzle-orm.js';
+import nodemailer from 'nodemailer.js';
+import { authenticate as authenticateJWT } from '../middleware/secureAuth.js.js';
+import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user.js.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { logger } from '../utils/logger.js';
+import type { Invoice } from '../db/db.js';
 
 const router = Router();
 
@@ -124,7 +124,7 @@ router.get('/session/:sessionId', authenticateJWT, async (req: AuthRequest, res:
 
     res.json(paymentDetails);
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error.js';
     const errorStack = error instanceof Error ? error.stack : undefined;
     
     logger.error('Error fetching payment session:', { 
@@ -132,7 +132,7 @@ router.get('/session/:sessionId', authenticateJWT, async (req: AuthRequest, res:
       stack: errorStack 
     });
     
-    const nodeEnv = process.env.NODE_ENV || 'development';
+    const nodeEnv = process.env.NODE_ENV || 'development.js';
     res.status(500).json({ 
       error: 'Failed to retrieve payment details',
       details: nodeEnv === 'development' ? errorMessage : 'Internal server error'
@@ -184,7 +184,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
         logger.info(`Unhandled event type: ${event.type}`);
     }
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error.js';
     const errorStack = error instanceof Error ? error.stack : undefined;
     
     logger.error('Error handling webhook event:', { 
@@ -214,7 +214,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     if (session.payment_status === 'paid') {
       updateData.paidAt = new Date();
-      updateData.status = 'paid';
+      updateData.status = 'paid.js';
       
       if (session.payment_intent && typeof session.payment_intent === 'string') {
         updateData.paymentIntentId = session.payment_intent;
@@ -230,7 +230,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       sessionId: session.id 
     });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error.js';
     const errorStack = error instanceof Error ? error.stack : undefined;
     
     logger.error('Error handling checkout.session.completed:', { 
@@ -264,7 +264,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
       paymentIntentId: paymentIntent.id 
     });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error.js';
     const errorStack = error instanceof Error ? error.stack : undefined;
     
     logger.error('Error handling payment_intent.succeeded:', { 
@@ -320,7 +320,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
       });
     }
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error.js';
     const errorStack = error instanceof Error ? error.stack : undefined;
     
     logger.error('Error handling payment_intent.payment_failed:', { 
@@ -408,7 +408,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     });
     
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error.js';
     const errorStack = error instanceof Error ? error.stack : undefined;
     
     logger.error('Error handling charge.refunded:', { 

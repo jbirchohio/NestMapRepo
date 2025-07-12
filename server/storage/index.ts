@@ -1,14 +1,14 @@
 // Re-export all types and interfaces
-export * from './types';
+export * from './types.js';
 
 // Re-export implementations
-export * from './implementations/MemStorage';
-// export * from './implementations/DatabaseStorage';
-// export * from './implementations/ExtendedDatabaseStorage';
+export * from './implementations/MemStorage.js';
+// export * from './implementations/DatabaseStorage.js';
+// export * from './implementations/ExtendedDatabaseStorage.js';
 
 // Re-export repositories
-export * from './repositories/TripTravelerRepository';
+export * from './repositories/TripTravelerRepository.js';
 // Add other repositories as they are created
 
 // Export the storage instance
-export { storage } from '../storage';
+export { storage } from '../storage.js';

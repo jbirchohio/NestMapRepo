@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { db } from "../db";
 import { users, organizations, trips, activities } from "@shared/schema";
 import { eq, count, sql, and, gte, desc } from "drizzle-orm";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 
 interface AdminAnalytics {
   overview: {

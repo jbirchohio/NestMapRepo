@@ -1,15 +1,15 @@
-import { Router, Request, Response } from 'express';
-import { z } from 'zod';
-import { insertOrganizationSchema } from '@shared/schema';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation';
-import { storage } from '../storage';
-import { getOrganizationAnalytics } from '../analytics';
-import { db } from '../db';
-import { users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { Router, Request, Response } from 'express.js';
+import { z } from 'zod.js';
+import { insertOrganizationSchema } from '@shared/schema.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js.js';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation.js.js';
+import { storage } from '../storage.js.js';
+import { getOrganizationAnalytics } from '../analytics.js.js';
+import { db } from '../db.js.js';
+import { users } from '@shared/schema.js';
+import { eq } from 'drizzle-orm.js';
 
 const router = Router();
 

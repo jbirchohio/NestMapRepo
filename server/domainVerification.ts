@@ -1,7 +1,7 @@
-import * as dns from 'dns';
-import { promisify } from 'util';
-import crypto from 'crypto';
-import https from 'https';
+import * as dns from 'dns.js';
+import { promisify } from 'util.js';
+import crypto from 'crypto.js';
+import https from 'https.js';
 
 /**
  * Helper to wrap fetch with a timeout using AbortController.

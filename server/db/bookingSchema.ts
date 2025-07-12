@@ -1,5 +1,5 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum } from 'drizzle-orm/pg-core';
-import { users, trips } from './schema.js';
+import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum } from 'drizzle-orm/pg-core.js';
+import { users, trips } from './schema.js.js';
 
 // Booking status enum
 export const bookingStatusEnum = pgEnum('booking_status', [

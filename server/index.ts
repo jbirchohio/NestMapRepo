@@ -1,18 +1,18 @@
-import 'dotenv/config';
-import express from 'express';
-import http from 'http';
-import { logger } from './utils/logger.js';
+import 'dotenv/config.js';
+import express from 'express.js';
+import http from 'http.js';
+import { logger } from './utils/logger.js.js';
 
 // Import SecureAuth middleware as JWT source of truth
-import { authenticate } from './middleware/secureAuth.js';
+import { authenticate } from './middleware/secureAuth.js.js';
 
 // Create Express app
 const app = express();
 
 // Configuration
 const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const HOST = process.env.HOST || '0.0.0.0';
+const NODE_ENV = process.env.NODE_ENV || 'development.js';
+const HOST = process.env.HOST || '0.0.0.0.js';
 
 // Basic middleware
 app.use(express.json({ limit: '10mb' }));

@@ -1,8 +1,8 @@
-import { Router } from 'express';
-import Stripe from 'stripe';
-import { db } from '../db';
-import { organizations } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { Router } from 'express.js';
+import Stripe from 'stripe.js';
+import { db } from '../db.js';
+import { organizations } from '@shared/schema.js';
+import { eq } from 'drizzle-orm.js';
 
 const router = Router();
 

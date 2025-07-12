@@ -1,5 +1,5 @@
 // Import the base Express types
-import { Request as ExpressRequest, Response, NextFunction, RequestHandler as ExpressRequestHandler } from 'express';
+import { Request as ExpressRequest, Response, NextFunction, RequestHandler as ExpressRequestHandler } from 'express.js';
 
 declare global {
   namespace Express {

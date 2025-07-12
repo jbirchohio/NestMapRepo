@@ -1,5 +1,5 @@
-import { createClient, RedisClientType } from 'redis';
-import { logger } from '../utils/logger';
+import { createClient, RedisClientType } from 'redis.js';
+import { logger } from '../utils/logger.js';
 
 // Use the standard Redis client type without extending it
 // This avoids type conflicts with the built-in methods

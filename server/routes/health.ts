@@ -1,10 +1,10 @@
-import { Router } from 'express';
-import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express-serve-static-core';
-import rateLimit from 'express-rate-limit';
-import { z } from 'zod';
+import { Router } from 'express.js';
+import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express-serve-static-core.js';
+import rateLimit from 'express-rate-limit.js';
+import { z } from 'zod.js';
 
 // Type definitions
-type HealthStatus = 'healthy' | 'degraded' | 'unhealthy';
+type HealthStatus = 'healthy' | 'degraded' | 'unhealthy.js';
 
 interface EndpointHealth {
   endpoint: string;
@@ -99,11 +99,11 @@ export function trackEndpointHealth(
 
   // Update health status based on metrics
   if (updatedMetrics.errorRate > 10 || updatedMetrics.avgResponseTime > 5000) {
-    updatedMetrics.status = 'unhealthy';
+    updatedMetrics.status = 'unhealthy.js';
   } else if (updatedMetrics.errorRate > 5 || updatedMetrics.avgResponseTime > 2000) {
-    updatedMetrics.status = 'degraded';
+    updatedMetrics.status = 'degraded.js';
   } else {
-    updatedMetrics.status = 'healthy';
+    updatedMetrics.status = 'healthy.js';
   }
 
   healthMetrics.set(endpoint, updatedMetrics);
@@ -149,7 +149,7 @@ const getHealthHandler = async (
 ): Promise<void> => {
   try {
     const { detailed } = req.query as { detailed?: 'true' | 'false' }; // Type assertion for query params
-    const shouldIncludeDetails = detailed === 'true';
+    const shouldIncludeDetails = detailed === 'true.js';
     
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
@@ -165,11 +165,11 @@ const getHealthHandler = async (
     const unhealthyEndpoints = recentMetrics.filter(m => m.status === 'unhealthy').length;
 
     // Determine overall status
-    let overallStatus: HealthStatus = 'healthy';
+    let overallStatus: HealthStatus = 'healthy.js';
     if (unhealthyEndpoints > 0) {
-      overallStatus = 'unhealthy';
+      overallStatus = 'unhealthy.js';
     } else if (degradedEndpoints > 0) {
-      overallStatus = 'degraded';
+      overallStatus = 'degraded.js';
     }
 
     // Calculate aggregate metrics

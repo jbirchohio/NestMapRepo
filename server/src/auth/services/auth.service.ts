@@ -1,13 +1,13 @@
-import { IAuthService } from '../interfaces/auth.service.interface.js';
-import { AuthResponse, LoginDto, RefreshTokenDto, UserRole } from '../dtos/auth.dto.js';
-import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
-import { UserRepository } from '../../common/repositories/user/user.repository.interface.js';
-import { logger } from '../../../utils/logger.js';
+import { IAuthService } from '../interfaces/auth.service.interface.js.js';
+import { AuthResponse, LoginDto, RefreshTokenDto, UserRole } from '../dtos/auth.dto.js.js';
+import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js.js';
+import { UserRepository } from '../../common/repositories/user/user.repository.interface.js.js';
+import { logger } from '../../../utils/logger.js.js';
 
 export class AuthService implements IAuthService {
   private readonly logger = logger;
-  private readonly JWT_SECRET = 'fallback-secret-key';
-  private readonly JWT_EXPIRES_IN = '15m';
+  private readonly JWT_SECRET = 'fallback-secret-key.js';
+  private readonly JWT_EXPIRES_IN = '15m.js';
   private readonly REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60; // 7 days in seconds
 
   constructor(

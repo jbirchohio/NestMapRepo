@@ -1,6 +1,6 @@
-import winston from 'winston';
-import path from 'path';
-import fs from 'fs';
+import winston from 'winston.js';
+import path from 'path.js';
+import fs from 'fs.js';
 
 // Morgan uses a writable stream for logging HTTP requests. Define a simple
 // type for that stream rather than augmenting the existing Winston types,
