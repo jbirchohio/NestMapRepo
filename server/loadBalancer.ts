@@ -83,26 +83,26 @@ async function getDomainConfig(domain: string): Promise<DomainConfig | null> {
     // Graceful fallback for database schema migration
     const result = await db
       .select({
-        domain: customDomains.domain,
-        organizationId: customDomains.organization_id,
-        dns_verified: customDomains.dns_verified,
+        domain: customDomains.domainName,
+        organizationId: customDomains.organizationId,
+        dns_verified: customDomains.sslEnabled,
         status: customDomains.status,
-        companyName: whiteLabelSettings.company_name,
-        companyLogo: whiteLabelSettings.company_logo,
-        primaryColor: whiteLabelSettings.primary_color,
-        secondaryColor: whiteLabelSettings.secondary_color,
-        accentColor: whiteLabelSettings.accent_color,
-        customDomain: whiteLabelSettings.custom_domain,
-        supportEmail: whiteLabelSettings.support_email,
-        helpUrl: whiteLabelSettings.help_url,
-        footerText: whiteLabelSettings.footer_text,
+        companyName: whiteLabelSettings.companyName,
+        companyLogo: whiteLabelSettings.companyLogo,
+        primaryColor: whiteLabelSettings.primaryColor,
+        secondaryColor: whiteLabelSettings.secondaryColor,
+        accentColor: whiteLabelSettings.accentColor,
+        customDomain: whiteLabelSettings.customDomain,
+        supportEmail: whiteLabelSettings.supportEmail,
+        helpUrl: whiteLabelSettings.helpUrl,
+        footerText: whiteLabelSettings.footerText,
       })
       .from(customDomains)
       .leftJoin(
         whiteLabelSettings,
-        eq(customDomains.organization_id, whiteLabelSettings.organization_id)
+        eq(customDomains.organizationId, whiteLabelSettings.organizationId)
       )
-      .where(eq(customDomains.domain, domain))
+      .where(eq(customDomains.domainName, domain))
       .limit(1);
 
     if (!result.length) {

@@ -136,7 +136,7 @@ export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], a
         timeZone: 'America/New_York',
       },
     };
-  });
+  }).filter(event => event !== null);
 
   const results = [];
   
@@ -198,7 +198,7 @@ export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], 
         timeZone: 'America/New_York',
       },
     };
-  });
+  }).filter(event => event !== null);
 
   const results = [];
   
