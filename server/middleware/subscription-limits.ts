@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express.js';
-import { and, eq, count } from 'drizzle-orm.js';
+import { Request, Response, NextFunction } from 'express';
+import { and, eq, count } from 'drizzle-orm';
 import { db } from '../db.js';
 import { organizations, users, trips } from '../db/schema.js';
 import { logger } from '../utils/logger.js';
-import type { User } from '../types/user.js';
+import type { User } from '../types/user';
 
 // Import JWTUser type from jwtAuth
 interface JWTUser {

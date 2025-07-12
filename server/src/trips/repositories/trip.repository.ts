@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common.js';
-import { eq, and } from 'drizzle-orm.js';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../../../db.js';
-import { trips as tripsTable, users as usersTable } from '../../../db/schema.js.js';
-import { Trip, User } from '../../../db/schema.js.js';
+import { trips as tripsTable, users as usersTable } from '../../../db/schema.js';
+import { Trip, User } from '../../../db/schema.js';
 import { TripRepository } from '../interfaces/trip.repository.interface.js';
 import { CorporateTripDto } from '../interfaces/trip.service.interface.js';
 import { UnauthorizedError } from '../../common/errors.js';

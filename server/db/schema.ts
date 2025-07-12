@@ -1,10 +1,10 @@
 import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index, type AnyPgColumn } from 'drizzle-orm/pg-core.js';
-import { sql } from 'drizzle-orm.js';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod.js';
-import { z } from 'zod.js';
+import { sql } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
 // Import types to avoid circular dependencies
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm.js';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 declare global {
   // This allows us to use the types before they're defined
@@ -32,7 +32,7 @@ export type WithTimestamps<T> = T & {
 export const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manager', 'member', 'guest']);
 export const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
 
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest.js';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 export type OrganizationPlan = 'free' | 'pro' | 'enterprise.js';
 
 // ======================

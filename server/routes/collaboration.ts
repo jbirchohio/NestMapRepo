@@ -1,9 +1,9 @@
-import { Router } from 'express.js';
-import { eq, and, desc, isNull } from 'drizzle-orm.js';
+import { Router } from 'express';
+import { eq, and, desc, isNull } from 'drizzle-orm';
 import { db } from '../db.js';
-import { tripComments, activityLog, trips, users, insertTripCommentSchema } from '@shared/schema.js';
-import { z } from 'zod.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { tripComments, activityLog, trips, users, insertTripCommentSchema } from '@@shared/schema';
+import { z } from 'zod';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 
 const router = Router();

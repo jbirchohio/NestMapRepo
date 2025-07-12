@@ -1,6 +1,6 @@
 import Redis from 'ioredis-mock.js';
 import type { Redis as RedisType } from 'ioredis.js';
-import { logger } from './logger.js.js';
+import { logger } from './logger.js';
 
 let redisClient: RedisType;
 

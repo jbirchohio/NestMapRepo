@@ -1,4 +1,4 @@
-import dotenv from 'dotenv.js';
+import dotenv from 'dotenv';
 import path from 'path.js';
 
 // Load environment variables from .env file

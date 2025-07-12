@@ -13,7 +13,7 @@
  * DO NOT create duplicate error handling implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 export function globalErrorHandler(err: any, req: Request, res: Response, next: NextFunction) {
   // Log error with context
   console.error('Global Error:', {

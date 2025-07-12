@@ -1,4 +1,4 @@
-import { Router } from 'express.js';
+import { Router } from 'express';
 import { ConfigService } from '@nestjs/config.js';
 import { AuthContainer } from '../src/auth/auth.container.js';
 
@@ -12,8 +12,8 @@ import {
 } from '../src/auth/dtos/auth.dto.js';
 
 // Import middleware
-import { authRateLimit } from '../middleware/comprehensive-rate-limiting.js.js';
-import { validateRequest } from '../src/auth/middleware/validation.middleware.js.js';
+import { authRateLimit } from '../middleware/comprehensive-rate-limiting.js';
+import { validateRequest } from '../src/auth/middleware/validation.middleware.js';
 
 export const createAuthRouter = (configService: ConfigService): Router => {
   const router = Router();

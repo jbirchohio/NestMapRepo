@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common.js';
 import { ConfigModule, ConfigService } from '@nestjs/config.js';
-import { NodemailerEmailService } from './services/nodemailer-email.service.js.js';
-import { ErrorService } from '../common/services/error.service.js.js';
+import { NodemailerEmailService } from './services/nodemailer-email.service.js';
+import { ErrorService } from '../common/services/error.service.js';
 
 @Module({
   imports: [ConfigModule],

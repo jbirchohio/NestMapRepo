@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest.js';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 
 export type TokenType = 'access' | 'refresh' | 'password_reset' | 'api_key.js';
 

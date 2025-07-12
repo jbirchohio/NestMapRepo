@@ -4,9 +4,9 @@ import { customDomains, organizations, whiteLabelSettings } from "../../shared/s
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import { promises as dns } from 'dns.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import type { AuthenticatedRequest } from '../src/types/auth-user.js.js';
+import type { AuthenticatedRequest } from '../src/types/auth-user';
 
 interface Domain {
   id: number;

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { db } from "../db";
 import { corporateCards, cardTransactions, users } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 
 export function registerCorporateCardRoutes(app: Express) {

@@ -1,4 +1,4 @@
-import { z } from 'zod.js';
+import { z } from 'zod';
 
 // Common schemas
 export const featureFlagIdSchema = z.object({

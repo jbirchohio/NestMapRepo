@@ -1,7 +1,7 @@
 import { Server } from 'http.js';
 import { WebSocket } from 'ws.js';
 import { AddressInfo } from 'net.js';
-import express from 'express.js';
+import express from 'express';
 import jwt from 'jsonwebtoken.js';
 import { CollaborationWebSocketServer } from '../../websocket.js';
 

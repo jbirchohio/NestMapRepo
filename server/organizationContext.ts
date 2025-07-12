@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { storage } from './storage.js';
 
 // Extend Express Request interface to include organization context

@@ -1,19 +1,19 @@
-import type { Request, Response, NextFunction, RequestHandler } from 'express.js';
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import type { Request as ExpressRequest } from 'express-serve-static-core.js';
 import type { ParamsDictionary } from 'express-serve-static-core.js';
 import type { ParsedQs } from 'qs.js';
 import { decode } from 'jsonwebtoken.js';
-import { IAuthService } from './interfaces/auth.service.interface.js.js';
+import { IAuthService } from './interfaces/auth.service.interface.js';
 import { 
   LoginDto, 
   RequestPasswordResetDto, 
   ResetPasswordDto,
   RefreshTokenDto
-} from './dtos/auth.dto.js.js';
-import { rateLimiterMiddleware } from './middleware/rate-limiter.middleware.js.js';
-import { isErrorWithMessage } from '../utils/error-utils.js.js';
+} from './dtos/auth.dto.js';
+import { rateLimiterMiddleware } from './middleware/rate-limiter.middleware.js';
+import { isErrorWithMessage } from '../utils/error-utils.js';
 import { Logger } from '@nestjs/common.js';
-import { UserRole } from './jwt/types.js.js';
+import { UserRole } from './jwt/types.js';
 
 // DTOs are imported from './dtos/auth.dto.js'
 

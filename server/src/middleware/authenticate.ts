@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express.js';
-import { verifyToken } from '../auth/services/jwtAuthService.js.js';
-import { TokenType } from '../auth/jwt/types.js.js';
+import { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../auth/services/jwtAuthService.js';
+import { TokenType } from '../auth/jwt/types.js';
 
 export function authenticate(
   req: Request,

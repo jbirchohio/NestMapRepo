@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { db } from '../../../db.js';
 import { organizations } from '../../../db/schema.js';
 import { auditLogs } from '../../../db/schema/auditLogs.js';
-import { eq, sql } from 'drizzle-orm.js';
+import { eq, sql } from 'drizzle-orm';
 import Stripe from 'stripe.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 });
 
 import { logSuperadminAction } from '../audit-logs/audit-service.js';
-import { AuthenticatedRequest } from '../../../middleware/superadmin.js';
+import { AuthenticatedRequest } from '../../../middleware/superadmin';
 
 // Get billing overview across all organizations
 export const getBillingOverview = async (req: Request, res: Response) => {

@@ -1,12 +1,12 @@
 import { hash, compare } from 'bcrypt.js';
 import { randomBytes, createHash } from 'crypto.js';
-import { SALT_ROUNDS } from '../config/constants.js.js';
-import { logger } from './logger.js.js';
+import { SALT_ROUNDS } from '../config/constants.js';
+import { logger } from './logger.js';
 import { users } from '../db/schema.js';  
 import type { User } from '../../shared/src/schema.js';  
-import { eq, and, sql } from 'drizzle-orm.js';
-import type { InferSelectModel } from 'drizzle-orm.js';
-import { dbService } from '../services/database.service.js.js';
+import { eq, and, sql } from 'drizzle-orm';
+import type { InferSelectModel } from 'drizzle-orm';
+import { dbService } from '../services/database.service.js';
 
 // Constants
 const MAX_FAILED_ATTEMPTS = 5;

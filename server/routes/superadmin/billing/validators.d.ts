@@ -1,5 +1,5 @@
-import type { RequestHandler } from 'express.js';
-import type { z } from 'zod.js';
+import type { RequestHandler } from 'express';
+import type { z } from 'zod';
 
 export const organizationIdParamSchema: z.ZodObject<{
   organizationId: z.ZodString;

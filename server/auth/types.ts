@@ -1,5 +1,5 @@
 import { users } from '../db/schema.js';
-import { InferSelectModel } from 'drizzle-orm.js';
+import { InferSelectModel } from 'drizzle-orm';
 
 export type AuthUser = Omit<InferSelectModel<typeof users>, 'password_hash' | 'auth_id' | 'organization_id'> & {
   password_hash: string | null;

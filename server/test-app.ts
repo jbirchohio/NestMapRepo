@@ -59,7 +59,7 @@ app.use((_req, res, next) => {
 app.set('trust proxy', 1);
 
 // Essential middleware
-app.use(express.json({ limit: '50mb' }) as express.RequestHandler);
+app.use(expresson({ limit: '50mb' }) as express.RequestHandler);
 app.use(express.urlencoded({ extended: true, limit: '50mb' }) as express.RequestHandler);
 
 // Security middleware

@@ -1,5 +1,5 @@
-import { Router, Request, Response } from 'express.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { Router, Request, Response } from 'express';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { getSubscriptionStatus, checkTripLimit, checkUserLimit } from '../middleware/subscription-limits.js';
 
 const router = Router();

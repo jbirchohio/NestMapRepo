@@ -3,7 +3,7 @@ import {
   Trip, 
   Activity,
   BaseEntity 
-} from '../../../shared/src/schema.js.js';
+} from '../../../shared/src/schema.js';
 
 // Define types that are used but not yet in the shared schema
 type NewActivity = Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>;

@@ -1,5 +1,5 @@
 import Stripe from 'stripe.js';
-import { storage } from '../storage.js.js';
+import { storage } from '../storage.js';
 
 // Stripe will be initialized when API keys are provided
 let stripe: Stripe | null = null;

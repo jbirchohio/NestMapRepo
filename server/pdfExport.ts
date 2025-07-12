@@ -22,7 +22,7 @@ type Todo = {
   title: string;
   completed: boolean;
   dueDate?: string | Date;
-  priority?: 'low' | 'medium' | 'high.js';
+  priority?: 'low' | 'medium' | 'high';
 };
 
 type Note = {

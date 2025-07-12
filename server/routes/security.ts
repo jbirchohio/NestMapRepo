@@ -1,10 +1,10 @@
-import { Router, Request, Response } from 'express.js';
+import { Router, Request, Response } from 'express';
 import { db } from '../db-connection.js';
-import { users, adminAuditLog, organizations, userSessions } from '../../shared/schema.js';
-import { eq, and, desc, gte, sql, count } from 'drizzle-orm.js';
-import { z } from 'zod.js';
+import { users, adminAuditLog, organizations, userSessions } from '../../@shared/schema';
+import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
+import { z } from 'zod';
 import { getActiveUserCount } from '../middleware/sessionTracking.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 
 const router = Router();

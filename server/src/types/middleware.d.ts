@@ -1,5 +1,5 @@
-import { Request as ExpressRequest, Response, NextFunction } from 'express.js';
-import { AuthUser } from './auth-user.js';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
+import { AuthUser } from './auth-user';
 
 // Database metrics type
 export interface DatabaseMetrics {

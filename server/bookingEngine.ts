@@ -1,4 +1,4 @@
-import { z } from 'zod.js';
+import { z } from 'zod';
 
 // Enhanced booking provider system with real API integration
 interface BookingProvider {

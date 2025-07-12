@@ -1,4 +1,4 @@
-import { AuthUser } from '../src/types/auth-user.js.js';
+import { AuthUser } from '../src/types/auth-user';
 import { UserRole } from '../types/jwt.js';
 
 declare global {

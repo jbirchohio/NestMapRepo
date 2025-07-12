@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 
 /**
  * Performance optimization service for acquisition-ready deployment

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { JwtPayload } from '../../../shared/types/auth.js';
 import { User } from '../../../shared/types/auth.js';
 import { ParamsDictionary } from 'express-serve-static-core.js';

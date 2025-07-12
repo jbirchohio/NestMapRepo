@@ -1,7 +1,7 @@
 import Stripe from 'stripe.js';
 import { db } from '../db.js';
-import { organizations } from '@shared/schema.js';
-import { eq } from 'drizzle-orm.js';
+import { organizations } from '@@shared/schema';
+import { eq } from 'drizzle-orm';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');

@@ -15,9 +15,9 @@
  * DO NOT create duplicate validation implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { Multer } from 'multer.js';
-import { z } from 'zod.js';
+import { z } from 'zod';
 import DOMPurify from 'isomorphic-dompurify.js';
 
 // Common validation patterns

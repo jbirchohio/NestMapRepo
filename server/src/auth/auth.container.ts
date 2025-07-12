@@ -1,7 +1,7 @@
-import { AuthController } from './controllers/auth.controller.js.js';
-import { AuthService } from './services/auth.service.js.js';
-import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js.js';
-import { UserRepositoryImpl } from './repositories/user.repository.js.js';
+import { AuthController } from './controllers/auth.controller.js';
+import { AuthService } from './services/auth.service.js';
+import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js';
+import { UserRepositoryImpl } from './repositories/user.repository.js';
 
 /**
  * Dependency injection container for authentication module

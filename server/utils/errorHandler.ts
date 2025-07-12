@@ -104,12 +104,12 @@ import type {
   NextFunction, 
   ErrorRequestHandler as ExpressErrorRequestHandler,
   Request as ExpressRequestType
-} from 'express.js';
+} from 'express';
 import type { ParamsDictionary } from 'express-serve-static-core.js';
 import type { ParsedQs } from 'qs.js';
 
 // Use the project's existing Express type extensions
-import type { AuthenticatedRequest } from '../src/types/express.js.js';
+import type { AuthenticatedRequest } from '../src/types/express';
 
 // Create a base request type with all the properties we need
 type BaseRequest = {

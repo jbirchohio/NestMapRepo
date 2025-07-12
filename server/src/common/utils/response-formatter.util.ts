@@ -1,4 +1,4 @@
-import { Response } from 'express.js';
+import { Response } from 'express';
 
 /**
  * Standard API success response structure

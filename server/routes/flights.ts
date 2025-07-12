@@ -1,8 +1,8 @@
-import { Router, Request, Response, NextFunction } from 'express.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js.js';
-import { z } from 'zod.js';
-import { asyncHandler } from '../utils/routeHelpers.js.js';
+import { Router, Request, Response, NextFunction } from 'express';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { z } from 'zod';
+import { asyncHandler } from '../utils/routeHelpers.js';
 
 // Define types for Duffel API responses
 interface DuffelOffer {

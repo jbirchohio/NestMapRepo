@@ -1,8 +1,8 @@
-import { Router } from 'express.js';
-import { requireSuperadmin } from '../../../middleware/superadmin.js.js';
-import { validateOrganizationAccess } from '../../../middleware/organizationContext.js.js';
-import * as organizationsController from './controllers.js.js';
-import * as organizationsValidators from './validators.js.js';
+import { Router } from 'express';
+import { requireSuperadmin } from '../../../middleware/superadmin';
+import { validateOrganizationAccess } from '../../../middleware/organizationContext.js';
+import * as organizationsController from './controllers.js';
+import * as organizationsValidators from './validators.js';
 
 const router = Router();
 

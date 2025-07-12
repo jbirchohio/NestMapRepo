@@ -1,4 +1,4 @@
-import { ITripTravelerRepository, TripTraveler, NewTripTraveler } from '../types/index.js.js';
+import { ITripTravelerRepository, TripTraveler, NewTripTraveler } from '../types/index.js';
 
 export class InMemoryTripTravelerRepository implements ITripTravelerRepository {
   private travelers: Map<string, TripTraveler> = new Map();

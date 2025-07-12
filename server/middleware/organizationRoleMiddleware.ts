@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { getUserPermissionsByRole } from '../permissions.js';
 
 /**

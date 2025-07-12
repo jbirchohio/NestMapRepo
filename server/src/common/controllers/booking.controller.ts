@@ -1,14 +1,14 @@
 import { Controller, Get, Post, Put, Body, Param, Delete, Inject, Logger } from '@nestjs/common.js';
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { BookingService } from '../services/booking.service.js';
-import { Booking } from '../../../db/bookingSchema.js.js';
+import { Booking } from '../../../db/bookingSchema.js';
 import { ResponseFormatter } from '../utils/response-formatter.util.js';
 import { withStandardizedErrorHandling } from '../middleware/standardized-error-handler.middleware.js';
 import { requireAuth, requireOrgContext, enforceOrganizationSecurity } from '../middleware/auth.middleware.js';
 import { validateBookingRequest } from '../middleware/validation.middleware.js';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces.js';
 import { ErrorService } from '../services/error.service.js';
-import { trips, activities, calendarIntegrations } from '@shared/schema.js';
+import { trips, activities, calendarIntegrations } from '@@shared/schema';
 
 /**
  * Controller for booking endpoints

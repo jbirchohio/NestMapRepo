@@ -1,5 +1,5 @@
 import { pgTable, uuid, text, integer, boolean, timestamp, jsonb } from 'drizzle-orm/pg-core.js';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod.js';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { users, organizations } from './schema.js';
 
 export const superadminAuditLogs = pgTable('superadmin_audit_logs', {

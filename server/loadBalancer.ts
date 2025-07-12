@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { db } from './db-connection.js';
-import { customDomains, organizations, whiteLabelSettings } from '@shared/schema.js';
-import { eq, and } from 'drizzle-orm.js';
+import { customDomains, organizations, whiteLabelSettings } from '@@shared/schema';
+import { eq, and } from 'drizzle-orm';
 
 export interface DomainConfig {
   domain: string;

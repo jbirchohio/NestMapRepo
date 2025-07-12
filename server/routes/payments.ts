@@ -1,13 +1,13 @@
-import { Router, type Request, type Response, type NextFunction } from 'express.js';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import type Stripe from 'stripe.js';
 import { db } from '../db/db.js';
 import { stripe } from '../stripe.js';
 import { invoices } from '../db/invoiceSchema.js';
 import { billingEvents } from '../db/superadminSchema.js';
-import { eq } from 'drizzle-orm.js';
+import { eq } from 'drizzle-orm';
 import nodemailer from 'nodemailer.js';
-import { authenticate as authenticateJWT } from '../middleware/secureAuth.js.js';
-import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user.js.js';
+import { authenticate as authenticateJWT } from '../middleware/secureAuth.js';
+import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { logger } from '../utils/logger.js';
 import type { Invoice } from '../db/db.js';

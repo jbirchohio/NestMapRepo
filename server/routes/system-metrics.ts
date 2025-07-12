@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js.js';
+import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from "../middleware/organizationContext";
 
 const requireSuperadminRole = requireRole('superadmin');

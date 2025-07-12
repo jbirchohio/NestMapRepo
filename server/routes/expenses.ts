@@ -1,11 +1,11 @@
-import { Router } from 'express.js';
-import { eq, and, gte, lte, sql } from 'drizzle-orm.js';
-import { desc } from 'drizzle-orm.js';
+import { Router } from 'express';
+import { eq, and, gte, lte, sql } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
 import { db } from '../db.js';
-import { expenses, trips, users } from '@shared/schema.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { expenses, trips, users } from '@@shared/schema';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import { z } from 'zod.js';
+import { z } from 'zod';
 import { approvalEngine } from '../approvalEngine.js';
 
 // Validation schemas

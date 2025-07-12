@@ -1,7 +1,7 @@
-import { Router } from 'express.js';
+import { Router } from 'express';
 import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express-serve-static-core.js';
 import rateLimit from 'express-rate-limit.js';
-import { z } from 'zod.js';
+import { z } from 'zod';
 
 // Type definitions
 type HealthStatus = 'healthy' | 'degraded' | 'unhealthy.js';

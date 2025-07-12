@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express.js';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import compression from 'compression.js';
 import { performance } from 'perf_hooks.js';
 

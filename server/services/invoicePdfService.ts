@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer.js';
 import nodemailer from 'nodemailer.js';
 import { Invoice } from '../db/invoiceSchema.js';
-import { format } from 'date-fns.js';
+import { format } from 'date-fns';
 
 interface InvoicePdfOptions {
   includeWatermark?: boolean;

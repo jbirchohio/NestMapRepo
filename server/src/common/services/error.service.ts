@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common.js';
-import { ApiError, ErrorType, createApiError } from '../types/index.js.js';
+import { ApiError, ErrorType, createApiError } from '../types/index.js';
 
 /**
  * Centralized service for error handling and creation

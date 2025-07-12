@@ -1,41 +1,41 @@
-import { Router } from 'express.js';
+import { Router } from 'express';
 
 // Core routes
-import authRoutes from './auth.js.js';
-import proposalsRoutes from './proposals.js.js';
-import tripRoutes from './trips.js.js';
-import activityRoutes from './activities.js.js';
-import organizationRoutes from './organizations.js.js';
-import analyticsRoutes from './analytics.js.js';
-import paymentsRoutes from './payments.js.js';
-import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus.js.js';
+import authRoutes from './auth.js';
+import proposalsRoutes from './proposals.js';
+import tripRoutes from './trips.js';
+import activityRoutes from './activities.js';
+import organizationRoutes from './organizations.js';
+import analyticsRoutes from './analytics.js';
+import paymentsRoutes from './payments.js';
+import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus.js';
 
 // Feature routes
-import adminRoutes from './admin.js.js';
-import invoicesRoutes from './invoices.js.js';
-import calendarRoutes from './calendar.js.js';
-import { registerBookingRoutes } from './bookings.js.js';
-import approvalRoutes from './approvals.js.js';
-import expenseRoutes from './expenses.js.js';
-import reportingRoutes from './reporting.js.js';
-import { registerCorporateCardRoutes } from './corporateCards.js.js';
-import organizationFundingRoutes from './organizationFunding.js.js';
-import stripeOAuthRoutes from './stripeOAuth.js.js';
+import adminRoutes from './admin';
+import invoicesRoutes from './invoices.js';
+import calendarRoutes from './calendar.js';
+import { registerBookingRoutes } from './bookings.js';
+import approvalRoutes from './approvals.js';
+import expenseRoutes from './expenses.js';
+import reportingRoutes from './reporting.js';
+import { registerCorporateCardRoutes } from './corporateCards.js';
+import organizationFundingRoutes from './organizationFunding.js';
+import stripeOAuthRoutes from './stripeOAuth.js';
 // Import modular superadmin routes
-import superadminRoutes from './superadmin/index.js.js';
-import webhookRoutes from './webhooks.js.js';
-import subscriptionStatusRoutes from './subscription-status.js.js';
-import { registerAdminSettingsRoutes } from './admin-settings.js.js';
-import aiRoutes from './ai.js.js';
-import billingRoutes from './billing.js.js';
-import securityRoutes from './security.js.js';
-import healthRoutes from './health.js.js';
-import notificationsRoutes from './notifications.js.js';
-import flightRoutes from './flights.js.js';
-import exportRoutes from './export.js.js';
+import superadminRoutes from './superadmin/index.js';
+import webhookRoutes from './webhooks.js';
+import subscriptionStatusRoutes from './subscription-status.js';
+import { registerAdminSettingsRoutes } from './admin-settings.js';
+import aiRoutes from './ai.js';
+import billingRoutes from './billing.js';
+import securityRoutes from './security.js';
+import healthRoutes from './health.js';
+import notificationsRoutes from './notifications.js';
+import flightRoutes from './flights.js';
+import exportRoutes from './export.js';
 
 // Test routes (development only)
-import testRoutes from './test.routes.js.js';
+import testRoutes from './test.routes.js';
 
 const router = Router();
 
@@ -52,7 +52,7 @@ router.use('/analytics', analyticsRoutes);
 
 // Mount admin and feature routes
 router.use('/admin', adminRoutes);
-import customDomainsRoutes from './customDomains.js.js';
+import customDomainsRoutes from './customDomains.js';
 
 router.use('/calendar', calendarRoutes);
 router.use('/approvals', approvalRoutes);
@@ -80,7 +80,7 @@ router.use('/flights', flightRoutes);
 router.use('/export', exportRoutes);
 
 // Import and register simplified white label routes
-import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified.js.js';
+import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified.js';
 // Note: This will be handled in the main server file since it needs the app instance
 // router.use('/todos', todosRoutes);
 // router.use('/notes', notesRoutes);

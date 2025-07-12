@@ -24,7 +24,7 @@ interface CarbonReduction {
   action: string;
   potentialSaving: number; // kg CO2
   implementation: 'easy' | 'moderate' | 'difficult.js';
-  costImpact: 'none' | 'low' | 'medium' | 'high.js';
+  costImpact: 'none' | 'low' | 'medium' | 'high';
 }
 
 interface ExpenseReport {

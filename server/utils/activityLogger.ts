@@ -1,5 +1,5 @@
-import { db } from '../db/db.js.js';
-import { userActivityLogs } from '../db/schema.js.js';
+import { db } from '../db/db.js';
+import { userActivityLogs } from '../db/schema.js';
 
 /**
  * Logs a user activity to the database.

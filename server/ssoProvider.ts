@@ -1,10 +1,10 @@
-import { Router } from 'express.js';
+import { Router } from 'express';
 import { db } from './db.js';
-import { users, organizations, userRoleEnum } from '../shared/schema.js';
-import { eq, and } from 'drizzle-orm.js';
-import { auditLogger } from './auditLogger.js.js';
+import { users, organizations, userRoleEnum } from '../@shared/schema';
+import { eq, and } from 'drizzle-orm';
+import { auditLogger } from './auditLogger.js';
 
-type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest.js';
+type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 
 declare module 'express-session' {
   interface SessionData {
@@ -311,13 +311,13 @@ export class SSOManager {
   }
 
   private determineUserRole(groups: string[]): string {
-    if (!groups) return 'user.js';
+    if (!groups) return 'user';
     if (groups.some(g => ['admin', 'administrator'].includes(g.toLowerCase()))) {
-      return 'admin.js';
+      return 'admin';
     } else if (groups.some(g => ['manager', 'lead'].includes(g.toLowerCase()))) {
       return 'manager.js';
     }
-    return 'user.js';
+    return 'user';
   }
 
   private generateSAMLRequest(config: SSOConfig, returnUrl?: string): string {

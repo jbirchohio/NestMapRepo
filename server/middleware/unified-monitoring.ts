@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { endpointMonitor } from './api-security.js';
 import { trackEndpointHealth } from '../routes/health.js';
 import { trackRequest } from '../routes/system-metrics.js';

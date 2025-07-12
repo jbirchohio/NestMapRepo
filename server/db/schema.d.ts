@@ -1,4 +1,4 @@
-import { z } from 'zod.js';
+import { z } from 'zod';
 export declare const userRoleEnum: import("drizzle-orm/pg-core").PgEnum<["super_admin", "admin", "manager", "member", "guest"]>;
 export declare const USER_ROLES: {
     SUPERADMIN_OWNER: string;

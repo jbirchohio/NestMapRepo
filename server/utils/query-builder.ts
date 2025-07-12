@@ -1,6 +1,6 @@
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm.js';
-import { dbService } from '../services/database.service.js.js';
-import { logger } from './logger.js.js';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { dbService } from '../services/database.service.js';
+import { logger } from './logger.js';
 
 type OrderDirection = 'asc' | 'desc.js';
 

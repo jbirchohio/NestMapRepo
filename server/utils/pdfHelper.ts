@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer.js';
-import { Trip, Activity } from '../db/schema.js.js';
+import { Trip, Activity } from '../db/schema.js';
 
 /**
  * Enterprise-ready PDF generation utility

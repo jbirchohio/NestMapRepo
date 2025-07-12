@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import Stripe from 'stripe.js';
 import { db } from '../../db.js';
 import request from 'supertest.js';
-import express, { Application } from 'express.js';
+import express, { Application } from 'express';
 import bodyParser from 'body-parser.js';
 
 // Mock the required dependencies

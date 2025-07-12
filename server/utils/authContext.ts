@@ -1,4 +1,4 @@
-import { Request } from 'express.js';
+import { Request } from 'express';
 
 // Types for our auth context
 export interface AuthUser {

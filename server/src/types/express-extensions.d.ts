@@ -1,4 +1,4 @@
-import { Request as ExpressRequest } from 'express.js';
+import { Request as ExpressRequest } from 'express';
 
 declare global {
   namespace Express {

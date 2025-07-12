@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, timestamp, integer, jsonb, pgEnum, index } from 'drizzle-orm/pg-core.js';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod.js';
-import { z } from 'zod.js';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { z } from 'zod';
 import { organizations, users } from './schema.js';
 import type { InvoiceItem } from '../../shared/types/invoice.js';
 

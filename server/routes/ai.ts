@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from "zod";
 import OpenAI from "openai";

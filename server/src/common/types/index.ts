@@ -1,4 +1,4 @@
 /**
  * Common types exports
  */
-export * from './error.types.js.js';
+export * from './error.types.js';

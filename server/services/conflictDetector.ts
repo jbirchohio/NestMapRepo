@@ -7,13 +7,13 @@ export interface TripConflict {
   departments?: string[];
   city?: string;
   potentialSavings?: number;
-  severity: 'low' | 'medium' | 'high.js';
+  severity: 'low' | 'medium' | 'high';
   description: string;
 }
 
 export interface ActivityConflict {
   type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict.js';
-  severity: 'high' | 'medium' | 'low.js';
+  severity: 'high' | 'medium' | 'low';
   activities: any[];
   description: string;
   suggestedFix: string;

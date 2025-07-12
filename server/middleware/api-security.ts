@@ -15,7 +15,7 @@
  * DO NOT create duplicate security implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto.js';
 
 type SecureRequest = Request & {

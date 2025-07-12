@@ -1,7 +1,7 @@
-import { Router, Request, Response, NextFunction } from 'express.js';
+import { Router, Request, Response, NextFunction } from 'express';
 import Stripe from 'stripe.js';
 import { db } from '../db.js';
-import { eq } from 'drizzle-orm.js';
+import { eq } from 'drizzle-orm';
 import { NodemailerEmailService } from '../src/email/services/nodemailer-email.service.js';
 import { ConfigService } from '@nestjs/config.js';
 import { invoices } from '../db/invoiceSchema.js';

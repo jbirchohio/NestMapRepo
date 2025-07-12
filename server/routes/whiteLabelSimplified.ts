@@ -2,9 +2,9 @@ import type { Express, Response } from "express";
 import { db } from "../db";
 import { organizations, users, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import type { AuthenticatedRequest } from '../src/types/auth-user.js.js';
+import type { AuthenticatedRequest } from '../src/types/auth-user';
 
 
 export function registerSimplifiedWhiteLabelRoutes(app: Express) {

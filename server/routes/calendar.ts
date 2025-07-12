@@ -1,10 +1,10 @@
-import { Router } from 'express.js';
-import { eq, and } from 'drizzle-orm.js';
+import { Router } from 'express';
+import { eq, and } from 'drizzle-orm';
 import { db } from '../db.js';
-import { calendarIntegrations, trips, activities } from '@shared/schema.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { calendarIntegrations, trips, activities } from '@@shared/schema';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import { z } from 'zod.js';
+import { z } from 'zod';
 
 const router = Router();
 

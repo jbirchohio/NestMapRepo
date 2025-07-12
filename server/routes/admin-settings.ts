@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { db } from "../db";
 import { eq, count } from "drizzle-orm";
 import { adminSettings, adminAuditLog } from "@shared/schema";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 
 interface SystemSettings {

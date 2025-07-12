@@ -1,4 +1,4 @@
-import { format } from 'date-fns.js';
+import { format } from 'date-fns';
 
 // Helper function to convert city names to airport codes
 function convertCityToAirportCode(cityOrCode: string): string {

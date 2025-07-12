@@ -1,4 +1,4 @@
-import { AuthUser, UserRole } from './auth-user.js';
+import { AuthUser, UserRole } from './auth-user';
 
 // This file extends the Express Request type to include our custom properties
 
@@ -99,4 +99,4 @@ export type AuthenticatedRequest<
 >;
 
 // Export all types for easy importing
-export * from './auth-user.js';
+export * from './auth-user';

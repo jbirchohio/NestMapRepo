@@ -14,14 +14,14 @@
  * DO NOT create duplicate authentication implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express.js';
-import { verifyToken } from '../utils/secureJwt.js.js';
-import { redis } from '../db/redis.js.js';
-import { logger } from '../utils/logger.js.js';
-import type { TokenPayload, TokenType, VerifyTokenResult } from '../types/jwt.d.js.js';
+import { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/secureJwt.js';
+import { redis } from '../db/redis.js';
+import { logger } from '../utils/logger.js';
+import type { TokenPayload, TokenType, VerifyTokenResult } from '../types/jwt.d.js';
 
 // Import the AuthUser type from the project's types
-import type { AuthUser } from '../src/types/auth-user.js';
+import type { AuthUser } from '../src/types/auth-user';
 
 // Extend Express Request type to include our custom properties
 declare global {

@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { db } from './db-connection.js';
-import { users, tripCollaborators, trips } from '@shared/schema.js';
-import { eq, and } from 'drizzle-orm.js';
-import { USER_ROLES, TRIP_ROLES, type UserRole, type TripRole } from '@shared/schema.js';
+import { users, tripCollaborators, trips } from '@@shared/schema';
+import { eq, and } from 'drizzle-orm';
+import { USER_ROLES, TRIP_ROLES, type UserRole, type TripRole } from '@@shared/schema';
 
 // Permission definitions
 export const PERMISSIONS = {

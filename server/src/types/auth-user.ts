@@ -26,7 +26,7 @@ export type RequestUser = Omit<AuthUser, 'organization_id'> & {
   organization_id?: string; // Keep for backward compatibility
 };
 
-import type { Request } from 'express.js';
+import type { Request } from 'express';
 
 export interface AuthenticatedRequest<
   Params = any,

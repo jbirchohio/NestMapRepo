@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express.js';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit.js';
 
 // Rate limiting configuration

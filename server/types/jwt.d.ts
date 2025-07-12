@@ -1,4 +1,4 @@
-import 'express.js';
+import 'express';
 import { UserRole } from '../src/auth/types.js';
 export { UserRole } from '../src/auth/types.js';
 

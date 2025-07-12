@@ -1,6 +1,6 @@
-import { db } from './db.js.js';
-import { approvalRequests, approvalRules, users, organizations } from './db/schema.js.js';
-import { eq, and } from 'drizzle-orm.js';
+import { db } from './db.js';
+import { approvalRequests, approvalRules, users, organizations } from './db/schema.js';
+import { eq, and } from 'drizzle-orm';
 
 interface ApprovalWorkflowConfig {
   organizationId: string;
@@ -18,7 +18,7 @@ interface ApprovalResult {
   requestId?: string;
   assignedApproverId?: string;
   dueDate?: Date;
-  priority: 'low' | 'normal' | 'high' | 'urgent.js';
+  priority: 'low' | 'normal' | 'high' | 'urgent';
 }
 
 export class ApprovalEngine {
@@ -191,12 +191,12 @@ export class ApprovalEngine {
       const amountInDollars = data.totalAmount / 100;
       const threshold = rule.conditions.budgetThreshold || 1000;
 
-      if (amountInDollars >= threshold * 5) return 'urgent.js';
-      if (amountInDollars >= threshold * 3) return 'high.js';
-      if (amountInDollars >= threshold * 1.5) return 'normal.js';
+      if (amountInDollars >= threshold * 5) return 'urgent';
+      if (amountInDollars >= threshold * 3) return 'high';
+      if (amountInDollars >= threshold * 1.5) return 'normal';
     }
 
-    return 'normal.js';
+    return 'normal';
   }
 
   /**
@@ -243,9 +243,9 @@ export class ApprovalEngine {
 
     return {
       pendingCount: pending.length,
-      urgent: pending.filter(r => r.priority === 'urgent').length,
-      high: pending.filter(r => r.priority === 'high').length,
-      overdue: pending.filter(r => r.dueDate && r.dueDate < new Date()).length,
+      urgent: pending.filter((r: any) => r.priority === 'urgent').length,
+      high: pending.filter((r: any) => r.priority === 'high').length,
+      overdue: pending.filter((r: any) => r.dueDate && r.dueDate < new Date()).length,
       requests: pending
     };
   }

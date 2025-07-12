@@ -1,4 +1,4 @@
-import { User } from '../../../db/schema.js.js';
+import { User } from '../../../db/schema.js';
 import { BaseRepository } from '../../common/repositories/base.repository.interface.js';
 
 /**

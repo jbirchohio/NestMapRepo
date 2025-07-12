@@ -1,5 +1,5 @@
-import { Response, NextFunction } from 'express.js';
-import type { CustomRequest } from '../../../types/custom-express.js.js';
+import { Response, NextFunction } from 'express';
+import type { CustomRequest } from '../../../types/custom-express';
 
 export function requireSuperadmin(req: CustomRequest, res: Response, next: NextFunction) {
   // Check if user is authenticated and has superadmin role

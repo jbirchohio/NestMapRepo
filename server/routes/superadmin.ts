@@ -1,8 +1,8 @@
-import express, { Request, Response, NextFunction, RequestHandler } from 'express.js';
+import express, { Request, Response, NextFunction, RequestHandler } from 'express';
 import { db } from '../db.js';
 import { auditLogs } from '../db/auditLog.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
-import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
+import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin';
 import { injectOrganizationContext } from '../middleware/organizationContext.js';
 
 // Import route modules

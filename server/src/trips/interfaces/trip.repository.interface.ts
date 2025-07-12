@@ -1,4 +1,4 @@
-import { Trip, User } from '../../../db/schema.js.js';
+import { Trip, User } from '../../../db/schema.js';
 import { CorporateTripDto } from './trip.service.interface.js';
 import { BaseRepository } from '../../common/repositories/base.repository.interface.js';
 

@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { Logger } from '@nestjs/common.js';
-import { ApiError, ErrorType, createApiError } from '../types/index.js.js';
+import { ApiError, ErrorType, createApiError } from '../types/index.js';
 
 /**
  * Maps error types to HTTP status codes

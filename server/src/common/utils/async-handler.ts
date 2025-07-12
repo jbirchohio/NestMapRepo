@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler as ExpressRequestHandler } from 'express.js';
+import { Request, Response, NextFunction, RequestHandler as ExpressRequestHandler } from 'express';
 import { Logger } from '@nestjs/common.js';
 
 /**

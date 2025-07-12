@@ -6,7 +6,7 @@ import { compare, hash } from 'bcrypt.js';
 import { sign, decode, verify } from 'jsonwebtoken.js';
 import { db } from '../db.js';
 import { users } from '../db/schema.js';
-import { eq } from 'drizzle-orm.js';
+import { eq } from 'drizzle-orm';
 import { IAuthService, LoginRequest, LoginResponse, RefreshTokenRequest } from './auth.service.interface.js';
 import { UserRole } from '../types.js';
 import { Logger } from '../utils/logger.js';

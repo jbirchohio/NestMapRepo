@@ -1,6 +1,6 @@
-import { Response, NextFunction, RequestHandler } from 'express.js';
-import { Request } from '../../types/express/index.js.js';
-import { IAuthService } from '../interfaces/auth.service.interface.js.js';
+import { Response, NextFunction, RequestHandler } from 'express';
+import { Request } from '../../types/express/index.js';
+import { IAuthService } from '../interfaces/auth.service.interface.js';
 import { 
   AuthResponse,
   LoginDto, 
@@ -8,9 +8,9 @@ import {
   RequestPasswordResetDto, 
   ResetPasswordDto,
   UserRole
-} from '../dtos/auth.dto.js.js';
-import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware.js.js';
-import { isErrorWithMessage } from '../../utils/error-utils.js.js';
+} from '../dtos/auth.dto.js';
+import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware.js';
+import { isErrorWithMessage } from '../../utils/error-utils.js';
 import { Logger } from '@nestjs/common.js';
 
 // Response type that excludes the refresh token when sending to client

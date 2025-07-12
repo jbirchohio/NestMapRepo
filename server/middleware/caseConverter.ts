@@ -12,7 +12,7 @@
  * DO NOT create duplicate case conversion implementations - extend this one if needed.
  */
 
-import { RequestHandler } from 'express.js';
+import { RequestHandler } from 'express';
 
 // Converts a string from camelCase to snake_case
 const toSnakeCase = (str: string): string =>

@@ -12,7 +12,7 @@
  * DO NOT create duplicate rate limiting implementations - extend this one if needed.
  */
 
-import express, { Request, Response, NextFunction } from 'express.js';
+import express, { Request, Response, NextFunction } from 'express';
 
 interface RateLimitConfig {
   requests: number;

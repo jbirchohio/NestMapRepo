@@ -1,16 +1,16 @@
-import { Router, Request, Response } from 'express.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js.js';
+import { Router, Request, Response } from 'express';
+import { authenticate as validateJWT } from '../middleware/secureAuth.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { 
   stripe, 
   SUBSCRIPTION_PLANS, 
   createStripeCustomer, 
   createSubscription, 
   updateSubscription 
-} from '../stripe.js.js';
-import { db } from '../db.js.js';
-import { organizations } from '../db/schema.js.js';
-import { eq } from 'drizzle-orm.js';
+} from '../stripe.js';
+import { db } from '../db.js';
+import { organizations } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 const router = Router();
 

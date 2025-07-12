@@ -1,6 +1,6 @@
 import { JwtPayload as BaseJwtPayload } from 'jsonwebtoken.js';
 
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest.js';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 export type TokenType = 'access' | 'refresh' | 'password_reset.js';
 
 // Extend JwtPayload but override the role to be required

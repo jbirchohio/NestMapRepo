@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing.js';
 import { BookingRepositoryImpl } from './booking.repository.js';
 import { Logger } from '@nestjs/common.js';
-import { eq } from 'drizzle-orm.js';
+import { eq } from 'drizzle-orm';
 
 // Mock the database module
 jest.mock('../../../../db', () => ({

@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express.js';
+import { Request, Response, NextFunction } from 'express';
 import { USER_ROLES } from '../db/schema.js';
-import { AuthUser } from '../src/types/auth-user.js';
+import { AuthUser } from '../src/types/auth-user';
 
 // Create a type that represents the custom properties we're adding to the request
 type CustomRequestProps = {

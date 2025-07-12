@@ -1,5 +1,5 @@
-import { Request as ExpressRequest, Response, NextFunction } from 'express.js';
-import { createApiError, ErrorType } from '../types/index.js.js';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
+import { createApiError, ErrorType } from '../types/index.js';
 import { Logger } from '@nestjs/common.js';
 
 // Extend the Express Request type to include the user property
