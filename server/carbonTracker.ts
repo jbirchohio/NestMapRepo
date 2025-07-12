@@ -1,31 +1,7 @@
 import OpenAI from "openai";
+import { CarbonFootprint, CarbonReduction } from './types/interfaces/carbon.js';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-interface CarbonFootprint {
-  totalEmissions: number; // kg CO2
-  breakdown: {
-    flights: number;
-    hotels: number;
-    localTransport: number;
-    activities: number;
-    meals: number;
-  };
-  comparison: {
-    averageTrip: number;
-    reductionPotential: number;
-    offsetCost: number;
-  };
-  recommendations: CarbonReduction[];
-}
-
-interface CarbonReduction {
-  category: string;
-  action: string;
-  potentialSaving: number; // kg CO2
-  implementation: 'easy' | 'moderate' | 'difficult.js';
-  costImpact: 'none' | 'low' | 'medium' | 'high';
-}
 
 interface ExpenseReport {
   totalCost: number;
@@ -51,7 +27,7 @@ interface ExpenseCategory {
   budgeted: number;
   actual: number;
   variance: number;
-  status: 'under' | 'on-track' | 'over.js';
+  status: 'under' | 'on-track' | 'over';
 }
 
 interface Receipt {
@@ -110,8 +86,26 @@ export async function calculateCarbonFootprint(
     
     return {
       totalEmissions: result.totalEmissions || calculateFallbackEmissions(activities, flights, accommodation),
+      totalCO2kg: result.totalCO2kg || result.totalEmissions || calculateFallbackEmissions(activities, flights, accommodation),
       breakdown: result.breakdown || generateEmissionsBreakdown(activities, flights, accommodation),
+      metrics: result.metrics || { 
+        co2PerKm: 0, 
+        co2PerDay: 0, 
+        offsetCost: (result.totalEmissions || 0) * 0.02 
+      },
+      esgCompliance: result.esgCompliance || {
+        scope1: 0,
+        scope2: 0,
+        scope3: result.totalEmissions || 0,
+        certifications: [],
+        offsetPrograms: []
+      },
       comparison: result.comparison || generateEmissionsComparison(result.totalEmissions || 0),
+      trends: result.trends || {
+        vsLastTrip: 0,
+        vsOrgAverage: 0,
+        improvementAreas: []
+      },
       recommendations: result.recommendations || generateCarbonRecommendations()
     };
 
@@ -255,38 +249,6 @@ export function analyzeExpenseCompliance(expenses: any[]): any {
 }
 
 // Enhanced Carbon Footprint Tracking System
-export interface CarbonFootprint {
-  totalCO2kg: number;
-  breakdown: {
-    flights: number;
-    ground: number;
-    accommodation: number;
-    activities: number;
-  };
-  metrics: {
-    co2PerKm: number;
-    co2PerDay: number;
-    offsetCost: number;
-  };
-  esgCompliance: {
-    scope1: number; // Direct emissions
-    scope2: number; // Indirect emissions from energy
-    scope3: number; // Other indirect emissions
-    certifications: string[];
-    offsetPrograms: Array<{
-      provider: string;
-      type: string;
-      cost: number;
-      verified: boolean;
-    }>;
-  };
-  recommendations: string[];
-  trends: {
-    vsLastTrip: number;
-    vsOrgAverage: number;
-    improvementAreas: string[];
-  };
-}
 
 export async function calculateTripCarbonFootprint(
   trip: any,
@@ -295,8 +257,17 @@ export async function calculateTripCarbonFootprint(
   organizationId: number
 ): Promise<CarbonFootprint> {
   const carbon: CarbonFootprint = {
+    totalEmissions: 0, // Legacy property
     totalCO2kg: 0,
-    breakdown: { flights: 0, ground: 0, accommodation: 0, activities: 0 },
+    breakdown: { 
+      flights: 0, 
+      ground: 0, 
+      accommodation: 0, 
+      activities: 0,
+      hotels: 0,
+      localTransport: 0,
+      meals: 0
+    },
     metrics: { co2PerKm: 0, co2PerDay: 0, offsetCost: 0 },
     esgCompliance: {
       scope1: 0,
@@ -304,6 +275,11 @@ export async function calculateTripCarbonFootprint(
       scope3: 0,
       certifications: [],
       offsetPrograms: []
+    },
+    comparison: {
+      averageTrip: 0,
+      reductionPotential: 0,
+      offsetCost: 0
     },
     recommendations: [],
     trends: { vsLastTrip: 0, vsOrgAverage: 0, improvementAreas: [] }
@@ -377,7 +353,7 @@ export async function calculateTripCarbonFootprint(
   ];
 
   // Generate recommendations
-  carbon.recommendations = generateCarbonRecommendations(carbon, trip);
+  carbon.recommendations = generateCarbonRecommendations();
 
   // Compare with organization trends
   carbon.trends = await calculateCarbonTrends(carbon, organizationId, trip.user_id);
@@ -467,7 +443,7 @@ function estimateFlightDistance(origin: string, destination: string): number {
   return distances[origin]?.[destination] || 5000; // Default long-haul distance
 }
 
-function generateCarbonRecommendations(carbon: CarbonFootprint, trip: any): string[] {
+function generateCarbonRecommendationStrings(carbon: CarbonFootprint, trip: any): string[] {
   const recommendations: string[] = [];
   
   if (carbon.breakdown.flights > carbon.totalCO2kg * 0.7) {
@@ -613,7 +589,10 @@ function generateEmissionsBreakdown(activities: any[], flights: any[], accommoda
     hotels: Math.round(total * 0.25),
     localTransport: Math.round(total * 0.1),
     activities: Math.round(total * 0.03),
-    meals: Math.round(total * 0.02)
+    meals: Math.round(total * 0.02),
+    // Additional properties for compatibility
+    ground: Math.round(total * 0.1),
+    accommodation: Math.round(total * 0.25)
   };
 }
 
@@ -656,8 +635,26 @@ function generateFallbackCarbonReport(activities: any[], flights: any[], accommo
   
   return {
     totalEmissions,
+    totalCO2kg: totalEmissions,
     breakdown: generateEmissionsBreakdown(activities, flights, accommodation),
+    metrics: {
+      co2PerKm: 0,
+      co2PerDay: 0,
+      offsetCost: totalEmissions * 0.02
+    },
+    esgCompliance: {
+      scope1: 0,
+      scope2: 0,
+      scope3: totalEmissions,
+      certifications: [],
+      offsetPrograms: []
+    },
     comparison: generateEmissionsComparison(totalEmissions),
+    trends: {
+      vsLastTrip: 0,
+      vsOrgAverage: 0,
+      improvementAreas: []
+    },
     recommendations: generateCarbonRecommendations()
   };
 }
@@ -666,7 +663,16 @@ function calculateTotalExpenses(expenses: any[]): number {
   return expenses.reduce((total, expense) => total + (expense.amount || 0), 0);
 }
 
-function generateExpenseBreakdown(expenses: any[]): any {
+interface ExpenseBreakdown {
+  flights: number;
+  accommodation: number;
+  meals: number;
+  transportation: number;
+  activities: number;
+  miscellaneous: number;
+}
+
+function generateExpenseBreakdown(expenses: any[]): ExpenseBreakdown {
   const breakdown = {
     flights: 0,
     accommodation: 0,
@@ -701,16 +707,16 @@ function generateDailyAverages(expenses: any[]): any[] {
 
 function generateExpenseCategories(expenses: any[], budget?: number): ExpenseCategory[] {
   const breakdown = generateExpenseBreakdown(expenses);
-  const totalBudget = budget || Object.values(breakdown).reduce((sum, val) => sum + val, 0) * 1.2;
+  const totalBudget = budget || Object.values(breakdown).reduce((sum: number, val: any) => sum + (val as number), 0) * 1.2;
   
   return Object.entries(breakdown).map(([name, actual]) => {
     const budgeted = totalBudget / Object.keys(breakdown).length;
-    const variance = actual - budgeted;
+    const variance = (actual as number) - budgeted;
     
     return {
       name,
       budgeted: Math.round(budgeted),
-      actual: Math.round(actual),
+      actual: Math.round(actual as number),
       variance: Math.round(variance),
       status: variance < -budgeted * 0.1 ? 'under' : variance > budgeted * 0.1 ? 'over' : 'on-track'
     };
