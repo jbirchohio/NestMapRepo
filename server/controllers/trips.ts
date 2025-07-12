@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { storage } from "../storage";
-import { insertTripSchema } from "../db/schema";
+import { storage } from "../storage.js";
+import { insertTripSchema } from "../db/schema.js";
 import { z } from "zod";
 import { 
   validateAndSanitizeBody, 

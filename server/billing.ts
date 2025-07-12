@@ -6,7 +6,7 @@ let stripe: Stripe | null = null;
 // Initialize Stripe if secret key is available
 if (process.env.STRIPE_SECRET_KEY) {
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2025-01-27.acacia",
+    apiVersion: "2025-05-28.basil",
   });
   console.log('✓ Stripe billing service initialized');
 } else {
@@ -68,8 +68,8 @@ export async function createOrganizationSubscription(params: CreateOrganizationS
     });
 
     const invoice = subscription.latest_invoice;
-    const paymentIntent = typeof invoice === 'object' && invoice ? invoice.payment_intent : null;
-    const clientSecret = typeof paymentIntent === 'object' && paymentIntent ? paymentIntent.client_secret : null;
+    const paymentIntent = typeof invoice === 'object' && invoice ? (invoice as any).payment_intent : null;
+    const clientSecret = typeof paymentIntent === 'object' && paymentIntent ? (paymentIntent as any).client_secret : null;
 
     console.log(`✓ Created ${params.plan} subscription for organization ${params.organization_id}`);
     
@@ -124,7 +124,7 @@ export async function getOrganizationBilling(customerId: string): Promise<Billin
       customerId,
       subscriptionId: subscription.id,
       status: subscription.status as any,
-      currentPeriodEnd: new Date((subscription.current_period_end || 0) * 1000),
+      currentPeriodEnd: new Date(((subscription as any).current_period_end || 0) * 1000),
       plan
     };
   } catch (error) {
