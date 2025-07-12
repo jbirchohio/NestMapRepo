@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from './db-connection.js';
-import { customDomains, organizations, whiteLabelSettings } from "../shared/src/schema.js";
+import { customDomains, organizations, whiteLabelSettings } from "./db/schema.js";
 import { eq, and } from 'drizzle-orm';
 
 export interface DomainConfig {
@@ -271,9 +271,9 @@ export async function updateLoadBalancerConfig(): Promise<void> {
     // Get all active domains
     const domains = await db
       .select({
-        domain: customDomains.domain,
-        organizationId: customDomains.organization_id,
-        ssl_verified: customDomains.ssl_verified,
+        domain: customDomains.domainName,
+        organizationId: customDomains.organizationId,
+        ssl_verified: customDomains.sslEnabled,
         status: customDomains.status,
       })
       .from(customDomains)
