@@ -39,7 +39,7 @@ const tripSchema = z.object({
   hotelLatitude: z.string().optional(),
   hotelLongitude: z.string().optional(),
   // B2B specific fields
-  tripType: z.enum(["personal", "business"]).default("personal"),
+  tripType: z.enum(["personal", "business"]),
   clientName: z.string().optional(),
   projectType: z.string().optional(),
   organization: z.string().optional(),

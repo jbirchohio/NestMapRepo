@@ -6,6 +6,7 @@ import { User, JwtPayload, AuthTokens } from '@/types/api';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionLockout } from '@/utils/sessionLockout';
 import { jwtDecode } from 'jwt-decode';
+import { mapUseCaseToRoleType } from '@/lib/roleUtils';
 
 // Constants
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -37,6 +38,7 @@ interface AuthContextType {
   loading: boolean;
   authReady: boolean;
   error: string | null;
+  roleType: 'corporate' | 'agency' | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -70,6 +72,23 @@ function isTokenExpired(token: string | null): boolean {
   if (!decoded) return true;
   const now = Date.now() / 1000;
   return decoded.exp < now;
+}
+
+// Helper function to determine role type from user role
+function getRoleType(userRole: string | null): 'corporate' | 'agency' | null {
+  if (!userRole) return null;
+  
+  // Map user roles to role types
+  const roleMapping: Record<string, 'corporate' | 'agency'> = {
+    'admin': 'corporate',
+    'user': 'corporate',
+    'corporate': 'corporate',
+    'agency': 'agency',
+    'travel_agent': 'agency',
+    'agent': 'agency',
+  };
+  
+  return roleMapping[userRole.toLowerCase()] || 'corporate';
 }
 
 // Provider component
@@ -248,6 +267,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
     loading,
     authReady,
     error,
+    roleType: getRoleType(user?.role || null),
     signIn,
     signUp,
     signOut,
