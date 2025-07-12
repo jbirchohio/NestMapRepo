@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db.js';
 import { auditLogs } from '../db/auditLog.js';
-import { AuthUser } from '../src/types/auth-user.js';
+import { AuthUser } from '../src/types/auth-user';
 
 type AuditRequest = Request & {
   user?: AuthUser;
@@ -17,27 +17,27 @@ export async function auditLogMiddleware(
   next: NextFunction
 ): Promise<Response | void> {
   // Only log if user is authenticated and org is known
-  if (!req.user || !req.user.id || !req.user.organizationId) {
+  if (!req.user?.id || !req.user?.organizationId) {
     return next();
   }
 
   // Capture method, path, and optionally resourceId from params
   const { method, originalUrl, params, body } = req;
   const action = `${method} ${originalUrl}`;
-  const resource = originalUrl.split('/')[1] || 'unknown';
+  const resource = originalUrl.split('/')[1] || 'unknown.js';
   const resourceId = params.id || params.tripId || params.userId || null;
 
   // Attach after response sent
   res.on('finish', async () => {
     try {
-      await db.insert(auditLogs).values([{
-        organizationId: req.user.organizationId,
-        userId: req.user.id,
+      await db.insert(auditLogs).values({
+        organizationId: req.user!.organizationId!,
+        userId: req.user!.id,
         action,
         resource,
         resourceId,
         metadata: { body, statusCode: res.statusCode }
-      }]);
+      });
     } catch (err) {
       // Optionally log error, but do not block response
       // eslint-disable-next-line no-console

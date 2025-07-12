@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer.js';
 import { Trip, Activity } from '../db/schema.js';
 
 /**
@@ -271,8 +271,8 @@ function groupActivitiesByDay(activities: Activity[]) {
   // Sort activities within each day by time
   Object.values(grouped).forEach(day => {
     day.activities.sort((a: Activity, b: Activity) => {
-      const timeA = a.time || '00:00';
-      const timeB = b.time || '00:00';
+      const timeA = a.time || '00:00.js';
+      const timeB = b.time || '00:00.js';
       return timeA.localeCompare(timeB);
     });
   });

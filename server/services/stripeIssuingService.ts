@@ -1,4 +1,4 @@
-import Stripe from 'stripe';
+import Stripe from 'stripe.js';
 import { storage } from '../storage.js';
 
 // Stripe will be initialized when API keys are provided
@@ -14,7 +14,7 @@ export interface CardIssuanceRequest {
   user_id: number;
   organization_id: number;
   spend_limit: number; // in cents
-  interval: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  interval: 'daily' | 'weekly' | 'monthly' | 'yearly.js';
   cardholder_name: string;
   purpose?: string;
   department?: string;
@@ -25,7 +25,7 @@ export interface CardIssuanceRequest {
 export interface CardControlsUpdate {
   card_id: number;
   spend_limit?: number;
-  status?: 'active' | 'inactive' | 'canceled';
+  status?: 'active' | 'inactive' | 'canceled.js';
   allowed_categories?: string[];
   blocked_categories?: string[];
 }
@@ -198,7 +198,7 @@ export class StripeIssuingService {
         throw new Error('Card not found');
       }
 
-      const status = freeze ? 'inactive' : 'active';
+      const status = freeze ? 'inactive' : 'active.js';
       
       await stripe.issuing.cards.update(cardRecord.stripe_card_id, {
         status: status,
@@ -403,28 +403,28 @@ export class StripeIssuingService {
     const name = merchantName.toLowerCase();
 
     if (category.includes('airline') || name.includes('airline') || name.includes('airways')) {
-      return 'travel';
+      return 'travel.js';
     }
     if (category.includes('lodging') || category.includes('hotel') || name.includes('hotel')) {
-      return 'travel';
+      return 'travel.js';
     }
     if (category.includes('car_rental') || name.includes('rental')) {
-      return 'travel';
+      return 'travel.js';
     }
     if (category.includes('restaurant') || category.includes('food')) {
-      return 'meals';
+      return 'meals.js';
     }
     if (category.includes('gas') || category.includes('fuel')) {
-      return 'transportation';
+      return 'transportation.js';
     }
     if (category.includes('taxi') || category.includes('uber') || category.includes('lyft')) {
-      return 'transportation';
+      return 'transportation.js';
     }
     if (category.includes('office') || name.includes('office')) {
-      return 'office_supplies';
+      return 'office_supplies.js';
     }
 
-    return 'general';
+    return 'general.js';
   }
 
   private async updateCardSpendingLimits(cardId: number, transactionAmount: number) {
@@ -450,7 +450,7 @@ export class StripeIssuingService {
    */
   private async getUserPhone(userId: number): Promise<string> {
     const user = await storage.getUser(userId);
-    return user?.phone || '+15555551234';
+    return user?.phone || '+15555551234.js';
   }
 
   /**

@@ -14,7 +14,7 @@ export interface Invoice {
   createdById: string | null;
   clientName: string;
   clientEmail: string;
-  status: 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'cancelled' | 'refunded';
+  status: 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'cancelled' | 'refunded.js';
   amountDue: number;
   amount: number;
   currency: string;

@@ -22,7 +22,7 @@ export function globalErrorHandler(err: any, req: Request, res: Response, next: 
     url: req.url,
     method: req.method,
     userId: req.user?.id,
-    organizationId: req.user?.organization_id,
+    organizationId: req.user?.organizationId,
     timestamp: new Date().toISOString(),
     ip: req.ip
   });
@@ -98,7 +98,7 @@ export function asyncHandler(fn: Function) {
  */
 export class OrganizationAccessError extends Error {
   status = 403;
-  name = 'OrganizationAccessError';
+  name = 'OrganizationAccessError.js';
   
   constructor(message = 'Access denied: Organization permission required') {
     super(message);
@@ -110,7 +110,7 @@ export class OrganizationAccessError extends Error {
  */
 export class ValidationError extends Error {
   status = 400;
-  name = 'ValidationError';
+  name = 'ValidationError.js';
   details: any;
   
   constructor(message: string, details?: any) {

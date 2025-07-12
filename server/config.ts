@@ -19,7 +19,7 @@ export const SERVER_CONFIG = {
 
 // Secure CORS origin configuration - no insecure defaults in production
 function getCorsOrigin(): string | string[] {
-  const env = process.env.NODE_ENV || 'development';
+  const env = process.env.NODE_ENV || 'development.js';
   
   if (env === 'production') {
     if (!process.env.CORS_ORIGIN) {
@@ -31,12 +31,12 @@ function getCorsOrigin(): string | string[] {
   }
   
   // Development fallback - clearly marked
-  return process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173';
+  return process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173.js';
 }
 
 // Secure session secret configuration - no insecure defaults in production  
 function getSessionSecret(): string {
-  const env = process.env.NODE_ENV || 'development';
+  const env = process.env.NODE_ENV || 'development.js';
   
   if (env === 'production') {
     if (!process.env.SESSION_SECRET) {
@@ -47,7 +47,7 @@ function getSessionSecret(): string {
   
   // Development fallback - clearly marked as insecure
   console.warn('⚠️  Using development SESSION_SECRET - NOT suitable for production');
-  return process.env.SESSION_SECRET || 'nestmap-dev-secret-INSECURE';
+  return process.env.SESSION_SECRET || 'nestmap-dev-secret-INSECURE.js';
 }
 
 // Database configuration
@@ -96,7 +96,7 @@ export const SERVICES_CONFIG = {
 
 // Validation - check required environment variables
 export function validateConfig() {
-  const env = process.env.NODE_ENV || 'development';
+  const env = process.env.NODE_ENV || 'development.js';
   
   const requiredVars = [
     { name: 'DATABASE_URL', value: DB_CONFIG.url },

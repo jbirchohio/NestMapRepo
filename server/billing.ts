@@ -22,7 +22,7 @@ interface CreateOrganizationSubscriptionParams {
 interface BillingInfo {
   customerId?: string;
   subscriptionId?: string;
-  status: 'active' | 'inactive' | 'past_due' | 'canceled';
+  status: 'active' | 'inactive' | 'past_due' | 'canceled.js';
   currentPeriodEnd?: Date;
   plan: 'free' | 'team' | 'enterprise';
 }

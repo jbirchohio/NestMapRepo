@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common.js';
 import { eq, and, between } from 'drizzle-orm';
-import { db } from '../../../../db';
+import { db } from '../../../../db.js';
 import { activities, type Activity } from '../../../../db/schema.js';
-import { ActivityRepository } from './activity.repository.interface';
-import { BaseRepositoryImpl } from '../base.repository';
+import { ActivityRepository } from './activity.repository.interface.js';
+import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()
 export class ActivityRepositoryImpl extends BaseRepositoryImpl<Activity, string, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>> implements ActivityRepository {

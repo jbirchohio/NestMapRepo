@@ -1,5 +1,5 @@
-import puppeteer from 'puppeteer';
-import { Trip, Activity } from '@shared/schema';
+import puppeteer from 'puppeteer.js';
+import { Trip, Activity } from '@@shared/schema';
 
 export interface ProposalData {
     trip: Trip;
@@ -46,7 +46,7 @@ export function generateCostEstimate(trip: Trip, activities: Activity[]): {
         };
         
         // Determine trip category
-        const isInternational = trip.country && trip.country.toLowerCase() !== 'usa' && trip.country.toLowerCase() !== 'united states';
+        const isInternational = trip.country && trip.country.toLowerCase() !== 'usa' && trip.country.toLowerCase() !== 'united states.js';
         const isLuxury = activities.some(a => a.tag === 'luxury' || a.notes?.toLowerCase().includes('luxury'));
         const isBudget = activities.some(a => a.tag === 'budget' || a.notes?.toLowerCase().includes('budget'));
         

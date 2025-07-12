@@ -6,41 +6,6 @@ interface Headers {
   [key: string]: string | string[] | undefined;
 }
 
-// Extend Express types
-declare global {
-  namespace Express {
-    // Define the User interface that will be available on the Request object
-    interface User extends AuthUser {}
-    
-    // Extend the Request interface
-    interface Request {
-      user?: User;
-      organizationId: string;
-      organizationFilter: (orgId: string | null) => boolean;
-      domainOrganizationId?: string;
-      isWhiteLabelDomain?: boolean;
-      analyticsScope?: {
-        organizationId: string;
-        startDate?: Date;
-        endDate?: Date;
-      };
-    }
-  }
-}
-
-type AuthenticatedRequest = Request & {
-  user: Express.User;  // Using the extended Express User type
-  organizationId: string;
-  organizationFilter: (orgId: string | null) => boolean;
-  domainOrganizationId?: string;
-  isWhiteLabelDomain?: boolean;
-  analyticsScope?: {
-    organizationId: string;
-    startDate?: Date;
-    endDate?: Date;
-  };
-};
-
 /**
  * Enhanced organization context middleware for enterprise-grade multi-tenant isolation
  * 

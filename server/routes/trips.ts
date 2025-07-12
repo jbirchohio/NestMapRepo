@@ -4,28 +4,12 @@ import { z } from 'zod';
 import { insertTripSchema } from '../db/schema.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext.js';
-import { fieldTransformMiddleware } from '../middleware/fieldTransform.js';
 import { enforceTripLimit } from '../middleware/subscription-limits.js';
 import { storage } from '../storage.js';
 import { generatePdfBuffer } from '../utils/pdfHelper.js';
 import { generateAIProposal } from '../proposalGenerator.js';
 import { logUserActivity } from '../utils/activityLogger.js';
 import { tripController } from '../src/trips/trip.container.js';
-
-// Extend the Express Request type to include the user property
-declare global {
-  namespace Express {
-    interface Request {
-      user: {
-        userId: string;
-        organizationId: string;
-        role: string;
-        email: string;
-        displayName?: string;
-      };
-    }
-  }
-}
 
 // Zod schema for validating numeric ID parameters
 const idParamSchema = z.object({
@@ -68,20 +52,19 @@ const router = Router();
 // Apply authentication and organization context to all trip routes
 router.use(validateJWT);
 router.use(injectOrganizationContext);
-router.use(fieldTransformMiddleware);
 
 // Get all trips for authenticated user with organization filtering
-router.get('/', (req: Request, res: Response) => tripController.getTrips(req as Request, res));
+router.get('/', (req: Request, res: Response) => tripController.getTrips(req, res));
 
 // Add organization-scoped trips endpoint for corporate features
-router.get('/corporate', (req: Request, res: Response) => tripController.getCorporateTrips(req as Request, res));
+router.get('/corporate', (req: Request, res: Response) => tripController.getCorporateTrips(req, res));
 
 // Get todos for a specific trip
 router.get("/:id/todos", validateAndSanitizeRequest({ params: idParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.id;
-    const userId = req.user.userId;
-    const orgId = req.user.organizationId;
+    const tripId = (req as any).params.id;
+    const userId = (req as any).user?.id;
+    const orgId = (req as any).user?.organizationId;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });

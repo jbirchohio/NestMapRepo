@@ -1,5 +1,5 @@
-import { db } from './db';
-import { trips } from '../shared/schema';
+import { db } from './db.js';
+import { trips } from '../@shared/schema';
 import { sql, and, eq } from 'drizzle-orm';
 
 export async function forecastBudget(
@@ -19,8 +19,8 @@ export async function forecastBudget(
     .limit(20);
 
   const dailyCosts = pastTrips
-    .filter(t => t.budget && t.duration && t.duration > 0)
-    .map(t => t.budget! / t.duration!);
+    .filter((t: any) => t.budget && t.duration && t.duration > 0)
+    .map((t: any) => t.budget! / t.duration!);
 
   const dailyAverage =
     dailyCosts.length > 0

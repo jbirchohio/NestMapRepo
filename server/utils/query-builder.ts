@@ -2,7 +2,7 @@ import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { dbService } from '../services/database.service.js';
 import { logger } from './logger.js';
 
-type OrderDirection = 'asc' | 'desc';
+type OrderDirection = 'asc' | 'desc.js';
 
 interface QueryOptions<T> {
   where?: Record<string, any>;

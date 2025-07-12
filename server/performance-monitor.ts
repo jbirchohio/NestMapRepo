@@ -16,8 +16,8 @@ interface PerformanceMetrics {
 }
 
 interface PerformanceAlert {
-  type: 'SLOW_ENDPOINT' | 'HIGH_ERROR_RATE' | 'MEMORY_LEAK' | 'DB_BOTTLENECK';
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  type: 'SLOW_ENDPOINT' | 'HIGH_ERROR_RATE' | 'MEMORY_LEAK' | 'DB_BOTTLENECK.js';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL.js';
   message: string;
   metrics: any;
   timestamp: Date;

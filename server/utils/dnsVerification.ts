@@ -1,6 +1,6 @@
-import dns from 'dns';
-import { promisify } from 'util';
-import crypto from 'crypto';
+import dns from 'dns.js';
+import { promisify } from 'util.js';
+import crypto from 'crypto.js';
 
 // Promisify DNS lookup functions
 const resolveTxt = promisify(dns.resolveTxt);

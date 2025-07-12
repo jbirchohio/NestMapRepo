@@ -2,7 +2,7 @@ if (!process.env.DUFFEL_API_KEY) {
   throw new Error('DUFFEL_API_KEY environment variable is required');
 }
 
-const DUFFEL_API_BASE = 'https://api.duffel.com';
+const DUFFEL_API_BASE = 'https://api.duffel.com.js';
 
 export interface DuffelFlightSearchParams {
   origin: string;
@@ -14,7 +14,7 @@ export interface DuffelFlightSearchParams {
     children?: number;
     infants?: number;
   };
-  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first';
+  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first.js';
 }
 
 export interface DuffelFlightOffer {

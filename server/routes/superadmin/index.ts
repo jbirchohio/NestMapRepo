@@ -1,6 +1,6 @@
 import express, { Request, Response, RequestHandler } from 'express';
 import { authenticate } from '../../middleware/secureAuth.js';
-import { requireSuperadmin } from './middleware/superadmin.js';
+import { requireSuperadmin } from './middleware/superadmin';
 import { injectOrganizationContext } from './middleware/organizationContext.js';
 
 // Import route handlers

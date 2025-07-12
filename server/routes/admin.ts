@@ -1,14 +1,14 @@
 import { Router, Request, Response, NextFunction, RequestHandler, RequestHandler as ExpressRequestHandler } from 'express';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
-import { pgTable, pgSchema, uuid, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { v4 as uuidv4 } from 'uuid.js';
+import { pgTable, pgSchema, uuid, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core.js';
 import { sql, eq, and, or, desc, gte, lte } from 'drizzle-orm';
-import { db } from '../db/db';
-import { users, organizations, customDomains, userActivityLogs, OrganizationRole } from '../db/schema';
+import { db } from '../db/db.js';
+import { users, organizations, customDomains, userActivityLogs, OrganizationRole } from '../db/schema.js';
 import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth.js';
-import { validateAndSanitizeRequest } from '../middleware/validation';
-import { auditLogger } from '../auditLogger';
-import { AuthenticatedRequest, AuthenticatedUser } from '../types/auth';
+import { validateAndSanitizeRequest } from '../middleware/validation.js';
+import { auditLogger } from '../auditLogger.js';
+import { AuthenticatedRequest, AuthenticatedUser } from '../types/auth.js';
 
 // Type guard for authenticated requests
 function isAuthenticatedRequest(req: Request): req is AuthenticatedRequest {
@@ -48,10 +48,10 @@ function requireAuth(handler: AuthenticatedHandler): RequestHandler {
 }
 
 // White label request status type
-type WhiteLabelRequestStatus = 'pending' | 'approved' | 'rejected';
+type WhiteLabelRequestStatus = 'pending' | 'approved' | 'rejected.js';
 
 // Custom domain status type
-type DomainStatus = 'pending_verification' | 'verified' | 'failed';
+type DomainStatus = 'pending_verification' | 'verified' | 'failed.js';
 
 // Extend the customDomains table type to include domain alias
 interface CustomDomainWithAlias {

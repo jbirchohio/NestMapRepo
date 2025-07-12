@@ -1,8 +1,8 @@
 import { Response, NextFunction, Request as ExpressRequest } from 'express';
-import { db } from '../db';
-import { customDomains } from '../db/schema';
+import { db } from '../db.js';
+import { customDomains } from '../db/schema.js';
 import { and, eq, isNull } from 'drizzle-orm';
-import { v4 as uuidv4, validate as validateUuid } from 'uuid';
+import { v4 as uuidv4, validate as validateUuid } from 'uuid.js';
 import { AuthUser, UserRole } from '../src/types/auth-user';
 
 // =============================================

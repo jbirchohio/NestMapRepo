@@ -1,5 +1,5 @@
-import { AuthUser } from '../src/types/auth-user.js';
-import { UserRole } from '../types/jwt';
+import { AuthUser } from '../src/types/auth-user';
+import { UserRole } from '../types/jwt.js';
 
 declare global {
   namespace Express {

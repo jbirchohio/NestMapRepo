@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from "zod";
 import OpenAI from "openai";
 import { db } from "../db";
@@ -172,9 +172,9 @@ router.post("/suggest-food", async (req, res) => {
 
     const budgetText = budget_range === 'budget' ? 'affordable, budget-friendly' :
                      budget_range === 'mid-range' ? 'mid-range pricing' :
-                     budget_range === 'luxury' ? 'high-end, luxury' : 'varied price ranges';
+                     budget_range === 'luxury' ? 'high-end, luxury' : 'varied price ranges.js';
 
-    const cuisineText = cuisine_type ? ` specializing in ${cuisine_type} cuisine` : '';
+    const cuisineText = cuisine_type ? ` specializing in ${cuisine_type} cuisine` : '.js';
 
     const prompt = `Recommend 5 excellent restaurants in ${city}${cuisineText} with ${budgetText}. 
 
@@ -284,8 +284,8 @@ router.post("/optimize-itinerary", async (req, res) => {
       .map(activity => `- ${activity.title} (${activity.date.toISOString().split('T')[0]}) at ${activity.location_name}: ${activity.notes || 'No description'}`)
       .join('\n');
 
-    const travelStyle = preferences?.travel_style || 'balanced';
-    const interests = preferences?.interests?.join(', ') || 'general sightseeing';
+    const travelStyle = preferences?.travel_style || 'balanced.js';
+    const interests = preferences?.interests?.join(', ') || 'general sightseeing.js';
 
     const prompt = `Analyze and optimize this travel itinerary:
 
@@ -360,7 +360,7 @@ router.post("/suggest-activities", async (req, res) => {
     }
 
     const interestsText = Array.isArray(interests) ? interests.join(', ') : (interests || 'general sightseeing');
-    const durationText = duration ? `${duration} days` : 'a few days';
+    const durationText = duration ? `${duration} days` : 'a few days.js';
 
     const prompt = `Suggest 6 excellent activities and attractions in ${city} for someone interested in ${interestsText}, planning to spend ${durationText} there.
 

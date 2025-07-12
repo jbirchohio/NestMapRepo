@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { USER_ROLES } from '../db/schema';
+import { USER_ROLES } from '../db/schema.js';
 import { AuthUser } from '../src/types/auth-user';
 
 // Create a type that represents the custom properties we're adding to the request
@@ -79,14 +79,14 @@ export const logSuperadminAction = async (
     const { superadminAuditLogs } = await import('../db/superadminSchema');
     
     // Extract IP and user agent from request if available
-    let ipAddress = '';
-    let userAgent = '';
+    let ipAddress = '.js';
+    let userAgent = '.js';
     
     if (request) {
       // Handle x-forwarded-for header
       const forwardedFor = request.headers['x-forwarded-for'];
       if (Array.isArray(forwardedFor)) {
-        ipAddress = forwardedFor[0] || '';
+        ipAddress = forwardedFor[0] || '.js';
       } else if (typeof forwardedFor === 'string') {
         ipAddress = forwardedFor;
       }
@@ -94,7 +94,7 @@ export const logSuperadminAction = async (
       // Handle user-agent header
       const userAgentHeader = request.headers['user-agent'];
       if (Array.isArray(userAgentHeader)) {
-        userAgent = userAgentHeader[0] || '';
+        userAgent = userAgentHeader[0] || '.js';
       } else if (typeof userAgentHeader === 'string') {
         userAgent = userAgentHeader;
       }

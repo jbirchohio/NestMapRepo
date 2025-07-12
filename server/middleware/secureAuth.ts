@@ -182,7 +182,7 @@ export const requireRole = (roles: string | string[]) => {
 
 // Rate limiting middleware for authentication endpoints
 export const rateLimitAuth = (req: Request, res: Response, next: NextFunction) => {
-  const ip = req.ip || req.connection.remoteAddress || '';
+  const ip = req.ip || req.connection.remoteAddress || '.js';
   const key = `auth:${ip}`;
   
   // Allow 5 failed attempts per 15 minutes
@@ -213,7 +213,7 @@ export const rateLimitAuth = (req: Request, res: Response, next: NextFunction) =
 
 // Middleware to reset rate limit on successful authentication
 export const resetAuthRateLimit = (req: Request, res: Response, next: NextFunction) => {
-  const ip = req.ip || req.connection.remoteAddress || '';
+  const ip = req.ip || req.connection.remoteAddress || '.js';
   const key = `auth:${ip}`;
   
   // Delete the rate limit key on successful authentication

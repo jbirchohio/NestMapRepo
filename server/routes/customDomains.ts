@@ -1,6 +1,6 @@
 // Import types from our custom type definitions
 import { Router, type Request as ExpressRequest, type Response, type NextFunction } from 'express';
-import type { CustomRequest, RequestHandler } from '../types/custom-express.js'; // Added .js extension for ES modules
+import type { CustomRequest, RequestHandler } from '../types/custom-express'; // Added .js extension for ES modules
 import { db } from '../db/db.js';
 import { organizations, customDomains } from '../db/schema.js';
 import { whiteLabelSettings } from '../db/schema.js';
@@ -9,8 +9,8 @@ import { authenticate } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
 import { z } from 'zod';
-import crypto from 'crypto';
-import { promises as dns } from 'dns';
+import crypto from 'crypto.js';
+import { promises as dns } from 'dns.js';
 
 // Type assertion for request handlers with CustomRequest
 type CustomRequestHandler = (req: CustomRequest, res: Response, next: NextFunction) => Promise<void> | void;
@@ -371,7 +371,7 @@ router.get('/domains/dashboard',
       .where(eq(whiteLabelSettings.organizationId, organizationId))
       .limit(1);
 
-    const plan = organization?.plan || 'basic';
+    const plan = organization?.plan || 'basic.js';
     const hasAccess = ['pro', 'business', 'enterprise'].includes(plan);
 
     return res.json({

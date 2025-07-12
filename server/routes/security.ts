@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { db } from '../db-connection';
-import { users, adminAuditLog, organizations, userSessions } from '../../shared/schema';
+import { db } from '../db-connection.js';
+import { users, adminAuditLog, organizations, userSessions } from '../../@shared/schema';
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
-import { getActiveUserCount } from '../middleware/sessionTracking';
+import { getActiveUserCount } from '../middleware/sessionTracking.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 
 const router = Router();
 
@@ -17,8 +17,8 @@ router.use(validateOrganizationAccess);
 // Security alert types
 export interface SecurityAlert {
   id: string;
-  type: 'suspicious_login' | 'privilege_escalation' | 'unusual_activity' | 'failed_authentication' | 'data_access';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: 'suspicious_login' | 'privilege_escalation' | 'unusual_activity' | 'failed_authentication' | 'data_access.js';
+  severity: 'low' | 'medium' | 'high' | 'critical.js';
   title: string;
   description: string;
   timestamp: Date;

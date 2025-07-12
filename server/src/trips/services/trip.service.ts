@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common.js';
 import { Trip, User } from '../../../db/schema.js';
-import { CorporateTripDto, TripService } from '../interfaces/trip.service.interface';
-import { TripRepository } from '../interfaces/trip.repository.interface';
-import { UnauthorizedError } from '../../common/errors';
-import { Inject } from '@nestjs/common';
+import { CorporateTripDto, TripService } from '../interfaces/trip.service.interface.js';
+import { TripRepository } from '../interfaces/trip.repository.interface.js';
+import { UnauthorizedError } from '../../common/errors.js';
+import { Inject } from '@nestjs/common.js';
 
 @Injectable()
 export class TripServiceImpl implements TripService {

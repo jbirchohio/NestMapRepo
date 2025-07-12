@@ -3,7 +3,7 @@ import { detectTripConflicts } from "./services/conflictDetector";
 import { Activity, OptimizedSchedule } from "../shared/interfaces";
 
 interface ConflictDetection {
-  type: 'time_overlap' | 'location_conflict' | 'capacity_issue' | 'schedule_gap';
+  type: 'time_overlap' | 'location_conflict' | 'capacity_issue' | 'schedule_gap.js';
   severity: 'low' | 'medium' | 'high';
   activities: Activity[];
   description: string;
@@ -14,7 +14,7 @@ interface ConflictDetection {
 interface SmartReminder {
   id: string;
   activityId: number;
-  type: 'departure' | 'preparation' | 'booking' | 'weather_check' | 'traffic_update';
+  type: 'departure' | 'preparation' | 'booking' | 'weather_check' | 'traffic_update.js';
   scheduledTime: Date;
   title: string;
   message: string;
@@ -378,13 +378,13 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 function guessVenueType(title: string, location: string): string {
   const text = (title + ' ' + location).toLowerCase();
   
-  if (text.includes('museum') || text.includes('gallery')) return 'museum';
-  if (text.includes('restaurant') || text.includes('cafe') || text.includes('dinner')) return 'restaurant';
-  if (text.includes('park') || text.includes('garden')) return 'park';
-  if (text.includes('church') || text.includes('cathedral') || text.includes('temple')) return 'church';
-  if (text.includes('shop') || text.includes('market') || text.includes('mall')) return 'shopping';
+  if (text.includes('museum') || text.includes('gallery')) return 'museum.js';
+  if (text.includes('restaurant') || text.includes('cafe') || text.includes('dinner')) return 'restaurant.js';
+  if (text.includes('park') || text.includes('garden')) return 'park.js';
+  if (text.includes('church') || text.includes('cathedral') || text.includes('temple')) return 'church.js';
+  if (text.includes('shop') || text.includes('market') || text.includes('mall')) return 'shopping.js';
   
-  return 'general';
+  return 'general.js';
 }
 
 async function estimateTravelTimeToActivity(activity: Activity): Promise<number> {
@@ -415,13 +415,13 @@ function needsBooking(activity: Activity): boolean {
 
 function getPreparationMessage(activity: Activity): string {
   if (activity.title.toLowerCase().includes('hike')) {
-    return 'Pack water, snacks, and wear comfortable hiking shoes.';
+    return 'Pack water, snacks, and wear comfortable hiking shoes..js';
   }
   if (activity.title.toLowerCase().includes('tour')) {
-    return 'Bring camera, comfortable walking shoes, and any required documents.';
+    return 'Bring camera, comfortable walking shoes, and any required documents..js';
   }
   if (activity.title.toLowerCase().includes('restaurant')) {
-    return 'Check dress code and confirm reservation details.';
+    return 'Check dress code and confirm reservation details..js';
   }
   
   return `Get ready for ${activity.title}. Check requirements and bring necessary items.`;

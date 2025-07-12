@@ -137,7 +137,7 @@ function convertCityToAirportCode(cityOrCode: string): string {
   return cityToAirport[lookup] || cityOrCode.toUpperCase();
 }
 
-import { duffelProvider } from './duffelProvider';
+import { duffelProvider } from './duffelProvider.js';
 
 interface BookingProvider {
   name: string;
@@ -351,7 +351,7 @@ export async function searchCars(params: {
 
 export async function createBooking(params: {
   providerId: string;
-  type: 'flight' | 'hotel' | 'activity';
+  type: 'flight' | 'hotel' | 'activity.js';
   itemId: string;
   userDetails: any;
 }): Promise<any> {

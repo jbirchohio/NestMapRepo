@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core.js';
 
 // Audit Log Table Definition
 export const auditLogs = pgTable('audit_logs', {

@@ -1,8 +1,8 @@
-import { db } from '../db/db';
-import { activities } from '../db/schema';
+import { db } from '../db/db.js';
+import { activities } from '../db/schema.js';
 import { and, eq, sql } from 'drizzle-orm';
-import type { Activity } from '../types/activity';
-import { v4 as uuidv4 } from 'uuid';
+import type { Activity } from '../types/activity.js';
+import { v4 as uuidv4 } from 'uuid.js';
 import type { InferSelectModel } from 'drizzle-orm';
 
 type ActivityRecord = InferSelectModel<typeof activities>;

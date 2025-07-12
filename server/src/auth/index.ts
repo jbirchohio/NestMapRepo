@@ -1,24 +1,24 @@
 // Core auth exports
-export * from './jwt';
-export * from './middleware';
-export * from './types';
+export * from './jwt.js';
+export * from './middleware.js';
+export * from './types.js';
 
 // Services and Repositories
-export * from './services/auth.service';
-export * from './repositories/user.repository';
-export * from './repositories/refresh-token.repository';
+export * from './services/auth.service.js';
+export * from './repositories/user.repository.js';
+export * from './repositories/refresh-token.repository.js';
 
 // Controllers
-export * from './controllers/auth.controller';
+export * from './controllers/auth.controller.js';
 
 // DTOs
-export * from './dtos/auth.dto';
+export * from './dtos/auth.dto.js';
 
 // Container (for dependency injection)
-export * from './auth.container';
+export * from './auth.container.js';
 
 // Re-export commonly used types
-export type { TokenPayload, TokenVerificationResult } from './types';
+export type { TokenPayload, TokenVerificationResult } from './types.js';
 
 // Register auth routes
-export { registerAuthRoutes } from './auth.container';
+export { registerAuthRoutes } from './auth.container.js';

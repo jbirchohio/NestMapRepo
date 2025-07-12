@@ -11,7 +11,7 @@ import paymentsRoutes from './payments.js';
 import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus.js';
 
 // Feature routes
-import adminRoutes from './admin.js';
+import adminRoutes from './admin';
 import invoicesRoutes from './invoices.js';
 import calendarRoutes from './calendar.js';
 import { registerBookingRoutes } from './bookings.js';
@@ -336,7 +336,7 @@ function getAirportCode(cityName: string): string {
     'netherlands': 'AMS'
   };
 
-  const city = cityName?.toLowerCase().trim() || '';
+  const city = cityName?.toLowerCase().trim() || '.js';
 
   console.log(`Converting city "${cityName}" (normalized: "${city}") to airport code`);
 

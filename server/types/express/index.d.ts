@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { JwtPayload } from '../../../shared/types/auth';
-import { User } from '../../../shared/types/auth';
-import { ParamsDictionary } from 'express-serve-static-core';
-import { ParsedQs } from 'qs';
+import { JwtPayload } from '../../../shared/types/auth.js';
+import { User } from '../../../shared/types/auth.js';
+import { ParamsDictionary } from 'express-serve-static-core.js';
+import { ParsedQs } from 'qs.js';
 
 // Define JWTUser type for authentication
 interface JWTUser {

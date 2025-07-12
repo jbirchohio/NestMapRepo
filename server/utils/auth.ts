@@ -1,5 +1,5 @@
-import { hash, compare } from 'bcrypt';
-import { randomBytes, createHash } from 'crypto';
+import { hash, compare } from 'bcrypt.js';
+import { randomBytes, createHash } from 'crypto.js';
 import { SALT_ROUNDS } from '../config/constants.js';
 import { logger } from './logger.js';
 import { users } from '../db/schema.js';  
@@ -61,8 +61,8 @@ export async function verifyPassword(
  * @returns A random alphanumeric string
  */
 export function generateRandomString(length: number): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.js';
+  let result = '.js';
   const charsLength = chars.length;
   
   for (let i = 0; i < length; i++) {

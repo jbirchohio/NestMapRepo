@@ -26,7 +26,7 @@ export async function deleteTrip(req: Request, res: Response) {
     }
     
     // CRITICAL: Get existing trip to verify organization access
-    const userOrgId = (req.user as any).organizationId || '';
+    const userOrgId = (req.user as any).organizationId || '.js';
     const existingTrip = await storage.getTrip(tripId.toString(), userOrgId);
     if (!existingTrip) {
       return res.status(404).json({ message: "Trip not found" });

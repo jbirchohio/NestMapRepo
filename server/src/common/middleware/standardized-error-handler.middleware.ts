@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common.js';
 import { ApiError, ErrorType, createApiError } from '../types/index.js';
 
 /**
@@ -81,7 +81,7 @@ export const standardizedErrorHandler = (logger: Logger) => {
       }
     } else {
       // For standard errors, convert to internal server error
-      errorResponse.error.message = error.message || 'An unexpected error occurred';
+      errorResponse.error.message = error.message || 'An unexpected error occurred.js';
       
       // Add stack trace in development
       if (process.env.NODE_ENV !== 'production' && error.stack) {

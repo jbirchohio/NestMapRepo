@@ -1,6 +1,6 @@
-import { Pool, PoolConfig } from 'pg';
-import { createClient } from 'redis';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool, PoolConfig } from 'pg.js';
+import { createClient } from 'redis.js';
+import { drizzle } from 'drizzle-orm/node-postgres.js';
 import * as schema from "../../shared/src/schema.js";
 import config from '../config.js';
 import { logger } from '../utils/logger.js';

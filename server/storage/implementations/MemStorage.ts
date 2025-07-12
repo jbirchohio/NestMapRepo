@@ -1,6 +1,6 @@
 import { IStorage } from '../types/index.js';
 import { InMemoryTripTravelerRepository } from '../repositories/TripTravelerRepository.js';
-import * as crypto from 'crypto';
+import * as crypto from 'crypto.js';
 import { 
   Activity,
   TripTraveler, 

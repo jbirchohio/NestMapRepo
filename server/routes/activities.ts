@@ -1,12 +1,12 @@
 import { Router, type Response, type NextFunction, type RequestHandler, type Request } from 'express';
-import { ParamsDictionary } from 'express-serve-static-core';
+import { ParamsDictionary } from 'express-serve-static-core.js';
 import { getAuthContext, requireAuth } from '../utils/authContext.js';
 import { logUserActivity } from '../utils/activityLogger.js';
 
 // Re-export types for backward compatibility
 export type { AuthUser, JWTUser } from '../utils/authContext.js';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid.js';
 
 // Import types and schemas
 import type { Activity, ActivityStatus, ActivityType } from '../types/activity.js';
@@ -34,7 +34,7 @@ function isJWTUser(user: unknown): user is JWTUser {
   return typeof user === 'object' && user !== null && 
     'id' in user && typeof (user as JWTUser).id === 'string' && 
     'email' in user && typeof (user as JWTUser).email === 'string' && 
-    'role' in user && typeof (user as JWTUser).role === 'string';
+    'role' in user && typeof (user as JWTUser).role === 'string.js';
 }
 
 // Define types for request parameters, body, and query

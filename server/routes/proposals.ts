@@ -1,11 +1,11 @@
 import { Router, Response } from 'express';
-import { proposals, insertProposalSchema, proposalStatusEnum } from '../db/proposalSchema';
-import { db } from '../db';
+import { proposals, insertProposalSchema, proposalStatusEnum } from '../db/proposalSchema.js';
+import { db } from '../db.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
 import { z } from 'zod';
-import type { AuthenticatedRequest } from '../src/types/auth-user.js';
+import type { AuthenticatedRequest } from '../src/types/auth-user';
 
 const router = Router();
 

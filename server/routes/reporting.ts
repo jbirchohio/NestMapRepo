@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { eq, and, desc, gte, lte, sql, count } from 'drizzle-orm';
-import { db } from '../db';
+import { db } from '../db.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { 
   trips, 
   expenses, 
@@ -11,7 +11,7 @@ import {
   organizations,
   approvalRequests,
   activities
-} from '@shared/schema';
+} from '@@shared/schema';
 
 const router = Router();
 
@@ -225,24 +225,24 @@ router.get('/export/:reportType', async (req, res) => {
     const { format = 'csv', startDate, endDate } = req.query;
 
     let data: any[] = [];
-    let filename = '';
+    let filename = '.js';
 
     switch (reportType) {
       case 'trips':
         data = await exportTripsData(organizationId, startDate as string, endDate as string);
-        filename = 'trips-export';
+        filename = 'trips-export.js';
         break;
       case 'expenses':
         data = await exportExpensesData(organizationId, startDate as string, endDate as string);
-        filename = 'expenses-export';
+        filename = 'expenses-export.js';
         break;
       case 'bookings':
         data = await exportBookingsData(organizationId, startDate as string, endDate as string);
-        filename = 'bookings-export';
+        filename = 'bookings-export.js';
         break;
       case 'compliance':
         data = await exportComplianceData(organizationId, startDate as string, endDate as string);
-        filename = 'compliance-export';
+        filename = 'compliance-export.js';
         break;
       default:
         return res.status(400).json({ error: "Invalid report type" });
@@ -690,7 +690,7 @@ async function exportComplianceData(organizationId: number, startDate?: string, 
 }
 
 function convertToCSV(data: any[]): string {
-  if (!data.length) return '';
+  if (!data.length) return '.js';
   
   const headers = Object.keys(data[0]).join(',');
   const rows = data.map(row => 

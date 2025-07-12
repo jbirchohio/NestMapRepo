@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db-connection';
-import { userSessions } from '../../shared/schema';
+import { db } from '../db-connection.js';
+import { userSessions } from '../../@shared/schema';
 import { eq, and } from 'drizzle-orm';
 
 // In-memory session tracking as fallback until database is updated

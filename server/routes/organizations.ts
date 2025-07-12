@@ -1,14 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { insertOrganizationSchema } from '@shared/schema';
+import { insertOrganizationSchema } from '@@shared/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation';
-import { storage } from '../storage';
-import { getOrganizationAnalytics } from '../analytics';
-import { db } from '../db';
-import { users } from '@shared/schema';
+import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
+import { storage } from '../storage.js';
+import { getOrganizationAnalytics } from '../analytics.js';
+import { db } from '../db.js';
+import { users } from '@@shared/schema';
 import { eq } from 'drizzle-orm';
 
 const router = Router();

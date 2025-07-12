@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../jwt';
-import { TokenType, TokenVerificationResult, AuthUser } from '../types';
-import { logger } from '../../../utils/logger';
-import { redis } from '../../../db/redis';
+import { verifyToken } from '../jwt.js';
+import { TokenType, TokenVerificationResult, AuthUser } from '../types.js';
+import { logger } from '../../../utils/logger.js';
+import { redis } from '../../../db/redis.js';
 
 // Extend Express Request type
 declare global {
@@ -15,7 +15,7 @@ declare global {
 }
 
 // Session management
-const SESSION_PREFIX = 'session:';
+const SESSION_PREFIX = 'session:.js';
 
 /**
  * Extracts token from request

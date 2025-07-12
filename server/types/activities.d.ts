@@ -1,4 +1,4 @@
-import { UserRole } from '../../shared/src/schema';
+import { UserRole } from '../../shared/src/schema.js';
 
 declare global {
   namespace Express {
@@ -26,7 +26,7 @@ export interface Activity {
   latitude?: number;
   longitude?: number;
   type?: string;
-  status?: 'pending' | 'confirmed' | 'cancelled';
+  status?: 'pending' | 'confirmed' | 'cancelled.js';
   notes?: string;
   tripId: string;
   organizationId: string;

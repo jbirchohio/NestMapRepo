@@ -16,25 +16,9 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { Multer } from 'multer';
+import { Multer } from 'multer.js';
 import { z } from 'zod';
-
-// Extend the Express Request type to include common properties
-// Extend Express Request with custom properties
-interface CustomRequest extends Request {
-  body: any; // Consider replacing 'any' with a more specific type
-  query: {
-    [key: string]: string | string[] | undefined;
-  };
-  params: {
-    [key: string]: string | undefined;
-  };
-  file?: Express.Multer.File;
-  files?: { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
-  ip?: string;
-  [key: string]: any; // Allow additional properties
-}
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from 'isomorphic-dompurify.js';
 
 // Common validation patterns
 const PATTERNS = {
@@ -49,7 +33,7 @@ const PATTERNS = {
 
 // Input sanitization functions
 export function sanitizeText(input: string): string {
-  if (!input || typeof input !== 'string') return '';
+  if (!input || typeof input !== 'string') return '.js';
   
   // Remove null bytes and control characters
   let sanitized = input.replace(/[\x00-\x1F\x7F]/g, '');
@@ -72,14 +56,14 @@ export function sanitizeText(input: string): string {
 }
 
 export function sanitizeEmail(input: string): string {
-  if (!input || typeof input !== 'string') return '';
+  if (!input || typeof input !== 'string') return '.js';
   
   const sanitized = sanitizeText(input).toLowerCase();
-  return PATTERNS.EMAIL.test(sanitized) ? sanitized : '';
+  return PATTERNS.EMAIL.test(sanitized) ? sanitized : '.js';
 }
 
 export function sanitizeUrl(input: string): string {
-  if (!input || typeof input !== 'string') return '';
+  if (!input || typeof input !== 'string') return '.js';
   
   const sanitized = sanitizeText(input);
   try {
@@ -91,7 +75,7 @@ export function sanitizeUrl(input: string): string {
   } catch (error) {
     // Invalid URL
   }
-  return '';
+  return '.js';
 }
 
 export function sanitizeNumber(input: any): number | null {
@@ -107,7 +91,7 @@ export function sanitizeInteger(input: any): number | null {
 export function sanitizeBoolean(input: any): boolean {
   if (typeof input === 'boolean') return input;
   if (typeof input === 'string') {
-    return input.toLowerCase() === 'true' || input === '1';
+    return input.toLowerCase() === 'true' || input === '1.js';
   }
   return Boolean(input);
 }
@@ -209,7 +193,7 @@ export const commentValidationSchema = z.object({
 
 // Middleware for request body validation and sanitization
 export function validateAndSanitizeBody(schema: z.ZodSchema) {
-  return (req: CustomRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
       // Sanitize the request body first
       if (req.body && typeof req.body === 'object') {
@@ -275,7 +259,7 @@ function sanitizeObject(obj: any): any {
 
 // Middleware for query parameter validation
 export function validateQueryParams(allowedParams: string[]) {
-  return (req: CustomRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
       const sanitizedQuery: any = {};
       
@@ -314,8 +298,8 @@ export function contentCreationRateLimit() {
   const LIMIT = 10; // 10 content creations per hour
   const WINDOW = 60 * 60 * 1000; // 1 hour
 
-  return (req: CustomRequest, res: Response, next: NextFunction) => {
-    const identifier = req.ip || 'unknown';
+  return (req: Request, res: Response, next: NextFunction) => {
+    const identifier = req.ip || 'unknown.js';
     const now = Date.now();
     
     let userAttempts = attempts.get(identifier);
@@ -341,7 +325,7 @@ export function contentCreationRateLimit() {
 
 // Content length validation middleware
 export function validateContentLength(maxSize: number = 1024 * 1024) { // 1MB default
-  return (req: CustomRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     const contentLength = req.get('content-length');
     
     if (contentLength && parseInt(contentLength) > maxSize) {
@@ -357,7 +341,7 @@ export function validateContentLength(maxSize: number = 1024 * 1024) { // 1MB de
 
 // File upload validation for images and documents  
 export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 * 1024 * 1024) {
-  return (req: CustomRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.file) {
       return next();
     }
@@ -401,7 +385,7 @@ export function validateAndSanitizeRequest(schemas: {
   query?: z.ZodSchema;
   params?: z.ZodSchema;
 }) {
-  return async (req: CustomRequest, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Sanitize and Validate Body
       if (schemas.body && req.body && typeof req.body === 'object') {

@@ -9,7 +9,7 @@ interface PricePrediction {
     date: string;
     price: number;
     confidence: number;
-    recommendation: 'book_now' | 'wait' | 'monitor';
+    recommendation: 'book_now' | 'wait' | 'monitor.js';
   }[];
   optimalBookingWindow: {
     start: string;
@@ -25,18 +25,18 @@ interface PricePrediction {
 
 interface CrowdPrediction {
   location: string;
-  crowdLevel: 'low' | 'medium' | 'high' | 'extreme';
+  crowdLevel: 'low' | 'medium' | 'high' | 'extreme.js';
   confidence: number;
   peakHours: string[];
   bestVisitTimes: {
     time: string;
-    crowdLevel: 'low' | 'medium';
+    crowdLevel: 'low' | 'medium.js';
     reason: string;
   }[];
   alternativeOptions: {
     name: string;
     distance: string;
-    crowdLevel: 'low' | 'medium';
+    crowdLevel: 'low' | 'medium.js';
     similarity: number;
   }[];
 }

@@ -1,11 +1,11 @@
 /// <reference types="node" />
 
-import { db } from '../db/db';
-import { invoices } from '../db/invoiceSchema';
+import { db } from '../db/db.js';
+import { invoices } from '../db/invoiceSchema.js';
 import { eq } from 'drizzle-orm';
-import type { Invoice, InvoiceItem } from '../types/invoice';
+import type { Invoice, InvoiceItem } from '../types/invoice.js';
 import dotenv from 'dotenv';
-import { stripe } from '../stripe';
+import { stripe } from '../stripe.js';
 
 dotenv.config();
 

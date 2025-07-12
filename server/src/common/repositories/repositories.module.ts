@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
-import { RepositoryProviders } from './repository.providers';
+import { Module } from '@nestjs/common.js';
+import { RepositoryProviders } from './repository.providers.js';
 
 /**
  * Module that registers all repository implementations

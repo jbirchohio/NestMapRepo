@@ -1,6 +1,6 @@
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 
-export type TokenType = 'access' | 'refresh' | 'password_reset' | 'api_key';
+export type TokenType = 'access' | 'refresh' | 'password_reset' | 'api_key.js';
 
 export interface TokenPayload {
   jti: string; // JWT ID

@@ -1,4 +1,4 @@
-import { sendEmail } from './emailService';
+import { sendEmail } from './emailService.js';
 
 interface ProposalNotificationData {
   proposalId: number;
@@ -265,11 +265,11 @@ The NestMap Team
 function generateProposalViewedHTML(data: ProposalViewData): string {
   const sectionsText = data.sectionsViewed?.length 
     ? `<p><strong>Sections viewed:</strong> ${data.sectionsViewed.join(', ')}</p>`
-    : '';
+    : '.js';
   
   const timeText = data.timeSpent 
     ? `<p><strong>Time spent:</strong> ${Math.round(data.timeSpent / 60)} minutes</p>`
-    : '';
+    : '.js';
 
   return `
     <!DOCTYPE html>
@@ -340,11 +340,11 @@ function generateProposalViewedHTML(data: ProposalViewData): string {
 function generateProposalViewedText(data: ProposalViewData): string {
   const sectionsText = data.sectionsViewed?.length 
     ? `Sections viewed: ${data.sectionsViewed.join(', ')}`
-    : '';
+    : '.js';
   
   const timeText = data.timeSpent 
     ? `Time spent: ${Math.round(data.timeSpent / 60)} minutes`
-    : '';
+    : '.js';
 
   return `
 Great News! ${data.clientName} viewed your proposal

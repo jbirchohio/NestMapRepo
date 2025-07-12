@@ -1,4 +1,4 @@
-import { User } from './user.interface';
+import { User } from './user.interface.js';
 
 export enum TokenType {
   ACCESS = 'access',

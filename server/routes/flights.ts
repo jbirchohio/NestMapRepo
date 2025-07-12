@@ -55,7 +55,7 @@ interface DuffelPassenger {
   id: string;
   given_name?: string;
   family_name?: string;
-  type: 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat';
+  type: 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat.js';
 }
 
 // Define types for search parameters
@@ -69,7 +69,7 @@ interface FlightSearchParams {
     children?: number;
     infants?: number;
   };
-  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first';
+  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first.js';
 }
 
 const router = Router();

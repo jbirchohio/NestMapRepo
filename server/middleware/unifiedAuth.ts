@@ -3,7 +3,7 @@ import {
   authenticate as authenticateJWT,
   requireRole as originalRequireRole
 } from './secureAuth.js';
-import type { AuthenticatedRequest as AuthRequest, AuthUser } from '../src/types/auth-user.js';
+import type { AuthenticatedRequest as AuthRequest, AuthUser } from '../src/types/auth-user';
 
 // Re-export with new names
 export const unifiedAuthMiddleware = authenticateJWT;

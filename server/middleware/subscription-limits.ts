@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { and, eq, count } from 'drizzle-orm';
-import { db } from '../db';
-import { organizations, users, trips } from '../db/schema';
-import { logger } from '../utils/logger';
+import { db } from '../db.js';
+import { organizations, users, trips } from '../db/schema.js';
+import { logger } from '../utils/logger.js';
 import type { User } from '../types/user';
 
 // Import JWTUser type from jwtAuth
@@ -15,7 +15,7 @@ interface JWTUser {
 }
 
 // Import the AuthUser type from auth middleware
-import type { AuthUser } from './auth';
+import type { AuthUser } from './auth.js';
 
 // Extend the AuthUser interface with additional JWT properties
 interface JwtUser extends AuthUser {

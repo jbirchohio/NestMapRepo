@@ -1,8 +1,8 @@
 import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
-import type { ParamsDictionary, Query } from 'express-serve-static-core';
-import type { AuthUser } from '../types/auth-user.js';
-import type { CustomRequest } from '../../types/custom-express.js';
-import { ConfigService } from '@nestjs/config';
+import type { ParamsDictionary, Query } from 'express-serve-static-core.js';
+import type { AuthUser } from '../types/auth-user';
+import type { CustomRequest } from '../../types/custom-express';
+import { ConfigService } from '@nestjs/config.js';
 import { AuthController } from './controllers/auth.controller.js';
 import { JwtAuthService } from './services/jwtAuthService.js';
 import { UserRepositoryImpl } from './repositories/user.repository.js';
@@ -17,7 +17,7 @@ import { authenticate } from '../../middleware/secureAuth.js';
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
 // Import ParsedQs from express-serve-static-core
-import { type ParsedQs } from 'qs';
+import { type ParsedQs } from 'qs.js';
 
 // Use a more flexible type for query parameters that's compatible with Express
 type QueryParams = ParsedQs & {

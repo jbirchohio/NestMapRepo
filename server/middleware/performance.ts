@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import compression from 'compression';
-import { performance } from 'perf_hooks';
+import compression from 'compression.js';
+import { performance } from 'perf_hooks.js';
 
 declare global {
   namespace NodeJS {
@@ -46,7 +46,7 @@ export const performanceMonitor: RequestHandler = (req: PerformanceRequest, res:
     const memoryDelta = endMemory.heapUsed - startMemory.heapUsed;
     
     // Extract endpoint pattern for better grouping
-    const endpoint = req.url?.split('?')[0] || req.url || 'unknown';
+    const endpoint = req.url?.split('?')[0] || req.url || 'unknown.js';
     const cleanEndpoint = endpoint.replace(/\/\d+/g, '/:id'); // Normalize IDs
     
     // Update endpoint metrics
@@ -226,7 +226,7 @@ export function queryOptimizer() {
  */
 // Response compression middleware
 export const responseCompression: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
-  const acceptEncoding = req.get('Accept-Encoding') || '';
+  const acceptEncoding = req.get('Accept-Encoding') || '.js';
   
   if (acceptEncoding.includes('gzip')) {
     res.setHeader('Content-Encoding', 'gzip');

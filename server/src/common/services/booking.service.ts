@@ -1,4 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common.js';
 import { BookingRepository } from '../repositories/booking/booking.repository.interface.js';
 import { Booking } from '../../../db/bookingSchema.js';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces.js';

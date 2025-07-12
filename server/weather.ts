@@ -9,7 +9,7 @@ interface WeatherData {
   description: string;
   humidity: number;
   windSpeed: number;
-  unit: 'C' | 'F';
+  unit: 'C' | 'F.js';
 }
 
 interface OpenWeatherResponse {
@@ -53,16 +53,16 @@ function getTemperatureUnit(location: string): 'metric' | 'imperial' {
   
   // Check for direct country mentions
   if (fahrenheitCountries.some(country => locationLower.includes(country))) {
-    return 'imperial';
+    return 'imperial.js';
   }
   
   // Check for US states
   if (usStates.some(state => locationLower.includes(state))) {
-    return 'imperial';
+    return 'imperial.js';
   }
   
   // Default to Celsius for most of the world
-  return 'metric';
+  return 'metric.js';
 }
 
 /**
@@ -176,20 +176,20 @@ export function getWeatherCategory(condition: string): string {
   const conditionLower = condition.toLowerCase();
   
   if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
-    return 'rainy';
+    return 'rainy.js';
   }
   if (conditionLower.includes('snow') || conditionLower.includes('blizzard')) {
-    return 'cold';
+    return 'cold.js';
   }
   if (conditionLower.includes('sun') || conditionLower.includes('clear')) {
-    return 'sunny';
+    return 'sunny.js';
   }
   if (conditionLower.includes('cloud')) {
-    return 'cloudy';
+    return 'cloudy.js';
   }
   if (conditionLower.includes('wind')) {
-    return 'windy';
+    return 'windy.js';
   }
   
-  return 'mild';
+  return 'mild.js';
 }

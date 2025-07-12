@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db } from '../../../db';
-import { users, organizations } from '../../../db/schema';
+import { db } from '../../../db.js';
+import { users, organizations } from '../../../db/schema.js';
 import { logSuperadminAction } from '../superadmin';
 import { eq, sql } from 'drizzle-orm';
 

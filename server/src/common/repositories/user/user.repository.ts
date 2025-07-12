@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common.js';
 import { eq, and } from 'drizzle-orm';
-import { db } from '../../../../db';
+import { db } from '../../../../db.js';
 import { users, organizationMembers, type User } from '../../../../db/schema.js';
-import { UserRepository } from './user.repository.interface';
-import { UserBookingPreferences } from '../../interfaces/booking.interfaces';
-import { BaseRepositoryImpl } from '../base.repository';
+import { UserRepository } from './user.repository.interface.js';
+import { UserBookingPreferences } from '../../interfaces/booking.interfaces.js';
+import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()
 export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> implements UserRepository {

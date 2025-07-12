@@ -147,7 +147,7 @@ export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], a
         results.push({ success: false, error, title: event.summary });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred.js';
       results.push({ success: false, error: errorMessage, title: event.summary });
     }
   }
@@ -207,7 +207,7 @@ export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], 
         results.push({ success: false, error, title: event.subject });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred.js';
       results.push({ success: false, error: errorMessage, title: event.subject });
     }
   }
@@ -220,7 +220,7 @@ export function getGoogleAuthUrl(): string {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${baseUrl}/api/auth/google/callback`;
-  const scope = 'https://www.googleapis.com/auth/calendar';
+  const scope = 'https://www.googleapis.com/auth/calendar.js';
   
   return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline`;
 }
@@ -229,7 +229,7 @@ export function getMicrosoftAuthUrl(): string {
   const clientId = process.env.MICROSOFT_CLIENT_ID;
   const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
   const redirectUri = process.env.MICROSOFT_REDIRECT_URI || `${baseUrl}/api/auth/microsoft/callback`;
-  const scope = 'https://graph.microsoft.com/calendars.readwrite';
+  const scope = 'https://graph.microsoft.com/calendars.readwrite.js';
   
   return `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
 }

@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
-import type { Request as ExpressRequest } from 'express-serve-static-core';
-import type { ParamsDictionary } from 'express-serve-static-core';
-import type { ParsedQs } from 'qs';
-import { decode } from 'jsonwebtoken';
+import type { Request as ExpressRequest } from 'express-serve-static-core.js';
+import type { ParamsDictionary } from 'express-serve-static-core.js';
+import type { ParsedQs } from 'qs.js';
+import { decode } from 'jsonwebtoken.js';
 import { IAuthService } from './interfaces/auth.service.interface.js';
 import { 
   LoginDto, 
@@ -12,7 +12,7 @@ import {
 } from './dtos/auth.dto.js';
 import { rateLimiterMiddleware } from './middleware/rate-limiter.middleware.js';
 import { isErrorWithMessage } from '../utils/error-utils.js';
-import { Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common.js';
 import { UserRole } from './jwt/types.js';
 
 // DTOs are imported from './dtos/auth.dto.js'
@@ -89,8 +89,8 @@ export class AuthController {
     rateLimiterMiddleware,
     async (req: ExpressRequest, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, _next: NextFunction): Promise<void> => {
       try {
-        const ip = req.ip || req.socket?.remoteAddress || 'unknown';
-        const userAgent = req.headers['user-agent'] || '';
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown.js';
+        const userAgent = req.headers['user-agent'] || '.js';
         
         const loginData: LoginDto = req.body;
         const response = await this.authService.login(loginData, ip, userAgent);
@@ -121,8 +121,8 @@ export class AuthController {
       try {
         // Try to get refresh token from cookie first, then from body
         const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
-        const ip = req.ip || req.socket?.remoteAddress || 'unknown';
-        const userAgent = req.headers['user-agent'] || '';
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown.js';
+        const userAgent = req.headers['user-agent'] || '.js';
         
         if (!refreshToken) {
           res.status(401).json({

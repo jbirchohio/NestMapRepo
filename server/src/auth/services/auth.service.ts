@@ -6,8 +6,8 @@ import { logger } from '../../../utils/logger.js';
 
 export class AuthService implements IAuthService {
   private readonly logger = logger;
-  private readonly JWT_SECRET = 'fallback-secret-key';
-  private readonly JWT_EXPIRES_IN = '15m';
+  private readonly JWT_SECRET = 'fallback-secret-key.js';
+  private readonly JWT_EXPIRES_IN = '15m.js';
   private readonly REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60; // 7 days in seconds
 
   constructor(

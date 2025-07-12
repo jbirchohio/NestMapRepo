@@ -230,7 +230,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
 // Export function for CSV generation
 export async function exportAnalyticsCSV(_data: AnalyticsData): Promise<string> {
   // Implementation for CSV export
-  return '';
+  return '.js';
 }
 
 // Organization analytics function

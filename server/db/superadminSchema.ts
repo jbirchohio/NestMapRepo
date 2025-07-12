@@ -1,6 +1,6 @@
-import { pgTable, uuid, text, integer, boolean, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, boolean, timestamp, jsonb } from 'drizzle-orm/pg-core.js';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users, organizations } from './schema';
+import { users, organizations } from './schema.js';
 
 export const superadminAuditLogs = pgTable('superadmin_audit_logs', {
   id: uuid('id').primaryKey().defaultRandom(),

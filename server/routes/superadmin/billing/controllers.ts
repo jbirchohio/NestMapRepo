@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../../../db';
-import { organizations } from '../../../db/schema';
-import { auditLogs } from '../../../db/schema/auditLogs';
+import { db } from '../../../db.js';
+import { organizations } from '../../../db/schema.js';
+import { auditLogs } from '../../../db/schema/auditLogs.js';
 import { eq, sql } from 'drizzle-orm';
-import Stripe from 'stripe';
+import Stripe from 'stripe.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-05-28.basil',
 });
 
-import { logSuperadminAction } from '../audit-logs/audit-service';
+import { logSuperadminAction } from '../audit-logs/audit-service.js';
 import { AuthenticatedRequest } from '../../../middleware/superadmin';
 
 // Get billing overview across all organizations
@@ -551,5 +551,5 @@ function getPriceIdForPlan(plan: string): string {
     'enterprise': process.env.STRIPE_ENTERPRISE_PLAN_PRICE_ID || 'price_enterprise_plan',
   };
   
-  return prices[plan] || '';
+  return prices[plan] || '.js';
 }

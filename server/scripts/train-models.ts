@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
-import fs from 'fs/promises';
-import { db } from '../db/db';
+import fs from 'fs/promises.js';
+import { db } from '../db/db.js';
 import { trips, activities, expenses } from '../db/schema.js';
 import { eq, sql } from 'drizzle-orm';
-import { GaussianNB } from 'ml-naivebayes';
-import MLR from 'ml-regression-multivariate-linear';
+import { GaussianNB } from 'ml-naivebayes.js';
+import MLR from 'ml-regression-multivariate-linear.js';
 
 dotenv.config();
 

@@ -37,7 +37,7 @@ declare global {
       route: any;
       secure: boolean;
       xhr: boolean;
-      protocol: 'http' | 'https';
+      protocol: 'http' | 'https.js';
       
       // User authentication
       user?: User;

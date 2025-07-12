@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common.js';
 import { TripService } from '../interfaces/trip.service.interface.js';
 import { ResponseFormatter } from '../../common/utils/response-formatter.util.js';
 import { requireAuth, requireOrgContext } from '../../common/middleware/auth.middleware.js';

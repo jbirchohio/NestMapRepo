@@ -2,7 +2,7 @@
 
 export interface TripConflict {
   trips: number[];
-  type: 'date_overlap' | 'geo_clustering' | 'resource_conflict';
+  type: 'date_overlap' | 'geo_clustering' | 'resource_conflict.js';
   users?: number[];
   departments?: string[];
   city?: string;
@@ -12,7 +12,7 @@ export interface TripConflict {
 }
 
 export interface ActivityConflict {
-  type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict';
+  type: 'time_overlap' | 'travel_time' | 'venue_hours' | 'capacity_conflict.js';
   severity: 'high' | 'medium' | 'low';
   activities: any[];
   description: string;

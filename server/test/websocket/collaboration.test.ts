@@ -1,9 +1,9 @@
-import { Server } from 'http';
-import { WebSocket } from 'ws';
-import { AddressInfo } from 'net';
+import { Server } from 'http.js';
+import { WebSocket } from 'ws.js';
+import { AddressInfo } from 'net.js';
 import express from 'express';
-import jwt from 'jsonwebtoken';
-import { CollaborationWebSocketServer } from '../../websocket';
+import jwt from 'jsonwebtoken.js';
+import { CollaborationWebSocketServer } from '../../websocket.js';
 
 describe('CollaborationWebSocketServer', () => {
   let server: Server;
@@ -79,7 +79,7 @@ describe('CollaborationWebSocketServer', () => {
   // Test case: Connection with invalid token
   test('should reject connection with invalid token', async () => {
     // Create an invalid token
-    const invalidToken = 'invalid-token';
+    const invalidToken = 'invalid-token.js';
     
     // Expect the connection to be rejected
     await expect(

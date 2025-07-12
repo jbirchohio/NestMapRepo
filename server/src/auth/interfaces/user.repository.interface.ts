@@ -1,5 +1,5 @@
 import { User } from '../../../db/schema.js';
-import { BaseRepository } from '../../common/repositories/base.repository.interface';
+import { BaseRepository } from '../../common/repositories/base.repository.interface.js';
 
 /**
  * User repository interface that extends the base repository interface

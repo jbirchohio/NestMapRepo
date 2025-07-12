@@ -1,6 +1,6 @@
-import { dbService } from '../services/database.service';
-import { users } from '@shared/schema';
-import { BaseDAL } from './base.dal';
+import { dbService } from '../services/database.service.js';
+import { users } from '@@shared/schema';
+import { BaseDAL } from './base.dal.js';
 import { sql } from 'drizzle-orm';
 
 export interface User {

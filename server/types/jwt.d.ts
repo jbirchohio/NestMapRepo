@@ -1,6 +1,6 @@
 import 'express';
-import { UserRole } from '../src/auth/types';
-export { UserRole } from '../src/auth/types';
+import { UserRole } from '../src/auth/types.js';
+export { UserRole } from '../src/auth/types.js';
 
 export interface JWTUser {
   userId: string;  // Changed from number to string for UUID consistency
@@ -24,7 +24,7 @@ declare global {
   }
 }
 
-export type TokenType = 'access' | 'refresh' | 'password_reset' | 'email_verification';
+export type TokenType = 'access' | 'refresh' | 'password_reset' | 'email_verification.js';
 
 export interface TokenPayload {
   jti: string;

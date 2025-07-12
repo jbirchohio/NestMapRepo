@@ -1,5 +1,5 @@
 import { User } from '../../users/entities/user.entity.js';
-import { ParamsDictionary, Query } from 'express-serve-static-core';
+import { ParamsDictionary, Query } from 'express-serve-static-core.js';
 
 declare global {
   namespace Express {

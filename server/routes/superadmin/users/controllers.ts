@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { db } from '../../../db';
-import { users, organizations, userSessions } from '../../../db/schema';
+import { db } from '../../../db.js';
+import { users, organizations, userSessions } from '../../../db/schema.js';
 import { eq, and, desc, sql, isNull, inArray } from 'drizzle-orm';
-import { logSuperadminAction } from '../audit-logs/audit-service';
-import { hashPassword } from '../../../utils/auth';
-import { v4 as uuidv4 } from 'uuid';
+import { logSuperadminAction } from '../audit-logs/audit-service.js';
+import { hashPassword } from '../../../utils/auth.js';
+import { v4 as uuidv4 } from 'uuid.js';
 
 // Define UserWithOrg type at the top level
 type UserWithOrg = {
