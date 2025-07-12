@@ -54,6 +54,7 @@ export default function EnhancedAIAssistantModal({
   ]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [foodSuggestions, setFoodSuggestions] = useState<any[]>([]);
+  // Note: foodSuggestions available for displaying AI food recommendations
 
   const assistantMutation = useMutation({
     mutationFn: async (question: string) => {
