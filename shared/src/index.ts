@@ -1,7 +1,8 @@
 // Re-export schema and types
 export * from './fieldTransforms.js';
+export * from './schema.js';
 
-// Export types explicitly to avoid ambiguity
+// Export types explicitly to avoid ambiguity  
 export type { 
   Activity, 
   Trip, 
@@ -9,5 +10,9 @@ export type {
   TripTraveler,
   NewTripTraveler,
   NewUser,
-  NewTrip 
+  NewTrip,
+  BaseEntity,
+  UserRole,
+  TripRole,
+  OrganizationPlan
 } from './schema.js';

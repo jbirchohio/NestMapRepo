@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
-import { Activity, Trip } from "@shared/schema";
+import { Activity, Trip } from "../shared/src/schema.js";
 import crypto from "crypto";
+// Ensure Express types are augmented
+import '../@types/express/index.js';
 
 /**
  * CSRF Protection for Calendar Sync Operations
