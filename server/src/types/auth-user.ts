@@ -27,14 +27,22 @@ export type RequestUser = Omit<AuthUser, 'organization_id'> & {
   organization_id?: string; // Keep for backward compatibility
 };
 
-import type { Request } from 'express';
+// Define basic HTTP request interface to avoid Express dependency
+export interface BaseRequest {
+  params?: Record<string, string>;
+  body?: Record<string, any>;
+  query?: Record<string, any>;
+  headers?: Record<string, string | string[]>;
+  path?: string;
+  ip?: string;
+}
 
 export interface AuthenticatedRequest<
   Params = any,
   ResBody = any,
   ReqBody = any,
   ReqQuery = any
-> extends Request<Params, ResBody, ReqBody, ReqQuery> {
+> extends BaseRequest {
   user: AuthUser;
   organizationId: string;
   organizationFilter: (orgId: string | null) => boolean;

@@ -1,9 +1,32 @@
-import { Request as ExpressRequest, Response, NextFunction } from 'express';
-import { createApiError, ErrorType } from '../types/index.js';
-import { Logger } from '@nestjs/common.js';
+// Local type definitions to avoid external dependencies
+interface Request {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    organizationId: string | null;
+    [key: string]: any;
+  };
+  params?: Record<string, string>;
+  body?: Record<string, any>;
+  query?: Record<string, any>;
+  headers?: Record<string, string | string[]>;
+  path?: string;
+  ip?: string;
+}
 
-// Extend the Express Request type to include the user property
-interface AuthenticatedRequest extends ExpressRequest {
+interface Response {
+  status(code: number): Response;
+  json(data: any): Response;
+  send(data: any): Response;
+}
+
+interface NextFunction {
+  (error?: any): void;
+}
+
+// Extend the Request type to include the user property
+interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
@@ -12,6 +35,28 @@ interface AuthenticatedRequest extends ExpressRequest {
     [key: string]: any;
   };
 }
+
+// Simple logger interface
+interface Logger {
+  warn(message: string): void;
+  error(message: string, error?: any): void;
+  log(message: string): void;
+}
+
+// Simple error creation function
+function createApiError(type: string, message: string) {
+  const error = new Error(message);
+  error.name = type;
+  return error;
+}
+
+const ErrorType = {
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
+  BAD_REQUEST: 'BAD_REQUEST',
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR'
+};
 
 /**
  * Middleware to ensure user is authenticated
