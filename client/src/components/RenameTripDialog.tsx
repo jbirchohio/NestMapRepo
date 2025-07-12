@@ -68,7 +68,7 @@ export default function RenameTripDialog({
       });
       onClose();
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to rename trip. Please try again.",
