@@ -41,6 +41,8 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noImplicitAny": true,
     "noUnusedParameters": true,
     "strictFunctionTypes": true,
     "strictBindCallApply": true,

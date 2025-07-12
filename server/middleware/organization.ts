@@ -15,7 +15,7 @@ const organizationAccessSchema = z.object({
  * Ensures the user has access to the specified organization
  */
 export const validateOrganizationAccess = () => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Get organization ID from request params, body, or headers
       const { organizationId } = req.params;
@@ -55,7 +55,7 @@ export const validateOrganizationAccess = () => {
  * Middleware to ensure the request includes an organization context
  * Should be used after authentication middleware
  */
-export const requireOrganizationContext = (req: Request, res: Response, next: NextFunction) => {
+export const requireOrganizationContext = (req: Request, res: Response, next: NextFunction): void => {
   const { organizationId } = req.params;
   const orgIdFromBody = req.body?.organizationId;
   const orgIdFromHeader = req.headers['x-organization-id'];
@@ -72,12 +72,3 @@ export const requireOrganizationContext = (req: Request, res: Response, next: Ne
   req.organizationId = organizationId || orgIdFromBody || orgIdFromHeader;
   next();
 };
-
-// Extend Express Request type to include organizationId
-declare global {
-  namespace Express {
-    interface Request {
-      organizationId?: string;
-    }
-  }
-}

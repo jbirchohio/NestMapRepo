@@ -13,7 +13,7 @@ import { AuthUser, UserRole } from '../src/types/auth-user.js';
  * Custom properties we add to the Express Request object
  */
 export interface CustomRequest extends ExpressRequest {
-  // Custom properties
+  // Custom properties only - standard Express properties are inherited
   user?: AuthUser;
   organizationId?: string;
   domainOrganizationId?: string;
@@ -21,16 +21,6 @@ export interface CustomRequest extends ExpressRequest {
   organizationContext?: OrganizationContext;
   analyticsScope?: AnalyticsScope;
   organizationFilter?: (orgId: string | null) => boolean;
-  
-  // Standard Express properties we use
-  path: string;
-  ip: string;
-  method: string;
-  params: Record<string, string>;
-  body: any;
-  query: Record<string, any>;
-  headers: Record<string, string | string[] | undefined>;
-  get(name: string): string | undefined;
 }
 
 /**
