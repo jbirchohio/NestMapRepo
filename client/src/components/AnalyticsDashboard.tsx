@@ -7,66 +7,90 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Users, MapPin, Calendar, Activity, TrendingUp, Download, Globe, BarChart3 } from "lucide-react";
 import { useAuth } from "@/contexts/auth/AuthContext";
 
+// Analytics data types
+interface AnalyticsOverview {
+  totalTrips: number;
+  totalUsers: number;
+  totalActivities: number;
+  averageTripLength: number;
+  averageActivitiesPerTrip: number;
+}
+
+interface DestinationData {
+  city: string;
+  country: string;
+  tripCount: number;
+  percentage: number;
+}
+
+interface TripDurationData {
+  duration: string;
+  count: number;
+  percentage: number;
+}
+
+interface ActivityTagData {
+  tag: string;
+  count: number;
+  percentage: number;
+}
+
+interface UserEngagementData {
+  usersWithTrips: number;
+  usersWithMultipleTrips: number;
+  averageTripsPerUser: number;
+  tripCompletionRate: number;
+  activityCompletionRate: number;
+}
+
+interface RecentActivityData {
+  newTripsLast7Days: number;
+  newUsersLast7Days: number;
+  activitiesAddedLast7Days: number;
+}
+
+interface GrowthMetricData {
+  date: string;
+  trips: number;
+  users: number;
+  activities: number;
+}
+
+interface UserFunnelData {
+  totalUsers: number;
+  usersWithTrips: number;
+  usersWithActivities: number;
+  usersWithCompletedTrips: number;
+  usersWithExports: number;
+}
+
+interface ChartDataItem {
+  name: string;
+  value: number;
+  percentage?: number;
+}
+
 interface AnalyticsData {
-  overview: {
-    totalTrips: number;
-    totalUsers: number;
-    totalActivities: number;
-    averageTripLength: number;
-    averageActivitiesPerTrip: number;
-  };
-  destinations: {
-    city: string;
-    country: string;
-    tripCount: number;
-    percentage: number;
-  }[];
-  tripDurations: {
-    duration: string;
-    count: number;
-    percentage: number;
-  }[];
-  activityTags: {
-    tag: string;
-    count: number;
-    percentage: number;
-  }[];
-  userEngagement: {
-    usersWithTrips: number;
-    usersWithMultipleTrips: number;
-    averageTripsPerUser: number;
-    tripCompletionRate: number;
-    activityCompletionRate: number;
-  };
-  recentActivity: {
-    newTripsLast7Days: number;
-    newUsersLast7Days: number;
-    activitiesAddedLast7Days: number;
-  };
-  growthMetrics: {
-    date: string;
-    trips: number;
-    users: number;
-    activities: number;
-  }[];
-  userFunnel: {
-    totalUsers: number;
-    usersWithTrips: number;
-    usersWithActivities: number;
-    usersWithCompletedTrips: number;
-    usersWithExports: number;
-  };
+  overview: AnalyticsOverview;
+  destinations: DestinationData[];
+  tripDurations: TripDurationData[];
+  activityTags: ActivityTagData[];
+  userEngagement: UserEngagementData;
+  recentActivity: RecentActivityData;
+  growthMetrics: GrowthMetricData[];
+  userFunnel: UserFunnelData;
 }
 
 const CHART_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 
 export default function AnalyticsDashboard() {
-  const { user, userId } = useAuth();
+  const { user } = useAuth();
+  const userId = user?.id;
 
   console.log('AnalyticsDashboard - userId:', userId);
   console.log('AnalyticsDashboard - user:', user);
 
-  const { data: analytics, isLoading, error } = useQuery({
+  const { data: analytics, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ["/api/analytics"],
     enabled: !!user, // Use user instead of userId since userId might be null
     queryFn: async () => {
@@ -143,18 +167,13 @@ export default function AnalyticsDashboard() {
 
   if (!analytics) return null;
 
-  const tripDurationChartData = analytics.tripDurations.map(item => ({
+  const tripDurationChartData = analytics.tripDurations.map((item: TripDurationData) => ({
     name: item.duration,
     value: item.count,
     percentage: item.percentage
   }));
 
-  const destinationChartData = analytics.destinations.slice(0, 6).map(item => ({
-    name: `${item.city}, ${item.country}`,
-    value: item.tripCount
-  }));
-
-  const activityTagsChartData = analytics.activityTags.slice(0, 8).map(item => ({
+  const activityTagsChartData = analytics.activityTags.slice(0, 8).map((item: ActivityTagData) => ({
     name: item.tag,
     value: item.count
   }));
@@ -267,7 +286,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {analytics.destinations.slice(0, 8).map((destination, index) => (
+              {analytics.destinations.slice(0, 8).map((destination: DestinationData, index: number) => (
                 <div key={`${destination.city}-${destination.country}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs">
@@ -307,17 +326,17 @@ export default function AnalyticsDashboard() {
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percentage }) => `${percentage}%`}
+                  label={({ percentage }: any) => `${percentage}%`}
                 >
-                  {tripDurationChartData.map((entry, index) => (
+                  {tripDurationChartData.map((_entry: ChartDataItem, index: number) => (
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value, name) => [`${value} trips`, name]} />
+                <Tooltip formatter={(value: number, name: string) => [`${value} trips`, name]} />
               </PieChart>
             </ResponsiveContainer>
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {tripDurationChartData.map((item, index) => (
+              {tripDurationChartData.map((item: ChartDataItem, index: number) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <div 
                     className="w-3 h-3 rounded-full" 

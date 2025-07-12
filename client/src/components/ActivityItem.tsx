@@ -13,7 +13,7 @@ interface ActivityItemProps {
   onToggleComplete?: (activityId: string, completed: boolean) => void;
 }
 
-export default function ActivityItem({ activity, onClick, onDelete, onToggleComplete }: ActivityItemProps) {
+export default function ActivityItem({ activity, onClick, onDelete }: ActivityItemProps) {
   const { toast } = useToast();
   
   // Delete activity mutation
