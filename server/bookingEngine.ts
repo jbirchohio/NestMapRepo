@@ -203,15 +203,15 @@ class BookingComHotelProvider implements BookingProvider {
   enabled = false; // Disabled until API access is configured
   requiresAuth = true;
 
-  async book(params: any): Promise<BookingResult> {
+  async book(_params: any): Promise<BookingResult> {
     throw new Error('Booking.com API integration requires partner credentials');
   }
 
-  async cancel(bookingId: string): Promise<CancellationResult> {
+  async cancel(_bookingId: string): Promise<CancellationResult> {
     throw new Error('Booking.com cancellation requires API access');
   }
 
-  async getStatus(bookingId: string): Promise<BookingStatus> {
+  async getStatus(_bookingId: string): Promise<BookingStatus> {
     throw new Error('Booking.com status check requires API access');
   }
 }
@@ -227,7 +227,7 @@ export class StripePaymentProcessor {
     }
   }
 
-  async createPaymentIntent(amount: number, currency: string, metadata: Record<string, any>) {
+  async createPaymentIntent(_amount: number, _currency: string, _metadata: Record<string, any>) {
     if (!process.env.STRIPE_SECRET_KEY) {
       throw new Error('Stripe integration requires STRIPE_SECRET_KEY');
     }
@@ -236,7 +236,7 @@ export class StripePaymentProcessor {
     throw new Error('Stripe SDK not installed. Please configure payment processing.');
   }
 
-  async confirmPayment(paymentIntentId: string) {
+  async confirmPayment(_paymentIntentId: string) {
     if (!this.stripe) {
       throw new Error('Stripe not configured');
     }

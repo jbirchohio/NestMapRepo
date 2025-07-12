@@ -1,4 +1,4 @@
-import type { Request as ExpressRequest, Response } from 'express';
+import type { Request, Response } from 'express';
 import { db } from './db-connection.js';
 import { customDomains } from './db/schema.js';
 import { eq } from 'drizzle-orm';
@@ -44,7 +44,7 @@ export function storeACMEChallenge(
 /**
  * Serve ACME challenge response
  */
-type ServeRequest = ExpressRequest<{ token: string }>;
+type ServeRequest = Request<{ token: string }>;
 
 export async function serveACMEChallenge(
   req: ServeRequest,
