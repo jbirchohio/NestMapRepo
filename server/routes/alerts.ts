@@ -4,7 +4,7 @@ import { authenticate as validateJWT, requireRole } from '../middleware/secureAu
 const requireSuperadminRole = requireRole('superadmin');
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { db } from "../db.js";
-import { adminAuditLog } from "@shared/schema";
+import { adminAuditLog } from "../shared/src/schema.js";
 import { desc, eq, and, gte } from "drizzle-orm";
 
 interface SystemAlert {

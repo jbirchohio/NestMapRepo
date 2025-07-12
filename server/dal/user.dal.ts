@@ -1,5 +1,5 @@
 import { dbService } from '../services/database.service.js';
-import { users } from '@@shared/schema';
+import { users } from '../shared/src/schema.js';
 import { BaseDAL } from './base.dal.js';
 import { sql } from 'drizzle-orm';
 

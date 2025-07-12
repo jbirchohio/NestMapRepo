@@ -98,7 +98,7 @@ interface Config {
 const config: Config = {
   server: {
     port: parseInt(env.PORT, 10),
-    env: env.NODE_ENV,
+    env: env.NODE_ENV as 'development' | 'production' | 'test',
     host: env.HOST,
     baseUrl: env.BASE_URL,
     logLevel: env.LOG_LEVEL,

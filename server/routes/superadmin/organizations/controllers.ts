@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { db } from '../../../db.js';
-import { organizations, organizationMembers, users } from '../../../db/schema.js';
+import { db } from '../../shared/src/schema.js'/../db.js';
+import { organizations, organizationMembers, users } from '../../shared/src/schema.js'/../db/schema.js';
 import { eq, desc, sql } from 'drizzle-orm';
 import { logSuperadminAction } from '../audit-logs/audit-service.js';
 

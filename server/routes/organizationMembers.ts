@@ -6,7 +6,7 @@
 import { Router, Response } from 'express';
 import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 import { db } from '../db.js';
-import { users, organizationMembers } from '@@shared/schema';
+import { users, organizationMembers } from '../shared/src/schema.js';
 import { eq, sql, and } from 'drizzle-orm';
 import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
 import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles.js';

@@ -12,10 +12,10 @@ const app = express();
 // Configuration
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development.js';
-const HOST = process.env.HOST || '0.0.0.0.js';
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Basic middleware
-app.use(expresson({ limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // CORS middleware
@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 });
 
 // Health check route
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
@@ -50,7 +50,7 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 });
 
 // Basic API routes
-app.get('/api/test', (req, res) => {
+app.get('/api/test', (_req, res) => {
   res.json({ 
     message: 'API is working',
     timestamp: new Date().toISOString()
@@ -58,7 +58,7 @@ app.get('/api/test', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
   logger.error('Unhandled error:', err);
   res.status(500).json({ 
     success: false, 

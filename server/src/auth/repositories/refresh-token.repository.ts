@@ -1,8 +1,8 @@
 import { eq, sql } from 'drizzle-orm';
-import { db } from '../../../db/db.js';
-import { users } from '../../../db/schema.js';
+import { db } from '../../shared/src/schema.js'/../db/db.js';
+import { users } from '../../shared/src/schema.js'/../db/schema.js';
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
-import { logger } from '../../../utils/logger.js';
+import { logger } from '../../shared/src/schema.js'/../utils/logger.js';
 import type { RefreshToken } from '../interfaces/refresh-token.repository.interface.js';
 
 export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {

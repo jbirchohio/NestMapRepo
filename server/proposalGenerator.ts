@@ -1,5 +1,5 @@
-import puppeteer from 'puppeteer.js';
-import { Trip, Activity } from '@@shared/schema';
+import puppeteer from 'puppeteer';
+import { Trip, Activity } from '../shared/src/schema.js';
 
 export interface ProposalData {
     trip: Trip;

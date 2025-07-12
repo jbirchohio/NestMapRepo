@@ -5,7 +5,7 @@ import { pool } from "./db-connection.js";
  * Standard health check handler that works across all platforms
  * Used by cloud providers to verify application health
  */
-export async function healthCheck(req: Request, res: Response) {
+export async function healthCheck(_req: Request, res: Response) {
   try {
     // Check database connection
     const dbResult = await pool.query("SELECT 1");

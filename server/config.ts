@@ -133,7 +133,7 @@ export function validateConfig() {
     }
   }
 
-  if (missingRecommended.length > 0 && env !== 'test') {
+  if (missingRecommended.length > 0 && env !== 'test' && env !== 'development') {
     console.warn(`⚠️  Missing recommended environment variables: ${missingRecommended.join(', ')}`);
     console.warn('   Some features may be disabled or use fallback implementations');
   }
