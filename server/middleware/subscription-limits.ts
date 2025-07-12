@@ -15,7 +15,7 @@ interface JWTUser {
 }
 
 // Import the AuthUser type from auth middleware
-import type { AuthUser } from './auth.js';
+import type { AuthUser } from '../src/types/auth-user.js';
 
 // Extend the AuthUser interface with additional JWT properties
 interface JwtUser extends AuthUser {

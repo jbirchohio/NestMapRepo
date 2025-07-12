@@ -61,7 +61,7 @@ router.get('/pending', asyncHandler(async (req, res) => {
       .from(approvalRequests)
       .leftJoin(users, eq(approvalRequests.requesterId, users.id))
       .where(and(
-        eq(approvalRequests.organization_id, organizationId),
+        eq(approvalRequests.organizationId, organizationId),
         eq(approvalRequests.status, 'pending'),
         or(
           eq(approvalRequests.approverId, userId),
@@ -100,7 +100,7 @@ router.patch('/:requestId/decision', asyncHandler(async (req, res) => {
       .from(approvalRequests)
       .where(and(
         eq(approvalRequests.id, requestId),
-        eq(approvalRequests.organization_id, organizationId)
+        eq(approvalRequests.organizationId, organizationId)
       ));
     
     if (!request) {
@@ -212,7 +212,7 @@ router.get('/rules', asyncHandler(async (req, res) => {
     const rules = await db
       .select()
       .from(approvalRules)
-      .where(eq(approvalRules.organization_id, organizationId))
+      .where(eq(approvalRules.organizationId, organizationId))
       .orderBy(approvalRules.priority);
     
     res.json(rules);
@@ -265,7 +265,7 @@ async function checkApprovalRequired(
     .select()
     .from(approvalRules)
     .where(and(
-      eq(approvalRules.organization_id, organizationId),
+      eq(approvalRules.organizationId, organizationId),
       eq(approvalRules.entityType, entityType),
       eq(approvalRules.active, true)
     ))
@@ -335,7 +335,7 @@ async function findApprover(
     .select({ id: users.id })
     .from(users)
     .where(and(
-      eq(users.organization_id, organizationId),
+      eq(users.organizationId, organizationId),
       eq(users.role, 'manager')
     ))
     .limit(1);

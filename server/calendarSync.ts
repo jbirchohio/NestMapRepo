@@ -1,8 +1,15 @@
 import { Request, Response } from "express";
 import { Activity, Trip } from "../shared/src/schema.js";
 import crypto from "crypto";
-// Ensure Express types are augmented
-import '../@types/express/index.js';
+
+// Define AuthenticatedRequest interface
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    organizationId: string;
+  };
+}
 
 /**
  * CSRF Protection for Calendar Sync Operations
@@ -80,7 +87,7 @@ function cleanupExpiredCalendarTokens(): void {
 /**
  * Middleware to validate calendar CSRF tokens
  */
-export function validateCalendarCSRF(req: Request, res: Response, next: Function): void {
+export function validateCalendarCSRF(req: AuthenticatedRequest, res: Response, next: Function): void {
   const token = req.headers['x-calendar-csrf-token'] as string;
   const user = req.user;
 
@@ -106,7 +113,7 @@ export function validateCalendarCSRF(req: Request, res: Response, next: Function
 export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], accessToken: string) {
   const events = activities.map(activity => {
     const activityDate = new Date(activity.date);
-    const [hours, minutes] = activity.time.split(':').map(Number);
+    const [hours, minutes] = (activity.time || '12:00').split(':').map(Number);
     
     const startDate = new Date(activityDate);
     startDate.setHours(hours, minutes, 0, 0);
@@ -161,7 +168,7 @@ export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], a
 export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], accessToken: string) {
   const events = activities.map(activity => {
     const activityDate = new Date(activity.date);
-    const [hours, minutes] = activity.time.split(':').map(Number);
+    const [hours, minutes] = (activity.time || '12:00').split(':').map(Number);
     
     const startDate = new Date(activityDate);
     startDate.setHours(hours, minutes, 0, 0);
