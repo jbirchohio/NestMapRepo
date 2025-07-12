@@ -811,6 +811,9 @@ export const adminAuditLog = auditLogsTableDefinition;
 // Superadmin Audit Log (alias to the main auditLogs table)
 export const superadminAuditLogs = auditLogsTableDefinition;
 
+// General audit logs (alias to the main auditLogs table)
+export const auditLogs = auditLogsTableDefinition;
+
 
 // Base schemas without validation
 export const baseUserSchema = createInsertSchema(users);
