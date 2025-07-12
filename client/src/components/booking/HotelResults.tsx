@@ -1,4 +1,4 @@
-import { Building, MapPin, Star, Bed, Users, Wifi, Utensils, ParkingCircle, Dumbbell } from "lucide-react";
+import { Building, MapPin, Star, Wifi, Utensils, ParkingCircle, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,6 +56,7 @@ export function HotelResults({
   onBack,
   onContinue,
 }: HotelResultsProps) {
+  // Unused parameters: clientInfo, isSearching, onSearch, travelerBookings, onBack, onContinue
   const hotelList = hotels || hotelResults || [];
   
   if (isSearching) {
