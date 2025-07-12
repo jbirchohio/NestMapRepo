@@ -22,7 +22,7 @@ export function globalErrorHandler(err: any, req: Request, res: Response, next: 
     url: req.url,
     method: req.method,
     userId: req.user?.id,
-    organizationId: req.user?.organization_id,
+    organizationId: req.user?.organizationId,
     timestamp: new Date().toISOString(),
     ip: req.ip
   });

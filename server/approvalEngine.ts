@@ -3,11 +3,11 @@ import { approvalRequests, approvalRules, users, organizations } from './db/sche
 import { eq, and } from 'drizzle-orm';
 
 interface ApprovalWorkflowConfig {
-  organizationId: number;
+  organizationId: string;
   entityType: string;
   requestType: string;
   data: Record<string, any>;
-  requesterId: number;
+  requesterId: string;
   reason?: string;
   businessJustification?: string;
 }
@@ -15,8 +15,8 @@ interface ApprovalWorkflowConfig {
 interface ApprovalResult {
   requiresApproval: boolean;
   autoApproved?: boolean;
-  requestId?: number;
-  assignedApproverId?: number;
+  requestId?: string;
+  assignedApproverId?: string;
   dueDate?: Date;
   priority: 'low' | 'normal' | 'high' | 'urgent';
 }
@@ -27,7 +27,7 @@ export class ApprovalEngine {
    * Process approval workflow for any entity
    */
   async processApprovalWorkflow(config: ApprovalWorkflowConfig): Promise<ApprovalResult> {
-    const rules = await this.getApplicableRules(config.organization_id, config.entityType);
+    const rules = await this.getApplicableRules(config.organizationId, config.entityType);
     
     // Check each rule in priority order
     for (const rule of rules) {
@@ -57,12 +57,12 @@ export class ApprovalEngine {
   /**
    * Get applicable approval rules for organization and entity type
    */
-  private async getApplicableRules(organizationId: number, entityType: string) {
+  private async getApplicableRules(organizationId: string, entityType: string) {
     return await db
       .select()
       .from(approvalRules)
       .where(and(
-        eq(approvalRules.organization_id, organizationId),
+        eq(approvalRules.organizationId, organizationId),
         eq(approvalRules.entityType, entityType),
         eq(approvalRules.active, true)
       ))
@@ -136,14 +136,14 @@ export class ApprovalEngine {
     config: ApprovalWorkflowConfig, 
     rule: any
   ): Promise<ApprovalResult> {
-    const approver = await this.findApprover(config.organization_id, rule.approverRoles);
+    const approver = await this.findApprover(config.organizationId, rule.approverRoles);
     const priority = this.calculatePriority(config.data, rule);
     const dueDate = new Date(Date.now() + (rule.escalationDays || 3) * 24 * 60 * 60 * 1000);
 
     const [request] = await db
       .insert(approvalRequests)
       .values({
-        organizationId: config.organization_id,
+        organizationId: config.organizationId,
         requesterId: config.requesterId,
         approverId: approver?.id,
         entityType: config.entityType,
@@ -170,12 +170,12 @@ export class ApprovalEngine {
   /**
    * Find appropriate approver based on roles
    */
-  private async findApprover(organizationId: number, approverRoles: string[]) {
+  private async findApprover(organizationId: string, approverRoles: string[]) {
     const approvers = await db
       .select({ id: users.id, role: users.role })
       .from(users)
       .where(and(
-        eq(users.organization_id, organizationId),
+        eq(users.organizationId, organizationId),
         eq(users.role, approverRoles[0] || 'manager') // Use first role or default to manager
       ))
       .limit(1);
@@ -211,13 +211,13 @@ export class ApprovalEngine {
   /**
    * Check if user can approve requests
    */
-  async canUserApprove(userId: number, organizationId: number): Promise<boolean> {
+  async canUserApprove(userId: string, organizationId: string): Promise<boolean> {
     const [user] = await db
       .select({ role: users.role })
       .from(users)
       .where(and(
         eq(users.id, userId),
-        eq(users.organization_id, organizationId)
+        eq(users.organizationId, organizationId)
       ));
 
     return user ? ['admin', 'manager'].includes(user.role) : false;
@@ -226,7 +226,7 @@ export class ApprovalEngine {
   /**
    * Get approval dashboard data for managers
    */
-  async getApprovalDashboard(userId: number, organizationId: number) {
+  async getApprovalDashboard(userId: string, organizationId: string) {
     const canApprove = await this.canUserApprove(userId, organizationId);
     
     if (!canApprove) {
@@ -237,7 +237,7 @@ export class ApprovalEngine {
       .select()
       .from(approvalRequests)
       .where(and(
-        eq(approvalRequests.organization_id, organizationId),
+        eq(approvalRequests.organizationId, organizationId),
         eq(approvalRequests.status, 'pending')
       ));
 
@@ -277,7 +277,7 @@ export class ApprovalEngine {
       .select({ id: users.id })
       .from(users)
       .where(and(
-        eq(users.organization_id, request.organization_id),
+        eq(users.organizationId, request.organizationId),
         eq(users.role, 'admin')
       ))
       .limit(1);

@@ -17,7 +17,7 @@ export async function auditLogMiddleware(
   next: NextFunction
 ): Promise<Response | void> {
   // Only log if user is authenticated and org is known
-  if (!req.user || !req.user.id || !req.user.organizationId) {
+  if (!req.user?.id || !req.user?.organizationId) {
     return next();
   }
 
@@ -30,14 +30,14 @@ export async function auditLogMiddleware(
   // Attach after response sent
   res.on('finish', async () => {
     try {
-      await db.insert(auditLogs).values([{
-        organizationId: req.user.organizationId,
-        userId: req.user.id,
+      await db.insert(auditLogs).values({
+        organizationId: req.user!.organizationId!,
+        userId: req.user!.id,
         action,
         resource,
         resourceId,
         metadata: { body, statusCode: res.statusCode }
-      }]);
+      });
     } catch (err) {
       // Optionally log error, but do not block response
       // eslint-disable-next-line no-console
