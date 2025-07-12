@@ -5,7 +5,7 @@ type CustomRequest = Request & {
   user?: {
     id: string | number;
     role: string;
-    organization_id?: number;
+    organizationId?: number; // Changed from organization_id to match global types
   };
   [key: string]: any;
 };
@@ -152,7 +152,7 @@ export function validateOrganizationAccess(req: CustomRequest, res: Response, ne
   }
   
   // Regular admins can only access their own organization
-  if (req.user?.role === 'admin' && req.user.organization_id === orgId) {
+  if (req.user?.role === 'admin' && req.user.organizationId === orgId) {
     return next();
   }
   
@@ -195,7 +195,7 @@ export function auditAdminOperation(operationType: string) {
             operation: operationType,
             userId: req.user?.id,
             userRole: req.user?.role,
-            organizationId: req.user?.organization_id,
+            organizationId: req.user?.organizationId,
           targetResource: req.params.id || 'N/A',
           method: req.method,
           ip: req.ip,
