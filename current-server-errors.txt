@@ -1,0 +1,324 @@
+server/@types/express/index.d.ts(3,54): error TS1005: ';' expected.
+server/@types/express/index.d.ts(3,77): error TS1005: ';' expected.
+server/@types/express/index.d.ts(3,79): error TS1002: Unterminated string literal.
+server/db/invoiceSchema.ts(5,62): error TS1005: ';' expected.
+server/db/invoiceSchema.ts(5,86): error TS1005: ';' expected.
+server/db/invoiceSchema.ts(5,88): error TS1002: Unterminated string literal.
+server/middleware/sessionTracking.ts(3,58): error TS1005: ';' expected.
+server/middleware/sessionTracking.ts(3,73): error TS1005: ';' expected.
+server/middleware/sessionTracking.ts(3,75): error TS1002: Unterminated string literal.
+server/routes/admin.temp.ts(3,150): error TS1005: ';' expected.
+server/routes/admin.temp.ts(3,165): error TS1005: ';' expected.
+server/routes/admin.temp.ts(3,167): error TS1002: Unterminated string literal.
+server/routes/notifications.ts(3,59): error TS1005: ';' expected.
+server/routes/notifications.ts(3,74): error TS1005: ';' expected.
+server/routes/notifications.ts(3,76): error TS1002: Unterminated string literal.
+server/routes/security.ts(3,95): error TS1005: ';' expected.
+server/routes/security.ts(3,110): error TS1005: ';' expected.
+server/routes/security.ts(3,112): error TS1002: Unterminated string literal.
+server/routes/superadmin/audit-logs/audit-service.ts(1,48): error TS1005: ';' expected.
+server/routes/superadmin/audit-logs/audit-service.ts(1,57): error TS1005: ';' expected.
+server/routes/superadmin/audit-logs/audit-service.ts(1,59): error TS1002: Unterminated string literal.
+server/routes/superadmin/audit-logs/audit-service.ts(2,65): error TS1005: ';' expected.
+server/routes/superadmin/audit-logs/audit-service.ts(2,81): error TS1005: ';' expected.
+server/routes/superadmin/audit-logs/audit-service.ts(2,83): error TS1002: Unterminated string literal.
+server/routes/superadmin/audit-logs/index.ts(2,63): error TS1005: ';' expected.
+server/routes/superadmin/audit-logs/index.ts(2,91): error TS1005: ';' expected.
+server/routes/superadmin/audit-logs/index.ts(2,93): error TS1002: Unterminated string literal.
+server/routes/superadmin/billing/controllers.ts(2,48): error TS1005: ';' expected.
+server/routes/superadmin/billing/controllers.ts(2,57): error TS1005: ';' expected.
+server/routes/superadmin/billing/controllers.ts(2,59): error TS1002: Unterminated string literal.
+server/routes/superadmin/billing/controllers.ts(3,59): error TS1005: ';' expected.
+server/routes/superadmin/billing/controllers.ts(3,75): error TS1005: ';' expected.
+server/routes/superadmin/billing/controllers.ts(3,77): error TS1002: Unterminated string literal.
+server/routes/superadmin/billing/controllers.ts(4,55): error TS1005: ';' expected.
+server/routes/superadmin/billing/controllers.ts(4,81): error TS1005: ';' expected.
+server/routes/superadmin/billing/controllers.ts(4,83): error TS1002: Unterminated string literal.
+server/routes/superadmin/billing/controllers.ts(13,66): error TS1005: ';' expected.
+server/routes/superadmin/billing/controllers.ts(13,94): error TS1005: ';' expected.
+server/routes/superadmin/billing/controllers.ts(13,96): error TS1002: Unterminated string literal.
+server/routes/superadmin/billing/index.ts(2,63): error TS1005: ';' expected.
+server/routes/superadmin/billing/index.ts(2,91): error TS1005: ';' expected.
+server/routes/superadmin/billing/index.ts(2,93): error TS1002: Unterminated string literal.
+server/routes/superadmin/dashboard/index.ts(2,48): error TS1005: ';' expected.
+server/routes/superadmin/dashboard/index.ts(2,57): error TS1005: ';' expected.
+server/routes/superadmin/dashboard/index.ts(2,59): error TS1002: Unterminated string literal.
+server/routes/superadmin/dashboard/index.ts(3,66): error TS1005: ';' expected.
+server/routes/superadmin/dashboard/index.ts(3,82): error TS1005: ';' expected.
+server/routes/superadmin/dashboard/index.ts(3,84): error TS1002: Unterminated string literal.
+server/routes/superadmin/feature-flags/controllers.ts(2,48): error TS1005: ';' expected.
+server/routes/superadmin/feature-flags/controllers.ts(2,57): error TS1005: ';' expected.
+server/routes/superadmin/feature-flags/controllers.ts(2,59): error TS1002: Unterminated string literal.
+server/routes/superadmin/feature-flags/controllers.ts(7,36): error TS1005: ';' expected.
+server/routes/superadmin/feature-flags/controllers.ts(7,52): error TS1005: ';' expected.
+server/routes/superadmin/feature-flags/controllers.ts(7,54): error TS1002: Unterminated string literal.
+server/routes/superadmin/feature-flags/index.ts(2,63): error TS1005: ';' expected.
+server/routes/superadmin/feature-flags/index.ts(2,91): error TS1005: ';' expected.
+server/routes/superadmin/feature-flags/index.ts(2,93): error TS1002: Unterminated string literal.
+server/routes/superadmin/index.ts(2,58): error TS1005: ';' expected.
+server/routes/superadmin/index.ts(2,83): error TS1005: ';' expected.
+server/routes/superadmin/index.ts(2,85): error TS1002: Unterminated string literal.
+server/routes/superadmin/middleware/superadmin.ts(2,64): error TS1005: ';' expected.
+server/routes/superadmin/middleware/superadmin.ts(2,88): error TS1005: ';' expected.
+server/routes/superadmin/middleware/superadmin.ts(2,90): error TS1002: Unterminated string literal.
+server/routes/superadmin/organizations/controllers.ts(2,48): error TS1005: ';' expected.
+server/routes/superadmin/organizations/controllers.ts(2,57): error TS1005: ';' expected.
+server/routes/superadmin/organizations/controllers.ts(2,59): error TS1002: Unterminated string literal.
+server/routes/superadmin/organizations/controllers.ts(3,87): error TS1005: ';' expected.
+server/routes/superadmin/organizations/controllers.ts(3,103): error TS1005: ';' expected.
+server/routes/superadmin/organizations/controllers.ts(3,105): error TS1002: Unterminated string literal.
+server/routes/superadmin/organizations/index.ts(2,63): error TS1005: ';' expected.
+server/routes/superadmin/organizations/index.ts(2,91): error TS1005: ';' expected.
+server/routes/superadmin/organizations/index.ts(2,93): error TS1002: Unterminated string literal.
+server/routes/superadmin/organizations/index.ts(3,72): error TS1005: ';' expected.
+server/routes/superadmin/organizations/index.ts(3,109): error TS1005: ';' expected.
+server/routes/superadmin/organizations/index.ts(3,111): error TS1002: Unterminated string literal.
+server/routes/superadmin/users/controllers.ts(2,48): error TS1005: ';' expected.
+server/routes/superadmin/users/controllers.ts(2,57): error TS1005: ';' expected.
+server/routes/superadmin/users/controllers.ts(2,59): error TS1002: Unterminated string literal.
+server/routes/superadmin/users/controllers.ts(3,80): error TS1005: ';' expected.
+server/routes/superadmin/users/controllers.ts(3,96): error TS1005: ';' expected.
+server/routes/superadmin/users/controllers.ts(3,98): error TS1002: Unterminated string literal.
+server/routes/superadmin/users/controllers.ts(6,58): error TS1005: ';' expected.
+server/routes/superadmin/users/controllers.ts(6,75): error TS1005: ';' expected.
+server/routes/superadmin/users/controllers.ts(6,77): error TS1002: Unterminated string literal.
+server/routes/superadmin/users/index.ts(2,63): error TS1005: ';' expected.
+server/routes/superadmin/users/index.ts(2,91): error TS1005: ';' expected.
+server/routes/superadmin/users/index.ts(2,93): error TS1002: Unterminated string literal.
+server/src/@types/express/index.d.ts(2,59): error TS1005: ';' expected.
+server/src/@types/express/index.d.ts(2,75): error TS1005: ';' expected.
+server/src/@types/express/index.d.ts(2,77): error TS1002: Unterminated string literal.
+server/src/auth/auth.routes.ts(4,64): error TS1005: ';' expected.
+server/src/auth/auth.routes.ts(4,85): error TS1005: ';' expected.
+server/src/auth/auth.routes.ts(4,87): error TS1002: Unterminated string literal.
+server/src/auth/auth.routes.ts(12,72): error TS1005: ';' expected.
+server/src/auth/auth.routes.ts(12,102): error TS1005: ';' expected.
+server/src/auth/auth.routes.ts(12,104): error TS1002: Unterminated string literal.
+server/src/auth/auth.routes.ts(14,58): error TS1005: ';' expected.
+server/src/auth/auth.routes.ts(14,83): error TS1005: ';' expected.
+server/src/auth/auth.routes.ts(14,85): error TS1002: Unterminated string literal.
+server/src/auth/controllers/auth.controller.ts(2,53): error TS1005: ';' expected.
+server/src/auth/controllers/auth.controller.ts(2,76): error TS1005: ';' expected.
+server/src/auth/controllers/auth.controller.ts(2,78): error TS1002: Unterminated string literal.
+server/src/auth/controllers/auth.controller.ts(13,64): error TS1005: ';' expected.
+server/src/auth/controllers/auth.controller.ts(13,85): error TS1005: ';' expected.
+server/src/auth/controllers/auth.controller.ts(13,87): error TS1002: Unterminated string literal.
+server/src/auth/interfaces/user.repository.interface.ts(1,50): error TS1005: ';' expected.
+server/src/auth/interfaces/user.repository.interface.ts(1,66): error TS1005: ';' expected.
+server/src/auth/interfaces/user.repository.interface.ts(1,68): error TS1002: Unterminated string literal.
+server/src/auth/interfaces/user.repository.interface.ts(2,60): error TS1005: ';' expected.
+server/src/auth/interfaces/user.repository.interface.ts(2,109): error TS1005: ';' expected.
+server/src/auth/interfaces/user.repository.interface.ts(2,111): error TS1002: Unterminated string literal.
+server/src/auth/jwt/index.ts(4,51): error TS1005: ';' expected.
+server/src/auth/jwt/index.ts(4,66): error TS1005: ';' expected.
+server/src/auth/jwt/index.ts(4,68): error TS1002: Unterminated string literal.
+server/src/auth/jwt/index.ts(6,48): error TS1005: ';' expected.
+server/src/auth/jwt/index.ts(6,64): error TS1005: ';' expected.
+server/src/auth/jwt/index.ts(6,66): error TS1002: Unterminated string literal.
+server/src/auth/middleware/index.ts(4,52): error TS1005: ';' expected.
+server/src/auth/middleware/index.ts(4,71): error TS1005: ';' expected.
+server/src/auth/middleware/index.ts(4,73): error TS1002: Unterminated string literal.
+server/src/auth/middleware/index.ts(5,51): error TS1005: ';' expected.
+server/src/auth/middleware/index.ts(5,66): error TS1005: ';' expected.
+server/src/auth/middleware/index.ts(5,68): error TS1002: Unterminated string literal.
+server/src/auth/repositories/refresh-token.repository.ts(2,48): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.repository.ts(2,60): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.repository.ts(2,62): error TS1002: Unterminated string literal.
+server/src/auth/repositories/refresh-token.repository.ts(3,51): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.repository.ts(3,67): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.repository.ts(3,69): error TS1002: Unterminated string literal.
+server/src/auth/repositories/refresh-token.repository.ts(5,52): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.repository.ts(5,71): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.repository.ts(5,73): error TS1002: Unterminated string literal.
+server/src/auth/repositories/refresh-token.ts(3,48): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.ts(3,57): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.ts(3,59): error TS1002: Unterminated string literal.
+server/src/auth/repositories/refresh-token.ts(4,78): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.ts(4,94): error TS1005: ';' expected.
+server/src/auth/repositories/refresh-token.ts(4,96): error TS1002: Unterminated string literal.
+server/src/auth/repositories/user.repository.ts(2,48): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(2,60): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(2,62): error TS1002: Unterminated string literal.
+server/src/auth/repositories/user.repository.ts(3,51): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(3,67): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(3,69): error TS1002: Unterminated string literal.
+server/src/auth/repositories/user.repository.ts(4,84): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(4,138): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(4,140): error TS1002: Unterminated string literal.
+server/src/auth/repositories/user.repository.ts(5,50): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(5,66): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(5,68): error TS1002: Unterminated string literal.
+server/src/auth/repositories/user.repository.ts(6,64): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(6,103): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(6,105): error TS1002: Unterminated string literal.
+server/src/auth/repositories/user.repository.ts(7,52): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(7,71): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(7,73): error TS1002: Unterminated string literal.
+server/src/auth/repositories/user.repository.ts(8,68): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(8,108): error TS1005: ';' expected.
+server/src/auth/repositories/user.repository.ts(8,110): error TS1002: Unterminated string literal.
+server/src/auth/services/auth.service.ts(4,60): error TS1005: ';' expected.
+server/src/auth/services/auth.service.ts(4,114): error TS1005: ';' expected.
+server/src/auth/services/auth.service.ts(4,116): error TS1002: Unterminated string literal.
+server/src/auth/services/auth.service.ts(5,52): error TS1005: ';' expected.
+server/src/auth/services/auth.service.ts(5,71): error TS1005: ';' expected.
+server/src/auth/services/auth.service.ts(5,73): error TS1002: Unterminated string literal.
+server/src/common/controllers/booking.controller.ts(4,53): error TS1005: ';' expected.
+server/src/common/controllers/booking.controller.ts(4,76): error TS1005: ';' expected.
+server/src/common/controllers/booking.controller.ts(4,78): error TS1002: Unterminated string literal.
+server/src/common/repositories/activity/activity.repository.interface.ts(1,54): error TS1005: ';' expected.
+server/src/common/repositories/activity/activity.repository.interface.ts(1,59): error TS1003: Identifier expected.
+server/src/common/repositories/activity/activity.repository.interface.ts(1,60): error TS1003: Identifier expected.
+server/src/common/repositories/activity/activity.repository.interface.ts(1,73): error TS1005: ';' expected.
+server/src/common/repositories/activity/activity.repository.interface.ts(1,75): error TS1002: Unterminated string literal.
+server/src/common/repositories/activity/activity.repository.ts(3,48): error TS1005: ';' expected.
+server/src/common/repositories/activity/activity.repository.ts(3,53): error TS1003: Identifier expected.
+server/src/common/repositories/activity/activity.repository.ts(3,54): error TS1003: Identifier expected.
+server/src/common/repositories/activity/activity.repository.ts(3,60): error TS1005: ';' expected.
+server/src/common/repositories/activity/activity.repository.ts(3,62): error TS1002: Unterminated string literal.
+server/src/common/repositories/activity/activity.repository.ts(4,71): error TS1005: ';' expected.
+server/src/common/repositories/activity/activity.repository.ts(4,76): error TS1003: Identifier expected.
+server/src/common/repositories/activity/activity.repository.ts(4,77): error TS1003: Identifier expected.
+server/src/common/repositories/activity/activity.repository.ts(4,90): error TS1005: ';' expected.
+server/src/common/repositories/activity/activity.repository.ts(4,92): error TS1002: Unterminated string literal.
+server/src/common/repositories/base.repository.ts(1,52): error TS1005: ';' expected.
+server/src/common/repositories/base.repository.ts(1,71): error TS1005: ';' expected.
+server/src/common/repositories/base.repository.ts(1,73): error TS1002: Unterminated string literal.
+server/src/common/repositories/base.repository.ts(4,48): error TS1005: ';' expected.
+server/src/common/repositories/base.repository.ts(4,60): error TS1005: ';' expected.
+server/src/common/repositories/base.repository.ts(4,62): error TS1002: Unterminated string literal.
+server/src/common/repositories/booking/booking.repository.interface.ts(1,53): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.interface.ts(1,76): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.interface.ts(1,78): error TS1002: Unterminated string literal.
+server/src/common/repositories/booking/booking.repository.interface.ts(3,72): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.interface.ts(3,105): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.interface.ts(3,107): error TS1002: Unterminated string literal.
+server/src/common/repositories/booking/booking.repository.ts(3,48): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.ts(3,53): error TS1003: Identifier expected.
+server/src/common/repositories/booking/booking.repository.ts(3,54): error TS1003: Identifier expected.
+server/src/common/repositories/booking/booking.repository.ts(3,60): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.ts(3,62): error TS1002: Unterminated string literal.
+server/src/common/repositories/booking/booking.repository.ts(4,68): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.ts(4,73): error TS1003: Identifier expected.
+server/src/common/repositories/booking/booking.repository.ts(4,74): error TS1003: Identifier expected.
+server/src/common/repositories/booking/booking.repository.ts(4,94): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.ts(4,96): error TS1002: Unterminated string literal.
+server/src/common/repositories/booking/booking.repository.ts(7,72): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.ts(7,105): error TS1005: ';' expected.
+server/src/common/repositories/booking/booking.repository.ts(7,107): error TS1002: Unterminated string literal.
+server/src/common/repositories/organization/organization.repository.interface.ts(1,64): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.interface.ts(1,80): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.interface.ts(1,82): error TS1002: Unterminated string literal.
+server/src/common/repositories/organization/organization.repository.interface.ts(2,73): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.interface.ts(2,106): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.interface.ts(2,108): error TS1002: Unterminated string literal.
+server/src/common/repositories/organization/organization.repository.ts(3,48): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.ts(3,53): error TS1003: Identifier expected.
+server/src/common/repositories/organization/organization.repository.ts(3,54): error TS1003: Identifier expected.
+server/src/common/repositories/organization/organization.repository.ts(3,60): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.ts(3,62): error TS1002: Unterminated string literal.
+server/src/common/repositories/organization/organization.repository.ts(4,117): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.ts(4,122): error TS1003: Identifier expected.
+server/src/common/repositories/organization/organization.repository.ts(4,123): error TS1003: Identifier expected.
+server/src/common/repositories/organization/organization.repository.ts(4,136): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.ts(4,138): error TS1002: Unterminated string literal.
+server/src/common/repositories/organization/organization.repository.ts(6,73): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.ts(6,106): error TS1005: ';' expected.
+server/src/common/repositories/organization/organization.repository.ts(6,108): error TS1002: Unterminated string literal.
+server/src/common/repositories/repository.providers.ts(2,64): error TS1005: ';' expected.
+server/src/common/repositories/repository.providers.ts(2,102): error TS1005: ';' expected.
+server/src/common/repositories/repository.providers.ts(2,104): error TS1002: Unterminated string literal.
+server/src/common/repositories/repository.providers.ts(7,90): error TS1005: ';' expected.
+server/src/common/repositories/repository.providers.ts(7,127): error TS1005: ';' expected.
+server/src/common/repositories/repository.providers.ts(7,129): error TS1002: Unterminated string literal.
+server/src/common/repositories/repository.providers.ts(8,72): error TS1005: ';' expected.
+server/src/common/repositories/repository.providers.ts(8,118): error TS1005: ';' expected.
+server/src/common/repositories/repository.providers.ts(8,120): error TS1002: Unterminated string literal.
+server/src/common/repositories/user/user.repository.interface.ts(1,50): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.interface.ts(1,66): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.interface.ts(1,68): error TS1002: Unterminated string literal.
+server/src/common/repositories/user/user.repository.interface.ts(3,68): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.interface.ts(3,101): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.interface.ts(3,103): error TS1002: Unterminated string literal.
+server/src/common/repositories/user/user.repository.ts(3,48): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.ts(3,53): error TS1003: Identifier expected.
+server/src/common/repositories/user/user.repository.ts(3,54): error TS1003: Identifier expected.
+server/src/common/repositories/user/user.repository.ts(3,60): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.ts(3,62): error TS1002: Unterminated string literal.
+server/src/common/repositories/user/user.repository.ts(4,83): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.ts(4,88): error TS1003: Identifier expected.
+server/src/common/repositories/user/user.repository.ts(4,89): error TS1003: Identifier expected.
+server/src/common/repositories/user/user.repository.ts(4,102): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.ts(4,104): error TS1002: Unterminated string literal.
+server/src/common/repositories/user/user.repository.ts(6,68): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.ts(6,101): error TS1005: ';' expected.
+server/src/common/repositories/user/user.repository.ts(6,103): error TS1002: Unterminated string literal.
+server/src/common/services/booking.service.ts(3,53): error TS1005: ';' expected.
+server/src/common/services/booking.service.ts(3,76): error TS1005: ';' expected.
+server/src/common/services/booking.service.ts(3,78): error TS1002: Unterminated string literal.
+server/src/email/services/nodemailer-email.service.ts(7,58): error TS1005: ';' expected.
+server/src/email/services/nodemailer-email.service.ts(7,91): error TS1005: ';' expected.
+server/src/email/services/nodemailer-email.service.ts(7,93): error TS1002: Unterminated string literal.
+server/src/trips/controllers/trip.controller.ts(4,63): error TS1005: ';' expected.
+server/src/trips/controllers/trip.controller.ts(4,103): error TS1005: ';' expected.
+server/src/trips/controllers/trip.controller.ts(4,105): error TS1002: Unterminated string literal.
+server/src/trips/controllers/trip.controller.ts(5,76): error TS1005: ';' expected.
+server/src/trips/controllers/trip.controller.ts(5,113): error TS1005: ';' expected.
+server/src/trips/controllers/trip.controller.ts(5,115): error TS1002: Unterminated string literal.
+server/src/trips/interfaces/trip.repository.interface.ts(1,56): error TS1005: ';' expected.
+server/src/trips/interfaces/trip.repository.interface.ts(1,72): error TS1005: ';' expected.
+server/src/trips/interfaces/trip.repository.interface.ts(1,74): error TS1002: Unterminated string literal.
+server/src/trips/interfaces/trip.repository.interface.ts(3,60): error TS1005: ';' expected.
+server/src/trips/interfaces/trip.repository.interface.ts(3,109): error TS1005: ';' expected.
+server/src/trips/interfaces/trip.repository.interface.ts(3,111): error TS1002: Unterminated string literal.
+server/src/trips/interfaces/trip.service.interface.ts(1,56): error TS1005: ';' expected.
+server/src/trips/interfaces/trip.service.interface.ts(1,72): error TS1005: ';' expected.
+server/src/trips/interfaces/trip.service.interface.ts(1,74): error TS1002: Unterminated string literal.
+server/src/trips/repositories/trip.repository.ts(3,48): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(3,57): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(3,59): error TS1002: Unterminated string literal.
+server/src/trips/repositories/trip.repository.ts(4,86): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(4,102): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(4,104): error TS1002: Unterminated string literal.
+server/src/trips/repositories/trip.repository.ts(5,56): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(5,72): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(5,74): error TS1002: Unterminated string literal.
+server/src/trips/repositories/trip.repository.ts(8,63): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(8,80): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(8,82): error TS1002: Unterminated string literal.
+server/src/trips/repositories/trip.repository.ts(9,64): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(9,103): error TS1005: ';' expected.
+server/src/trips/repositories/trip.repository.ts(9,105): error TS1002: Unterminated string literal.
+server/src/trips/services/trip.service.ts(2,56): error TS1005: ';' expected.
+server/src/trips/services/trip.service.ts(2,72): error TS1005: ';' expected.
+server/src/trips/services/trip.service.ts(2,74): error TS1002: Unterminated string literal.
+server/src/trips/services/trip.service.ts(5,63): error TS1005: ';' expected.
+server/src/trips/services/trip.service.ts(5,80): error TS1005: ';' expected.
+server/src/trips/services/trip.service.ts(5,82): error TS1002: Unterminated string literal.
+server/src/types/express/index.d.ts(1,50): error TS1005: ';' expected.
+server/src/types/express/index.d.ts(1,80): error TS1005: ';' expected.
+server/src/types/express/index.d.ts(1,82): error TS1002: Unterminated string literal.
+server/storage/implementations/MemStorage.ts(12,36): error TS1005: ';' expected.
+server/storage/implementations/MemStorage.ts(12,60): error TS1005: ';' expected.
+server/storage/implementations/MemStorage.ts(12,62): error TS1002: Unterminated string literal.
+server/storage/types/index.ts(6,36): error TS1005: ';' expected.
+server/storage/types/index.ts(6,60): error TS1005: ';' expected.
+server/storage/types/index.ts(6,62): error TS1002: Unterminated string literal.
+server/types/activities.d.ts(1,54): error TS1005: ';' expected.
+server/types/activities.d.ts(1,75): error TS1005: ';' expected.
+server/types/activities.d.ts(1,77): error TS1002: Unterminated string literal.
+server/types/express/index.d.ts(2,56): error TS1005: ';' expected.
+server/types/express/index.d.ts(2,80): error TS1005: ';' expected.
+server/types/express/index.d.ts(2,82): error TS1002: Unterminated string literal.
+server/types/express/index.d.ts(3,50): error TS1005: ';' expected.
+server/types/express/index.d.ts(3,74): error TS1005: ';' expected.
+server/types/express/index.d.ts(3,76): error TS1002: Unterminated string literal.
+server/types/interfaces/express.ts(2,54): error TS1005: ';' expected.
+server/types/interfaces/express.ts(2,77): error TS1005: ';' expected.
+server/types/interfaces/express.ts(2,79): error TS1002: Unterminated string literal.
+server/utils/auth.ts(6,55): error TS1005: ';' expected.
+server/utils/auth.ts(6,76): error TS1005: ';' expected.
+server/utils/auth.ts(6,80): error TS1002: Unterminated string literal.
+server/utils/response.ts(2,79): error TS1005: ';' expected.
+server/utils/response.ts(2,99): error TS1005: ';' expected.
+server/utils/response.ts(2,101): error TS1002: Unterminated string literal.
