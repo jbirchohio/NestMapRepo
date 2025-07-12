@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db.js';
-import { securityAuditLog } from '@@shared/schema';
+import { securityAuditLog } from "@shared/schema";
 
 interface AuditLogEntry {
   userId: number;

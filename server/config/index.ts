@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import path from 'path.js';
+import path from 'path';
 import { z } from 'zod';
 
 // Load environment variables from .env file

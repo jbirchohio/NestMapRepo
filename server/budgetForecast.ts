@@ -1,5 +1,5 @@
 import { db } from './db.js';
-import { trips } from '../shared/src/schema.js';
+import { trips } from "./db/schema.js";
 import { sql, and, eq } from 'drizzle-orm';
 
 export async function forecastBudget(

@@ -35,7 +35,7 @@ router.get("/personal", async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    const organizationId = req.user.organization_id || undefined;
+    const organizationId = req.user.organizationId || undefined;
     const analyticsData = await getSimpleAnalytics(organizationId);
     res.json(analyticsData);
   } catch (error) {
@@ -86,7 +86,7 @@ router.get("/export/csv", requireOrgPermission('export_data'), async (req: Reque
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    const organizationId = req.user.organization_id;
+    const organizationId = req.user.organizationId;
     const analyticsData = await getSimpleAnalytics(organizationId);
     
     // Convert to CSV format
