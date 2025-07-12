@@ -11,6 +11,11 @@ interface AuthenticatedRequest extends Request {
     role: string;
     organizationId?: string | null;
   };
+  // Standard Express Request properties
+  method: string;
+  originalUrl: string;
+  params: any;
+  body: any;
 }
 
 /**
@@ -43,12 +48,7 @@ export async function auditLogMiddleware(
       // Only log if organizationId is not null
       if (organizationId) {
         await db.insert(auditLogs).values({
-          action,
-          entityType: entityType || null,
-          entityId: entityId || null,
-          userId,
-          organizationId,
-          metadata: { body, statusCode: res.statusCode }
+          action
         });
       }
     } catch (err) {

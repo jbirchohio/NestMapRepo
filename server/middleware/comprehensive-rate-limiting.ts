@@ -14,6 +14,27 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 
+// Extend Request interface for this middleware
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    organizationId?: string | null;
+    organizationTier?: string;
+  };
+  // Standard Express Request properties
+  ip?: string;
+  path?: string;
+  headers?: any;
+  socket?: {
+    remoteAddress?: string;
+  };
+  connection?: {
+    remoteAddress?: string;
+  };
+}
+
 interface RateLimitConfig {
   requests: number;
   windowMs: number;
@@ -297,7 +318,7 @@ const comprehensiveRateLimit = new ComprehensiveRateLimit();
 /**
  * General API rate limiting middleware
  */
-export const apiRateLimit: express.RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export const apiRateLimit: express.RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown.js';
   const userId = req.user?.id || 'anonymous.js';
   const key = `global:${ip}:${userId}`;
@@ -324,7 +345,7 @@ export const apiRateLimit: express.RequestHandler = (req: Request, res: Response
 /**
  * Authentication-specific rate limiting
  */
-export const authRateLimit: express.RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export const authRateLimit: express.RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const ip = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown.js';
   const key = `auth:${ip}`;
   
@@ -359,22 +380,22 @@ export const authRateLimit: express.RequestHandler = (req: Request, res: Respons
 /**
  * Organization-tier based rate limiting
  */
-export const organizationRateLimit: express.RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export const organizationRateLimit: express.RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   if (!req.user?.organizationId) {
     // No organization context, apply free tier limits
-    return tieredRateLimit('free')(req, res, next);
+    return tieredRateLimit('free')(req as any, res, next);
   }
 
   // Determine organization tier (would typically come from database)
   const orgTier = req.user?.organizationTier || 'free';
-  return tieredRateLimit(orgTier)(req, res, next);
+  return tieredRateLimit(orgTier)(req as any, res, next);
 };
 
 /**
  * Tiered rate limiting factory
  */
 export function tieredRateLimit(tier: string): express.RequestHandler {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const ip = req.ip || req.connection?.remoteAddress || 'unknown.js';
     const orgId = req.user?.organizationId || 'none.js';
     const key = `tier:${tier}:${orgId}:${ip}`;
@@ -406,7 +427,7 @@ export function tieredRateLimit(tier: string): express.RequestHandler {
  * Endpoint-specific rate limiting
  */
 export function endpointRateLimit(endpointType: string): express.RequestHandler {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const ip = req.ip || req.connection?.remoteAddress || 'unknown.js';
     const userId = req.user?.id || 'anonymous.js';
     const key = `endpoint:${endpointType}:${ip}:${userId}`;
