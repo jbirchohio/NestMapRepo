@@ -1,7 +1,7 @@
 import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
 import type { ParamsDictionary, Query } from 'express-serve-static-core';
 import type { AuthUser } from '../types/auth-user.js';
-import type { CustomRequest } from '../../shared/src/schema.js'/types/custom-express';
+import type { CustomRequest } from '../../types/custom-express.js';
 import { ConfigService } from '@nestjs/config';
 import { AuthController } from './controllers/auth.controller.js';
 import { JwtAuthService } from './services/jwtAuthService.js';
@@ -9,9 +9,9 @@ import { UserRepositoryImpl } from './repositories/user.repository.js';
 import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js';
 import { NodemailerEmailService } from '../email/services/nodemailer-email.service.js';
 import { ErrorService } from '../common/services/error.service.js';
-import { validateAndSanitizeRequest } from '../../shared/src/schema.js'/middleware/inputValidation.js';
+import { validateAndSanitizeRequest } from '../../shared/src/schema.js';
 import { loginSchema, requestPasswordResetSchema, resetPasswordSchema, refreshTokenSchema, logoutSchema } from './dtos/auth.dto.js';
-import { authenticate } from '../../shared/src/schema.js'/middleware/secureAuth.js';
+import { authenticate } from '../../shared/src/schema.js';
 
 // Helper type to make certain properties required
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };

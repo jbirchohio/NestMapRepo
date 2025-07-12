@@ -7,6 +7,7 @@ interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
+    role: string;
     organizationId: string;
   };
 }
@@ -16,8 +17,8 @@ interface AuthenticatedRequest extends Request {
  */
 interface CalendarCSRFToken {
   token: string;
-  userId: number;
-  organizationId: number;
+  userId: string;
+  organizationId: string;
   createdAt: Date;
   expiresAt: Date;
 }
@@ -27,7 +28,7 @@ const calendarCSRFTokens = new Map<string, CalendarCSRFToken>();
 /**
  * Generate CSRF token for calendar operations
  */
-export function generateCalendarCSRFToken(userId: number, organizationId: number): string {
+export function generateCalendarCSRFToken(userId: string, organizationId: string): string {
   const token = crypto.randomBytes(32).toString('hex');
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes
@@ -51,8 +52,8 @@ export function generateCalendarCSRFToken(userId: number, organizationId: number
  */
 export function validateCalendarCSRFToken(
   token: string, 
-  userId: number, 
-  organizationId: number
+  userId: string, 
+  organizationId: string
 ): boolean {
   const tokenData = calendarCSRFTokens.get(token);
   
@@ -101,7 +102,7 @@ export function validateCalendarCSRF(req: AuthenticatedRequest, res: Response, n
     return;
   }
 
-  if (!validateCalendarCSRFToken(token, user.id, user.organizationId || 0)) {
+  if (!validateCalendarCSRFToken(token, user.id, user.organizationId || '')) {
     res.status(403).json({ error: 'Invalid or expired CSRF token' });
     return;
   }
@@ -112,6 +113,8 @@ export function validateCalendarCSRF(req: AuthenticatedRequest, res: Response, n
 // Google Calendar API integration
 export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], accessToken: string) {
   const events = activities.map(activity => {
+    if (!activity.date) return null;
+    
     const activityDate = new Date(activity.date);
     const [hours, minutes] = (activity.time || '12:00').split(':').map(Number);
     
@@ -133,7 +136,7 @@ export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], a
         timeZone: 'America/New_York',
       },
     };
-  });
+  }).filter(event => event !== null);
 
   const results = [];
   
@@ -167,6 +170,8 @@ export async function syncToGoogleCalendar(trip: Trip, activities: Activity[], a
 // Outlook Calendar API integration
 export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], accessToken: string) {
   const events = activities.map(activity => {
+    if (!activity.date) return null;
+    
     const activityDate = new Date(activity.date);
     const [hours, minutes] = (activity.time || '12:00').split(':').map(Number);
     
@@ -193,7 +198,7 @@ export async function syncToOutlookCalendar(trip: Trip, activities: Activity[], 
         timeZone: 'America/New_York',
       },
     };
-  });
+  }).filter(event => event !== null);
 
   const results = [];
   

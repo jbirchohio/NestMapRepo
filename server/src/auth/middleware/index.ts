@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../jwt.js';
 import { TokenType, TokenVerificationResult, AuthUser } from '../types.js';
-import { logger } from '../../shared/src/schema.js'/../utils/logger.js';
-import { redis } from '../../shared/src/schema.js'/../db/redis.js';
+import { logger } from '../../shared/src/schema.js';
+import { redis } from '../../shared/src/schema.js';
 
 // Extend Express Request type
 declare global {

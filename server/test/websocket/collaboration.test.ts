@@ -3,7 +3,7 @@ import { WebSocket } from 'ws.js';
 import { AddressInfo } from 'net.js';
 import express from 'express';
 import jwt from 'jsonwebtoken.js';
-import { CollaborationWebSocketServer } from '../../shared/src/schema.js'/websocket.js';
+import { CollaborationWebSocketServer } from '../../shared/src/schema.js';
 
 describe('CollaborationWebSocketServer', () => {
   let server: Server;

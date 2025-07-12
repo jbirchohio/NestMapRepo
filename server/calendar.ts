@@ -5,8 +5,10 @@ import { Activity, Trip } from "../shared/src/schema.js";
 export function generateICalContent(trip: Trip, activities: Activity[]): string {
   const events = activities.map(activity => {
     // Parse the activity date and time properly
+    if (!activity.date) return null;
+    
     const activityDate = new Date(activity.date);
-    const [hours, minutes] = activity.time.split(':').map(Number);
+    const [hours, minutes] = activity.time ? activity.time.split(':').map(Number) : [9, 0]; // Default to 9:00 AM
     
     const startDate = new Date(activityDate);
     startDate.setHours(hours, minutes, 0, 0);
@@ -27,7 +29,7 @@ SUMMARY:${activity.title}
 DESCRIPTION:${activity.notes || 'Activity from NestMap trip: ' + trip.title}
 LOCATION:${activity.locationName || ''}
 END:VEVENT`;
-  }).join('\n');
+  }).filter(event => event !== null).join('\n');
 
   return `BEGIN:VCALENDAR
 VERSION:2.0
@@ -43,8 +45,10 @@ END:VCALENDAR`;
 // Generate Google Calendar URLs for each activity
 export function generateGoogleCalendarUrls(trip: Trip, activities: Activity[]): string[] {
   return activities.map(activity => {
+    if (!activity.date) return '';
+    
     const activityDate = new Date(activity.date);
-    const [hours, minutes] = activity.time.split(':').map(Number);
+    const [hours, minutes] = activity.time ? activity.time.split(':').map(Number) : [9, 0]; // Default to 9:00 AM
     
     const startDate = new Date(activityDate);
     startDate.setHours(hours, minutes, 0, 0);
@@ -62,8 +66,10 @@ export function generateGoogleCalendarUrls(trip: Trip, activities: Activity[]): 
 // Generate Outlook Calendar URLs for each activity
 export function generateOutlookCalendarUrls(trip: Trip, activities: Activity[]): string[] {
   return activities.map(activity => {
+    if (!activity.date) return '';
+    
     const activityDate = new Date(activity.date);
-    const [hours, minutes] = activity.time.split(':').map(Number);
+    const [hours, minutes] = activity.time ? activity.time.split(':').map(Number) : [9, 0]; // Default to 9:00 AM
     
     const startDate = new Date(activityDate);
     startDate.setHours(hours, minutes, 0, 0);

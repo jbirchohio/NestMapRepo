@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { db } from '../../shared/src/schema.js'/../db.js';
+import { db } from '../../db.js';
 import { 
   superadminFeatureFlags, 
   organizationFeatureFlags,
   organizations
-} from '../../shared/src/schema.js'/../db/schema.js';
+} from '../../shared/src/schema.js';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { logSuperadminAction } from '../audit-logs/audit-service.js';
 

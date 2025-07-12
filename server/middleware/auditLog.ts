@@ -1,18 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db.js';
 import { auditLogs } from '../db/auditLog.js';
-import { AuthUser } from '../src/types/auth-user.js';
-
-type AuditRequest = Request & {
-  user?: AuthUser;
-};
 
 /**
  * Express middleware to log user actions for audit trail.
  * Logs action, resource, user, organization, and metadata to audit_logs table.
  */
 export async function auditLogMiddleware(
-  req: AuditRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): Promise<Response | void> {
