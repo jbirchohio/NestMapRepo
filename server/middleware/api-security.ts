@@ -16,7 +16,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto.js';
+import crypto from 'crypto';
 
 type SecureRequest = Request & {
   apiVersion?: string;

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Activity, Trip } from "../../shared/src/schema.js";
+import { Activity, Trip } from "@shared/schema";
 
 // Generate iCal format content for calendar export
 export function generateICalContent(trip: Trip, activities: Activity[]): string {

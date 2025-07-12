@@ -1,8 +1,8 @@
 import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
-import type { ParamsDictionary, Query } from 'express-serve-static-core.js';
+import type { ParamsDictionary, Query } from 'express-serve-static-core';
 import type { AuthUser } from '../types/auth-user.js';
 import type { CustomRequest } from '../../types/custom-express';
-import { ConfigService } from '@nestjs/config.js';
+import { ConfigService } from '@nestjs/config';
 import { AuthController } from './controllers/auth.controller.js';
 import { JwtAuthService } from './services/jwtAuthService.js';
 import { UserRepositoryImpl } from './repositories/user.repository.js';
