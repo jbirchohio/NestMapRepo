@@ -1,5 +1,5 @@
 import { db } from './db.js';
-import { trips } from '../@shared/schema';
+import { trips } from "./db/schema.js";
 import { sql, and, eq } from 'drizzle-orm';
 
 export async function forecastBudget(
@@ -24,7 +24,7 @@ export async function forecastBudget(
 
   const dailyAverage =
     dailyCosts.length > 0
-      ? Math.round(dailyCosts.reduce((a, b) => a + b, 0) / dailyCosts.length)
+      ? Math.round(dailyCosts.reduce((a: number, b: number) => a + b, 0) / dailyCosts.length)
       : 15000; // default $150/day in cents
 
   const durationDays = Math.max(

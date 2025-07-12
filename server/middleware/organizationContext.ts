@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { eq, SQL, Column } from 'drizzle-orm';
-import { AuthUser, UserRole } from '../src/types/auth-user';
+import { AuthUser, UserRole } from '../src/types/auth-user.js';
 
 interface Headers {
   [key: string]: string | string[] | undefined;

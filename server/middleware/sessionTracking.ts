@@ -19,7 +19,7 @@ export async function trackUserActivity(req: Request, res: Response, next: NextF
     // Update in-memory session tracking
     activeSessions.set(sessionKey, {
       userId: req.user.id,
-      organizationId: req.user.organization_id || 0,
+      organizationId: req.user.organizationId || '0',
       lastActivity: new Date(),
       ipAddress: req.ip || 'unknown',
       userAgent: req.get('User-Agent') || 'unknown'

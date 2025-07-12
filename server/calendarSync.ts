@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Activity, Trip } from "@shared/schema";
+import { Activity, Trip } from "../../shared/src/schema.js";
 import crypto from "crypto";
 
 /**

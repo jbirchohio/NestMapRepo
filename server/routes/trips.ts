@@ -77,7 +77,7 @@ router.get("/:id/todos", validateAndSanitizeRequest({ params: idParamSchema }), 
     }
 
     // Verify organization access
-    if (req.user.role !== 'super_admin' && trip.organization_id !== orgId) {
+    if (req.user.role !== 'super_admin' && trip.organizationId !== orgId) {
       return res.status(403).json({ message: "Access denied: Cannot access this trip" });
     }
 

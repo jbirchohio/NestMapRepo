@@ -36,10 +36,10 @@ export function organizationContextMiddleware(req: Request, res: Response, next:
 
   // For authenticated routes, establish organization context
   if (req.user) {
-    const userOrgId = req.user.organization_id;
+    const userOrgId = req.user.organizationId;
     
     // Set organization context on request
-    req.organization_id = userOrgId;
+    req.organizationId = userOrgId;
     req.organizationContext = {
       id: userOrgId || null,
       
@@ -150,7 +150,7 @@ export async function validateTripAccess(req: Request, res: Response, next: Next
     
     // Check organization access
     if (req.organizationContext) {
-      req.organizationContext.enforceOrganizationAccess(trip.organization_id);
+      req.organizationContext.enforceOrganizationAccess(trip.organizationId);
     }
     
     next();

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db.js';
-import { securityAuditLog } from '@@shared/schema';
+import { securityAuditLog } from "@shared/schema";
 
 interface AuditLogEntry {
   userId: number;
@@ -58,7 +58,7 @@ export class SecurityAuditLogger {
             action,
             resource,
             resourceId: req.params.id || req.params.orgId || req.params.userId,
-            organizationId: req.user.organization_id,
+            organizationId: req.user.organizationId,
             ipAddress: req.ip || req.connection.remoteAddress || 'unknown',
             userAgent: req.get('User-Agent') || 'unknown',
             success,
@@ -197,7 +197,7 @@ export function auditAdminAccess(req: Request, res: Response, next: NextFunction
       userId: req.user.id,
       action: 'ADMIN_ACCESS',
       resource: 'admin_dashboard',
-      organizationId: req.user.organization_id,
+      organizationId: req.user.organizationId,
       ipAddress: req.ip || 'unknown',
       userAgent: req.get('User-Agent') || 'unknown',
       success: true,

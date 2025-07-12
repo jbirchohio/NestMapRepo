@@ -15,7 +15,7 @@ export function requireOrgPermission(permission: string) {
       const permissions = await getUserPermissionsByRole(
         req.user.id,
         req.user.role,
-        req.user.organization_id || req.user.organizationId
+        req.user.organizationId || req.user.organization_id
       );
       if (permissions[permission] === true) {
         return next();
