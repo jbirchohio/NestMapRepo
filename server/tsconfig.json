@@ -25,6 +25,7 @@
     "types": ["node", "express", "express-serve-static-core", "jest"],
     "typeRoots": [
       "./node_modules/@types",
+      "./@types",
       "./src/@types",
       "./types",
       "../node_modules/@types"

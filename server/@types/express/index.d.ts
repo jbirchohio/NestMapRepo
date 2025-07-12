@@ -1,4 +1,4 @@
-import 'express-serve-static-core.js';
+import 'express-serve-static-core';
 
 declare global {
   namespace Express {
