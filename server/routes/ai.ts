@@ -4,7 +4,7 @@ import { injectOrganizationContext, validateOrganizationAccess } from '../middle
 import { z } from "zod";
 import OpenAI from "openai";
 import { db } from "../db.js";
-import { trips, activities } from "../../shared/schema";
+import { trips, activities } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { findLocation } from "../aiLocations.js";
 import { fetchEarthquakeAlerts } from "../disasterMonitor.js";

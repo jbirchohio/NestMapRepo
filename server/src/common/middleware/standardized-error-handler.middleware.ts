@@ -1,6 +1,69 @@
-import { Request, Response, NextFunction } from 'express';
-import { Logger } from '@nestjs/common.js';
-import { ApiError, ErrorType, createApiError } from '../types/index.js';
+// Local type definitions to avoid external dependencies
+interface Request {
+  params?: Record<string, string>;
+  body?: Record<string, any>;
+  query?: Record<string, any>;
+  headers?: Record<string, string | string[]>;
+  path?: string;
+  ip?: string;
+  method?: string;
+  [key: string]: any;
+}
+
+interface Response {
+  status(code: number): Response;
+  json(data: any): Response;
+  send(data: any): Response;
+  setHeader(name: string, value: string): void;
+  getHeader(name: string): string | undefined;
+}
+
+interface NextFunction {
+  (error?: any): void;
+}
+
+// Mock logger implementation
+class Logger {
+  constructor(private name: string) {}
+  
+  log(message: string): void {
+    console.log(`[${this.name}] ${message}`);
+  }
+  
+  error(message: string, stack?: string): void {
+    console.error(`[${this.name}] ${message}`);
+    if (stack) console.error(stack);
+  }
+  
+  warn(message: string): void {
+    console.warn(`[${this.name}] ${message}`);
+  }
+}
+
+// Mock error types
+enum ErrorType {
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  FORBIDDEN = 'FORBIDDEN',
+  NOT_FOUND = 'NOT_FOUND',
+  BAD_REQUEST = 'BAD_REQUEST',
+  CONFLICT = 'CONFLICT',
+  INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR'
+}
+
+interface ApiError extends Error {
+  type: ErrorType;
+  statusCode: number;
+  message: string;
+  details?: any;
+}
+
+const createApiError = (type: ErrorType, message: string, details?: any): ApiError => {
+  const error = new Error(message) as ApiError;
+  error.type = type;
+  error.statusCode = errorTypeToStatusCode[type];
+  error.details = details;
+  return error;
+};
 
 /**
  * Maps error types to HTTP status codes

@@ -12,6 +12,9 @@ interface AuthenticatedRequest extends Request {
   path?: string;
   ip?: string;
   headers?: Headers;
+  params?: Record<string, string>;
+  body?: Record<string, any>;
+  query?: Record<string, any>;
   isWhiteLabelDomain?: boolean;
   domainOrganizationId?: string;
   organizationId?: string;

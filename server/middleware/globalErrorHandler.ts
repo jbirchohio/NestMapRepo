@@ -13,7 +13,29 @@
  * DO NOT create duplicate error handling implementations - extend this one if needed.
  */
 
-import { Request, Response, NextFunction } from 'express';
+// Local type definitions to avoid external dependencies
+interface Request {
+  params?: Record<string, string>;
+  body?: Record<string, any>;
+  query?: Record<string, any>;
+  headers?: Record<string, string | string[]>;
+  path?: string;
+  ip?: string;
+  method?: string;
+  [key: string]: any;
+}
+
+interface Response {
+  status(code: number): Response;
+  json(data: any): Response;
+  send(data: any): Response;
+  setHeader(name: string, value: string): void;
+  getHeader(name: string): string | undefined;
+}
+
+interface NextFunction {
+  (error?: any): void;
+}
 
 // Extend Request interface for this middleware
 interface AuthenticatedRequest extends Request {

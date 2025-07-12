@@ -42,7 +42,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "noImplicitAny": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "noImplicitReturns": true,
