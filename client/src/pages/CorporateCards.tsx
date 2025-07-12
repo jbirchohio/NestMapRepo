@@ -7,28 +7,23 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { FullScreenModal } from "@/components/ui/full-screen-modal";
-import { RoleGate, useRolePermissions } from "@/hooks/useRolePermissions";
+import { RoleGate } from "@/hooks/useRolePermissions";
 import { motion } from "framer-motion";
-import { CardsList } from "@/components/cards/CardsList";
 import CarbonExpenseTracker from "@/components/CarbonExpenseTracker";
 import { 
   CreditCard, 
   Plus, 
   Settings, 
-  Eye, 
-  EyeOff, 
   TrendingUp, 
   DollarSign, 
   Users, 
-  Calendar,
   Receipt,
-  AlertTriangle,
   CheckCircle,
   XCircle,
   Sparkles,
@@ -103,7 +98,7 @@ export default function CorporateCards() {
   const cards = cardsResponse?.cards || [];
 
   // Fetch expenses
-  const { data: expenses = [], isLoading: expensesLoading } = useQuery({
+  const { data: expenses = [] } = useQuery({
     queryKey: ["/api/expenses"],
     queryFn: () => apiRequest("GET", "/api/expenses").then(res => res.json()),
   });
@@ -184,7 +179,7 @@ export default function CorporateCards() {
       }
       return response.json();
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       toast({
         title: "Card Updated",
         description: "Card details have been updated successfully.",
@@ -218,7 +213,7 @@ export default function CorporateCards() {
       }
       return response.json();
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: async (_data, variables) => {
       toast({
         title: "Funds Added",
         description: `$${variables.amount} has been added to the card successfully.`,
@@ -271,19 +266,6 @@ export default function CorporateCards() {
         description: error.message || "Failed to delete card",
         variant: "destructive",
       });
-    },
-  });
-
-  // Approve expense mutation
-  const approveExpenseMutation = useMutation({
-    mutationFn: (approvalData: any) =>
-      apiRequest("POST", "/api/expenses/approve", approvalData).then(res => res.json()),
-    onSuccess: () => {
-      toast({
-        title: "Expense Processed",
-        description: "Expense approval status updated successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
     },
   });
 

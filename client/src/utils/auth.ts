@@ -1,5 +1,3 @@
-import { User } from '@/types/jwt';
-
 // Account lockout state
 interface AccountLockout {
   attempts: number;
@@ -12,7 +10,6 @@ const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 
 // Local storage keys
 const LOCKOUT_KEY = 'account_lockout';
-const LAST_LOGIN_KEY = 'last_login';
 
 // Get stored lockout state
 const getLockoutState = (): AccountLockout | null => {
@@ -31,7 +28,7 @@ const clearLockoutState = (): void => {
 };
 
 // Check if account is locked
-export const isAccountLocked = (email: string): boolean => {
+export const isAccountLocked = (_email: string): boolean => {
   const lockout = getLockoutState();
   if (!lockout) return false;
   
@@ -40,7 +37,7 @@ export const isAccountLocked = (email: string): boolean => {
 };
 
 // Set account lockout
-export const setAccountLockout = (email: string): void => {
+export const setAccountLockout = (_email: string): void => {
   const now = Date.now();
   const lockout: AccountLockout = {
     attempts: MAX_LOGIN_ATTEMPTS,
@@ -50,7 +47,7 @@ export const setAccountLockout = (email: string): void => {
 };
 
 // Increment login attempts
-export const incrementLoginAttempts = (email: string): void => {
+export const incrementLoginAttempts = (_email: string): void => {
   const lockout = getLockoutState() || { attempts: 0, lockedUntil: 0 };
   lockout.attempts += 1;
   
@@ -62,18 +59,18 @@ export const incrementLoginAttempts = (email: string): void => {
 };
 
 // Reset login attempts
-export const resetLoginAttempts = (email: string): void => {
+export const resetLoginAttempts = (_email: string): void => {
   clearLockoutState();
 };
 
 // Get login attempts
-export const getLoginAttempts = (email: string): number => {
+export const getLoginAttempts = (_email: string): number => {
   const lockout = getLockoutState();
   return lockout ? lockout.attempts : 0;
 };
 
 // Get lockout time remaining
-export const getLockoutTimeRemaining = (email: string): number => {
+export const getLockoutTimeRemaining = (_email: string): number => {
   const lockout = getLockoutState();
   if (!lockout) return 0;
   
