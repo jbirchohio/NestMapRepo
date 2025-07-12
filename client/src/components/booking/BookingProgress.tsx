@@ -1,4 +1,4 @@
-import { CheckCircle, Circle, Loader2 } from "lucide-react";
+import { CheckCircle, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Step = {
@@ -35,7 +35,7 @@ export function BookingProgress({
         {steps.map((step, index) => {
           const isCompleted = index < currentIndex;
           const isActive = index === currentIndex;
-          const isUpcoming = index > currentIndex;
+          // const isUpcoming = index > currentIndex; // Not used but part of step logic
 
           return (
             <div

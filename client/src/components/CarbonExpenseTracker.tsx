@@ -66,6 +66,8 @@ interface OffsetOption {
   certifications: string[];
 }
 
+const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
+
 export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerProps) {
   const [selectedTab, setSelectedTab] = useState('carbon');
   const [newExpense, setNewExpense] = useState({
@@ -74,7 +76,7 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
     description: '',
     vendor: ''
   });
-
+  
   // Fetch carbon footprint data
   const { data: carbonData, isLoading: carbonLoading } = useQuery<CarbonData>({
     queryKey: ['/api/carbon/footprint', tripId],
@@ -109,8 +111,6 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
       queryClient.invalidateQueries({ queryKey: ['/api/carbon/footprint', tripId] });
     }
   });
-
-  const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
 
   if (carbonLoading || expenseLoading) {
     return (

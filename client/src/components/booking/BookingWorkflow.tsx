@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/auth/AuthContext';
@@ -30,8 +29,8 @@ export const BookingWorkflow = () => {
     returnDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
     passengers: 1,
     primaryTraveler: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
+      firstName: (user as any)?.firstName || '',
+      lastName: (user as any)?.lastName || '',
       email: user?.email || '',
       phone: '',
       dateOfBirth: '',
@@ -97,7 +96,7 @@ export const BookingWorkflow = () => {
       
       toast({
         title: 'Booking Confirmed!',
-        description: 'Your trip has been successfully booked.',
+        description: 'Your trip has been successfully booked.' as React.ReactNode,
       });
       
       // Navigate to booking confirmation page
@@ -106,7 +105,7 @@ export const BookingWorkflow = () => {
       console.error('Booking failed:', error);
       toast({
         title: 'Booking Failed',
-        description: 'There was an error processing your booking. Please try again.',
+        description: 'There was an error processing your booking. Please try again.' as React.ReactNode,
         variant: 'destructive',
       });
     }

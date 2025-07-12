@@ -33,6 +33,13 @@ interface FlightResultsProps {
   isLoading: boolean;
   onBack: () => void;
   onContinue: () => void;
+  currentTravelerIndex?: number;
+  totalTravelers?: number;
+  travelerBookings?: Array<{
+    traveler: string;
+    departureFlight?: Flight | null;
+    returnFlight?: Flight | null;
+  }>;
 }
 
 export function FlightResults({
@@ -44,7 +51,12 @@ export function FlightResults({
   isLoading,
   onBack,
   onContinue,
+  currentTravelerIndex,
+  totalTravelers,
+  travelerBookings,
 }: FlightResultsProps) {
+  // Unused parameters for now but part of the interface
+  // selectedReturnFlight, currentTravelerIndex, totalTravelers, travelerBookings
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
