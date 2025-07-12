@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { FileText, DollarSign, User, Building, Mail, Phone, Globe, Download, Calculator } from "lucide-react";
+import { FileText, DollarSign, User, Building, Mail, Download, Calculator } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -46,7 +46,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
   });
 
   // Fetch proposals for this trip
-  const { data: proposals, refetch: refetchProposals } = useQuery({
+  const { data: proposals } = useQuery({
     queryKey: ['/api/proposals', { tripId }],
     queryFn: async () => {
       const response = await apiRequest("GET", `/api/proposals?tripId=${tripId}`);
@@ -112,40 +112,6 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
       setSelectedProposal(proposals[0]); // Use most recent or allow selection
     }
   }, [proposals]);
-
-  // Generate actual PDF proposal
-  const generateProposal = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest("POST", `/api/trips/${tripId}/generate-proposal`, data);
-      if (!response.ok) {
-        throw new Error("Failed to generate proposal");
-      }
-      return response.blob();
-    },
-    onSuccess: (blob) => {
-      // Download the PDF
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Travel_Proposal_${formData.clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${tripTitle.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Proposal Generated!",
-        description: "Your professional travel proposal has been downloaded successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate proposal. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -216,7 +182,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
         <div className="flex flex-wrap items-center gap-4 justify-between p-3 bg-gray-50 rounded-lg border">
           <div className="flex items-center gap-2">
             <Badge variant="outline">Status: {selectedProposal.status}</Badge>
-            {selectedProposal.status === 'signed' && <Badge variant="success">Ready to Invoice</Badge>}
+            {selectedProposal.status === 'signed' && <Badge variant="secondary">Ready to Invoice</Badge>}
           </div>
           <div className="flex items-center gap-2">
             {selectedProposal.status !== 'signed' && (
@@ -238,7 +204,7 @@ export default function ProposalGenerator({ tripId, tripTitle }: ProposalGenerat
               <Button size="sm" onClick={() => handleStatusChange('signed')}>Mark as Signed</Button>
             )}
             {selectedProposal.status === 'signed' && (
-              <Button size="sm" variant="success" onClick={handleConvertToInvoice}>Convert to Invoice</Button>
+              <Button size="sm" variant="default" onClick={handleConvertToInvoice}>Convert to Invoice</Button>
             )}
           </div>
         </div>

@@ -22,7 +22,6 @@ interface SignatureData {
 }
 
 export default function SignatureField({ 
-  proposalId, 
   onSigned, 
   readonly = false,
   existingSignature 

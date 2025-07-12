@@ -54,7 +54,8 @@ export default function ShareTripModal({
       setShareLink(`${baseUrl}/share/${shareCode}?permission=${permission}`);
       
       // Set collaborators
-      setCollaborators(trip.collaborators as string[] || []);
+      const collabList = trip.collaborators ? Object.keys(trip.collaborators) : [];
+      setCollaborators(collabList);
     }
   }, [trip]);
 
@@ -77,10 +78,10 @@ export default function ShareTripModal({
       const updates = {
         shareCode: shareCode,
         sharingEnabled: newValue,
-        sharePermission: sharePermission
+        sharePermission: (sharePermission === 'read-only' ? 'view' : 'edit') as 'view' | 'edit' | 'admin'
       };
       try {
-        await onSave(trip.id, updates);
+        await onSave(parseInt(trip.id), updates);
         const baseUrl = window.location.origin;
         setShareLink(`${baseUrl}/share/${shareCode}?permission=${sharePermission}`);
         toast({
@@ -160,8 +161,8 @@ export default function ShareTripModal({
       // Ensure we have a share code - generate one if missing
       const shareCode = trip.shareCode || generateShareCode();
       
-      await onSave(trip.id, {
-        sharePermission: newPermission,
+      await onSave(parseInt(trip.id), {
+        sharePermission: newPermission === 'read-only' ? 'view' : 'edit',
         shareCode: shareCode,
         sharingEnabled: true
       });
@@ -204,7 +205,9 @@ export default function ShareTripModal({
       
       if (trip) {
         // Save to database
-        onSave(trip.id, { collaborators: newCollaborators });
+        onSave(parseInt(trip.id), { 
+          collaborators: Object.fromEntries(newCollaborators.map(email => [email, 'viewer'])) 
+        });
       }
     } else {
       toast({
@@ -221,7 +224,9 @@ export default function ShareTripModal({
     
     if (trip) {
       // Save to database
-      onSave(trip.id, { collaborators: newCollaborators });
+      onSave(parseInt(trip.id), { 
+        collaborators: Object.fromEntries(newCollaborators.map(email => [email, 'viewer'])) 
+      });
     }
   };
 
@@ -233,11 +238,11 @@ export default function ShareTripModal({
       // Only generate a share code if sharing is enabled and no code exists
       const shareCode = sharingEnabled && !trip.shareCode ? generateShareCode() : trip.shareCode;
       
-      await onSave(trip.id, {
+      await onSave(parseInt(trip.id), {
         isPublic,
         sharingEnabled,
-        shareCode: sharingEnabled ? shareCode : null,
-        collaborators
+        shareCode: sharingEnabled ? shareCode : undefined,
+        collaborators: Object.fromEntries(collaborators.map(email => [email, 'viewer']))
       });
       
       toast({

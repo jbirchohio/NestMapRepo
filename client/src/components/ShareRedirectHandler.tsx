@@ -1,18 +1,17 @@
-import { useParams, useLocation } from "wouter";
+import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import SharedTrip from "@/pages/SharedTrip";
 
 export default function ShareRedirectHandler() {
   const { shareCode } = useParams<{ shareCode: string }>();
-  const [location] = useLocation();
 
   // Extract permission from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const permission = urlParams.get('permission');
 
   // Fetch shared trip data
-  const { data: sharedTrip, isLoading } = useQuery({
+  const { data: sharedTrip } = useQuery({
     queryKey: [`/api/share/${shareCode}`],
     enabled: !!shareCode,
   });
