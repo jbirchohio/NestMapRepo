@@ -22,7 +22,7 @@
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/src/*"]
     },
-    "types": ["vite/client", "node"],
+    "types": [],
     "typeRoots": [
       "./node_modules/@types",
       "../node_modules/@types"
