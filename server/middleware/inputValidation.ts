@@ -20,6 +20,23 @@ import { Multer } from 'multer';
 import { z } from 'zod';
 import DOMPurify from 'isomorphic-dompurify';
 
+// Extend Request interface for this middleware
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    organizationId?: string | null;
+  };
+  // Standard Express Request properties
+  body?: any;
+  query?: any;
+  params?: any;
+  ip?: string;
+  file?: any;
+  get?: (header: string) => string | undefined;
+}
+
 // Common validation patterns
 const PATTERNS = {
   EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -193,7 +210,7 @@ export const commentValidationSchema = z.object({
 
 // Middleware for request body validation and sanitization
 export function validateAndSanitizeBody(schema: z.ZodSchema) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       // Sanitize the request body first
       if (req.body && typeof req.body === 'object') {
@@ -259,7 +276,7 @@ function sanitizeObject(obj: any): any {
 
 // Middleware for query parameter validation
 export function validateQueryParams(allowedParams: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const sanitizedQuery: any = {};
       
@@ -298,7 +315,7 @@ export function contentCreationRateLimit() {
   const LIMIT = 10; // 10 content creations per hour
   const WINDOW = 60 * 60 * 1000; // 1 hour
 
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const identifier = req.ip || 'unknown.js';
     const now = Date.now();
     
@@ -325,7 +342,7 @@ export function contentCreationRateLimit() {
 
 // Content length validation middleware
 export function validateContentLength(maxSize: number = 1024 * 1024) { // 1MB default
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const contentLength = req.get('content-length');
     
     if (contentLength && parseInt(contentLength) > maxSize) {
@@ -341,7 +358,7 @@ export function validateContentLength(maxSize: number = 1024 * 1024) { // 1MB de
 
 // File upload validation for images and documents  
 export function validateFileUpload(allowedTypes: string[], maxSize: number = 5 * 1024 * 1024) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.file) {
       return next();
     }
@@ -385,7 +402,7 @@ export function validateAndSanitizeRequest(schemas: {
   query?: z.ZodSchema;
   params?: z.ZodSchema;
 }) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       // Sanitize and Validate Body
       if (schemas.body && req.body && typeof req.body === 'object') {

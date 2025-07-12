@@ -6,6 +6,28 @@ interface Headers {
   [key: string]: string | string[] | undefined;
 }
 
+// Extend Request interface for this middleware
+interface AuthenticatedRequest extends Request {
+  user?: AuthUser;
+  path?: string;
+  ip?: string;
+  headers?: Headers;
+  isWhiteLabelDomain?: boolean;
+  domainOrganizationId?: string;
+  organizationId?: string;
+  organizationFilter?: (orgId: string | null) => boolean;
+  organizationContext?: {
+    organizationId: string;
+    isWhiteLabelDomain: boolean;
+    domainOrganizationId?: string;
+  };
+  analyticsScope?: {
+    organizationId: string;
+    startDate?: Date;
+    endDate?: Date;
+  };
+}
+
 /**
  * Enhanced organization context middleware for enterprise-grade multi-tenant isolation
  * 
@@ -19,18 +41,18 @@ interface Headers {
  * Automatically injects organization context into all requests
  * Prevents cross-organization data access
  */
-export function injectOrganizationContext(req: Request, res: Response, next: NextFunction) {
+export function injectOrganizationContext(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   // Skip for public endpoints and auth routes
   const publicPaths = ['/api/auth/', '/api/public/', '/api/health', '/api/share/', '/.well-known/'];
   const frontendPaths = ['/', '/trip/', '/share/', '/login', '/signup', '/demo'];
   
   // Skip for public API endpoints
-  if (publicPaths.some(path => req.path.includes(path))) {
+  if (req.path && publicPaths.some(path => req.path!.includes(path))) {
     return next();
   }
   
   // Skip for frontend routes (non-API)
-  if (!req.path.startsWith('/api') || frontendPaths.some(path => req.path.startsWith(path))) {
+  if (!req.path || !req.path.startsWith('/api') || frontendPaths.some(path => req.path!.startsWith(path))) {
     return next();
   }
 
@@ -85,7 +107,7 @@ export function injectOrganizationContext(req: Request, res: Response, next: Nex
  * Middleware to validate organization access for specific resources
  * Used for routes that accept organization ID as parameter
  */
-export function validateOrganizationAccess(req: Request, res: Response, next: NextFunction) {
+export function validateOrganizationAccess(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const requestedOrgId = req.params.organization_id || req.body.organization_id;
   
   if (requestedOrgId && requestedOrgId !== req.organizationId) {
@@ -112,7 +134,7 @@ export function validateOrganizationAccess(req: Request, res: Response, next: Ne
  */
 export function addOrganizationScope<T extends { organizationId: Column<any> }>(
   baseQuery: any,
-  req: Request,
+  req: AuthenticatedRequest,
   table: T
 ) {
   if (!req.organizationId) {
@@ -127,7 +149,7 @@ export function addOrganizationScope<T extends { organizationId: Column<any> }>(
  * Validation helper for organization-scoped inserts
  * Automatically injects organization ID into create operations
  */
-export function validateOrganizationData(data: any, req: Request) {
+export function validateOrganizationData(data: any, req: AuthenticatedRequest) {
   if (!req.organizationId) {
     throw new Error('Organization context required');
   }
@@ -143,7 +165,7 @@ export function validateOrganizationData(data: any, req: Request) {
  * Analytics access control middleware
  * Ensures only organization admins can access analytics
  */
-export function requireAnalyticsAccess(req: Request, res: Response, next: NextFunction) {
+export function requireAnalyticsAccess(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ message: 'Authentication required' });
   }
@@ -182,7 +204,7 @@ export function requireAnalyticsAccess(req: Request, res: Response, next: NextFu
  * Domain-based organization resolution middleware
  * Resolves organization context from custom domains for white-label routing
  */
-export async function resolveDomainOrganization(req: Request, res: Response, next: NextFunction) {
+export async function resolveDomainOrganization(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const host = req.headers.host as string | undefined;
   if (!host) {
     return next();
