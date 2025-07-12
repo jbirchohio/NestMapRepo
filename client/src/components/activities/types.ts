@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ClientActivity } from '@/types/activity';
+import { ClientActivity, ActivityModalProps } from '@/lib/types';
 
 export const activitySchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -16,10 +16,5 @@ export const activitySchema = z.object({
 
 export type ActivityFormValues = z.infer<typeof activitySchema>;
 
-export interface ActivityModalProps {
-  tripId: string;
-  date: Date;
-  activity?: ClientActivity;
-  onClose: () => void;
-  onSave: () => void;
-}
+// Re-export for convenience
+export { ActivityModalProps };

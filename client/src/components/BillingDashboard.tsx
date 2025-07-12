@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { 
   CreditCard, 
   Calendar, 
-  DollarSign, 
   Users, 
   ArrowUpRight, 
   CheckCircle,
@@ -30,8 +28,6 @@ interface BillingInfo {
 export default function BillingDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
 
   // Check user permissions for billing access
   const { data: userPermissions } = useQuery({
@@ -40,23 +36,23 @@ export default function BillingDashboard() {
   });
 
   const hasBillingAccess = userPermissions && (
-    userPermissions.canAccessBilling || 
-    userPermissions.canManageOrganization ||
-    userPermissions.canAccessAdmin ||
+    userPermissions?.canAccessBilling || 
+    userPermissions?.canManageOrganization ||
+    userPermissions?.canAccessAdmin ||
     user?.role === 'admin'
   );
 
   // Get billing information
-  const { data: billingInfo, isLoading: billingLoading } = useQuery<BillingInfo>({
-    queryKey: ['/api/billing', user?.user_metadata?.customerId],
-    enabled: !!user?.user_metadata?.customerId && hasBillingAccess,
+  const { data: billingInfo } = useQuery<BillingInfo>({
+    queryKey: ['/api/billing', user?.id],
+    enabled: !!user?.id && hasBillingAccess,
   });
 
   // Create billing portal session
   const portalMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", "/api/billing/portal", {
-        customerId: user?.user_metadata?.customerId,
+        customerId: user?.id,
         returnUrl: window.location.origin + "/team"
       });
       return response.json();
@@ -77,10 +73,10 @@ export default function BillingDashboard() {
   const upgradeMutation = useMutation({
     mutationFn: async (plan: 'team' | 'enterprise') => {
       const response = await apiRequest("POST", "/api/billing/subscription", {
-        organizationId: user?.user_metadata?.organization_id,
+        organizationId: (user as any)?.organizationId,
         plan,
         customerEmail: user?.email,
-        customerName: user?.user_metadata?.display_name || user?.email
+        customerName: user?.username || user?.email
       });
       return response.json();
     },
@@ -202,7 +198,7 @@ export default function BillingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {user?.user_metadata?.organization_id ? '5' : '1'}
+                {(user as any)?.organizationId ? '5' : '1'}
               </div>
               <p className="text-xs text-muted-foreground">
                 Active members

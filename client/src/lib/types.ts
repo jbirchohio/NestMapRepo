@@ -22,6 +22,7 @@ export interface ClientTrip extends Trip {
 }
 
 export interface ClientActivity extends Activity {
+  date: string; // Make date required for client-side activities
   travelTimeFromPrevious?: string;
   travelDistanceFromPrevious?: string;
   conflict?: boolean;
@@ -128,4 +129,12 @@ export interface Collaborator {
   id: number;
   username: string;
   role: 'viewer' | 'editor' | 'commenter';
+}
+
+export interface ActivityModalProps {
+  tripId: string;
+  date: Date;
+  activity?: ClientActivity;
+  onClose: () => void;
+  onSave: () => void;
 }

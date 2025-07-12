@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,27 +12,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Leaf, 
   DollarSign, 
-  TrendingUp,
-  TrendingDown,
-  Camera,
   Download,
-  Upload,
   Target,
-  AlertCircle,
   CheckCircle,
   BarChart3,
-  PieChart,
   Receipt
 } from 'lucide-react';
-import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line } from 'recharts';
+import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 interface CarbonExpenseTrackerProps {
   tripId: number;
-  activities: any[];
-  budget?: number;
 }
 
-export default function CarbonExpenseTracker({ tripId, activities, budget }: CarbonExpenseTrackerProps) {
+export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerProps) {
   const [selectedTab, setSelectedTab] = useState('carbon');
   const [newExpense, setNewExpense] = useState({
     amount: '',
@@ -54,7 +46,7 @@ export default function CarbonExpenseTracker({ tripId, activities, budget }: Car
   });
 
   // Fetch offset options
-  const { data: offsetOptions, isLoading: offsetLoading } = useQuery({
+  const { data: offsetOptions } = useQuery({
     queryKey: ['/api/carbon/offsets', tripId],
     enabled: !!tripId && !!carbonData
   });
@@ -234,7 +226,7 @@ function CarbonTrackingTab({ carbonData }: { carbonData: any }) {
             <ResponsiveContainer width="100%" height={250}>
               <RechartsPieChart>
                 <RechartsPieChart data={chartData}>
-                  {chartData.map((entry, index) => (
+                  {chartData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </RechartsPieChart>

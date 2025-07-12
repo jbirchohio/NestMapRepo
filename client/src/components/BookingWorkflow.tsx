@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -104,18 +104,6 @@ const formatTripDate = (dateString: string): string => {
   }
 };
 
-const formatFlightTime = (timeString: string): string => {
-  try {
-    return new Date(timeString).toLocaleTimeString('en-US', { 
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  } catch {
-    return timeString;
-  }
-};
-
 const formatDuration = (duration: string): string => {
   return duration || 'N/A';
 };
@@ -181,7 +169,7 @@ export default function BookingWorkflow() {
       ...clientInfo.additionalTravelers.map(t => `${t.firstName} ${t.lastName}`)
     ];
     
-    return travelers.map((name, index) => ({
+    return travelers.map((name) => ({
       firstName: name.split(' ')[0],
       lastName: name.split(' ')[1] || '',
       fullName: name
