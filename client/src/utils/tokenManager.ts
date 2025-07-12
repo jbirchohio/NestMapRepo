@@ -401,15 +401,6 @@ export class TokenManager {
       delete window.__tokenManager;
     }
   }
-  
-  private decodeToken(token: string): { exp: number } | null {
-    try {
-      return jwtDecode<{ exp: number }>(token);
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      return null;
-    }
-  }
 
   public getUserId(): string {
     const token = SecureCookie.get('access_token');

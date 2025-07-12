@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useAuthContext as useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/contexts/auth/AuthContext';
 import { userService } from '@/services/api/userService';
 
 export default function RoleBasedRedirect() {

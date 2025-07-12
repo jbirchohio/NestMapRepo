@@ -5,7 +5,7 @@ import api from '@/services/api/apiClient';
 import { User, JwtPayload, AuthTokens } from '@/types/api';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionLockout } from '@/utils/sessionLockout';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 // Constants
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
