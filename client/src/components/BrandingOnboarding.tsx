@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { motion } from 'framer-motion';
 import { 
-  Palette, 
   Eye, 
   Sparkles,
   Building2,
@@ -41,7 +40,6 @@ interface BrandingOnboardingProps {
 export default function BrandingOnboarding({ onComplete, onSkip, organizationPlan }: BrandingOnboardingProps) {
   const { toast } = useToast();
   const { updateConfig, enableWhiteLabel } = useWhiteLabel();
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<QuickBrandingData>({

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +12,9 @@ import {
   Calendar, 
   CalendarDays, 
   CheckCircle, 
-  ExternalLink, 
   Download, 
   Upload,
   Settings,
-  AlertCircle,
   Info
 } from 'lucide-react';
 
@@ -52,7 +50,7 @@ export default function CalendarIntegration() {
   const queryClient = useQueryClient();
 
   // Fetch calendar connections
-  const { data: connections = [], isLoading } = useQuery({
+  const { data: connections = [], isLoading } = useQuery<CalendarConnection[]>({
     queryKey: ['/api/calendar/connections'],
   });
 
@@ -255,7 +253,7 @@ export default function CalendarIntegration() {
             </Alert>
           ) : (
             <div className="space-y-3">
-              {connections.map((connection: CalendarConnection) => (
+              {connections.map((connection) => (
                 <div key={connection.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{getProviderIcon(connection.provider)}</span>

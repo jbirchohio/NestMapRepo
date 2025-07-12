@@ -7,19 +7,16 @@ interface Hotel {
   id: string;
   name: string;
   address: string;
-  starRating: number;
+  starRating?: number;
   price: {
     amount: number;
     currency: string;
-    per: string;
+    per?: string;
   };
   amenities: string[];
   images: string[];
-  rating: {
-    score: number;
-    reviews: number;
-  };
-  cancellation: string;
+  rating: number;
+  cancellation?: string;
 }
 
 interface HotelResultsProps {
@@ -138,12 +135,12 @@ export function HotelResults({
 
                       <div className="mt-4 flex items-center">
                         <div className="flex items-center bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 px-2 py-1 rounded-md text-sm">
-                          <span className="font-semibold">{hotel.rating.score}</span>
+                          <span className="font-semibold">{hotel.rating}</span>
                           <span className="mx-1">/</span>
-                          <span>10</span>
+                          <span>5</span>
                         </div>
                         <span className="ml-2 text-sm text-muted-foreground">
-                          ({hotel.rating.reviews} reviews)
+                          Rating
                         </span>
                       </div>
 

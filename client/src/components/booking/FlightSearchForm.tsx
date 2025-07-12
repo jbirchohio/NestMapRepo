@@ -15,6 +15,23 @@ interface FlightSearchData {
   tripType: 'one-way' | 'round-trip';
   passengers: number;
   cabin: 'economy' | 'premium-economy' | 'business' | 'first';
+  // Required properties from comprehensive client info
+  primaryTraveler: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+  };
+  additionalTravelers: Array<{
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+  }>;
+  budget?: number;
+  department?: string;
+  projectCode?: string;
+  costCenter?: string;
 }
 
 interface FlightSearchFormProps {

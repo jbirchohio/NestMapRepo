@@ -25,12 +25,18 @@ interface BillingInfo {
   plan: 'free' | 'team' | 'enterprise';
 }
 
+interface UserPermissions {
+  canAccessBilling: boolean;
+  canManageOrganization: boolean;
+  canAccessAdmin: boolean;
+}
+
 export default function BillingDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
 
   // Check user permissions for billing access
-  const { data: userPermissions } = useQuery({
+  const { data: userPermissions } = useQuery<UserPermissions>({
     queryKey: ['/api/user/permissions'],
     enabled: !!user,
   });
