@@ -1,5 +1,5 @@
 import express, { Request, Response, RequestHandler } from 'express';
-import { authenticate } from '../../shared/src/schema.js'/middleware/secureAuth.js';
+import { authenticate } from '@shared/middleware/secureAuth';
 import { requireSuperadmin } from './middleware/superadmin.js';
 import { injectOrganizationContext } from './middleware/organizationContext.js';
 

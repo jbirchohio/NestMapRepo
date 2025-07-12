@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db-connection.js';
-import { users, adminAuditLog, organizations, userSessions } from '../../shared/src/schema.js'/@shared/schema';
+import { users, adminAuditLog, organizations, userSessions } from '@shared/schema';
 import { eq, and, desc, gte, sql, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { getActiveUserCount } from '../middleware/sessionTracking.js';

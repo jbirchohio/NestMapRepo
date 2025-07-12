@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { requireSuperadmin } from '../../shared/src/schema.js'/../middleware/superadmin.js';
-import { validateOrganizationAccess } from '../../shared/src/schema.js'/../middleware/organizationContext.js';
+import { requireSuperadmin } from '@shared/../middleware/superadmin';
+import { validateOrganizationAccess } from '@shared/../middleware/organizationContext';
 import * as organizationsController from './controllers.js';
 import * as organizationsValidators from './validators.js';
 

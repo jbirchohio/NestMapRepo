@@ -1,5 +1,5 @@
-import { Organization, User } from '../../shared/src/schema.js'/../db/schema.js';
-import { OrganizationBookingSettings } from '../../shared/src/schema.js'/interfaces/booking.interfaces.js';
+import { Organization, User } from '@shared/../db/schema';
+import { OrganizationBookingSettings } from '@shared/interfaces/booking.interfaces';
 
 export interface OrganizationRepository {
   // Organization retrieval

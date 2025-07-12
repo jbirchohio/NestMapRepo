@@ -1,5 +1,5 @@
 import 'express';
-import type { AuthUser } from '../../shared/src/schema.js'/types/auth-user';
+import type { AuthUser } from '@shared/types/auth-user';
 
 declare global {
   namespace Express {

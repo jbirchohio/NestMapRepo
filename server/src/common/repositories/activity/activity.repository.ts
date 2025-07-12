@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common.js';
 import { eq, and, between } from 'drizzle-orm';
-import { db } from '../../shared/src/schema.js'/../../db.js';
-import { activities, type Activity } from '../../shared/src/schema.js'/../../db/schema.js';
+import { db } from '@shared/../../db';
+import { activities, type Activity } from '@shared/../../db/schema';
 import { ActivityRepository } from './activity.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 

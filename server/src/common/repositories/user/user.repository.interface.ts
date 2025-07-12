@@ -1,6 +1,6 @@
-import { User } from '../../shared/src/schema.js'/../db/schema.js';
+import { User } from '@shared/../db/schema';
 import { BaseRepository } from '../base.repository.interface.js';
-import { UserBookingPreferences } from '../../shared/src/schema.js'/interfaces/booking.interfaces.js';
+import { UserBookingPreferences } from '@shared/interfaces/booking.interfaces';
 
 export interface UserRepository extends BaseRepository<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> {
   // User retrieval

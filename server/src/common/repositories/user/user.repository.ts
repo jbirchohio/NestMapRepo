@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common.js';
 import { eq, and } from 'drizzle-orm';
-import { db } from '../../shared/src/schema.js'/../../db.js';
-import { users, organizationMembers, type User } from '../../shared/src/schema.js'/../../db/schema.js';
+import { db } from '@shared/../../db';
+import { users, organizationMembers, type User } from '@shared/../../db/schema';
 import { UserRepository } from './user.repository.interface.js';
-import { UserBookingPreferences } from '../../shared/src/schema.js'/interfaces/booking.interfaces.js';
+import { UserBookingPreferences } from '@shared/interfaces/booking.interfaces';
 import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Request as ExpressRequest } from 'express';
-import { AuthUser } from '../../shared/src/schema.js'/src/types/auth-user.js';
+import { AuthUser } from '@server/src/types/auth-user.js';
 
 // This file should be used to import the express augmentation
 // The actual global augmentation is in server/@types/express/index.d.ts

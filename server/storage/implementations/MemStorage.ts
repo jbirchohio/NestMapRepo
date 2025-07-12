@@ -9,7 +9,7 @@ import {
   NewUser, 
   Trip, 
   NewTrip 
-} from '../../shared/src/schema.js'/../shared/src/schema.js';
+} from '@shared/../shared/src/schema';
 
 type InsertUser = NewUser;
 type InsertTrip = NewTrip;

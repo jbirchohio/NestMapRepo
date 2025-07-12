@@ -1,0 +1,9 @@
+error TS6305: Output file '/home/runner/work/NestMapRepo/NestMapRepo/dist/shared/src/fieldTransforms.d.ts' has not been built from source file '/home/runner/work/NestMapRepo/NestMapRepo/shared/src/fieldTransforms.ts'.
+  The file is in the program because:
+    Matched by include pattern '../shared/src/**/*.ts' in 'server/tsconfig.json'
+error TS6305: Output file '/home/runner/work/NestMapRepo/NestMapRepo/dist/shared/src/index.d.ts' has not been built from source file '/home/runner/work/NestMapRepo/NestMapRepo/shared/src/index.ts'.
+  The file is in the program because:
+    Matched by include pattern '../shared/src/**/*.ts' in 'server/tsconfig.json'
+error TS6305: Output file '/home/runner/work/NestMapRepo/NestMapRepo/dist/shared/src/schema.d.ts' has not been built from source file '/home/runner/work/NestMapRepo/NestMapRepo/shared/src/schema.ts'.
+  The file is in the program because:
+    Matched by include pattern '../shared/src/**/*.ts' in 'server/tsconfig.json'

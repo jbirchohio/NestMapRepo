@@ -1,11 +1,11 @@
 import { eq, sql, and, gte, inArray } from 'drizzle-orm';
-import { db } from '../../shared/src/schema.js'/../db/db.js';
-import { users } from '../../shared/src/schema.js'/../db/schema.js';
-import { UserRepository as CommonUserRepository } from '../../shared/src/schema.js'/common/repositories/user/user.repository.interface.js';
-import { User } from '../../shared/src/schema.js'/../db/schema.js';
-import { BaseRepositoryImpl } from '../../shared/src/schema.js'/common/repositories/base.repository.js';
-import { logger } from '../../shared/src/schema.js'/../utils/logger.js';
-import { UserBookingPreferences } from '../../shared/src/schema.js'/common/interfaces/booking.interfaces.js';
+import { db } from '@shared/../db/db';
+import { users } from '@shared/../db/schema';
+import { UserRepository as CommonUserRepository } from '@shared/common/repositories/user/user.repository.interface';
+import { User } from '@shared/../db/schema';
+import { BaseRepositoryImpl } from '@shared/common/repositories/base.repository';
+import { logger } from '@shared/../utils/logger';
+import { UserBookingPreferences } from '@shared/common/interfaces/booking.interfaces';
 
 /**
  * User repository implementation that extends the base repository implementation

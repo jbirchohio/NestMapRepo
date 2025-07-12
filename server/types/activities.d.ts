@@ -1,4 +1,4 @@
-import { UserRole } from '../../shared/src/schema.js'/shared/src/schema.js';
+import { UserRole } from '@shared/shared/src/schema';
 
 declare global {
   namespace Express {

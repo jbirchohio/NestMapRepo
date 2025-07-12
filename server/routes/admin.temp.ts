@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db.js';
-import { organizations, users, customDomains, whiteLabelRequests, organizationRoles, insertOrganizationRoleSchema } from '../../shared/src/schema.js'/@shared/schema';
+import { organizations, users, customDomains, whiteLabelRequests, organizationRoles, insertOrganizationRoleSchema } from '@shared/schema';
 import { auditLogs } from '../db/auditLog.js';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { z } from 'zod';

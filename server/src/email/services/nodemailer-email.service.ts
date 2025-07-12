@@ -4,7 +4,7 @@ import { createTransport, Transporter } from 'nodemailer.js';
 import { readFileSync } from 'fs.js';
 import { join, dirname } from 'path.js';
 import { fileURLToPath } from 'url.js';
-import { ErrorService } from '../../shared/src/schema.js'/common/services/error.service.js';
+import { ErrorService } from '@shared/common/services/error.service';
 import { 
   EmailService, 
   EmailOptions, 

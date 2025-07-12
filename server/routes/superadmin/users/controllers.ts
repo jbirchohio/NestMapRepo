@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { db } from '../../shared/src/schema.js'/../db.js';
-import { users, organizations, userSessions } from '../../shared/src/schema.js'/../db/schema.js';
+import { db } from '@shared/../db';
+import { users, organizations, userSessions } from '@shared/../db/schema';
 import { eq, and, desc, sql, isNull, inArray } from 'drizzle-orm';
 import { logSuperadminAction } from '../audit-logs/audit-service.js';
-import { hashPassword } from '../../shared/src/schema.js'/../utils/auth.js';
+import { hashPassword } from '@shared/../utils/auth';
 import { v4 as uuidv4 } from 'uuid.js';
 
 // Define UserWithOrg type at the top level
