@@ -14,6 +14,33 @@ import { FlightSearchForm } from './booking/FlightSearchForm';
 import { FlightResults } from './booking/FlightResults';
 import { HotelResults } from './booking/HotelResults';
 
+// Define the FlightSearchData interface to be compatible with the form
+interface FlightSearchData {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate: string;
+  tripType: 'one-way' | 'round-trip';
+  passengers: number;
+  cabin: 'economy' | 'premium-economy' | 'business' | 'first';
+  primaryTraveler: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    dateOfBirth: string;
+  };
+  additionalTravelers: Array<{
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+  }>;
+  budget: number | undefined;
+  department: string | undefined;
+  projectCode: string | undefined;
+  costCenter: string | undefined;
+}
+
 // Comprehensive client information schema
 const clientInfoSchema = z.object({
   // Travel Details
@@ -115,7 +142,7 @@ export default function BookingWorkflow() {
   // State management
   const [currentStep, setCurrentStep] = useState<BookingStep>('client-info');
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FlightSearchData>({
     origin: '',
     destination: '',
     departureDate: '',
@@ -135,10 +162,10 @@ export default function BookingWorkflow() {
       dateOfBirth: string;
     }>,
     cabin: 'economy' as 'economy' | 'premium-economy' | 'business' | 'first',
-    budget: undefined as number | undefined,
-    department: '',
-    projectCode: '',
-    costCenter: '',
+    budget: undefined,
+    department: undefined,
+    projectCode: undefined,
+    costCenter: undefined,
   });
   
   // Flight and hotel state

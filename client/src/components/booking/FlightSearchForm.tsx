@@ -28,10 +28,10 @@ interface FlightSearchData {
     lastName: string;
     dateOfBirth: string;
   }>;
-  budget?: number;
-  department?: string;
-  projectCode?: string;
-  costCenter?: string;
+  budget: number | undefined;
+  department: string | undefined;
+  projectCode: string | undefined;
+  costCenter: string | undefined;
 }
 
 interface FlightSearchFormProps {

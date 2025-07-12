@@ -74,6 +74,8 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
     description: '',
     vendor: ''
   });
+  
+  const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
 
   // Fetch carbon footprint data
   const { data: carbonData, isLoading: carbonLoading } = useQuery<CarbonData>({
@@ -109,8 +111,6 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
       queryClient.invalidateQueries({ queryKey: ['/api/carbon/footprint', tripId] });
     }
   });
-
-  const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
 
   if (carbonLoading || expenseLoading) {
     return (

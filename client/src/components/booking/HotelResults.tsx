@@ -20,11 +20,20 @@ interface Hotel {
 }
 
 interface HotelResultsProps {
-  hotels: Hotel[];
+  clientInfo?: any;
+  hotelResults?: Hotel[];
+  hotels?: Hotel[];
   selectedHotel: Hotel | null;
   onSelectHotel: (hotel: Hotel) => void;
-  isSearching: boolean;
-  onSearch: (query: string) => void;
+  isSearching?: boolean;
+  onSearch?: (query: string) => void;
+  travelerBookings?: Array<{
+    traveler: string;
+    departureFlight?: any;
+    returnFlight?: any;
+  }>;
+  onBack?: () => void;
+  onContinue?: () => void;
 }
 
 const amenityIcons: Record<string, JSX.Element> = {
@@ -36,12 +45,19 @@ const amenityIcons: Record<string, JSX.Element> = {
 };
 
 export function HotelResults({
+  clientInfo,
+  hotelResults,
   hotels,
   selectedHotel,
   onSelectHotel,
   isSearching,
   onSearch,
+  travelerBookings,
+  onBack,
+  onContinue,
 }: HotelResultsProps) {
+  const hotelList = hotels || hotelResults || [];
+  
   if (isSearching) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -50,12 +66,12 @@ export function HotelResults({
     );
   }
 
-  if (hotels.length === 0) {
+  if (hotelList.length === 0) {
     return (
       <div className="text-center p-8">
         <h3 className="text-lg font-medium">No hotels found</h3>
         <p className="text-muted-foreground mb-4">Try adjusting your search criteria</p>
-        <Button onClick={() => onSearch('')}>Reset Search</Button>
+        {onSearch && <Button onClick={() => onSearch('')}>Reset Search</Button>}
       </div>
     );
   }
@@ -64,7 +80,7 @@ export function HotelResults({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">
-          {hotels.length} {hotels.length === 1 ? 'Hotel' : 'Hotels'} Found
+          {hotelList.length} {hotelList.length === 1 ? 'Hotel' : 'Hotels'} Found
         </h3>
         <div className="text-sm text-muted-foreground">
           Sorted by: <span className="font-medium">Recommended</span>
@@ -72,7 +88,7 @@ export function HotelResults({
       </div>
 
       <div className="space-y-4">
-        {hotels.map((hotel) => (
+        {hotelList.map((hotel) => (
           <Card
             key={hotel.id}
             className={`overflow-hidden transition-all ${
@@ -180,6 +196,22 @@ export function HotelResults({
           </Card>
         ))}
       </div>
+      
+      {/* Navigation buttons */}
+      {(onBack || onContinue) && (
+        <div className="flex justify-between pt-4">
+          {onBack && (
+            <Button variant="outline" onClick={onBack}>
+              Back
+            </Button>
+          )}
+          {onContinue && (
+            <Button onClick={onContinue}>
+              Continue
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
