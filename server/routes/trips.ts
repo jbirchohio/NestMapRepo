@@ -54,17 +54,17 @@ router.use(validateJWT);
 router.use(injectOrganizationContext);
 
 // Get all trips for authenticated user with organization filtering
-router.get('/', (req: Request, res: Response) => tripController.getTrips(req as Request, res));
+router.get('/', (req: Request, res: Response) => tripController.getTrips(req, res));
 
 // Add organization-scoped trips endpoint for corporate features
-router.get('/corporate', (req: Request, res: Response) => tripController.getCorporateTrips(req as Request, res));
+router.get('/corporate', (req: Request, res: Response) => tripController.getCorporateTrips(req, res));
 
 // Get todos for a specific trip
 router.get("/:id/todos", validateAndSanitizeRequest({ params: idParamSchema }), async (req: Request, res: Response) => {
   try {
-    const tripId = req.params.id;
-    const userId = req.user.userId;
-    const orgId = req.user.organizationId;
+    const tripId = (req as any).params.id;
+    const userId = (req as any).user?.id;
+    const orgId = (req as any).user?.organizationId;
     
     if (!userId) {
       return res.status(401).json({ message: "User ID required" });
