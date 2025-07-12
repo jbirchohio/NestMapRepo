@@ -30,8 +30,8 @@ export const BookingWorkflow = () => {
     returnDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
     passengers: 1,
     primaryTraveler: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
+      firstName: (user as any)?.firstName || '',
+      lastName: (user as any)?.lastName || '',
       email: user?.email || '',
       phone: '',
       dateOfBirth: '',

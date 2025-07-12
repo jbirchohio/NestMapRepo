@@ -55,6 +55,8 @@ export function FlightResults({
   totalTravelers,
   travelerBookings,
 }: FlightResultsProps) {
+  // Unused parameters for now but part of the interface
+  // selectedReturnFlight, currentTravelerIndex, totalTravelers, travelerBookings
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
