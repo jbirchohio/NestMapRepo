@@ -14,8 +14,7 @@
     "./types/**/*.d.ts",
     "./@types/**/*.d.ts",
     "./index.ts",
-    "./*.ts",
-    "../shared/src/**/*.ts"
+    "./*.ts"
   ],
   "exclude": ["node_modules"],
   "compilerOptions": {
@@ -24,7 +23,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2022", "DOM", "ES2022.Object", "ES2022.String", "ES2015.Promise", "ES2015.Iterable"],
-    "types": ["node", "express", "express-serve-static-core", "jest"],
+    "types": ["node", "express"],
     "typeRoots": [
       "./node_modules/@types",
       "./@types",
@@ -54,5 +53,4 @@
     "target": "ES2022",
     "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/server.tsbuildinfo"
   },
-  "references": [{"path": "../shared"}]
 }
