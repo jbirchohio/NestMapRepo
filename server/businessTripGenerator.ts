@@ -1,10 +1,10 @@
-import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
-import { calculateTripCost } from "./utils/tripCost";
-import { detectTripConflicts } from "./services/conflictDetector";
-import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "./predictiveAI";
-import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer";
-import { calculateCarbonFootprint } from "./carbonTracker";
-import { searchFlights, searchHotels } from "./bookingProviders";
+import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient.js";
+import { calculateTripCost } from "./utils/tripCost.js";
+import { detectTripConflicts } from "./services/conflictDetector.js";
+import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "./predictiveAI.js";
+import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer.js";
+import { calculateCarbonFootprint } from "./carbonTracker.js";
+import { searchFlights, searchHotels } from "./bookingProviders.js";
 
 interface BusinessTripRequest {
   clientName: string;

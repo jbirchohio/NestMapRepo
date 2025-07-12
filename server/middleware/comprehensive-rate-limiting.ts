@@ -360,13 +360,13 @@ export const authRateLimit: express.RequestHandler = (req: Request, res: Respons
  * Organization-tier based rate limiting
  */
 export const organizationRateLimit: express.RequestHandler = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.user?.organization_id) {
+  if (!req.user?.organizationId) {
     // No organization context, apply free tier limits
     return tieredRateLimit('free')(req, res, next);
   }
 
   // Determine organization tier (would typically come from database)
-  const orgTier = req.user?.organization_tier || 'free';
+  const orgTier = req.user?.organizationTier || 'free';
   return tieredRateLimit(orgTier)(req, res, next);
 };
 
