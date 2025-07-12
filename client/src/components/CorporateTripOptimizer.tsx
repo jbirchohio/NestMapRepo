@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -112,7 +112,7 @@ export default function CorporateTripOptimizer() {
     });
   };
 
-  const handleRejectChanges = (tripId: number) => {
+  const handleRejectChanges = () => {
     toast({
       title: "Changes Rejected",
       description: "Trip optimization suggestions have been dismissed.",
@@ -387,7 +387,7 @@ export default function CorporateTripOptimizer() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleRejectChanges(trip.id)}
+                                onClick={() => handleRejectChanges()}
                                 className="text-red-600 border-red-600 hover:bg-red-50"
                               >
                                 <X className="h-3 w-3" />

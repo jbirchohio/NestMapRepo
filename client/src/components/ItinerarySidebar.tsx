@@ -7,7 +7,6 @@ import { formatDateRange, formatDate } from "@/lib/constants";
 import { ClientTrip, ClientActivity, Todo } from "@/lib/types";
 import ActivityTimeline from "./ActivityTimeline";
 import EnhancedAIAssistantModal from "./EnhancedAIAssistantModal";
-import { TripTeamManagement } from "./TripTeamManagement";
 
 import PdfExport from "./PdfExport";
 import { ItineraryOptimizationModal } from "./ItineraryOptimizationModal";
@@ -41,8 +40,6 @@ export default function ItinerarySidebar({
   onChangeDayClick,
   onActivitiesUpdated,
   onAddActivity,
-  mobileView,
-  setMobileView,
 }: ItinerarySidebarProps) {
   const { toast } = useToast();
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
@@ -57,7 +54,7 @@ export default function ItinerarySidebar({
   const handleAutoOptimize = async () => {
     setIsAutoOptimizing(true);
     try {
-      const result = await optimizeItinerary.mutateAsync(trip.id);
+      const result = await optimizeItinerary.mutateAsync(parseInt(trip.id));
       
       // Debug: Log what optimizations we received
       console.log("Optimization result:", result);
@@ -440,7 +437,7 @@ export default function ItinerarySidebar({
         onOpenChange={setIsOptimizationModalOpen}
         trip={trip}
         activities={activities}
-        onApplyOptimization={(optimizedActivities) => {
+        onApplyOptimization={() => {
           // Here we would typically update the activities with the new times/days
           // For now, we'll just refresh the activities to show the user feedback
           onActivitiesUpdated();
