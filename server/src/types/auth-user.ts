@@ -16,6 +16,7 @@ export interface AuthUser {
   displayName?: string;
   // For backward compatibility with older code
   organization_id?: string;
+  userId?: string; // Add userId property for compatibility
   
   // Add index signature to allow dynamic property access
   [key: string]: any;

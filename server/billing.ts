@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import './types/interfaces/stripe.js';
 
 let stripe: Stripe | null = null;
 

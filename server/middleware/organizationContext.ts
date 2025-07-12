@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { eq, SQL, Column } from 'drizzle-orm';
 import { AuthUser, UserRole } from '../src/types/auth-user.js';
-import '../types/interfaces/express.js'; // Import the Express augmentation
 
 interface Headers {
   [key: string]: string | string[] | undefined;
