@@ -1,6 +1,6 @@
 // Import the Express augmentation to ensure it's loaded
 import '@types/express-serve-static-core';
-import { AuthUser } from '../../src/types/auth-user.js';
+import { AuthUser } from '../../shared/src/schema.js'/src/types/auth-user.js';
 
 declare global {
   namespace Express {

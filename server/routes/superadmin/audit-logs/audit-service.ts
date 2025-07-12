@@ -1,5 +1,5 @@
-import { db } from '../../../db.js';
-import { superadminAuditLogs } from '../../../db/schema.js';
+import { db } from '../../shared/src/schema.js'/../db.js';
+import { superadminAuditLogs } from '../../shared/src/schema.js'/../db/schema.js';
 
 /**
  * Logs an admin action to the audit log

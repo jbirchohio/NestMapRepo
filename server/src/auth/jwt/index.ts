@@ -1,9 +1,9 @@
 import jwt, { type SignOptions } from 'jsonwebtoken.js';
 const { sign, verify, decode } = jwt;
 import { v4 as uuidv4 } from 'uuid.js';
-import { redis } from '../../utils/redis.js';
+import { redis } from '../../shared/src/schema.js'/utils/redis.js';
 // @ts-ignore - We know the logger exists
-import logger from '../../utils/logger.js';
+import logger from '../../shared/src/schema.js'/utils/logger.js';
 import {
   UserRole,
   TokenType,

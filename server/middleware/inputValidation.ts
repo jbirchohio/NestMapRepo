@@ -16,9 +16,9 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { Multer } from 'multer.js';
+import { Multer } from 'multer';
 import { z } from 'zod';
-import DOMPurify from 'isomorphic-dompurify.js';
+import DOMPurify from 'isomorphic-dompurify';
 
 // Common validation patterns
 const PATTERNS = {

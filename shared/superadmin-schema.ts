@@ -1,1 +1,1 @@
-export * from '../server/db/superadminSchema';
+export * from '../server/db/superadminSchema.js';

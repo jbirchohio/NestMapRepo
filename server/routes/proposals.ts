@@ -5,7 +5,7 @@ import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
 import { z } from 'zod';
-import type { AuthenticatedRequest } from '../src/types/auth-user';
+import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 
 const router = Router();
 

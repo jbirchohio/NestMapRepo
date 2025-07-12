@@ -245,7 +245,7 @@ export class DuffelProvider {
     return { hotels };
   }
 
-  async searchCars(params: {
+  async searchCars(_params: {
     pickUpLocation: string;
     dropOffLocation: string;
     pickUpDate: string;

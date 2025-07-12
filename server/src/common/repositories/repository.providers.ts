@@ -1,11 +1,11 @@
 import { Provider } from '@nestjs/common.js';
-import { TripRepositoryImpl } from '../../trips/repositories/trip.repository.js';
+import { TripRepositoryImpl } from '../../shared/src/schema.js'/trips/repositories/trip.repository.js';
 import { OrganizationRepositoryImpl } from './organization/organization.repository.js';
 import { ActivityRepositoryImpl } from './activity/activity.repository.js';
 import { UserRepositoryImpl } from './user/user.repository.js';
 import { BookingRepositoryImpl } from './booking/booking.repository.js';
-import { UserRepositoryImpl as AuthUserRepositoryImpl } from '../../auth/repositories/user.repository.js';
-import { RefreshTokenRepositoryImpl } from '../../auth/repositories/refresh-token.repository.js';
+import { UserRepositoryImpl as AuthUserRepositoryImpl } from '../../shared/src/schema.js'/auth/repositories/user.repository.js';
+import { RefreshTokenRepositoryImpl } from '../../shared/src/schema.js'/auth/repositories/refresh-token.repository.js';
 
 /**
  * Provider definitions for all repositories

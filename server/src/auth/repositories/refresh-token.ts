@@ -1,7 +1,7 @@
 import { and, eq, lte } from 'drizzle-orm';
 import { Injectable, Logger } from '@nestjs/common.js';
-import { db } from '../../../db.js';
-import { refreshTokens, type RefreshToken } from '../../../db/schema.js';
+import { db } from '../../shared/src/schema.js'/../db.js';
+import { refreshTokens, type RefreshToken } from '../../shared/src/schema.js'/../db/schema.js';
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
 
 @Injectable()

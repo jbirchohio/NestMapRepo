@@ -7,7 +7,7 @@ import { billingEvents } from '../db/superadminSchema.js';
 import { eq } from 'drizzle-orm';
 import nodemailer from 'nodemailer.js';
 import { authenticate as authenticateJWT } from '../middleware/secureAuth.js';
-import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user';
+import type { AuthenticatedRequest as AuthRequest } from '../src/types/auth-user.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { logger } from '../utils/logger.js';
 import type { Invoice } from '../db/db.js';

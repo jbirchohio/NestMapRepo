@@ -1,5 +1,5 @@
-import { MailService } from '@sendgrid/mail.js';
-import { getBrandingConfig } from '../branding.js';
+import { MailService } from '@sendgrid/mail';
+import { getBrandingConfig } from '../branding';
 
 let mailService: MailService | null = null;
 
@@ -49,7 +49,7 @@ export async function sendNotificationEmail(params: NotificationEmailParams): Pr
       to: params.to,
       from: process.env.FROM_EMAIL || 'noreply@nestmap.com',
       subject: params.subject,
-      html: generateNotificationHTML(params),
+      html: generateNotificationHTML ? generateNotificationHTML(params) : params.message || '',
     };
 
     await sgMail.send(msg);

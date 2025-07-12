@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import compression from 'compression.js';
-import { performance } from 'perf_hooks.js';
+import compression from 'compression';
+import { performance } from 'perf_hooks';
 
 declare global {
   namespace NodeJS {

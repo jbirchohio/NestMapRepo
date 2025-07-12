@@ -1,17 +1,17 @@
 import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
-import type { ParamsDictionary, Query } from 'express-serve-static-core.js';
-import type { AuthUser } from '../types/auth-user';
-import type { CustomRequest } from '../../types/custom-express';
-import { ConfigService } from '@nestjs/config.js';
+import type { ParamsDictionary, Query } from 'express-serve-static-core';
+import type { AuthUser } from '../types/auth-user.js';
+import type { CustomRequest } from '../../shared/src/schema.js'/types/custom-express';
+import { ConfigService } from '@nestjs/config';
 import { AuthController } from './controllers/auth.controller.js';
 import { JwtAuthService } from './services/jwtAuthService.js';
 import { UserRepositoryImpl } from './repositories/user.repository.js';
 import { RefreshTokenRepositoryImpl } from './repositories/refresh-token.repository.js';
 import { NodemailerEmailService } from '../email/services/nodemailer-email.service.js';
 import { ErrorService } from '../common/services/error.service.js';
-import { validateAndSanitizeRequest } from '../../middleware/inputValidation.js';
+import { validateAndSanitizeRequest } from '../../shared/src/schema.js'/middleware/inputValidation.js';
 import { loginSchema, requestPasswordResetSchema, resetPasswordSchema, refreshTokenSchema, logoutSchema } from './dtos/auth.dto.js';
-import { authenticate } from '../../middleware/secureAuth.js';
+import { authenticate } from '../../shared/src/schema.js'/middleware/secureAuth.js';
 
 // Helper type to make certain properties required
 type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };

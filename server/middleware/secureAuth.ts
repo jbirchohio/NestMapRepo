@@ -21,7 +21,7 @@ import { logger } from '../utils/logger.js';
 import type { TokenPayload, TokenType, VerifyTokenResult } from '../types/jwt.d.js';
 
 // Import the AuthUser type from the project's types
-import type { AuthUser } from '../src/types/auth-user';
+import type { AuthUser } from '../src/types/auth-user.js';
 
 // Extend Express Request type to include our custom properties
 declare global {

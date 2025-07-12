@@ -3,7 +3,7 @@ import { and, eq, count } from 'drizzle-orm';
 import { db } from '../db.js';
 import { organizations, users, trips } from '../db/schema.js';
 import { logger } from '../utils/logger.js';
-import type { User } from '../types/user';
+import type { User } from '../types/user.js';
 
 // Import JWTUser type from jwtAuth
 interface JWTUser {
@@ -15,7 +15,7 @@ interface JWTUser {
 }
 
 // Import the AuthUser type from auth middleware
-import type { AuthUser } from './auth.js';
+import type { AuthUser } from '../src/types/auth-user.js';
 
 // Extend the AuthUser interface with additional JWT properties
 interface JwtUser extends AuthUser {

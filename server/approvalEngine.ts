@@ -1,11 +1,12 @@
 import { db } from './db.js';
 import { approvalRequests, approvalRules, users, organizations } from './db/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
+import type { UserRole } from './db/schema.js';
 
 interface ApprovalWorkflowConfig {
   organizationId: string;
   entityType: string;
-  requestType: string;
+  requestType: 'create' | 'modify' | 'delete' | 'approve' | 'other';
   data: Record<string, any>;
   requesterId: string;
   reason?: string;
@@ -138,32 +139,31 @@ export class ApprovalEngine {
   ): Promise<ApprovalResult> {
     const approver = await this.findApprover(config.organizationId, rule.approverRoles);
     const priority = this.calculatePriority(config.data, rule);
-    const dueDate = new Date(Date.now() + (rule.escalationDays || 3) * 24 * 60 * 60 * 1000);
+    const dueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Default 3 days
 
     const [request] = await db
       .insert(approvalRequests)
       .values({
         organizationId: config.organizationId,
         requesterId: config.requesterId,
-        approverId: approver?.id,
+        approverId: approver?.id || null,
         entityType: config.entityType,
-        entityId: config.data.id || 0,
+        entityId: typeof config.data.id === 'string' ? config.data.id : null,
         requestType: config.requestType,
         proposedData: config.data,
-        reason: config.reason,
-        businessJustification: config.businessJustification,
+        reason: config.reason || null,
+        businessJustification: config.businessJustification || null,
         priority,
-        dueDate,
-        autoApprovalRule: rule.name
+        dueDate
       })
       .returning();
 
     return {
       requiresApproval: true,
       requestId: request.id,
-      assignedApproverId: approver?.id,
+      assignedApproverId: approver?.id || undefined,
       dueDate,
-      priority
+      priority: priority as 'low' | 'normal' | 'high' | 'urgent'
     };
   }
 
@@ -171,12 +171,13 @@ export class ApprovalEngine {
    * Find appropriate approver based on roles
    */
   private async findApprover(organizationId: string, approverRoles: string[]) {
+    const targetRole = (approverRoles[0] || 'manager') as UserRole;
     const approvers = await db
       .select({ id: users.id, role: users.role })
       .from(users)
       .where(and(
         eq(users.organizationId, organizationId),
-        eq(users.role, approverRoles[0] || 'manager') // Use first role or default to manager
+        eq(users.role, targetRole)
       ))
       .limit(1);
 

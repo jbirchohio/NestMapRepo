@@ -1,5 +1,5 @@
 import { Response, NextFunction, RequestHandler } from 'express';
-import { Request } from '../../types/express/index.js';
+import { Request } from '../../shared/src/schema.js'/types/express/index.js';
 import { IAuthService } from '../interfaces/auth.service.interface.js';
 import { 
   AuthResponse,
@@ -10,7 +10,7 @@ import {
   UserRole
 } from '../dtos/auth.dto.js';
 import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware.js';
-import { isErrorWithMessage } from '../../utils/error-utils.js';
+import { isErrorWithMessage } from '../../shared/src/schema.js'/utils/error-utils.js';
 import { Logger } from '@nestjs/common.js';
 
 // Response type that excludes the refresh token when sending to client

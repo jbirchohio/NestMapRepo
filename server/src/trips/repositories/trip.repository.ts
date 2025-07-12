@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common.js';
 import { eq, and } from 'drizzle-orm';
-import { db } from '../../../db.js';
-import { trips as tripsTable, users as usersTable } from '../../../db/schema.js';
-import { Trip, User } from '../../../db/schema.js';
+import { db } from '../../shared/src/schema.js'/../db.js';
+import { trips as tripsTable, users as usersTable } from '../../shared/src/schema.js'/../db/schema.js';
+import { Trip, User } from '../../shared/src/schema.js'/../db/schema.js';
 import { TripRepository } from '../interfaces/trip.repository.interface.js';
 import { CorporateTripDto } from '../interfaces/trip.service.interface.js';
-import { UnauthorizedError } from '../../common/errors.js';
-import { BaseRepositoryImpl } from '../../common/repositories/base.repository.js';
+import { UnauthorizedError } from '../../shared/src/schema.js'/common/errors.js';
+import { BaseRepositoryImpl } from '../../shared/src/schema.js'/common/repositories/base.repository.js';
 
 @Injectable()
 export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {

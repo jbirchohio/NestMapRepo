@@ -443,7 +443,7 @@ function estimateFlightDistance(origin: string, destination: string): number {
   return distances[origin]?.[destination] || 5000; // Default long-haul distance
 }
 
-function generateCarbonRecommendationStrings(carbon: CarbonFootprint, trip: any): string[] {
+function generateCarbonRecommendationStrings(carbon: CarbonFootprint, _trip: any): string[] {
   const recommendations: string[] = [];
   
   if (carbon.breakdown.flights > carbon.totalCO2kg * 0.7) {
@@ -471,9 +471,9 @@ function generateCarbonRecommendationStrings(carbon: CarbonFootprint, trip: any)
 }
 
 async function calculateCarbonTrends(
-  currentCarbon: CarbonFootprint,
-  organizationId: number,
-  userId: number
+  _currentCarbon: CarbonFootprint,
+  _organizationId: number,
+  _userId: number
 ): Promise<CarbonFootprint['trends']> {
   // In production, query historical trip data from database
   // For now, provide sample calculations
@@ -515,7 +515,7 @@ export interface ESGReport {
 }
 
 export async function generateESGReport(
-  organizationId: number,
+  _organizationId: number,
   period: string
 ): Promise<ESGReport> {
   // Generate comprehensive ESG compliance report

@@ -11,7 +11,7 @@ import {
   organizations,
   approvalRequests,
   activities
-} from '@@shared/schema';
+} from '../shared/src/schema.js';
 
 const router = Router();
 

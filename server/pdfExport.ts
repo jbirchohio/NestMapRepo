@@ -1,6 +1,6 @@
-import puppeteer from 'puppeteer.js';
-import Handlebars from 'handlebars.js';
-import { Buffer } from 'buffer.js';
+import puppeteer from 'puppeteer';
+import Handlebars from 'handlebars';
+import { Buffer } from 'buffer';
 
 // Define local types since we can't import from @shared/schema
 type Activity = {

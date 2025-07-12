@@ -1,4 +1,4 @@
-import fetch from 'node-fetch.js';
+import fetch from 'node-fetch';
 
 interface KiwiFlightSearchParams {
   fly_from: string;

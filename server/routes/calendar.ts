@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { eq, and } from 'drizzle-orm';
 import { db } from '../db.js';
-import { calendarIntegrations, trips, activities } from '@@shared/schema';
+import { calendarIntegrations, trips, activities } from '../shared/src/schema.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';

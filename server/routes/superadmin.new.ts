@@ -2,7 +2,7 @@ import express from 'express';
 import { db } from '../db.js';
 import { superadminAuditLogs } from '../db/schema.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin';
+import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin.js';
 import { injectOrganizationContext } from '../middleware/organizationContext.js';
 
 // Import route modules

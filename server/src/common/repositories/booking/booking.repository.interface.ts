@@ -1,6 +1,6 @@
-import { Booking } from '../../../db/bookingSchema.js';
+import { Booking } from '../../shared/src/schema.js'/../db/bookingSchema.js';
 import { BaseRepository } from '../base.repository.interface.js';
-import { BookingConfirmationDetails } from '../../interfaces/booking.interfaces.js';
+import { BookingConfirmationDetails } from '../../shared/src/schema.js'/interfaces/booking.interfaces.js';
 
 /**
  * Interface for booking repository operations

@@ -34,8 +34,8 @@
     "baseUrl": ".",
     "paths": {
       "@server/*": ["src/*"],
-
-      "@shared/*": ["../shared/src/*"]
+      "@shared/*": ["../shared/src/*"],
+      "@shared/schema": ["../shared/src/schema"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,

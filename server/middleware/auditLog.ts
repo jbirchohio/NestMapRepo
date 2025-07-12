@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db.js';
 import { auditLogs } from '../db/auditLog.js';
-import { AuthUser } from '../src/types/auth-user';
+import { AuthUser } from '../src/types/auth-user.js';
 
 type AuditRequest = Request & {
   user?: AuthUser;

@@ -5,7 +5,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { duffelProvider } from "../duffelProvider.js";
-import { AuthUser } from '../src/types/auth-user';
+import { AuthUser } from '../src/types/auth-user.js';
 import { asyncHandler } from '../utils/routeHelpers.js';
 
 // Extend Express types to include our custom properties
