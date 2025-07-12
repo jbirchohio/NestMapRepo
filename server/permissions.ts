@@ -143,7 +143,7 @@ export const DEPARTMENT_PERMISSIONS = {
 // Get user permissions based on role and organization - async version
 export async function getUserPermissionsByRole(userId: number, role: string, organizationId?: number): Promise<any> {
   const { db } = await import('./db.js');
-  const { users, organizations } = await import('../shared/schema');
+  const { users, organizations } = await import('./db/schema.js');
   const { eq } = await import('drizzle-orm');
 
   try {

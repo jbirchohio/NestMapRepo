@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from './db.js';
-import { users, organizations, userRoleEnum } from '../@shared/schema';
+import { users, organizations, userRoleEnum } from './db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { auditLogger } from './auditLogger.js';
 

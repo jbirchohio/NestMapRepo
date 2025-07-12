@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { db } from "../db.js";
-import { customDomains, organizations, whiteLabelSettings } from "../../shared/schema";
+import { customDomains, organizations, whiteLabelSettings } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import { promises as dns } from 'dns.js';

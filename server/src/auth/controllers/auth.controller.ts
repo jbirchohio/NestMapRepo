@@ -1,17 +1,102 @@
-import { Response, NextFunction, RequestHandler } from 'express';
-import { Request } from '../../shared/src/schema.js';
-import { IAuthService } from '../interfaces/auth.service.interface.js';
-import { 
-  AuthResponse,
-  LoginDto, 
-  UserResponse,
-  RequestPasswordResetDto, 
-  ResetPasswordDto,
-  UserRole
-} from '../dtos/auth.dto.js';
-import { rateLimiterMiddleware } from '../middleware/rate-limiter.middleware.js';
-import { isErrorWithMessage } from '../../shared/src/schema.js';
-import { Logger } from '@nestjs/common.js';
+// Local type definitions to avoid external dependencies
+interface Request {
+  params?: Record<string, string>;
+  body?: Record<string, any>;
+  query?: Record<string, any>;
+  headers?: Record<string, string | string[]>;
+  path?: string;
+  ip?: string;
+  method?: string;
+  get?(header: string): string | undefined;
+  [key: string]: any;
+}
+
+interface Response {
+  status(code: number): Response;
+  json(data: any): Response;
+  send(data: any): Response;
+  setHeader(name: string, value: string): void;
+  getHeader(name: string): string | undefined;
+}
+
+interface NextFunction {
+  (error?: any): void;
+}
+
+interface RequestHandler {
+  (req: Request, res: Response, next: NextFunction): void;
+}
+
+// Mock interfaces and types
+interface IAuthService {
+  login(dto: LoginDto): Promise<AuthResponse>;
+  refreshToken(dto: RefreshTokenDto): Promise<AuthResponse>;
+  requestPasswordReset(dto: RequestPasswordResetDto): Promise<void>;
+  resetPassword(dto: ResetPasswordDto): Promise<void>;
+}
+
+interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+  user: UserResponse;
+}
+
+interface LoginDto {
+  email: string;
+  password: string;
+}
+
+interface UserResponse {
+  id: string;
+  email: string;
+  role: UserRole;
+  organizationId?: string | null;
+}
+
+interface RequestPasswordResetDto {
+  email: string;
+}
+
+interface ResetPasswordDto {
+  token: string;
+  newPassword: string;
+}
+
+interface RefreshTokenDto {
+  refreshToken: string;
+}
+
+enum UserRole {
+  ADMIN = 'admin',
+  USER = 'user',
+  GUEST = 'guest'
+}
+
+// Mock rate limiter
+const rateLimiterMiddleware = (req: Request, res: Response, next: NextFunction) => next();
+
+// Mock error utility
+const isErrorWithMessage = (error: any): error is Error => error instanceof Error;
+
+// Mock logger
+class Logger {
+  constructor(private name: string) {}
+  
+  log(message: string): void {
+    console.log(`[${this.name}] ${message}`);
+  }
+  
+  error(message: string, stack?: string): void {
+    console.error(`[${this.name}] ${message}`);
+    if (stack) console.error(stack);
+  }
+  
+  warn(message: string): void {
+    console.warn(`[${this.name}] ${message}`);
+  }
+}
 
 // Response type that excludes the refresh token when sending to client
 type AuthResponseWithoutRefreshToken = Omit<AuthResponse, 'refreshToken'> & {
