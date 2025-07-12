@@ -35,7 +35,7 @@ interface BudgetResponse {
   suggestions: BudgetSuggestion[];
 }
 
-export default function BudgetOptionsPanel({ trip, onAddActivity }: BudgetOptionsPanelProps) {
+export default function BudgetOptionsPanel({ trip, onAddActivity: _ }: BudgetOptionsPanelProps) {
   const { toast } = useToast();
   const [budgetLevel, setBudgetLevel] = useState<BudgetLevel>("medium");
   const [activityType, setActivityType] = useState<ActivityType>("");

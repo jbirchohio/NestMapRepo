@@ -18,10 +18,52 @@ import {
   BarChart3,
   Receipt
 } from 'lucide-react';
-import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Pie } from 'recharts';
 
 interface CarbonExpenseTrackerProps {
   tripId: number;
+}
+
+interface CarbonData {
+  totalEmissions: number;
+  breakdown: Record<string, number>;
+  comparison: {
+    reductionPotential: number;
+    offsetCost: number;
+  };
+  recommendations: string[];
+}
+
+interface ExpenseData {
+  totalCost: number;
+  currency: string;
+  breakdown: Record<string, number>;
+  budget?: number;
+  categories?: Array<{
+    name: string;
+    actual: number;
+    budgeted: number;
+    variance: number;
+    status: 'under' | 'over' | 'on-track';
+  }>;
+}
+
+interface Expense {
+  id: string;
+  amount: number;
+  category: string;
+  description: string;
+  vendor: string;
+  date: string;
+}
+
+interface OffsetOption {
+  id: string;
+  provider: string;
+  name: string;
+  pricePerTon: number;
+  description: string;
+  certifications: string[];
 }
 
 export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerProps) {
@@ -34,26 +76,26 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
   });
 
   // Fetch carbon footprint data
-  const { data: carbonData, isLoading: carbonLoading } = useQuery({
+  const { data: carbonData, isLoading: carbonLoading } = useQuery<CarbonData>({
     queryKey: ['/api/carbon/footprint', tripId],
     enabled: !!tripId
   });
 
   // Fetch expense data
-  const { data: expenseData, isLoading: expenseLoading } = useQuery({
+  const { data: expenseData, isLoading: expenseLoading } = useQuery<ExpenseData>({
     queryKey: ['/api/expenses/report', tripId],
     enabled: !!tripId
   });
 
   // Fetch offset options
-  const { data: offsetOptions } = useQuery({
+  const { data: offsetOptions } = useQuery<OffsetOption[]>({
     queryKey: ['/api/carbon/offsets', tripId],
     enabled: !!tripId && !!carbonData
   });
 
   // Add expense mutation
   const addExpenseMutation = useMutation({
-    mutationFn: (expense: any) => apiRequest('POST', '/api/expenses/add', { tripId, ...expense }),
+    mutationFn: (expense: Expense) => apiRequest('POST', '/api/expenses/add', { tripId, ...expense }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/expenses/report', tripId] });
       setNewExpense({ amount: '', category: '', description: '', vendor: '' });
@@ -62,7 +104,7 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
 
   // Purchase offset mutation
   const purchaseOffsetMutation = useMutation({
-    mutationFn: (offsetData: any) => apiRequest('POST', '/api/carbon/purchase-offset', { tripId, ...offsetData }),
+    mutationFn: (offsetData: { amount: number; provider: string }) => apiRequest('POST', '/api/carbon/purchase-offset', { tripId, ...offsetData }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/carbon/footprint', tripId] });
     }
@@ -146,9 +188,9 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Budget Status</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {budget ? Math.round(((expenseData?.totalCost || 0) / budget) * 100) : 0}%
+                  {expenseData?.budget ? Math.round(((expenseData?.totalCost || 0) / expenseData.budget) * 100) : 0}%
                 </p>
-                <p className="text-xs text-gray-500">of ${budget || 0}</p>
+                <p className="text-xs text-gray-500">of ${expenseData?.budget || 0}</p>
               </div>
               <BarChart3 className="w-8 h-8 text-orange-600" />
             </div>
@@ -174,7 +216,7 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
             <TabsContent value="expenses" className="space-y-6">
               <ExpenseManagementTab 
                 expenseData={expenseData}
-                budget={budget}
+                budget={expenseData?.budget}
                 newExpense={newExpense}
                 setNewExpense={setNewExpense}
                 onAddExpense={(expense) => addExpenseMutation.mutate(expense)}
@@ -201,7 +243,7 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
   );
 }
 
-function CarbonTrackingTab({ carbonData }: { carbonData: any }) {
+function CarbonTrackingTab({ carbonData }: { carbonData: CarbonData | undefined }) {
   if (!carbonData) {
     return <div className="text-center py-8 text-gray-500">No carbon data available yet.</div>;
   }
@@ -225,11 +267,11 @@ function CarbonTrackingTab({ carbonData }: { carbonData: any }) {
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
               <RechartsPieChart>
-                <RechartsPieChart data={chartData}>
+                <Pie data={chartData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
                   {chartData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
-                </RechartsPieChart>
+                </Pie>
                 <Tooltip />
               </RechartsPieChart>
             </ResponsiveContainer>
@@ -309,7 +351,14 @@ function ExpenseManagementTab({
   setNewExpense, 
   onAddExpense, 
   isAdding 
-}: any) {
+}: { 
+  expenseData: ExpenseData | undefined; 
+  budget: number | undefined; 
+  newExpense: any; 
+  setNewExpense: (expense: any) => void; 
+  onAddExpense: (expense: any) => void; 
+  isAdding: boolean; 
+}) {
   const categories = ['flights', 'accommodation', 'meals', 'transportation', 'activities', 'miscellaneous'];
 
   return (
@@ -399,7 +448,7 @@ function ExpenseManagementTab({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {expenseData.categories?.map((cat: any, index: number) => (
+                {expenseData.categories?.map((cat, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{cat.name}</span>
@@ -461,7 +510,17 @@ function ExpenseManagementTab({
   );
 }
 
-function CarbonOffsetsTab({ offsetOptions, carbonFootprint, onPurchaseOffset, isPurchasing }: any) {
+function CarbonOffsetsTab({ 
+  offsetOptions, 
+  carbonFootprint, 
+  onPurchaseOffset, 
+  isPurchasing 
+}: { 
+  offsetOptions: OffsetOption[] | undefined; 
+  carbonFootprint: number; 
+  onPurchaseOffset: (offsetData: { amount: number; provider: string }) => void; 
+  isPurchasing: boolean; 
+}) {
   return (
     <div className="space-y-6">
       <Alert>
@@ -472,7 +531,7 @@ function CarbonOffsetsTab({ offsetOptions, carbonFootprint, onPurchaseOffset, is
       </Alert>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {offsetOptions?.map((option: any, index: number) => (
+        {offsetOptions?.map((option, index) => (
           <Card key={index} className="relative">
             <CardHeader>
               <CardTitle className="text-lg">{option.provider}</CardTitle>
@@ -514,7 +573,7 @@ function CarbonOffsetsTab({ offsetOptions, carbonFootprint, onPurchaseOffset, is
   );
 }
 
-function ReportsTab({ carbonData, expenseData }: any) {
+function ReportsTab({ carbonData, expenseData }: { carbonData: CarbonData | undefined; expenseData: ExpenseData | undefined }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
