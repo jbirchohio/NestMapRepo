@@ -22,12 +22,16 @@ export async function auditLogMiddleware(
   const resource = originalUrl.split('/')[1] || 'unknown.js';
   const resourceId = params.id || params.tripId || params.userId || null;
 
+  // Store user info since we verified it exists
+  const userId = req.user.id;
+  const organizationId = req.user.organizationId;
+
   // Attach after response sent
   res.on('finish', async () => {
     try {
       await db.insert(auditLogs).values({
-        organizationId: req.user!.organizationId!,
-        userId: req.user!.id,
+        organizationId,
+        userId,
         action,
         resource,
         resourceId,

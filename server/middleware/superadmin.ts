@@ -6,28 +6,18 @@ import { AuthUser } from '../src/types/auth-user.js';
 type CustomRequestProps = {
   user?: AuthUser;
   organizationId?: string | null;
-  organization_id?: string | null;
 };
 
 // Define a custom request type that includes our AuthUser
 export type AuthenticatedRequest = Request & {
   user: AuthUser; // Make user required in AuthenticatedRequest
   organizationId?: string | null;
-  organization_id?: string | null;
 };
-
-// Extend the Express Request type to include our custom properties
-declare module 'express-serve-static-core' {
-  interface Request extends CustomRequestProps {}
-}
 
 // Middleware to check superadmin permissions
 export const requireSuperadmin = (req: Request, res: Response, next: NextFunction) => {
-  // Type assertion to access user property
-  const user = (req as any).user as AuthUser | undefined;
-  
   // Check if user is authenticated first
-  if (!user) {
+  if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
@@ -38,7 +28,7 @@ export const requireSuperadmin = (req: Request, res: Response, next: NextFunctio
     'superadmin_auditor'
   ];
   
-  if (!user.role || !validSuperadminRoles.includes(user.role.toLowerCase())) {
+  if (!req.user.role || !validSuperadminRoles.includes(req.user.role.toLowerCase())) {
     return res.status(403).json({ error: 'Superadmin access required' });
   }
   
@@ -47,16 +37,13 @@ export const requireSuperadmin = (req: Request, res: Response, next: NextFunctio
 
 // Middleware for superadmin owner level permissions
 export const requireSuperadminOwner = (req: Request, res: Response, next: NextFunction) => {
-  // Type assertion to access user property
-  const user = (req as any).user as AuthUser | undefined;
-  
   // Check if user is authenticated first
-  if (!user) {
+  if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
   // Check if user has superadmin owner role
-  if (user.role.toLowerCase() !== 'superadmin_owner') {
+  if (req.user.role.toLowerCase() !== 'superadmin_owner') {
     return res.status(403).json({ error: 'Superadmin owner access required' });
   }
   

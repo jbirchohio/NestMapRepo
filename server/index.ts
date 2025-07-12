@@ -1,5 +1,5 @@
 import 'dotenv/config.js';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import http from 'http';
 import { logger } from './utils/logger.js';
 
@@ -58,7 +58,7 @@ app.get('/api/test', (_req, res) => {
 });
 
 // Error handling middleware
-app.use((err, _req, res, _next) => {
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   logger.error('Unhandled error:', err);
   res.status(500).json({ 
     success: false, 
@@ -67,7 +67,7 @@ app.use((err, _req, res, _next) => {
 });
 
 // 404 handler
-app.use((req, res) => {
+app.use((_req: Request, res: Response) => {
   res.status(404).json({ 
     success: false, 
     error: 'Route not found' 

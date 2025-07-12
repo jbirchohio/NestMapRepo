@@ -19,15 +19,15 @@ router.use(validateJWT);
 router.use(injectOrganizationContext);
 
 // Get billing information for the current user's organization
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", async (req: Request, res: Response): Promise<Response | void> => {
   try {
-    if (!req.user?.organization_id) {
+    if (!req.user?.organizationId) {
       return res.status(400).json({ error: 'Organization required' });
     }
 
     // Get organization details
     const org = await db.query.organizations.findFirst({
-      where: eq(organizations.id, req.user.organization_id)
+      where: eq(organizations.id, req.user.organizationId)
     });
 
     if (!org) {
@@ -120,7 +120,7 @@ router.post("/subscription", async (req: Request, res: Response) => {
       
       // Update organization with customer ID
       await db.update(organizations)
-        .set({ stripe_customer_id: customerId })
+        .set({ stripeCustomerId: customerId })
         .where(eq(organizations.id, organizationId));
     }
     
@@ -142,7 +142,7 @@ router.post("/subscription", async (req: Request, res: Response) => {
       
       // Update organization with subscription ID
       await db.update(organizations)
-        .set({ stripe_subscription_id: subscriptionResult.id })
+        .set({ stripeSubscriptionId: subscriptionResult.id })
         .where(eq(organizations.id, organizationId));
       
       // Return client secret for checkout
