@@ -33,7 +33,7 @@ export const userRoleEnum = pgEnum('user_role', ['super_admin', 'admin', 'manage
 export const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
-export type OrganizationPlan = 'free' | 'pro' | 'enterprise.js';
+export type OrganizationPlan = 'free' | 'pro' | 'enterprise';
 
 // ======================
 // Constants

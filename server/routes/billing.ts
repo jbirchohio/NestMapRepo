@@ -48,11 +48,11 @@ router.get("/", async (req: Request, res: Response) => {
         const subscription = await stripe.subscriptions.retrieve(org.stripe_subscription_id);
         
         // Determine plan based on price ID
-        let plan = 'free.js';
+        let plan = 'free';
         if (subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_TEAM) {
-          plan = 'team.js';
+          plan = 'team';
         } else if (subscription.items.data[0].price.id === process.env.STRIPE_PRICE_ID_ENTERPRISE) {
-          plan = 'enterprise.js';
+          plan = 'enterprise';
         }
 
         return res.json({

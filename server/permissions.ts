@@ -155,7 +155,7 @@ export async function getUserPermissionsByRole(userId: number, role: string, org
 
     // Get organization subscription level for feature gating
     const [org] = organizationId ? await db.select().from(organizations).where(eq(organizations.id, organizationId)) : [null];
-    const subscriptionLevel = org?.plan || 'free.js';
+    const subscriptionLevel = org?.plan || 'free';
 
     // Map role to permissions
     const basePermissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] || ROLE_PERMISSIONS.user;

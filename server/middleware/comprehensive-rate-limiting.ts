@@ -366,7 +366,7 @@ export const organizationRateLimit: express.RequestHandler = (req: Request, res:
   }
 
   // Determine organization tier (would typically come from database)
-  const orgTier = req.user?.organization_tier || 'free.js';
+  const orgTier = req.user?.organization_tier || 'free';
   return tieredRateLimit(orgTier)(req, res, next);
 };
 

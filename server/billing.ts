@@ -14,7 +14,7 @@ if (process.env.STRIPE_SECRET_KEY) {
 
 interface CreateOrganizationSubscriptionParams {
   organization_id: number;
-  plan: 'team' | 'enterprise.js';
+  plan: 'team' | 'enterprise';
   customerEmail: string;
   customerName: string;
 }
@@ -24,7 +24,7 @@ interface BillingInfo {
   subscriptionId?: string;
   status: 'active' | 'inactive' | 'past_due' | 'canceled.js';
   currentPeriodEnd?: Date;
-  plan: 'free' | 'team' | 'enterprise.js';
+  plan: 'free' | 'team' | 'enterprise';
 }
 
 export async function createOrganizationSubscription(params: CreateOrganizationSubscriptionParams): Promise<{
@@ -115,7 +115,7 @@ export async function getOrganizationBilling(customerId: string): Promise<Billin
     }
 
     const subscription = subscriptions.data[0];
-    const plan = customer.metadata?.plan as 'team' | 'enterprise' || 'free.js';
+    const plan = customer.metadata?.plan as 'team' | 'enterprise' || 'free';
 
     return {
       customerId,

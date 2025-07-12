@@ -93,7 +93,7 @@ export async function getOrganizationLimits(organizationId: string) {
     .from(organizations)
     .where(eq(organizations.id, organizationId));
 
-  const tier = org?.plan || 'free.js';
+  const tier = org?.plan || 'free';
   return {
     tier,
     limits: TIER_LIMITS[tier as keyof typeof TIER_LIMITS] || TIER_LIMITS.free,

@@ -29,7 +29,7 @@ type SecureRequest = Request & {
     id: string | number;
     role: string;
     organization_id?: number;
-    subscription_tier?: 'free' | 'premium' | 'enterprise.js';
+    subscription_tier?: 'free' | 'premium' | 'enterprise';
   };
   [key: string]: any;
 };
@@ -317,7 +317,7 @@ export function tieredRateLimit(
   next: NextFunction
 ): Response | void {
   const key = req.ip || 'unknown.js';
-  const tier = req.user?.subscription_tier || 'free.js';
+  const tier = req.user?.subscription_tier || 'free';
   
   const result = advancedRateLimit.checkLimit(key, tier as any);
   
