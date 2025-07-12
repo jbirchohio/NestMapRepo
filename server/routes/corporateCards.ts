@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { db } from "../db";
+import { db } from "../db.js";
 import { corporateCards, cardTransactions, users } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';

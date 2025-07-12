@@ -127,7 +127,7 @@ export interface WeatherInfo {
   recommendations: string[];
 }
 
-import { UserRole } from './types/auth';
+import { UserRole } from './types/auth.js';
 
 export interface User {
   id: number;

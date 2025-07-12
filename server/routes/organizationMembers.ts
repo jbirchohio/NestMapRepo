@@ -4,7 +4,7 @@
  */
 
 import { Router, Response } from 'express';
-import type { AuthenticatedRequest } from '../src/types/auth-user';
+import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 import { db } from '../db.js';
 import { users, organizationMembers } from '@@shared/schema';
 import { eq, sql, and } from 'drizzle-orm';

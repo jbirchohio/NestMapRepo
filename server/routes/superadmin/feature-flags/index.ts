@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireSuperadmin } from '../../../middleware/superadmin';
+import { requireSuperadmin } from '../../../middleware/superadmin.js';
 import * as featureFlagsController from './controllers.js';
 import * as featureFlagsValidators from './validators.js';
 

@@ -3,7 +3,7 @@ import { db } from '../db.js';
 import { customDomains } from '../db/schema.js';
 import { and, eq, isNull } from 'drizzle-orm';
 import { v4 as uuidv4, validate as validateUuid } from 'uuid.js';
-import { AuthUser, UserRole } from '../src/types/auth-user';
+import { AuthUser, UserRole } from '../src/types/auth-user.js';
 
 // =============================================
 // Type Definitions

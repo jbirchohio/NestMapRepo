@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { getWeatherForecast } from "./weather";
+import { getWeatherForecast } from "./weather.js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

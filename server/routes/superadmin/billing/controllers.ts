@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 });
 
 import { logSuperadminAction } from '../audit-logs/audit-service.js';
-import { AuthenticatedRequest } from '../../../middleware/superadmin';
+import { AuthenticatedRequest } from '../../../middleware/superadmin.js';
 
 // Get billing overview across all organizations
 export const getBillingOverview = async (req: Request, res: Response) => {

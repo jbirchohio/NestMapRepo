@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireSuperadmin } from '../../../middleware/superadmin';
+import { requireSuperadmin } from '../../../middleware/superadmin.js';
 import { getAuditLogs } from './audit-service.js';
 
 const router = Router();

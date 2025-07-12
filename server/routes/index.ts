@@ -11,7 +11,7 @@ import paymentsRoutes from './payments.js';
 import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus.js';
 
 // Feature routes
-import adminRoutes from './admin';
+import adminRoutes from './admin.js';
 import invoicesRoutes from './invoices.js';
 import calendarRoutes from './calendar.js';
 import { registerBookingRoutes } from './bookings.js';

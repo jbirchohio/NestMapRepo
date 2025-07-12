@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { USER_ROLES } from '../db/schema.js';
-import { AuthUser } from '../src/types/auth-user';
+import { AuthUser } from '../src/types/auth-user.js';
 
 // Create a type that represents the custom properties we're adding to the request
 type CustomRequestProps = {
@@ -75,8 +75,8 @@ export const logSuperadminAction = async (
   request?: Request
 ) => {
   try {
-    const { db } = await import('../db');
-    const { superadminAuditLogs } = await import('../db/superadminSchema');
+    const { db } = await import('../db.js');
+    const { superadminAuditLogs } = await import('../db/superadminSchema.js');
     
     // Extract IP and user agent from request if available
     let ipAddress = '.js';

@@ -195,7 +195,7 @@ export async function resolveDomainOrganization(req: Request, res: Response, nex
     }
 
     // Import database connection
-    const { db } = await import('../db');
+    const { db } = await import('../db.js');
     const { customDomains } = await import('../../shared/schema');
     const { eq } = await import('drizzle-orm');
 

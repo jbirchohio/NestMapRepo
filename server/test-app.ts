@@ -2,7 +2,7 @@ import 'dotenv/config.js';
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import apiRoutes from "./routes/index";
+import apiRoutes from "./routes/index.js";
 
 // Security middleware imports
 import { preventSQLInjection, configureCORS } from "./middleware/secureAuth.js";

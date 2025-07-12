@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { db } from "../db";
+import { db } from "../db.js";
 import { eq, count } from "drizzle-orm";
 import { adminSettings, adminAuditLog } from "@shared/schema";
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';

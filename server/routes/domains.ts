@@ -1,12 +1,12 @@
 import type { Express, Request, Response } from "express";
-import { db } from "../db";
+import { db } from "../db.js";
 import { customDomains, organizations, whiteLabelSettings } from "../../shared/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
 import { promises as dns } from 'dns.js';
 import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import type { AuthenticatedRequest } from '../src/types/auth-user';
+import type { AuthenticatedRequest } from '../src/types/auth-user.js';
 
 interface Domain {
   id: number;

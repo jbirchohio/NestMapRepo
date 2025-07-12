@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
 import type { ParamsDictionary, Query } from 'express-serve-static-core.js';
-import type { AuthUser } from '../types/auth-user';
+import type { AuthUser } from '../types/auth-user.js';
 import type { CustomRequest } from '../../types/custom-express';
 import { ConfigService } from '@nestjs/config.js';
 import { AuthController } from './controllers/auth.controller.js';
