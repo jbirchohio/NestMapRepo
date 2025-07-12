@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingDown, TrendingUp, Clock, Users, Cloud, Sun, CloudRain, AlertTriangle, CheckCircle, Lightbulb } from 'lucide-react';
 
 interface PredictiveInsightsProps {
@@ -93,7 +91,7 @@ export default function PredictiveInsights({
           </TabsContent>
 
           <TabsContent value="crowds" className="space-y-4">
-            <CrowdInsights data={crowdPrediction} activities={activities} />
+            <CrowdInsights data={crowdPrediction} />
           </TabsContent>
 
           <TabsContent value="weather" className="space-y-4">
@@ -112,7 +110,7 @@ export default function PredictiveInsights({
 function PricingInsights({ data }: { data: any }) {
   if (!data) return <div>No pricing data available</div>;
 
-  const { currentPrice, predictedPrices, optimalBookingWindow, seasonalTrends } = data;
+  const { currentPrice, predictedPrices, optimalBookingWindow } = data;
   const savings = optimalBookingWindow?.expectedSavings || 0;
   const recommendation = predictedPrices?.[0]?.recommendation || 'monitor';
 
@@ -192,7 +190,7 @@ function PricingInsights({ data }: { data: any }) {
   );
 }
 
-function CrowdInsights({ data, activities }: { data: any; activities: any[] }) {
+function CrowdInsights({ data }: { data: any }) {
   if (!data) return <div>No crowd data available</div>;
 
   const { crowdLevel, confidence, peakHours, bestVisitTimes, alternativeOptions } = data;
@@ -301,7 +299,7 @@ function CrowdInsights({ data, activities }: { data: any; activities: any[] }) {
 function WeatherInsights({ data }: { data: any }) {
   if (!data) return <div>No weather data available</div>;
 
-  const { weatherForecast, indoorAlternatives, adaptedPlan } = data;
+  const { weatherForecast, indoorAlternatives } = data;
 
   const getWeatherIcon = (condition: string) => {
     switch (condition.toLowerCase()) {

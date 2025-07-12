@@ -39,6 +39,7 @@ interface ExpenseData {
   currency: string;
   breakdown: Record<string, number>;
   budget?: number;
+  receipts?: any[];
   categories?: Array<{
     name: string;
     actual: number;
@@ -64,6 +65,11 @@ interface OffsetOption {
   pricePerTon: number;
   description: string;
   certifications: string[];
+  project: string;
+  cost: number;
+  quality: string;
+  certification: string;
+  amount: number;
 }
 
 const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
@@ -216,7 +222,6 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
             <TabsContent value="expenses" className="space-y-6">
               <ExpenseManagementTab 
                 expenseData={expenseData}
-                budget={expenseData?.budget}
                 newExpense={newExpense}
                 setNewExpense={setNewExpense}
                 onAddExpense={(expense) => addExpenseMutation.mutate(expense)}
@@ -346,14 +351,12 @@ function CarbonTrackingTab({ carbonData }: { carbonData: CarbonData | undefined 
 
 function ExpenseManagementTab({ 
   expenseData, 
-  budget, 
   newExpense, 
   setNewExpense, 
   onAddExpense, 
   isAdding 
 }: { 
   expenseData: ExpenseData | undefined; 
-  budget: number | undefined; 
   newExpense: any; 
   setNewExpense: (expense: any) => void; 
   onAddExpense: (expense: any) => void; 

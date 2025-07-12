@@ -42,7 +42,7 @@ export function ItineraryOptimizationModal({
 
   const handleOptimize = async () => {
     try {
-      const result = await optimizeItinerary.mutateAsync(trip.id);
+      const result = await optimizeItinerary.mutateAsync(parseInt(trip.id));
       setOptimizationResult(result);
       
       // Auto-apply if enabled

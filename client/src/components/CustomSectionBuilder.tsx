@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -156,13 +156,11 @@ export default function CustomSectionBuilder({ sections, onChange }: CustomSecti
                       draggableId={section.id}
                       index={index}
                     >
-                      {(provided, snapshot) => (
+                      {(provided) => (
                         <Card
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`${
-                            snapshot.isDragging ? 'shadow-lg' : ''
-                          } ${!section.enabled ? 'opacity-50' : ''}`}
+                          className={`${!section.enabled ? 'opacity-50' : ''}`}
                         >
                           <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">

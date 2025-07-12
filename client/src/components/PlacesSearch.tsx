@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, MapPin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useDebounce } from "@/hooks/use-debounce";
 
 

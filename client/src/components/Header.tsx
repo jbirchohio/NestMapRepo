@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,8 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ClientTrip } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 
 interface HeaderProps {
   trip?: ClientTrip;
@@ -32,7 +29,6 @@ export default function Header({
   onDeleteTrip
 }: HeaderProps) {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
   
   return (
     <header className="bg-white dark:bg-[hsl(var(--card))] shadow-sm z-10">
