@@ -1,4 +1,4 @@
-import { getAnalytics, getOrganizationAnalytics } from "./analytics";
+import { getAnalytics, getOrganizationAnalytics } from "./analytics.js";
 
 // Analytics now use authentic database data only - all mock data removed
 export async function getAuthenticAnalytics(organizationId?: number) {
