@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { JwtPayload } from '../../shared/src/schema.js';
-import { User } from '../../shared/src/schema.js';
-import { ParamsDictionary } from 'express-serve-static-core.js';
-import { ParsedQs } from 'qs.js';
+import { ParamsDictionary } from 'express-serve-static-core';
+import { ParsedQs } from 'qs';
+import { AuthUser } from '../../src/types/auth-user.js';
 
 // Define JWTUser type for authentication
 interface JWTUser {
@@ -10,48 +9,55 @@ interface JWTUser {
   userId?: string; // For backward compatibility
   email: string;
   role: string;
-  organizationId?: string;
+  organizationId?: string | null;
 }
 
 declare global {
   namespace Express {
     // Extend the Request interface with our custom properties
-    interface Request<
-      P = ParamsDictionary,
-      ResBody = any,
-      ReqBody = any,
-      ReqQuery = ParsedQs,
-      Locals extends Record<string, any> = Record<string, any>
-    > {
+    interface Request {
       /**
        * Authenticated user information
        */
-      user?: JWTUser | User;
-      
-      /**
-       * JWT payload if using JWT authentication
-       */
-      auth?: JwtPayload;
+      user?: JWTUser | AuthUser;
       
       /**
        * Organization ID from the request (can be in params, query, or body)
        */
-      organizationId?: string;  // Optional string type for UUID
+      organizationId?: string;
       
       /**
-       * Request parameters
+       * Organization filter function for data access
        */
-      params: P;
+      organizationFilter?: (orgId: string | null) => boolean;
       
       /**
-       * Request body
+       * Domain organization ID for white-label domains
        */
-      body: ReqBody;
+      domainOrganizationId?: string;
       
       /**
-       * Request query parameters
+       * Whether the request is from a white-label domain
        */
-      query: ReqQuery;
+      isWhiteLabelDomain?: boolean;
+      
+      /**
+       * Analytics scope for the request
+       */
+      analyticsScope?: {
+        organizationId: string;
+        startDate?: Date;
+        endDate?: Date;
+      };
+      
+      /**
+       * Organization context for multi-tenant isolation
+       */
+      organizationContext?: {
+        organizationId: string;
+        isWhiteLabelDomain: boolean;
+        domainOrganizationId?: string;
+      };
       
       /**
        * Request ID for tracing
@@ -69,21 +75,32 @@ declare global {
       token?: string;
       
       /**
-       * Check if the request is authenticated
+       * Response metrics for monitoring
        */
-      isAuthenticated?: () => boolean;
+      responseMetrics?: {
+        startTime: [number, number];
+        endTime?: [number, number];
+        processingTime?: number;
+        dbQueries?: number;
+        cacheHits?: number;
+        cacheMisses?: number;
+      };
       
       /**
-       * Check if the authenticated user has a specific role
-       * @param role The role to check for
+       * Unified monitoring metrics
        */
-      hasRole?: (role: string | string[]) => boolean;
+      unifiedMetrics?: {
+        queries: number;
+        cacheHits: number;
+        cacheMisses: number;
+        errors: number;
+        startTime: [number, number];
+      };
       
       /**
-       * Check if the authenticated user has any of the specified permissions
-       * @param permissions The permissions to check for
+       * Track query function for monitoring
        */
-      hasPermission?: (permissions: string | string[]) => boolean;
+      trackQuery?: (query: string, duration: number) => void;
     }
     
     // Extend the Response interface with our custom methods
@@ -91,7 +108,7 @@ declare global {
       /**
        * Send a success response with data
        */
-      success: <T = any>(
+      success?: <T = any>(
         data: T,
         message?: string,
         statusCode?: number
@@ -100,7 +117,7 @@ declare global {
       /**
        * Send an error response
        */
-      error: (
+      error?: (
         message: string,
         statusCode?: number,
         errorCode?: string,
@@ -110,7 +127,7 @@ declare global {
       /**
        * Send a paginated response
        */
-      paginate: <T = any>(
+      paginate?: <T = any>(
         data: T[],
         total: number,
         page: number,
@@ -121,45 +138,43 @@ declare global {
   }
 }
 
-// Extend the global Express namespace with our custom types
+// Also extend the express-serve-static-core module for compatibility
 declare module 'express-serve-static-core' {
   interface Request {
-    user?: JWTUser | User;  // Union type for both JWT and database user
-    auth?: JwtPayload;
+    user?: JWTUser | AuthUser;
     organizationId?: string;
+    organizationFilter?: (orgId: string | null) => boolean;
+    domainOrganizationId?: string;
+    isWhiteLabelDomain?: boolean;
+    analyticsScope?: {
+      organizationId: string;
+      startDate?: Date;
+      endDate?: Date;
+    };
+    organizationContext?: {
+      organizationId: string;
+      isWhiteLabelDomain: boolean;
+      domainOrganizationId?: string;
+    };
     requestId?: string;
     startTime?: [number, number];
     token?: string;
-    isAuthenticated?: () => boolean;
-    hasRole?: (role: string | string[]) => boolean;
-    hasPermission?: (permissions: string | string[]) => boolean;
-  }
-  
-  interface Response {
-    success: <T = any>(
-      data: T,
-      message?: string,
-      statusCode?: number
-    ) => Response;
-    
-    error: (
-      message: string,
-      statusCode?: number,
-      errorCode?: string,
-      details?: any
-    ) => Response;
-    
-    paginate: <T = any>(
-      data: T[],
-      total: number,
-      page: number,
-      limit: number,
-      message?: string
-    ) => Response;
-  }
-  
-  interface Application {
-    // Add any custom application-level methods here
+    responseMetrics?: {
+      startTime: [number, number];
+      endTime?: [number, number];
+      processingTime?: number;
+      dbQueries?: number;
+      cacheHits?: number;
+      cacheMisses?: number;
+    };
+    unifiedMetrics?: {
+      queries: number;
+      cacheHits: number;
+      cacheMisses: number;
+      errors: number;
+      startTime: [number, number];
+    };
+    trackQuery?: (query: string, duration: number) => void;
   }
 }
 

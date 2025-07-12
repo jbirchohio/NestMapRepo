@@ -14,7 +14,22 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-export function globalErrorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+
+// Extend Request interface for this middleware
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+    organizationId?: string | null;
+  };
+  // Standard Express Request properties
+  url?: string;
+  method?: string;
+  ip?: string;
+}
+
+export function globalErrorHandler(err: any, req: AuthenticatedRequest, res: Response, next: NextFunction) {
   // Log error with context
   console.error('Global Error:', {
     error: err.message,

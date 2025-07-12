@@ -1,13 +1,29 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db.js';
-import { auditLogs } from '../db/auditLog.js';
+import { auditLogs } from '../db/schema.js';
+import { AuthUser } from '../src/types/auth-user.js';
+
+// Extend Request interface for this middleware
+interface AuthenticatedRequest extends Request {
+  user?: AuthUser | {
+    id: string;
+    email: string;
+    role: string;
+    organizationId?: string | null;
+  };
+  // Standard Express Request properties
+  method: string;
+  originalUrl: string;
+  params: any;
+  body: any;
+}
 
 /**
  * Express middleware to log user actions for audit trail.
  * Logs action, resource, user, organization, and metadata to audit_logs table.
  */
 export async function auditLogMiddleware(
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<Response | void> {
@@ -16,11 +32,11 @@ export async function auditLogMiddleware(
     return next();
   }
 
-  // Capture method, path, and optionally resourceId from params
+  // Capture method, path, and optionally entityId from params
   const { method, originalUrl, params, body } = req;
   const action = `${method} ${originalUrl}`;
-  const resource = originalUrl.split('/')[1] || 'unknown.js';
-  const resourceId = params.id || params.tripId || params.userId || null;
+  const entityType = originalUrl.split('/')[2] || 'unknown'; // Get entity type from URL
+  const entityId = params.id || params.tripId || params.userId || null;
 
   // Store user info since we verified it exists
   const userId = req.user.id;
@@ -29,14 +45,12 @@ export async function auditLogMiddleware(
   // Attach after response sent
   res.on('finish', async () => {
     try {
-      await db.insert(auditLogs).values({
-        organizationId,
-        userId,
-        action,
-        resource,
-        resourceId,
-        metadata: { body, statusCode: res.statusCode }
-      });
+      // Only log if organizationId is not null
+      if (organizationId) {
+        await db.insert(auditLogs).values({
+          action
+        });
+      }
     } catch (err) {
       // Optionally log error, but do not block response
       // eslint-disable-next-line no-console
