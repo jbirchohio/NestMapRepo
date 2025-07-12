@@ -25,7 +25,7 @@ class ErrorBoundary extends Component<
         this.props.fallback || (
           <div className="p-4 text-center space-y-2">
             <h6 className="text-red-600 font-semibold">Something went wrong</h6>
-            <p className="text-sm">{this.state.error?.message}</p>
+            <p className="text-sm">{this.state.error?.message || 'An error occurred'}</p>
             <Button onClick={() => this.setState({ hasError: false, error: undefined })}>
               Try Again
             </Button>
