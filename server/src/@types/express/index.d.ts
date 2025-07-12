@@ -1,11 +1,11 @@
 import 'express';
-import type { AuthUser } from '../../shared/src/schema.js'/types/auth-user';
+import type { User } from '../../shared/src/schema.js';
 
 declare global {
   namespace Express {
     // Extend the Express Request type with our custom properties
     interface Request {
-      user?: AuthUser;
+      user?: User;
       cookies: {
         [key: string]: string | undefined;
       };

@@ -1,4 +1,4 @@
-import { User } from '../../shared/src/schema.js'/users/entities/user.entity.js';
+import { User } from '../../shared/src/schema.js';
 import { ParamsDictionary, Query } from 'express-serve-static-core.js';
 
 declare global {

@@ -6,7 +6,7 @@ import {
   cancelSubscription, 
   getSubscriptionDetails, 
   SUBSCRIPTION_PLANS 
-} from '../../shared/src/schema.js'/stripe.js';
+} from '../../shared/src/schema.js';
 
 // Mock Stripe SDK
 jest.mock('stripe');

@@ -1,8 +1,8 @@
 import { IAuthService } from '../interfaces/auth.service.interface.js';
 import { AuthResponse, LoginDto, RefreshTokenDto, UserRole } from '../dtos/auth.dto.js';
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
-import { UserRepository } from '../../shared/src/schema.js'/common/repositories/user/user.repository.interface.js';
-import { logger } from '../../shared/src/schema.js'/../utils/logger.js';
+import { UserRepository } from '../../shared/src/schema.js';
+import { logger } from '../../shared/src/schema.js';
 
 export class AuthService implements IAuthService {
   private readonly logger = logger;

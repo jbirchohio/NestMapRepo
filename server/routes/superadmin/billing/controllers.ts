@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../../shared/src/schema.js'/../db.js';
-import { organizations } from '../../shared/src/schema.js'/../db/schema.js';
-import { auditLogs } from '../../shared/src/schema.js'/../db/schema/auditLogs.js';
+import { db } from '../../db.js';
+import { organizations } from '../../shared/src/schema.js';
+import { auditLogs } from '../../shared/src/schema.js';
 import { eq, sql } from 'drizzle-orm';
 import Stripe from 'stripe.js';
 
@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 });
 
 import { logSuperadminAction } from '../audit-logs/audit-service.js';
-import { AuthenticatedRequest } from '../../shared/src/schema.js'/../middleware/superadmin.js';
+import { AuthenticatedRequest } from '../../shared/src/schema.js';
 
 // Get billing overview across all organizations
 export const getBillingOverview = async (req: Request, res: Response) => {

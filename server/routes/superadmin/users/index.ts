@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireSuperadmin } from '../../shared/src/schema.js'/../middleware/superadmin.js';
+import { requireSuperadmin } from '../../shared/src/schema.js';
 import * as usersController from './controllers.js';
 import * as usersValidators from './validators.js';
 

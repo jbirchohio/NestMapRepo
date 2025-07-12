@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Body, Param, Delete, Inject, Logger } from '@nestjs/common.js';
 import { Request, Response, NextFunction } from 'express';
 import { BookingService } from '../services/booking.service.js';
-import { Booking } from '../../shared/src/schema.js'/../db/bookingSchema.js';
+import { Booking } from '../../shared/src/schema.js';
 import { ResponseFormatter } from '../utils/response-formatter.util.js';
 import { withStandardizedErrorHandling } from '../middleware/standardized-error-handler.middleware.js';
 import { requireAuth, requireOrgContext, enforceOrganizationSecurity } from '../middleware/auth.middleware.js';

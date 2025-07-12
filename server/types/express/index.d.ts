@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { JwtPayload } from '../../shared/src/schema.js'/../shared/types/auth.js';
-import { User } from '../../shared/src/schema.js'/../shared/types/auth.js';
+import { JwtPayload } from '../../shared/src/schema.js';
+import { User } from '../../shared/src/schema.js';
 import { ParamsDictionary } from 'express-serve-static-core.js';
 import { ParsedQs } from 'qs.js';
 

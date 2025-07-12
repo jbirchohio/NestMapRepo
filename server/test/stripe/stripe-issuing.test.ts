@@ -1,6 +1,6 @@
 import Stripe from 'stripe.js';
-import { StripeIssuingService, CardIssuanceRequest, CardControlsUpdate } from '../../shared/src/schema.js'/services/stripeIssuingService.js';
-import { storage } from '../../shared/src/schema.js'/storage.js';
+import { StripeIssuingService, CardIssuanceRequest, CardControlsUpdate } from '../../shared/src/schema.js';
+import { storage } from '../../shared/src/schema.js';
 
 // Mock dependencies
 jest.mock('stripe');

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Stripe from 'stripe.js';
-import { db } from '../../shared/src/schema.js'/db.js';
+import { db } from '../../db.js';
 import request from 'supertest.js';
 import express, { Application } from 'express';
 import bodyParser from 'body-parser.js';
@@ -10,7 +10,7 @@ jest.mock('stripe');
 jest.mock('../../db');
 
 // Import the webhook router
-import webhookRouter from '../../shared/src/schema.js'/routes/webhooks.js';
+import webhookRouter from '../../shared/src/schema.js';
 
 // Create a test Express app
 const createTestApp = (): Application => {
