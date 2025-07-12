@@ -110,8 +110,6 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
     }
   });
 
-  const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
-
   if (carbonLoading || expenseLoading) {
     return (
       <Card>
@@ -244,6 +242,8 @@ export default function CarbonExpenseTracker({ tripId }: CarbonExpenseTrackerPro
 }
 
 function CarbonTrackingTab({ carbonData }: { carbonData: CarbonData | undefined }) {
+  const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c'];
+  
   if (!carbonData) {
     return <div className="text-center py-8 text-gray-500">No carbon data available yet.</div>;
   }
@@ -346,7 +346,7 @@ function CarbonTrackingTab({ carbonData }: { carbonData: CarbonData | undefined 
 
 function ExpenseManagementTab({ 
   expenseData, 
-  budget, 
+  budget: _, 
   newExpense, 
   setNewExpense, 
   onAddExpense, 

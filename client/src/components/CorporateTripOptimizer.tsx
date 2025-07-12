@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,6 +113,8 @@ export default function CorporateTripOptimizer() {
   };
 
   const handleRejectChanges = (tripId: number) => {
+    // tripId parameter available for future use
+    console.log('Rejecting changes for trip:', tripId);
     toast({
       title: "Changes Rejected",
       description: "Trip optimization suggestions have been dismissed.",

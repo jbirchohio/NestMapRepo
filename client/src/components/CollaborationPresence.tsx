@@ -25,11 +25,12 @@ export default function CollaborationPresence({
     isConnected, 
     connectionError, 
     updateCursor, 
-    updateSection,
+    updateSection: _,
     totalCollaborators 
   } = useRealTimeCollaboration({ tripId, organizationId, userId });
 
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  // Note: setRecentActivity is available for future use
 
   // Track mouse movement for cursor sharing
   useEffect(() => {

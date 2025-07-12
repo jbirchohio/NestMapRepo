@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ClientTrip, ClientActivity } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
@@ -156,6 +155,7 @@ export default function EnhancedAIAssistantModal({
     }
   };
 
+  // Food suggestions functionality - available for future use
   const handleGetFoodSuggestions = async () => {
     try {
       setIsProcessing(true);
