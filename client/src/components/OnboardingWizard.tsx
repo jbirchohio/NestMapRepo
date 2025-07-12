@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,10 +12,8 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/contexts/auth/AuthContext';
 import { 
   CheckCircle, 
-  Circle, 
   Building2, 
   Users, 
   MapPin, 
@@ -23,10 +21,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
-  Mail,
-  Calendar,
-  DollarSign,
-  Target,
   Zap
 } from 'lucide-react';
 
@@ -44,7 +38,6 @@ interface OnboardingWizardProps {
 }
 
 export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-  const { user, userId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);

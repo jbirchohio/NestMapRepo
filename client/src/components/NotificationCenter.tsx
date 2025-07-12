@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,8 +21,7 @@ import {
   Calendar, 
   CreditCard,
   AlertTriangle,
-  Info,
-  CheckCircle
+  Info
 } from 'lucide-react';
 
 interface Notification {
@@ -62,7 +61,7 @@ export default function NotificationCenter() {
   const queryClient = useQueryClient();
 
   // Fetch notifications
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
     refetchInterval: 30000, // Refetch every 30 seconds
   });
