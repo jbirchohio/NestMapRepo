@@ -19,8 +19,14 @@ export interface UserNavigationItem {
   onClick?: () => void | Promise<void>;
 }
 
-// Extend the API User type to handle both string and number IDs
-export type User = Omit<ApiUser, 'id'> & { id: string | number };
+// Extend the API User type to handle both string and number IDs and add missing fields
+export type User = Omit<ApiUser, 'id'> & { 
+  id: string | number;
+  avatarUrl?: string | null;
+  name?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+};
 
 export interface NavigationProps {
   isAuthenticated: boolean;
@@ -58,7 +64,7 @@ export interface UserMenuProps {
 export interface NotificationsMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  notifications: Notification[];
+  notifications: AppNotification[];
   onNotificationClick: (id: string) => Promise<void>;
   onMarkAllAsRead: () => Promise<void>;
   onNotificationsClick: () => void;

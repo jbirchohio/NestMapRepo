@@ -190,7 +190,7 @@ export default function TeamManagement() {
       }
       return response.json();
     },
-    onSuccess: (data, memberId) => {
+    onSuccess: (_, memberId) => {
       const member = teamMembers?.find((m: TeamMember) => m.id === memberId);
       queryClient.invalidateQueries({ queryKey: ['/api/organizations/members'] });
       toast({
@@ -199,7 +199,7 @@ export default function TeamManagement() {
         variant: "destructive",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to remove member. Please try again.",

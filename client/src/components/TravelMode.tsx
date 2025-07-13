@@ -10,13 +10,11 @@ import {
   MapPin, 
   Navigation, 
   Camera, 
-  Bell, 
   Wifi, 
   WifiOff, 
   CheckCircle, 
   Clock,
   Route,
-  Star,
   Upload,
   Phone
 } from 'lucide-react';
@@ -27,14 +25,13 @@ interface TravelActivity {
   description: string;
   locationName: string;
   address?: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
+  latitude?: number;
+  longitude?: number;
   category: string;
   duration: number;
   startTime?: string;
   endTime?: string;
+  time?: string;
   day?: number;
   price?: number;
   rating?: number;
@@ -45,15 +42,14 @@ interface TravelActivity {
 }
 
 interface TravelModeProps {
-  tripId: number;
+  tripId?: number;
   activities: TravelActivity[];
   currentActivity?: TravelActivity;
 }
 
-export default function TravelMode({ tripId, activities, currentActivity }: TravelModeProps) {
+export default function TravelMode({ activities, currentActivity }: TravelModeProps) {
   const {
     currentLocation,
-    isLocationEnabled,
     locationError,
     isOnline,
     capturePhoto,
@@ -81,8 +77,8 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
         const distance = calculateDistance(
           currentLocation.latitude,
           currentLocation.longitude,
-          parseFloat(activity.latitude),
-          parseFloat(activity.longitude)
+          activity.latitude,
+          activity.longitude
         );
         
         return distance <= 0.5; // Within 500 meters
@@ -90,14 +86,14 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
         const distanceA = calculateDistance(
           currentLocation.latitude,
           currentLocation.longitude,
-          parseFloat(a.latitude),
-          parseFloat(a.longitude)
+          a.latitude!,
+          a.longitude!
         );
         const distanceB = calculateDistance(
           currentLocation.latitude,
           currentLocation.longitude,
-          parseFloat(b.latitude),
-          parseFloat(b.longitude)
+          b.latitude!,
+          b.longitude!
         );
         return distanceA - distanceB;
       });
@@ -113,8 +109,8 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
             `${closestActivity.title} is just ${Math.round(calculateDistance(
               currentLocation.latitude,
               currentLocation.longitude,
-              parseFloat(closestActivity.latitude),
-              parseFloat(closestActivity.longitude)
+              closestActivity.latitude!,
+              closestActivity.longitude!
             ) * 1000)}m away`
           );
         }
@@ -302,8 +298,8 @@ export default function TravelMode({ tripId, activities, currentActivity }: Trav
                     variant="outline"
                     size="sm"
                     onClick={() => openMapsNavigation({
-                      lat: parseFloat(nextActivity.latitude),
-                      lng: parseFloat(nextActivity.longitude),
+                      lat: nextActivity.latitude!,
+                      lng: nextActivity.longitude!,
                       name: nextActivity.locationName
                     })}
                     className="flex items-center gap-2"

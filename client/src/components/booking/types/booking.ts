@@ -40,6 +40,57 @@ export type TripType = 'one-way' | 'round-trip';
 export type CabinType = 'economy' | 'premium-economy' | 'business' | 'first';
 export type BookingStep = 'client-info' | 'flights' | 'hotels' | 'confirmation';
 
+export interface Flight {
+  id: string;
+  flightNumber: string;
+  airline: string;
+  departure: {
+    airport: string;
+    city: string;
+    time: string;
+  };
+  arrival: {
+    airport: string;
+    city: string;
+    time: string;
+  };
+  duration: string;
+  price: number;
+  cabin: CabinType;
+  stops?: number;
+  departureTime?: string;
+  arrivalTime?: string;
+  segments?: FlightSegment[];
+}
+
+export interface FlightSegment {
+  carrier: {
+    name: string;
+  };
+  flightNumber: string;
+  departure: {
+    airport: string;
+    city: string;
+    time: string;
+  };
+  arrival: {
+    airport: string;
+    city: string;
+    time: string;
+  };
+}
+
+export interface Hotel {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  rating: number;
+  price: number;
+  amenities: string[];
+  images: string[];
+}
+
 export interface TravelerBooking {
   traveler: string;
   departureFlight?: Flight | null;

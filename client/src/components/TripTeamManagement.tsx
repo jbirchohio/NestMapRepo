@@ -97,6 +97,23 @@ interface NewTraveler {
   notes: string;
 }
 
+interface TravelerApiData {
+  trip_id: number;
+  name: string;
+  email: string;
+  phone: string;
+  date_of_birth: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  emergency_contact_relationship: string;
+  departure_city: string;
+  departure_country: string;
+  travel_class: string;
+  dietary_requirements: string;
+  budget_allocation: number | null;
+  notes: string;
+}
+
 interface TripTeamManagementProps {
   tripId: number;
   userRole: string;
@@ -142,7 +159,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
   });
 
   const addTravelerMutation = useMutation({
-    mutationFn: (data: NewTraveler) =>
+    mutationFn: (data: TravelerApiData) =>
       apiRequest("POST", `/api/trips/${tripId}/travelers`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/trips/${tripId}/travelers`] });
@@ -170,7 +187,7 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     onError: (error: unknown) => {
       toast({
         title: "Failed to add team member",
-        description: error.message || "Please try again.",
+        description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
     },
@@ -302,13 +319,8 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     // Debug: Log complete trip data to identify date field names
     console.log('DEBUG: Complete tripData object:', tripData);
     console.log('DEBUG: Available date fields:', {
-      start_date: tripData.start_date,
       startDate: tripData.startDate,
-      end_date: tripData.end_date,
       endDate: tripData.endDate,
-      departure_date: tripData.departure_date,
-      return_date: tripData.return_date,
-      dates: tripData.dates
     });
 
     // Create sequential booking workflow data using existing tripData
@@ -325,8 +337,8 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
     const sequentialBookingData = {
       tripId: tripId.toString(),
       tripDestination: `${city}, ${country}`,
-      departureDate: formatDateForBooking(tripData.startDate) || formatDateForBooking(tripData.start_date),
-      returnDate: formatDateForBooking(tripData.endDate) || formatDateForBooking(tripData.end_date),
+      departureDate: formatDateForBooking(tripData.startDate),
+      returnDate: formatDateForBooking(tripData.endDate),
       currentTravelerIndex: 0,
       travelers: travelers.map(traveler => ({
         id: traveler.id,

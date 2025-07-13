@@ -5,7 +5,6 @@ import { NotificationsMenuProps } from './types';
 
 export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
   isOpen,
-  onClose,
   notifications,
   onNotificationClick,
   onMarkAllAsRead,
