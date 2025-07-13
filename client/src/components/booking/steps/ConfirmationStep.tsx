@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import { CalendarIcon, Plane, Home, Users, CreditCard, CheckCircle } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { Booking, Flight, Hotel } from '../types';
+import { useToast } from '@/hooks/use-toast';
+import { Flight, Hotel } from '../types';
 
 interface ConfirmationStepProps {
   formData: {
@@ -26,7 +26,7 @@ interface ConfirmationStepProps {
   onConfirm: () => void;
 }
 
-export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationStepProps) => {
+export const ConfirmationStep = ({ formData, onBack }: ConfirmationStepProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,13 +35,6 @@ export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationSt
       style: 'currency',
       currency: 'USD',
     }).format(amount);
-  };
-
-  const formatDuration = (duration: string) => {
-    const parts = duration.split(' ');
-    const hours = parseInt(parts[0]);
-    const minutes = parseInt(parts[2]);
-    return `${hours}h ${minutes}m`;
   };
 
   const handleConfirm = async () => {

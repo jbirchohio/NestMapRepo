@@ -10,11 +10,8 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   user,
   navigationItems,
   notifications,
-  onNotificationClick,
-  onMarkAllAsRead,
   onSignOut,
 }) => {
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <AnimatePresence>
