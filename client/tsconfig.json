@@ -10,7 +10,24 @@
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "composite": true,
-    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/client.tsbuildinfo"
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/client.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/components": ["src/components"],
+      "@/lib": ["src/lib"],
+      "@/hooks": ["src/hooks"],
+      "@/pages": ["src/pages"],
+      "@/services": ["src/services"],
+      "@/utils": ["src/utils"],
+      "@/types": ["src/types"],
+      "@/contexts": ["src/contexts"],
+      "@/config": ["src/config"],
+      "@/layouts": ["src/layouts"],
+      "@/styles": ["src/styles"],
+      "@/components/ui": ["src/components/ui"],
+      "@shared/*": ["../shared/src/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

@@ -28,7 +28,7 @@ export const supabase = createClient(
 // Auth helper functions
 export const auth = {
   // Sign up with email and password
-  signUp: async (email: string, password: string, metadata: any = {}) => {
+  signUp: async (email: string, password: string, metadata: Record<string, unknown> = {}) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

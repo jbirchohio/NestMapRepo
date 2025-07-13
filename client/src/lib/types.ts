@@ -138,3 +138,85 @@ export interface ActivityModalProps {
   onClose: () => void;
   onSave: () => void;
 }
+
+// AI Trip Generation related types
+export interface GeneratedTrip {
+  id: string;
+  title: string;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  budget: number;
+  travelers: number;
+  summary: string;
+  days: TripDay[];
+  flights: Flight[];
+  accommodations: Accommodation[];
+  activities: TripActivity[];
+  meals: Meal[];
+  tripSummary: TripSummary;
+  trip_summary?: TripSummary; // Keep for backward compatibility
+  client_access?: ClientAccess;
+  created_at: string;
+}
+
+export interface TripDay {
+  date: string;
+  activities: TripActivity[];
+}
+
+export interface Flight {
+  id: string;
+  departure: string;
+  arrival: string;
+  departure_time: string;
+  arrival_time: string;
+  airline: string;
+  flight_number: string;
+  price: number;
+}
+
+export interface Accommodation {
+  id: string;
+  name: string;
+  address: string;
+  check_in: string;
+  check_out: string;
+  price_per_night: number;
+  rating: number;
+}
+
+export interface TripActivity {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  duration: number;
+  location: string;
+  price: number;
+  category: string;
+}
+
+export interface Meal {
+  id: string;
+  name: string;
+  restaurant: string;
+  time: string;
+  price: number;
+  cuisine: string;
+}
+
+export interface TripSummary {
+  total_cost: number;
+  duration_days: number;
+  activities_count: number;
+  meals_count: number;
+  flights_count: number;
+  accommodations_count: number;
+}
+
+export interface ClientAccess {
+  email: string;
+  phone?: string;
+  access_level: 'view' | 'edit';
+}

@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 
+interface WebSocketMessage {
+  type: string;
+  collaborators?: CollaboratorPresence[];
+  collaborator?: CollaboratorPresence;
+  [key: string]: unknown;
+}
+
 interface CollaboratorPresence {
   userId: number;
   username: string;
@@ -121,13 +128,15 @@ export function useRealTimeCollaboration({
     }
   }, [location]);
 
-  const handleWebSocketMessage = (data: any) => {
+  const handleWebSocketMessage = (data: WebSocketMessage) => {
     switch (data.type) {
       case 'collaborators_list':
-        setCollaborators(data.collaborators.map((collab: any, index: number) => ({
-          ...collab,
-          color: PRESENCE_COLORS[index % PRESENCE_COLORS.length]
-        })));
+        if (data.collaborators) {
+          setCollaborators(data.collaborators.map((collab: CollaboratorPresence, index: number) => ({
+            ...collab,
+            color: PRESENCE_COLORS[index % PRESENCE_COLORS.length]
+          })));
+        }
         break;
 
       case 'collaborator_joined':
@@ -203,7 +212,7 @@ export function useRealTimeCollaboration({
   };
 
   // Send activity updates (editing, viewing, etc.)
-  const sendActivity = (activityType: string, data: any) => {
+  const sendActivity = (activityType: string, data: Record<string, unknown>) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
         type: 'activity_update',
