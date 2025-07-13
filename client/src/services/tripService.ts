@@ -1,5 +1,5 @@
 import { ApiClient } from '@/services/api/apiClient';
-import { GeneratedTrip } from '@/types/trip';
+import { GeneratedTrip } from '@/lib/types';
 
 const apiClient = new ApiClient({
   baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',

@@ -7,6 +7,16 @@ interface GeolocationPosition {
   timestamp: number;
 }
 
+interface NotificationOptions {
+  icon?: string;
+  badge?: string;
+  tag?: string;
+  requireInteraction?: boolean;
+  silent?: boolean;
+  data?: unknown;
+  timestamp?: number;
+}
+
 interface MobileFeatures {
   // Location services
   currentLocation: GeolocationPosition | null;
@@ -15,13 +25,13 @@ interface MobileFeatures {
   
   // Offline capabilities
   isOnline: boolean;
-  offlineData: any[];
+  offlineData: unknown[];
   
   // Camera integration
   capturePhoto: () => Promise<string | null>;
   
   // Push notifications
-  sendNotification: (title: string, body: string, options?: any) => void;
+  sendNotification: (title: string, body: string, options?: NotificationOptions) => void;
   requestNotificationPermission: () => Promise<boolean>;
   
   // Travel mode
@@ -37,7 +47,7 @@ export function useMobileFeatures(): MobileFeatures {
   const [isLocationEnabled, setIsLocationEnabled] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [offlineData, setOfflineData] = useState<any[]>([]);
+  const [offlineData, setOfflineData] = useState<unknown[]>([]);
   const [isTravelMode, setIsTravelMode] = useState(false);
   
   const watchIdRef = useRef<number | null>(null);
@@ -203,8 +213,8 @@ export function useMobileFeatures(): MobileFeatures {
         input.capture = 'environment';
         
         return new Promise((resolve) => {
-          input.onchange = (e: any) => {
-            const file = e.target.files[0];
+          input.onchange = (e: Event) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
             if (file) {
               const reader = new FileReader();
               reader.onload = () => resolve(reader.result as string);
@@ -240,7 +250,7 @@ export function useMobileFeatures(): MobileFeatures {
     return permission === 'granted';
   };
 
-  const sendNotification = (title: string, body: string, options: any = {}) => {
+  const sendNotification = (title: string, body: string, options: NotificationOptions = {}) => {
     if (Notification.permission !== 'granted') {
       console.log('Notification permission not granted');
       return;

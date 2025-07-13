@@ -2,17 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
-import { ClientActivity } from "@/lib/types";
+import { ClientActivity, ClientTrip } from "@/lib/types";
 
 export default function useActivities(tripId: string | number) {
   // Helper function to check if trip exists in localStorage (guest mode)
-  const getGuestTrip = (): any => {
+  const getGuestTrip = (): ClientTrip | null => {
     if (typeof window === "undefined") return null;
     const stored = localStorage.getItem("nestmap_guest_trips");
     if (!stored) return null;
     
-    const guestTrips = JSON.parse(stored);
-    return guestTrips.find((trip: any) => trip.id === tripId) || null;
+    const guestTrips: ClientTrip[] = JSON.parse(stored);
+    return guestTrips.find((trip: ClientTrip) => trip.id === tripId) || null;
   };
 
   const {
@@ -27,15 +27,15 @@ export default function useActivities(tripId: string | number) {
       
       // Check if this is guest mode by looking for trip in localStorage
       const guestTripsData = localStorage.getItem("nestmap_guest_trips");
-      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: any) => trip.id === tripId);
+      const isGuestTrip = guestTripsData && JSON.parse(guestTripsData).some((trip: ClientTrip) => trip.id === tripId);
       
       if (isGuestTrip) {
         // For guest trips, get activities from localStorage
         const guestActivities = localStorage.getItem(`guest_activities_${tripId}`);
         if (guestActivities) {
-          const activities = JSON.parse(guestActivities);
+          const activities: ClientActivity[] = JSON.parse(guestActivities);
           // Convert date strings back to Date objects for consistency
-          const processedActivities = activities.map((activity: any) => ({
+          const processedActivities = activities.map((activity: ClientActivity) => ({
             ...activity,
             date: new Date(activity.date)
           }));
