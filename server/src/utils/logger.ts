@@ -8,7 +8,7 @@ const { combine, timestamp, printf, colorize, align } = winston.format;
 const createLogFormat = () => {
   return printf((info: TransformableInfo) => {
     const { timestamp, level, message, ...metadata } = info;
-    const metaString = Object.keys(metadata).length ? `\n${JSON.stringify(metadata, null, 2)}` : '.js';
+    const metaString = Object.keys(metadata).length ? `\n${JSON.stringify(metadata, null, 2)}` : '';
     return `[${timestamp}] ${level}: ${message}${metaString}`;
   });
 };
@@ -40,6 +40,27 @@ const stream: StreamOptions = {
     logger.info(message.trim());
   },
 };
+
+// Export Logger class
+export class Logger {
+  constructor(private context: string) {}
+  
+  info(message: string, meta?: any): void {
+    logger.info(`[${this.context}] ${message}`, meta);
+  }
+  
+  error(message: string, error?: any): void {
+    logger.error(`[${this.context}] ${message}`, error);
+  }
+  
+  warn(message: string, meta?: any): void {
+    logger.warn(`[${this.context}] ${message}`, meta);
+  }
+  
+  log(message: string, meta?: any): void {
+    logger.info(`[${this.context}] ${message}`, meta);
+  }
+}
 
 export { logger, stream };
 export default logger;

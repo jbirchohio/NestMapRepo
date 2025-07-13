@@ -1,6 +1,6 @@
 import Redis from 'ioredis-mock';
 import type { Redis as RedisType } from 'ioredis';
-import { logger } from './logger.js';
+import { logger } from './logger';
 
 let redisClient: RedisType;
 
@@ -26,4 +26,5 @@ if (process.env.NODE_ENV === 'test') {
 }
 
 export const redis = redisClient;
+export { redisClient };
 export default redisClient;
