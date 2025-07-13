@@ -1,9 +1,9 @@
-import jwt, { type SignOptions } from 'jsonwebtoken.js';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 const { sign, verify, decode } = jwt;
-import { v4 as uuidv4 } from 'uuid.js';
-import { redis } from '../../shared/src/schema.js';
+import { v4 as uuidv4 } from 'uuid';
+import { redis } from '../../shared/src/schema';
 // @ts-ignore - We know the logger exists
-import logger from '../../shared/src/schema.js';
+import logger from '../../shared/src/schema';
 import {
   UserRole,
   TokenType,
@@ -11,7 +11,7 @@ import {
   TokenVerificationResult,
   JwtConfig,
   AuthTokens
-} from './types.js';
+} from './types';
 
 // Token expiration times (in seconds as strings for jsonwebtoken)
 const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
@@ -19,7 +19,7 @@ const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
 const PASSWORD_RESET_EXPIRY = '1h'; // 1 hour
 
 // Redis key prefix
-const TOKEN_BLACKLIST_PREFIX = 'token:blacklist:.js';
+const TOKEN_BLACKLIST_PREFIX = 'token:blacklist:';
 
 /**
  * JWT configuration with default values
@@ -252,7 +252,7 @@ export const revokeAllUserTokens = async (userId: string): Promise<void> => {
 };
 
 // Export all types
-export * from './types.js';
+export * from './types';
 
 // Export the JWT utility functions
 const jwtUtils = {

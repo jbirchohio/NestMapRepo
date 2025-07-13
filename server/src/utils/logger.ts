@@ -1,6 +1,6 @@
-import winston from 'winston.js';
-import { TransformableInfo } from 'logform.js';
-import { StreamOptions } from 'morgan.js';
+import winston from 'winston';
+import { TransformableInfo } from 'logform';
+import { StreamOptions } from 'morgan';
 
 const { combine, timestamp, printf, colorize, align } = winston.format;
 

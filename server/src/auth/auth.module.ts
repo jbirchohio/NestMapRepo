@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common.js';
-import { ConfigModule } from '@nestjs/config.js';
-import { AuthController } from './controllers/auth.controller.js';
-import { JwtAuthService } from './services/jwtAuthService.js';
-import { RepositoriesModule } from '../common/repositories/repositories.module.js';
-import { AuthUserRepositoryProvider, RefreshTokenRepositoryProvider } from '../common/repositories/repository.providers.js';
-import { EmailModule } from '../email/email.module.js';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AuthController } from './controllers/auth.controller';
+import { JwtAuthService } from './services/jwtAuthService';
+import { RepositoriesModule } from '../common/repositories/repositories.module';
+import { AuthUserRepositoryProvider, RefreshTokenRepositoryProvider } from '../common/repositories/repository.providers';
+import { EmailModule } from '../email/email.module';
 
 /**
  * Auth module that handles authentication and authorization
