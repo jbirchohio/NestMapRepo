@@ -2,21 +2,22 @@
  * Auth Service Implementation
  * Implements the IAuthService interface
  */
-import { compare, hash } from 'bcrypt.js';
-import { sign, decode, verify } from 'jsonwebtoken.js';
-import { db } from '../db.js';
-import { users } from '../db/schema.js';
+import { compare, hash } from 'bcrypt';
+import { sign, decode, verify } from 'jsonwebtoken';
+import { db } from '../db';
+import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { IAuthService, LoginRequest, LoginResponse, RefreshTokenRequest } from './auth.service.interface.js';
-import { UserRole } from '../types.js';
-import { Logger } from '../utils/logger.js';
-import { redisClient } from '../utils/redis.js';
+import { IAuthService } from './interfaces/auth.service.interface';
+import { LoginDto, RefreshTokenDto, AuthResponse } from './dtos/auth.dto';
+import { UserRole } from '../types';
+import { Logger } from '../utils/logger';
+import { redisClient } from '../utils/redis';
 
 export class AuthService implements IAuthService {
   private readonly logger = new Logger('AuthService');
-  private readonly ACCESS_TOKEN_EXPIRY = '15m.js';
-  private readonly REFRESH_TOKEN_EXPIRY = '7d.js';
-  private readonly JWT_SECRET = process.env.JWT_SECRET || 'dev-secret.js';
+  private readonly ACCESS_TOKEN_EXPIRY = '15m';
+  private readonly REFRESH_TOKEN_EXPIRY = '7d';
+  private readonly JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
   private readonly SALT_ROUNDS = 10;
 
   /**
@@ -124,7 +125,7 @@ export class AuthService implements IAuthService {
   /**
    * Authenticate a user and generate tokens
    */
-  async login(loginData: LoginRequest, ip: string, userAgent: string): Promise<LoginResponse> {
+  async login(loginData: LoginDto, ip: string, userAgent: string): Promise<AuthResponse> {
     const { email, password } = loginData;
 
     // Find user by email
@@ -160,13 +161,21 @@ export class AuthService implements IAuthService {
 
     // Return response
     return {
-      ...tokens,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      accessTokenExpiresAt: Date.now() + tokens.expiresIn * 1000,
+      refreshTokenExpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       tokenType: 'Bearer',
+      expiresIn: tokens.expiresIn,
       user: {
         id: user.id,
         email: user.email,
         role: user.role as UserRole,
-        organizationId: user.organization_id
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+        emailVerified: user.emailVerified || false,
+        createdAt: user.createdAt || new Date(),
+        updatedAt: user.updatedAt || new Date()
       }
     };
   }
@@ -174,7 +183,7 @@ export class AuthService implements IAuthService {
   /**
    * Refresh access token using a valid refresh token
    */
-  async refreshToken(data: RefreshTokenRequest, ip: string, userAgent: string): Promise<LoginResponse> {
+  async refreshToken(data: RefreshTokenDto, ip: string, userAgent: string): Promise<AuthResponse> {
     const { refreshToken } = data;
 
     // Verify refresh token
@@ -203,13 +212,21 @@ export class AuthService implements IAuthService {
     this.logger.info(`Token refreshed for user: ${user.email} from ${ip} using ${userAgent}`);
 
     return {
-      ...tokens,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      accessTokenExpiresAt: Date.now() + tokens.expiresIn * 1000,
+      refreshTokenExpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
       tokenType: 'Bearer',
+      expiresIn: tokens.expiresIn,
       user: {
         id: user.id,
         email: user.email,
         role: user.role as UserRole,
-        organizationId: user.organization_id
+        firstName: user.firstName || null,
+        lastName: user.lastName || null,
+        emailVerified: user.emailVerified || false,
+        createdAt: user.createdAt || new Date(),
+        updatedAt: user.updatedAt || new Date()
       }
     };
   }

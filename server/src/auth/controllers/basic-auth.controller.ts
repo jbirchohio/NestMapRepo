@@ -3,10 +3,10 @@ import { IAuthService } from '../interfaces/auth.service.interface';
 import { LoginDto, RefreshTokenDto, RequestPasswordResetDto, ResetPasswordDto } from '../dtos/auth.dto';
 
 /**
- * Auth Controller implementation with proper Express types
- * This replaces the legacy function-based controller
+ * Basic Auth Controller implementation with proper Express types
+ * This is a simplified version to resolve TypeScript errors
  */
-export class AuthController {
+export class BasicAuthController {
   constructor(private readonly authService: IAuthService) {}
 
   /**

@@ -1,6 +1,6 @@
-import Redis from 'ioredis-mock.js';
-import type { Redis as RedisType } from 'ioredis.js';
-import { logger } from './logger.js';
+import Redis from 'ioredis-mock';
+import type { Redis as RedisType } from 'ioredis';
+import { logger } from './logger';
 
 let redisClient: RedisType;
 
@@ -12,7 +12,7 @@ if (process.env.NODE_ENV === 'test') {
   });
 } else {
   // In non-test environments, use real Redis
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379.js';
+  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
   redisClient = new (Redis as any)(redisUrl);
 
   // Only set up event handlers for non-test environments
@@ -26,4 +26,5 @@ if (process.env.NODE_ENV === 'test') {
 }
 
 export const redis = redisClient;
+export { redisClient };
 export default redisClient;
