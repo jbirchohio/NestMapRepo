@@ -1,9 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common.js';
-import { Trip, User } from '../../shared/src/schema.js';
-import { CorporateTripDto, TripService } from '../interfaces/trip.service.interface.js';
-import { TripRepository } from '../interfaces/trip.repository.interface.js';
-import { UnauthorizedError } from '../../shared/src/schema.js';
-import { Inject } from '@nestjs/common.js';
+import { Injectable, Logger, Inject, UnauthorizedException } from '@nestjs/common';
+import type { Trip, User } from '@shared';
+import type { CorporateTripDto, TripService } from '../interfaces/trip.service.interface.js';
+import type { TripRepository } from '../interfaces/trip.repository.interface.js';
 
 @Injectable()
 export class TripServiceImpl implements TripService {
@@ -35,7 +33,7 @@ export class TripServiceImpl implements TripService {
     // Enforce organization-level access control
     const hasAccess = await this.tripRepository.checkTripAccess(tripId, user);
     if (!hasAccess) {
-      throw new UnauthorizedError('Access denied: You do not have permission to view this trip.');
+      throw new UnauthorizedException('Access denied: You do not have permission to view this trip.');
     }
 
     return trip;

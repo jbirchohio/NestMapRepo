@@ -1,10 +1,13 @@
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Configuration
 const BATCH_SIZE = 10; // Reduced batch size to prevent memory issues
 const TSC_CMD = 'npx tsc --noEmit';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const TSCONFIG_PATH = path.join(__dirname, 'tsconfig.json');
 
 // Get all TypeScript/TSX files from the project
@@ -48,7 +51,7 @@ function runTypeScriptCheck(files) {
   
   try {
     // Create a temporary tsconfig that only includes the current batch of files
-    const tsconfig = require(TSCONFIG_PATH);
+    const tsconfig = JSON.parse(fs.readFileSync(TSCONFIG_PATH, 'utf-8'));
     tsconfig.include = files;
     
     const tempTsconfigPath = path.join(__dirname, 'tsconfig.temp.json');

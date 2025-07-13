@@ -1,56 +1,27 @@
 {
   "extends": "../tsconfig.base.json",
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.d.ts",
-    "./storage/**/*.ts",
-    "./db/**/*.ts",
-    "./utils/**/*.ts",
-    "./config/**/*.ts",
-    "./middleware/**/*.ts",
-    "./routes/**/*.ts",
-    "./services/**/*.ts",
-    "./types/**/*.ts",
-    "./types/**/*.d.ts",
-    "./@types/**/*.d.ts",
-    "./index.ts",
-    "./*.ts"
-  ],
-  "exclude": ["node_modules"],
   "compilerOptions": {
-    "outDir": "../dist/server",
-    "rootDir": ".",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "lib": ["ES2022", "DOM", "ES2022.Object", "ES2022.String", "ES2015.Promise", "ES2015.Iterable"],
-    "types": ["node", "express"],
-    "typeRoots": [
-      "./node_modules/@types",
-      "./@types",
-      "./src/@types",
-      "./types",
-      "../node_modules/@types"
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "@server/*": ["src/*"],
-      "@shared/*": ["../shared/src/*"],
-      "@shared/schema": ["../shared/src/schema"]
-    },
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "noUnusedParameters": false,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "noImplicitReturns": true,
+    "outDir": "dist",
+    "rootDir": "./src",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "skipLibCheck": true,
-    "target": "ES2022",
-    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/server.tsbuildinfo"
+    "sourceMap": true,
+    "types": ["node", "jest"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowJs": true,
+    "noEmit": false
   },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }

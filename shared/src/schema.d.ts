@@ -146,7 +146,7 @@ export declare function transformTripToFrontend(trip: Trip): {
     isPublic: boolean;
     shareCode: string | undefined;
     sharingEnabled: boolean;
-    sharePermission: "view" | "admin" | "edit";
+    sharePermission: "admin" | "edit" | "view";
     city: string | undefined;
     country: string | undefined;
     location: string | undefined;

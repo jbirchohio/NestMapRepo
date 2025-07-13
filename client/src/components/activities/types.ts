@@ -17,4 +17,4 @@ export const activitySchema = z.object({
 export type ActivityFormValues = z.infer<typeof activitySchema>;
 
 // Re-export for convenience
-export { ActivityModalProps };
+export type { ActivityModalProps };

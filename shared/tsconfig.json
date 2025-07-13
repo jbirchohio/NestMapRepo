@@ -1,24 +1,36 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../dist/shared",
-    "rootDir": ".",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "lib": ["ES2022", "DOM", "ES2022.Object", "ES2022.String", "ES2015.Promise", "ES2015.Iterable"],
+    "outDir": "dist",
+    "rootDir": "./src",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "esModuleInterop": true,
+    "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/*"]
+      "@shared/*": ["./src/*"]
     },
-    "target": "ES2022",
+    "types": ["node"],
+    "typeRoots": [
+      "../node_modules/@types"
+    ],
+    "esModuleInterop": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/shared.tsbuildinfo"
+    "moduleResolution": "node",
+    "module": "esnext",
+    "target": "es2022"
   },
-  "include": ["src/**/*.ts", "types/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

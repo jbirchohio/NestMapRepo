@@ -1,0 +1,26 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./client"
+    },
+    {
+      "path": "./server"
+    },
+    {
+      "path": "./shared"
+    }
+  ],
+  "include": [
+    "analyze-code.ts",
+    "capacitor.config.ts",
+    "cli\\src\\commands\\deploy.ts",
+    "cli\\src\\commands\\seed.ts",
+    "cli\\src\\commands\\setup.ts",
+    "cli\\src\\commands\\tests.ts",
+    "client\\src\\App.tsx",
+    "client\\src\\components\\activities\\ActivityForm.tsx",
+    "client\\src\\components\\activities\\ActivityLocationPicker.tsx",
+    "client\\src\\components\\activities\\ActivityModal.tsx"
+  ]
+}

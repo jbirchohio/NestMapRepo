@@ -12,7 +12,14 @@ export type {
   NewUser,
   NewTrip,
   BaseEntity,
+  BaseRepository,
   UserRole,
   TripRole,
-  OrganizationPlan
+  OrganizationPlan,
+  // Export transform functions
+  transformTripToFrontend,
+  transformActivityToFrontend
 } from './schema.js';
+
+// Export constants
+export { USER_ROLES } from './schema.js';
