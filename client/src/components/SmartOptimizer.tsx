@@ -56,17 +56,17 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
   const [selectedTab, setSelectedTab] = useState('optimization');
 
   // Fetch optimization data
-  const { data: optimization, isLoading: optimizationLoading, refetch: refetchOptimization } = useQuery({
+  const { data: optimization, isLoading: optimizationLoading, refetch: refetchOptimization } = useQuery<Optimization>({
     queryKey: ['/api/optimize/schedule', tripId],
     enabled: !!tripId && activities.length > 0
   });
 
-  const { data: conflicts, isLoading: conflictsLoading } = useQuery({
+  const { data: conflicts, isLoading: conflictsLoading } = useQuery<Conflict[]>({
     queryKey: ['/api/conflicts/detect', tripId],
     enabled: !!tripId && activities.length > 0
   });
 
-  const { data: reminders, isLoading: remindersLoading } = useQuery({
+  const { data: reminders, isLoading: remindersLoading } = useQuery<Reminder[]>({
     queryKey: ['/api/reminders/smart', tripId],
     enabled: !!tripId && activities.length > 0
   });
@@ -231,23 +231,29 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
             </TabsList>
 
             <TabsContent value="optimization" className="space-y-4">
-              <OptimizationTab 
-                optimization={optimization} 
-                onApplyOptimization={() => applyOptimizationMutation.mutate()}
-                isApplying={applyOptimizationMutation.isPending}
-              />
+              {optimization ? (
+                <OptimizationTab 
+                  optimization={optimization} 
+                  onApplyOptimization={() => applyOptimizationMutation.mutate()}
+                  isApplying={applyOptimizationMutation.isPending}
+                />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No optimization data available
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="conflicts" className="space-y-4">
               <ConflictsTab 
-                conflicts={conflicts || []} 
+                conflicts={conflicts ?? []} 
                 onAutoFix={(conflictIds: any) => autoFixMutation.mutate(conflictIds)}
                 isFixing={autoFixMutation.isPending}
               />
             </TabsContent>
 
             <TabsContent value="reminders" className="space-y-4">
-              <RemindersTab reminders={reminders || []} />
+              <RemindersTab reminders={reminders ?? []} />
             </TabsContent>
 
             <TabsContent value="settings" className="space-y-4">
@@ -266,6 +272,8 @@ export default function SmartOptimizer({ tripId, activities, onActivitiesUpdate 
 interface OptimizationImprovement {
   efficiencyGain: number;
   timeSaved: number;
+  travelTimeReduced: number;
+  conflictsResolved: number;
   routeChanges: number;
   suggestedActivities: OptimizableActivity[];
   optimizedSchedule: OptimizableActivity[];
@@ -275,6 +283,7 @@ interface Optimization {
   id: string;
   tripId: number;
   improvements: OptimizationImprovement;
+  recommendations?: string[];
   createdAt: string;
   status: 'pending' | 'completed' | 'failed';
 }
@@ -328,7 +337,7 @@ function OptimizationTab({ optimization, onApplyOptimization, isApplying }: Opti
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {recommendations.map((rec: string, index: number) => (
+              {recommendations?.map((rec: string, index: number) => (
                 <div key={index} className="flex items-start gap-2 p-2 bg-muted rounded">
                   <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">{rec}</span>

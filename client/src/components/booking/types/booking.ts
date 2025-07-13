@@ -58,6 +58,26 @@ export interface Flight {
   price: number;
   cabin: CabinType;
   stops?: number;
+  departureTime?: string;
+  arrivalTime?: string;
+  segments?: FlightSegment[];
+}
+
+export interface FlightSegment {
+  carrier: {
+    name: string;
+  };
+  flightNumber: string;
+  departure: {
+    airport: string;
+    city: string;
+    time: string;
+  };
+  arrival: {
+    airport: string;
+    city: string;
+    time: string;
+  };
 }
 
 export interface Hotel {
