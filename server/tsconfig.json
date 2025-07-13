@@ -7,7 +7,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": [],
+    "types": ["node"],
     "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,

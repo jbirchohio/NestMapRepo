@@ -1,60 +1,7 @@
-// Local type definitions to avoid external dependencies
-interface Request {
-  params?: Record<string, string>;
-  body?: Record<string, any>;
-  query?: Record<string, any>;
-  headers?: Record<string, string | string[]>;
-  path?: string;
-  ip?: string;
-  method?: string;
-  get?(header: string): string | undefined;
-  [key: string]: any;
-}
-
-interface Response {
-  status(code: number): Response;
-  json(data: any): Response;
-  send(data: any): Response;
-  setHeader(name: string, value: string): void;
-  getHeader(name: string): string | undefined;
-}
-
-interface NextFunction {
-  (error?: any): void;
-}
-
-interface RequestHandler {
-  (req: Request, res: Response, next: NextFunction): void;
-}
-
-// Mock implementations for missing dependencies
-const decode = (token: string) => ({ userId: 'mock-user-id', organizationId: 'mock-org-id' });
-
-// Mock interfaces and types
-interface IAuthService {
-  login(dto: LoginDto): Promise<AuthResponse>;
-  refreshToken(dto: RefreshTokenDto): Promise<AuthResponse>;
-  requestPasswordReset(dto: RequestPasswordResetDto): Promise<void>;
-  resetPassword(dto: ResetPasswordDto): Promise<void>;
-}
-
-interface LoginDto {
-  email: string;
-  password: string;
-}
-
-interface RefreshTokenDto {
-  refreshToken: string;
-}
-
-interface RequestPasswordResetDto {
-  email: string;
-}
-
-interface ResetPasswordDto {
-  token: string;
-  newPassword: string;
-}
+import { Request, Response, NextFunction } from 'express';
+import { IAuthService } from './interfaces/auth.service.interface';
+import { LoginDto, RefreshTokenDto, RequestPasswordResetDto, ResetPasswordDto, AuthResponse } from './dtos/auth.dto';
+import { UserRole } from '../types';
 
 // Mock rate limiter
 const rateLimiterMiddleware = (req: Request, res: Response, next: NextFunction) => next();
@@ -62,49 +9,25 @@ const rateLimiterMiddleware = (req: Request, res: Response, next: NextFunction) 
 // Mock error utility
 const isErrorWithMessage = (error: any): error is Error => error instanceof Error;
 
-// Mock logger
-interface Logger {
-  log(message: string): void;
-  error(message: string, error?: any): void;
-  warn(message: string): void;
-}
-
-// Mock user role
-enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user',
-  GUEST = 'guest'
-}
-
-// Response types
-interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  tokenType: string;
-  user: {
-    id: string;
-    email: string;
-    role: UserRole;
-    organizationId?: string | null;
-  };
-}
-
-interface AuthResponseWithoutRefreshToken {
-  accessToken: string;
-  user: {
-    id: string;
-    email: string;
-    role: string | null;
-    organizationId?: string | null;
-  };
-}
-
-interface ErrorResponse {
-  error: string;
-  code?: string;
-  message?: string;
-  expired?: boolean;
+// Mock logger class
+class Logger {
+  constructor(private context: string) {}
+  
+  log(message: string): void {
+    console.log(`[${this.context}] ${message}`);
+  }
+  
+  error(message: string, error?: any): void {
+    console.error(`[${this.context}] ${message}`, error);
+  }
+  
+  warn(message: string): void {
+    console.warn(`[${this.context}] ${message}`);
+  }
+  
+  info(message: string): void {
+    console.info(`[${this.context}] ${message}`);
+  }
 }
 
 /**
@@ -146,10 +69,10 @@ export class AuthController {
    */
   login = [
     rateLimiterMiddleware,
-    async (req: ExpressRequest, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, _next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       try {
-        const ip = req.ip || req.socket?.remoteAddress || 'unknown.js';
-        const userAgent = req.headers['user-agent'] || '.js';
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+        const userAgent = req.headers['user-agent'] || '';
         
         const loginData: LoginDto = req.body;
         const response = await this.authService.login(loginData, ip, userAgent);
@@ -176,12 +99,12 @@ export class AuthController {
    * Refresh access token
    */
   refreshToken = [
-    async (req: ExpressRequest, res: Response<AuthResponseWithoutRefreshToken | ErrorResponse>, _next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       try {
         // Try to get refresh token from cookie first, then from body
         const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
-        const ip = req.ip || req.socket?.remoteAddress || 'unknown.js';
-        const userAgent = req.headers['user-agent'] || '.js';
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+        const userAgent = req.headers['user-agent'] || '';
         
         if (!refreshToken) {
           res.status(401).json({
@@ -219,7 +142,7 @@ export class AuthController {
    * Logout user
    */
   logout = [
-    async (req: ExpressRequest, res: Response<{ success: boolean } | ErrorResponse>, _next: NextFunction): Promise<void> => {
+    async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
       try {
         const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
         const authHeader = req.headers.authorization;
@@ -250,7 +173,7 @@ export class AuthController {
    * Logout from all devices
    */
   logoutAllDevices = [
-    async (req: ExpressRequest, res: Response<{ success: boolean } | ErrorResponse>): Promise<void> => {
+    async (req: Request, res: Response): Promise<void> => {
       try {
         const user = (req as any).user;
         
@@ -285,7 +208,7 @@ export class AuthController {
    */
   requestPasswordReset = [
     rateLimiterMiddleware, // Apply rate limiting
-    async (req: ExpressRequest, res: Response<{ success: boolean; message: string } | ErrorResponse>): Promise<void> => {
+    async (req: Request, res: Response): Promise<void> => {
       try {
         const { email } = req.body as RequestPasswordResetDto;
         await this.authService.requestPasswordReset(email);
@@ -304,7 +227,7 @@ export class AuthController {
    * Reset password with token
    */
   resetPassword = [
-    async (req: ExpressRequest, res: Response<{ success: boolean; message?: string } | ErrorResponse>): Promise<void> => {
+    async (req: Request, res: Response): Promise<void> => {
       try {
         const { token, newPassword } = req.body as ResetPasswordDto;
         await this.authService.resetPassword(token, newPassword);
