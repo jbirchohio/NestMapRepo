@@ -73,3 +73,9 @@ export interface ActivityBooking extends BookingDetails {
   participants: number;
   scheduledTime?: Date;
 }
+
+export interface BookingConfirmationDetails {
+  notes?: string;
+  confirmationDate?: Date;
+  confirmationCode?: string;
+}
