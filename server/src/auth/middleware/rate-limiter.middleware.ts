@@ -1,25 +1,25 @@
 // Local type definitions to avoid external dependencies
 interface Request {
   params?: Record<string, string>;
-  body?: Record<string, any>;
-  query?: Record<string, any>;
+  body?: Record<string, unknown>;
+  query?: Record<string, unknown>;
   headers?: Record<string, string | string[]>;
   path?: string;
   ip?: string;
   method?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Response {
   status(code: number): Response;
-  json(data: any): Response;
-  send(data: any): Response;
+  json(data: Record<string, unknown>): Response;
+  send(data: unknown): Response;
   setHeader(name: string, value: string): void;
   getHeader(name: string): string | undefined;
 }
 
 interface NextFunction {
-  (error?: any): void;
+  (error?: Error | string | null): void;
 }
 
 interface RequestHandler {
@@ -35,7 +35,7 @@ const rateLimit = (options: {
   skip: (req: Request) => boolean;
   handler: (req: Request, res: Response) => void;
 }): RequestHandler => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     if (options.skip(req)) {
       return next();
     }
@@ -57,7 +57,8 @@ const limiter = rateLimit({
     return process.env.NODE_ENV === 'development' || 
            skipPaths.some(path => req.path?.startsWith(path));
   },
-  handler: (req: Request, res: Response) => {
+  // Handler for rate limit exceeded
+  handler: (_req: Request, res: Response) => {
     res.status(429).json({
       error: 'Too many requests, please try again later.',
       status: 429
@@ -67,7 +68,8 @@ const limiter = rateLimit({
 
 export const rateLimiterMiddleware: RequestHandler = (req, res, next) => {
   // Skip rate limiting for non-authentication endpoints
-  if (!req.path.startsWith('/api/auth')) {
+  // Check if path exists and then verify if it starts with the auth endpoint path
+  if (!req.path || !req.path.startsWith('/api/auth')) {
     return next();
   }
   

@@ -1,5 +1,27 @@
-import { User } from '../../shared/src/schema.js';
-import { BaseRepository } from '../../shared/src/schema.js';
+// Define interfaces locally to avoid import errors
+interface User {
+  id: string;
+  email: string;
+  password_hash?: string;
+  role: string;
+  organization_id?: string;
+  firstName?: string;
+  lastName?: string;
+  emailVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  isActive?: boolean;
+  failedLoginAttempts?: number;
+  lockedUntil?: Date;
+}
+
+interface BaseRepository<T, ID, CreateDTO, UpdateDTO> {
+  findAll(): Promise<T[]>;
+  findById(id: ID): Promise<T | undefined>;
+  create(data: CreateDTO): Promise<T>;
+  update(id: ID, data: UpdateDTO): Promise<T | undefined>;
+  delete(id: ID): Promise<boolean>;
+}
 
 /**
  * User repository interface that extends the base repository interface
@@ -31,7 +53,7 @@ export interface UserRepository extends BaseRepository<User, string, Omit<User, 
   updatePassword(userId: string, newPassword: string): Promise<boolean>;
   
   // Preferences
-  updatePreferences(userId: string, preferences: Record<string, any>): Promise<boolean>;
+  updatePreferences(userId: string, preferences: Record<string, unknown>): Promise<boolean>;
   
   // Password reset
   findByResetToken(token: string): Promise<User | null>;

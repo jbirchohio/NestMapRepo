@@ -1,4 +1,11 @@
-import { Injectable } from '@nestjs/common';
+// Define Injectable as a class decorator type to avoid dependency on NestJS
+type Injectable = () => ClassDecorator;
+const Injectable: Injectable = () => {
+  return (target: any) => {
+    // This is just a stub decorator that does nothing
+    return target;
+  };
+};
 import jwtUtils, { 
   TokenPayload, 
   UserRole, 
@@ -20,7 +27,7 @@ export class JwtAuthService implements IAuthService {
   async generateTokenPair(
     userId: string,
     email: string,
-    role: UserRole = 'user',
+    role: UserRole = 'member', // Changed from 'user' to 'member' to match UserRole type
     organizationId?: string
   ): Promise<AuthTokens> {
     return jwtUtils.generateTokenPair(userId, email, role, organizationId);
@@ -49,7 +56,7 @@ export class JwtAuthService implements IAuthService {
   /**
    * Decodes a JWT token without verification
    */
-  decodeToken<T extends Record<string, any> = TokenPayload>(
+  decodeToken<T extends Record<string, unknown> = TokenPayload>(
     token: string
   ): T | null {
     return jwtUtils.decodeToken<T>(token);

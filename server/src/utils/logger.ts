@@ -45,20 +45,20 @@ const stream: StreamOptions = {
 export class Logger {
   constructor(private context: string) {}
   
-  info(message: string, meta?: any): void {
-    logger.info(`[${this.context}] ${message}`, meta);
+  info(message: string, meta?: Record<string, unknown>): void {
+    logger.info(meta ? `[${this.context}] ${message} ${JSON.stringify(meta)}` : `[${this.context}] ${message}`);
   }
   
-  error(message: string, error?: any): void {
+  error(message: string, error?: unknown): void {
     logger.error(`[${this.context}] ${message}`, error);
   }
   
-  warn(message: string, meta?: any): void {
-    logger.warn(`[${this.context}] ${message}`, meta);
+  warn(message: string, meta?: Record<string, unknown>): void {
+    logger.warn(meta ? `[${this.context}] ${message} ${JSON.stringify(meta)}` : `[${this.context}] ${message}`);
   }
   
-  log(message: string, meta?: any): void {
-    logger.info(`[${this.context}] ${message}`, meta);
+  log(message: string, meta?: Record<string, unknown>): void {
+    logger.info(meta ? `[${this.context}] ${message} ${JSON.stringify(meta)}` : `[${this.context}] ${message}`);
   }
 }
 

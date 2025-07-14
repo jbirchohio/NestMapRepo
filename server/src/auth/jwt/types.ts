@@ -19,6 +19,7 @@ interface CustomJwtPayload extends Omit<BaseJwtPayload, 'role'> {
 }
 
 export interface TokenPayload extends CustomJwtPayload {
+  [key: string]: unknown;
   sub: string;
   email: string;
   jti: string;

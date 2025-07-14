@@ -1,24 +1,25 @@
-// Core auth exports
-export * from './jwt.js';
-export * from './middleware.js';
-export * from './types.js';
+// Core auth exports - use explicit named exports to avoid ambiguities
+export { createToken, validateToken } from './jwt';
+// Explicitly re-export types to avoid ambiguity
+export type { UserRole, TokenType } from './jwt/types';
+
+// Export middleware functions
+export { authenticate, requireRole, requireOrganizationAccess } from './middleware';
 
 // Services and Repositories
-export * from './services/auth.service.js';
-export * from './repositories/user.repository.js';
-export * from './repositories/refresh-token.repository.js';
+export { JwtAuthService, verifyToken as verifyJwtToken } from './services/jwtAuthService';
+export { UserRepositoryImpl } from './repositories/user.repository';
+// Make sure this path exists before uncommenting
+// export { RefreshTokenRepositoryImpl } from './repositories/refresh-token';
 
 // Controllers
-export * from './controllers/auth.controller.js';
+export { AuthController } from './controllers/auth.controller';
 
 // DTOs
-export * from './dtos/auth.dto.js';
+export * from './dtos/auth.dto';
 
 // Container (for dependency injection)
-export * from './auth.container.js';
+export { AuthContainer, authContainer } from './auth.container';
 
 // Re-export commonly used types
-export type { TokenPayload, TokenVerificationResult } from './types.js';
-
-// Register auth routes
-export { registerAuthRoutes } from './auth.container.js';
+export type { TokenPayload, TokenVerificationResult } from './jwt/types';

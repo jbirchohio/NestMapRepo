@@ -1,13 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { eq, and } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm/expressions';
 import { db } from '../../db';
-import { trips as tripsTable, users as usersTable } from '@shared';
-import { Trip, User } from '@shared';
+import { trips as tripsTable, users as usersTable } from '../../shared/schema';
+import { Trip, User } from '../../shared/types';
 import { TripRepository } from '../interfaces/trip.repository.interface';
 import { CorporateTripDto } from '../interfaces/trip.service.interface';
-import { UnauthorizedError, BaseRepositoryImpl } from '@shared';
+import { BaseRepositoryImpl } from '../../shared/repositories/base.repository';
 
-@Injectable()
 export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {
   constructor() {
     super('Trip', tripsTable, tripsTable.id);
@@ -42,7 +40,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
     return super.create(tripData);
   }
 
-  async updateTrip(tripId: string, tripData: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>): Promise<Trip | null> {
+  async updateTrip(tripId: string, tripData: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Trip | null> {
     return super.update(tripId, tripData);
   }
 
@@ -76,7 +74,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
           project_type: trip.projectType,
           userName: user?.firstName && user?.lastName 
             ? `${user.firstName} ${user.lastName}` 
-            : user?.username || 'Unknown User',
+            : user?.email || 'Unknown User',
           userEmail: user?.email || 'No Email',
         };
       })

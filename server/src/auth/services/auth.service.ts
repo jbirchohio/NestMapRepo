@@ -1,18 +1,18 @@
 import { IAuthService } from '../interfaces/auth.service.interface.js';
 import { AuthResponse, LoginDto, RefreshTokenDto, UserRole } from '../dtos/auth.dto.js';
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
-import { UserRepository } from '../../shared/src/schema.js';
-import { logger } from '../../shared/src/schema.js';
+import { IUserRepository } from '../repositories/user.repository.js';
+// Create a local logger instance (replace with your logger implementation)
+const logger = console;
 
 export class AuthService implements IAuthService {
   private readonly logger = logger;
-  private readonly JWT_SECRET = 'fallback-secret-key.js';
-  private readonly JWT_EXPIRES_IN = '15m.js';
+  // JWT_SECRET and JWT_EXPIRES_IN were unused and have been removed.
   private readonly REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60; // 7 days in seconds
 
   constructor(
     private readonly refreshTokenRepository: RefreshTokenRepository,
-    private readonly userRepository: UserRepository
+    private readonly userRepository: IUserRepository
   ) {}
 
   async login(loginData: LoginDto, ip: string, userAgent: string): Promise<AuthResponse> {
@@ -25,7 +25,7 @@ export class AuthService implements IAuthService {
     }
 
     // Verify password (simplified for compilation)
-    const isPasswordValid = password === (user as any).password;
+    const isPasswordValid = password === (user as unknown as { password: string }).password;
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
     }
@@ -124,7 +124,7 @@ export class AuthService implements IAuthService {
     };
   }
 
-  async logout(refreshToken: string, _authHeader?: string): Promise<void> {
+  async logout(refreshToken: string): Promise<void> {
     // Revoke refresh token
     await this.refreshTokenRepository.revokeByToken(refreshToken);
 
@@ -143,9 +143,20 @@ export class AuthService implements IAuthService {
     this.logger.info(`Password reset requested for user: ${user.id}`);
   }
 
-  async resetPassword(token: string, _newPassword: string): Promise<void> {
-    this.logger.info(`Password reset attempted with token: ${token}`);
-    throw new Error('Password reset not yet implemented');
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    this.logger.info(`Password reset attempted with token: ${token.substring(0, 8)}...`);
+    
+    // TODO: Implement actual password reset logic
+    // 1. Verify the reset token is valid and not expired
+    // 2. Find the user associated with the token
+    // 3. Hash the new password
+    // 4. Update the user's password in the database
+    // 5. Invalidate the used token
+    
+    // For now, we'll just log that we received the new password
+    // and throw a not implemented error
+    this.logger.debug(`New password received (not hashed): ${newPassword ? '[HIDDEN]' : 'undefined'}`);
+    throw new Error('Password reset functionality is not yet implemented');
   }
 
   async revokeAllSessions(userId: string): Promise<void> {

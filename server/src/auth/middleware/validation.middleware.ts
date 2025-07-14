@@ -1,25 +1,25 @@
 // Local type definitions to avoid external dependencies
 interface Request {
   params?: Record<string, string>;
-  body?: Record<string, any>;
-  query?: Record<string, any>;
+  body?: Record<string, unknown>;
+  query?: Record<string, unknown>;
   headers?: Record<string, string | string[]>;
   path?: string;
   ip?: string;
   method?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Response {
   status(code: number): Response;
-  json(data: any): Response;
-  send(data: any): Response;
+  json(data: Record<string, unknown>): Response;
+  send(data: unknown): Response;
   setHeader(name: string, value: string): void;
   getHeader(name: string): string | undefined;
 }
 
 interface NextFunction {
-  (error?: any): void;
+  (error?: Error | string | null): void;
 }
 
 // Mock zod implementation
@@ -28,14 +28,20 @@ export interface AnyZodObject {
   parse(data: unknown): unknown;
 }
 
+interface ZodErrorDetail {
+  message: string;
+  path: string[];
+}
+
 const z = {
-  ZodError: class ZodError implements ZodError {
-    errors: Array<{ message: string; path: string[] }> = [];
-    constructor(errors: Array<{ message: string; path: string[] }>) {
+  ZodError: class ZodError {
+    errors: Array<ZodErrorDetail> = [];
+    constructor(errors: Array<ZodErrorDetail>) {
       this.errors = errors;
     }
   },
-  object: (_schema: Record<string, unknown>) => ({
+  // Mock implementation
+  object: () => ({
     parse: (data: unknown) => data
   })
 };
