@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,7 +34,8 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export default function ProfileSettings() {
-  const { user, userId } = useAuth();
+  const { user } = useAuth();
+  const userId = user?.id;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -63,8 +64,8 @@ export default function ProfileSettings() {
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: user?.user_metadata?.display_name || user?.email || '',
-      username: user?.user_metadata?.username || '',
+      displayName: (user as any)?.user_metadata?.display_name || user?.email || '',
+      username: (user as any)?.user_metadata?.username || '',
       email: user?.email || '',
     },
   });

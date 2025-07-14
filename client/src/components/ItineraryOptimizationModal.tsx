@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,15 +81,15 @@ export function ItineraryOptimizationModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+        <div className="space-y-1.5 text-center sm:text-left">
+          <div className="text-lg font-semibold leading-none tracking-tight flex items-center justify-center sm:justify-start gap-2">
             <Sparkles className="h-5 w-5 text-electric-600" />
-            AI Itinerary Optimization
-          </DialogTitle>
-          <DialogDescription>
+            <span>AI Itinerary Optimization</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
             Let our AI analyze your itinerary and suggest improvements to minimize travel time and avoid conflicts.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
 
         <div className="space-y-4">
           {!optimizationResult ? (
@@ -178,7 +178,7 @@ export function ItineraryOptimizationModal({
                                 <h4 className="font-medium">{activity.title}</h4>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <MapPin className="h-3 w-3" />
-                                  {activity.locationName || "Location not set"}
+                                  {activity.location || "Location not set"}
                                 </div>
                               </div>
                               {(hasTimeChange || hasDayChange) && (

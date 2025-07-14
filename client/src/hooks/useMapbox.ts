@@ -61,8 +61,8 @@ export default function useMapbox() {
       } catch (mapboxError) {
         console.error('Mapbox GL initialization failed:', mapboxError);
         console.error('Error details:', {
-          message: mapboxError?.message || 'Unknown error',
-          stack: mapboxError?.stack || 'No stack trace',
+          message: (mapboxError as Error)?.message || 'Unknown error',
+          stack: (mapboxError as Error)?.stack || 'No stack trace',
           center,
           zoom,
           containerExists: !!container
@@ -157,7 +157,10 @@ export default function useMapbox() {
         data: {
           type: 'Feature',
           properties: {},
-          geometry: route.geometry
+          geometry: route.geometry || {
+            type: 'LineString',
+            coordinates: route.coordinates
+          }
         }
       });
 
@@ -197,7 +200,7 @@ export default function useMapbox() {
     }
   }, []);
 
-  const geocodeLocation = useCallback(async (searchQuery: string, isCity?: boolean): Promise<{
+  const geocodeLocation = useCallback(async (searchQuery: string): Promise<{
     latitude: number;
     longitude: number;
     fullAddress: string;

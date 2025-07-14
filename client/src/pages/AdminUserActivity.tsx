@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -11,11 +11,8 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/auth/AuthContext';
 import {
   Users,
-  Search,
   Filter,
-  Download,
   RefreshCw,
-  Clock,
   FilePlus,
   Edit,
   Trash2
@@ -33,11 +30,11 @@ interface UserActivityLog {
 
 export default function AdminUserActivity() {
   const { user } = useAuth();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage] = useState(1);
   const [filterAction, setFilterAction] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const orgId = user?.organization_id;
+  const orgId = user?.organizationId;
 
   const { data: logs, isLoading, refetch } = useQuery<UserActivityLog[]>({ 
     queryKey: ['userActivityLogs', orgId, currentPage, filterAction, searchTerm],

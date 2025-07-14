@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import apiClient from './apiClient';
 
 export interface FileUploadResponse {
   id: string;
@@ -42,7 +42,7 @@ class FileService {
       formData.append('metadata', JSON.stringify(metadata));
     }
 
-    return apiClient.post<FileUploadResponse, FormData>(
+    return apiClient.post<FileUploadResponse>(
       `${this.basePath}/upload`,
       formData,
       {
@@ -113,7 +113,7 @@ class FileService {
     metadata: Partial<FileMetadata>,
     config?: RequestConfig
   ): Promise<FileUploadResponse> {
-    return apiClient.patch<FileUploadResponse, Partial<FileMetadata>>(
+    return apiClient.patch<FileUploadResponse>(
       `${this.basePath}/${fileId}/metadata`,
       metadata,
       config

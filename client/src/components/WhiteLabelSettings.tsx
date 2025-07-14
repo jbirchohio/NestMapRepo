@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -21,10 +21,10 @@ import {
   Paintbrush,
   Type,
   Link,
-  Smartphone
+
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
+
 
 const whiteLabelSchema = z.object({
   // Branding
@@ -80,7 +80,7 @@ export default function WhiteLabelSettings() {
   });
 
   // Watch form values for live preview
-  const watchedValues = form.watch();
+
 
   const onSubmit = async (values: WhiteLabelFormValues) => {
     setIsSaving(true);
@@ -564,9 +564,9 @@ export default function WhiteLabelSettings() {
                       </p>
                     </div>
                     <Switch
-                      id="enableGuestMode"
                       checked={form.watch("enableGuestMode")}
                       onCheckedChange={(checked) => form.setValue("enableGuestMode", checked)}
+                      className="ml-2"
                     />
                   </div>
 
@@ -578,9 +578,9 @@ export default function WhiteLabelSettings() {
                       </p>
                     </div>
                     <Switch
-                      id="enablePublicSignup"
                       checked={form.watch("enablePublicSignup")}
                       onCheckedChange={(checked) => form.setValue("enablePublicSignup", checked)}
+                      className="ml-2"
                     />
                   </div>
 
@@ -592,9 +592,9 @@ export default function WhiteLabelSettings() {
                       </p>
                     </div>
                     <Switch
-                      id="enableSocialLogin"
                       checked={form.watch("enableSocialLogin")}
                       onCheckedChange={(checked) => form.setValue("enableSocialLogin", checked)}
+                      className="ml-2"
                     />
                   </div>
 
@@ -606,9 +606,9 @@ export default function WhiteLabelSettings() {
                       </p>
                     </div>
                     <Switch
-                      id="enableMobileApp"
                       checked={form.watch("enableMobileApp")}
                       onCheckedChange={(checked) => form.setValue("enableMobileApp", checked)}
+                      className="ml-2"
                     />
                   </div>
                 </div>

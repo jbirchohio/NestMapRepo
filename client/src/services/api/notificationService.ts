@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import apiClient from './apiClient';
 import { EventEmitter } from 'events';
 
 export interface Notification {
@@ -157,14 +157,14 @@ class NotificationService extends EventEmitter {
   }
 
   public async markAsRead(notificationId: string): Promise<Notification> {
-    return apiClient.patch<Notification, void>(
+    return apiClient.patch<Notification>(
       `${this.basePath}/${notificationId}/read`,
       undefined
     );
   }
 
   public async markAllAsRead(): Promise<{ count: number }> {
-    return apiClient.patch<{ count: number }, void>(
+    return apiClient.patch<{ count: number }>(
       `${this.basePath}/mark-all-read`,
       undefined
     );
@@ -177,21 +177,21 @@ class NotificationService extends EventEmitter {
   public async updatePreferences(
     preferences: Partial<NotificationPreferences>
   ): Promise<NotificationPreferences> {
-    return apiClient.patch<NotificationPreferences, Partial<NotificationPreferences>>(
+    return apiClient.patch<NotificationPreferences>(
       `${this.basePath}/preferences`,
       preferences
     );
   }
 
   public async subscribeToTopic(topic: string): Promise<{ success: boolean }> {
-    return apiClient.post<{ success: boolean }, { topic: string }>(
+    return apiClient.post<{ success: boolean }>(
       `${this.basePath}/subscribe`,
       { topic }
     );
   }
 
   public async unsubscribeFromTopic(topic: string): Promise<{ success: boolean }> {
-    return apiClient.post<{ success: boolean }, { topic: string }>(
+    return apiClient.post<{ success: boolean }>(
       `${this.basePath}/unsubscribe`,
       { topic }
     );

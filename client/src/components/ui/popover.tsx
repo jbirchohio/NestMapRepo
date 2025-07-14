@@ -5,7 +5,27 @@ import { cn } from "@/lib/utils"
 
 const Popover = PopoverPrimitive.Root
 
-const PopoverTrigger = PopoverPrimitive.Trigger
+// Simple wrapper around Radix UI's Popover Trigger
+const PopoverTrigger = React.forwardRef<
+  React.ElementRef<typeof PopoverPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Trigger> & {
+    asChild?: boolean;
+    children?: React.ReactNode;
+  }
+>(({ asChild, children, ...props }, ref) => {
+  const triggerProps = {
+    ref,
+    asChild: asChild === true,
+    ...props
+  };
+  return (
+    <PopoverPrimitive.Trigger {...(triggerProps as any)}>
+      {asChild ? children : <button type="button">{children}</button>}
+    </PopoverPrimitive.Trigger>
+  );
+});
+
+PopoverTrigger.displayName = PopoverPrimitive.Trigger.displayName;
 
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,

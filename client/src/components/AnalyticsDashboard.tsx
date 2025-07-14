@@ -95,8 +95,8 @@ export default function AnalyticsDashboard() {
     enabled: !!user, // Use user instead of userId since userId might be null
     queryFn: async () => {
       // Get the current Supabase session for JWT token
-      const { supabase } = await import("@/lib/supabase");
-      const { data: { session } } = await supabase.auth.getSession();
+      const { auth } = await import("@/lib/supabase");
+      const { session } = await auth.getSession();
 
       console.log('Analytics query - session exists:', !!session);
       console.log('Analytics query - access token exists:', !!session?.access_token);

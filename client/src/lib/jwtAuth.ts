@@ -17,15 +17,6 @@ interface AuthResponse {
   token: string;
 }
 
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-interface RegisterRequest extends LoginRequest {
-  username: string;
-}
-
 class JWTAuth {
   private token: string | null = null;
   private user: User | null = null;
@@ -59,7 +50,7 @@ class JWTAuth {
 
   async signIn(email: string, password: string): Promise<{ user: User | null; error: Error | null }> {
     try {
-      const data = await apiClient.post<AuthResponse, LoginRequest>('/auth/login', {
+      const data = await apiClient.post<AuthResponse>('/auth/login', {
         email,
         password
       });
@@ -86,7 +77,7 @@ class JWTAuth {
 
   async signUp(email: string, password: string, username: string): Promise<{ user: User | null; error: Error | null }> {
     try {
-      const data = await apiClient.post<AuthResponse, RegisterRequest>('/auth/register', {
+      const data = await apiClient.post<AuthResponse>('/auth/register', {
         email,
         password,
         username

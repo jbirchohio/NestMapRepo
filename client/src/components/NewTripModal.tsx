@@ -13,15 +13,11 @@ import useMapbox from "@/hooks/useMapbox";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const tripSchema = z.object({
@@ -110,7 +106,7 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
     if (city && city.length > 3) {
       const timer = setTimeout(async () => {
         try {
-          const result = await geocodeLocation(city, true);
+          const result = await geocodeLocation(city);
           if (result) {
             setValue("cityLatitude", result.latitude.toString());
             setValue("cityLongitude", result.longitude.toString());
@@ -253,12 +249,12 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
           zIndex: 50
         }}
       >
-        <DialogHeader>
-          <DialogTitle>Create New Trip</DialogTitle>
-          <DialogDescription>
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-semibold leading-none tracking-tight">Create New Trip</h3>
+          <p className="text-sm text-muted-foreground">
             Enter your trip details to get started with planning.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
         
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4 py-4">
@@ -280,11 +276,19 @@ export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGue
                 <Label htmlFor="tripType" className="text-sm font-medium">Trip Type</Label>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-slate-600">Personal</span>
-                  <Switch
-                    id="tripType"
-                    checked={tripType === "business"}
-                    onCheckedChange={(checked) => setValue("tripType", checked ? "business" : "personal")}
-                  />
+                  <button
+                    type="button"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                      tripType === 'business' ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+                    }`}
+                    onClick={() => setValue("tripType", tripType === "business" ? "personal" : "business")}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        tripType === 'business' ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
                   <span className="text-sm text-slate-600">Business</span>
                 </div>
               </div>

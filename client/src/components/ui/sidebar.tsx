@@ -211,8 +211,8 @@ const Sidebar = React.forwardRef<
             side={side}
           >
             <SheetHeader className="sr-only">
-              <SheetTitle>Sidebar</SheetTitle>
-              <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+              <SheetTitle {...({children: "Sidebar"} as any)} />
+              <SheetDescription {...({children: "Displays the mobile sidebar."} as any)} />
             </SheetHeader>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
@@ -587,7 +587,7 @@ const SidebarMenuButton = React.forwardRef<
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipTrigger {...({asChild: true, children: button} as any)} />
         <TooltipContent
           side="right"
           align="center"

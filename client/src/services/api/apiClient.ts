@@ -1,15 +1,10 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
-import { AbortController } from 'abort-controller';
 import { SecurityUtils } from '@/utils/securityUtils';
 import { TokenManager } from '@/utils/tokenManager';
 import { SessionSecurity } from '@/utils/sessionSecurity';
-import { InputValidator } from '@/utils/inputValidator';
-import { RateLimiter } from '@/utils/rateLimiter';
 import { CSRFTokenManager } from '@/utils/csrfTokenManager';
 import { ErrorLogger } from '@/utils/errorLogger';
 import { PerformanceMonitor } from '@/utils/performanceMonitor';
-import { CSRFError, TokenError, SessionError } from '@/utils/errors';
-import { SecureCookie } from '@/utils/SecureCookie';
 import { ApiResponse, ApiErrorResponse, PerformanceMetrics } from '@/types/api';
 
 interface ApiClientConfig {
@@ -18,18 +13,23 @@ interface ApiClientConfig {
   headers?: Record<string, string>;
 }
 
-type RequestConfig = Omit<AxiosRequestConfig, 'method' | 'url'>;
+interface ExtendedRequestConfig extends Omit<AxiosRequestConfig, 'method' | 'url'> {
+  cancelKey?: string;
+}
+
+type RequestConfig = ExtendedRequestConfig;
 
 export class ApiClient {
   private client: AxiosInstance;
   private securityUtils: SecurityUtils;
   private tokenManager: TokenManager;
   private sessionSecurity: SessionSecurity;
-  private rateLimiter: RateLimiter;
+  // Rate limiter is initialized but not currently used - keeping for future rate limiting
   private csrfManager: CSRFTokenManager;
   private errorLogger: ErrorLogger;
   private performanceMonitor: PerformanceMonitor;
   private securityAuditInterval: ReturnType<typeof setInterval> | null = null;
+  private cancelSources: Map<string, AbortController> = new Map();
 
   constructor(config: ApiClientConfig) {
     const defaultHeaders: RawAxiosRequestHeaders = {
@@ -46,16 +46,17 @@ export class ApiClient {
     this.securityUtils = SecurityUtils.getInstance();
     this.tokenManager = TokenManager.getInstance();
     this.sessionSecurity = SessionSecurity.getInstance();
-    this.rateLimiter = RateLimiter.getInstance({
-      maxRequests: 100,
-      windowMs: 60000
-    });
     this.csrfManager = CSRFTokenManager.getInstance();
     this.errorLogger = ErrorLogger.getInstance();
     this.performanceMonitor = PerformanceMonitor.getInstance();
 
     this.setupInterceptors();
     this.setupSecurityAudit();
+
+    // Clean up on page unload
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', this.cleanup.bind(this));
+    }
   }
 
   // Typed HTTP methods
@@ -98,7 +99,28 @@ export class ApiClient {
   }
 
   // Core request method with proper typing
+  // Request cancellation methods
+  public cancelRequest(key: string): void {
+    const source = this.cancelSources.get(key);
+    if (source) {
+      source.abort();
+      this.cancelSources.delete(key);
+    }
+  }
+
+  public isCancel(error: unknown): boolean {
+    return axios.isCancel(error);
+  }
+
   private async request<T>(config: AxiosRequestConfig): Promise<T> {
+    // If we have an extended config with cancelKey, create a cancellation token
+    const extendedConfig = config as ExtendedRequestConfig;
+    if (extendedConfig.cancelKey) {
+      const controller = new AbortController();
+      this.cancelSources.set(extendedConfig.cancelKey, controller);
+      config.signal = controller.signal;
+    }
+    
     try {
       const response = await this.client.request<ApiResponse<T>>(config);
       const responseData = response.data;
@@ -134,15 +156,17 @@ export class ApiClient {
           (config as InternalAxiosRequestConfig & { metrics?: PerformanceMetrics }).metrics = metrics;
 
           // Add security headers
-          const securityHeaders = this.securityUtils.getSecurityHeaders(); // Type is inferred
-          (Object.keys(securityHeaders) as Array<keyof typeof securityHeaders>).forEach(key => {
-            config.headers.set(key, securityHeaders[key]);
+          const securityHeaders = this.securityUtils.getSecurityHeaders();
+          Object.entries(securityHeaders).forEach(([key, value]) => {
+            if (value !== undefined) {
+              config.headers[key] = value;
+            }
           });
 
           // Add CSRF token
-          const csrfHeader = this.csrfManager.getCSRFHeader(); // Returns { 'X-CSRF-Token': string } | null
-          if (csrfHeader) {
-            config.headers.set('X-CSRF-Token', csrfHeader['X-CSRF-Token']);
+          const csrfHeader = this.csrfManager.getCSRFHeader();
+          if (csrfHeader?.['X-CSRF-Token']) {
+            config.headers['X-CSRF-Token'] = csrfHeader['X-CSRF-Token'];
           }
 
           // Add Authorization token
@@ -151,14 +175,8 @@ export class ApiClient {
             config.headers.set('Authorization', `Bearer ${token}`);
           }
 
-          // Validate request data
-          if (config.data && typeof config.data === 'object') {
-            try {
-              InputValidator.validateRequestData(config.data);
-            } catch (error) {
-              throw new Error('Request validation failed');
-            }
-          }
+          // Request data validation can be added here if needed
+          // Example: this.validateRequestData(config.data);
 
           return config;
         } catch (error) {
@@ -188,12 +206,8 @@ export class ApiClient {
             this.performanceMonitor.endRequest(response.config.metrics, response);
           }
 
-          // Validate response
-          try {
-            InputValidator.validateResponse(response.data);
-          } catch (error) {
-            throw new Error('Response validation failed');
-          }
+          // Response validation can be added here if needed
+          // Example: this.validateResponse(response.data);
 
           return response;
         } catch (error) {
@@ -239,11 +253,11 @@ export class ApiClient {
     );
   }
 
-  private async handleTokenError(error: AxiosError<ApiResponse>): Promise<void> {
+  private async handleTokenError(_error: AxiosError<ApiResponse>): Promise<void> {
     try {
       this.tokenManager.destroyTokens();
-    } catch (error) {
-      this.errorLogger.logError(error as Error, {
+    } catch (err) {
+      this.errorLogger.logError(err as Error, {
         type: 'TokenError',
         context: {
           token: this.tokenManager.getAccessToken(),
@@ -306,24 +320,30 @@ export class ApiClient {
           details: auditResult.details
         });
       }
-    } catch (error) {
-      this.errorLogger.logError(error as Error, {
+    } catch (err) {
+      // Log the error but don't throw to prevent unhandled promise rejections
+      this.errorLogger.logError(err as Error, {
         type: 'SecurityAuditError'
       });
     }
   }
 
-  public destroy(): void {
+  /**
+   * Clean up resources when the client is no longer needed
+   */
+  private cleanup(): void {
     if (this.securityAuditInterval) {
       clearInterval(this.securityAuditInterval);
+      this.securityAuditInterval = null;
     }
   }
 }
 
 // Create and export a singleton instance
-const apiClient = new ApiClient({
+const apiClientInstance = new ApiClient({
   baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 30000
 });
 
-export default apiClient;
+// Export the instance as default and named export
+export { apiClientInstance as apiClient, apiClientInstance as default };

@@ -1,20 +1,14 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { 
   BarChart3, 
   Users, 
-  MapPin, 
   DollarSign, 
   TrendingUp, 
-  Calendar,
   Sparkles,
   Building2,
-  FileText,
-  Settings,
   Plus,
-  ArrowUpRight,
   Clock,
   Target
 } from "lucide-react";

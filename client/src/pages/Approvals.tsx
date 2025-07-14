@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '@/components/ui/dialog';
+import { AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, XCircle, Clock, AlertTriangle, User, Calendar, DollarSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface ApprovalRequest {
@@ -54,11 +54,19 @@ export default function Approvals() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: ({ requestId, decision, reason }: { requestId: number; decision: string; reason?: string }) =>
-      apiRequest(`/api/approvals/${requestId}/decision`, {
+    mutationFn: async ({ requestId, decision, reason }: { requestId: number; decision: string; reason?: string }) => {
+      const response = await fetch(`/api/approvals/${requestId}/decision`, {
         method: 'PATCH',
-        body: { decision, reason }
-      }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ decision, reason })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to process approval');
+      }
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/approvals/pending'] });
       setSelectedRequest(null);
@@ -295,10 +303,14 @@ export default function Approvals() {
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Request</DialogTitle>
-            <DialogDescription>
-              Please provide a reason for rejecting this request.
-            </DialogDescription>
+            <div className="flex flex-col space-y-1.5">
+              <AlertDialogTitle>
+                Reject Request
+              </AlertDialogTitle>
+              <p className="text-sm text-muted-foreground">
+                Please provide a reason for rejecting this request.
+              </p>
+            </div>
           </DialogHeader>
           
           <div className="space-y-4">

@@ -2,7 +2,25 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientTrip } from "@/lib/types";
-import { Todo, Note } from "@shared/schema";
+
+// Define local interfaces for Todo and Note since they're not in the shared schema
+interface Todo {
+  id: string;
+  task: string;
+  completed: boolean;
+  tripId: string;
+  assignedTo?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface Note {
+  id: string;
+  content: string;
+  tripId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export default function useTrip(tripId: string | number) {
   // Helper function to check if trip exists in localStorage (guest mode)
@@ -12,7 +30,9 @@ export default function useTrip(tripId: string | number) {
     if (!stored) return null;
     
     const guestTrips = JSON.parse(stored);
-    const foundTrip = guestTrips.find((trip: ClientTrip) => trip.id === Number(tripId)) || null;
+    const foundTrip = guestTrips.find((trip: ClientTrip) => 
+      String(trip.id) === String(tripId)
+    ) || null;
     
     // Debug localStorage trip data
     console.log('useTrip debug:', {

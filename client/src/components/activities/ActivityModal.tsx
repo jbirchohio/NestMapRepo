@@ -16,7 +16,6 @@ export default function ActivityModal({
   onSave
 }: ActivityModalProps) {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(date);
 
   const activityMutation = useMutation({
@@ -47,7 +46,6 @@ export default function ActivityModal({
   });
 
   const handleSubmit = (data: ActivityFormValues) => {
-    setLoading(true);
     activityMutation.mutate(data);
   };
 
@@ -74,13 +72,12 @@ export default function ActivityModal({
               title: activity.title,
               date: selectedDate,
               time: activity.time,
-              locationName: activity.locationName,
+              location: activity.location,
               travelMode: activity.travelMode,
               notes: activity.notes,
               tag: activity.tag,
               latitude: activity.latitude,
-              longitude: activity.longitude,
-              assignedTo: activity.assignedTo
+              longitude: activity.longitude
             } : { date: selectedDate } as any}
             tripId={tripId.toString()}
             onSubmit={handleSubmit}

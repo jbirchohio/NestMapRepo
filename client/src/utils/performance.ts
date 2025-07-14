@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useEffect } from 'react';
 import { debounce, throttle } from 'lodash';
+import React from 'react';
 
 /**
  * Memoize a component with React.memo and custom comparison function
@@ -9,7 +10,7 @@ import { debounce, throttle } from 'lodash';
  */
 export function memo<T extends React.ComponentType<any>>(
   Component: T,
-  propsAreEqual?: (prevProps: React.ComponentProps<T>, nextProps: React.ComponentProps<T>) => boolean
+  propsAreEqual?: (prevProps: Readonly<React.ComponentProps<T>>, nextProps: Readonly<React.ComponentProps<T>>) => boolean
 ) {
   return React.memo(Component, propsAreEqual);
 }
@@ -62,7 +63,7 @@ export function useDebounce<T extends (...args: any[]) => any>(
   return useMemo(
     () => debounce((...args: Parameters<T>) => callbackRef.current(...args), delay, { leading: true, trailing: true }),
     [delay, ...dependencies]
-  ) as T;
+  ) as unknown as T;
 }
 
 /**
@@ -87,7 +88,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
   return useMemo(
     () => throttle((...args: Parameters<T>) => callbackRef.current(...args), limit, { leading: true, trailing: true }),
     [limit, ...dependencies]
-  ) as T;
+  ) as unknown as T;
 }
 
 /**

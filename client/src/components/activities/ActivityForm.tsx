@@ -18,7 +18,7 @@ interface ActivityFormProps {
 
 export default function ActivityForm({ activity, onSubmit }: ActivityFormProps) {
   const { register, handleSubmit, setValue: rawSetValue, watch } = useForm<ActivityFormValues>({
-    resolver: zodResolver(activitySchema),
+    resolver: zodResolver(activitySchema) as any,
     defaultValues: activity || {
       title: "",
       date: new Date(),
@@ -38,7 +38,7 @@ export default function ActivityForm({ activity, onSubmit }: ActivityFormProps) 
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
       <div>
         <Label htmlFor="title">Activity Title</Label>
         <Input

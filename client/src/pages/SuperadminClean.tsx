@@ -17,6 +17,9 @@ interface Organization {
   name: string;
   type: string;
   memberCount: number;
+  user_count?: number;
+  plan?: string;
+  subscription_status?: string;
   isActive: boolean;
   created_at: string;
 }
@@ -45,7 +48,7 @@ export default function SuperadminClean() {
   const queryClient = useQueryClient();
 
   // Individual API queries for each section (original working approach)
-  const { data: organizations = [], isLoading: orgsLoading } = useQuery({
+  const { data: organizations = [] } = useQuery({
     queryKey: ['/api/superadmin/organizations'],
     retry: false
   });
@@ -81,7 +84,7 @@ export default function SuperadminClean() {
   });
 
   // Use dashboard query only for overview metrics
-  const { data: dashboardData = {}, isLoading: dashboardLoading, error: dashboardError } = useQuery({
+  const { isLoading: dashboardLoading, error: dashboardError } = useQuery({
     queryKey: ['/api/superadmin/dashboard'],
     enabled: activeSection === 'overview',
     staleTime: 1000 * 60 * 5,

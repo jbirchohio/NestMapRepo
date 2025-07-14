@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Clock, Users, DollarSign } from "lucide-react";
+import { MapPin, Clock, Users, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
@@ -59,7 +59,7 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
   const [customTitle, setCustomTitle] = useState("");
   const { toast } = useToast();
 
-  const { data: templates, isLoading, error } = useQuery({
+  const { data: templates, isLoading } = useQuery({
     queryKey: ["/api/templates"],
     queryFn: async () => {
       const response = await fetch("/api/templates");
@@ -101,7 +101,7 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
         onTripCreated(data.trip.id);
       }
     },
-    onError: (error) => {
+    onError: (_error) => {
       toast({
         title: "Error creating trip",
         description: "Please try again.",
@@ -145,12 +145,14 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="w-full">
-          <MapPin className="h-4 w-4 mr-2" />
-          Browse Trip Templates
-        </Button>
-      </DialogTrigger>
+      <Button 
+        variant="outline" 
+        className="w-full"
+        onClick={() => setIsOpen(true)}
+      >
+        <MapPin className="h-4 w-4 mr-2" />
+        Browse Trip Templates
+      </Button>
       <DialogContent 
         className="max-w-4xl max-h-[80vh] overflow-y-auto"
         style={{
@@ -166,9 +168,9 @@ export default function TripTemplates({ userId, onTripCreated }: TripTemplatesPr
           zIndex: 50
         }}
       >
-        <DialogHeader>
-          <DialogTitle>Choose a Trip Template</DialogTitle>
-        </DialogHeader>
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-semibold leading-none tracking-tight">Choose a Trip Template</h3>
+        </div>
         
         {selectedTemplate ? (
           <div className="space-y-6">

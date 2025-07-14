@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiRequest } from '@/lib/queryClient';
-import { InfiniteScrollList } from '@/components/ui/infinite-scroll-list';
 import { motion } from 'framer-motion';
 import { 
   Settings, 
@@ -15,7 +14,6 @@ import {
   Filter, 
   Download,
   RefreshCw,
-  Calendar,
   User,
   Shield,
   AlertTriangle,
@@ -46,45 +44,49 @@ export default function AdminLogs() {
   const [filterAction, setFilterAction] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('audit');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allLogs, setAllLogs] = useState<AdminLog[]>([]);
 
-  // Use infinite query instead of regular query
   const {
     data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     isLoading,
     refetch
-  } = useInfiniteQuery<LogsResponse>({
-    queryKey: ['/api/admin/logs', filterAction, searchTerm],
-    queryFn: async ({ pageParam = 1 }): Promise<LogsResponse> => {
+  } = useQuery({
+    queryKey: ['adminLogs', filterAction, searchTerm, currentPage],
+    queryFn: async (): Promise<LogsResponse> => {
       const params = new URLSearchParams({
-        page: pageParam.toString(),
-        limit: '20' // Smaller page size for smoother scrolling
+        page: currentPage.toString(),
+        limit: '20'
       });
-      
+
       if (filterAction !== 'all') {
         params.append('action', filterAction);
       }
-      
+
       if (searchTerm) {
         params.append('search', searchTerm);
       }
 
       const response = await apiRequest('GET', `/api/admin/logs?${params.toString()}`);
-      return (await response.json()) as LogsResponse;
+      return response as unknown as LogsResponse;
     },
-    getNextPageParam: (lastPage: LogsResponse) => {
-      // Return undefined when there are no more pages
-      if (lastPage.pagination.page >= lastPage.pagination.pages) {
-        return undefined;
+    onSuccess: (response) => {
+      if (currentPage === 1) {
+        setAllLogs(response.logs);
+      } else {
+        setAllLogs(prev => [...prev, ...response.logs]);
       }
-      return lastPage.pagination.page + 1;
     },
+    keepPreviousData: true
   });
-  
-  // Flatten the logs from all pages
-  const allLogs = data?.pages.flatMap(page => page.logs) || [];
+
+  const hasNextPage = data ? data.pagination.page < data.pagination.pages : false;
+
+  const loadMore = () => {
+    if (hasNextPage && !isLoading) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
 
   const getActionIcon = (actionType: string) => {
     switch (actionType.toLowerCase()) {
@@ -250,66 +252,64 @@ export default function AdminLogs() {
                 </div>
 
                 {/* Logs List */}
-                {isLoading ? (
+                {isLoading && allLogs.length === 0 ? (
                   <div className="flex items-center justify-center h-32">
                     <RefreshCw className="w-6 h-6 animate-spin text-electric-600" />
                   </div>
+                ) : allLogs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No logs found matching your criteria</p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
-                    <InfiniteScrollList
-                      items={allLogs}
-                      loadMore={fetchNextPage}
-                      hasMore={!!hasNextPage}
-                      isLoading={isFetchingNextPage}
-                      loadingMessage={
-                        <div className="flex justify-center items-center py-4">
-                          <RefreshCw className="w-5 h-5 animate-spin text-electric-600 mr-2" />
-                          <span className="text-sm text-muted-foreground">Loading more logs...</span>
+                    {allLogs.map((log) => (
+                      <div
+                        key={log.id}
+                        className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="p-2 bg-muted rounded-lg">
+                            {getActionIcon(log.action_type)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant={getActionBadgeVariant(log.action_type)}>
+                                {formatActionType(log.action_type)}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">
+                                by Admin User #{log.admin_user_id}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {log.action_data ? JSON.stringify(log.action_data).substring(0, 100) + '...' : 'No additional data'}
+                            </p>
+                          </div>
                         </div>
-                      }
-                      emptyMessage={
-                        <div className="text-center py-8">
-                          <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground">No logs found matching your criteria</p>
+                        <div className="text-right">
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(log.timestamp).toLocaleString()}
+                          </div>
+                          {log.ip_address && (
+                            <p className="text-xs text-muted-foreground">
+                              IP: {log.ip_address}
+                            </p>
+                          )}
                         </div>
-                      }
-                      renderItem={(log, index) => (
-                        <div
-                          key={log.id}
-                          className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      </div>
+                    ))}
+                    {hasNextPage && (
+                      <div className="flex justify-center pt-4">
+                        <Button
+                          onClick={loadMore}
+                          variant="outline"
+                          disabled={isLoading}
                         >
-                          <div className="flex items-center gap-3 flex-1">
-                            <div className="p-2 bg-muted rounded-lg">
-                              {getActionIcon(log.action_type)}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge variant={getActionBadgeVariant(log.action_type)}>
-                                  {formatActionType(log.action_type)}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">
-                                  by Admin User #{log.admin_user_id}
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {log.action_data ? JSON.stringify(log.action_data).substring(0, 100) + '...' : 'No additional data'}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                              <Clock className="w-3 h-3" />
-                              {new Date(log.timestamp).toLocaleString()}
-                            </div>
-                            {log.ip_address && (
-                              <p className="text-xs text-muted-foreground">
-                                IP: {log.ip_address}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    />
+                          {isLoading ? 'Loading...' : 'Load More'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

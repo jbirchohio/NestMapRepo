@@ -52,13 +52,14 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
+        // Use type assertion to allow custom icon components
+        IconLeft: ({ className, ...props }: { className?: string }) => (
           <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
         ),
-        IconRight: ({ className, ...props }) => (
+        IconRight: ({ className, ...props }: { className?: string }) => (
           <ChevronRight className={cn("h-4 w-4", className)} {...props} />
-        ),
-      }}
+        )
+      } as any}
       {...props}
     />
   )

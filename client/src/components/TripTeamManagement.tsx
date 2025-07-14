@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -328,9 +328,12 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
       if (!date) return '';
       if (typeof date === 'string' && date.length > 0) return date;
       if (date instanceof Date) return date.toISOString().split('T')[0];
-      if (typeof date === 'object' && date.getTime) return date.toISOString().split('T')[0];
+      // Handle date-like objects
+      if (date && typeof date === 'object' && 'getTime' in date && typeof (date as any).getTime === 'function') {
+        return new Date((date as any).getTime()).toISOString().split('T')[0];
+      }
       // Handle empty objects from case conversion
-      if (typeof date === 'object' && Object.keys(date).length === 0) return '';
+      if (date && typeof date === 'object' && Object.keys(date).length === 0) return '';
       return '';
     };
 
@@ -385,16 +388,18 @@ export function TripTeamManagement({ tripId, userRole }: TripTeamManagementProps
           </CardTitle>
           {canManageTeam && (
             <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Add Traveler
-                </Button>
-              </DialogTrigger>
+              <Button 
+                size="sm" 
+                className="flex items-center gap-2"
+                onClick={() => setIsAddModalOpen(true)}
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Traveler
+              </Button>
               <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add Team Member</DialogTitle>
-                </DialogHeader>
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-semibold leading-none tracking-tight">Add Team Member</h3>
+                </div>
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="name">Full Name *</Label>

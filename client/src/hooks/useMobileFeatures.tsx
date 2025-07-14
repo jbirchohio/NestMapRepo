@@ -1,9 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 
-interface GeolocationPosition {
+interface GeolocationCoordinates {
   latitude: number;
   longitude: number;
   accuracy: number;
+  altitude: number | null;
+  altitudeAccuracy: number | null;
+  heading: number | null;
+  speed: number | null;
+}
+
+interface GeolocationPosition {
+  coords: GeolocationCoordinates;
   timestamp: number;
 }
 
@@ -47,7 +55,13 @@ export function useMobileFeatures(): MobileFeatures {
   const [isLocationEnabled, setIsLocationEnabled] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [offlineData, setOfflineData] = useState<unknown[]>([]);
+  interface OfflineDataItem {
+    type: 'activity_update' | 'photo_upload' | string;
+    id?: string;
+    data: any;
+  }
+
+  const [offlineData, setOfflineData] = useState<OfflineDataItem[]>([]);
   const [isTravelMode, setIsTravelMode] = useState(false);
   
   const watchIdRef = useRef<number | null>(null);
@@ -67,9 +81,15 @@ export function useMobileFeatures(): MobileFeatures {
 
     const success = (position: GeolocationPosition) => {
       setCurrentLocation({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
+        coords: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude,
+          altitudeAccuracy: position.coords.altitudeAccuracy,
+          heading: position.coords.heading,
+          speed: position.coords.speed
+        },
         timestamp: position.timestamp
       });
       setIsLocationEnabled(true);

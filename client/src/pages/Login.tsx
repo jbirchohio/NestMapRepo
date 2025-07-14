@@ -42,7 +42,18 @@ export default function Login() {
     }
   };
 
-
+  const handleDemoMode = async () => {
+    setIsLoading(true);
+    try {
+      // Use demo credentials to sign in
+      await signIn('demo@example.com', 'demo123');
+      setLocation('/');
+    } catch (err) {
+      console.error('Demo login failed:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">

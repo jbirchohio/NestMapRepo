@@ -28,7 +28,7 @@ export const ProtectedRoute = ({
   }
 
   // Check if user has required roles
-  if (requiredRoles.length > 0 && !requiredRoles.some(role => user.roles?.includes(role))) {
+  if (requiredRoles.length > 0 && !requiredRoles.some(role => user.role?.includes(role))) {
     // User is authenticated but doesn't have required role
     return <Navigate to="/unauthorized" replace />;
   }

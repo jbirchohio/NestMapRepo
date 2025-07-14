@@ -1,16 +1,15 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CreditCard, DollarSign, Lock, Unlock, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Plus, CreditCard, DollarSign, Lock, Unlock, Sparkles, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface CorporateCard {
@@ -126,6 +125,32 @@ export default function CorporateCardsManagement() {
     },
   });
 
+  // Create card mutation
+  const createCardMutation = useMutation({
+    mutationFn: (data: { cardholderName: string; spendingLimit: number; cardType: string }) => {
+      return apiRequest("POST", "/api/corporate-cards/cards", {
+        cardholder_name: data.cardholderName,
+        spending_limit: data.spendingLimit * 100, // Convert to cents for the API
+        card_type: data.cardType,
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: "Card Created",
+        description: `New ${variables.cardType} card for ${variables.cardholderName} has been created successfully.`,
+      });
+      setShowCreateCard(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/corporate-cards/cards"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Creating Card",
+        description: error.message || "Failed to create card. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAddFunds = () => {
     if (!selectedCard || !addFundsAmount) return;
     
@@ -140,6 +165,31 @@ export default function CorporateCardsManagement() {
     }
 
     addFundsMutation.mutate({ cardId: selectedCard.id, amount });
+  };
+
+  const handleCreateCard = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const cardholderName = formData.get('cardholder') as string;
+    const spendingLimit = parseFloat(formData.get('spendingLimit') as string);
+    const cardType = formData.get('cardType') as string;
+
+    // Basic validation
+    if (!cardholderName || isNaN(spendingLimit) || spendingLimit <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields with valid values",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Call the mutation to create the card
+    createCardMutation.mutate({
+      cardholderName,
+      spendingLimit,
+      cardType
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -461,6 +511,66 @@ export default function CorporateCardsManagement() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Card Dialog */}
+        <Dialog open={showCreateCard} onOpenChange={setShowCreateCard}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Create New Corporate Card</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateCard} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cardholder">Cardholder Name</Label>
+                <Input
+                  id="cardholder"
+                  placeholder="Enter cardholder name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="spendingLimit">Spending Limit</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5">$</span>
+                  <Input
+                    id="spendingLimit"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="pl-7"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Card Type</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input type="radio" id="virtual" name="cardType" value="virtual" className="h-4 w-4" defaultChecked />
+                    <Label htmlFor="virtual">Virtual</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input type="radio" id="physical" name="cardType" value="physical" className="h-4 w-4" />
+                    <Label htmlFor="physical">Physical</Label>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateCard(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Card
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>

@@ -1,12 +1,11 @@
-import { Injectable } from '@nestjs/common.js';
+import { Injectable } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
-import { db } from '../../db.js';
-import { trips as tripsTable, users as usersTable } from '../../shared/src/schema.js';
-import { Trip, User } from '../../shared/src/schema.js';
-import { TripRepository } from '../interfaces/trip.repository.interface.js';
-import { CorporateTripDto } from '../interfaces/trip.service.interface.js';
-import { UnauthorizedError } from '../../shared/src/schema.js';
-import { BaseRepositoryImpl } from '../../shared/src/schema.js';
+import { db } from '../../db';
+import { trips as tripsTable, users as usersTable } from '@shared';
+import { Trip, User } from '@shared';
+import { TripRepository } from '../interfaces/trip.repository.interface';
+import { CorporateTripDto } from '../interfaces/trip.service.interface';
+import { UnauthorizedError, BaseRepositoryImpl } from '@shared';
 
 @Injectable()
 export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {
@@ -15,7 +14,6 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
   }
 
   async getTripsByUserId(userId: string, orgId: string): Promise<Trip[]> {
-    this.logger.log(`Fetching trips for user ${userId} in organization ${orgId}`);
     
     return db
       .select()
@@ -29,7 +27,6 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
   }
 
   async getTripsByOrganizationId(orgId: string): Promise<Trip[]> {
-    this.logger.log(`Fetching all trips for organization ${orgId}`);
     
     return db
       .select()
@@ -38,27 +35,22 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
   }
 
   async getTripById(tripId: string): Promise<Trip | null> {
-    this.logger.log(`Fetching trip ${tripId}`);
     return super.findById(tripId);
   }
 
   async createTrip(tripData: Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>): Promise<Trip> {
-    this.logger.log('Creating new trip');
     return super.create(tripData);
   }
 
-  async updateTrip(tripId: string, tripData: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Trip | null> {
-    this.logger.log(`Updating trip ${tripId}`);
+  async updateTrip(tripId: string, tripData: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>): Promise<Trip | null> {
     return super.update(tripId, tripData);
   }
 
   async deleteTrip(tripId: string): Promise<boolean> {
-    this.logger.log(`Deleting trip ${tripId}`);
     return super.delete(tripId);
   }
 
   async getCorporateTrips(orgId: string): Promise<CorporateTripDto[]> {
-    this.logger.log(`Fetching corporate trips for organization ${orgId}`);
     
     const trips = await this.getTripsByOrganizationId(orgId);
 
@@ -67,8 +59,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
         const [user] = await db
           .select()
           .from(usersTable)
-          .where(eq(usersTable.id, trip.userId))
-          .limit(1);
+          .where(eq(usersTable.id, trip.userId));
 
         return {
           id: trip.id, // Now using string ID directly
@@ -80,7 +71,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
           country: trip.country,
           budget: trip.budget,
           completed: trip.completed ?? false,
-          trip_type: trip.tripType as 'business' | 'leisure' | 'bleisure' | null,
+          trip_type: trip.tripType,
           client_name: trip.clientName,
           project_type: trip.projectType,
           userName: user?.firstName && user?.lastName 

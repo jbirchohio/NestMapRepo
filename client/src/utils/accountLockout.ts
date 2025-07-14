@@ -1,4 +1,3 @@
-const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
 
 export const isAccountLocked = (email: string): boolean => {

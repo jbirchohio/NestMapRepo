@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiRequest } from '@/lib/queryClient';
-import { Plane, Clock, MapPin, Filter, ArrowRight, Wifi, Utensils, Luggage } from 'lucide-react';
+import { Plane, Clock, MapPin, Filter, ArrowRight, Luggage } from 'lucide-react';
 
 interface FlightOffer {
   id: string;
@@ -71,7 +70,7 @@ interface FlightOffer {
 }
 
 export default function FlightResults() {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const [sortBy, setSortBy] = useState('price');
   const [filters, setFilters] = useState({
     maxPrice: '',
@@ -115,15 +114,6 @@ export default function FlightResults() {
     return duration;
   };
 
-  const formatDateTime = (dateTime: string) => {
-    return new Date(dateTime).toLocaleString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const formatTime = (dateTime: string) => {
     return new Date(dateTime).toLocaleTimeString('en-US', {

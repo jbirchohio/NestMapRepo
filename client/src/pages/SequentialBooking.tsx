@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { jwtAuth } from "@/lib/jwtAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -581,7 +580,7 @@ export default function SequentialBooking() {
             </div>
 
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              {flightOffers.map((offer, index) => (
+              {flightOffers.map((offer) => (
                 <Card 
                   key={offer.id} 
                   className={`cursor-pointer transition-colors ${
@@ -613,7 +612,7 @@ export default function SequentialBooking() {
                       
                       <div className="text-right">
                         <div className="text-2xl font-bold text-primary">
-                          ${parseFloat(offer.price).toFixed(2)}
+                          ${offer.price.toFixed(2)}
                         </div>
                         <div className="text-sm text-muted-foreground">{offer.currency}</div>
                       </div>

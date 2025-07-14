@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WhiteLabelConfig } from '@/contexts/WhiteLabelContext';
 import { Eye, Monitor, Smartphone, Tablet } from 'lucide-react';
 
@@ -99,7 +99,7 @@ export default function WhiteLabelPreview({ config, isActive }: WhiteLabelPrevie
     if (config.tagline) {
       const taglineElements = doc.querySelectorAll('.company-tagline');
       taglineElements.forEach(el => {
-        el.textContent = config.tagline;
+        el.textContent = config.tagline || ''; // Fallback to empty string if undefined
       });
     }
     
@@ -107,7 +107,7 @@ export default function WhiteLabelPreview({ config, isActive }: WhiteLabelPrevie
     if (config.footerText) {
       const footerElements = doc.querySelectorAll('.footer-text');
       footerElements.forEach(el => {
-        el.textContent = config.footerText;
+        el.textContent = config.footerText || ''; // Fallback to empty string if undefined
       });
     }
   };

@@ -85,7 +85,7 @@ export default function Home() {
     setLocation(`/trip/${tripId}`);
   };
   
-  const handleNavigateToTrip = (tripId: number) => {
+  const handleNavigateToTrip = (tripId: string) => {
     setLocation(`/trip/${tripId}`);
   };
   

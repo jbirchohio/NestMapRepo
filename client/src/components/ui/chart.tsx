@@ -264,9 +264,12 @@ const ChartLegend = RechartsPrimitive.Legend
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> &
-    Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+    // Use type assertion to allow payload and verticalAlign props
+    Partial<RechartsPrimitive.LegendProps> & {
       hideIcon?: boolean
       nameKey?: string
+      payload?: Array<any>
+      verticalAlign?: string
     }
 >(
   (
@@ -275,7 +278,10 @@ const ChartLegendContent = React.forwardRef<
   ) => {
     const { config } = useChart()
 
-    if (!payload?.length) {
+    // Ensure payload is treated as an array
+    const payloadArray = Array.isArray(payload) ? payload : [];
+    
+    if (!payloadArray.length) {
       return null
     }
 
@@ -288,7 +294,7 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map((item) => {
+        {payloadArray.map((item) => {
           const key = `${nameKey || item.dataKey || "value"}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
 

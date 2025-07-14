@@ -4,16 +4,16 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+// Textarea import removed as it's not used
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Edit, Copy, Trash2, Template, Settings } from "lucide-react";
+import { Plus, Edit, Copy, Trash2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const templateSchema = z.object({
@@ -112,8 +112,11 @@ export default function ProposalTemplates() {
     },
   });
 
-  const form = useForm<TemplateFormData>({
-    resolver: zodResolver(templateSchema),
+  // Define form type with all required fields
+  type TemplateForm = z.infer<typeof templateSchema>;
+  
+  const form = useForm<TemplateForm>({
+    resolver: zodResolver(templateSchema) as any, // Type assertion to handle the resolver type
     defaultValues: {
       name: "",
       description: "",
@@ -175,18 +178,21 @@ export default function ProposalTemplates() {
           <p className="text-gray-600 dark:text-gray-300">Create reusable templates to speed up proposal generation</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              New Template
-            </Button>
-          </DialogTrigger>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="inline-flex items-center"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Template
+          </Button>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create Proposal Template</DialogTitle>
-              <DialogDescription>
-                Set up a reusable template with your branding, sections, and pricing rules.
-              </DialogDescription>
+              <div className="flex flex-col space-y-1.5">
+                <h3 className="text-lg font-semibold">Create Proposal Template</h3>
+                <p className="text-sm text-muted-foreground">
+                  Set up a reusable template with your branding, sections, and pricing rules.
+                </p>
+              </div>
             </DialogHeader>
             <TemplateForm form={form} onSubmit={onSubmit} isLoading={createTemplate.isPending} />
           </DialogContent>
@@ -200,7 +206,7 @@ export default function ProposalTemplates() {
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Template className="w-5 h-5 text-blue-600" />
+                    <FileText className="w-5 h-5 text-blue-600" />
                     {template.name}
                   </CardTitle>
                   <CardDescription>{template.description}</CardDescription>
@@ -265,10 +271,12 @@ export default function ProposalTemplates() {
       <Dialog open={!!editingTemplate} onOpenChange={() => setEditingTemplate(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Template</DialogTitle>
-            <DialogDescription>
-              Update your proposal template settings.
-            </DialogDescription>
+            <div className="flex flex-col space-y-1.5">
+              <h3 className="text-lg font-semibold">Edit Template</h3>
+              <p className="text-sm text-muted-foreground">
+                Update your proposal template settings.
+              </p>
+            </div>
           </DialogHeader>
           <TemplateForm 
             form={form} 
@@ -288,7 +296,8 @@ function TemplateForm({ form, onSubmit, isLoading, isEditing = false }: {
   isLoading: boolean;
   isEditing?: boolean;
 }) {
-  const [customSections, setCustomSections] = useState<Array<{ title: string; content: string; order: number }>>([]);
+  // Custom sections state (commented out as it's not currently used)
+  // const [customSections, setCustomSections] = useState<Array<{ title: string; content: string; order: number }>>([]);
 
   return (
     <Form {...form}>

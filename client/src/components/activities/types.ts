@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ClientActivity, ActivityModalProps } from '@/lib/types';
+import { ActivityModalProps } from '@/lib/types';
 
 export const activitySchema = z.object({
   title: z.string().min(1, "Title is required"),

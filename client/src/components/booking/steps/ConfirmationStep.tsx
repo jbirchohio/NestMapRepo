@@ -2,40 +2,44 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
+import { CabinType } from '../types';
 import { CalendarIcon, Plane, Home, Users, CreditCard, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Flight, Hotel } from '../types';
 
 interface ConfirmationStepProps {
   formData: {
-    clientInfo: {
+    tripType: 'one-way' | 'round-trip';
+    origin: string;
+    destination: string;
+    departureDate: string;
+    returnDate?: string;
+    passengers: number;
+    primaryTraveler: {
       firstName: string;
       lastName: string;
       email: string;
       phone: string;
       dateOfBirth: string;
     };
-    flights: {
-      outbound: Flight;
-      return?: Flight;
-    };
-    hotel: Hotel;
-    totalCost: number;
+    additionalTravelers?: Array<{
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string;
+    }>;
+    cabin: CabinType; // 'economy' | 'premium-economy' | 'business' | 'first'
+    budget?: number;
+    department?: string;
+    projectCode?: string;
+    costCenter?: string;
   };
   onBack: () => void;
   onConfirm: () => void;
 }
 
-export const ConfirmationStep = ({ formData, onBack }: ConfirmationStepProps) => {
+export const ConfirmationStep = ({ formData, onBack, onConfirm }: ConfirmationStepProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -50,8 +54,8 @@ export const ConfirmationStep = ({ formData, onBack }: ConfirmationStepProps) =>
         description: 'Your trip has been successfully booked. You will receive a confirmation email shortly.',
       });
 
-      // Navigate to booking confirmation page
-      // window.location.href = '/booking/confirmation';
+      // Call the onConfirm callback
+      onConfirm();
     } catch (error) {
       console.error('Error confirming booking:', error);
       toast({
@@ -79,7 +83,7 @@ export const ConfirmationStep = ({ formData, onBack }: ConfirmationStepProps) =>
               <div className="mt-2 space-y-2">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  <span>{formData.clientInfo.firstName} {formData.clientInfo.lastName}</span>
+                  <span>{formData.primaryTraveler.firstName} {formData.primaryTraveler.lastName}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4" />
@@ -94,66 +98,78 @@ export const ConfirmationStep = ({ formData, onBack }: ConfirmationStepProps) =>
               <div className="mt-2 space-y-2">
                 <div className="flex items-center gap-2">
                   <Plane className="h-4 w-4" />
-                  <span>Outbound Flight:</span>
+                  <span>Trip Type:</span>
+                  <span className="font-medium capitalize">
+                    {formData.tripType}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Plane className="h-4 w-4" />
+                  <span>Route:</span>
                   <span className="font-medium">
-                    {formData.flights.outbound.airline} {formData.flights.outbound.flightNumber}
+                    {formData.origin} to {formData.destination}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
                   <span>
-                    {format(new Date(formData.flights.outbound.departureTime), 'PPP')} at {format(new Date(formData.flights.outbound.departureTime), 'h:mm a')}
+                    Departure: {format(new Date(formData.departureDate), 'PPP')}
                   </span>
                 </div>
-                {formData.flights.return && (
+                {formData.returnDate && formData.tripType === 'round-trip' && (
                   <div className="flex items-center gap-2">
-                    <Plane className="h-4 w-4 rotate-180" />
-                    <span>Return Flight:</span>
-                    <span className="font-medium">
-                      {formData.flights.return.airline} {formData.flights.return.flightNumber}
+                    <CalendarIcon className="h-4 w-4" />
+                    <span>
+                      Return: {format(new Date(formData.returnDate), 'PPP')}
                     </span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Hotel Information */}
+            {/* Traveler Details */}
             <div className="border-b pb-4">
-              <h3 className="font-medium">Hotel Details</h3>
+              <h3 className="font-medium">Traveler Details</h3>
               <div className="mt-2 space-y-2">
                 <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>Passengers: {formData.passengers}</span>
+                </div>
+                <div className="flex items-center gap-2">
                   <Home className="h-4 w-4" />
-                  <span>{formData.hotel.name}</span>
+                  <span>Cabin Class: {formData.cabin}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  <span>
-                    Check-in: {format(new Date(formData.hotel.checkInTime), 'PPP')} at {format(new Date(formData.hotel.checkInTime), 'h:mm a')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>{formData.hotel.address.street}, {formData.hotel.address.city}</span>
-                </div>
+                {formData.budget && (
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Budget: ${formData.budget}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Total Cost */}
+            {/* Additional Information */}
             <div className="border-b pb-4">
-              <h3 className="font-medium">Total Cost</h3>
+              <h3 className="font-medium">Additional Information</h3>
               <div className="mt-2">
-                <div className="flex justify-between">
-                  <span>Flights</span>
-                  <span>{formatPrice(formData.flights.return ? formData.flights.outbound.price.amount + formData.flights.return.price.amount : formData.flights.outbound.price.amount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Hotel</span>
-                  <span>{formatPrice(formData.hotel.price.amount)}</span>
-                </div>
-                <div className="flex justify-between font-medium mt-2">
-                  <span>Total</span>
-                  <span>{formatPrice(formData.totalCost)}</span>
-                </div>
+                {formData.department && (
+                  <div className="flex justify-between">
+                    <span>Department</span>
+                    <span>{formData.department}</span>
+                  </div>
+                )}
+                {formData.projectCode && (
+                  <div className="flex justify-between">
+                    <span>Project Code</span>
+                    <span>{formData.projectCode}</span>
+                  </div>
+                )}
+                {formData.costCenter && (
+                  <div className="flex justify-between">
+                    <span>Cost Center</span>
+                    <span>{formData.costCenter}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

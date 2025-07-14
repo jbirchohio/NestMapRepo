@@ -1,4 +1,3 @@
-import { handleError } from './errorHandler';
 
 export interface RateLimitConfig {
   maxRequests: number;

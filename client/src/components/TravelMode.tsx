@@ -75,23 +75,23 @@ export default function TravelMode({ activities, currentActivity }: TravelModePr
         if (!activity.latitude || !activity.longitude) return false;
         
         const distance = calculateDistance(
-          currentLocation.latitude,
-          currentLocation.longitude,
-          activity.latitude,
-          activity.longitude
+          currentLocation.coords.latitude,
+          currentLocation.coords.longitude,
+          activity.latitude!,
+          activity.longitude!
         );
         
         return distance <= 0.5; // Within 500 meters
       }).sort((a, b) => {
         const distanceA = calculateDistance(
-          currentLocation.latitude,
-          currentLocation.longitude,
+          currentLocation.coords.latitude,
+          currentLocation.coords.longitude,
           a.latitude!,
           a.longitude!
         );
         const distanceB = calculateDistance(
-          currentLocation.latitude,
-          currentLocation.longitude,
+          currentLocation.coords.latitude,
+          currentLocation.coords.longitude,
           b.latitude!,
           b.longitude!
         );
@@ -107,8 +107,8 @@ export default function TravelMode({ activities, currentActivity }: TravelModePr
           sendNotification(
             'You\'re near an activity!',
             `${closestActivity.title} is just ${Math.round(calculateDistance(
-              currentLocation.latitude,
-              currentLocation.longitude,
+              currentLocation.coords.latitude,
+              currentLocation.coords.longitude,
               closestActivity.latitude!,
               closestActivity.longitude!
             ) * 1000)}m away`
@@ -264,11 +264,11 @@ export default function TravelMode({ activities, currentActivity }: TravelModePr
           </CardHeader>
           <CardContent>
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              Lat: {currentLocation.latitude.toFixed(6)}, 
-              Lng: {currentLocation.longitude.toFixed(6)}
+              Lat: {currentLocation.coords.latitude.toFixed(6)}, 
+              Lng: {currentLocation.coords.longitude.toFixed(6)}
             </div>
             <div className="text-xs text-gray-500 mt-1">
-              Accuracy: ±{Math.round(currentLocation.accuracy)}m
+              Accuracy: ±{Math.round(currentLocation.coords.accuracy)}m
             </div>
           </CardContent>
         </Card>
@@ -336,8 +336,8 @@ export default function TravelMode({ activities, currentActivity }: TravelModePr
             <div className="space-y-3">
               {nearbyActivities.slice(0, 3).map((activity, index) => {
                 const distance = currentLocation ? calculateDistance(
-                  currentLocation.latitude,
-                  currentLocation.longitude,
+                  currentLocation.coords.latitude,
+                  currentLocation.coords.longitude,
                   parseFloat(activity.latitude),
                   parseFloat(activity.longitude)
                 ) : 0;

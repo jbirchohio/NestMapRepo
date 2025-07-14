@@ -6,6 +6,15 @@ interface LogContext {
   action?: string;
   component?: string;
   metadata?: Record<string, any>;
+  method?: string;
+  url?: string;
+  status?: number;
+  duration?: number;
+  hasData?: boolean;
+  hasProps?: boolean;
+  details?: any;
+  event?: string;
+  data?: any;
 }
 
 class Logger {

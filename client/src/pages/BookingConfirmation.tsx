@@ -1,16 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useParams, useLocation } from 'wouter';
+import { useParams, useLocation as useWouterLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
-import { CheckCircle, Plane, MapPin, Clock, User, CreditCard, Download, Calendar, Phone, Mail } from 'lucide-react';
+import { CheckCircle, Plane, MapPin, Clock, User, Download, Calendar, Phone, Mail } from 'lucide-react';
 
 export default function BookingConfirmation() {
   const { bookingId } = useParams();
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useWouterLocation();
 
   // Get booking details
   const { data: booking, isLoading } = useQuery({

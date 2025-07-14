@@ -1,4 +1,4 @@
-import { motion, AnimatePresence, HTMLMotionProps } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { forwardRef, ReactNode, useEffect } from "react";
 import { X } from "lucide-react";

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Flight } from './flight';
 
 export const clientInfoSchema = z.object({
   // Travel Details
@@ -40,45 +41,7 @@ export type TripType = 'one-way' | 'round-trip';
 export type CabinType = 'economy' | 'premium-economy' | 'business' | 'first';
 export type BookingStep = 'client-info' | 'flights' | 'hotels' | 'confirmation';
 
-export interface Flight {
-  id: string;
-  flightNumber: string;
-  airline: string;
-  departure: {
-    airport: string;
-    city: string;
-    time: string;
-  };
-  arrival: {
-    airport: string;
-    city: string;
-    time: string;
-  };
-  duration: string;
-  price: number;
-  cabin: CabinType;
-  stops?: number;
-  departureTime?: string;
-  arrivalTime?: string;
-  segments?: FlightSegment[];
-}
 
-export interface FlightSegment {
-  carrier: {
-    name: string;
-  };
-  flightNumber: string;
-  departure: {
-    airport: string;
-    city: string;
-    time: string;
-  };
-  arrival: {
-    airport: string;
-    city: string;
-    time: string;
-  };
-}
 
 export interface Hotel {
   id: string;

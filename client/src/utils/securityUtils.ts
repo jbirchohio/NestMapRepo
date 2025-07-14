@@ -1,9 +1,6 @@
-import { handleError } from './errorHandler';
 import { TokenManager } from './tokenManager';
 import { SessionSecurity } from './sessionSecurity';
-import {
-  SecurityContext,
-  SecurityHeaders,
+import {SecurityHeaders,
   SanitizedError,
   SessionDetails
 } from './types';
@@ -11,26 +8,18 @@ import {
   TokenError,
   CSRFError,
   SessionError,
-  AccountLockoutError,
-  ValidationError
 } from './errors';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export class SecurityUtils {
   private static instance: SecurityUtils;
-  private securityContext: SecurityContext;
   private tokenManager: TokenManager;
   private sessionSecurity: SessionSecurity;
 
   private constructor() {
     this.tokenManager = TokenManager.getInstance();
     this.sessionSecurity = SessionSecurity.getInstance();
-    this.securityContext = {
-      headers: {},
-      session: null,
-      token: null,
-      errors: []
-    };
+    // Removed erroneous this.securityContext assignment
   }
 
   public static getInstance(): SecurityUtils {
@@ -119,7 +108,6 @@ export class SecurityUtils {
 
       // Validate token if present
       if (config.headers?.Authorization) {
-        const token = config.headers.Authorization.replace('Bearer ', '');
         if (!this.tokenManager.hasValidToken()) {
           throw new TokenError('Invalid token');
         }

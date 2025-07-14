@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FileText, Plus, Download, Send, DollarSign, Calendar, Clock, CheckCircle } from "lucide-react";
+import { FileText, Plus, Download, Send, DollarSign, Clock, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const invoiceSchema = z.object({
@@ -161,7 +161,7 @@ export default function InvoiceCenter() {
           <p className="text-gray-600 dark:text-gray-300">Convert proposals to invoices and track payments</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger>
             <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
               Create Invoice
@@ -433,7 +433,7 @@ function InvoiceForm({ form, onSubmit, isLoading, proposals }: {
             </Button>
           </div>
           
-          {form.watch("lineItems")?.map((item: any, index: number) => (
+          {form.watch("lineItems")?.map((_: any, index: number) => (
             <div key={index} className="grid grid-cols-12 gap-2 items-end">
               <div className="col-span-5">
                 <FormField

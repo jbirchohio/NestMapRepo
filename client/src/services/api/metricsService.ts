@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import apiClient from './apiClient';
 
 export interface MetricPoint {
   timestamp: string;
@@ -155,9 +155,10 @@ class MetricsService {
 
   // Custom Metrics
   public async queryMetrics(queries: MetricQuery[]): Promise<MetricResponse[]> {
-    return apiClient.post<MetricResponse[], { queries: MetricQuery[] }>(
+    return apiClient.post<MetricResponse[]>(
       `${this.basePath}/query`,
-      { queries }
+      { queries },
+      { params: { queries } as any } // Cast to any to avoid type issues with the request config
     );
   }
 
@@ -239,7 +240,7 @@ class MetricsService {
     properties: Record<string, any> = {},
     userId?: string
   ): Promise<void> {
-    return apiClient.post<void, { eventName: string; properties: Record<string, any>; userId?: string }>(
+    return apiClient.post<void>(
       `${this.basePath}/events`,
       { eventName, properties, userId }
     );

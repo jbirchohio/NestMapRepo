@@ -466,18 +466,14 @@ export default function BookingWorkflow() {
           </CardHeader>
           <CardContent>
             <FlightResults
-              clientInfo={clientInfo}
               flightResults={flightResults}
               selectedDepartureFlight={selectedDepartureFlight}
-              selectedReturnFlight={selectedReturnFlight}
               onSelectDepartureFlight={setSelectedDepartureFlight}
-              onSelectReturnFlight={setSelectedReturnFlight}
               isLoading={isSearching}
               onBack={() => setCurrentStep('client-info')}
               onContinue={handleFlightSelectionComplete}
               currentTravelerIndex={currentTravelerIndex}
               totalTravelers={totalTravelers}
-              travelerBookings={travelerBookings}
             />
           </CardContent>
         </Card>
@@ -491,11 +487,9 @@ export default function BookingWorkflow() {
           </CardHeader>
           <CardContent>
             <HotelResults
-              clientInfo={clientInfo}
               hotelResults={hotelResults}
               selectedHotel={selectedHotel}
               onSelectHotel={setSelectedHotel}
-              travelerBookings={travelerBookings}
               onBack={() => setCurrentStep('flights')}
               onContinue={() => setCurrentStep('confirmation')}
             />

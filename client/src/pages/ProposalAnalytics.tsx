@@ -2,12 +2,11 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
-import { Eye, Download, FileSignature, DollarSign, Clock, Users, TrendingUp, Calendar } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { Eye, FileSignature, DollarSign, Clock, TrendingUp } from "lucide-react";
 
 export default function ProposalAnalytics() {
   const [timeRange, setTimeRange] = useState("30d");
@@ -71,8 +70,6 @@ export default function ProposalAnalytics() {
     { stage: "Downloaded", count: 12, percentage: 50.0 },
     { stage: "Signed", count: 7, percentage: 29.2 }
   ];
-
-  const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
     <div className="p-6 space-y-6">
@@ -200,7 +197,7 @@ export default function ProposalAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {sectionData.map((section, index) => (
+                  {sectionData.map((section) => (
                     <div key={section.section} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">{section.section}</span>

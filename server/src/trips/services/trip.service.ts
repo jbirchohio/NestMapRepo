@@ -1,7 +1,7 @@
 import { Injectable, Logger, Inject, UnauthorizedException } from '@nestjs/common';
 import type { Trip, User } from '@shared';
-import type { CorporateTripDto, TripService } from '../interfaces/trip.service.interface.js';
-import type { TripRepository } from '../interfaces/trip.repository.interface.js';
+import type { CorporateTripDto, TripService } from '../interfaces/trip.service.interface';
+import type { TripRepository } from '../interfaces/trip.repository.interface';
 
 @Injectable()
 export class TripServiceImpl implements TripService {

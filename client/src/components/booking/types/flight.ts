@@ -31,7 +31,7 @@ export interface FlightSegment {
     name: string;
   };
   duration: number; // in minutes
-  cabin: string;
+  cabin: 'economy' | 'premium-economy' | 'business' | 'first';
   bookingClass: string;
   fareBasis: string;
   operatingCarrier?: {
@@ -67,7 +67,7 @@ export interface Flight {
   bookingClass: string;
   fareBasis: string;
   baggageAllowance: {
-    cabin: string;
+    cabin: 'economy' | 'premium-economy' | 'business' | 'first';
     checked: string;
   };
   refundable: boolean;
@@ -91,7 +91,7 @@ export interface FlightSearchParams {
     children?: number;
     infants?: number;
   };
-  cabin: string;
+  cabin: 'economy' | 'premium-economy' | 'business' | 'first';
   directOnly?: boolean;
   maxStops?: number;
   maxPrice?: number;
@@ -104,6 +104,46 @@ export interface FlightSearchResponse {
   success: boolean;
   data: {
     flights: Flight[];
+    metadata: {
+      currency: string;
+      totalResults: number;
+      filteredResults: number;
+    };
+  };
+  error?: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+  };
+}
+
+export interface HotelSearchParams {
+  destination: string | { latitude: number; longitude: number };
+  checkIn: string;
+  checkOut: string;
+  guests: {
+    adults: number;
+    children?: number;
+    rooms?: number;
+  };
+  filters?: {
+    minStarRating?: number;
+    priceRange?: {
+      min?: number;
+      max?: number;
+      currency?: string;
+    };
+    amenities?: string[];
+    hotelChains?: string[];
+  };
+}
+
+import { Hotel } from './hotel';
+
+export interface HotelSearchResponse {
+  success: boolean;
+  data: {
+    hotels: Hotel[];
     metadata: {
       currency: string;
       totalResults: number;

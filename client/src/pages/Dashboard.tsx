@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, Link } from 'wouter';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Calendar, BarChart3, Settings, Building2, DollarSign, Users, Clock, FileText, Target, User } from 'lucide-react';
+import { Loader2, Plus, Calendar, Building2, DollarSign, Users, Clock, FileText, Target, User } from 'lucide-react';
 import NewTripModal from "@/components/NewTripModal";
 import { useAuth } from '@/contexts/auth/AuthContext';
 import { useTrips } from '@/hooks/useTrips';
@@ -43,7 +43,7 @@ export default function Dashboard() {
   const error = tripsError || analyticsError;
   const trips = useMemo(() => (tripsData?.data || []) as TripDTO[], [tripsData]);
 
-  const handleOnboardingTaskClick = (taskId: string, url: string) => {
+  const handleOnboardingTaskClick = (_taskId: string, url: string) => {
     setLocation(url);
   };
 
@@ -55,8 +55,11 @@ export default function Dashboard() {
       return {
         totalTrips: corpData.overview?.totalTrips || 0,
         totalBudget: corpData.overview?.totalBudget || 0,
-        avgDuration: corpData.overview?.averageTripLength || 0,
-        teamSize: corpData.overview?.totalUsers || 0,
+        avgDuration: corpData.overview?.avgDuration || 0,
+        teamSize: corpData.overview?.teamSize || 0,
+        activeTrips: corpData.overview?.activeTrips || 0,
+        upcomingTrips: corpData.overview?.upcomingTrips || 0,
+        completedTrips: corpData.overview?.completedTrips || 0
       };
     } else {
       const agencyData = analyticsData as AgencyAnalyticsDTO;
@@ -65,6 +68,8 @@ export default function Dashboard() {
         totalRevenue: agencyData.overview?.totalRevenue || 0,
         winRate: agencyData.overview?.winRate || 0,
         activeClients: agencyData.overview?.activeClients || 0,
+        pendingApprovals: agencyData.overview?.pendingApprovals || 0,
+        upcomingTrips: agencyData.overview?.upcomingTrips || 0
       };
     }
   }, [analyticsData, isCorporate]);
@@ -113,7 +118,10 @@ export default function Dashboard() {
           <p className="text-md text-gray-600 dark:text-gray-300 mt-1">{dashboardConfig.description}</p>
         </motion.div>
 
-        {user && <OnboardingProgress user={user} onTaskClick={handleOnboardingTaskClick} />}
+        {user && <OnboardingProgress 
+          onTaskClick={handleOnboardingTaskClick} 
+          className="mt-6" 
+        />}
 
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -125,7 +133,7 @@ export default function Dashboard() {
               </AnimatedCard>
               <AnimatedCard>
                 <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Budget</CardTitle><DollarSign className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                <CardContent><div className="text-2xl font-bold">${analytics?.totalBudget.toLocaleString()}</div></CardContent>
+                <CardContent><div className="text-2xl font-bold">${(analytics?.totalBudget ?? 0).toLocaleString()}</div></CardContent>
               </AnimatedCard>
               <AnimatedCard>
                 <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Avg. Trip Duration</CardTitle><Clock className="h-4 w-4 text-muted-foreground" /></CardHeader>
@@ -144,7 +152,7 @@ export default function Dashboard() {
               </AnimatedCard>
               <AnimatedCard>
                 <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Total Revenue</CardTitle><DollarSign className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                <CardContent><div className="text-2xl font-bold">${analytics?.totalRevenue.toLocaleString()}</div></CardContent>
+                <CardContent><div className="text-2xl font-bold">${(analytics?.totalRevenue ?? 0).toLocaleString()}</div></CardContent>
               </AnimatedCard>
               <AnimatedCard>
                 <CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">Win Rate</CardTitle><Target className="h-4 w-4 text-muted-foreground" /></CardHeader>
@@ -174,11 +182,12 @@ export default function Dashboard() {
                       <li key={trip.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div>
                           <Link href={`/trips/${trip.id}`} className="font-semibold text-blue-600 hover:underline">
-                            {trip.name}
+                            {trip.title || 'Untitled Trip'}
                           </Link>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{trip.destination}</p>
                         </div>
                         <div className="text-right">
+                          <h3 className="font-medium">{trip.title || 'Untitled Trip'}</h3>
                           <p className="text-sm font-medium">{new Date(trip.startDate).toLocaleDateString()}</p>
                           <Badge variant={trip.status === TripStatus.PLANNING ? 'secondary' : 'default'}>{trip.status}</Badge>
                         </div>
@@ -202,10 +211,15 @@ export default function Dashboard() {
 
         <NewTripModal 
           isOpen={isNewTripModalOpen} 
-          onClose={() => setIsNewTripModalOpen(false)} 
+          onClose={() => setIsNewTripModalOpen(false)}
+          onSuccess={() => {
+            setIsNewTripModalOpen(false);
+            // Optionally refresh trips data
+            // queryClient.invalidateQueries({ queryKey: ['/api/trips'] });
+          }}
+          userId={user?.id ? Number(user.id) : 0}
         />
       </div>
     </div>
   );
 }
-

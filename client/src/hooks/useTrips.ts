@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tripService } from '../services/api/tripService';
 import { useAuth } from '../contexts/auth/AuthContext';
-import { TripDTO, CreateTripDTO, UpdateTripDTO, GetTripsParams, TripCardDTO } from '../types/dtos/trip';
+import { CreateTripDTO, UpdateTripDTO, GetTripsParams, TripCardDTO } from '../types/dtos/trip';
 
 export const useTrips = (params?: GetTripsParams) => {
   const { user } = useAuth();

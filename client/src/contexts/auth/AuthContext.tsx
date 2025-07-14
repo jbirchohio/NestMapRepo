@@ -1,35 +1,36 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import api from '@/services/api/apiClient';
-import { User, JwtPayload, AuthTokens } from '@/types/api';
+import type { JwtPayload, AuthTokens } from '@/types/api';
 import { TokenManager } from '@/utils/tokenManager';
+import { apiClient } from '@/services/api/apiClient';
 import { SessionLockout } from '@/utils/sessionLockout';
 import { jwtDecode } from 'jwt-decode';
-import { mapUseCaseToRoleType } from '@/lib/roleUtils';
 
 // Constants
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const SESSION_WARNING_THRESHOLD = 5 * 60 * 1000; // 5 minutes before session expires
 
 // Interfaces
-interface PasswordValidationResult {
-  isValid: boolean;
-  message?: string;
-}
-
-interface SecurityContext {
-  userId: string;
-  ipAddress: string;
-  userAgent: string;
-  timestamp: string;
-  sensitiveData: boolean;
-}
-
-interface DecodedJwt extends JwtPayload {
+interface DecodedJwt extends Omit<JwtPayload, 'organization_id'> {
+  sub: string;
+  email: string;
   name: string;
-  organization_id: string;
+  role: string;
+  organization_id: number;
   permissions: string[];
+  exp: number;
+}
+
+interface User {
+  id: number;
+  email: string;
+  name: string;
+  username?: string; // Add username property for compatibility
+  role: string;
+  organizationId: number;
+  permissions: string[];
+  displayName?: string;
 }
 
 // Context type
@@ -103,22 +104,86 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
   const [error, setError] = useState<string | null>(null);
   const [lastActivity, setLastActivity] = useState<number>(Date.now());
 
+  // Auth signOut function that can be used throughout the component
+  const signOut = useCallback(async () => {
+    try {
+      await apiClient.post<void>('/auth/logout');
+      tokenManager.clearTokens();
+      setUser(null);
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear tokens and redirect even if API call fails
+      tokenManager.clearTokens();
+      setUser(null);
+      navigate('/login');
+    }
+  }, [tokenManager, navigate, setUser]);
+
   // Initialize auth state
   useEffect(() => {
+    // Token refresh function - used within this effect and actually called
+    const refreshAuthToken = async () => {
+      try {
+        const accessToken = tokenManager.getAccessToken();
+        const refreshToken = tokenManager.getRefreshToken();
+        
+        if (accessToken && refreshToken) {
+          const response = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ refreshToken })
+          });
+
+          if (response.ok) {
+            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await response.json();
+            tokenManager.setTokens(newAccessToken, newRefreshToken);
+            
+            const decoded = decodeToken(newAccessToken);
+            if (decoded) {
+              const user: User = {
+                id: parseInt(decoded.sub, 10),
+                email: decoded.email,
+                name: decoded.name,
+                role: decoded.role,
+                organizationId: decoded.organization_id,
+                permissions: decoded.permissions || [],
+                displayName: decoded.name
+              };
+              setUser(user);
+            }
+          } else {
+            throw new Error('Failed to refresh token');
+          }
+        }
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+        // Call the signOut function defined at component level
+        await signOut();
+      }
+    };
+
     const initializeAuth = async () => {
       try {
         const accessToken = tokenManager.getAccessToken();
         if (accessToken) {
           const decoded = decodeToken(accessToken);
-          if (!isTokenExpired(accessToken)) {
-            setUser({
-              id: parseInt(decoded.sub),
-              email: decoded.email,
-              username: decoded.name,
-              role: decoded.role,
-              organization_id: decoded.organization_id || null,
-              permissions: decoded.permissions || []
-            });
+          if (decoded && !isTokenExpired(accessToken)) {
+            const user: User = {
+              id: parseInt(decoded.sub, 10),
+              email: decoded.email || '',
+              name: decoded.name || '',
+              role: decoded.role || 'user',
+              organizationId: decoded.organization_id || 0,
+              permissions: decoded.permissions || [],
+              displayName: decoded.name || ''
+            };
+            setUser(user);
+          } else {
+            // Token is expired, try to refresh it
+            await refreshAuthToken();
           }
         }
       } catch (error) {
@@ -134,10 +199,9 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
 
   // Cleanup on unmount
   useEffect(() => {
-    const cleanup = () => {
-      tokenManager.stopTokenRotation();
+    return () => {
+      tokenManager.clearTokens();
     };
-    return cleanup;
   }, [tokenManager]);
 
   // Handle session timeout
@@ -147,17 +211,22 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
       const idleTime = now - lastActivity;
       
       if (idleTime > SESSION_TIMEOUT) {
+        const signOut = async () => {
+          tokenManager.clearTokens();
+          setUser(null);
+          navigate('/login');
+        };
         signOut();
         toast({
-          title: 'Session Expired',
-          description: 'Your session has expired due to inactivity. Please sign in again.',
-          variant: 'destructive'
+          title: 'Session Expiring Soon',
+          description: 'Your session will expire in 5 minutes',
+          variant: 'default'
         });
       } else if (idleTime > SESSION_TIMEOUT - SESSION_WARNING_THRESHOLD) {
         toast({
           title: 'Session Warning',
           description: 'Your session will expire soon. Please continue using the app to stay active.',
-          variant: 'warning'
+          variant: 'default'
         });
       }
     };
@@ -172,7 +241,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [lastActivity, signOut, toast, SESSION_TIMEOUT, SESSION_WARNING_THRESHOLD]);
+  }, [lastActivity, signOut, toast]);
 
   // Helper methods
   const handleError = useCallback((error: Error) => {
@@ -194,10 +263,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
     return status.attempts;
   }, [sessionLockout]);
 
-  // Authentication methods
+  // Authentication methods are now defined above
+
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const response = await api.post<AuthTokens & { user: User }>('/auth/login', { email, password });
+      const response = await apiClient.post<AuthTokens & { user: User }>('/auth/login', { email, password });
       const { accessToken, refreshToken, user } = response;
       tokenManager.setTokens(accessToken, refreshToken);
       setUser(user);
@@ -210,7 +280,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
 
   const signUp = useCallback(async (email: string, password: string, username: string) => {
     try {
-      const response = await api.post<AuthTokens & { user: User }>('/auth/signup', { email, password, username });
+      const response = await apiClient.post<AuthTokens & { user: User }>('/auth/signup', { email, password, username });
       const { accessToken, refreshToken, user } = response;
       tokenManager.setTokens(accessToken, refreshToken);
       setUser(user);
@@ -219,20 +289,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
     }
   }, [tokenManager, setUser, handleError]);
 
-  const signOut = useCallback(async () => {
-    try {
-      await api.post<void>('/auth/logout');
-      tokenManager.destroy();
-      setUser(null);
-      navigate('/login');
-    } catch (error) {
-      handleError(error as Error);
-    }
-  }, [tokenManager, navigate, setUser, handleError]);
+
 
   const signInWithProvider = useCallback(async (provider: string) => {
     try {
-      const response = await api.post<AuthTokens & { user: User }>(`/auth/${provider}`);
+      const response = await apiClient.post<AuthTokens & { user: User }>(`/auth/${provider}`);
       const { accessToken, refreshToken, user } = response;
       tokenManager.setTokens(accessToken, refreshToken);
       setUser(user);
@@ -248,7 +309,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
         return false;
       }
       
-      const response = await api.post<{ accessToken: string }>('/auth/refresh', {
+      const response = await apiClient.post<{ accessToken: string }>('/auth/refresh', {
         refreshToken: tokenManager.getRefreshToken()
       });
 

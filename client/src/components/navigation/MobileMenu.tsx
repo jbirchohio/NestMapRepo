@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { XIcon } from '../icons';
 import { NavigationLink } from './NavigationLink';
 import { MobileMenuProps } from './types';
+import { X, User } from 'lucide-react';
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({
   isOpen,
@@ -9,7 +9,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   isAuthenticated,
   user,
   navigationItems,
-  notifications,
   onSignOut,
 }) => {
 
@@ -46,7 +45,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                   onClick={onClose}
                   aria-label="Close menu"
                 >
-                  <XIcon className="h-6 w-6" aria-hidden="true" />
+                  <X className="h-6 w-6" aria-hidden="true" />
                 </button>
               </div>
 
@@ -73,7 +72,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                         />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-600">
-                          <UserIcon className="h-6 w-6" />
+                          <User className="h-6 w-6" />
                         </div>
                       )}
                     </div>

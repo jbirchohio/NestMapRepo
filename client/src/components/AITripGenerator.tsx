@@ -9,19 +9,28 @@ import { tripService } from '@/services/tripService';
 import { useCallback, useState, FC, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Define the ClientAccess interface with all required fields
-interface ClientAccess {
-  tracking_code: string;
-  share_url: string;
+// Import the ClientAccess type from shared types
+type ClientAccessType = import('@/lib/types').ClientAccess;
+
+// Extend the shared ClientAccess type with additional properties
+interface ClientAccess extends Omit<ClientAccessType, 'access_level'> {
+  // Required fields from shared type
+  email: string;  // Make email required to match shared type
+  access_level: 'view' | 'edit';  // Make access_level required with specific values
+  
+  // Additional fields for local use
+  tracking_code?: string;
+  share_url?: string;
   last_accessed?: string;
   access_count?: number;
   is_active?: boolean;
   notifications_enabled?: boolean;
   permissions?: string[];
   created_at?: string;
-  updated_at: string;
+  updated_at?: string;
   role?: string;
-  client_email?: string;
+  client_email?: string; // Alias for backward compatibility
+  phone?: string; // Optional phone number
 }
 
 // Define shared types aligned with Duffel API
@@ -111,21 +120,28 @@ interface Offer {
   base_currency?: string;
 }
 
+// Internal Flight interface for Duffel API data
 interface Flight {
   id: string;
-  origin: Airport;
-  destination: Airport;
-  departing_at: string;
-  arriving_at: string;
-  departure_time?: string;
-  arrival_time?: string;
-  airline: Airline;
+  // Required by types.ts
+  departure: string;
+  arrival: string;
+  departure_time: string;
+  arrival_time: string;
+  airline: string;
   flight_number: string;
-  segments: Segment[];
+  price: number;
+  
+  // Additional properties from Duffel API
+  origin?: Airport;
+  destination?: Airport;
+  departing_at?: string;
+  arriving_at?: string;
+  segments?: Segment[];
   offer?: Offer;
   booking_reference?: string;
   status?: 'scheduled' | 'active' | 'landed' | 'cancelled' | 'incident' | 'diverted' | 'redirected' | string;
-  duration: string;
+  duration?: string;
   aircraft?: {
     name: string;
     id: string;
@@ -141,71 +157,50 @@ interface Flight {
     }>;
   };
   operating_flight_number?: string;
+  
+  // Alias for origin/destination to match types.ts
+  departure_airport?: string;
+  arrival_airport?: string;
 }
 
 interface TripActivity {
   id: string;
-  type: 'meeting' | 'sightseeing' | 'dining' | 'transport' | 'other';
   title: string;
   description: string;
-  start_time: string;
-  end_time: string;
-  location: string;
-  address?: string;
-  cost?: number;
-  currency?: string;
-  notes?: string;
-  booking_reference?: string;
-  status?: 'confirmed' | 'pending' | 'cancelled';
-  category?: string;
-}
-
-interface Accommodation {
-  id: string;
-  name: string;
-  check_in: string;
-  check_out: string;
-  location: string;
-  address: string;
-  room_type: string;
-  cost_per_night: number;
-  currency: string;
-  booking_reference?: string;
-  amenities?: string[];
-  status?: 'confirmed' | 'pending' | 'cancelled';
-  stars?: number;
-  pricePerNight?: number;
-}
-
-interface Meal {
-  id: string;
-  type: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'other';
-  name: string;
-  description: string;
   time: string;
+  duration: number;
   location: string;
+  price: number;
+  category: string;
+  // Optional properties
   address?: string;
-  cost?: number;
-  currency?: string;
   notes?: string;
   booking_reference?: string;
   status?: 'confirmed' | 'pending' | 'cancelled';
-  restaurant?: string;
-  cuisine?: string;
-  estimatedCost: number;  // Changed from optional to required as it's used in calculations
+  type?: 'meeting' | 'sightseeing' | 'dining' | 'transport' | 'other';
+  cost?: number;
+  currency?: string;
+  start_time?: string;
+  end_time?: string;
 }
 
-interface TripSummary {
+// Import the types we need from the shared types file
+import { Accommodation, Meal, GeneratedTrip as ImportedGeneratedTrip } from '@/lib/types';
+
+interface TripSummary extends Omit<import('@/lib/types').TripSummary, 'total_cost'> {
+  // Required by shared type
   total_cost: number;
-  currency: string;
-  flights_cost: number;
-  accommodation_cost: number;
-  activities_cost: number;
-  meals_cost: number;
-  other_expenses: number;
+  
+  // Additional properties for local use
+  currency?: string;
+  flights_cost?: number;
+  accommodation_cost?: number;
+  activities_cost?: number;
+  meals_cost?: number;
+  other_expenses?: number;
   savings?: number;
   currency_conversion_rates?: Record<string, number>;
-  budget_status: 'under_budget' | 'on_budget' | 'over_budget';
+  budget_status?: 'under_budget' | 'on_budget' | 'over_budget';
   recommendations?: string[];
   conflicts?: string[];
   warnings?: string[];
@@ -220,7 +215,8 @@ interface TripDay {
   notes?: string;
 }
 
-interface GeneratedTrip {
+// This interface now extends the imported type to ensure compatibility
+interface GeneratedTrip extends Omit<ImportedGeneratedTrip, 'accommodations' | 'meals' | 'flights'> {
   id: string;
   title: string;
   destination: string;
@@ -316,14 +312,148 @@ const AITripGenerator: FC<AITripGeneratorProps> = () => {
     }
   }, [trip?.client_access, trackingCode]);
 
+  // Map flight data from Duffel API format to the expected Flight type
+  const mapFlightToExpectedFormat = (flight: Flight): Flight => {
+    // If the flight already has the expected format, return it as is
+    if (flight.departure && flight.arrival) {
+      return flight;
+    }
+
+    // Safely get the airline name
+    let airlineName = '';
+    if (typeof flight.airline === 'string') {
+      airlineName = flight.airline;
+    } else if (flight.airline && typeof flight.airline === 'object') {
+      // Handle case where airline is an object with a name property
+      airlineName = (flight.airline as { name?: string }).name || '';
+    }
+
+    // Map from Duffel API format to expected format
+    return {
+      ...flight,
+      departure: flight.origin?.iata_code || flight.departure_airport || '',
+      arrival: flight.destination?.iata_code || flight.arrival_airport || '',
+      departure_time: flight.departing_at || flight.departure_time || '',
+      arrival_time: flight.arriving_at || flight.arrival_time || '',
+      price: flight.offer ? parseFloat(flight.offer.total_amount) || 0 : 0,
+      airline: airlineName,
+      // Ensure we have all required Flight properties
+      flight_number: flight.flight_number || flight.operating_flight_number || '',
+      id: flight.id || `flight-${Date.now()}`
+    } as Flight;
+  };
+
   // Create client itinerary mutation
   const createClientItinerary = useCallback(async (data: { tripId: string; clientName: string; clientEmail: string }) => {
     try {
       if (!trip) return; // Ensure trip exists
       
       setIsCreating(true);
+      
+      // Create a properly typed trip object with mapped data
+      // Map client access if it exists, ensuring all required fields are included
+      const clientAccess = trip.client_access ? {
+        // Required fields
+        email: trip.client_access.client_email || trip.client_access.email || 'client@example.com',
+        access_level: (trip.client_access.access_level as 'view' | 'edit') || 'view',
+        
+        // Optional fields
+        ...(trip.client_access.phone && { phone: trip.client_access.phone }),
+        ...(trip.client_access.tracking_code && { tracking_code: trip.client_access.tracking_code }),
+        ...(trip.client_access.share_url && { share_url: trip.client_access.share_url }),
+        ...(trip.client_access.last_accessed && { last_accessed: trip.client_access.last_accessed }),
+        ...(trip.client_access.access_count !== undefined && { access_count: trip.client_access.access_count }),
+        ...(trip.client_access.is_active !== undefined && { is_active: trip.client_access.is_active }),
+        ...(trip.client_access.notifications_enabled !== undefined && { 
+          notifications_enabled: trip.client_access.notifications_enabled 
+        }),
+        ...(trip.client_access.permissions && { permissions: trip.client_access.permissions }),
+        ...(trip.client_access.created_at && { created_at: trip.client_access.created_at }),
+        ...(trip.client_access.updated_at && { updated_at: trip.client_access.updated_at }),
+        ...(trip.client_access.role && { role: trip.client_access.role })
+      } : undefined;
+
+      const mappedTrip: GeneratedTrip = {
+        ...trip,
+        // Ensure required properties are present
+        id: trip.id || '',
+        title: trip.title || 'Generated Trip',
+        destination: trip.destination || '',
+        start_date: trip.start_date || new Date().toISOString(),
+        end_date: trip.end_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        budget: trip.budget || 0,
+        travelers: trip.travelers || 1,
+        summary: trip.summary || '',
+        days: trip.days || [],
+        
+        // Map flights with proper typing
+        flights: (trip.flights || []).map(flight => mapFlightToExpectedFormat(flight as Flight)),
+        
+        // Map accommodations with proper typing
+        accommodations: (trip.accommodations || []).map(acc => ({
+          id: acc.id,
+          name: acc.name,
+          address: acc.address,
+          check_in: acc.check_in,
+          check_out: acc.check_out,
+          price_per_night: acc.price_per_night,
+          rating: acc.rating
+        })),
+
+        
+        // Map meals with proper typing
+        meals: (trip.meals || []).map(meal => ({
+          id: meal.id,
+          name: meal.name,
+          restaurant: meal.restaurant,
+          time: meal.time,
+          price: meal.price,
+          cuisine: meal.cuisine
+        })),
+
+        
+        // Map trip summary with all required fields
+        tripSummary: {
+          total_cost: trip.tripSummary?.total_cost || 0,
+          duration_days: trip.tripSummary?.duration_days || 
+            Math.ceil((new Date(trip.end_date).getTime() - new Date(trip.start_date).getTime()) / (1000 * 60 * 60 * 24)) || 1,
+          activities_count: trip.activities?.length || 0,
+          meals_count: trip.meals?.length || 0,
+          flights_count: trip.flights?.length || 0,
+          accommodations_count: trip.accommodations?.length || 0,
+          // Include additional summary properties if they exist
+          ...(trip.tripSummary?.currency && { currency: trip.tripSummary.currency }),
+          ...(trip.tripSummary?.flights_cost !== undefined && { flights_cost: trip.tripSummary.flights_cost }),
+          ...(trip.tripSummary?.accommodation_cost !== undefined && { accommodation_cost: trip.tripSummary.accommodation_cost }),
+          ...(trip.tripSummary?.activities_cost !== undefined && { activities_cost: trip.tripSummary.activities_cost }),
+          ...(trip.tripSummary?.meals_cost !== undefined && { meals_cost: trip.tripSummary.meals_cost }),
+          ...(trip.tripSummary?.other_expenses !== undefined && { other_expenses: trip.tripSummary.other_expenses }),
+          ...(trip.tripSummary?.savings !== undefined && { savings: trip.tripSummary.savings }),
+          ...(trip.tripSummary?.currency_conversion_rates && { 
+            currency_conversion_rates: trip.tripSummary.currency_conversion_rates 
+          }),
+          ...(trip.tripSummary?.budget_status && { budget_status: trip.tripSummary.budget_status }),
+          ...(trip.tripSummary?.recommendations && { recommendations: trip.tripSummary.recommendations }),
+          ...(trip.tripSummary?.conflicts && { conflicts: trip.tripSummary.conflicts }),
+          ...(trip.tripSummary?.warnings && { warnings: trip.tripSummary.warnings }),
+          ...(trip.tripSummary?.notes && { notes: trip.tripSummary.notes })
+        },
+        
+        // Map client access if it exists
+        ...(clientAccess && { client_access: clientAccess }),
+        
+        // Ensure other required properties
+        created_at: trip.created_at || new Date().toISOString(),
+        updated_at: trip.updated_at || new Date().toISOString(),
+        status: trip.status || 'draft',
+        created_by: trip.created_by || '',
+        updated_by: trip.updated_by || trip.created_by || '',
+        city: trip.city || '',
+        country: trip.country || ''
+      };
+      
       const response = await tripService.createClientItinerary({
-        tripData: trip, // Pass the full trip data
+        tripData: mappedTrip, // Pass the mapped trip data
         clientEmail: data.clientEmail
       });
       

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";
 import {
-  Activity,
   Cpu,
   HardDrive,
   MemoryStick,
@@ -103,12 +102,6 @@ function getStatusColor(value: number, thresholds: { warning: number; critical: 
   if (value >= thresholds.critical) return "text-red-600 bg-red-50";
   if (value >= thresholds.warning) return "text-yellow-600 bg-yellow-50";
   return "text-green-600 bg-green-50";
-}
-
-function getProgressColor(value: number, thresholds: { warning: number; critical: number }): string {
-  if (value >= thresholds.critical) return "bg-red-500";
-  if (value >= thresholds.warning) return "bg-yellow-500";
-  return "bg-green-500";
 }
 
 export default function AdminSystemMetrics() {

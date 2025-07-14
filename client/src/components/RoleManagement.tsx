@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,19 +119,17 @@ export function RoleManagement({ tripId, userRole }: RoleManagementProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Users className="h-4 w-4 mr-2" />
-          Manage Access
-        </Button>
-      </DialogTrigger>
+      <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
+        <Users className="h-4 w-4 mr-2" />
+        Manage Access
+      </Button>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+        <div className="space-y-1.5">
+          <div className="text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Trip Access Management
-          </DialogTitle>
-        </DialogHeader>
+            <span>Trip Access Management</span>
+          </div>
+        </div>
 
         <div className="space-y-6">
           {/* Invite New Collaborator */}

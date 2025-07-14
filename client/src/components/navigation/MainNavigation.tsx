@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, ReactNode } from 'react';
-import { useLocation, useNavigate, Link } from 'wouter';
+import { useLocation, Link } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { MenuIcon, XIcon, BarChartIcon, CheckIcon, FileTextIcon, HomeIcon } from '../icons';
 import { MobileMenu } from './MobileMenu';
 import { DesktopNavigation } from './DesktopNavigation';

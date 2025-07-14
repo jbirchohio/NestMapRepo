@@ -24,39 +24,25 @@ interface Flight {
 }
 
 interface FlightResultsProps {
-  clientInfo?: any;
   flightResults: Flight[];
   selectedDepartureFlight: Flight | null;
-  selectedReturnFlight?: Flight | null;
   onSelectDepartureFlight: (flight: Flight) => void;
-  onSelectReturnFlight?: (flight: Flight) => void;
   isLoading: boolean;
   onBack: () => void;
   onContinue: () => void;
   currentTravelerIndex?: number;
   totalTravelers?: number;
-  travelerBookings?: Array<{
-    traveler: string;
-    departureFlight?: Flight | null;
-    returnFlight?: Flight | null;
-  }>;
 }
 
 export function FlightResults({
   flightResults,
   selectedDepartureFlight,
-  selectedReturnFlight,
   onSelectDepartureFlight,
-  onSelectReturnFlight,
   isLoading,
   onBack,
   onContinue,
-  currentTravelerIndex,
-  totalTravelers,
-  travelerBookings,
 }: FlightResultsProps) {
-  // Unused parameters for now but part of the interface
-  // selectedReturnFlight, currentTravelerIndex, totalTravelers, travelerBookings
+  // Component logic here
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">

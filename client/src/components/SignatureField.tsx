@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { FileSignature, Pen, Check, X, Smartphone, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -220,19 +220,20 @@ export default function SignatureField({
           </div>
 
           <Dialog open={isSignDialogOpen} onOpenChange={setIsSignDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                <FileSignature className="w-4 h-4 mr-2" />
-                Sign Proposal
-              </Button>
-            </DialogTrigger>
+            <Button 
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              onClick={() => setIsSignDialogOpen(true)}
+            >
+              <FileSignature className="w-4 h-4 mr-2" />
+              Sign Proposal
+            </Button>
             <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[95vh]' : 'max-w-2xl'}`}>
-              <DialogHeader>
-                <DialogTitle>Digital Signature</DialogTitle>
-                <DialogDescription>
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-semibold leading-none tracking-tight">Digital Signature</h3>
+                <p className="text-sm text-muted-foreground">
                   Please enter your name and draw your signature below
-                </DialogDescription>
-              </DialogHeader>
+                </p>
+              </div>
               
               <div className="space-y-4">
                 <div>

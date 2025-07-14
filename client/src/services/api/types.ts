@@ -1,4 +1,4 @@
-import { AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 
 /**
  * Extended request configuration with our custom options

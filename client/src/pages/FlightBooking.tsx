@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ interface PaymentDetails {
 
 export default function FlightBooking() {
   const { offerId } = useParams();
-  const [location, setLocation] = useLocation();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   
   const [passengers, setPassengers] = useState<PassengerDetails[]>([{
@@ -67,7 +67,7 @@ export default function FlightBooking() {
     }
   });
 
-  const [selectedSeats, setSelectedSeats] = useState<{[key: string]: string}>({});
+  const [selectedSeats] = useState<{[key: string]: string}>({});
 
   // Get offer details
   const { data: offer, isLoading: offerLoading } = useQuery({
@@ -85,7 +85,7 @@ export default function FlightBooking() {
         title: 'Booking Confirmed',
         description: `Your flight has been booked successfully. Booking ID: ${data.data.id}`,
       });
-      setLocation(`/bookings/${data.data.id}`);
+      navigate(`/bookings/${data.data.id}`);
     },
     onError: (error: any) => {
       toast({
@@ -156,7 +156,7 @@ export default function FlightBooking() {
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 The selected flight offer is no longer available.
               </p>
-              <Button onClick={() => setLocation('/flights')}>
+              <Button onClick={() => navigate('/flights')}>
                 Search New Flights
               </Button>
             </div>

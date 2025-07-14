@@ -1,7 +1,6 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { getAuthToken, refreshAuthToken } from '@/lib/auth';
+import { getAuthToken } from '@/lib/auth';
 import { RequestConfig } from '../types';
-import { ApiError } from '../utils/error';
 
 /**
  * Auth interceptor to handle token management
@@ -61,7 +60,7 @@ export class AuthInterceptor {
 
     // If we're already refreshing the token, add this request to the queue
     if (this.isRefreshing) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         this.refreshSubscribers.push((token: string) => {
           // Update the auth header and retry the request
           originalRequest.headers = originalRequest.headers || {};
@@ -76,14 +75,23 @@ export class AuthInterceptor {
     this.isRefreshing = true;
 
     try {
-      // Try to refresh the token
-      const newToken = await refreshAuthToken();
+      // Try to refresh the token by making an API call to the refresh token endpoint
+      const axios = (await import('axios')).default;
+      const response = await axios.post('/api/auth/refresh', {}, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        // Use type assertion to include our custom properties
+        ...({ _retry: false } as any) // Don't retry the refresh request
+      });
+      
+      const newToken = response?.data?.token;
       
       if (!newToken) {
-        throw new Error('Failed to refresh token');
+        throw new Error('Failed to refresh token: No token received');
       }
 
-      // Update the auth token
+      // Update the auth token in the interceptor
       this.setAuthToken(newToken);
       
       // Update the original request with the new token
@@ -122,13 +130,16 @@ export class AuthInterceptor {
   /**
    * Retry a request with the given config
    */
-  private async retryRequest(config: AxiosRequestConfig): Promise<AxiosResponse> {
+  private async retryRequest(config: AxiosRequestConfig & { _retry?: boolean }): Promise<AxiosResponse> {
     // Create a new axios instance to avoid mutating the original config
     const axios = (await import('axios')).default;
-    return axios({
-      ...config,
-      // Clear the retry flag
-      _retry: false
-    });
+    
+    // Create a new config object without the _retry property
+    const newConfig = { ...config };
+    if ('_retry' in newConfig) {
+      delete (newConfig as any)._retry;
+    }
+    
+    return axios(newConfig);
   }
 }

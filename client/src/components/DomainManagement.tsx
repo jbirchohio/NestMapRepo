@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from '@/components/ui/dialog';
+// Removed direct import of DialogPrimitive as we're using shadcn/ui components
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -193,19 +194,33 @@ export default function DomainManagement() {
                 Configure custom domains for your white label deployment
               </CardDescription>
             </div>
+            {/* Button outside of Dialog to avoid children prop issues */}
+            <Button onClick={() => setAddDomainOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Domain
+            </Button>
+            
+            {/* Dialog controlled by state */}
             <Dialog open={addDomainOpen} onOpenChange={setAddDomainOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Domain
-                </Button>
-              </DialogTrigger>
+
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add Domain</DialogTitle>
-                  <DialogDescription>
-                    Add a custom domain or configure a subdomain for your organization
-                  </DialogDescription>
+                  {/* Workaround for DialogTitle with children prop issue */}
+                  {(() => {
+                    return (
+                      <div className="text-lg font-semibold text-left leading-none tracking-tight">
+                        Add Domain
+                      </div>
+                    );
+                  })()}
+                  {/* Workaround for DialogDescription with children prop issue */}
+                  {(() => {
+                    return (
+                      <div className="text-sm text-muted-foreground text-left">
+                        Add a custom domain or configure a subdomain for your organization
+                      </div>
+                    );
+                  })()}
                 </DialogHeader>
                 <Tabs value={domainType} onValueChange={(v) => setDomainType(v as 'custom' | 'subdomain')}>
                   <TabsList className="grid w-full grid-cols-2">

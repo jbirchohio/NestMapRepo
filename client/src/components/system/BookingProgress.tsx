@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -29,7 +28,6 @@ export function BookingProgress({
   tripDetails,
   onStepClick 
 }: BookingProgressProps) {
-  const currentStepIndex = steps.findIndex(step => step.id === currentStep);
   const completedSteps = steps.filter(step => step.status === 'completed').length;
   const progressPercentage = (completedSteps / steps.length) * 100;
 

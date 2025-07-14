@@ -1,5 +1,5 @@
 import { Trip, User, BaseRepository } from '@shared';
-import type { CorporateTripDto } from './trip.service.interface.js';
+import type { CorporateTripDto } from './trip.service.interface';
 
 /**
  * Trip repository interface that extends the base repository interface

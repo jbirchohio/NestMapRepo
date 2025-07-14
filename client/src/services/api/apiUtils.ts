@@ -62,7 +62,7 @@ export function debounceApi<T extends (...args: any[]) => Promise<any>>(
   wait: number
 ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  let pendingPromise: Promise<Awaited<ReturnType<T>>> | null = null;
+  let pendingPromise: Promise<any> | null = null;
 
   return async (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
     // Cancel any pending timeouts
@@ -76,7 +76,7 @@ export function debounceApi<T extends (...args: any[]) => Promise<any>>(
     }
 
     // Create a new promise that will be resolved after the debounce time
-    return new Promise((resolve, reject) => {
+    return new Promise<Awaited<ReturnType<T>>>((resolve, reject) => {
       timeoutId = setTimeout(async () => {
         try {
           pendingPromise = func(...args);

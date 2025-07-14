@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { Shield, Users, Plane, Sparkles } from "lucide-react";
 
 export default function Bookings() {
-  const { user, userId } = useAuth();
+  const { user } = useAuth();
   
   // Check user permissions for booking access
   const { data: userPermissions } = useQuery({

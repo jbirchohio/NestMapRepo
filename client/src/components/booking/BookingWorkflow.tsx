@@ -9,7 +9,7 @@ import { ClientInfoStep } from './steps/ClientInfoStep';
 import { FlightSelectionStep } from './steps/FlightSelectionStep';
 import { HotelSelectionStep } from './steps/HotelSelectionStep';
 import { ConfirmationStep } from './steps/ConfirmationStep';
-import { BookingStep } from './types';
+import { BookingStep, ClientInfo, CabinType } from './types/booking';
 
 export const BookingWorkflow = () => {
   const navigate = useNavigate();
@@ -21,27 +21,23 @@ export const BookingWorkflow = () => {
   const [progress, setProgress] = useState(25);
   
   // Form data state
-  const [formData, setFormData] = useState({
-    tripType: 'round-trip' as const,
+  const [formData, setFormData] = useState<ClientInfo>({
+    tripType: 'round-trip',
     origin: '',
     destination: '',
     departureDate: format(new Date(), 'yyyy-MM-dd'),
     returnDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
     passengers: 1,
     primaryTraveler: {
-      firstName: (user as any)?.firstName || '',
-      lastName: (user as any)?.lastName || '',
+      firstName: String((user as any)?.firstName || ''),
+      lastName: String((user as any)?.lastName || ''),
       email: user?.email || '',
       phone: '',
       dateOfBirth: '',
     },
-    additionalTravelers: [] as Array<{
-      firstName: string;
-      lastName: string;
-      dateOfBirth: string;
-    }>,
-    cabin: 'economy' as const,
-    budget: undefined as number | undefined,
+    additionalTravelers: [],
+    cabin: 'economy' as CabinType,
+    budget: undefined,
     department: '',
     projectCode: '',
     costCenter: '',
@@ -76,8 +72,8 @@ export const BookingWorkflow = () => {
   }, [currentStep]);
 
   // Handle form submission
-  const handleSubmit = useCallback((data: typeof formData) => {
-    setFormData(data);
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
     goToNextStep();
   }, [goToNextStep]);
 

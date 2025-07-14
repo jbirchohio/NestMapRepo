@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+
+// Remove unused analytics variable to fix warning
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,15 +24,12 @@ import {
   Plane,
   Clock,
   Plus,
-  BarChart3,
-  Settings,
   Sparkles,
   CreditCard,
   Lock,
   Unlock,
   Eye
 } from "lucide-react";
-import MainNavigation from "@/components/MainNavigation";
 import NewTripModal from "@/components/NewTripModal";
 import OnboardingProgress from "@/components/OnboardingProgress";
 
@@ -65,7 +64,7 @@ interface CorporateCard {
 }
 
 export default function CorporateDashboard() {
-  const { userId, user } = useAuth();
+  const { user } = useAuth();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CorporateCard | null>(null);
   const [showAddFunds, setShowAddFunds] = useState(false);
@@ -74,7 +73,7 @@ export default function CorporateDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleOnboardingTaskClick = (taskId: string, url: string) => {
+  const handleOnboardingTaskClick = (_taskId: string, url: string) => {
     setLocation(url);
   };
 
@@ -152,8 +151,8 @@ export default function CorporateDashboard() {
     },
   });
 
-  const { data: analytics } = useQuery({
-    queryKey: ['/api/analytics/corporate', { userId }],
+  useQuery({
+    queryKey: ['/api/analytics/corporate', { userId: user?.id }],
     queryFn: async () => {
       const res = await fetch('/api/analytics', {
         credentials: 'include'
@@ -559,9 +558,9 @@ export default function CorporateDashboard() {
         <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2">
+              <DialogTitle className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
-                <span>Card Management - {selectedCard.cardholder_name}</span>
+                Card Management - {selectedCard.cardholder_name}
               </DialogTitle>
             </DialogHeader>
 
@@ -693,7 +692,7 @@ export default function CorporateDashboard() {
         isOpen={isNewTripModalOpen} 
         onClose={() => setIsNewTripModalOpen(false)} 
         onSuccess={() => setIsNewTripModalOpen(false)}
-        userId={userId!}
+        userId={user?.id!}
       />
     </div>
   );

@@ -1,7 +1,6 @@
 import { SecureCookie } from './SecureCookie';
 
 const CSRF_TOKEN_NAME = 'csrf_token';
-const CSRF_TOKEN_HEADER = 'X-CSRF-Token';
 
 // Generate a cryptographically secure random token
 export const generateCSRFToken = (): string => {

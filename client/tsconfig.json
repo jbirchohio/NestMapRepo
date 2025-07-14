@@ -12,6 +12,8 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo/client.tsbuildinfo",
     "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "react", "react-dom", "jest"],
     "paths": {
       "@/*": ["src/*"],
       "@/components": ["src/components"],
@@ -29,6 +31,6 @@
       "@shared/*": ["../shared/src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "**/*.test.ts", "**/*.test.tsx"],
   "exclude": ["node_modules", "dist"]
 }

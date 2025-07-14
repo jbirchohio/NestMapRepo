@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import React from 'react';
+import { useMemo, useRef } from 'react';
 
 /**
  * Memoize a function's result based on its arguments
@@ -85,7 +86,7 @@ export function useMemoizedValue<T>(
  */
 export function memo<T extends React.ComponentType<any>>(
   Component: T,
-  areEqual?: (prevProps: React.ComponentProps<T>, nextProps: React.ComponentProps<T>) => boolean
+  areEqual?: (prevProps: Readonly<React.ComponentProps<T>>, nextProps: Readonly<React.ComponentProps<T>>) => boolean
 ) {
   return React.memo(Component, areEqual);
 }

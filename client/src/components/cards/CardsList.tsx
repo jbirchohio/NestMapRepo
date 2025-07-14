@@ -1,8 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, CreditCard, Lock, Unlock, Eye, EyeOff, Pause, Play } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, CreditCard, Lock, Unlock, Eye, Pause } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface CorporateCard {
   id: string;
@@ -107,37 +111,49 @@ export function CardsList({ cards, onCardAction, isLoading }: CardsListProps) {
                     {card.cardType}
                   </Badge>
                   
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                  <Popover>
+                    <PopoverTrigger asChild>
                       <Button variant="ghost" size="sm">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onCardAction(card.id, 'view')}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
-                      {card.status === 'active' ? (
-                        <DropdownMenuItem onClick={() => onCardAction(card.id, 'freeze')}>
-                          <Lock className="h-4 w-4 mr-2" />
-                          Freeze Card
-                        </DropdownMenuItem>
-                      ) : card.status === 'frozen' ? (
-                        <DropdownMenuItem onClick={() => onCardAction(card.id, 'unfreeze')}>
-                          <Unlock className="h-4 w-4 mr-2" />
-                          Unfreeze Card
-                        </DropdownMenuItem>
-                      ) : null}
-                      <DropdownMenuItem 
-                        onClick={() => onCardAction(card.id, 'suspend')}
-                        className="text-red-600 dark:text-red-400"
-                      >
-                        <Pause className="h-4 w-4 mr-2" />
-                        Suspend Card
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-1" align="end">
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => onCardAction(card.id, 'view')}
+                          className="flex items-center px-2 py-1.5 text-sm rounded-sm hover:bg-gray-100 w-full text-left"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </button>
+                        {card.status === 'active' && (
+                          <button
+                            onClick={() => onCardAction(card.id, 'freeze')}
+                            className="flex items-center px-2 py-1.5 text-sm rounded-sm hover:bg-gray-100 w-full text-left"
+                          >
+                            <Lock className="h-4 w-4 mr-2" />
+                            Freeze Card
+                          </button>
+                        )}
+                        {card.status === 'frozen' && (
+                          <button
+                            onClick={() => onCardAction(card.id, 'unfreeze')}
+                            className="flex items-center px-2 py-1.5 text-sm rounded-sm hover:bg-gray-100 w-full text-left"
+                          >
+                            <Unlock className="h-4 w-4 mr-2" />
+                            Unfreeze Card
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onCardAction(card.id, 'suspend')}
+                          className="flex items-center px-2 py-1.5 text-sm rounded-sm text-red-600 hover:bg-red-50 w-full text-left"
+                        >
+                          <Pause className="h-4 w-4 mr-2" />
+                          Suspend Card
+                        </button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 

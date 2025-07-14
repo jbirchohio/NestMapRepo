@@ -21,7 +21,6 @@ export function DashboardMetrics({ data }: DashboardMetricsProps) {
   const totalRevenue = data.billingData?.reduce((sum, billing) => sum + (billing.amount_cents || 0), 0) / 100 || 0;
   
   const recentAuditLogs = data.auditLogs?.slice(0, 5) || [];
-  const runningJobs = data.backgroundJobs?.filter(job => job.status === 'running')?.length || 0;
 
   const metrics = [
     {

@@ -33,7 +33,7 @@ interface OnboardingStep {
   optional?: boolean;
 }
 
-interface OnboardingWizardProps {
+export interface OnboardingWizardProps {
   onComplete: () => void;
 }
 

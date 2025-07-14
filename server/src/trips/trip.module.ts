@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common.js';
-import { TripController } from './controllers/trip.controller.js';
-import { TripServiceProvider } from './trip.container.js';
-import { RepositoriesModule } from '../common/repositories.js';
+import { Module } from '@nestjs/common';
+import { TripController } from './controllers/trip.controller';
+import { TripServiceProvider } from './trip.container';
+import { RepositoriesModule } from '../common/repositories';
 
 @Module({
   imports: [RepositoriesModule],

@@ -12,7 +12,6 @@ import useActivities from "@/hooks/useActivities";
 import { useAutoComplete } from "@/hooks/useAutoComplete";
 import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
-import { apiRequest } from "@/lib/queryClient";
 
 export default function TripPlanner() {
   const [, params] = useRoute("/trip/:id");
@@ -50,16 +49,19 @@ export default function TripPlanner() {
   
   // State for activity modal management
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<ClientActivity | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<ClientActivity | undefined>(undefined);
   
   // Centralized activity modal handlers
   const handleOpenActivityModal = (activity: ClientActivity | null = null, day: Date | null = null) => {
-    setSelectedActivity(activity);
+    setSelectedActivity(activity || undefined);
     setIsActivityModalOpen(true);
+    if (day) {
+      setActiveDay(day);
+    }
   };
   
   const handleCloseActivityModal = () => {
-    setSelectedActivity(null);
+    setSelectedActivity(undefined);
     setIsActivityModalOpen(false);
   };
   
@@ -257,10 +259,6 @@ export default function TripPlanner() {
     );
   }
   
-  // Toggle view function for mobile
-  const toggleMobileView = () => {
-    setMobileView(mobileView === 'itinerary' ? 'map' : 'itinerary');
-  };
 
   return (
     <AppShell trip={trip} onOpenShare={handleOpenShare}>

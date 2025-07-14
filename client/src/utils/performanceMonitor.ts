@@ -3,7 +3,7 @@ import { ErrorLogger } from './errorLogger';
 
 import { SessionSecurity } from './sessionSecurity';
 import { SecureCookie } from './SecureCookie';
-import apiClient from '../services/api/apiClient';
+import apiClient from '@/services/api/apiClient';
 
 export interface PerformanceMetrics {
   timestamp: string;

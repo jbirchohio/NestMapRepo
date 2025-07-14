@@ -555,13 +555,15 @@ export default function TeamManagement() {
                         <Label className="text-sm">{permission.label}</Label>
                         <p className="text-xs text-muted-foreground">{permission.desc}</p>
                       </div>
-                      <Switch 
-                        defaultChecked={selectedMember.role === 'admin'} 
-                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-gray-700 border border-gray-300 data-[state=checked]:border-blue-600"
-                        style={{
-                          backgroundColor: selectedMember.role === 'admin' ? '#2563eb' : '#e5e7eb'
-                        }}
-                      />
+                      <div className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                        selectedMember.role === 'admin' 
+                          ? 'bg-blue-600' 
+                          : 'bg-gray-200 dark:bg-gray-700'
+                      }`}>
+                        <span className={`${
+                          selectedMember.role === 'admin' ? 'translate-x-6' : 'translate-x-1'
+                        } inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                      </div>
                     </div>
                   ))}
                 </div>

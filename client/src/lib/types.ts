@@ -1,32 +1,92 @@
 // Type definitions for the application
-import { Trip, Activity, Todo, Note } from "@shared/schema";
+
+// Base Todo interface
+interface Todo {
+  id: string;
+  task: string;
+  completed: boolean;
+  tripId: string;
+  createdAt?: string;
+  updatedAt?: string;
+  assignedTo?: string;
+}
+
+// Base Note interface
+interface Note {
+  id: string;
+  content: string;
+  tripId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 // Re-export shared types for easier imports
-export { Todo, Note };
+export type { Todo, Note };
+
+// Base Trip interface
+interface Trip {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  description?: string;
+  cityLatitude?: number;
+  cityLongitude?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Base Activity interface
+interface Activity {
+  id: string;
+  tripId: string;
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
+  category?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 // Extended types with additional client-side properties
-export interface ClientTrip extends Trip {
+export interface ClientTrip extends Omit<Trip, 'cityLatitude' | 'cityLongitude'> {
   days?: Date[];
   city?: string;
   location?: string;
+  completed?: boolean;
   // City coordinates for map centering
-  cityLatitude?: string;
-  cityLongitude?: string;
+  cityLatitude?: number;
+  cityLongitude?: number;
   // Hotel/accommodation information
   hotel?: string;
-  hotelLatitude?: string;
-  hotelLongitude?: string;
+  hotelLatitude?: number;
+  hotelLongitude?: number;
   // Legacy coordinates (for backward compatibility)
-  latitude?: string;
-  longitude?: string;
+  latitude?: number;
+  longitude?: number;
+  // Sharing-related properties
+  isPublic?: boolean;
+  sharingEnabled?: boolean;
+  shareCode?: string;
+  sharePermission?: 'view' | 'edit' | 'admin';
+  collaborators?: Record<string, any>;
 }
 
 export interface ClientActivity extends Activity {
   date: string; // Make date required for client-side activities
+  time?: string; // Time of the activity (used in ActivityItem and ActivityTimeline)
   travelTimeFromPrevious?: string;
   travelDistanceFromPrevious?: string;
   conflict?: boolean;
   timeConflict?: boolean; // For identical time conflicts
+  completed?: boolean; // Track completion status of activities
+  tag?: string; // Activity tag/category for display
+  notes?: string; // Additional notes for the activity
+  travelMode?: 'driving' | 'walking' | 'transit' | 'cycling' | string; // Mode of travel to this activity
 }
 
 export interface DayActivities {
@@ -42,6 +102,7 @@ export interface MapMarker {
   label?: string;
   activity?: ClientActivity;
   completed?: boolean;
+  color?: string; // Added color property for marker styling
 }
 
 export interface MapRoute {
@@ -49,6 +110,11 @@ export interface MapRoute {
   coordinates: [number, number][];
   duration: number;
   distance: number;
+  color?: string; // Added color property for route styling
+  geometry?: {
+    type: string;
+    coordinates: [number, number][];
+  }; // Added geometry property for GeoJSON compatibility
 }
 
 // AI Assistant types

@@ -33,7 +33,14 @@ export class SecureCookie {
 
   static getAll(): Record<string, string> {
     const cookies = document.cookie;
-    return parse(cookies);
+    const parsed = parse(cookies);
+    const filtered: Record<string, string> = {};
+    Object.keys(parsed).forEach((key) => {
+      if (typeof parsed[key] === 'string') {
+        filtered[key] = parsed[key] as string;
+      }
+    });
+    return filtered;
   }
 
   static clearAll(): void {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { User } from '../types/user';
 
 interface AuthState {
@@ -19,7 +19,7 @@ export function useAuth() {
     error: null,
   });
 
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
 
   // Initialize auth state from localStorage
   useEffect(() => {

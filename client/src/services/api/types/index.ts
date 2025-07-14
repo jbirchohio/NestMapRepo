@@ -5,7 +5,7 @@ import { AxiosRequestConfig, AxiosResponse, AxiosError, CancelToken, Method } fr
  * @template T - Expected response type
  * @template D - Request data type
  */
-export interface RequestConfig<T = any, D = any> extends Omit<AxiosRequestConfig<D>, 'cancelToken' | 'headers' | 'method'> {
+export interface RequestConfig<D = any> extends Omit<AxiosRequestConfig<D>, 'cancelToken' | 'headers' | 'method' | 'onUploadProgress' | 'onDownloadProgress'> {
   /** Request headers */
   headers?: Record<string, string>;
   /** Skip authentication for this request */

@@ -1,14 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Flight, FlightSearchParams } from '../types';
+import { FlightSearchParams } from '../types/flight';
+import { Flight } from '../types/flight';
+import { CabinType } from '../types/booking';
 import { FlightCard } from './FlightCard';
 
 interface FlightSelectionStepProps {
@@ -18,7 +19,7 @@ interface FlightSelectionStepProps {
     departureDate: string;
     returnDate?: string;
     passengers: number;
-    cabin: string;
+    cabin: CabinType; // 'economy' | 'premium-economy' | 'business' | 'first'
   };
   onBack: () => void;
   onNext: () => void;
@@ -30,8 +31,12 @@ export const FlightSelectionStep = ({ formData, onBack, onNext }: FlightSelectio
     destination: formData.destination,
     departureDate: formData.departureDate,
     returnDate: formData.returnDate,
-    passengers: { adults: formData.passengers },
-    cabin: formData.cabin,
+    passengers: { 
+      adults: formData.passengers,
+      children: 0,
+      infants: 0 
+    },
+    cabin: formData.cabin as 'economy' | 'premium-economy' | 'business' | 'first',
     directOnly: false,
   });
 
@@ -127,7 +132,7 @@ export const FlightSelectionStep = ({ formData, onBack, onNext }: FlightSelectio
                     onSelect={(date) => {
                       setSearchParams((prev) => ({
                         ...prev,
-                        departureDate: date?.toISOString().split('T')[0],
+                        departureDate: date ? date.toISOString().split('T')[0] : prev.departureDate,
                       }));
                     }}
                     initialFocus
@@ -173,7 +178,7 @@ export const FlightSelectionStep = ({ formData, onBack, onNext }: FlightSelectio
               <Label>Cabin Class</Label>
               <Select
                 value={searchParams.cabin}
-                onValueChange={(value) => {
+                onValueChange={(value: CabinType) => {
                   setSearchParams((prev) => ({
                     ...prev,
                     cabin: value,
@@ -185,7 +190,7 @@ export const FlightSelectionStep = ({ formData, onBack, onNext }: FlightSelectio
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="economy">Economy</SelectItem>
-                  <SelectItem value="premium">Premium Economy</SelectItem>
+                  <SelectItem value="premium-economy">Premium Economy</SelectItem>
                   <SelectItem value="business">Business</SelectItem>
                   <SelectItem value="first">First Class</SelectItem>
                 </SelectContent>
@@ -220,7 +225,7 @@ export const FlightSelectionStep = ({ formData, onBack, onNext }: FlightSelectio
                 key={flight.id}
                 flight={flight}
                 isSelected={flight.id === (formData.returnDate ? selectedReturn?.id : selectedOutbound?.id)}
-                onSelect={(selected) => handleSelectFlight(flight, formData.returnDate ? 'return' : 'outbound')}
+                onSelect={() => handleSelectFlight(flight, formData.returnDate ? 'return' : 'outbound')}
                 onClear={() => handleClearSelection(formData.returnDate ? 'return' : 'outbound')}
               />
             ))}

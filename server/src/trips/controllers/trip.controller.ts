@@ -1,8 +1,11 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common.js';
+import { Logger } from '@nestjs/common/services/logger.service';
+import { UnauthorizedException, NotFoundException } from '@nestjs/common/exceptions';
 import { TripService } from '../interfaces/trip.service.interface.js';
-import { ResponseFormatter } from '../../shared/src/schema.js';
-import { requireAuth, requireOrgContext } from '../../shared/src/schema.js';
+import ResponseFormatter from '@shared/src/schema.js';
+import requireAuth from '@shared/src/schema.js';
+import requireOrgContext from '@shared/src/schema.js';
+import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator.js';
 
 // Define the AuthUser interface to match the expected User type from the service
 interface AuthUser {
@@ -44,17 +47,9 @@ type AuthenticatedRequest = Request & {
   };
 };
 
-// Define the expected structure of the trip object from the service
-interface Trip {
-  id: string;
-  userId: string;
-  organizationId?: string;
-  [key: string]: any;
-}
 
 @Injectable()
 export class TripController {
-  private readonly logger = new Logger(TripController.name);
 
   constructor(@Inject('TripService') private readonly tripService: TripService) {}
 
@@ -148,3 +143,7 @@ export class TripController {
     ];
   }
 }
+function Inject(_arg0: string): (target: typeof TripController, propertyKey: undefined, parameterIndex: 0) => void {
+  throw new Error('Function not implemented.');
+}
+

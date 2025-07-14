@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatedCard } from "@/components/ui/animated-card";
@@ -52,17 +52,6 @@ interface CorporateCard {
   updated_at: string;
 }
 
-interface CardTransaction {
-  id: number;
-  amount: number;
-  currency: string;
-  merchant_name: string;
-  merchant_category: string;
-  transaction_type: string;
-  transaction_status: string;
-  processed_at: string;
-}
-
 interface Expense {
   id: number;
   merchant_name: string;
@@ -70,13 +59,14 @@ interface Expense {
   currency: string;
   expense_category: string;
   description: string;
-  status: string;
-  approval_status: string;
+  status: 'approved' | 'pending' | 'rejected';
+  approval_status: 'approved' | 'pending' | 'rejected';
   transaction_date: string;
   user: {
     username: string;
     email: string;
   };
+  category: string;
 }
 
 export default function CorporateCards() {
@@ -617,9 +607,7 @@ export default function CorporateCards() {
 
               {/* Carbon Expense Tracker */}
               <CarbonExpenseTracker 
-                tripId={1} 
-                activities={[]} 
-                budget={analytics?.totalSpend || 0}
+                tripId={1}
               />
             </TabsContent>
           </Tabs>
@@ -1047,13 +1035,17 @@ export default function CorporateCards() {
       <Dialog open={isAddFundsDialogOpen} onOpenChange={setIsAddFundsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-electric-600" />
-              Add Funds to Card
-            </DialogTitle>
-            <DialogDescription>
-              Add funds to {selectedCard?.cardholder_name}'s corporate card
-            </DialogDescription>
+            <div className="flex flex-col space-y-1.5">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-electric-600" />
+                <AlertDialogTitle className="m-0 p-0">
+                  Add Funds to Card
+                </AlertDialogTitle>
+              </div>
+              <AlertDialogDescription>
+                Add funds to {selectedCard?.cardholder_name}'s corporate card
+              </AlertDialogDescription>
+            </div>
           </DialogHeader>
 
           <div className="space-y-4">

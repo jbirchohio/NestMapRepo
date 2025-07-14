@@ -1,12 +1,11 @@
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Edit, MapPin, Calendar, Users } from "lucide-react";
+import { Eye, Edit, MapPin, Calendar } from "lucide-react";
 import { format } from "date-fns";
-import TripPlanner from "./TripPlanner";
 
 interface SharedTripData {
   id: number;

@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import * as Accordion from '@radix-ui/react-accordion';
+import { ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { motion } from 'framer-motion';
 import { 
   HelpCircle, 
   MessageSquare, 
@@ -23,8 +21,7 @@ import {
   Mail,
   Phone,
   Globe,
-  ChevronRight,
-  Sparkles
+  ChevronRight
 } from 'lucide-react';
 
 export default function HelpCenter() {
@@ -213,18 +210,42 @@ export default function HelpCenter() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Accordion type="single" collapsible>
-                      {category.questions.map((qa, qaIndex) => (
-                        <AccordionItem key={qaIndex} value={`item-${index}-${qaIndex}`}>
-                          <AccordionTrigger className="text-left">
-                            {qa.question}
-                          </AccordionTrigger>
-                          <AccordionContent className="text-slate-600 dark:text-slate-400">
-                            {qa.answer}
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
+                    <div className="w-full">
+                      {/* @ts-expect-error - Radix UI typing issues with children prop */}
+                      <Accordion.Root
+                        type="single"
+                        collapsible
+                        className="w-full"
+                        defaultValue={category.questions[0] ? `item-${index}-0` : ''}
+                      >
+                        {category.questions.map((qa, qaIndex) => {
+                          const itemValue = `item-${index}-${qaIndex}`;
+                          return (
+                            // @ts-expect-error - Radix UI typing issues with children prop
+                            <Accordion.Item 
+                              key={itemValue} 
+                              value={itemValue}
+                              className="border-b"
+                            >
+                              {/* @ts-expect-error - Radix UI typing issues with children prop */}
+                              <Accordion.Header className="flex">
+                                {/* @ts-expect-error - Radix UI typing issues with children prop */}
+                                <Accordion.Trigger className="flex flex-1 items-center justify-between py-4 font-medium transition-all hover:no-underline text-left">
+                                  <span className="flex-1 text-left">{qa.question}</span>
+                                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                                </Accordion.Trigger>
+                              </Accordion.Header>
+                              {/* @ts-expect-error - Radix UI typing issues with children prop */}
+                              <Accordion.Content className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                                <div className="pb-4 pt-0 text-slate-600 dark:text-slate-400">
+                                  {qa.answer}
+                                </div>
+                              </Accordion.Content>
+                            </Accordion.Item>
+                          );
+                        })}
+                      </Accordion.Root>
+                    </div>
                   </CardContent>
                 </Card>
               ))

@@ -2,19 +2,10 @@ import { TokenManager } from './tokenManager';
 import { SecureCookie } from './SecureCookie';
 import { handleError, SessionError } from './errorHandler';
 
-interface SessionState {
-  sessionId: string;
-  userId: string;
-  createdAt: number;
-  lastActivity: number;
-  userAgent: string;
-  ip: string;
-}
 
 // Constants
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const SESSION_REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes
-const MAX_SESSION_AGE = 24 * 60 * 60 * 1000; // 24 hours
 
 export class SessionSecurity {
   private static instance: SessionSecurity;
@@ -52,14 +43,14 @@ export class SessionSecurity {
       const storedSession = SecureCookie.get('session_state');
       if (storedSession) {
         this.sessionState = JSON.parse(storedSession);
-        this.sessionId = this.sessionState.sessionId;
-        this.lastActivity = this.sessionState.lastActivity;
-        this.userId = this.sessionState.userId;
-        this.userAgent = this.sessionState.userAgent;
-        this.ip = this.sessionState.ip;
+        this.sessionId = this.sessionState ? this.sessionState.sessionId : null;
+        this.lastActivity = this.sessionState ? this.sessionState.lastActivity : Date.now();
+        this.userId = this.sessionState ? this.sessionState.userId : null;
+        this.userAgent = this.sessionState ? this.sessionState.userAgent : null;
+        this.ip = this.sessionState ? this.sessionState.ip : null;
       }
     } catch (error) {
-      handleError(error);
+      handleError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -157,7 +148,7 @@ export class SessionSecurity {
           maxAge: SESSION_TIMEOUT / 1000
         });
       } catch (error) {
-        handleError(error);
+        handleError(error instanceof Error ? error : new Error(String(error)));
       }
     }
   }

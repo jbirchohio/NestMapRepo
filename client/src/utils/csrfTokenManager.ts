@@ -39,7 +39,7 @@ export class CSRFTokenManager {
         }
       }
     } catch (error) {
-      handleError(error);
+      handleError(error as Error);
       this.csrfToken = null;
     }
   }
@@ -74,7 +74,7 @@ export class CSRFTokenManager {
       });
       this.csrfToken = newToken;
     } catch (error) {
-      handleError(error);
+      handleError(error as Error);
       throw new Error('Failed to refresh CSRF token');
     }
   }

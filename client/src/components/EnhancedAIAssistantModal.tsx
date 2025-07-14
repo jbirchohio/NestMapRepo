@@ -10,9 +10,6 @@ import { parseAISuggestions } from "@/utils/patternParser";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -155,17 +152,19 @@ export default function EnhancedAIAssistantModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl w-[90vw] max-h-[90dvh] sm:w-[85vw] sm:max-h-[85dvh] md:max-h-[80vh] p-0 overflow-hidden flex flex-col">
-        <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b">
-          <DialogTitle className="flex items-center">
-            <Sparkles className="h-5 w-5 mr-2 text-primary" />
-            NestMap AI Assistant
-          </DialogTitle>
-          <DialogDescription>
-            Get personalized travel recommendations, weather-based suggestions, and budget options
-          </DialogDescription>
-        </DialogHeader>
+        <div className="px-6 pt-6 pb-4 flex-shrink-0 border-b">
+          <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+            <div className="text-lg font-semibold leading-none tracking-tight flex items-center justify-center sm:justify-start">
+              <Sparkles className="h-5 w-5 mr-2 text-primary" />
+              <span>NestMap AI Assistant</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Get personalized travel recommendations, weather-based suggestions, and budget options
+            </p>
+          </div>
+        </div>
 
         <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0" value={activeTab} onValueChange={setActiveTab}>
           <div className="px-6">

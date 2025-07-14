@@ -1,4 +1,3 @@
-import { handleError } from './errorHandler';
 
 export interface PasswordValidationResult {
   isValid: boolean;
@@ -55,7 +54,7 @@ export const validatePassword = (password: string): PasswordValidationResult => 
   for (const char of password) {
     charCounts.set(char, (charCounts.get(char) || 0) + 1);
   }
-  for (const [char, count] of charCounts) {
+  for (const [_, count] of charCounts) {
     if (count > PASSWORD_REQUIREMENTS.maxRepeats) {
       errors.push(`Password cannot have more than ${PASSWORD_REQUIREMENTS.maxRepeats} of the same character in a row`);
     }

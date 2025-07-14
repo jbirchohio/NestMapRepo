@@ -23,12 +23,9 @@ interface NextFunction {
 }
 
 // Mock zod implementation
-interface ZodError {
-  errors: Array<{ message: string; path: string[] }>;
-}
 
-interface AnyZodObject {
-  parse(data: any): any;
+export interface AnyZodObject {
+  parse(data: unknown): unknown;
 }
 
 const z = {
@@ -38,8 +35,8 @@ const z = {
       this.errors = errors;
     }
   },
-  object: (schema: Record<string, any>) => ({
-    parse: (data: any) => data
+  object: (_schema: Record<string, unknown>) => ({
+    parse: (data: unknown) => data
   })
 };
 

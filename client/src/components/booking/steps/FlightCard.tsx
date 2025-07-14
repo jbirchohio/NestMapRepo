@@ -25,6 +25,20 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
     return format(new Date(date), 'MMM d, yyyy');
   };
 
+  // Helper function to safely get price amount
+  const getPriceAmount = (flight: Flight): number => {
+    if (typeof flight.price === 'number') {
+      return flight.price;
+    }
+    
+    if (flight.price && typeof flight.price === 'object') {
+      const priceObj = flight.price as { amount?: number };
+      return priceObj.amount || 0;
+    }
+    
+    return 0;
+  };
+
   return (
     <div
       className={`border rounded-lg p-4 transition-colors ${
@@ -41,10 +55,10 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
           </div>
           <div>
             <div className="font-medium">
-              {flight.airline ?? flight.segments[0]?.carrier.name} {flight.flightNumber ?? flight.segments[0]?.flightNumber}
+              {flight.airline ?? (flight.segments && flight.segments[0]?.carrier.name) ?? 'Unknown Airline'} {flight.flightNumber ?? (flight.segments && flight.segments[0]?.flightNumber) ?? ''}
             </div>
             <div className="text-sm text-muted-foreground">
-              {flight.segments[0]?.departure.airport} → {flight.segments[flight.segments.length - 1]?.arrival.airport}
+              {flight.segments?.[0]?.departure.airport.name || 'Unknown'} → {flight.segments?.[flight.segments.length - 1]?.arrival.airport.name || 'Unknown'}
             </div>
           </div>
         </div>
@@ -52,17 +66,19 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
         {/* Flight Times */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div className="space-y-1">
-            <div className="font-medium">{formatTime(flight.departureTime)}</div>
-            <div className="text-muted-foreground">{formatDate(flight.departureTime)}</div>
+            <div className="font-medium">{flight.departureTime ? formatTime(flight.departureTime) : 'N/A'}</div>
+            <div className="text-muted-foreground">{flight.departureTime ? formatDate(flight.departureTime) : 'N/A'}</div>
           </div>
           <div className="space-y-1">
-            <div className="font-medium">{formatTime(flight.arrivalTime)}</div>
-            <div className="text-muted-foreground">{formatDate(flight.arrivalTime)}</div>
+            <div className="font-medium">{flight.arrivalTime ? formatTime(flight.arrivalTime) : 'N/A'}</div>
+            <div className="text-muted-foreground">{flight.arrivalTime ? formatDate(flight.arrivalTime) : 'N/A'}</div>
           </div>
           <div className="space-y-1">
-            <div className="font-medium">${flight.price.amount}</div>
+            <div className="font-medium">
+              ${getPriceAmount(flight)}
+            </div>
             <div className="text-muted-foreground">
-              {flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}
+              {flight.stops !== undefined ? (flight.stops === 0 ? 'Direct' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`) : 'Unknown'}
             </div>
           </div>
         </div>
@@ -101,14 +117,14 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
         </div>
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4" />
-          <span>{flight.stops === 0 ? 'Non-stop' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`}</span>
+          <span>{flight.stops !== undefined ? (flight.stops === 0 ? 'Non-stop' : `${flight.stops} stop${flight.stops > 1 ? 's' : ''}`) : 'Unknown'}</span>
         </div>
         <div className="flex items-center gap-1">
           <Users className="h-4 w-4" />
-          <span>{flight.availableSeats} seat{flight.availableSeats !== 1 ? 's' : ''} left</span>
+          <span>Seats available</span>
         </div>
         <Badge variant="outline" className="ml-auto capitalize">
-          {flight.cabin ?? flight.bookingClass}
+          {flight.cabin || 'Economy'}
         </Badge>
       </div>
 
@@ -127,17 +143,17 @@ export const FlightCard = ({ flight, isSelected, onSelect, onClear }: FlightCard
           <div className="mt-2 space-y-2">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              <span>Departure: {formatDate(flight.departureTime)}</span>
+              <span>Departure: {flight.departureTime ? formatDate(flight.departureTime) : 'N/A'}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span>Duration: {flight.duration}</span>
+              <span>Duration: {flight.duration || 'Unknown'}</span>
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span>Seats Available: {flight.availableSeats}</span>
+              <span>Seats Available: Available</span>
             </div>
-            {flight.stops > 0 && (
+            {flight.stops !== undefined && flight.stops > 0 && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
                 <span>Stops: {flight.stops} stop{flight.stops > 1 ? 's' : ''}</span>

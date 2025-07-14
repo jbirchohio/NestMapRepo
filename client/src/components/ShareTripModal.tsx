@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -266,12 +259,12 @@ export default function ShareTripModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Share Trip</DialogTitle>
-          <DialogDescription>
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-semibold leading-none tracking-tight">Share Trip</h3>
+          <p className="text-sm text-muted-foreground">
             Configure sharing settings for your trip.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
 
         <Tabs defaultValue="link">
           <TabsList className="mb-4">
@@ -283,7 +276,6 @@ export default function ShareTripModal({
             <div className="flex items-center justify-between space-x-2">
               <Label htmlFor="public" className="flex-1">Make trip public</Label>
               <Switch 
-                id="public" 
                 checked={isPublic} 
                 onCheckedChange={handleTogglePublic} 
               />
@@ -292,7 +284,6 @@ export default function ShareTripModal({
             <div className="flex items-center justify-between space-x-2">
               <Label htmlFor="sharing" className="flex-1">Enable sharing via link</Label>
               <Switch 
-                id="sharing" 
                 checked={sharingEnabled} 
                 onCheckedChange={handleToggleSharing} 
               />
@@ -426,14 +417,14 @@ export default function ShareTripModal({
           </TabsContent>
         </Tabs>
 
-        <DialogFooter>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            Close
           </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save settings"}
+          <Button type="submit" onClick={handleSave} disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Changes"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

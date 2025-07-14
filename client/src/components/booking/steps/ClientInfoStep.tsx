@@ -1,11 +1,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ClientInfo } from '../types/booking';
 
 interface ClientInfoStepProps {
-  formData: any;
-  onChange: (data: any) => void;
-  onSubmit: (data: any) => void;
+  formData: ClientInfo;
+  onChange: React.Dispatch<React.SetStateAction<ClientInfo>>;
+  onSubmit: (e: React.FormEvent) => void;
 }
 
 export const ClientInfoStep: React.FC<ClientInfoStepProps> = ({ formData, onChange, onSubmit }) => {
@@ -15,7 +16,7 @@ export const ClientInfoStep: React.FC<ClientInfoStepProps> = ({ formData, onChan
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit(e);
   };
 
   return (

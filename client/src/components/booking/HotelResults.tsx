@@ -20,18 +20,12 @@ interface Hotel {
 }
 
 interface HotelResultsProps {
-  clientInfo?: any;
   hotelResults?: Hotel[];
   hotels?: Hotel[];
   selectedHotel: Hotel | null;
   onSelectHotel: (hotel: Hotel) => void;
   isSearching?: boolean;
   onSearch?: (query: string) => void;
-  travelerBookings?: Array<{
-    traveler: string;
-    departureFlight?: any;
-    returnFlight?: any;
-  }>;
   onBack?: () => void;
   onContinue?: () => void;
 }
@@ -45,18 +39,16 @@ const amenityIcons: Record<string, JSX.Element> = {
 };
 
 export function HotelResults({
-  clientInfo,
   hotelResults,
   hotels,
   selectedHotel,
   onSelectHotel,
   isSearching,
   onSearch,
-  travelerBookings,
   onBack,
   onContinue,
 }: HotelResultsProps) {
-  // Unused parameters: clientInfo, isSearching, onSearch, travelerBookings, onBack, onContinue
+  // Unused parameters: isSearching, onSearch, onBack, onContinue
   const hotelList = hotels || hotelResults || [];
   
   if (isSearching) {
@@ -114,7 +106,7 @@ export function HotelResults({
                         <Star
                           key={i}
                           className={`h-4 w-4 ${
-                            i < hotel.starRating
+                            i < (hotel.starRating || 0)
                               ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300 dark:text-gray-600'
                           }`}
@@ -141,7 +133,7 @@ export function HotelResults({
                             ${hotel.price.amount}
                             <span className="text-sm font-normal text-muted-foreground">
                               {' '}
-                              / {hotel.price.per.toLowerCase()}
+                              / {hotel.price.per ? hotel.price.per.toLowerCase() : 'night'}
                             </span>
                           </div>
                           <div className="text-sm text-muted-foreground">

@@ -2,7 +2,8 @@ import { Calendar as CalendarIcon, MapPin, Users, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent } from "@/components/ui/popover";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 
@@ -33,7 +34,7 @@ export function HotelSearchForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="destination" className="flex items-center gap-2">
+        <Label className="flex items-center gap-2">
           <MapPin className="h-4 w-4" />
           Destination
         </Label>
@@ -56,7 +57,7 @@ export function HotelSearchForm({
             Check-in / Check-out
           </Label>
           <Popover>
-            <PopoverTrigger asChild>
+            <PopoverPrimitive.Trigger>
               <Button
                 variant="outline"
                 className="w-full justify-start text-left font-normal"
@@ -74,14 +75,14 @@ export function HotelSearchForm({
                   <span>Select dates</span>
                 )}
               </Button>
-            </PopoverTrigger>
+            </PopoverPrimitive.Trigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 initialFocus
                 mode="range"
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
-                onSelect={(range) => onDateRangeChange(range || { from: undefined, to: undefined })}
+                onSelect={(range) => onDateRangeChange(range ? { from: range.from, to: range.to || range.from } : { from: undefined, to: undefined })}
                 numberOfMonths={2}
                 disabled={(date) => date < new Date()}
               />
@@ -91,7 +92,7 @@ export function HotelSearchForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="guests" className="flex items-center gap-2">
+            <Label className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Guests
             </Label>
@@ -110,7 +111,7 @@ export function HotelSearchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="rooms">Rooms</Label>
+            <Label>Rooms</Label>
             <select
               id="rooms"
               name="rooms"

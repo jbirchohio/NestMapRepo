@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, DollarSign, Clock, Users, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Clock, Zap } from 'lucide-react';
 
 interface OptimizationResult {
   originalCost: number;

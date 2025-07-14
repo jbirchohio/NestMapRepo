@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/api/apiClient';
+import apiClient from '@/services/api/apiClient';
 
 export interface User {
   id: string | number;
@@ -63,7 +63,7 @@ class UserService {
 
   // Authentication
   public async login(credentials: { email: string; password: string }): Promise<{ user: User; token: string }> {
-    return apiClient.post<{ user: User; token: string }, typeof credentials>(
+    return apiClient.post<{ user: User; token: string }>(
       `${this.authPath}/login`,
       credentials
     );
@@ -77,7 +77,7 @@ class UserService {
     lastName?: string;
     organizationId?: number;
   }): Promise<{ user: User; token: string }> {
-    return apiClient.post<{ user: User; token: string }, typeof userData>(
+    return apiClient.post<{ user: User; token: string }>(
       `${this.authPath}/register`,
       userData
     );
@@ -92,14 +92,14 @@ class UserService {
   }
 
   public async requestPasswordReset(email: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }, { email: string }>(
+    return apiClient.post<{ message: string }>(
       `${this.authPath}/request-password-reset`,
       { email }
     );
   }
 
   public async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }, { token: string; newPassword: string }>(
+    return apiClient.post<{ message: string }>(
       `${this.authPath}/reset-password`,
       { token, newPassword }
     );
@@ -119,14 +119,14 @@ class UserService {
   }
 
   public async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
-    return apiClient.post<User, typeof userData>(this.basePath, userData);
+    return apiClient.post<User>(this.basePath, userData);
   }
 
   public async updateUser(
     userId: string | number,
     updates: Partial<Omit<User, 'id' | 'email' | 'createdAt'>>
   ): Promise<User> {
-    return apiClient.put<User, typeof updates>(`${this.basePath}/${userId}`, updates);
+    return apiClient.put<User>(`${this.basePath}/${userId}`, updates);
   }
 
   public async deleteUser(userId: string | number): Promise<void> {
@@ -135,14 +135,14 @@ class UserService {
 
   // Profile Management
   public async updateProfile(userId: string | number, data: Partial<User>): Promise<User> {
-    return apiClient.patch<User, Partial<User>>(`${this.basePath}/${userId}/profile`, data);
+    return apiClient.patch<User>(`${this.basePath}/${userId}/profile`, data);
   }
 
   public async updateAvatar(userId: string | number, file: File): Promise<{ avatarUrl: string }> {
     const formData = new FormData();
     formData.append('avatar', file);
 
-    return apiClient.post<{ avatarUrl: string }, FormData>(
+    return apiClient.post<{ avatarUrl: string }>(
       `${this.basePath}/${userId}/avatar`,
       formData,
       {
@@ -158,7 +158,7 @@ class UserService {
     currentPassword: string,
     newPassword: string
   ): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }, { currentPassword: string; newPassword: string }>(
+    return apiClient.post<{ message: string }>(
       `${this.basePath}/${userId}/change-password`,
       { currentPassword, newPassword }
     );
@@ -173,7 +173,7 @@ class UserService {
     userId: string | number,
     preferences: Partial<UserPreferences>
   ): Promise<UserPreferences> {
-    return apiClient.patch<UserPreferences, Partial<UserPreferences>>(
+    return apiClient.patch<UserPreferences>(
       `${this.basePath}/${userId}/preferences`,
       preferences
     );

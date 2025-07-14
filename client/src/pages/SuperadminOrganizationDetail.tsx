@@ -7,15 +7,15 @@ import { Button } from '@/components/ui/button';
 import { AnimatedCard } from '@/components/ui/animated-card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialogDescription, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2, Key, Users, Building, CreditCard, Settings, DollarSign, RefreshCw, Ban, CheckCircle, Shield, Save, RotateCcw } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
+import { ArrowLeft, Plus, Edit, Trash2, Key, Users, Building, CreditCard, DollarSign, RefreshCw, Ban, CheckCircle, Settings } from 'lucide-react';
 import { SuperadminNavigation } from '@/components/SuperadminNavigation';
 
 export default function SuperadminOrganizationDetail() {
@@ -337,64 +337,68 @@ export default function SuperadminOrganizationDetail() {
             </div>
             <div className="flex items-center space-x-2">
               <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogTrigger asChild>
+                <DialogTrigger>
                   <Button variant="outline" className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20">
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Edit Organization</DialogTitle>
-                    <DialogDescription>Update organization details</DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.target as HTMLFormElement);
-                    const updates = Object.fromEntries(formData.entries());
-                    updateOrganization.mutate(updates);
-                  }}>
-                    <div className="grid gap-4 py-4">
-                      <div>
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" name="name" defaultValue={organization.name} />
-                      </div>
-                      <div>
-                        <Label htmlFor="domain">Domain</Label>
-                        <Input id="domain" name="domain" defaultValue={organization.domain} />
-                      </div>
-                      <div>
-                        <Label htmlFor="plan">Plan</Label>
-                        <Select name="plan" defaultValue={organization.plan}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="free">Free</SelectItem>
-                            <SelectItem value="team">Team</SelectItem>
-                            <SelectItem value="enterprise">Enterprise</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="employee_count">Employee Count</Label>
-                        <Input 
-                          id="employee_count" 
-                          name="employee_count" 
-                          type="number" 
-                          defaultValue={organization.employee_count || 0} 
-                        />
-                      </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold">Edit Organization</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Update organization details
+                      </p>
                     </div>
-                    <DialogFooter className="mt-6">
-                      <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={updateOrganization.isPending}>
-                        Save Changes
-                      </Button>
-                    </DialogFooter>
-                  </form>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.target as HTMLFormElement);
+                      const updates = Object.fromEntries(formData.entries());
+                      updateOrganization.mutate(updates);
+                    }}>
+                      <div className="grid gap-4 py-4">
+                        <div>
+                          <Label htmlFor="name">Name</Label>
+                          <Input id="name" name="name" defaultValue={organization.name} />
+                        </div>
+                        <div>
+                          <Label htmlFor="domain">Domain</Label>
+                          <Input id="domain" name="domain" defaultValue={organization.domain} />
+                        </div>
+                        <div>
+                          <Label htmlFor="plan">Plan</Label>
+                          <Select name="plan" defaultValue={organization.plan}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">Free</SelectItem>
+                              <SelectItem value="team">Team</SelectItem>
+                              <SelectItem value="enterprise">Enterprise</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="employee_count">Employee Count</Label>
+                          <Input 
+                            id="employee_count" 
+                            name="employee_count" 
+                            type="number" 
+                            defaultValue={organization.employee_count || 0} 
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end space-x-2 mt-6">
+                        <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={updateOrganization.isPending}>
+                          Save Changes
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
                 </DialogContent>
               </Dialog>
 
@@ -520,13 +524,13 @@ export default function SuperadminOrganizationDetail() {
                   description: 'Create and manage own trips',
                   permissions: ['Create own trips', 'Basic booking', 'View assigned trips', 'Export own data']
                 }
-              ].map((role, index) => (
+              ].map((role) => (
                 <div key={role.title} className="p-4 bg-gradient-to-br from-white/5 to-white/10 rounded-xl border border-white/10">
                   <h3 className="font-semibold text-navy-900 dark:text-white mb-2">{role.title}</h3>
                   <p className="text-xs text-navy-600 dark:text-navy-300 mb-3">{role.description}</p>
                   <div className="space-y-1 text-xs">
-                    {role.permissions.map((permission, i) => (
-                      <div key={i} className="text-navy-700 dark:text-navy-400">• {permission}</div>
+                    {role.permissions.map((permission) => (
+                      <div key={permission} className="text-navy-700 dark:text-navy-400">• {permission}</div>
                     ))}
                   </div>
                 </div>
@@ -556,7 +560,7 @@ export default function SuperadminOrganizationDetail() {
                 <div className="text-sm font-medium text-navy-600 dark:text-navy-400">Plan Management</div>
                 <div className="space-y-2">
                   <Dialog open={isUpgradeDialogOpen} onOpenChange={setIsUpgradeDialogOpen}>
-                    <DialogTrigger asChild>
+                    <DialogTrigger>
                       <Button variant="outline" size="sm" className="w-full" disabled={organization.plan === 'enterprise'}>
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Upgrade Plan
@@ -564,8 +568,8 @@ export default function SuperadminOrganizationDetail() {
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Upgrade Plan</DialogTitle>
-                        <DialogDescription>Upgrade organization to a higher plan</DialogDescription>
+                        <AlertDialogTitle>Upgrade Plan</AlertDialogTitle>
+                        <AlertDialogDescription>Upgrade organization to a higher plan</AlertDialogDescription>
                       </DialogHeader>
                       <div className="py-4">
                         <Label htmlFor="upgrade-plan">Select Plan</Label>
@@ -603,7 +607,7 @@ export default function SuperadminOrganizationDetail() {
                   </Dialog>
 
                   <Dialog open={isDowngradeDialogOpen} onOpenChange={setIsDowngradeDialogOpen}>
-                    <DialogTrigger asChild>
+                    <DialogTrigger>
                       <Button variant="outline" size="sm" className="w-full" disabled={organization.plan === 'free'}>
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Downgrade Plan
@@ -611,8 +615,8 @@ export default function SuperadminOrganizationDetail() {
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Downgrade Plan</DialogTitle>
-                        <DialogDescription>Downgrade organization to a lower plan</DialogDescription>
+                        <AlertDialogTitle>Downgrade Plan</AlertDialogTitle>
+                        <AlertDialogDescription>Downgrade organization to a lower plan</AlertDialogDescription>
                       </DialogHeader>
                       <div className="py-4">
                         <Label htmlFor="downgrade-plan">Select Plan</Label>
@@ -655,7 +659,7 @@ export default function SuperadminOrganizationDetail() {
               <div className="space-y-2">
                 <div className="text-sm font-medium text-navy-600 dark:text-navy-400">Refund Processing</div>
                 <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
-                  <DialogTrigger asChild>
+                  <DialogTrigger>
                     <Button variant="outline" size="sm" className="w-full">
                       <DollarSign className="w-4 h-4 mr-2" />
                       Process Refund
@@ -663,8 +667,8 @@ export default function SuperadminOrganizationDetail() {
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Process Refund</DialogTitle>
-                      <DialogDescription>Issue a refund for this organization</DialogDescription>
+                      <AlertDialogTitle>Process Refund</AlertDialogTitle>
+                      <AlertDialogDescription>Issue a refund for this organization</AlertDialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div>
@@ -763,7 +767,7 @@ export default function SuperadminOrganizationDetail() {
                 <p className="text-navy-600 dark:text-navy-300">Manage users in this organization</p>
               </div>
               <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
-                <DialogTrigger asChild>
+                <DialogTrigger>
                   <Button className="bg-gradient-to-r from-electric-600 to-electric-700 hover:from-electric-700 hover:to-electric-800">
                     <Plus className="w-4 h-4 mr-2" />
                     Add User
@@ -771,8 +775,8 @@ export default function SuperadminOrganizationDetail() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create New User</DialogTitle>
-                    <DialogDescription>Add a new user to this organization</DialogDescription>
+                    <AlertDialogTitle>Create New User</AlertDialogTitle>
+                    <AlertDialogDescription>Add a new user to this organization</AlertDialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleCreateUser}>
                     <div className="grid gap-4 py-4">
@@ -903,8 +907,8 @@ export default function SuperadminOrganizationDetail() {
         <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Reset User Password</DialogTitle>
-              <DialogDescription>Enter a new password for this user</DialogDescription>
+              <AlertDialogTitle>Reset User Password</AlertDialogTitle>
+              <AlertDialogDescription>Enter a new password for this user</AlertDialogDescription>
             </DialogHeader>
             <div className="py-4">
               <Label htmlFor="new-password">New Password</Label>

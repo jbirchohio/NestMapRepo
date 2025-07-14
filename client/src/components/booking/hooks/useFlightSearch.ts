@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
 import { bookingService } from '../services/bookingService';
-import { Flight, FlightSearchParams } from '../types';
+import { FlightSearchParams } from '../types';
+import { Flight } from '../types/flight';
 
 interface UseFlightSearchProps {
   origin: string;
@@ -9,7 +9,7 @@ interface UseFlightSearchProps {
   departureDate: string;
   returnDate?: string;
   passengers: number;
-  cabin: string;
+  cabin: 'economy' | 'premium-economy' | 'business' | 'first';
 }
 
 export const useFlightSearch = ({
@@ -20,7 +20,6 @@ export const useFlightSearch = ({
   passengers,
   cabin,
 }: UseFlightSearchProps) => {
-  const { toast } = useToast();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

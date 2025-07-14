@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { RouteObject } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { ProtectedRoute } from './ProtectedRoute';
 
 interface RouteRendererProps {
   routes: RouteObject[];
@@ -18,7 +19,7 @@ const LoadingFallback = () => (
 /**
  * Recursively renders routes with proper error boundaries and loading states
  */
-export const RouteRenderer: React.FC<RouteRendererProps> = ({ routes, isNested = false }) => {
+export const RouteRenderer: React.FC<RouteRendererProps> = ({ routes }) => {
   return (
     <Routes>
       {routes.map((route) => {
@@ -38,7 +39,7 @@ export const RouteRenderer: React.FC<RouteRendererProps> = ({ routes, isNested =
             }
           >
             {hasChildren && route.children && (
-              <RouteRenderer routes={route.children} isNested />
+              <RouteRenderer routes={route.children} />
             )}
           </Route>
         );

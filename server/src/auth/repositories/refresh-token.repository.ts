@@ -1,8 +1,6 @@
-import { eq, sql } from 'drizzle-orm';
-import { db } from '../../db.js';
-import { users } from '../../shared/src/schema.js';
+;
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
-import { logger } from '../../shared/src/schema.js';
+import logger from '../../shared/src/schema.js';
 import type { RefreshToken } from '../interfaces/refresh-token.repository.interface.js';
 
 export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
@@ -27,7 +25,7 @@ export class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
 
   async revokeByUserId(userId: string): Promise<void> {
     const now = new Date();
-    for (const [tokenKey, refreshToken] of this.tokens.entries()) {
+    for (const [, refreshToken] of this.tokens.entries()) {
       if (refreshToken.userId === userId && !refreshToken.revoked) {
         refreshToken.revoked = true;
         refreshToken.revokedAt = now;

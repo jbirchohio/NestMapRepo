@@ -1,4 +1,4 @@
-import {
+import React, {
   lazy,
   LazyExoticComponent,
   ComponentType,
@@ -17,35 +17,29 @@ type RouteElement = ReactElement & {
 };
 
 /**
- * Higher-order function for lazy loading components with error boundaries and loading states
+ * Higher-order function for lazy loading components with preloading capability
  */
 function lazyLoad<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>
-): ReactElement {
+): PreloadableComponent<T> {
   const LazyComponent = lazy(importFn) as PreloadableComponent<T>;
-
-  // Add preloading capability
   LazyComponent.preload = importFn;
-
-  const element = <LazyComponent />;
-  // Safe cast since we know this element has the preload function
-  (element as unknown as RouteElement).preload = importFn;
-  return element;
+  return LazyComponent;
 }
 
 // Public routes (no authentication required)
 export const publicRoutes: RouteObject[] = [
   {
     path: '/login',
-    element: lazyLoad(() => import('@/pages/Login')),
+    element: React.createElement(lazyLoad(() => import('@/pages/Login'))),
   },
   {
     path: '/signup',
-    element: lazyLoad(() => import('@/pages/Signup')),
+    element: React.createElement(lazyLoad(() => import('@/pages/Signup'))),
   },
   {
     path: '/onboarding',
-    element: lazyLoad(() => import('@/pages/Onboarding')),
+    element: React.createElement(lazyLoad(() => import('@/pages/Onboarding'))),
   },
 ];
 

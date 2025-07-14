@@ -9,7 +9,7 @@ export class ErrorInterceptor {
   /**
    * Response interceptor to transform successful responses
    */
-  public onResponse = <T>(response: AxiosResponse): AxiosResponse => {
+  public onResponse = (response: AxiosResponse): AxiosResponse => {
     // You can transform the response data here if needed
     return response;
   };
@@ -32,7 +32,7 @@ export class ErrorInterceptor {
         {
           code: error.code,
           config: error.config as RequestConfig,
-          response: error.response?.data
+          response: (error.response && 'data' in error.response) ? (error.response as AxiosResponse).data : undefined
         }
       );
       return Promise.reject(networkError);
@@ -49,7 +49,7 @@ export class ErrorInterceptor {
         statusCode: status,
         details: responseData?.details,
         config: error.config as RequestConfig,
-        response: error.response?.data
+        response: error.response ? error.response.data : undefined
       }
     );
 

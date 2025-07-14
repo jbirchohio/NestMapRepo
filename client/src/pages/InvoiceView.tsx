@@ -1,5 +1,5 @@
 import { useParams, useSearchParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,6 @@ export default function InvoiceView() {
   const { id: invoiceId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Check for payment success/failure in URL params
   const paymentStatus = searchParams.get('payment_status');

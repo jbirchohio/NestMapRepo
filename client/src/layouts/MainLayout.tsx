@@ -34,7 +34,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       {!hideNav && (
         <MainNavigation 
           isAuthenticated={!!user}
-          user={user}
+          user={user ? {
+            ...user,
+            organization_id: user.organizationId, // Convert organizationId to organization_id for compatibility
+            username: user.username || user.email, // Ensure username is always defined
+          } : null}
           notifications={notifications}
           onSignOut={async () => {
             try {

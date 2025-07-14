@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRealTimeCollaboration } from '@/hooks/useRealTimeCollaboration';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Users, Eye, Edit3, MapPin, Wifi, WifiOff } from 'lucide-react';
 
 interface CollaborationPresenceProps {
@@ -93,8 +93,7 @@ export default function CollaborationPresence({
               {collaborators.map((collaborator) => (
                 <TooltipProvider key={collaborator.userId}>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
                         <div 
                           className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
                           style={{ backgroundColor: collaborator.color }}
@@ -122,8 +121,7 @@ export default function CollaborationPresence({
                         >
                           {collaborator.isActive ? 'Live' : getPresenceText(collaborator)}
                         </Badge>
-                      </div>
-                    </TooltipTrigger>
+                    </div>
                     <TooltipContent side="left">
                       <div className="text-sm">
                         <div className="font-medium">{collaborator.username}</div>

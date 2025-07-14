@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
 import { bookingService } from '../services/bookingService';
-import { Hotel, HotelSearchParams } from '../types';
+import { HotelSearchParams, Hotel } from '../types/hotel';
 
 interface UseHotelSearchProps {
   destination: string;
@@ -18,7 +17,6 @@ export const useHotelSearch = ({
   guests = 1,
   rooms = 1,
 }: UseHotelSearchProps) => {
-  const { toast } = useToast();
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,16 +40,21 @@ export const useHotelSearch = ({
 
     try {
       const params: HotelSearchParams = {
-        destination,
+        destination: destination,
         checkIn,
         checkOut,
         guests: {
           adults: guests,
-          rooms,
+          rooms: rooms
         },
         filters: {
-          ...filters,
-        },
+          priceRange: {
+            min: filters.priceRange.min,
+            max: filters.priceRange.max
+          },
+          amenities: filters.amenities,
+          minStarRating: filters.minStarRating
+        }
       };
 
       const response = await bookingService.searchHotels(params);

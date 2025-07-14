@@ -109,7 +109,7 @@ export class AuthorizationError extends ApplicationError {
 }
 
 // Error handling utilities
-export const handleError = (error: Error, context?: SecurityContext): void => {
+export const handleError = (error: Error): void => {
   // Handle security errors
   if (error instanceof SecurityError) {
     console.error('Security error:', {

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { forwardRef, ReactNode, useEffect, useState } from "react";
-import { X, Minus } from "lucide-react";
+import { X } from "lucide-react";
 
 interface SwipeableDrawerProps {
   children: ReactNode;
@@ -56,7 +56,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
       return () => document.removeEventListener('keydown', handleEscape);
     }, [isOpen, onClose]);
 
-    const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       setIsDragging(false);
       
       const velocity = info.velocity.y;
@@ -161,14 +161,14 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
               onDragEnd={handleDragEnd}
               style={{
                 height: `${currentSnapPoint * 100}vh`
-              }}
+              } as React.CSSProperties}
             >
               {/* Drag handle */}
               {showHandle && (
                 <div className="flex justify-center py-3 cursor-grab active:cursor-grabbing">
                   <motion.div 
                     className="w-10 h-1.5 bg-gray-300 dark:bg-navy-600 rounded-full"
-                    whileHover={{ scale: 1.1, backgroundColor: "#6D5DFB" }}
+                    whileHover={{ scale: 1.1 }}
                     transition={{ duration: 0.2 }}
                   />
                 </div>
@@ -185,7 +185,7 @@ const SwipeableDrawer = forwardRef<HTMLDivElement, SwipeableDrawerProps>(
                 <div className="flex items-center space-x-2">
                   {/* Snap point indicators */}
                   <div className="flex space-x-1">
-                    {snapPoints.map((point, index) => (
+                    {snapPoints.map((point) => (
                       <motion.button
                         key={point}
                         onClick={() => setCurrentSnapPoint(point)}

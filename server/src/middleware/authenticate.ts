@@ -1,8 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../auth/services/jwtAuthService.js';
-import { TokenType } from '../auth/jwt/types.js';
+import { verifyToken } from '../auth/services/jwtAuthService';
+import { TokenPayload } from '../auth/jwt/types';
 
-export function authenticate(
+// Extend Express Request type to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email: string;
+        role: string;
+        organizationId?: string;
+      };
+    }
+  }
+}
+
+export async function authenticate(
   req: Request,
   res: Response,
   next: NextFunction
@@ -20,22 +34,25 @@ export function authenticate(
 
     const token = authHeader.split(' ')[1];
     
-    // Verify the token
-    const decoded = verifyToken(token, TokenType.ACCESS);
+    // Verify the token - must await since it returns a Promise
+    const verificationResult = await verifyToken(token, 'access');
     
-    if (!decoded || !decoded.userId) {
+    if (!verificationResult.valid || !verificationResult.payload) {
       return res.status(401).json({
         error: 'Invalid or expired token',
-        code: 'INVALID_TOKEN'
+        code: 'INVALID_TOKEN',
+        message: verificationResult.error
       });
     }
 
+    const payload = verificationResult.payload as TokenPayload;
+
     // Attach user to request object
-    (req as any).user = {
-      id: decoded.userId,
-      email: decoded.email,
-      role: decoded.role,
-      organizationId: decoded.organizationId
+    req.user = {
+      id: payload.sub,
+      email: payload.email,
+      role: payload.role,
+      organizationId: payload.organizationId
     };
 
     next();

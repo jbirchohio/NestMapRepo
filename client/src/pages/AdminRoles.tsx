@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -197,22 +198,21 @@ export default function AdminRoles() {
                 Configure user roles and permissions for your organization
               </p>
             </div>
+            <Button 
+                className="bg-electric-600 hover:bg-electric-700"
+                onClick={() => {
+                  setIsCreating(true);
+                  setEditingRole({ permissions: [] });
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Role
+              </Button>
+              
             <Dialog open={isCreating} onOpenChange={setIsCreating}>
-              <DialogTrigger asChild>
-                <Button 
-                  className="bg-electric-600 hover:bg-electric-700"
-                  onClick={() => {
-                    setIsCreating(true);
-                    setEditingRole({ permissions: [] });
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Role
-                </Button>
-              </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Create New Role</DialogTitle>
+                  <AlertDialogTitle>Create New Role</AlertDialogTitle>
                 </DialogHeader>
                 <RoleEditor 
                   role={editingRole}
@@ -331,12 +331,12 @@ export default function AdminRoles() {
         <Dialog open={!!selectedRole} onOpenChange={() => setSelectedRole(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>
+              <AlertDialogTitle>
                 <span className="flex items-center gap-2">
                   <Settings className="w-5 h-5" />
                   Edit Role: {selectedRole?.name}
                 </span>
-              </DialogTitle>
+              </AlertDialogTitle>
             </DialogHeader>
             {selectedRole && (
               <RoleEditor 

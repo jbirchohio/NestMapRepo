@@ -8,20 +8,17 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { 
   Briefcase, 
-  Users, 
   FileText, 
   TrendingUp, 
   MapPin, 
   DollarSign,
   Target,
-  Clock,
   Plus,
   BarChart3,
   Settings,
   Sparkles,
   User
 } from "lucide-react";
-import MainNavigation from "@/components/MainNavigation";
 import NewTripModal from "@/components/NewTripModal";
 
 interface Trip {
@@ -36,7 +33,8 @@ interface Trip {
 }
 
 export default function AgencyDashboard() {
-  const { userId, user } = useAuth();
+  const { user } = useAuth();
+  const userId = user?.id;
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
 
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({

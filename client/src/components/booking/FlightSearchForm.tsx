@@ -3,9 +3,11 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent } from "@/components/ui/popover";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface FlightSearchData {
   origin: string;
@@ -126,7 +128,7 @@ export function FlightSearchForm({
         <div className="space-y-2">
           <Label>Departure Date</Label>
           <Popover>
-            <PopoverTrigger asChild>
+            <PopoverPrimitive.Trigger>
               <Button
                 variant="outline"
                 className="w-full justify-start text-left font-normal"
@@ -138,7 +140,7 @@ export function FlightSearchForm({
                   <span>Pick a date</span>
                 )}
               </Button>
-            </PopoverTrigger>
+            </PopoverPrimitive.Trigger>
             <PopoverContent className="w-auto p-0">
               <Calendar
                 mode="single"
@@ -154,20 +156,18 @@ export function FlightSearchForm({
           <div className="space-y-2">
             <Label>Return Date</Label>
             <Popover>
-              <PopoverTrigger asChild>
+              <PopoverPrimitive.Trigger>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                  disabled={!formData.departureDate}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.departureDate && "text-muted-foreground"
+                  )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.returnDate ? (
-                    format(new Date(formData.returnDate), 'PPP')
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
+                  {formData.departureDate ? format(new Date(formData.departureDate), "PPP") : <span>Departure date</span>}
                 </Button>
-              </PopoverTrigger>
+              </PopoverPrimitive.Trigger>
               <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"

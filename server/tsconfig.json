@@ -9,6 +9,10 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../shared/src/*"]
+    },
     // "types": ["node"],
     "module": "commonjs",
     "moduleResolution": "node",

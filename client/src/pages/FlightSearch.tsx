@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,9 @@ import {
   Users, 
   MapPin,
   Calendar as CalendarIcon,
-  ArrowRight,
-  Wifi,
-  Coffee,
   Luggage,
-  Shield,
-  Star,
-  Info
+  Info,
+  ShieldCheck as Shield
 } from "lucide-react";
 
 interface FlightSearchParams {
@@ -120,7 +116,6 @@ export default function FlightSearch() {
   const [departureDate, setDepartureDate] = useState<Date>();
   const [returnDate, setReturnDate] = useState<Date>();
   const [isRoundTrip, setIsRoundTrip] = useState(false);
-  const [selectedFlight, setSelectedFlight] = useState<FlightOffer | null>(null);
   
   const { toast } = useToast();
 
@@ -410,8 +405,7 @@ export default function FlightSearch() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => setSelectedFlight(flight)}
+                      className="border rounded-lg p-4 hover:shadow-md transition-shadow"
                     >
                       {flight.slices.map((slice, sliceIndex) => (
                         <div key={sliceIndex} className="mb-4 last:mb-0">

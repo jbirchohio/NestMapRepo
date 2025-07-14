@@ -1,5 +1,5 @@
 import { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { RequestConfig } from '../types';
+import { ApiErrorResponse, RequestConfig } from '../types';
 import { ApiError } from '../utils/error';
 
 // Default retry configuration
@@ -66,9 +66,9 @@ export class RetryInterceptor {
       config._retryCount = 0;
     }
 
-    // Check if we should retry the request
-    if (!this.shouldRetry(error, config)) {
-      return Promise.reject(ApiError.fromAxiosError(error, config));
+      // Check if we should retry the request
+    if (!this.shouldRetry({ error, config })) {
+      return Promise.reject(ApiError.fromAxiosError(error as AxiosError<ApiErrorResponse, any>));
     }
 
     // Calculate delay with exponential backoff
@@ -89,25 +89,22 @@ export class RetryInterceptor {
   /**
    * Check if a request should be retried
    */
-  private shouldRetry(error: AxiosError, config: RequestConfig & { _retryCount?: number }): boolean {
-    // Don't retry if retries are disabled
-    if (config.retry === 0 || config._retryCount === undefined) {
+  private shouldRetry = (params: { error: AxiosError; config: RequestConfig & { _retryCount?: number } }): boolean => {
+    const { error, config } = params;
+    
+    // Don't retry if retry is explicitly disabled
+    if (config.retry === 0) {
       return false;
     }
     
     // Check if we've exceeded max retries
-    if (config._retryCount >= (config.retry || this.defaultConfig.maxRetries)) {
+    if (config._retryCount && config.retry && config._retryCount >= config.retry) {
       return false;
     }
     
-    // Check if this is a retryable error
-    if (error.response) {
-      return this.defaultConfig.retryOn.includes(error.response.status);
-    }
-    
-    // Check network errors
+    // Use the default shouldRetry function from config
     return this.defaultConfig.shouldRetry(error);
-  }
+  };
 
   /**
    * Calculate retry delay with exponential backoff and jitter

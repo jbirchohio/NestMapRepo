@@ -5,15 +5,7 @@ import { API_ENDPOINTS } from "@/lib/constants";
 import { ClientActivity, ClientTrip } from "@/lib/types";
 
 export default function useActivities(tripId: string | number) {
-  // Helper function to check if trip exists in localStorage (guest mode)
-  const getGuestTrip = (): ClientTrip | null => {
-    if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("nestmap_guest_trips");
-    if (!stored) return null;
-    
-    const guestTrips: ClientTrip[] = JSON.parse(stored);
-    return guestTrips.find((trip: ClientTrip) => trip.id === tripId) || null;
-  };
+ 
 
   const {
     data: activities = [],
@@ -37,7 +29,8 @@ export default function useActivities(tripId: string | number) {
           // Convert date strings back to Date objects for consistency
           const processedActivities = activities.map((activity: ClientActivity) => ({
             ...activity,
-            date: new Date(activity.date)
+            // Ensure date is a string in ISO format to match the ClientActivity type
+            date: new Date(activity.date).toISOString()
           }));
           return processActivities(processedActivities);
         }
@@ -62,22 +55,26 @@ export default function useActivities(tripId: string | number) {
     
     // First sort by date and time
     const sortedActivities = [...rawActivities].sort((a, b) => {
-      // First sort by date
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      if (dateA.getTime() !== dateB.getTime()) {
-        return dateA.getTime() - dateB.getTime();
+      // First sort by date (ensure date is a string in ISO format)
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      if (dateA !== dateB) {
+        return dateA - dateB;
       }
       
-      // Then sort by time
-      return a.time.localeCompare(b.time);
+      // Then sort by time (handle undefined time with a fallback)
+      const timeA = a.time || '';
+      const timeB = b.time || '';
+      return timeA.localeCompare(timeB);
     });
     
     // Process by day
     const activitiesByDay: { [dateStr: string]: ClientActivity[] } = {};
     
     sortedActivities.forEach(activity => {
-      const dateStr = new Date(activity.date).toDateString();
+      // Ensure date is properly formatted as a string
+      const date = new Date(activity.date);
+      const dateStr = isNaN(date.getTime()) ? 'Invalid Date' : date.toDateString();
       if (!activitiesByDay[dateStr]) {
         activitiesByDay[dateStr] = [];
       }
@@ -126,10 +123,10 @@ export default function useActivities(tripId: string | number) {
         ) {
           // Simple distance-based travel time estimation
           const distance = calculateDistance(
-            parseFloat(prevActivity.latitude), 
-            parseFloat(prevActivity.longitude),
-            parseFloat(activity.latitude), 
-            parseFloat(activity.longitude)
+            prevActivity.latitude, 
+            prevActivity.longitude,
+            activity.latitude, 
+            activity.longitude
           );
           
           // Get travel speed based on travel mode and distance
@@ -235,17 +232,28 @@ export default function useActivities(tripId: string | number) {
   };
   
   // Calculate distance between two coordinates (Haversine formula)
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const calculateDistance = (lat1: number | string, lon1: number | string, lat2: number | string, lon2: number | string): number => {
+    // Convert string coordinates to numbers if needed
+    const lat1Num = typeof lat1 === 'string' ? parseFloat(lat1) : lat1;
+    const lon1Num = typeof lon1 === 'string' ? parseFloat(lon1) : lon1;
+    const lat2Num = typeof lat2 === 'string' ? parseFloat(lat2) : lat2;
+    const lon2Num = typeof lon2 === 'string' ? parseFloat(lon2) : lon2;
+
+    // Validate coordinates
+    if (isNaN(lat1Num) || isNaN(lon1Num) || isNaN(lat2Num) || isNaN(lon2Num)) {
+      return 0;
+    }
+
     const R = 6371; // Radius of the earth in km
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
+    const dLat = deg2rad(lat2Num - lat1Num);
+    const dLon = deg2rad(lon2Num - lon1Num);
     const a = 
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.cos(deg2rad(lat1Num)) * Math.cos(deg2rad(lat2Num)) * 
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Distance in km
-    return distance;
+    return isNaN(distance) ? 0 : distance;
   };
   
   const deg2rad = (deg: number): number => {

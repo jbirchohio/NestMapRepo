@@ -228,9 +228,9 @@ function dispatch(action: Action) {
   })
 }
 
-type ToastProps = Omit<ToasterToast, 'id'>
+type ToastPropsInput = Omit<ToasterToast, 'id'>
 
-function toast({ ...props }: ToastProps) {
+function toast({ ...props }: ToastPropsInput) {
   const id = genId()
 
   const update = (props: Partial<ToasterToast>) =>

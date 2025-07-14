@@ -17,6 +17,9 @@ interface Activity {
   category: string;
   locationName: string;
   tag: string;
+  date: string;
+  time: string;
+  order?: number;
   coordinates?: {
     lat: number;
     lng: number;
@@ -71,7 +74,7 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
   const [selectedDate, setSelectedDate] = useState<string>(
     trip.startDate ? new Date(trip.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   );
-  const [weatherCondition, setWeatherCondition] = useState<WeatherCondition>("sunny");
+  const [weatherCondition] = useState<WeatherCondition>("sunny");
   const [autoWeatherData, setAutoWeatherData] = useState<WeatherData[]>([]);
   const [isAutoDetected, setIsAutoDetected] = useState(false);
   const [selectedDayWeather, setSelectedDayWeather] = useState<WeatherData | null>(null);
@@ -95,12 +98,14 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
   // Auto weather detection
   const autoWeatherMutation = useMutation({
     mutationFn: async () => {
-      const tripDates = [];
+      const tripDates: string[] = []; // Explicitly type the array
       if (trip.startDate) {
         const start = new Date(trip.startDate);
         const end = trip.endDate ? new Date(trip.endDate) : start;
-        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          tripDates.push(d.toISOString().split('T')[0]);
+        const currentDate = new Date(start);
+        while (currentDate <= end) {
+          tripDates.push(currentDate.toISOString().split('T')[0]);
+          currentDate.setDate(currentDate.getDate() + 1);
         }
       }
       
@@ -241,16 +246,17 @@ export default function WeatherSuggestionsPanel({ trip, onAddActivity }: Weather
   const handleAddActivity = async (activitySuggestion: WeatherActivitySuggestion): Promise<void> => {
     try {
       // Format the activity for saving
-      const activityDate = new Date(selectedDate);
-      const formattedActivity = {
-        tripId: trip.id,
+      const formattedActivity: Activity = {
+        id: crypto.randomUUID(),
         title: activitySuggestion.title,
-        date: activityDate,
-        time: "12:00", // Default time
-        locationName: activitySuggestion.locationName,
-        notes: activitySuggestion.description,
-        tag: activitySuggestion.tag,
-        order: 0 // Will be adjusted when added
+        description: activitySuggestion.description || 'No description provided',
+        category: activitySuggestion.category || 'sightseeing',
+        locationName: activitySuggestion.locationName || 'Location not specified',
+        tag: activitySuggestion.tag || 'activity',
+        date: selectedDate,
+        time: '12:00', // Default time
+        order: 0, // Will be adjusted when added
+        weatherCondition: (selectedDayWeather?.condition.toLowerCase() as WeatherCondition) || 'sunny'
       };
       
       await onAddActivity(formattedActivity);

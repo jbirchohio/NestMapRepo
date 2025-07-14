@@ -1,40 +1,66 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+// Input is not used, so it's removed
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Hotel, HotelSearchParams } from '../types';
+import { CabinType } from '../types/booking';
+import { Hotel, HotelSearchParams } from '../types/hotel';
 import { HotelCard } from './HotelCard';
 
 interface HotelSelectionStepProps {
   formData: {
+    tripType: 'one-way' | 'round-trip';
+    origin: string;
     destination: string;
-    checkIn: string;
-    checkOut: string;
-    guests: number;
-    rooms: number;
+    departureDate: string;
+    returnDate?: string;
+    passengers: number;
+    primaryTraveler: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      dateOfBirth: string;
+    };
+    additionalTravelers?: Array<{
+      firstName: string;
+      lastName: string;
+      dateOfBirth: string;
+    }>;
+    cabin: CabinType; // 'economy' | 'premium-economy' | 'business' | 'first'
+    budget?: number;
+    department?: string;
+    projectCode?: string;
+    costCenter?: string;
   };
   onBack: () => void;
   onNext: () => void;
 }
 
 export const HotelSelectionStep = ({ formData, onBack, onNext }: HotelSelectionStepProps) => {
+  // Ensure we have valid dates for check-in and check-out
+  const defaultCheckIn = formData.departureDate || format(new Date(), 'yyyy-MM-dd');
+  const defaultCheckOut = formData.returnDate || 
+    format(new Date(new Date(defaultCheckIn).getTime() + 86400000), 'yyyy-MM-dd');
+
   const [searchParams, setSearchParams] = useState<HotelSearchParams>({
     destination: formData.destination,
-    checkIn: formData.checkIn,
-    checkOut: formData.checkOut,
-    guests: { adults: formData.guests },
-    rooms: formData.rooms,
+    checkIn: defaultCheckIn,
+    checkOut: defaultCheckOut,
+    guests: {
+      adults: formData.passengers,
+      rooms: 1,
+    },
     filters: {
-      minStarRating: 0,
-      priceRange: { min: 0, max: 1000 },
-      amenities: [],
-      freeCancellation: false,
+      minStarRating: 3,
+      priceRange: {
+        currency: 'USD',
+      },
     },
   });
 
@@ -115,12 +141,19 @@ export const HotelSelectionStep = ({ formData, onBack, onNext }: HotelSelectionS
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={searchParams.checkIn ? new Date(searchParams.checkIn) : undefined}
+                    selected={new Date(searchParams.checkIn)}
                     onSelect={(date) => {
-                      setSearchParams((prev) => ({
-                        ...prev,
-                        checkIn: date?.toISOString().split('T')[0],
-                      }));
+                      if (date) {
+                        const checkInDate = date.toISOString().split('T')[0];
+                        setSearchParams(prev => ({
+                          ...prev,
+                          checkIn: checkInDate,
+                          // Ensure check-out is after check-in
+                          checkOut: prev.checkOut < checkInDate 
+                            ? format(new Date(date.getTime() + 86400000), 'yyyy-MM-dd')
+                            : prev.checkOut
+                        }));
+                      }
                     }}
                     initialFocus
                   />
@@ -146,15 +179,17 @@ export const HotelSelectionStep = ({ formData, onBack, onNext }: HotelSelectionS
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={searchParams.checkOut ? new Date(searchParams.checkOut) : undefined}
+                    selected={new Date(searchParams.checkOut)}
                     onSelect={(date) => {
-                      setSearchParams((prev) => ({
-                        ...prev,
-                        checkOut: date?.toISOString().split('T')[0],
-                      }));
+                      if (date) {
+                        setSearchParams(prev => ({
+                          ...prev,
+                          checkOut: date.toISOString().split('T')[0]
+                        }));
+                      }
                     }}
                     initialFocus
-                    disabled={(date) => date < new Date(searchParams.checkIn)}
+                    disabled={(date) => date <= new Date(searchParams.checkIn)}
                   />
                 </PopoverContent>
               </Popover>

@@ -7,7 +7,6 @@ import {
   Building, 
   AlertTriangle, 
   CheckCircle, 
-  Clock, 
   Database,
   Server,
   Zap

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+
 import { useToast } from '@/hooks/use-toast';
 import WhiteLabelPreview from '@/components/WhiteLabelPreview';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
@@ -50,7 +50,7 @@ interface WhiteLabelStatus {
 export default function WhiteLabelDashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { whiteLabelConfig, isWhiteLabelActive } = useWhiteLabel();
+  const { config: whiteLabelConfig, isWhiteLabelActive } = useWhiteLabel();
   
   const [status, setStatus] = useState<WhiteLabelStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

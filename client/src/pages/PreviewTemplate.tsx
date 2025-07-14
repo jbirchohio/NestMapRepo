@@ -1,21 +1,6 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Calendar, 
-  Map, 
-  Plane, 
-  Hotel, 
-  Utensils, 
-  Camera, 
-  CreditCard, 
-  Users, 
-  MessageSquare,
-  Clock
-} from 'lucide-react';
+import { Calendar, Plane, Hotel, CreditCard, Users, MessageSquare } from 'lucide-react';
 
 export default function PreviewTemplate() {
   return (
@@ -38,10 +23,23 @@ export default function PreviewTemplate() {
               <a href="#" className="text-sm font-medium hover:text-primary">Bookings</a>
               <a href="#" className="text-sm font-medium hover:text-primary">Reports</a>
             </nav>
-            <Avatar>
-              <AvatarImage src="/placeholder-avatar.png" />
-              <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <div className="h-10 w-10 overflow-hidden rounded-full">
+                <img
+                  src="/placeholder-avatar.png"
+                  alt="User Avatar"
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <div className="h-full w-full flex items-center justify-center bg-muted text-foreground hidden">
+                  JD
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -170,9 +168,9 @@ export default function PreviewTemplate() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <Avatar>
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
+                  <div className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
+                    <span className="text-foreground">JD</span>
+                  </div>
                   <div>
                     <p className="font-medium">Jane Doe</p>
                     <p className="text-sm text-muted-foreground">Travel Manager, Acme Inc.</p>
@@ -187,9 +185,9 @@ export default function PreviewTemplate() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <Avatar>
-                    <AvatarFallback>JS</AvatarFallback>
-                  </Avatar>
+                  <div className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
+                    <span className="text-foreground">JS</span>
+                  </div>
                   <div>
                     <p className="font-medium">John Smith</p>
                     <p className="text-sm text-muted-foreground">CEO, Tech Solutions</p>
@@ -204,9 +202,9 @@ export default function PreviewTemplate() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <Avatar>
-                    <AvatarFallback>AL</AvatarFallback>
-                  </Avatar>
+                  <div className="h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
+                    <span className="text-foreground">AL</span>
+                  </div>
                   <div>
                     <p className="font-medium">Amy Lee</p>
                     <p className="text-sm text-muted-foreground">CFO, Global Enterprises</p>

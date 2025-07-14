@@ -3,7 +3,7 @@
  * Real-time monitoring and optimization insights for administrators
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -60,7 +60,7 @@ export default function PerformanceDashboard() {
     refetchInterval: 5000, // Refresh every 5 seconds
   });
 
-  const { data: recommendationsData, isLoading: recommendationsLoading } = useQuery({
+  const { data: recommendationsData } = useQuery({
     queryKey: ['/api/admin/performance/recommendations'],
   });
 

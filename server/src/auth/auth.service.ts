@@ -2,13 +2,13 @@
  * Auth Service Implementation
  * Implements the IAuthService interface
  */
-import { compare, hash } from 'bcrypt';
+import { compare } from 'bcrypt';
 import { sign, decode, verify } from 'jsonwebtoken';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { IAuthService } from './interfaces/auth.service.interface';
-import { LoginDto, RefreshTokenDto, AuthResponse } from './dtos/auth.dto';
+import { LoginDto, RefreshTokenDto, AuthResponse, UserRole as AuthDtoUserRole } from './dtos/auth.dto';
 import { UserRole } from '../types';
 import { Logger } from '../utils/logger';
 import { redisClient } from '../utils/redis';
@@ -18,7 +18,6 @@ export class AuthService implements IAuthService {
   private readonly ACCESS_TOKEN_EXPIRY = '15m';
   private readonly REFRESH_TOKEN_EXPIRY = '7d';
   private readonly JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
-  private readonly SALT_ROUNDS = 10;
 
   /**
    * Generate JWT tokens for authentication
@@ -62,10 +61,10 @@ export class AuthService implements IAuthService {
   /**
    * Verify and decode a JWT token
    */
-  private async verifyToken(token: string, type: 'access' | 'refresh'): Promise<{
+  private async verifyToken(token: string): Promise<{
     valid: boolean;
     expired: boolean;
-    payload?: any;
+    payload?: Record<string, unknown>;
     error?: string;
   }> {
     try {
@@ -83,13 +82,14 @@ export class AuthService implements IAuthService {
       return {
         valid: true,
         expired: false,
-        payload: decoded
+        payload: decoded as Record<string, unknown>
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error & { name?: string };
       return {
         valid: false,
-        expired: error.name === 'TokenExpiredError',
-        error: error.message
+        expired: err.name === 'TokenExpiredError',
+        error: err.message
       };
     }
   }
@@ -170,7 +170,7 @@ export class AuthService implements IAuthService {
       user: {
         id: user.id,
         email: user.email,
-        role: user.role as UserRole,
+        role: user.role as unknown as AuthDtoUserRole,
         firstName: user.firstName || null,
         lastName: user.lastName || null,
         emailVerified: user.emailVerified || false,
@@ -187,14 +187,14 @@ export class AuthService implements IAuthService {
     const { refreshToken } = data;
 
     // Verify refresh token
-    const result = await this.verifyToken(refreshToken, 'refresh');
+    const result = await this.verifyToken(refreshToken);
     
     if (!result.valid || !result.payload) {
       throw new Error(result.error || 'Invalid refresh token');
     }
 
     // Get user from database
-    const [user] = await db.select().from(users).where(eq(users.id, result.payload.sub));
+    const [user] = await db.select().from(users).where(eq(users.id, result.payload.sub as string));
 
     if (!user) {
       throw new Error('User not found');
@@ -221,7 +221,7 @@ export class AuthService implements IAuthService {
       user: {
         id: user.id,
         email: user.email,
-        role: user.role as UserRole,
+        role: user.role as unknown as AuthDtoUserRole,
         firstName: user.firstName || null,
         lastName: user.lastName || null,
         emailVerified: user.emailVerified || false,
@@ -294,10 +294,11 @@ export class AuthService implements IAuthService {
     // In a real implementation, you would:
     // 1. Verify the reset token
     // 2. Find the associated user
-    // 3. Update their password
+    // 3. Update their password with the newPassword
     // 4. Invalidate the token
     
     // For now, we'll just log the attempt
+    this.logger.info(`Password reset requested with token ${token.substring(0, 8)}... and new password of length ${newPassword.length}`);
     this.logger.info(`Password reset attempt with token: ${token.substring(0, 10)}...`);
   }
 }

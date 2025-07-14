@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Building, Users, Search, MoreHorizontal, Eye, Settings, CreditCard } from 'lucide-react';
 import { useState } from 'react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu } from '@/components/ui/dropdown-menu';
 
 interface Organization {
   id: number;
@@ -139,25 +139,45 @@ export function OrganizationsList({ organizations, onOrganizationSelect, isLoadi
                     </Badge>
                     
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onOrganizationSelect(org)}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const button = e.currentTarget;
+                          const menu = button.nextElementSibling as HTMLElement;
+                          if (menu) {
+                            menu.style.display = 'block';
+                            menu.style.position = 'absolute';
+                            menu.style.right = '0';
+                            menu.style.top = '100%';
+                            menu.style.zIndex = '50';
+                            menu.style.minWidth = '200px';
+                          }
+                        }}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                      <div className="hidden bg-white shadow-lg rounded-md border border-gray-200 py-1">
+                        <button 
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOrganizationSelect(org);
+                          }}
+                        >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        </button>
+                        <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center">
                           <Settings className="h-4 w-4 mr-2" />
                           Manage Settings
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        </button>
+                        <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center">
                           <CreditCard className="h-4 w-4 mr-2" />
                           Billing Info
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
+                        </button>
+                      </div>
                     </DropdownMenu>
                   </div>
                 </div>
@@ -177,7 +197,7 @@ export function OrganizationsList({ organizations, onOrganizationSelect, isLoadi
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-gray-500">Funding:</span>
-                    <Badge className={getStatusColor(org.funding_source_status)} className="text-xs">
+                    <Badge className={`${getStatusColor(org.funding_source_status)} text-xs`}>
                       {org.funding_source_status}
                     </Badge>
                   </div>

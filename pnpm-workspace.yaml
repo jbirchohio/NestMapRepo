@@ -1,4 +1,13 @@
 packages:
-  - 'client'
-  - 'server'
-  - 'shared'
+  - client
+  - server
+  - shared
+
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@tailwindcss/oxide'
+  - bcrypt
+  - bufferutil
+  - esbuild
+  - puppeteer
+  - sharp

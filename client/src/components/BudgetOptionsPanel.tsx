@@ -94,7 +94,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity: _ }: BudgetOpt
             value={budgetLevel} 
             onValueChange={(value) => setBudgetLevel(value as BudgetLevel)}
           >
-            <SelectTrigger id="budget" className="mt-1">
+            <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select budget level" />
             </SelectTrigger>
             <SelectContent>
@@ -111,7 +111,7 @@ export default function BudgetOptionsPanel({ trip, onAddActivity: _ }: BudgetOpt
             value={activityType} 
             onValueChange={(value) => setActivityType(value as ActivityType)}
           >
-            <SelectTrigger id="category" className="mt-1">
+            <SelectTrigger className="mt-1">
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>

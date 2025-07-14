@@ -140,15 +140,31 @@ export function useRealTimeCollaboration({
         break;
 
       case 'collaborator_joined':
-        setCollaborators(prev => {
-          const existing = prev.find(c => c.userId === data.collaborator.userId);
-          if (existing) return prev;
-          
-          return [...prev, {
-            ...data.collaborator,
-            color: PRESENCE_COLORS[prev.length % PRESENCE_COLORS.length]
-          }];
-        });
+        if (data.collaborator && typeof data.collaborator === 'object') {
+          const collaborator = data.collaborator as Partial<CollaboratorPresence>;
+          setCollaborators(prev => {
+            // Safe check for userId being a number
+            if (typeof collaborator.userId !== 'number') return prev;
+            
+            const existing = prev.find(c => c.userId === collaborator.userId);
+            if (existing) return prev;
+            
+            // Create a properly typed collaborator object
+            const newCollaborator: CollaboratorPresence = {
+              userId: collaborator.userId,
+              username: collaborator.username || 'Unknown User',
+              avatar: collaborator.avatar,
+              currentPage: collaborator.currentPage || '',
+              currentSection: collaborator.currentSection,
+              cursor: collaborator.cursor || { x: 0, y: 0 },
+              lastSeen: collaborator.lastSeen instanceof Date ? collaborator.lastSeen : new Date(),
+              isActive: collaborator.isActive ?? true,
+              color: PRESENCE_COLORS[prev.length % PRESENCE_COLORS.length]
+            };
+            
+            return [...prev, newCollaborator];
+          });
+        }
         break;
 
       case 'collaborator_left':
@@ -158,23 +174,51 @@ export function useRealTimeCollaboration({
         break;
 
       case 'presence_update':
-        setCollaborators(prev =>
-          prev.map(c =>
-            c.userId === data.userId
-              ? { ...c, ...data.presence, lastSeen: new Date() }
-              : c
-          )
-        );
+        if (data.userId && typeof data.presence === 'object' && data.presence !== null) {
+          setCollaborators(prev =>
+            prev.map(c =>
+              c.userId === data.userId
+                ? { 
+                    ...c, 
+                    // Only update properties that exist in CollaboratorPresence
+                    ...(data.presence as Partial<CollaboratorPresence>),
+                    lastSeen: new Date() 
+                  }
+                : c
+            )
+          );
+        }
         break;
 
       case 'cursor_update':
-        setCollaborators(prev =>
-          prev.map(c =>
-            c.userId === data.userId
-              ? { ...c, cursor: data.cursor, lastSeen: new Date() }
-              : c
-          )
-        );
+        if (data.userId && data.cursor) {
+          // Safely cast cursor to an appropriate type
+          const cursor = data.cursor as unknown;
+          let typedCursor = { x: 0, y: 0 };
+          
+          // Check if cursor is an object with x and y properties
+          if (cursor && typeof cursor === 'object' && cursor !== null) {
+            const cursorObj = cursor as Record<string, unknown>;
+            if ('x' in cursorObj && typeof cursorObj.x === 'number') {
+              typedCursor.x = cursorObj.x;
+            }
+            if ('y' in cursorObj && typeof cursorObj.y === 'number') {
+              typedCursor.y = cursorObj.y;
+            }
+          }
+          
+          setCollaborators(prev =>
+            prev.map(c =>
+              c.userId === data.userId
+                ? { 
+                    ...c, 
+                    cursor: typedCursor, 
+                    lastSeen: new Date() 
+                  }
+                : c
+            )
+          );
+        }
         break;
 
       default:

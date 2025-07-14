@@ -1,4 +1,14 @@
-import { JwtPayload as BaseJwtPayload } from 'jsonwebtoken';
+// Define JwtPayload type if not available from 'jsonwebtoken'
+type BaseJwtPayload = {
+  iss?: string;
+  sub?: string;
+  aud?: string | string[];
+  exp?: number;
+  nbf?: number;
+  iat?: number;
+  jti?: string;
+  key: string;
+};
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 export type TokenType = 'access' | 'refresh' | 'password_reset';

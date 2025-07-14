@@ -3,10 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,12 +83,12 @@ export default function RenameTripDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Rename Trip</DialogTitle>
-          <DialogDescription>
+        <div className="space-y-1.5">
+          <h3 className="text-lg font-semibold leading-none tracking-tight">Rename Trip</h3>
+          <p className="text-sm text-muted-foreground">
             Enter a new name for your trip.
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
         
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
@@ -107,7 +103,7 @@ export default function RenameTripDialog({
             </div>
           </div>
           
-          <DialogFooter>
+          <div className="flex justify-end space-x-2 pt-4">
             <Button
               type="button"
               variant="outline"
@@ -122,7 +118,7 @@ export default function RenameTripDialog({
             >
               {renameTrip.isPending ? "Renaming..." : "Rename Trip"}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

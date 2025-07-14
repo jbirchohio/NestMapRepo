@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plane, CheckCircle, ArrowRight, ArrowLeft, User, Clock, MapPin, CreditCard } from 'lucide-react';
+import { Plane, CheckCircle, ArrowRight, ArrowLeft, CreditCard } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -31,6 +31,8 @@ interface SequentialBookingData {
       phone: string;
       relationship: string;
     };
+    selectedOutboundFlight?: FlightOffer;
+    selectedReturnFlight?: FlightOffer;
   }>;
   bookingStatus: 'flights' | 'payment' | 'complete';
   confirmationNumber?: string;
@@ -38,11 +40,12 @@ interface SequentialBookingData {
 }
 
 interface FlightOffer {
+  segments: any;
   id: string;
   airline: string;
   flightNumber: string;
-  price: number;
-  currency: string;
+  price: number | { amount: number; currency: string };
+  currency?: string;
   departure: {
     airport: string;
     time: string;
@@ -64,7 +67,6 @@ export default function SequentialBookingFlights() {
   const [bookingData, setBookingData] = useState<SequentialBookingData | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [flightOffers, setFlightOffers] = useState<FlightOffer[]>([]);
-  const [selectedFlight, setSelectedFlight] = useState<FlightOffer | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
   const [sortBy, setSortBy] = useState<'price' | 'duration' | 'departure'>('price');
@@ -429,6 +431,13 @@ export default function SequentialBookingFlights() {
     }
   };
 
+  // Helper to extract price value
+  function getPriceValue(price: number | { amount: number; currency: string }): number {
+    if (typeof price === 'number') return price;
+    if (typeof price === 'object' && price !== null && 'amount' in price) return price.amount;
+    return 0;
+  }
+
   if (!bookingData) {
     return (
       <div className="container mx-auto p-6">
@@ -528,7 +537,7 @@ export default function SequentialBookingFlights() {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <span className="font-medium">{flight.airline?.name || flight.airline}</span>
+                          <span className="font-medium">{typeof flight.airline === 'object' && flight.airline !== null ? (flight.airline as any).name : flight.airline}</span>
                           <Badge variant="outline">{flight.segments?.[0]?.flightNumber || flight.flightNumber}</Badge>
                           {flight.stops === 0 && (
                             <Badge variant="secondary">Direct</Badge>
@@ -574,7 +583,11 @@ export default function SequentialBookingFlights() {
                           <div className="grid grid-cols-3 gap-4 text-sm">
                             <div>
                               <p className="font-medium">{formatTime(flight.departure.time)}</p>
-                              <p className="text-muted-foreground">{flight.departure.airport?.code || flight.departure.airport}</p>
+                              <p className="text-muted-foreground">
+                                {typeof flight.departure.airport === 'object' && flight.departure.airport !== null && 'code' in flight.departure.airport
+                                  ? (flight.departure.airport as { code: string }).code
+                                  : flight.departure.airport}
+                              </p>
                             </div>
                             <div className="text-center">
                               <p className="text-muted-foreground">{formatDuration(flight.duration)}</p>
@@ -586,14 +599,18 @@ export default function SequentialBookingFlights() {
                             </div>
                             <div className="text-right">
                               <p className="font-medium">{formatTime(flight.arrival.time)}</p>
-                              <p className="text-muted-foreground">{flight.arrival.airport?.code || flight.arrival.airport}</p>
+                              <p className="text-muted-foreground">
+                                {typeof flight.arrival.airport === 'object' && flight.arrival.airport !== null && 'code' in flight.arrival.airport
+                                  ? (flight.arrival.airport as { code: string }).code
+                                  : flight.arrival.airport}
+                              </p>
                             </div>
                           </div>
                         )}
                       </div>
                       <div className="text-right ml-4">
-                        <p className="text-lg font-bold">${flight.price?.amount || flight.price}</p>
-                        <p className="text-sm text-muted-foreground">{flight.price?.currency || flight.currency || 'USD'}</p>
+                        <p className="text-lg font-bold">${typeof flight.price === 'object' && flight.price !== null ? flight.price.amount : flight.price}</p>
+                        <p className="text-sm text-muted-foreground">{typeof flight.price === 'object' && flight.price !== null && 'currency' in flight.price ? flight.price.currency : (flight.currency || 'USD')}</p>
                       </div>
                     </div>
                   </div>
@@ -614,20 +631,19 @@ export default function SequentialBookingFlights() {
                 <div className="space-y-2 text-sm">
                   {selectedOutbound && (
                     <div className="flex justify-between">
-                      <span>Outbound: {selectedOutbound.airline?.name || selectedOutbound.airline} {selectedOutbound.segments?.[0]?.flightNumber || selectedOutbound.flightNumber}</span>
-                      <span className="font-medium">${selectedOutbound.price?.amount || selectedOutbound.price}</span>
-                    </div>
-                  )}
-                  {selectedReturn && (
-                    <div className="flex justify-between">
-                      <span>Return: {selectedReturn.airline?.name || selectedReturn.airline} {selectedReturn.segments?.[0]?.flightNumber || selectedReturn.flightNumber}</span>
-                      <span className="font-medium">${selectedReturn.price?.amount || selectedReturn.price}</span>
+                      <span>
+                        Outbound: {typeof selectedOutbound.airline === 'object' && selectedOutbound.airline !== null && 'name' in selectedOutbound.airline
+                          ? (selectedOutbound.airline as { name: string }).name
+                          : selectedOutbound.airline}{' '}
+                        {selectedOutbound.segments?.[0]?.flightNumber || selectedOutbound.flightNumber}
+                      </span>
+                      <span className="font-medium">${typeof selectedOutbound.price === 'object' && selectedOutbound.price !== null ? selectedOutbound.price.amount : selectedOutbound.price}</span>
                     </div>
                   )}
                   {selectedOutbound && selectedReturn && (
                     <div className="flex justify-between border-t pt-2 font-medium">
                       <span>Total:</span>
-                      <span>${(selectedOutbound.price?.amount || selectedOutbound.price) + (selectedReturn.price?.amount || selectedReturn.price)}</span>
+                      <span>${getPriceValue(selectedOutbound.price) + getPriceValue(selectedReturn.price)}</span>
                     </div>
                   )}
                 </div>
@@ -663,7 +679,7 @@ export default function SequentialBookingFlights() {
           <CardContent>
             <div className="space-y-4 mb-6">
               <h4 className="font-medium">Flight Summary</h4>
-              {bookingData.travelers.map((traveler, index) => (
+              {bookingData.travelers.map((traveler) => (
                 <div key={traveler.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start">
                     <div>

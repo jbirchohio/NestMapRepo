@@ -1,25 +1,20 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 import { 
   Shield, 
   Users, 
   Building2, 
   Settings, 
   BarChart3,
-  CreditCard,
-  Bell,
   Sparkles,
-  Plus,
-  TrendingUp,
-  Activity
+  Activity,
+  TrendingUp
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { SystemStatusIndicator } from "@/components/SystemStatusIndicator";
@@ -94,7 +89,6 @@ function ApiHealthStatus() {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const { data: analytics } = useQuery({
     queryKey: ['/api/admin/analytics'],
@@ -102,11 +96,6 @@ export default function AdminDashboard() {
       const res = await apiRequest('GET', '/api/admin/analytics');
       return res.json();
     },
-    enabled: !!user,
-  });
-
-  const { data: whiteLabelConfig } = useQuery({
-    queryKey: ['/api/white-label/config'],
     enabled: !!user,
   });
 

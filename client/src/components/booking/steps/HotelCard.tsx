@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
 import { Star, Clock, MapPin, Home, Users, X, Check } from 'lucide-react';
 import { Hotel } from '../types';
 
@@ -25,7 +24,7 @@ export const HotelCard = ({ hotel, isSelected, onSelect, onClear }: HotelCardPro
   };
 
   const formatStars = (rating: number) => {
-    const stars = [];
+    const stars: React.ReactNode[] = [];
     for (let i = 0; i < 5; i++) {
       stars.push(
         <Star
