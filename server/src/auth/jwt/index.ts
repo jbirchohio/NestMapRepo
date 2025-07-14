@@ -1,6 +1,5 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 const { sign, verify, decode } = jwt;
-type SignOptions = jwt.SignOptions;
 import { v4 as uuidv4 } from 'uuid';
 
 // Create local redis and logger if the shared module isn't available
@@ -150,17 +149,24 @@ export const verifyToken = async <T extends TokenPayload = TokenPayload>(
 
     // Verify token signature and expiration
     try {
+      // Verify the token using the callback style
       const verified = await new Promise<T>((resolve, reject) => {
-        verify(token, secret, {
-          issuer: defaultJwtConfig.issuer,
-          audience: defaultJwtConfig.audience,
-          algorithms: ['HS256']
-        }, (err, decoded) => {
-          if (err) {
-            return reject(err);
-          }
-          resolve(decoded as unknown as T);
-        });
+        const verifyCallback = (err: Error | null, decoded: unknown) => {
+          if (err) return reject(err);
+          resolve(decoded as T);
+        };
+        
+        // Call verify with the correct number of arguments
+        (verify as any)(
+          token,
+          secret,
+          {
+            issuer: defaultJwtConfig.issuer,
+            audience: defaultJwtConfig.audience,
+            algorithms: ['HS256']
+          },
+          verifyCallback
+        );
       });
 
       // Verify token type
@@ -199,7 +205,8 @@ export const blacklistToken = async (
   _expiresInSeconds: number = 7 * 24 * 60 * 60 // Default 7 days (unused in this implementation)
 ): Promise<void> => {
   try {
-    await redis.set(
+    // Using type assertion to avoid type errors with the mock Redis implementation
+    await (redis as any).set(
       `${TOKEN_BLACKLIST_PREFIX}${tokenId}`,
       '1'
     );

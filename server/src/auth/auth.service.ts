@@ -133,12 +133,12 @@ export class AuthService implements IAuthService {
       where: eq(users.email, email)
     });
 
-    if (!user || !user.password_hash) {
+    if (!user || !user.passwordHash) {
       throw new Error('Invalid credentials');
     }
 
     // Verify password
-    const isPasswordValid = await compare(password, user.password_hash);
+    const isPasswordValid = await compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
     }

@@ -1,6 +1,7 @@
 import * as express from 'express';
-import { Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
-import { AuthController } from './controllers/auth.controller';
+import type { Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
+const { Router } = express;
+import { AuthController } from './controllers/auth.controller.js';
 // Import validation schemas
 import { 
   loginSchema, 
@@ -8,10 +9,10 @@ import {
   requestPasswordResetSchema, 
   resetPasswordSchema, 
   logoutSchema 
-} from './validation/auth.schemas';
-import { validateRequest, AnyZodObject } from './middleware/validation.middleware';
-import { authenticate } from '../middleware/authenticate';
-import { JwtAuthService } from './services/jwtAuthService';
+} from './validation/auth.schemas.js';
+import { validateRequest, type AnyZodObject } from './middleware/validation.middleware.js';
+import { authenticate } from '../middleware/authenticate.js';
+import { JwtAuthService } from './services/jwtAuthService.js';
 
 // Define handler function type
 type HandlerFunction = (req: ExpressRequest, res: Response, next: NextFunction) => void | Promise<void>;
@@ -25,19 +26,24 @@ type RouteMiddleware = RequestHandler[] | RequestHandler;
 // Helper function to ensure request has required properties
 const ensureRequestProperties = (req: ExpressRequest): ExpressRequest => {
   // Ensure our custom properties exist with the correct types
-  if (!('cookies' in req)) {
-    (req as Record<string, unknown>).cookies = {};
+  const reqWithCookies = req as ExpressRequest & {
+    cookies: Record<string, string>;
+    signedCookies: Record<string, string>;
+  };
+
+  if (!reqWithCookies.cookies) {
+    reqWithCookies.cookies = {};
   }
   
-  if (!('signedCookies' in req)) {
-    (req as Record<string, unknown>).signedCookies = {};
+  if (!reqWithCookies.signedCookies) {
+    reqWithCookies.signedCookies = {};
   }
   
-  return req;
+  return reqWithCookies;
 };
 
 // Create Express Router instance
-const router = express.Router();
+const router = Router();
 
 // Initialize services and controllers
 const authService = new JwtAuthService();

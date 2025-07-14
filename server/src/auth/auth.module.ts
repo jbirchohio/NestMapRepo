@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthController } from './controllers/auth.controller';
 import { JwtAuthService } from './services/jwtAuthService';
 import { RepositoriesModule } from '../common/repositories/repositories.module';
-import { AuthUserRepositoryProvider, RefreshTokenRepositoryProvider } from '../common/repositories/repository.providers';
+import { UserRepositoryProvider, RefreshTokenRepositoryProvider } from '../common/repositories/repository.providers';
 import { EmailModule } from '../email/email.module';
 
 /**
@@ -19,7 +19,7 @@ import { EmailModule } from '../email/email.module';
   controllers: [AuthController],
   providers: [
     JwtAuthService,
-    AuthUserRepositoryProvider,
+    UserRepositoryProvider,
     RefreshTokenRepositoryProvider,
   ],
   exports: [JwtAuthService],

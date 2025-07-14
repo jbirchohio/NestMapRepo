@@ -18,8 +18,8 @@ export interface AuthUser {
   organization_id?: string;
   userId?: string; // Add userId property for compatibility
   
-  // Add index signature to allow dynamic property access
-  [key: string]: any;
+  // Add index signature to allow dynamic property access with proper type safety
+  [key: string]: string | number | boolean | string[] | number[] | boolean[] | undefined | null;
 }
 
 // Export a type that can be used for request.user
@@ -30,19 +30,14 @@ export type RequestUser = Omit<AuthUser, 'organization_id'> & {
 // Define basic HTTP request interface to avoid Express dependency
 export interface BaseRequest {
   params?: Record<string, string>;
-  body?: Record<string, any>;
-  query?: Record<string, any>;
+  body?: Record<string, unknown>;
+  query?: Record<string, string | string[]>;
   headers?: Record<string, string | string[]>;
   path?: string;
   ip?: string;
 }
 
-export interface AuthenticatedRequest<
-  Params = any,
-  ResBody = any,
-  ReqBody = any,
-  ReqQuery = any
-> extends BaseRequest {
+export interface AuthenticatedRequest extends BaseRequest {
   user: AuthUser;
   organizationId: string;
   organizationFilter: (orgId: string | null) => boolean;

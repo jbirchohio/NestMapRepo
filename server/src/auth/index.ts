@@ -1,7 +1,16 @@
 // Core auth exports - use explicit named exports to avoid ambiguities
-export { createToken, validateToken } from './jwt';
+export { generateToken, verifyToken, decodeToken, generateTokenPair } from './jwt';
+
 // Explicitly re-export types to avoid ambiguity
-export type { UserRole, TokenType } from './jwt/types';
+export type { 
+  UserRole, 
+  TokenType, 
+  TokenPayload, 
+  TokenVerificationResult, 
+  TokenPair, 
+  JwtConfig, 
+  AuthTokens 
+} from './jwt/types';
 
 // Export middleware functions
 export { authenticate, requireRole, requireOrganizationAccess } from './middleware';
@@ -21,5 +30,3 @@ export * from './dtos/auth.dto';
 // Container (for dependency injection)
 export { AuthContainer, authContainer } from './auth.container';
 
-// Re-export commonly used types
-export type { TokenPayload, TokenVerificationResult } from './jwt/types';
