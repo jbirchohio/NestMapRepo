@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common.js';
+import { Module } from '@nestjs/common';
 import { RepositoryProviders } from './repository.providers.js';
 
 /**

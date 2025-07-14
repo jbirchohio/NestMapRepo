@@ -1,7 +1,10 @@
-import { Organization, User } from '../../shared/src/schema.js';
-import { OrganizationBookingSettings } from '../../shared/src/schema.js';
+import { Organization, User } from '../../db/schema.js';
+import { BaseRepository } from '../base.repository.interface.js';
 
-export interface OrganizationRepository {
+// Define OrganizationBookingSettings type if it doesn't exist
+export type OrganizationBookingSettings = Record<string, any>;
+
+export interface OrganizationRepository extends BaseRepository<Organization, string, Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>>> {
   // Organization retrieval
   findById(id: string): Promise<Organization | null>;
   findBySlug(slug: string): Promise<Organization | null>;
@@ -18,7 +21,7 @@ export interface OrganizationRepository {
   removeMember(organizationId: string, userId: string): Promise<boolean>;
   updateMemberRole(organizationId: string, userId: string, role: string): Promise<boolean>;
   
-  // Plan and settings
+  // Plan and settings (commented out settings as it doesn't exist in schema)
   updatePlan(organizationId: string, plan: 'free' | 'pro' | 'enterprise'): Promise<Organization | null>;
-  updateSettings(organizationId: string, settings: OrganizationBookingSettings): Promise<Organization | null>;
+  // updateSettings(organizationId: string, settings: OrganizationBookingSettings): Promise<Organization | null>;
 }

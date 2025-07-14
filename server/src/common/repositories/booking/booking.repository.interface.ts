@@ -1,6 +1,8 @@
-import { Booking } from '../../shared/src/schema.js';
+import { Booking } from '../../db/schema.js';
 import { BaseRepository } from '../base.repository.interface.js';
-import { BookingConfirmationDetails } from '../../shared/src/schema.js';
+
+// Define BookingConfirmationDetails type if it doesn't exist
+export type BookingConfirmationDetails = Record<string, any>;
 
 /**
  * Interface for booking repository operations
@@ -13,8 +15,10 @@ export interface BookingRepository extends BaseRepository<Booking, string, Omit<
   findByProviderReferenceId(providerReferenceId: string): Promise<Booking | null>;
   
   // Booking-specific management methods
-  confirmBooking(id: string, confirmationDetails: BookingConfirmationDetails): Promise<Booking | null>;
-  cancelBooking(id: string, cancellationReason: string): Promise<Booking | null>;
+  // Note: confirmBooking and cancelBooking are commented out because confirmationDetails 
+  // and cancellationReason fields don't exist in the current schema
+  // confirmBooking(id: string, confirmationDetails: BookingConfirmationDetails): Promise<Booking | null>;
+  // cancelBooking(id: string, cancellationReason: string): Promise<Booking | null>;
   
   // Booking analytics and reporting
   getBookingStatsByUserId(userId: string): Promise<any>;

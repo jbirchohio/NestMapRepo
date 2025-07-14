@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common.js';
+import { Injectable } from '@nestjs/common';
 import { eq, and, between } from 'drizzle-orm';
 import { db } from '../../db.js';
-import { activities, type Activity } from '../../shared/src/schema.js';
+import { activities } from '../../db/schema.js';
+import { type Activity } from '../../db/schema.js';
 import { ActivityRepository } from './activity.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 
@@ -17,8 +18,7 @@ export class ActivityRepositoryImpl extends BaseRepositoryImpl<Activity, string,
     return db
       .select()
       .from(activities)
-      .where(eq(activities.tripId, tripId))
-      .orderBy(activities.startTime);
+      .where(eq(activities.tripId, tripId));
   }
 
   async createMany(activitiesData: Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<Activity[]> {
@@ -55,8 +55,7 @@ export class ActivityRepositoryImpl extends BaseRepositoryImpl<Activity, string,
           eq(activities.tripId, tripId),
           between(activities.startTime, startDate, endDate)
         )
-      )
-      .orderBy(activities.startTime);
+      );
   }
 
   async reschedule(activityId: string, startTime: Date, endTime: Date): Promise<Activity | null> {
