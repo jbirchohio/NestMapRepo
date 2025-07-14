@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import { db } from '../../db.js';
-import { activities } from '../../db/schema.js';
-import { type Activity } from '../../db/schema.js';
+import { db } from '../../db';
+import { activities } from '../../db/schema';
+import { type Activity } from '../../db/schema';
 import { ActivityRepository } from './activity.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 

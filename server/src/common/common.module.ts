@@ -1,4 +1,4 @@
-import { Module, Global } from '@nestjs/common.js';
+import { Module, Global } from '@nestjs/common';
 import { ErrorService } from './services/error.service.js';
 import { BookingService } from './services/booking.service.js';
 import { BookingController } from './controllers/booking.controller.js';

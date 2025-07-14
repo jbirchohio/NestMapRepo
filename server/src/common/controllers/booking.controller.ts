@@ -8,15 +8,12 @@ import {
   Delete, 
   UseGuards, 
   Req, 
-  Res,
-  Logger as NestLogger,
-  NotFoundException,
-  ForbiddenException
+  Res
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 // Types and interfaces
-import { Booking } from '../../shared/types/bookings';
+import { Booking } from '../../../../shared/types/bookings';
 import { AuthUser } from '../../types/auth-user';
 
 // Services and utilities
@@ -26,8 +23,7 @@ import { ResponseFormatter } from '../utils/response-formatter.util';
 // Middleware
 import { requireAuth, requireOrgContext } from '../middleware/auth.middleware';
 
-// Request DTOs will be defined here when needed
-
+// Request DTOs
 interface ConfirmationDetails {
   notes?: string;
 }
@@ -55,9 +51,6 @@ declare global {
 @Controller('bookings')
 @UseGuards(requireAuth, requireOrgContext)
 export class BookingController {
-  private readonly logger = new NestLogger(BookingController.name);
-  private readonly responseFormatter = new ResponseFormatter();
-
   constructor(
     private readonly bookingService: BookingService
   ) {}
@@ -74,22 +67,22 @@ export class BookingController {
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
 
       const booking = await this.bookingService.getBookingById(id);
       if (!booking) {
-        throw new NotFoundException('Booking not found');
+        return ResponseFormatter.notFound(res, 'Booking not found');
       }
-      
-      if (booking.organizationId !== req.user.organizationId) {
-        throw new ForbiddenException('Not authorized to view this booking');
+
+      if (booking.userId !== req.user.id && !req.user.isAdmin) {
+        return ResponseFormatter.forbidden(res, 'Not authorized to view this booking');
       }
-      
-      ResponseFormatter.success(res, { booking });
+
+      return ResponseFormatter.success(res, { booking });
     } catch (error) {
-      this.logger.error(`Error getting booking ${id}`, error);
-      throw error;
+      console.error(`Error getting booking ${id}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while fetching the booking');
     }
   }
 
@@ -98,21 +91,25 @@ export class BookingController {
    */
   @Get()
   @UseGuards(requireAuth, requireOrgContext)
-  async getAllBookings(@Req() req: Request, @Res() res: Response) {
+  async getAllBookings(
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
-      const bookings = await this.bookingService.getBookingsByUserId(req.user.id);
-      ResponseFormatter.success(res, { bookings });
+
+      const bookings = await this.bookingService.getAllBookings();
+      return ResponseFormatter.success(res, { bookings });
     } catch (error) {
-      this.logger.error('Error getting all bookings', error);
-      throw error;
+      console.error('Error getting all bookings', error);
+      return ResponseFormatter.serverError(res, 'An error occurred while fetching bookings');
     }
   }
 
   /**
-   * Get all bookings for a trip
+   * Get bookings by trip ID
    */
   @Get('trip/:tripId')
   @UseGuards(requireAuth, requireOrgContext)
@@ -123,24 +120,19 @@ export class BookingController {
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
-      
+
       const bookings = await this.bookingService.getBookingsByTripId(tripId);
-      // Filter bookings to only include those from the user's organization
-      const orgBookings = bookings.filter(booking => 
-        booking.organizationId === req.user.organizationId
-      );
-      
-      ResponseFormatter.success(res, { bookings: orgBookings });
+      return ResponseFormatter.success(res, { bookings });
     } catch (error) {
-      this.logger.error(`Error getting bookings for trip ${tripId}`, error);
-      throw error;
+      console.error(`Error getting bookings for trip ${tripId}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while fetching bookings');
     }
   }
 
   /**
-   * Get all bookings for a user
+   * Get bookings by user ID
    */
   @Get('user/:userId')
   @UseGuards(requireAuth, requireOrgContext)
@@ -151,19 +143,18 @@ export class BookingController {
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
-      
-      // Verify the user has access to these bookings
-      if (userId !== req.user.id) {
-        throw new ForbiddenException('Not authorized to access these bookings');
+
+      if (userId !== req.user.id && !req.user.isAdmin) {
+        return ResponseFormatter.forbidden(res, 'Not authorized to access these bookings');
       }
-      
+
       const bookings = await this.bookingService.getBookingsByUserId(userId);
-      ResponseFormatter.success(res, { bookings });
+      return ResponseFormatter.success(res, { bookings });
     } catch (error) {
-      this.logger.error(`Error getting bookings for user ${userId}`, error);
-      throw error;
+      console.error(`Error getting bookings for user ${userId}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while fetching bookings');
     }
   }
 
@@ -173,26 +164,27 @@ export class BookingController {
   @Post()
   @UseGuards(requireAuth, requireOrgContext)
   async createBooking(
-    @Body() bookingData: Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'organizationId' | 'status'>,
+    @Body() bookingData: Partial<Booking>,
     @Req() req: Request,
     @Res() res: Response
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
-      
-      const booking = await this.bookingService.createBooking({
+
+      // Ensure the booking is associated with the authenticated user
+      const bookingDataWithUser = {
         ...bookingData,
         userId: req.user.id,
-        organizationId: req.user.organizationId,
-        status: 'pending' as const
-      });
-      
-      ResponseFormatter.created(res, { booking });
+        organizationId: req.user.organizationId
+      } as Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>;
+
+      const booking = await this.bookingService.createBooking(bookingDataWithUser);
+      return ResponseFormatter.created(res, { booking });
     } catch (error) {
-      this.logger.error('Error creating booking', error);
-      throw error;
+      console.error('Error creating booking', error);
+      return ResponseFormatter.serverError(res, 'An error occurred while creating the booking');
     }
   }
 
@@ -203,30 +195,29 @@ export class BookingController {
   @UseGuards(requireAuth, requireOrgContext)
   async updateBooking(
     @Param('id') id: string,
-    @Body() updateData: Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'organizationId'>>,
+    @Body() updateData: Partial<Booking>,
     @Req() req: Request,
     @Res() res: Response
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
-      
-      // First get the booking to verify ownership
+
       const existingBooking = await this.bookingService.getBookingById(id);
       if (!existingBooking) {
-        throw new NotFoundException('Booking not found');
+        return ResponseFormatter.notFound(res, 'Booking not found');
       }
-      
-      if (existingBooking.organizationId !== req.user.organizationId) {
-        throw new ForbiddenException('Not authorized to update this booking');
+
+      if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
+        return ResponseFormatter.forbidden(res, 'Not authorized to update this booking');
       }
-      
-      const updatedBooking = await this.bookingService.updateBooking(id, updateData);
-      ResponseFormatter.success(res, { booking: updatedBooking });
+
+      const booking = await this.bookingService.updateBooking(id, updateData);
+      return ResponseFormatter.success(res, { booking });
     } catch (error) {
-      this.logger.error(`Error updating booking ${id}`, error);
-      throw error;
+      console.error(`Error updating booking ${id}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while updating the booking');
     }
   }
 
@@ -242,24 +233,23 @@ export class BookingController {
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
-      
-      // First get the booking to verify ownership
-      const booking = await this.bookingService.getBookingById(id);
-      if (!booking) {
-        throw new NotFoundException('Booking not found');
+
+      const existingBooking = await this.bookingService.getBookingById(id);
+      if (!existingBooking) {
+        return ResponseFormatter.notFound(res, 'Booking not found');
       }
-      
-      if (booking.organizationId !== req.user.organizationId) {
-        throw new ForbiddenException('Not authorized to delete this booking');
+
+      if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
+        return ResponseFormatter.forbidden(res, 'Not authorized to delete this booking');
       }
-      
+
       await this.bookingService.deleteBooking(id);
-      ResponseFormatter.success(res, { success: true });
+      return ResponseFormatter.noContent(res);
     } catch (error) {
-      this.logger.error(`Error deleting booking ${id}`, error);
-      throw error;
+      console.error(`Error deleting booking ${id}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while deleting the booking');
     }
   }
 
@@ -276,28 +266,23 @@ export class BookingController {
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
 
-      // First get the booking to verify ownership
       const existingBooking = await this.bookingService.getBookingById(id);
       if (!existingBooking) {
-        throw new NotFoundException('Booking not found');
+        return ResponseFormatter.notFound(res, 'Booking not found');
       }
-      
-      if (existingBooking.organizationId !== req.user.organizationId) {
-        throw new ForbiddenException('Not authorized to confirm this booking');
+
+      if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
+        return ResponseFormatter.forbidden(res, 'Not authorized to confirm this booking');
       }
-      
-      const booking = await this.bookingService.updateBooking(id, { 
-        status: 'confirmed',
-        ...confirmationDetails 
-      });
-      
-ResponseFormatter.success(res, { booking });
+
+      const booking = await this.bookingService.confirmBooking(id, confirmationDetails);
+      return ResponseFormatter.success(res, { booking });
     } catch (error) {
-      this.logger.error(`Error confirming booking ${id}`, error);
-      throw error;
+      console.error(`Error confirming booking ${id}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while confirming the booking');
     }
   }
 
@@ -314,103 +299,95 @@ ResponseFormatter.success(res, { booking });
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
 
-      // First get the booking to verify ownership
       const existingBooking = await this.bookingService.getBookingById(id);
       if (!existingBooking) {
-        throw new NotFoundException('Booking not found');
+        return ResponseFormatter.notFound(res, 'Booking not found');
       }
-      
-      if (existingBooking.organizationId !== req.user.organizationId) {
-        throw new ForbiddenException('Not authorized to cancel this booking');
+
+      if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
+        return ResponseFormatter.forbidden(res, 'Not authorized to cancel this booking');
       }
-      
-      const booking = await this.bookingService.updateBooking(id, { 
-        status: 'cancelled',
-        cancellationReason: cancellationDetails.reason,
-        cancelledAt: new Date().toISOString()
-      });
-      
-      ResponseFormatter.success(res, { booking });
+
+      const booking = await this.bookingService.cancelBooking(id, cancellationDetails.reason || '');
+      return ResponseFormatter.success(res, { booking });
     } catch (error) {
-      this.logger.error(`Error cancelling booking ${id}`, error);
-      throw error;
+      console.error(`Error cancelling booking ${id}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while cancelling the booking');
     }
   }
 
   /**
-   * Get booking statistics for a user
+   * Get booking stats for a user
    */
   @Get('stats/user/:userId')
   @UseGuards(requireAuth, requireOrgContext)
-  async getUserBookingStats(
+  async getBookingStatsByUserId(
     @Param('userId') userId: string,
     @Req() req: Request,
     @Res() res: Response
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
 
-      // Verify the user has access to these stats
-      if (userId !== req.user.id) {
-        throw new ForbiddenException('Not authorized to view these stats');
+      if (userId !== req.user.id && !req.user.isAdmin) {
+        return ResponseFormatter.forbidden(res, 'Not authorized to view these stats');
       }
+
+      const stats = await this.bookingService.getBookingStatsByUserId(userId);
       
-      // This would be implemented in the service layer
-      const stats = {
+      // If no stats found, return empty stats object
+      const finalStats = stats || {
         total: 0,
         confirmed: 0,
         pending: 0,
         cancelled: 0
       };
       
-      return this.responseFormatter.success(res, { stats });
+      return ResponseFormatter.success(res, { stats: finalStats });
     } catch (error) {
-      this.logger.error(`Error getting booking stats for user ${userId}`, error);
-      throw error;
+      console.error(`Error getting booking stats for user ${userId}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while fetching booking stats');
     }
   }
 
   /**
-   * Get booking statistics for an organization
+   * Get booking stats for an organization
    */
-  @Get('stats/organization/:orgId')
+  @Get('stats/org/:orgId')
   @UseGuards(requireAuth, requireOrgContext)
-  async getOrganizationBookingStats(
+  async getBookingStatsByOrgId(
     @Param('orgId') orgId: string,
     @Req() req: Request,
     @Res() res: Response
   ) {
     try {
       if (!req.user) {
-        throw new ForbiddenException('Authentication required');
+        return ResponseFormatter.unauthorized(res, 'Authentication required');
       }
 
-      // Verify the requesting user has access to this organization
-      if (orgId !== req.user.organizationId) {
-        throw new ForbiddenException('Not authorized to view these stats');
+      if (orgId !== req.user.organizationId && !req.user.isAdmin) {
+        return ResponseFormatter.forbidden(res, 'Not authorized to view these stats');
       }
+
+      const stats = await this.bookingService.getBookingStatsByOrgId(orgId);
       
-      // This would be implemented in the service layer
-      const stats = {
+      // If no stats found, return empty stats object
+      const finalStats = stats || {
         total: 0,
-        byStatus: {
-          confirmed: 0,
-          pending: 0,
-          cancelled: 0
-        },
-        byType: {},
-        recentBookings: []
+        confirmed: 0,
+        pending: 0,
+        cancelled: 0
       };
       
-      return this.responseFormatter.success(res, { stats });
+      return ResponseFormatter.success(res, { stats: finalStats });
     } catch (error) {
-      this.logger.error(`Error getting booking stats for organization ${orgId}`, error);
-      throw error;
+      console.error(`Error getting booking stats for organization ${orgId}`, error);
+      return ResponseFormatter.serverError(res, 'An error occurred while fetching booking stats');
     }
   }
 }

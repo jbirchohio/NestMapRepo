@@ -1,6 +1,6 @@
-import { Injectable, Inject, Logger } from '@nestjs/common.js';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { BookingRepository } from '../repositories/booking/booking.repository.interface.js';
-import { Booking } from '../../shared/src/schema.js';
+import { Booking } from '../../../../shared/types/bookings';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces.js';
 
 /**
@@ -22,6 +22,14 @@ export class BookingService {
   async getBookingById(id: string): Promise<Booking | null> {
     this.logger.log(`Getting booking by ID: ${id}`);
     return this.bookingRepository.findById(id);
+  }
+
+  /**
+   * Get all bookings
+   */
+  async getAllBookings(): Promise<Booking[]> {
+    this.logger.log('Getting all bookings');
+    return this.bookingRepository.findAll();
   }
 
   /**
