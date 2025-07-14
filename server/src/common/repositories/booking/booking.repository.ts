@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common.js';
+import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { db } from '../../db.js';
-import { bookings, type Booking } from '../../shared/src/schema.js';
-import { BookingRepository } from './booking.repository.interface.js';
+import { bookings } from '../../db/schema.js';
+import { type Booking } from '../../db/schema.js';
+import { BookingRepository, type BookingConfirmationDetails } from './booking.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
-import { BookingConfirmationDetails } from '../../shared/src/schema.js';
 
 /**
  * Implementation of the booking repository
@@ -22,8 +22,7 @@ export class BookingRepositoryImpl extends BaseRepositoryImpl<Booking, string, O
     return db
       .select()
       .from(bookings)
-      .where(eq(bookings.userId, userId))
-      .orderBy(bookings.createdAt);
+      .where(eq(bookings.userId, userId));
   }
 
   async findByTripId(tripId: string): Promise<Booking[]> {
@@ -32,8 +31,7 @@ export class BookingRepositoryImpl extends BaseRepositoryImpl<Booking, string, O
     return db
       .select()
       .from(bookings)
-      .where(eq(bookings.tripId, tripId))
-      .orderBy(bookings.createdAt);
+      .where(eq(bookings.tripId, tripId));
   }
 
   async findByProviderReferenceId(providerReferenceId: string): Promise<Booking | null> {
@@ -42,75 +40,85 @@ export class BookingRepositoryImpl extends BaseRepositoryImpl<Booking, string, O
     const [booking] = await db
       .select()
       .from(bookings)
-      .where(eq(bookings.providerReferenceId, providerReferenceId))
+      .where(eq(bookings.providerBookingId, providerReferenceId))
       .limit(1);
     
     return booking || null;
   }
 
-  async confirmBooking(id: string, confirmationDetails: BookingConfirmationDetails): Promise<Booking | null> {
-    this.logger.log(`Confirming booking: ${id}`);
-    
-    const [updatedBooking] = await db
-      .update(bookings)
-      .set({
-        status: 'confirmed',
-        confirmationDetails,
-        updatedAt: new Date()
-      })
-      .where(eq(bookings.id, id))
-      .returning();
-    
-    return updatedBooking || null;
-  }
+  // Commented out as confirmationDetails field doesn't exist in current schema
+  // async confirmBooking(id: string, confirmationDetails: BookingConfirmationDetails): Promise<Booking | null> {
+  //   this.logger.log(`Confirming booking: ${id}`);
+  //   
+  //   const [updatedBooking] = await db
+  //     .update(bookings)
+  //     .set({
+  //       status: 'confirmed',
+  //       confirmationDetails,
+  //       updatedAt: new Date()
+  //     })
+  //     .where(eq(bookings.id, id))
+  //     .returning();
+  //   
+  //   return updatedBooking || null;
+  // }
 
-  async cancelBooking(id: string, cancellationReason: string): Promise<Booking | null> {
-    this.logger.log(`Cancelling booking: ${id}, reason: ${cancellationReason}`);
-    
-    const [updatedBooking] = await db
-      .update(bookings)
-      .set({
-        status: 'cancelled',
-        cancellationReason,
-        updatedAt: new Date()
-      })
-      .where(eq(bookings.id, id))
-      .returning();
-    
-    return updatedBooking || null;
-  }
+  // Commented out as cancellationReason field doesn't exist in current schema
+  // async cancelBooking(id: string, cancellationReason: string): Promise<Booking | null> {
+  //   this.logger.log(`Cancelling booking: ${id}, reason: ${cancellationReason}`);
+  //   
+  //   const [updatedBooking] = await db
+  //     .update(bookings)
+  //     .set({
+  //       status: 'cancelled',
+  //       cancellationReason,
+  //       updatedAt: new Date()
+  //     })
+  //     .where(eq(bookings.id, id))
+  //     .returning();
+  //   
+  //   return updatedBooking || null;
+  // }
 
   async getBookingStatsByUserId(userId: string): Promise<any> {
     this.logger.log(`Getting booking stats for user: ${userId}`);
     
-    // This would typically involve more complex queries with aggregations
-    // For demonstration purposes, we'll return a simple count
-    const bookingsByStatus = await db
-      .select({
-        status: bookings.status,
-        count: db.fn.count()
-      })
+    // Simple implementation - return all bookings for the user
+    const userBookings = await db
+      .select()
       .from(bookings)
-      .where(eq(bookings.userId, userId))
-      .groupBy(bookings.status);
+      .where(eq(bookings.userId, userId));
     
-    return bookingsByStatus;
+    // Count by status
+    const statusCounts = userBookings.reduce((acc, booking) => {
+      acc[booking.status] = (acc[booking.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(statusCounts).map(([status, count]) => ({
+      status,
+      count
+    }));
   }
 
   async getBookingStatsByOrgId(orgId: string): Promise<any> {
     this.logger.log(`Getting booking stats for organization: ${orgId}`);
     
-    // This would typically involve more complex queries with aggregations and joins
-    // For demonstration purposes, we'll return a simple count
-    const bookingsByStatus = await db
-      .select({
-        status: bookings.status,
-        count: db.fn.count()
-      })
+    // Simple implementation - return all bookings for the organization
+    const orgBookings = await db
+      .select()
       .from(bookings)
-      .where(eq(bookings.organizationId, orgId))
-      .groupBy(bookings.status);
+      .where(eq(bookings.organizationId, orgId));
     
-    return bookingsByStatus;
+    // Count by status
+    const statusCounts = orgBookings.reduce((acc, booking) => {
+      acc[booking.status] = (acc[booking.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(statusCounts).map(([status, count]) => ({
+      status,
+      count
+    }));
   }
 }

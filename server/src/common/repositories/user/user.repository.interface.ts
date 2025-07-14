@@ -1,6 +1,8 @@
-import { User } from '../../shared/src/schema.js';
+import { User } from '../../db/schema.js';
 import { BaseRepository } from '../base.repository.interface.js';
-import { UserBookingPreferences } from '../../shared/src/schema.js';
+
+// Define UserBookingPreferences type if it doesn't exist
+export type UserBookingPreferences = Record<string, any>;
 
 export interface UserRepository extends BaseRepository<User, string, Omit<User, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>> {
   // User retrieval
@@ -18,6 +20,6 @@ export interface UserRepository extends BaseRepository<User, string, Omit<User, 
   updatePassword(id: string, passwordHash: string): Promise<boolean>;
   updateLastLogin(id: string): Promise<boolean>;
   
-  // Preferences
-  updatePreferences(id: string, preferences: UserBookingPreferences): Promise<User | null>;
+  // Preferences (commented out as preferences field doesn't exist in schema)
+  // updatePreferences(id: string, preferences: UserBookingPreferences): Promise<User | null>;
 }

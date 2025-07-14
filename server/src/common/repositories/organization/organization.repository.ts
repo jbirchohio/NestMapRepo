@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common.js';
-import { eq, and } from 'drizzle-orm';
+import { Injectable } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import { db } from '../../db.js';
-import { organizations, organizationMembers, users, type Organization, type User } from '../../shared/src/schema.js';
-import { OrganizationRepository } from './organization.repository.interface.js';
-import { OrganizationBookingSettings } from '../../shared/src/schema.js';
+import { organizations, organizationMembers, users } from '../../db/schema.js';
+import { type Organization, type User } from '../../db/schema.js';
+import { OrganizationRepository, type OrganizationBookingSettings } from './organization.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()
@@ -64,12 +64,8 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization,
     
     const result = await db
       .delete(organizationMembers)
-      .where(
-        and(
-          eq(organizationMembers.organizationId, organizationId),
-          eq(organizationMembers.userId, userId)
-        )
-      );
+      .where(eq(organizationMembers.organizationId, organizationId))
+      .where(eq(organizationMembers.userId, userId));
     
     return result.rowCount > 0;
   }
@@ -83,12 +79,8 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization,
         role,
         updatedAt: new Date()
       })
-      .where(
-        and(
-          eq(organizationMembers.organizationId, organizationId),
-          eq(organizationMembers.userId, userId)
-        )
-      );
+      .where(eq(organizationMembers.organizationId, organizationId))
+      .where(eq(organizationMembers.userId, userId));
     
     return result.rowCount > 0;
   }
@@ -108,18 +100,19 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization,
     return updatedOrg || null;
   }
 
-  async updateSettings(organizationId: string, settings: OrganizationBookingSettings): Promise<Organization | null> {
-    this.logger.log(`Updating settings for organization ${organizationId}`);
-    
-    const [updatedOrg] = await db
-      .update(organizations)
-      .set({
-        settings,
-        updatedAt: new Date()
-      })
-      .where(eq(organizations.id, organizationId))
-      .returning();
-    
-    return updatedOrg || null;
-  }
+  // Commented out as settings field doesn't exist in schema
+  // async updateSettings(organizationId: string, settings: OrganizationBookingSettings): Promise<Organization | null> {
+  //   this.logger.log(`Updating settings for organization ${organizationId}`);
+  //   
+  //   const [updatedOrg] = await db
+  //     .update(organizations)
+  //     .set({
+  //       settings,
+  //       updatedAt: new Date()
+  //     })
+  //     .where(eq(organizations.id, organizationId))
+  //     .returning();
+  //   
+  //   return updatedOrg || null;
+  // }
 }

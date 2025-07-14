@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common.js';
-import { eq, and } from 'drizzle-orm';
+import { Injectable } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
 import { db } from '../../db.js';
-import { users, organizationMembers, type User } from '../../shared/src/schema.js';
-import { UserRepository } from './user.repository.interface.js';
-import { UserBookingPreferences } from '../../shared/src/schema.js';
+import { users, organizationMembers } from '../../db/schema.js';
+import { type User } from '../../db/schema.js';
+import { UserRepository, type UserBookingPreferences } from './user.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()
@@ -66,18 +66,19 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
     return result.rowCount > 0;
   }
 
-  async updatePreferences(id: string, preferences: UserBookingPreferences): Promise<User | null> {
-    this.logger.log(`Updating preferences for user: ${id}`);
-    
-    const [updatedUser] = await db
-      .update(users)
-      .set({
-        preferences,
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, id))
-      .returning();
-    
-    return updatedUser || null;
-  }
+  // Commented out as preferences field doesn't exist in schema
+  // async updatePreferences(id: string, preferences: UserBookingPreferences): Promise<User | null> {
+  //   this.logger.log(`Updating preferences for user: ${id}`);
+  //   
+  //   const [updatedUser] = await db
+  //     .update(users)
+  //     .set({
+  //       preferences,
+  //       updatedAt: new Date()
+  //     })
+  //     .where(eq(users.id, id))
+  //     .returning();
+  //   
+  //   return updatedUser || null;
+  // }
 }

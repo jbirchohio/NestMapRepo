@@ -1,4 +1,4 @@
-import { logger } from '../../shared/src/schema.js';
+import { logger } from '../../utils/logger.js';
 import { BaseRepository } from './base.repository.interface.js';
 import { eq } from 'drizzle-orm';
 import { db } from '../../db.js';
@@ -70,7 +70,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
       const result = await db
         .delete(this.table)
         .where(eq(this.idColumn, id));
-      return result.rowsAffected > 0;
+      return result.rowCount > 0;
     } catch (error) {
       this.logger.error(`Error deleting ${this.entityName} with ID ${id}:`, error);
       return false;

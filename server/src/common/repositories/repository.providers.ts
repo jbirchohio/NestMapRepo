@@ -1,11 +1,10 @@
-import { Provider } from '@nestjs/common.js';
-import { TripRepositoryImpl } from '../../shared/src/schema.js';
+import { Provider } from '@nestjs/common';
+import { TripRepositoryImpl } from '../../trips/repositories/trip.repository.js';
 import { OrganizationRepositoryImpl } from './organization/organization.repository.js';
 import { ActivityRepositoryImpl } from './activity/activity.repository.js';
 import { UserRepositoryImpl } from './user/user.repository.js';
 import { BookingRepositoryImpl } from './booking/booking.repository.js';
-import { User } from '../../shared/src/schema.js';
-import { RefreshTokenRepositoryImpl } from '../../shared/src/schema.js';
+import { RefreshTokenRepositoryImpl } from '../../auth/repositories/refresh-token.repository.js';
 
 /**
  * Provider definitions for all repositories
@@ -37,11 +36,6 @@ export const BookingRepositoryProvider: Provider = {
   useClass: BookingRepositoryImpl,
 };
 
-export const AuthUserRepositoryProvider: Provider = {
-  provide: 'AuthUserRepository',
-  useClass: AuthUserRepositoryImpl,
-};
-
 export const RefreshTokenRepositoryProvider: Provider = {
   provide: 'RefreshTokenRepository',
   useClass: RefreshTokenRepositoryImpl,
@@ -54,6 +48,5 @@ export const RepositoryProviders = [
   ActivityRepositoryProvider,
   UserRepositoryProvider,
   BookingRepositoryProvider,
-  AuthUserRepositoryProvider,
   RefreshTokenRepositoryProvider,
 ];

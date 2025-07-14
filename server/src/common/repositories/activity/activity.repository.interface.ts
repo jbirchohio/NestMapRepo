@@ -1,6 +1,7 @@
-import { Activity } from '../../shared/src/schema.js';
+import { Activity } from '../../db/schema.js';
+import { BaseRepository } from '../base.repository.interface.js';
 
-export interface ActivityRepository {
+export interface ActivityRepository extends BaseRepository<Activity, string, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>> {
   // Activity retrieval
   findById(id: string): Promise<Activity | null>;
   findByTripId(tripId: string): Promise<Activity[]>;
