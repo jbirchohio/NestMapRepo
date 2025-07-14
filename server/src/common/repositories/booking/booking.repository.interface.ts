@@ -1,4 +1,4 @@
-import { Booking } from '../../db/schema';
+import { Booking } from '../../../../shared/types/bookings';
 import { BaseRepository } from '../base.repository.interface.js';
 
 // Define BookingConfirmationDetails type if it doesn't exist

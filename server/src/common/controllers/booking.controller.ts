@@ -178,7 +178,7 @@ export class BookingController {
         ...bookingData,
         userId: req.user.id,
         organizationId: req.user.organizationId
-      };
+      } as Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>;
 
       const booking = await this.bookingService.createBooking(bookingDataWithUser);
       return ResponseFormatter.created(res, { booking });

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler as ExpressRequestHandler } from 'express';
-import { Logger } from '@nestjs/common.js';
+import { Logger } from '@nestjs/common';
 
 /**
  * Wraps an async route handler to catch any unhandled promise rejections
