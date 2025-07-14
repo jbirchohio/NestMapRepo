@@ -8,11 +8,9 @@ import {
   Delete, 
   UseGuards, 
   Req, 
-  Res,
-  Logger,
-  NotFoundException,
-  ForbiddenException
+  Res
 } from '@nestjs/common';
+// import { Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 // Types and interfaces
@@ -55,8 +53,6 @@ declare global {
 @Controller('bookings')
 @UseGuards(requireAuth, requireOrgContext)
 export class BookingController {
-  private readonly logger = new Logger(BookingController.name);
-
   constructor(
     private readonly bookingService: BookingService
   ) {}
