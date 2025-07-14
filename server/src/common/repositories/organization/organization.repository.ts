@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../../db.js';
 import { organizations, organizationMembers, users } from '../../db/schema.js';
 import { type Organization, type User } from '../../db/schema.js';
@@ -64,12 +64,8 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization,
     
     const result = await db
       .delete(organizationMembers)
-      .where(
-        and(
-          eq(organizationMembers.organizationId, organizationId),
-          eq(organizationMembers.userId, userId)
-        )
-      );
+      .where(eq(organizationMembers.organizationId, organizationId))
+      .where(eq(organizationMembers.userId, userId));
     
     return result.rowCount > 0;
   }
@@ -83,12 +79,8 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization,
         role,
         updatedAt: new Date()
       })
-      .where(
-        and(
-          eq(organizationMembers.organizationId, organizationId),
-          eq(organizationMembers.userId, userId)
-        )
-      );
+      .where(eq(organizationMembers.organizationId, organizationId))
+      .where(eq(organizationMembers.userId, userId));
     
     return result.rowCount > 0;
   }
