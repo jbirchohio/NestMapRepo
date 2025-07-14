@@ -64,7 +64,7 @@ const ErrorType = {
  * @returns Express middleware function
  */
 export const requireAuth = (logger: Logger) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       logger.warn('Authentication required but no user found in request');
       next(createApiError(ErrorType.UNAUTHORIZED, 'Authentication required'));
@@ -146,7 +146,7 @@ export const requireOwnership = (
   getResourceOwnerId: (req: AuthenticatedRequest) => Promise<string | undefined>,
   logger: Logger
 ) => {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
         logger.warn('Authentication required but no user found in request');

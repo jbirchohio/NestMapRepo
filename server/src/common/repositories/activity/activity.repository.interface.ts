@@ -1,4 +1,4 @@
-import { Activity } from '../../db/schema.js';
+import { Activity } from '../../db/schema';
 import { BaseRepository } from '../base.repository.interface.js';
 
 export interface ActivityRepository extends BaseRepository<Activity, string, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>> {

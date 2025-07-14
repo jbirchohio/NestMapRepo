@@ -9,14 +9,14 @@ import {
   UseGuards, 
   Req, 
   Res,
-  Logger as NestLogger,
+  Logger,
   NotFoundException,
   ForbiddenException
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 // Types and interfaces
-import { Booking } from '../../shared/types/bookings';
+import { Booking } from '@shared/types/bookings';
 import { AuthUser } from '../../types/auth-user';
 
 // Services and utilities
@@ -55,8 +55,7 @@ declare global {
 @Controller('bookings')
 @UseGuards(requireAuth, requireOrgContext)
 export class BookingController {
-  private readonly logger = new NestLogger(BookingController.name);
-  private readonly responseFormatter = new ResponseFormatter();
+  private readonly logger = new Logger(BookingController.name);
 
   constructor(
     private readonly bookingService: BookingService
@@ -368,7 +367,7 @@ ResponseFormatter.success(res, { booking });
         cancelled: 0
       };
       
-      return this.responseFormatter.success(res, { stats });
+      return ResponseFormatter.success(res, { stats });
     } catch (error) {
       this.logger.error(`Error getting booking stats for user ${userId}`, error);
       throw error;
@@ -407,7 +406,7 @@ ResponseFormatter.success(res, { booking });
         recentBookings: []
       };
       
-      return this.responseFormatter.success(res, { stats });
+      return ResponseFormatter.success(res, { stats });
     } catch (error) {
       this.logger.error(`Error getting booking stats for organization ${orgId}`, error);
       throw error;
