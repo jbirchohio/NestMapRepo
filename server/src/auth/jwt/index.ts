@@ -262,11 +262,20 @@ export const generateTokenPair = async (
       ? parseInt(defaultJwtConfig.accessExpiresIn) * 1000
       : defaultJwtConfig.accessExpiresIn * 1000;
 
+  const refreshExpiresIn = 
+    typeof defaultJwtConfig.refreshExpiresIn === 'string'
+      ? parseInt(defaultJwtConfig.refreshExpiresIn) * 1000
+      : defaultJwtConfig.refreshExpiresIn * 1000;
+
+  const now = Date.now();
+  
   return {
     accessToken,
     refreshToken,
     expiresIn,
     tokenType: 'Bearer',
+    accessTokenExpiresAt: now + expiresIn,
+    refreshTokenExpiresAt: now + refreshExpiresIn,
   };
 };
 

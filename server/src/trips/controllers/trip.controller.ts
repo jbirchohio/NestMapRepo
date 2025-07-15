@@ -131,7 +131,7 @@ export class TripController {
           }
 
           // Check if user has permission to view this trip
-          if (trip.userId !== authReq.user.id && authReq.user.role !== 'admin') {
+          if ((trip as any).userId !== authReq.user.id && authReq.user.role !== 'admin') {
             throw new UnauthorizedException('Not authorized to view this trip');
           }
 

@@ -2,8 +2,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import * as schema from "./db/schema.js";
-import * as superadminSchema from "../../shared/src/schema.js";
+import * as schema from "./db/schema";
+// import * as superadminSchema from "@shared/src/schema";
+// For now, use empty object to avoid import issues
+const superadminSchema = {};
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error(

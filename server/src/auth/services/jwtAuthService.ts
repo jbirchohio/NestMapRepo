@@ -95,9 +95,14 @@ export class JwtAuthService implements IAuthService {
       user: {
         id: userId,
         email: email,
-        role: 'member' as UserRole
+        role: 'member' as UserRole,
+        firstName: null,
+        lastName: null,
+        emailVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
       },
-      tokens
+      ...tokens
     };
   }
 
@@ -122,9 +127,14 @@ export class JwtAuthService implements IAuthService {
       user: {
         id: userId,
         email: email,
-        role: 'member' as UserRole
+        role: 'member' as UserRole,
+        firstName: null,
+        lastName: null,
+        emailVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
       },
-      tokens
+      ...tokens
     };
   }
 
@@ -161,7 +171,7 @@ export class JwtAuthService implements IAuthService {
   /**
    * Reset password with token
    */
-  async resetPassword(token: string, newPassword: string): Promise<void> {
+  async resetPassword(token: string, _newPassword: string): Promise<void> {
     // Implementation would involve verifying the token and updating the password
     console.log(`Reset password with token: ${token.substring(0, 10)}...`);
   }

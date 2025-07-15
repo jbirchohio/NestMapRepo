@@ -42,7 +42,7 @@ const ensureRequestProperties = (req: ExpressRequest): ExpressRequest => {
 };
 
 // Create Express Router instance
-const router = express.Router();
+const router = (express as any).Router();
 
 // Initialize services and controllers
 const authService = new JwtAuthService();

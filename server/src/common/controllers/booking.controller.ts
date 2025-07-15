@@ -13,7 +13,21 @@ import {
 import { Request, Response } from 'express';
 
 // Types and interfaces
-import { Booking } from '../../../../shared/types/bookings';
+// import { Booking } from '@shared/src/types/bookings';
+interface Booking {
+  id: string;
+  userId: string;
+  organizationId: string;
+  type: string;
+  provider: string;
+  providerBookingId: string;
+  status: string;
+  bookingReference: string;
+  bookingData: any;
+  passengerData: any;
+  createdAt: Date;
+  updatedAt: Date;
+}
 import { AuthUser } from '../../types/auth-user';
 
 // Services and utilities
