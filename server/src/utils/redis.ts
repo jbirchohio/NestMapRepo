@@ -1,21 +1,32 @@
-import Redis from 'ioredis-mock';
-import type { Redis as RedisType } from 'ioredis';
+import Redis from 'ioredis';
+import RedisMock from 'ioredis-mock';
 import { logger } from './logger';
 
-let redisClient: RedisType;
+// Create a type that includes both Redis client and EventEmitter methods
+type RedisClient = Redis & {
+  on(event: string, listener: (...args: any[]) => void): RedisClient;
+  once(event: string, listener: (...args: any[]) => void): RedisClient;
+  off(event: string, listener: (...args: any[]) => void): RedisClient;
+  emit(event: string, ...args: any[]): boolean;
+};
+
+// The Redis client instance
+let redisClient: RedisClient;
 
 // In test environment, use Redis mock automatically
 if (process.env.NODE_ENV === 'test') {
-  redisClient = new (Redis as any)({
-    // Use in-memory mock for tests
+  // Use the mock Redis client for tests
+  redisClient = new RedisMock({
     lazyConnect: true
-  });
+  }) as unknown as RedisClient;
+  
+  logger.info('Using mock Redis client for tests');
 } else {
   // In non-test environments, use real Redis
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-  redisClient = new (Redis as any)(redisUrl);
+  redisClient = new Redis(redisUrl) as RedisClient;
 
-  // Only set up event handlers for non-test environments
+  // Set up event handlers for non-test environments
   redisClient.on('connect', () => {
     logger.info('Redis client connected');
   });

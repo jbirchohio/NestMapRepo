@@ -22,18 +22,19 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
         .from(this.table)
         .where(eq(this.idColumn, id))
         .limit(1);
-      return result || null;
+      return result as T || null;
     } catch (error) {
-      this.logger.error(`Error finding ${this.entityName} by ID ${id}:`, error);
+      this.logger.error(`Error finding ${this.entityName} by ID ${id}:`, { error });
       return null;
     }
   }
 
   async findAll(): Promise<T[]> {
     try {
-      return await db.select().from(this.table);
+      const results = await db.select().from(this.table);
+      return results as T[];
     } catch (error) {
-      this.logger.error(`Error finding all ${this.entityName}:`, error);
+      this.logger.error(`Error finding all ${this.entityName}:`, { error });
       return [];
     }
   }
@@ -46,7 +47,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
         .returning();
       return result;
     } catch (error) {
-      this.logger.error(`Error creating ${this.entityName}:`, error);
+      this.logger.error(`Error creating ${this.entityName}:`, { error });
       throw error;
     }
   }
@@ -60,7 +61,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
         .returning();
       return result || null;
     } catch (error) {
-      this.logger.error(`Error updating ${this.entityName} with ID ${id}:`, error);
+      this.logger.error(`Error updating ${this.entityName} with ID ${id}:`, { error });
       return null;
     }
   }
@@ -70,9 +71,10 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
       const result = await db
         .delete(this.table)
         .where(eq(this.idColumn, id));
-      return result.rowCount > 0;
+      // For Drizzle ORM with Postgres, check if any rows were affected
+      return result && Object.keys(result).length > 0;
     } catch (error) {
-      this.logger.error(`Error deleting ${this.entityName} with ID ${id}:`, error);
+      this.logger.error(`Error deleting ${this.entityName} with ID ${id}:`, { error });
       return false;
     }
   }
@@ -83,7 +85,7 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
       const results = await db.select().from(this.table);
       return results.length;
     } catch (error) {
-      this.logger.error(`Error counting ${this.entityName}:`, error);
+      this.logger.error(`Error counting ${this.entityName}:`, { error });
       return 0;
     }
   }

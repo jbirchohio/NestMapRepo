@@ -1,4 +1,4 @@
-import { Booking } from '../../../../shared/types/bookings';
+import { type Booking } from '../../../db/bookingSchema.js';
 import { BaseRepository } from '../base.repository.interface.js';
 
 // Define BookingConfirmationDetails type if it doesn't exist
@@ -19,6 +19,6 @@ export interface BookingRepository extends BaseRepository<Booking, string, Omit<
   cancelBooking(id: string, cancellationReason: string): Promise<Booking | null>;
   
   // Booking analytics and reporting
-  getBookingStatsByUserId(userId: string): Promise<any>;
-  getBookingStatsByOrgId(orgId: string): Promise<any>;
+  getBookingStatsByUserId(userId: string): Promise<{total: number, statusCounts: Record<string, number>}>;
+  getBookingStatsByOrgId(orgId: string): Promise<{total: number, statusCounts: Record<string, number>}>;
 }

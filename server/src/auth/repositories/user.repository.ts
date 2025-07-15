@@ -1,26 +1,35 @@
 import { db } from '../../db';
 import { users } from '../../db/schema';
 import { v4 as uuidv4 } from 'uuid';
+import { UserRole } from '../../db/schema';
+import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm/sql';
 
-// Define user interface based on schema structure and mock database responses
+// Define user interface based on DB schema structure
 export interface IUser {
   id: string;
   email: string;
-  password_hash?: string;
-  role: string;
-  organization_id?: string;
-  firstName?: string;
-  lastName?: string;
+  username: string;
+  passwordHash: string;
+  role: UserRole;
+  organizationId: string | null;
+  firstName: string | null;
+  lastName: string | null;
   emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
-  lastLoginAt?: Date;
+  lastLoginAt: Date | null;
   // Additional fields needed for our implementation
-  resetToken?: string | null;
-  resetTokenExpires?: Date | null;
-  lockedUntil?: Date | null;
-  failedLoginAttempts?: number;
-  isActive?: boolean;
+  passwordChangedAt: Date | null;
+  passwordResetToken: string | null;
+  passwordResetExpires: Date | null;
+  resetToken: string | null;
+  resetTokenExpires: Date | null;
+  failedLoginAttempts: number;
+  lockedUntil: Date | null;
+  mfaSecret: string | null;
+  lastLoginIp: string | null;
+  isActive: boolean;
 }
 
 // Define interface for the user repository
@@ -51,59 +60,54 @@ export interface IUserRepository {
 export class UserRepositoryImpl implements IUserRepository {
   async findByEmail(email: string): Promise<IUser | null> {
     if (!email) return null;
-    // Use the mock database structure
-    const result = await db.query.users.findFirst({ email: email.toLowerCase().trim() });
-    return result || null;
+    // Use the correct query approach
+    const result = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.email, email.toLowerCase().trim())
+    });
+    return result as IUser | null;
   }
 
   async findById(id: string): Promise<IUser | null> {
     if (!id) return null;
-    // Use the mock database structure
-    const result = await db.query.users.findFirst({ id });
-    return result || null;
+    // Use the correct query approach
+    const result = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.id, id)
+    });
+    return result as IUser | null;
   }
 
   async findAll(): Promise<IUser[]> {
-    // Mock implementation for findAll using the select().from() pattern
-    const usersPromise = db.select().from(users).where({});
-    const result = await usersPromise;
-    return Array.isArray(result) ? result : [];
+    // Use the correct query approach
+    const result = await db.select().from(users);
+    return result as IUser[];
   }
 
   async findByOrganizationId(organizationId: string): Promise<IUser[]> {
-    // Use the mock database structure
-    const usersPromise = db.select().from(users).where({ organization_id: organizationId });
-    const result = await usersPromise;
-    return Array.isArray(result) ? result : [];
+    // Use the correct property name
+    const result = await db.select().from(users).where(
+      eq(users.organizationId, organizationId)
+    );
+    return result as IUser[];
   }
 
   async findByResetToken(token: string): Promise<IUser | null> {
     // In a real implementation, we'd query by reset token and expiration
-    // For the mock, we'll simulate by returning the standard mock user with a matching token
-    const user = await db.query.users.findFirst({});
+    const result = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.resetToken, token)
+    });
     
-    // Mock implementation that simulates checking reset token
-    if (user) {
-      // Add the token fields to the mock response
-      return {
-        ...user,
-        resetToken: token, // Pretend this matched
-        resetTokenExpires: new Date(Date.now() + 3600000) // 1 hour in the future
-      };
-    }
-    
-    return null;
+    return result as IUser | null;
   }
 
   async setPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void> {
-    // Use the mock database update structure
+    // Use the correct query approach
     await db
       .update(users)
       .set({
         resetToken: token,
         resetTokenExpires: expiresAt
       })
-      .where({ id: userId });
+      .where(eq(users.id, userId));
   }
 
   async clearPasswordResetToken(userId: string): Promise<void> {
@@ -113,7 +117,7 @@ export class UserRepositoryImpl implements IUserRepository {
         resetToken: null,
         resetTokenExpires: null
       })
-      .where({ id: userId });
+      .where(eq(users.id, userId));
   }
 
   async incrementFailedLoginAttempts(userId: string): Promise<void> {
@@ -139,7 +143,7 @@ export class UserRepositoryImpl implements IUserRepository {
         failedLoginAttempts: failedAttempts,
         lockedUntil: lockedUntil
       })
-      .where({ id: userId });
+      .where(eq(users.id, userId));
   }
 
   async resetFailedLoginAttempts(userId: string): Promise<void> {
@@ -150,7 +154,7 @@ export class UserRepositoryImpl implements IUserRepository {
         lockedUntil: null,
         lastLoginAt: new Date()
       })
-      .where({ id: userId });
+      .where(eq(users.id, userId));
   }
 
   isAccountLocked(user: IUser): boolean {
@@ -164,7 +168,7 @@ export class UserRepositoryImpl implements IUserRepository {
         lockedUntil,
         updatedAt: new Date()
       })
-      .where({ id: userId });
+      .where(eq(users.id, userId));
   }
 
   // Create method
@@ -201,11 +205,11 @@ export class UserRepositoryImpl implements IUserRepository {
       updatedAt: new Date()
     };
 
-    // Update in the mock database
+    // Update in the database
     await db
       .update(users)
       .set(updatedUser)
-      .where({ id });
+      .where(eq(users.id, id));
     
     return updatedUser;
   }
@@ -216,8 +220,7 @@ export class UserRepositoryImpl implements IUserRepository {
       const user = await this.findById(id);
       if (!user) return false;
       
-      // In a real implementation, we would use: await db.delete(users).where({ id });
-      // For the mock implementation, we'll simulate successful deletion
+      await db.delete(users).where(eq(users.id, id));
       return true;
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -227,14 +230,13 @@ export class UserRepositoryImpl implements IUserRepository {
 
   async verifyEmail(userId: string): Promise<boolean> {
     try {
-      // Using the userId parameter in the where clause
       await db
         .update(users)
         .set({
           emailVerified: true,
           updatedAt: new Date()
         })
-        .where({ id: userId }); // Using userId to find the correct user
+        .where(eq(users.id, userId));
       
       return true;
     } catch (error) {
@@ -247,14 +249,17 @@ export class UserRepositoryImpl implements IUserRepository {
   async findByIds(ids: string[]): Promise<IUser[]> {
     if (ids.length === 0) return [];
     
-    // For the mock implementation, we'll return the mock user for each ID
-    const mockUser = await db.query.users.findFirst({});
-    return ids.map(id => ({ ...mockUser, id }));
+    const result = await db
+      .select()
+      .from(users)
+      .where(sql`${users.id} IN (${ids.join(',')})`);
+      
+    return result as IUser[];
   }
 
   async count(): Promise<number> {
-    // For the mock implementation, always return 1
-    return 1;
+    const result = await db.select({ count: sql`COUNT(*)` }).from(users);
+    return Number(result[0]?.count || 0);
   }
 
   async exists(id: string): Promise<boolean> {

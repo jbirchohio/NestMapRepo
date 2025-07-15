@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common/index.js';
 import { eq } from 'drizzle-orm';
-import { db } from '../../db.js';
-import { users, organizationMembers } from '../../db/schema.js';
-import { type User } from '../../db/schema.js';
-import { UserRepository, type UserBookingPreferences } from './user.repository.interface.js';
+import { db } from '../../../db.js';
+import { users, organizationMembers } from '../../../db/schema.js';
+import { type User } from '../../../db/schema.js';
+import { UserRepository } from './user.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()
@@ -49,7 +49,8 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
       })
       .where(eq(users.id, id));
     
-    return result.rowCount > 0;
+    // For Drizzle ORM with Postgres, check the result based on updated rows
+    return result && Object.keys(result).length > 0;
   }
 
   async updateLastLogin(id: string): Promise<boolean> {
@@ -63,7 +64,8 @@ export class UserRepositoryImpl extends BaseRepositoryImpl<User, string, Omit<Us
       })
       .where(eq(users.id, id));
     
-    return result.rowCount > 0;
+    // For Drizzle ORM with Postgres, check the result based on updated rows
+    return result && Object.keys(result).length > 0;
   }
 
   // Commented out as preferences field doesn't exist in schema

@@ -1,9 +1,7 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "./src",
-    "composite": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -11,21 +9,21 @@
     "paths": {
       "@shared/*": ["./src/*"]
     },
-    "types": ["node"],
-    "typeRoots": [
-      "../node_modules/@types"
-    ],
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "moduleResolution": "node",
-    "module": "esnext",
-    "target": "es2022"
+    "moduleResolution": "node16",
+    "module": "Node16",
+    "target": "es2022",
+    "noEmit": false,
+    "types": ["node"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",

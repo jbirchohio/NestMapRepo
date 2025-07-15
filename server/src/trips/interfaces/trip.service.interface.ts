@@ -1,4 +1,5 @@
-import { Trip, User } from '@shared';
+import * as tripSchema from '../../db/tripSchema.js';
+import * as schema from '../../db/schema.js';
 
 // A DTO for the transformed corporate trip data
 export interface CorporateTripDto {
@@ -19,7 +20,7 @@ export interface CorporateTripDto {
 }
 
 export interface TripService {
-  getTripsByUserId(userId: string, orgId: string): Promise<Trip[]>;
+  getTripsByUserId(userId: string, orgId: string): Promise<tripSchema.Trip[]>;
   getCorporateTrips(orgId: string): Promise<CorporateTripDto[]>;
-  getTripById(tripId: string, user: User): Promise<Trip | null>;
+  getTripById(tripId: string, user: schema.User): Promise<tripSchema.Trip | null>;
 }

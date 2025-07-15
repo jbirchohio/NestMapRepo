@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { Logger } from '@nestjs/common/services/logger.service';
-import { UnauthorizedException, NotFoundException } from '@nestjs/common/exceptions';
+import { Logger } from '@nestjs/common/services/logger.service.js';
+import { UnauthorizedException, NotFoundException } from '@nestjs/common/exceptions/index.js';
 import { TripService } from '../interfaces/trip.service.interface.js';
-import ResponseFormatter from '@shared/src/schema.js';
-import requireAuth from '@shared/src/schema.js';
-import requireOrgContext from '@shared/src/schema.js';
+import ResponseFormatter from '../../utils/response.formatter.js';
+import requireAuth from '../../auth/middleware/auth.middleware.js';
+import requireOrgContext from '../../auth/middleware/org.middleware.js';
 import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator.js';
 
 // Define the AuthUser interface to match the expected User type from the service

@@ -1,4 +1,4 @@
-import { User } from '../../db/schema.js';
+import { type User } from '../../../db/schema.js';
 import { BaseRepository } from '../base.repository.interface.js';
 
 // Define UserBookingPreferences type if it doesn't exist

@@ -1,43 +1,68 @@
+// Import directly to avoid TypeScript ESM compatibility issues
 import winston from 'winston';
 import { TransformableInfo } from 'logform';
 import { StreamOptions } from 'morgan';
 
-const { combine, timestamp, printf, colorize, align } = winston.format;
+// Use explicit typing to avoid TypeScript errors with ESM modules
+type LoggerType = {
+  info: (message: string, meta?: any) => void;
+  error: (message: string, meta?: any) => void;
+  warn: (message: string, meta?: any) => void;
+  debug: (message: string, meta?: any) => void;
+  log: (message: string, meta?: any) => void;
+};
+
+// Use type assertion to satisfy TypeScript
+const winstonLogger = winston as unknown as {
+  format: {
+    printf: (fn: any) => any;
+    timestamp: (opts?: any) => any;
+    colorize: (opts?: any) => any;
+    align: () => any;
+    combine: (...args: any[]) => any;
+  };
+  createLogger: (opts: any) => any;
+  transports: {
+    Console: any;
+    File: any;
+  };
+};
 
 // Create a type-safe printf function that handles the log format
 const createLogFormat = () => {
-  return printf((info: TransformableInfo) => {
+  return winstonLogger.format.printf((info: TransformableInfo) => {
     const { timestamp, level, message, ...metadata } = info;
     const metaString = Object.keys(metadata).length ? `\n${JSON.stringify(metadata, null, 2)}` : '';
     return `[${timestamp}] ${level}: ${message}${metaString}`;
   });
 };
 
-const logger = winston.createLogger({
+// Create the logger with proper typing that works in ESM
+const logger = winstonLogger.createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  format: combine(
-    colorize({ all: true }),
-    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    align(),
+  format: winstonLogger.format.combine(
+    winstonLogger.format.colorize({ all: true }),
+    winstonLogger.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winstonLogger.format.align(),
     createLogFormat()
   ),
   transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
+    new winstonLogger.transports.Console(),
+    new winstonLogger.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winstonLogger.transports.File({ filename: 'logs/combined.log' }),
   ],
   exceptionHandlers: [
-    new winston.transports.File({ filename: 'logs/exceptions.log' }),
+    new winstonLogger.transports.File({ filename: 'logs/exceptions.log' }),
   ],
   rejectionHandlers: [
-    new winston.transports.File({ filename: 'logs/rejections.log' }),
+    new winstonLogger.transports.File({ filename: 'logs/rejections.log' }),
   ],
-});
+}) as LoggerType;
 
 // Create a stream for morgan
 const stream: StreamOptions = {
   write: (message: string) => {
-    logger.info(message.trim());
+    logger.info(message.trim(), {});
   },
 };
 

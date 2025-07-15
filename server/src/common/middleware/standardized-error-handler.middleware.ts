@@ -16,6 +16,7 @@ interface Response {
   send(data: any): Response;
   setHeader(name: string, value: string): void;
   getHeader(name: string): string | undefined;
+  headersSent: boolean; // Added property to fix the error
 }
 
 interface NextFunction {
@@ -57,13 +58,18 @@ interface ApiError extends Error {
   details?: any;
 }
 
-const createApiError = (type: ErrorType, message: string, details?: any): ApiError => {
-  const error = new Error(message) as ApiError;
-  error.type = type;
-  error.statusCode = errorTypeToStatusCode[type];
-  error.details = details;
-  return error;
-};
+ interface ExtendedErrorResponse {
+        type: ErrorType;
+        message: string;
+        timestamp: string;
+        path: string;
+        method: string;
+        details?: unknown;
+        stack?: string;
+        requestId?: string;
+      }
+      
+
 
 /**
  * Maps error types to HTTP status codes
@@ -112,18 +118,10 @@ export const standardizedErrorHandler = (logger: Logger) => {
       errorResponse.error.type = apiError.type;
       errorResponse.error.message = apiError.message;
       
-      // Use type assertion with interface extension to handle optional properties
-      interface ExtendedErrorResponse {
-        type: ErrorType;
-        message: string;
-        timestamp: string;
-        path: string;
-        method: string;
-        details?: unknown;
-        stack?: string;
-        requestId?: string;
-      }
-      
+      /**
+       * Extended error response type for additional properties
+       */
+     
       if ('details' in apiError && apiError.details !== undefined) {
         (errorResponse.error as ExtendedErrorResponse).details = apiError.details;
       }
@@ -156,9 +154,18 @@ export const standardizedErrorHandler = (logger: Logger) => {
     }
 
     // Add request ID if available
-    const requestId = req.headers['x-request-id'];
+    const requestId = req.headers?.['x-request-id'] ?? undefined;
     if (requestId && typeof requestId === 'string') {
-      (errorResponse.error as ExtendedErrorResponse).requestId = requestId;
+      (errorResponse.error as {
+        type: ErrorType;
+        message: string;
+        timestamp: string;
+        path: string;
+        method: string;
+        details?: unknown;
+        stack?: string;
+        requestId?: string;
+      }).requestId = requestId;
     }
 
     // Send response
@@ -173,8 +180,7 @@ export const standardizedErrorHandler = (logger: Logger) => {
  * @returns Wrapped handler function with standardized error handling
  */
 export const withStandardizedErrorHandling = (
-  handler: (req: Request, res: Response, next: NextFunction) => Promise<any>,
-  logger: Logger
+  handler: (req: Request, res: Response, next: NextFunction) => Promise<any>
 ) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

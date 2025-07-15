@@ -148,7 +148,7 @@ export class AuthService implements IAuthService {
       user.id,
       user.email,
       (user.role as UserRole) || 'user',
-      user.organization_id || undefined
+      user.organizationId || undefined
     );
 
     // Update last login
@@ -205,7 +205,7 @@ export class AuthService implements IAuthService {
       user.id,
       user.email,
       (user.role as UserRole) || 'user',
-      user.organization_id || undefined
+      user.organizationId || undefined
     );
 
     // Log the token refresh

@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import { db } from '../../db';
-import { activities } from '../../db/schema';
-import { type Activity } from '../../db/schema';
-import { ActivityRepository } from './activity.repository.interface.js';
+import { db } from '../../db/db.js';
+import { activities, type Activity } from '../../db/schema.js';
+import type { ActivityRepository } from './activity.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()
@@ -28,10 +27,12 @@ export class ActivityRepositoryImpl extends BaseRepositoryImpl<Activity, string,
       return [];
     }
     
-    return db
+    const result = await db
       .insert(activities)
       .values(activitiesData as any[])
       .returning();
+    
+    return result;
   }
 
   async deleteByTripId(tripId: string): Promise<boolean> {

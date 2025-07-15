@@ -1,46 +1,47 @@
-import { eq, and } from 'drizzle-orm/expressions';
-import { db } from '../../db';
-import { trips as tripsTable, users as usersTable } from '../../shared/schema';
-import { Trip, User } from '../../shared/types';
-import { TripRepository } from '../interfaces/trip.repository.interface';
-import { CorporateTripDto } from '../interfaces/trip.service.interface';
-import { BaseRepositoryImpl } from '../../shared/repositories/base.repository';
+import { eq } from 'drizzle-orm';
+import { and } from 'drizzle-orm/expressions';
+import { db } from '../../db/db.js';
+import * as tripSchema from '../../db/tripSchema.js';
+import * as schema from '../../db/schema.js';
+import { TripRepository } from '../interfaces/trip.repository.interface.js';
+import { CorporateTripDto } from '../interfaces/trip.service.interface.js';
+import { BaseRepositoryImpl } from '../../common/repositories/base.repository.js';
 
-export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {
+export class TripRepositoryImpl extends BaseRepositoryImpl<tripSchema.Trip, string, Omit<tripSchema.Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<tripSchema.Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {
   constructor() {
-    super('Trip', tripsTable, tripsTable.id);
+    super('Trip', tripSchema.trips, tripSchema.trips.id);
   }
 
-  async getTripsByUserId(userId: string, orgId: string): Promise<Trip[]> {
+  async getTripsByUserId(userId: string, orgId: string): Promise<tripSchema.Trip[]> {
     
     return db
       .select()
-      .from(tripsTable)
+      .from(tripSchema.trips)
       .where(
         and(
-          eq(tripsTable.userId, userId),
-          eq(tripsTable.organizationId, orgId)
+          eq(tripSchema.trips.createdById, userId),
+          eq(tripSchema.trips.organizationId, orgId)
         )
       );
   }
 
-  async getTripsByOrganizationId(orgId: string): Promise<Trip[]> {
+  async getTripsByOrganizationId(orgId: string): Promise<tripSchema.Trip[]> {
     
     return db
       .select()
-      .from(tripsTable)
-      .where(eq(tripsTable.organizationId, orgId));
+      .from(tripSchema.trips)
+      .where(eq(tripSchema.trips.organizationId, orgId));
   }
 
-  async getTripById(tripId: string): Promise<Trip | null> {
+  async getTripById(tripId: string): Promise<tripSchema.Trip | null> {
     return super.findById(tripId);
   }
 
-  async createTrip(tripData: Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>): Promise<Trip> {
+  async createTrip(tripData: Omit<tripSchema.Trip, 'id' | 'createdAt' | 'updatedAt'>): Promise<tripSchema.Trip> {
     return super.create(tripData);
   }
 
-  async updateTrip(tripId: string, tripData: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Trip | null> {
+  async updateTrip(tripId: string, tripData: Partial<Omit<tripSchema.Trip, 'id' | 'createdAt' | 'updatedAt'>>): Promise<tripSchema.Trip | null> {
     return super.update(tripId, tripData);
   }
 
@@ -54,24 +55,28 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
 
     const tripsWithUserDetails = await Promise.all(
       trips.map(async (trip) => {
+        // Get the creator user information
         const [user] = await db
           .select()
-          .from(usersTable)
-          .where(eq(usersTable.id, trip.userId));
+          .from(schema.users)
+          .where(eq(schema.users.id, trip.createdById || ''));
+
+        // Extract metadata fields if they exist, or use defaults
+        const metadata = trip.metadata as Record<string, any> || {};
 
         return {
-          id: trip.id, // Now using string ID directly
+          id: trip.id,
           title: trip.title,
           startDate: trip.startDate.toISOString(),
           endDate: trip.endDate.toISOString(),
-          userId: String(trip.userId),
-          city: trip.city,
-          country: trip.country,
-          budget: trip.budget,
-          completed: trip.completed ?? false,
-          trip_type: trip.tripType,
-          client_name: trip.clientName,
-          project_type: trip.projectType,
+          userId: String(trip.createdById || ''),
+          city: trip.destinationCity || null,
+          country: trip.destinationCountry || null,
+          budget: metadata.budget || null,
+          completed: trip.status === 'completed',
+          trip_type: metadata.tripType || null,
+          client_name: metadata.clientName || null,
+          project_type: metadata.projectType || null,
           userName: user?.firstName && user?.lastName 
             ? `${user.firstName} ${user.lastName}` 
             : user?.email || 'Unknown User',
@@ -83,7 +88,7 @@ export class TripRepositoryImpl extends BaseRepositoryImpl<Trip, string, Omit<Tr
     return tripsWithUserDetails;
   }
 
-  async checkTripAccess(tripId: string, user: User): Promise<boolean> {
+  async checkTripAccess(tripId: string, user: schema.User): Promise<boolean> {
     const trip = await this.getTripById(tripId);
     
     if (!trip) {

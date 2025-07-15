@@ -95,7 +95,7 @@ export class JwtAuthService implements IAuthService {
       user: {
         id: userId,
         email: email,
-        role: 'user'
+        role: 'member' as UserRole
       },
       tokens
     };
@@ -122,7 +122,7 @@ export class JwtAuthService implements IAuthService {
       user: {
         id: userId,
         email: email,
-        role: 'user'
+        role: 'member' as UserRole
       },
       tokens
     };
@@ -134,16 +134,18 @@ export class JwtAuthService implements IAuthService {
   async logout(refreshToken: string, authHeader?: string): Promise<void> {
     if (refreshToken) {
       const decoded = this.decodeToken(refreshToken);
-      if (decoded && decoded.jti) {
-        await this.blacklistToken(decoded.jti);
+      if (decoded?.jti) {
+        await this.blacklistToken(decoded.jti as string);
       }
     }
-    
+
     if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const decoded = this.decodeToken(token);
-      if (decoded && decoded.jti) {
-        await this.blacklistToken(decoded.jti);
+      const token = authHeader.split(' ')[1];
+      if (token) {
+        const decoded = this.decodeToken(token);
+        if (decoded?.jti) {
+          await this.blacklistToken(decoded.jti as string);
+        }
       }
     }
   }
@@ -152,16 +154,16 @@ export class JwtAuthService implements IAuthService {
    * Request password reset
    */
   async requestPasswordReset(email: string): Promise<void> {
-    // Stub implementation
-    console.log(`Password reset requested for ${email}`);
+    // Implementation would involve sending an email with a password reset link
+    console.log(`Password reset requested for: ${email}`);
   }
 
   /**
    * Reset password with token
    */
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    // Stub implementation
-    console.log(`Password reset with token ${token} and new password length: ${newPassword.length}`);
+    // Implementation would involve verifying the token and updating the password
+    console.log(`Reset password with token: ${token.substring(0, 10)}...`);
   }
 
   /**
@@ -176,3 +178,4 @@ export class JwtAuthService implements IAuthService {
  * Utility function to verify tokens for middleware use
  */
 export const verifyToken = jwtUtils.verifyToken;
+export default JwtAuthService;

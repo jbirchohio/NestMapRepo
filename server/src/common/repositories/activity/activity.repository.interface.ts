@@ -1,22 +1,23 @@
-import { Activity } from '../../db/schema';
+import Activity from '../../db/schema.js';
+type ActivityType = typeof Activity;
 import { BaseRepository } from '../base.repository.interface.js';
 
-export interface ActivityRepository extends BaseRepository<Activity, string, Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>> {
-  // Activity retrieval
-  findById(id: string): Promise<Activity | null>;
-  findByTripId(tripId: string): Promise<Activity[]>;
-  findAll(): Promise<Activity[]>;
-  
+export interface ActivityRepository extends BaseRepository<ActivityType, string, Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>>> {
+  findById(id: string): Promise<ActivityType | null>;
+  findById(id: string): Promise<ActivityType | null>;
+  findByTripId(tripId: string): Promise<ActivityType[]>;
+  findAll(): Promise<ActivityType[]>;
+
   // Activity management
-  create(activityData: Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>): Promise<Activity>;
-  update(id: string, activityData: Partial<Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Activity | null>;
+  create(activityData: Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>): Promise<ActivityType>;
+  update(id: string, activityData: Partial<Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ActivityType | null>;
   delete(id: string): Promise<boolean>;
   
   // Batch operations
-  createMany(activitiesData: Omit<Activity, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<Activity[]>;
+  createMany(activitiesData: Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<ActivityType[]>;
   deleteByTripId(tripId: string): Promise<boolean>;
   
   // Activity scheduling
-  findByDateRange(tripId: string, startDate: Date, endDate: Date): Promise<Activity[]>;
-  reschedule(activityId: string, startTime: Date, endTime: Date): Promise<Activity | null>;
+  findByDateRange(tripId: string, startDate: Date, endDate: Date): Promise<ActivityType[]>;
+  reschedule(activityId: string, startTime: Date, endTime: Date): Promise<ActivityType | null>;
 }

@@ -1,27 +1,28 @@
-import { Organization, User } from '../../db/schema.js';
+// Use direct type imports to avoid value/type confusion
+import * as schema from '../../../db/schema.js';
 import { BaseRepository } from '../base.repository.interface.js';
 
 // Define OrganizationBookingSettings type if it doesn't exist
 export type OrganizationBookingSettings = Record<string, any>;
 
-export interface OrganizationRepository extends BaseRepository<Organization, string, Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>>> {
+export interface OrganizationRepository extends BaseRepository<schema.Organization, string, Omit<schema.Organization, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<schema.Organization, 'id' | 'createdAt' | 'updatedAt'>>> {
   // Organization retrieval
-  findById(id: string): Promise<Organization | null>;
-  findBySlug(slug: string): Promise<Organization | null>;
-  findAll(): Promise<Organization[]>;
+  findById(id: string): Promise<schema.Organization | null>;
+  findBySlug(slug: string): Promise<schema.Organization | null>;
+  findAll(): Promise<schema.Organization[]>;
   
   // Organization management
-  create(organizationData: Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>): Promise<Organization>;
-  update(id: string, organizationData: Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Organization | null>;
+  create(organizationData: Omit<schema.Organization, 'id' | 'createdAt' | 'updatedAt'>): Promise<schema.Organization>;
+  update(id: string, organizationData: Partial<Omit<schema.Organization, 'id' | 'createdAt' | 'updatedAt'>>): Promise<schema.Organization | null>;
   delete(id: string): Promise<boolean>;
   
   // Organization members
-  getMembers(organizationId: string): Promise<User[]>;
+  getMembers(organizationId: string): Promise<schema.User[]>;
   addMember(organizationId: string, userId: string, role: string): Promise<boolean>;
   removeMember(organizationId: string, userId: string): Promise<boolean>;
   updateMemberRole(organizationId: string, userId: string, role: string): Promise<boolean>;
   
   // Plan and settings (commented out settings as it doesn't exist in schema)
-  updatePlan(organizationId: string, plan: 'free' | 'pro' | 'enterprise'): Promise<Organization | null>;
-  // updateSettings(organizationId: string, settings: OrganizationBookingSettings): Promise<Organization | null>;
+  updatePlan(organizationId: string, plan: 'free' | 'pro' | 'enterprise'): Promise<schema.Organization | null>;
+  // updateSettings(organizationId: string, settings: OrganizationBookingSettings): Promise<schema.Organization | null>;
 }

@@ -1,10 +1,9 @@
 import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index, type AnyPgColumn } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm/sql';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 // Import types to avoid circular dependencies
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 declare global {
   // This allows us to use the types before they're defined

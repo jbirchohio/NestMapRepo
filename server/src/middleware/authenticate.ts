@@ -2,16 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../auth/services/jwtAuthService';
 import { TokenPayload } from '../auth/jwt/types';
 
+// Import the AuthUser type from the project's type definitions
+import type { AuthUser } from '../types/auth-user.js';
+
 // Extend Express Request type to include user property
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        email: string;
-        role: string;
-        organizationId?: string;
-      };
+      user?: AuthUser;
     }
   }
 }

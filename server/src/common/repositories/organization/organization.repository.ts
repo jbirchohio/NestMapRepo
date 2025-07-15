@@ -1,39 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common/index.js';
+import { db } from '../../../db/db.js';
+import * as schema from '../../../db/schema.js';
+import { OrganizationRepository } from './organization.repository.interface.js';
 import { eq } from 'drizzle-orm';
-import { db } from '../../db.js';
-import { organizations, organizationMembers, users } from '../../db/schema.js';
-import { type Organization, type User } from '../../db/schema.js';
-import { OrganizationRepository, type OrganizationBookingSettings } from './organization.repository.interface.js';
 import { BaseRepositoryImpl } from '../base.repository.js';
 
 @Injectable()
-export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization, string, Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<Organization, 'id' | 'createdAt' | 'updatedAt'>>> implements OrganizationRepository {
+export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organization, string, Omit<schema.Organization, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<schema.Organization, 'id' | 'createdAt' | 'updatedAt'>>> implements OrganizationRepository {
   constructor() {
-    super('Organization', organizations, organizations.id);
+    super('Organization', schema.organizations, schema.organizations.id);
   }
 
-  async findBySlug(slug: string): Promise<Organization | null> {
+  async findBySlug(slug: string): Promise<schema.Organization | null> {
     this.logger.log(`Finding organization by slug: ${slug}`);
     
-    const [organization] = await db
+    return db
       .select()
-      .from(organizations)
-      .where(eq(organizations.slug, slug))
-      .limit(1);
-    
-    return organization || null;
+      .from(schema.organizations)
+      .where(eq(schema.organizations.slug, slug))
+      .limit(1)
+      .then((orgs) => orgs[0] || null);
   }
 
-  async getMembers(organizationId: string): Promise<User[]> {
+  async getMembers(organizationId: string): Promise<schema.User[]> {
     this.logger.log(`Getting members for organization: ${organizationId}`);
     
     const members = await db
       .select({
-        user: users
+        user: schema.users
       })
-      .from(organizationMembers)
-      .innerJoin(users, eq(organizationMembers.userId, users.id))
-      .where(eq(organizationMembers.organizationId, organizationId));
+      .from(schema.organizationMembers)
+      .innerJoin(schema.users, eq(schema.organizationMembers.userId, schema.users.id))
+      .where(eq(schema.organizationMembers.organizationId, organizationId));
     
     return members.map(m => m.user);
   }
@@ -42,15 +40,16 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization,
     this.logger.log(`Adding member ${userId} to organization ${organizationId} with role ${role}`);
     
     try {
-      await db
-        .insert(organizationMembers)
-        .values({
-          organizationId,
-          userId,
-          role,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
+      // Cast the role string to the expected enum type
+      const validRole = role as "admin" | "manager" | "member" | "viewer" | "billing";
+      
+      await db.insert(schema.organizationMembers).values({
+        organizationId,
+        userId,
+        role: validRole,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
       
       return true;
     } catch (error) {
@@ -62,55 +61,74 @@ export class OrganizationRepositoryImpl extends BaseRepositoryImpl<Organization,
   async removeMember(organizationId: string, userId: string): Promise<boolean> {
     this.logger.log(`Removing member ${userId} from organization ${organizationId}`);
     
-    const result = await db
-      .delete(organizationMembers)
-      .where(eq(organizationMembers.organizationId, organizationId))
-      .where(eq(organizationMembers.userId, userId));
-    
-    return result.rowCount > 0;
+    try {
+      // Using a simpler syntax for delete operation
+      const result = await db
+        .delete(schema.organizationMembers)
+        .where(
+          eq(schema.organizationMembers.organizationId, organizationId)
+          .and(eq(schema.organizationMembers.userId, userId))
+        );
+      
+      return result.rowCount != null && result.rowCount > 0;
+    } catch (error) {
+      this.logger.error(`Error removing member from organization: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return false;
+    }
   }
 
   async updateMemberRole(organizationId: string, userId: string, role: string): Promise<boolean> {
     this.logger.log(`Updating role for member ${userId} in organization ${organizationId} to ${role}`);
     
-    const result = await db
-      .update(organizationMembers)
-      .set({
-        role,
-        updatedAt: new Date()
-      })
-      .where(eq(organizationMembers.organizationId, organizationId))
-      .where(eq(organizationMembers.userId, userId));
-    
-    return result.rowCount > 0;
+    try {
+      // Cast the role string to the expected enum type
+      const validRole = role as "admin" | "manager" | "member" | "viewer" | "billing";
+      
+      // Using a simpler syntax for update operation
+      const result = await db
+        .update(schema.organizationMembers)
+        .set({
+          role: validRole,
+          updatedAt: new Date()
+        })
+        .where(
+          eq(schema.organizationMembers.organizationId, organizationId)
+          .and(eq(schema.organizationMembers.userId, userId))
+        );
+      
+      return result.rowCount != null && result.rowCount > 0;
+    } catch (error) {
+      this.logger.error(`Error updating member role in organization: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return false;
+    }
   }
 
-  async updatePlan(organizationId: string, plan: 'free' | 'pro' | 'enterprise'): Promise<Organization | null> {
+  async updatePlan(organizationId: string, plan: 'free' | 'pro' | 'enterprise'): Promise<schema.Organization | null> {
     this.logger.log(`Updating plan for organization ${organizationId} to ${plan}`);
     
     const [updatedOrg] = await db
-      .update(organizations)
+      .update(schema.organizations)
       .set({
         plan,
         updatedAt: new Date()
       })
-      .where(eq(organizations.id, organizationId))
+      .where(eq(schema.organizations.id, organizationId))
       .returning();
     
     return updatedOrg || null;
   }
 
   // Commented out as settings field doesn't exist in schema
-  // async updateSettings(organizationId: string, settings: OrganizationBookingSettings): Promise<Organization | null> {
+  // async updateSettings(organizationId: string, settings: any): Promise<schema.Organization | null> {
   //   this.logger.log(`Updating settings for organization ${organizationId}`);
   //   
   //   const [updatedOrg] = await db
-  //     .update(organizations)
+  //     .update(schema.organizations)
   //     .set({
   //       settings,
   //       updatedAt: new Date()
   //     })
-  //     .where(eq(organizations.id, organizationId))
+  //     .where(eq(schema.organizations.id, organizationId))
   //     .returning();
   //   
   //   return updatedOrg || null;

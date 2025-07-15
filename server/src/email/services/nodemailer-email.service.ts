@@ -1,18 +1,20 @@
-import { Injectable, Logger } from '@nestjs/common.js';
-import { ConfigService } from '@nestjs/config.js';
-import { createTransport, Transporter } from 'nodemailer.js';
-import { readFileSync } from 'fs.js';
-import { join, dirname } from 'path.js';
-import { fileURLToPath } from 'url.js';
-import { ErrorService } from '../../shared/src/schema.js';
-import { 
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import ErrorService from '../../shared/src/schema.js';
+import type { 
   EmailService, 
   EmailOptions, 
   PasswordResetEmailOptions, 
   PasswordResetConfirmationOptions,
   PaymentReceiptEmailOptions
 } from '../interfaces/email.service.interface.js';
-import handlebars from 'handlebars.js';
+import * as handlebars from 'handlebars';
+
 const { compile } = handlebars;
 type TemplateDelegate = handlebars.TemplateDelegate;
 
@@ -22,8 +24,8 @@ const __dirname = dirname(__filename);
 
 @Injectable()
 export class NodemailerEmailService implements EmailService {
-  private readonly logger = new Logger(NodemailerEmailService.name);
-  private transporter: Transporter | null = null;
+  private readonly logger = new Logger(NodemailerEmailService.name, { timestamp: true });
+  private transporter: any = null;
 
   constructor(
     private readonly configService: ConfigService,
@@ -33,17 +35,21 @@ export class NodemailerEmailService implements EmailService {
   }
 
   private initializeTransporter() {
-    const smtpConfig = {
-      host: this.configService.get<string>('SMTP_HOST', 'smtp.example.com'),
-      port: this.configService.get<number>('SMTP_PORT', 587),
-      secure: this.configService.get<boolean>('SMTP_SECURE', false),
-      auth: {
-        user: this.configService.get<string>('SMTP_USER', ''),
-        pass: this.configService.get<string>('SMTP_PASSWORD', ''),
-      },
-    };
+    const host = this.configService.get<string>('SMTP_HOST') || 'smtp.example.com';
+    const port = Number(this.configService.get<string>('SMTP_PORT')) || 587;
+    const secure = this.configService.get<string>('SMTP_SECURE') === 'true';
+    const user = this.configService.get<string>('SMTP_USER') || '';
+    const pass = this.configService.get<string>('SMTP_PASSWORD') || '';
 
-    this.transporter = createTransport(smtpConfig);
+    this.transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: {
+        user,
+        pass
+      }
+    });
 
     // Verify connection configuration
     this.transporter.verify((error) => {
@@ -61,7 +67,7 @@ export class NodemailerEmailService implements EmailService {
     }
     
     const { to, subject, template, context = {} } = options;
-    const from = this.configService.get<string>('EMAIL_FROM', 'noreply@example.com');
+    const from = this.configService.get<string>('EMAIL_FROM') || 'noreply@example.com';
 
     try {
       const html = await this.renderTemplate(template, context);
@@ -92,7 +98,7 @@ export class NodemailerEmailService implements EmailService {
       name,
       resetUrl,
       expiryHours,
-      supportEmail: this.configService.get<string>('SUPPORT_EMAIL', 'support@example.com'),
+      supportEmail: this.configService.get<string>('SUPPORT_EMAIL') || 'support@example.com',
     };
 
     await this.sendEmail({ to: email, subject, template, context });
@@ -133,20 +139,27 @@ export class NodemailerEmailService implements EmailService {
     });
   }
 
-  private loadTemplate(templateName: string): TemplateDelegate {
+  private loadTemplate(templateName: string): TemplateDelegate | undefined {
     try {
-      const templatePath = join(__dirname, '..', 'templates', `${templateName}.hbs`);
-      const templateSource = readFileSync(templatePath, 'utf8');
+      const templatePath = path.join(__dirname, '..', 'templates', `${templateName}.hbs`);
+      const templateSource = fs.readFileSync(templatePath, 'utf8');
       return compile(templateSource);
     } catch (error) {
       this.logger.error(`Failed to load template: ${templateName}`, error);
       this.errorService.throwInternalServerError(`Failed to load template: ${templateName}`, { templateName }, error instanceof Error ? error.stack : undefined);
+      return undefined;
     }
   }
 
   private renderTemplate(templateName: string, context: Record<string, any>): string {
     try {
       const template = this.loadTemplate(templateName);
+      if (!template) {
+        this.logger.error(`Template is undefined: ${templateName}`);
+        this.errorService.throwInternalServerError(`Template is undefined: ${templateName}`, { templateName });
+        return ''; // Return an empty string as a fallback
+      }
+
       return template({
         ...context,
         // Add any global helpers or context variables here
@@ -172,5 +185,6 @@ export class NodemailerEmailService implements EmailService {
       this.logger.error(`Error rendering template: ${templateName}`, error);
       this.errorService.throwInternalServerError(`Failed to render template: ${templateName}`, { templateName }, error instanceof Error ? error.stack : undefined);
     }
+    return ''; // Return an empty string as a fallback
   }
 }
