@@ -1,7 +1,11 @@
-// Import types first for proper type extraction
-import type {
-  Activity,
-  Trip,
+// Re-export schema and types
+export * from './fieldTransforms.js';
+export * from './schema.js';
+
+// Export types explicitly to avoid ambiguity  
+export type { 
+  Activity, 
+  Trip, 
   User,
   TripTraveler,
   NewTripTraveler,
@@ -11,29 +15,11 @@ import type {
   BaseRepository,
   UserRole,
   TripRole,
-  OrganizationPlan
-} from './schema.js';
-
-// Re-export functions and constants (non-type exports)
-export * from './fieldTransforms.js';
-export { 
-  USER_ROLES,
+  OrganizationPlan,
+  // Export transform functions
   transformTripToFrontend,
   transformActivityToFrontend
 } from './schema.js';
 
-// Re-export all types
-export type {
-  Activity,
-  Trip,
-  User,
-  TripTraveler,
-  NewTripTraveler,
-  NewUser,
-  NewTrip,
-  BaseEntity,
-  BaseRepository,
-  UserRole,
-  TripRole,
-  OrganizationPlan
-};
+// Export constants
+export { USER_ROLES } from './schema.js';

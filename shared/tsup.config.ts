@@ -3,14 +3,14 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
-  // Change to false and we'll handle declarations separately
-  dts: false,
+  dts: true,
   sourcemap: true,
   clean: true,
   outDir: 'dist',
   target: 'es2022',
   tsconfig: 'tsconfig.json',
   external: ['drizzle-orm'],
+  noExternal: [],
   minify: false,
   splitting: false,
   skipNodeModulesBundle: true,
