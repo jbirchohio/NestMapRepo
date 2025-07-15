@@ -14,13 +14,14 @@
       "@shared/*": ["../shared/*"]
     },
     // "types": ["node"],
-    "module": "commonjs",
+    "module": "ES2020",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowJs": true,
     "noEmit": false,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "isolatedModules": false
   },
   "include": [
     "src/**/*.ts",

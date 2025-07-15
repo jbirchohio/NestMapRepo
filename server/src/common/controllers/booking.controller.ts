@@ -13,7 +13,7 @@ import {
 import { Request, Response } from 'express';
 
 // Types and interfaces
-import { Booking } from '../../../../shared/types/bookings';
+import { Booking } from '@shared/src/types/bookings';
 import { AuthUser } from '../../types/auth-user';
 
 // Services and utilities

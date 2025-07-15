@@ -1,11 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { Logger } from '@nestjs/common/services/logger.service';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import nodemailer from 'nodemailer';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import ErrorService from '../../shared/src/schema.js';
+import { ErrorService } from '../../common/services/error.service';
 import type { 
   EmailService, 
   EmailOptions, 
@@ -35,11 +36,11 @@ export class NodemailerEmailService implements EmailService {
   }
 
   private initializeTransporter() {
-    const host = this.configService.get<string>('SMTP_HOST') || 'smtp.example.com';
-    const port = Number(this.configService.get<string>('SMTP_PORT')) || 587;
-    const secure = this.configService.get<string>('SMTP_SECURE') === 'true';
-    const user = this.configService.get<string>('SMTP_USER') || '';
-    const pass = this.configService.get<string>('SMTP_PASSWORD') || '';
+    const host = this.configService.get('SMTP_HOST') || 'smtp.example.com';
+    const port = Number(this.configService.get('SMTP_PORT')) || 587;
+    const secure = this.configService.get('SMTP_SECURE') === 'true';
+    const user = this.configService.get('SMTP_USER') || '';
+    const pass = this.configService.get('SMTP_PASSWORD') || '';
 
     this.transporter = nodemailer.createTransport({
       host,
@@ -67,7 +68,7 @@ export class NodemailerEmailService implements EmailService {
     }
     
     const { to, subject, template, context = {} } = options;
-    const from = this.configService.get<string>('EMAIL_FROM') || 'noreply@example.com';
+    const from = this.configService.get('EMAIL_FROM') || 'noreply@example.com';
 
     try {
       const html = await this.renderTemplate(template, context);
@@ -98,7 +99,7 @@ export class NodemailerEmailService implements EmailService {
       name,
       resetUrl,
       expiryHours,
-      supportEmail: this.configService.get<string>('SUPPORT_EMAIL') || 'support@example.com',
+      supportEmail: this.configService.get('SUPPORT_EMAIL') || 'support@example.com',
     };
 
     await this.sendEmail({ to: email, subject, template, context });
