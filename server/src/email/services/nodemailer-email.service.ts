@@ -1,7 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Logger } from '@nestjs/common/services/logger.service';
 import { ConfigService } from '@nestjs/config';
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -23,10 +21,14 @@ type TemplateDelegate = handlebars.TemplateDelegate;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-@Injectable()
 export class NodemailerEmailService implements EmailService {
-  private readonly logger = new Logger(NodemailerEmailService.name, { timestamp: true });
   private transporter: any = null;
+  private logger = {
+    log: (msg: string) => console.log(msg),
+    error: (msg: string, error?: any) => console.error(msg, error),
+    warn: (msg: string) => console.warn(msg),
+    debug: (msg: string) => console.debug(msg)
+  };
 
   constructor(
     private readonly configService: ConfigService,
@@ -42,7 +44,7 @@ export class NodemailerEmailService implements EmailService {
     const user = this.configService.get('SMTP_USER') || '';
     const pass = this.configService.get('SMTP_PASSWORD') || '';
 
-    this.transporter = nodemailer.createTransport({
+    this.transporter = (nodemailer as any).createTransport({
       host,
       port,
       secure,
