@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './auth/AuthContext';
-import { useLocation } from 'wouter';
+import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
 export interface WhiteLabelConfig {
@@ -93,32 +93,53 @@ const WhiteLabelContext = createContext<WhiteLabelContextType | undefined>(undef
 
 export function WhiteLabelProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [location] = useLocation();
+  const location = useLocation();
   const [isWhiteLabelActive, setIsWhiteLabelActive] = useState(false);
   
-  // Load branding configuration from database
-  const { data: brandingData } = useQuery<{
-    isWhiteLabelActive: boolean;
-    config: Partial<WhiteLabelConfig>;
-  }>({
-    queryKey: ['/api/white-label/config'],
-    enabled: !!user // Only fetch when user is authenticated
+  // Fetch white label config when user logs in or location changes
+  const { data: whiteLabelConfig } = useQuery<WhiteLabelConfig>({
+    queryKey: ['whiteLabelConfig', user?.organizationId],
+    queryFn: async () => {
+      if (!user?.organizationId) return defaultConfig;
+      
+      try {
+        const token = user?.accessToken; // Get token from user object
+        if (!token) return defaultConfig;
+        
+        const response = await fetch(`/api/organizations/${user.organizationId}/white-label`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch white label config');
+        }
+        
+        const data = await response.json();
+        return { ...defaultConfig, ...data };
+      } catch (error) {
+        console.error('Error fetching white label config:', error);
+        return defaultConfig;
+      }
+    },
+    enabled: !!user?.organizationId,
+    initialData: defaultConfig,
   });
 
   const [config, setConfig] = useState<WhiteLabelConfig>(defaultConfig);
 
-  // Update config when branding data loads from database
+  // Update config when white label config loads
   useEffect(() => {
-    if (brandingData && typeof brandingData === 'object') {
-      setIsWhiteLabelActive(brandingData.isWhiteLabelActive || false);
-      if (brandingData.config && typeof brandingData.config === 'object') {
-        setConfig({
-          ...defaultConfig,
-          ...brandingData.config
-        });
-      }
+    if (whiteLabelConfig) {
+      setIsWhiteLabelActive(true);
+      setConfig(() => ({
+        ...defaultConfig,
+        ...whiteLabelConfig
+      }));
     }
-  }, [brandingData]);
+  }, [whiteLabelConfig]);
 
   // Determine if we should be in white label mode
   const shouldUseWhiteLabel = () => {
@@ -126,10 +147,11 @@ export function WhiteLabelProvider({ children }: { children: React.ReactNode }) 
     // 1. Organization has white label enabled (from database)
     // 2. When on white label settings page for preview
     // 3. When explicitly enabled by user for testing
+    const pathname = location.pathname;
     return isWhiteLabelActive || 
-           location === '/white-label' || 
-           location.startsWith('/white-label/') ||
-           location === '/settings'; // Also apply on settings page for immediate preview
+           pathname === '/white-label' || 
+           pathname.startsWith('/white-label/') ||
+           pathname === '/settings'; // Also apply on settings page for immediate preview
   };
 
   const updateConfig = (newConfig: Partial<WhiteLabelConfig>) => {

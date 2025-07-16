@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
-import { useLocation, Link } from 'wouter';
+import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Calendar, Building2, DollarSign, Users, Clock, FileText, Target, User } from 'lucide-react';
 import NewTripModal from "@/components/NewTripModal";
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useTrips } from '@/hooks/useTrips';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { TripStatus, UserRole } from '@/types/dtos/common';
@@ -18,9 +19,9 @@ const AnimatedCard = motion(Card);
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
-  const [, setLocation] = useLocation();
-  const isCorporate = useMemo(() => user?.role === UserRole.CORPORATE, [user]); // FIX: use single role property
+  const isCorporate = useMemo(() => user?.role === UserRole.CORPORATE, [user]);
 
   const { 
     data: tripsData, 
@@ -44,7 +45,7 @@ export default function Dashboard() {
   const trips = useMemo(() => (tripsData?.data || []) as TripDTO[], [tripsData]);
 
   const handleOnboardingTaskClick = (_taskId: string, url: string) => {
-    setLocation(url);
+    navigate.push(url);
   };
 
   const analytics = useMemo(() => {
@@ -181,7 +182,7 @@ export default function Dashboard() {
                     {upcomingTrips.map((trip: TripDTO) => (
                       <li key={trip.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div>
-                          <Link href={`/trips/${trip.id}`} className="font-semibold text-blue-600 hover:underline">
+                          <Link to={`/trips/${trip.id}`} className="font-semibold text-blue-600 hover:underline">
                             {trip.title || 'Untitled Trip'}
                           </Link>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{trip.destination}</p>

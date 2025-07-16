@@ -1,30 +1,34 @@
-import { TokenManager } from './tokenManager';
-import { SessionSecurity } from './sessionSecurity';
-import {SecurityHeaders,
-  SanitizedError,
-  SessionDetails
-} from './types';
-import {
-  TokenError,
-  CSRFError,
-  SessionError,
-} from './errors';
-import { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
+import { getSession } from 'next-auth/react';
+import { SecurityHeaders, SanitizedError } from './types';
 
 export class SecurityUtils {
   private static instance: SecurityUtils;
-  private tokenManager: TokenManager;
-  private sessionSecurity: SessionSecurity;
+  private navigate?: () => void;
 
-  private constructor() {
-    this.tokenManager = TokenManager.getInstance();
-    this.sessionSecurity = SessionSecurity.getInstance();
-    // Removed erroneous this.securityContext assignment
+  private constructor(navigate?: () => void) {
+    this.navigate = navigate;
   }
 
-  public static getInstance(): SecurityUtils {
+  public static getInstance(navigate?: () => void): SecurityUtils {
     if (!SecurityUtils.instance) {
-      SecurityUtils.instance = new SecurityUtils();
+      SecurityUtils.instance = new SecurityUtils(navigate);
+    } else if (navigate && !SecurityUtils.instance.navigate) {
+      // Update navigate function if a new one is provided and none was set before
+      SecurityUtils.instance.navigate = navigate;
+    }
+    return SecurityUtils.instance;
+  }
+
+  // Add a method to check if instance is initialized
+  public static isInitialized(): boolean {
+    return !!SecurityUtils.instance;
+  }
+
+  // Add a method to safely get the instance or throw if not initialized
+  public static getInstanceOrThrow(): SecurityUtils {
+    if (!SecurityUtils.instance) {
+      throw new Error('SecurityUtils has not been initialized. Call getInstance() first.');
     }
     return SecurityUtils.instance;
   }
@@ -89,28 +93,21 @@ export class SecurityUtils {
     return response;
   }
 
-  public getCSRFToken(): string | null {
-    return localStorage.getItem('csrfToken');
+  public async refreshSession(): Promise<boolean> {
+    const session = await getSession();
+    return !!session;
   }
 
-  public validateRequest(config: AxiosRequestConfig): boolean {
+  public async validateSession(): Promise<boolean> {
+    const session = await getSession();
+    return !!session?.user?.accessToken;
+  }
+
+  public validateRequest(): boolean {
     try {
-      // Validate CSRF token
-      const csrfToken = this.getCSRFToken();
-      if (!csrfToken) {
-        throw new CSRFError('CSRF token is missing');
-      }
-
       // Validate session
-      if (!this.sessionSecurity.hasValidSession()) {
-        throw new SessionError('Session is invalid');
-      }
-
-      // Validate token if present
-      if (config.headers?.Authorization) {
-        if (!this.tokenManager.hasValidToken()) {
-          throw new TokenError('Invalid token');
-        }
+      if (!this.validateSession()) {
+        throw new Error('Session is invalid');
       }
 
       return true;
@@ -123,12 +120,9 @@ export class SecurityUtils {
   public async performSecurityAudit(): Promise<{ success: boolean; details: string[] }> {
     const details: string[] = [];
 
-    // Validate session and token
-    if (!this.sessionSecurity.isSessionValid()) {
+    // Validate session
+    if (!await this.validateSession()) {
       details.push('Invalid session');
-    }
-    if (!this.tokenManager.hasValidToken()) {
-      details.push('Invalid token');
     }
 
     // Validate security headers
@@ -141,39 +135,18 @@ export class SecurityUtils {
 
     return { success: details.length === 0, details };
   }
-  public auditSecurity(): void {
-    // Check security headers
-    const headers = this.getSecurityHeaders();
-    Object.entries(headers).forEach(([header, value]) => {
-      if (!value) {
-        console.warn(`Missing security header: ${header}`);
-      }
-    });
 
-    // Check session security
-    if (!this.sessionSecurity.isSessionValid()) {
-      console.warn('Invalid session detected');
-    }
-
-    // Check token validity
-    if (!this.tokenManager.hasValidToken()) {
-      console.warn('Invalid token detected');
-    }
-  }
-
-  // Security Context
-  public getSecurityContext(): SessionDetails {
+  public async getSessionDetails(): Promise<Record<string, any>> {
+    const session = await getSession();
     return {
-      sessionId: this.sessionSecurity.getSessionId(),
-      userId: this.sessionSecurity.getUserId(),
-      userAgent: this.sessionSecurity.getUserAgent(),
-      ip: this.sessionSecurity.getIp(),
-      sessionAge: this.sessionSecurity.getSessionAge(),
-      sessionTimeout: this.sessionSecurity.getSessionTimeoutRemaining()
+      userId: session?.user?.id || null,
+      sessionId: session ? 'active' : null,
+      ipAddress: null, // No longer tracking IP in client
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : null
     };
   }
-
-  public reportSecurityContext(context: SessionDetails): void {
+  
+  public reportSecurityContext(context: Record<string, any>): void {
     try {
       console.log('Security context report', context);
     } catch (error) {

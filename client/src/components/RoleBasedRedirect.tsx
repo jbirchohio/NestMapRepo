@@ -1,16 +1,20 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { useAuth } from '@/hooks/useAuth';
 import { userService } from '@/services/api/userService';
 
-export default function RoleBasedRedirect() {
-  const { roleType, authReady, user } = useAuth();
-  const [, setLocation] = useLocation();
+interface RoleBasedRedirectProps {
+  children?: React.ReactNode;
+}
+
+export default function RoleBasedRedirect({ children }: RoleBasedRedirectProps) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
   const [permissionsChecked, setPermissionsChecked] = useState(false);
 
   useEffect(() => {
     // Only redirect if authentication is ready and user is logged in
-    if (!authReady || !user || permissionsChecked) return;
+    if (isLoading || !isAuthenticated || !user || permissionsChecked) return;
 
     // Check user's actual role from database, not organization permissions
     const checkPermissions = async () => {
@@ -25,7 +29,7 @@ export default function RoleBasedRedirect() {
               userData.role === 'superadmin_staff' || 
               userData.role === 'superadmin_auditor' || 
               userData.role === 'super_admin') {
-            setLocation('/superadmin');
+            await router.push('/superadmin');
             setPermissionsChecked(true);
             return;
           }
@@ -36,7 +40,7 @@ export default function RoleBasedRedirect() {
           if (permissions.includes('ACCESS_ANALYTICS') &&
               permissions.includes('BILLING_ACCESS') &&
               permissions.includes('MANAGE_TEAM_ROLES')) {
-            setLocation('/admin');
+            await router.push('/admin');
             setPermissionsChecked(true);
             return;
           }
@@ -44,16 +48,17 @@ export default function RoleBasedRedirect() {
           console.error('Error checking user permissions:', error);
         }
       } catch (err) {
-        // Could not check permissions, proceeding with role-based redirect
+        console.error('Error in permission check:', err);
       }
 
       // Map role types to unified dashboard route
-      setLocation('/dashboard');
+      router.push('/dashboard');
       setPermissionsChecked(true);
     };
 
     checkPermissions();
-  }, [authReady, user, roleType, setLocation, permissionsChecked]);
+  }, [isAuthenticated, isLoading, user, router, permissionsChecked]);
 
-  return null; // This component doesn't render anything
+  // If we have children, render them, otherwise return null
+  return children || null; // This component doesn't render anything
 }

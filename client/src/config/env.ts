@@ -34,37 +34,37 @@ const defaultConfig: EnvConfig = {
   SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
   
   // API defaults
-  API_BASE_URL: process.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  API_BASE_URL: import.meta.env.VITE_SUPABASE_URL || 'http://localhost:3000',
   API_TIMEOUT: 30000, // 30 seconds
   
   // Security defaults
   SECURE_COOKIE_OPTIONS: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: import.meta.env.PROD,
     sameSite: 'strict',
     httpOnly: true,
     path: '/',
   },
   
   // Feature flags
-  ENABLE_DEVELOPER_TOOLS: process.env.NODE_ENV === 'development',
-  ENABLE_ANALYTICS: process.env.NODE_ENV === 'production',
+  ENABLE_DEVELOPER_TOOLS: import.meta.env.DEV,
+  ENABLE_ANALYTICS: import.meta.env.PROD,
 };
 
 // Merge environment variables with defaults
 const config: EnvConfig = {
   ...defaultConfig,
   // Override with environment variables if they exist
-  ...(process.env.VITE_TOKEN_REFRESH_INTERVAL && {
-    TOKEN_REFRESH_INTERVAL: parseInt(process.env.VITE_TOKEN_REFRESH_INTERVAL, 10),
+  ...(import.meta.env.VITE_TOKEN_REFRESH_INTERVAL && {
+    TOKEN_REFRESH_INTERVAL: parseInt(import.meta.env.VITE_TOKEN_REFRESH_INTERVAL, 10),
   }),
-  ...(process.env.VITE_TOKEN_ROTATION_INTERVAL && {
-    TOKEN_ROTATION_INTERVAL: parseInt(process.env.VITE_TOKEN_ROTATION_INTERVAL, 10),
+  ...(import.meta.env.VITE_TOKEN_ROTATION_INTERVAL && {
+    TOKEN_ROTATION_INTERVAL: parseInt(import.meta.env.VITE_TOKEN_ROTATION_INTERVAL, 10),
   }),
-  ...(process.env.VITE_REFRESH_TOKEN_THRESHOLD && {
-    REFRESH_TOKEN_THRESHOLD: parseInt(process.env.VITE_REFRESH_TOKEN_THRESHOLD, 10),
+  ...(import.meta.env.VITE_REFRESH_TOKEN_THRESHOLD && {
+    REFRESH_TOKEN_THRESHOLD: parseInt(import.meta.env.VITE_REFRESH_TOKEN_THRESHOLD, 10),
   }),
-  ...(process.env.VITE_SESSION_TIMEOUT && {
-    SESSION_TIMEOUT: parseInt(process.env.VITE_SESSION_TIMEOUT, 10),
+  ...(import.meta.env.VITE_SESSION_TIMEOUT && {
+    SESSION_TIMEOUT: parseInt(import.meta.env.VITE_SESSION_TIMEOUT, 10),
   }),
 };
 

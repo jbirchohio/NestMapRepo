@@ -1,9 +1,6 @@
 import { AxiosError } from 'axios';
-import { SecurityUtils } from './securityUtils';
-import { TokenManager } from './tokenManager';
-import { SessionSecurity } from './sessionSecurity';
-import { SecureCookie } from './SecureCookie';
-import apiClient from '@/services/api/apiClient';
+import { getSession } from 'next-auth/react';
+import { getApiClient } from '@/services/api/apiClient';
 
 export interface ErrorLog {
   timestamp: string;
@@ -19,17 +16,11 @@ export interface ErrorLog {
 
 export class ErrorLogger {
   private static instance: ErrorLogger;
-  private securityUtils: SecurityUtils;
-  private tokenManager: TokenManager;
-  private sessionSecurity: SessionSecurity;
   private errorLogs: ErrorLog[];
   private maxLogs: number;
   private logInterval: NodeJS.Timeout | null;
 
   private constructor() {
-    this.securityUtils = SecurityUtils.getInstance();
-    this.tokenManager = TokenManager.getInstance();
-    this.sessionSecurity = SessionSecurity.getInstance();
     this.errorLogs = [];
     this.maxLogs = 100; // Maximum logs to keep in memory
     this.logInterval = null;
@@ -56,55 +47,59 @@ export class ErrorLogger {
     }
   }
 
-  private getSecurityContext(): Record<string, any> {
+  private async getSecurityContext(): Promise<Record<string, any>> {
+    const session = await getSession();
     return {
-      userId: this.sessionSecurity.getUserId(),
-      sessionId: this.sessionSecurity.getSessionId(),
-      ipAddress: this.sessionSecurity.getIp(),
-      userAgent: this.sessionSecurity.getUserAgent()
+      userId: session?.user?.id || null,
+      sessionId: session?.user?.accessToken ? 'active' : null,
+      ipAddress: null, // No longer tracking IP in client
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : null
     };
   }
 
   private sanitizeError(error: Error): Error {
-    const sanitizedError = new Error(this.securityUtils.sanitizeOutput(error.message));
-    sanitizedError.name = this.securityUtils.sanitizeOutput(error.name);
+    // Simple sanitization without dependency on securityUtils
+    const sanitizedError = new Error(error.message.replace(/[<>]/g, ''));
+    sanitizedError.name = error.name.replace(/[<>]/g, '');
     return sanitizedError;
   }
 
-  public logError(
+  public async logError(
     error: Error | AxiosError,
     context: Record<string, any> = {}
-  ): void {
+  ): Promise<void> {
     try {
       const sanitizedError = error instanceof Error 
         ? this.sanitizeError(error)
-        : new Error(this.securityUtils.sanitizeOutput(error as any));
+        : new Error((error as any).message || 'Unknown error');
 
+      const securityContext = await this.getSecurityContext();
       const errorLog: ErrorLog = {
         timestamp: new Date().toISOString(),
         errorType: error.name || 'Error',
         errorMessage: sanitizedError.message,
         stackTrace: error.stack || null,
-        userId: this.sessionSecurity.getUserId(),
-        sessionId: this.sessionSecurity.getSessionId(),
-        ipAddress: this.sessionSecurity.getIp(),
-        userAgent: this.sessionSecurity.getUserAgent(),
+        userId: securityContext.userId,
+        sessionId: securityContext.sessionId,
+        ipAddress: securityContext.ipAddress,
+        userAgent: securityContext.userAgent,
         context: {
           ...context,
-          ...this.getSecurityContext()
+          ...securityContext
         }
       };
 
       this.errorLogs.push(errorLog);
       this.rotateLogs();
 
-      // Send to backend if token is valid
-      if (this.tokenManager.hasValidToken()) {
+      // Send to backend if session exists
+      const session = await getSession();
+      if (session?.user?.accessToken) {
         this.sendErrorToBackend(errorLog);
       }
 
-      //  in secure cookie for offline access
-      this.ErrorLocally(errorLog);
+      // Store in local storage for offline access
+      this.storeErrorLocally(errorLog);
     } catch (error) {
       console.error('Failed to log error:', error);
     }
@@ -112,31 +107,19 @@ export class ErrorLogger {
 
   private async sendErrorToBackend(errorLog: ErrorLog): Promise<void> {
     try {
-      await apiClient.post('/errors', errorLog);
+      await getApiClient().post('/errors', errorLog);
     } catch (error) {
       //  failed logs for retry
-      SecureCookie.set('pending_errors', JSON.stringify(this.errorLogs), {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 86400 // 24 hours
-      });
+      localStorage.setItem('pending_errors', JSON.stringify(this.errorLogs));
     }
   }
 
-  private ErrorLocally(errorLog: ErrorLog): void {
+  private storeErrorLocally(errorLog: ErrorLog): void {
     try {
-      const dLogs = SecureCookie.get('error_logs') || '[]';
+      const dLogs = localStorage.getItem('error_logs') || '[]';
       const logs = JSON.parse(dLogs);
       logs.push(errorLog);
-      SecureCookie.set('error_logs', JSON.stringify(logs), {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 86400 // 24 hours
-      });
+      localStorage.setItem('error_logs', JSON.stringify(logs));
     } catch (error) {
       console.error('Failed to  error locally:', error);
     }
@@ -148,7 +131,7 @@ export class ErrorLogger {
 
   public clearLogs(): void {
     this.errorLogs = [];
-    SecureCookie.remove('error_logs');
+    localStorage.removeItem('error_logs');
   }
 
   public destroy(): void {
@@ -160,13 +143,13 @@ export class ErrorLogger {
 
   public retryFailedLogs(): void {
     try {
-      const pendingLogs = SecureCookie.get('pending_errors');
+      const pendingLogs = localStorage.getItem('pending_errors');
       if (pendingLogs) {
         const logs = JSON.parse(pendingLogs);
         for (const log of logs) {
           this.sendErrorToBackend(log);
         }
-        SecureCookie.remove('pending_errors');
+        localStorage.removeItem('pending_errors');
       }
     } catch (error) {
       console.error('Failed to retry error logs:', error);

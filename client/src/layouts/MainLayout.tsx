@@ -1,10 +1,16 @@
 import React from 'react';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
+// User type from next-auth is not needed as we're using our own AuthUser type
 import { useNotifications } from '@/hooks/useNotifications';
 import MainNavigation from '@/components/MainNavigation';
 import BrandedFooter from '@/components/BrandedFooter';
 import { useToast } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+import { useNavigate } from 'react-router-dom';
+
+// Import the User type from navigation types
+import type { User as NavigationUser } from '@/components/navigation/types';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -18,9 +24,24 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   hideFooter = false,
 }) => {
   const { config } = useWhiteLabel();
-  const { user, signOut } = useAuth();
+  const { user: authUser, signOut, isAuthenticated } = useAuth();
+  
+  // Transform the user object to match the expected type for navigation components
+  const user: NavigationUser | null = authUser ? {
+    id: authUser.id,
+    email: authUser.email,
+    role: authUser.role,
+    organization_id: authUser.organizationId || null,
+    username: authUser.name || authUser.email.split('@')[0] || '',
+    avatarUrl: (authUser as any).image || null,
+    name: authUser.name || '',
+    firstName: authUser.name ? authUser.name.split(' ')[0] : null,
+    lastName: authUser.name ? authUser.name.split(' ').slice(1).join(' ') || null : null,
+    permissions: [],  // Add empty permissions array if not provided by NextAuth
+  } : null;
   const { notifications = [], markAsRead, markAllAsRead } = useNotifications();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   return (
     <div 
@@ -31,23 +52,21 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         '--accent': config.accentColor || '#8b5cf6',
       } as React.CSSProperties}
     >
+      <Toaster />
       {!hideNav && (
         <MainNavigation 
-          isAuthenticated={!!user}
-          user={user ? {
-            ...user,
-            organization_id: user.organizationId, // Convert organizationId to organization_id for compatibility
-            username: user.username || user.email, // Ensure username is always defined
-          } : null}
+          isAuthenticated={isAuthenticated}
+          user={user}
           notifications={notifications}
           onSignOut={async () => {
             try {
-              await signOut();
+              await signOut({ callbackUrl: '/login' });
+              navigate('/login');
             } catch (error) {
               console.error('Error signing out:', error);
               toast({
                 title: 'Error',
-                description: 'Failed to sign out',
+                description: 'Failed to sign out. Please try again.',
                 variant: 'destructive',
               });
             }

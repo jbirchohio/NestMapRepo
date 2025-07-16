@@ -1,4 +1,4 @@
-import apiClient from '@/services/api/apiClient';
+import { getApiClient } from '@/services/api/apiClient';
 
 export interface User {
   id: string | number;
@@ -63,7 +63,7 @@ class UserService {
 
   // Authentication
   public async login(credentials: { email: string; password: string }): Promise<{ user: User; token: string }> {
-    return apiClient.post<{ user: User; token: string }>(
+    return getApiClient().post<{ user: User; token: string }>(
       `${this.authPath}/login`,
       credentials
     );
@@ -77,29 +77,29 @@ class UserService {
     lastName?: string;
     organizationId?: number;
   }): Promise<{ user: User; token: string }> {
-    return apiClient.post<{ user: User; token: string }>(
+    return getApiClient().post<{ user: User; token: string }>(
       `${this.authPath}/register`,
       userData
     );
   }
 
   public async refreshToken(): Promise<{ token: string }> {
-    return apiClient.post<{ token: string }>(`${this.authPath}/refresh-token`);
+    return getApiClient().post<{ token: string }>(`${this.authPath}/refresh-token`);
   }
 
   public async logout(): Promise<void> {
-    return apiClient.post<void>(`${this.authPath}/logout`);
+    return getApiClient().post<void>(`${this.authPath}/logout`);
   }
 
   public async requestPasswordReset(email: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(
+    return getApiClient().post<{ message: string }>(
       `${this.authPath}/request-password-reset`,
       { email }
     );
   }
 
   public async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(
+    return getApiClient().post<{ message: string }>(
       `${this.authPath}/reset-password`,
       { token, newPassword }
     );
@@ -107,42 +107,42 @@ class UserService {
 
   // User Management
   public async getCurrentUser(): Promise<User> {
-    return apiClient.get<User>(`${this.basePath}/me`);
+    return getApiClient().get<User>(`${this.basePath}/me`);
   }
 
   public async getUserById(userId: string | number): Promise<User> {
-    return apiClient.get<User>(`${this.basePath}/${userId}`);
+    return getApiClient().get<User>(`${this.basePath}/${userId}`);
   }
 
   public async getUsers(params?: UserListParams): Promise<{ data: User[]; total: number }> {
-    return apiClient.get<{ data: User[]; total: number }>(this.basePath, { params });
+    return getApiClient().get<{ data: User[]; total: number }>(this.basePath, { params });
   }
 
   public async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
-    return apiClient.post<User>(this.basePath, userData);
+    return getApiClient().post<User>(this.basePath, userData);
   }
 
   public async updateUser(
     userId: string | number,
     updates: Partial<Omit<User, 'id' | 'email' | 'createdAt'>>
   ): Promise<User> {
-    return apiClient.put<User>(`${this.basePath}/${userId}`, updates);
+    return getApiClient().put<User>(`${this.basePath}/${userId}`, updates);
   }
 
   public async deleteUser(userId: string | number): Promise<void> {
-    return apiClient.delete<void>(`${this.basePath}/${userId}`);
+    return getApiClient().delete<void>(`${this.basePath}/${userId}`);
   }
 
   // Profile Management
   public async updateProfile(userId: string | number, data: Partial<User>): Promise<User> {
-    return apiClient.patch<User>(`${this.basePath}/${userId}/profile`, data);
+    return getApiClient().patch<User>(`${this.basePath}/${userId}/profile`, data);
   }
 
   public async updateAvatar(userId: string | number, file: File): Promise<{ avatarUrl: string }> {
     const formData = new FormData();
     formData.append('avatar', file);
 
-    return apiClient.post<{ avatarUrl: string }>(
+    return getApiClient().post<{ avatarUrl: string }>(
       `${this.basePath}/${userId}/avatar`,
       formData,
       {
@@ -158,7 +158,7 @@ class UserService {
     currentPassword: string,
     newPassword: string
   ): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(
+    return getApiClient().post<{ message: string }>(
       `${this.basePath}/${userId}/change-password`,
       { currentPassword, newPassword }
     );
@@ -166,14 +166,14 @@ class UserService {
 
   // Preferences
   public async getPreferences(userId: string | number): Promise<UserPreferences> {
-    return apiClient.get<UserPreferences>(`${this.basePath}/${userId}/preferences`);
+    return getApiClient().get<UserPreferences>(`${this.basePath}/${userId}/preferences`);
   }
 
   public async updatePreferences(
     userId: string | number,
     preferences: Partial<UserPreferences>
   ): Promise<UserPreferences> {
-    return apiClient.patch<UserPreferences>(
+    return getApiClient().patch<UserPreferences>(
       `${this.basePath}/${userId}/preferences`,
       preferences
     );
@@ -182,11 +182,11 @@ class UserService {
   // Permissions
   public async getPermissions(userId?: string | number): Promise<UserPermissions> {
     const path = userId ? `${this.basePath}/${userId}/permissions` : `${this.basePath}/me/permissions`;
-    return apiClient.get<UserPermissions>(path);
+    return getApiClient().get<UserPermissions>(path);
   }
 
   public async getAvailableRoles(): Promise<Array<{ id: string; name: string; description: string }>> {
-    return apiClient.get<Array<{ id: string; name: string; description: string }>>(
+    return getApiClient().get<Array<{ id: string; name: string; description: string }>>(
       `${this.basePath}/roles`
     );
   }

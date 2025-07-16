@@ -1,8 +1,9 @@
-import { Link, useLocation } from 'wouter';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Shield, Users, Building2, Activity, CreditCard, Settings, LogOut, BarChart3, Flag, Briefcase, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 
@@ -19,7 +20,7 @@ const superadminNavItems = [
 ];
 
 export function SuperadminNavigation() {
-  const [location] = useLocation();
+  const pathname = usePathname();
   const { signOut } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -82,7 +83,7 @@ export function SuperadminNavigation() {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
           {superadminNavItems.map((item) => {
-            const isActive = location === item.path || (item.path !== '/superadmin' && location.startsWith(item.path));
+            const isActive = pathname === item.path || (item.path !== '/superadmin' && pathname?.startsWith(item.path));
             
             return (
               <Link key={item.id} href={item.path}>
@@ -108,7 +109,10 @@ export function SuperadminNavigation() {
           <Link href="/">
             <div 
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-navy-300 hover:text-white hover:bg-navy-700/50 dark:hover:bg-navy-800/50 transition-all duration-200 cursor-pointer morphing-button"
+              className={cn('flex items-center gap-3 px-3 py-2 rounded-md transition-colors', {
+                'bg-electric-600 text-white': pathname === '/',
+                'hover:bg-navy-700/60 text-gray-300 hover:text-white': pathname !== '/'
+              })}
             >
               <BarChart3 className="w-5 h-5" />
               Exit to App

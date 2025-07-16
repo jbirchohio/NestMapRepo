@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import getApiClient from './apiClient';
 
 export interface AISuggestion {
   id: string;
@@ -50,7 +50,7 @@ class AIService {
     sessionId?: string,
     config?: RequestConfig
   ): Promise<AIChatResponse> {
-    return apiClient.post<AIChatResponse>(
+    return getApiClient().post<AIChatResponse>(
       `${this.basePath}/chat`,
       { messages, sessionId },
       config
@@ -65,7 +65,7 @@ class AIService {
     },
     config?: RequestConfig
   ): Promise<AILocationSuggestion> {
-    return apiClient.post<AILocationSuggestion>(
+    return getApiClient().post<AILocationSuggestion>(
       `${this.basePath}/find-location`,
       { description, ...context },
       config
@@ -83,7 +83,7 @@ class AIService {
     },
     config?: RequestConfig
   ): Promise<{ itinerary: string; suggestions: AISuggestion[] }> {
-    return apiClient.post<{ itinerary: string; suggestions: AISuggestion[] }>(
+    return getApiClient().post<{ itinerary: string; suggestions: AISuggestion[] }>(
       `${this.basePath}/generate-itinerary`,
       tripDetails,
       config
@@ -100,7 +100,7 @@ class AIService {
     },
     config?: RequestConfig
   ): Promise<AISuggestion[]> {
-    return apiClient.post<AISuggestion[]>(
+    return getApiClient().post<AISuggestion[]>(
       `${this.basePath}/suggest-activities`,
       context,
       config
@@ -120,7 +120,7 @@ class AIService {
     if (context?.tripId) formData.append('tripId', context.tripId);
     if (context?.locationId) formData.append('locationId', context.locationId);
 
-    return apiClient.post<{ description: string; tags: string[]; metadata: Record<string, any> }>(
+    return getApiClient().post<{ description: string; tags: string[]; metadata: Record<string, any> }>(
       `${this.basePath}/analyze-image`,
       formData,
       {

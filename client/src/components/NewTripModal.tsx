@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { API_ENDPOINTS } from "@/lib/constants";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import useMapbox from "@/hooks/useMapbox";
 
 import {
@@ -54,7 +54,8 @@ interface NewTripModalProps {
 
 export default function NewTripModal({ isOpen, onClose, onSuccess, userId, isGuestMode = false }: NewTripModalProps) {
   const { toast } = useToast();
-  const { roleType } = useAuth();
+  const { user } = useAuth();
+  const roleType = user?.role ? (user.role.includes('corporate') ? 'corporate' : user.role.includes('agency') ? 'agency' : null) : null;
   const { geocodeLocation } = useMapbox();
   
   // Set default dates (today to 3 days from now)

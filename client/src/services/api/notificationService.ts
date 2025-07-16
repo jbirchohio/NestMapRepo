@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { getApiClient } from './apiClient';
 import { EventEmitter } from 'events';
 
 export interface Notification {
@@ -149,49 +149,49 @@ class NotificationService extends EventEmitter {
     read?: boolean;
     type?: string;
   } = {}): Promise<{ data: Notification[]; total: number }> {
-    return apiClient.get<{ data: Notification[]; total: number }>(this.basePath, { params });
+    return getApiClient().get<{ data: Notification[]; total: number }>(this.basePath, { params });
   }
 
   public async getUnreadCount(): Promise<NotificationCount> {
-    return apiClient.get<NotificationCount>(`${this.basePath}/unread-count`);
+    return getApiClient().get<NotificationCount>(`${this.basePath}/unread-count`);
   }
 
   public async markAsRead(notificationId: string): Promise<Notification> {
-    return apiClient.patch<Notification>(
+    return getApiClient().patch<Notification>(
       `${this.basePath}/${notificationId}/read`,
       undefined
     );
   }
 
   public async markAllAsRead(): Promise<{ count: number }> {
-    return apiClient.patch<{ count: number }>(
+    return getApiClient().patch<{ count: number }>(
       `${this.basePath}/mark-all-read`,
       undefined
     );
   }
 
   public async getPreferences(): Promise<NotificationPreferences> {
-    return apiClient.get<NotificationPreferences>(`${this.basePath}/preferences`);
+    return getApiClient().get<NotificationPreferences>(`${this.basePath}/preferences`);
   }
 
   public async updatePreferences(
     preferences: Partial<NotificationPreferences>
   ): Promise<NotificationPreferences> {
-    return apiClient.patch<NotificationPreferences>(
+    return getApiClient().patch<NotificationPreferences>(
       `${this.basePath}/preferences`,
       preferences
     );
   }
 
   public async subscribeToTopic(topic: string): Promise<{ success: boolean }> {
-    return apiClient.post<{ success: boolean }>(
+    return getApiClient().post<{ success: boolean }>(
       `${this.basePath}/subscribe`,
       { topic }
     );
   }
 
   public async unsubscribeFromTopic(topic: string): Promise<{ success: boolean }> {
-    return apiClient.post<{ success: boolean }>(
+    return getApiClient().post<{ success: boolean }>(
       `${this.basePath}/unsubscribe`,
       { topic }
     );

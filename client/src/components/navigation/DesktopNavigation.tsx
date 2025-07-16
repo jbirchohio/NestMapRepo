@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { NavigationLink } from './NavigationLink';
 import { NotificationsMenu } from './NotificationsMenu';
 import { UserMenu } from './UserMenu';

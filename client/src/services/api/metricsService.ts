@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { getApiClient } from './apiClient';
 
 export interface MetricPoint {
   timestamp: string;
@@ -120,20 +120,20 @@ class MetricsService {
 
   // System Metrics
   public async getSystemMetrics(): Promise<SystemMetrics> {
-    return apiClient.get<SystemMetrics>(`${this.basePath}/system`);
+    return getApiClient().get<SystemMetrics>(`${this.basePath}/system`);
   }
 
   public async getSystemMetricsHistory(params: TimeRange): Promise<MetricResponse> {
-    return apiClient.get<MetricResponse>(`${this.basePath}/system/history`, { params });
+    return getApiClient().get<MetricResponse>(`${this.basePath}/system/history`, { params });
   }
 
   // Application Metrics
   public async getApplicationMetrics(): Promise<ApplicationMetrics> {
-    return apiClient.get<ApplicationMetrics>(`${this.basePath}/application`);
+    return getApiClient().get<ApplicationMetrics>(`${this.basePath}/application`);
   }
 
   public async getApplicationMetricsHistory(params: TimeRange): Promise<MetricResponse> {
-    return apiClient.get<MetricResponse>(`${this.basePath}/application/history`, { params });
+    return getApiClient().get<MetricResponse>(`${this.basePath}/application/history`, { params });
   }
 
   // User Activity
@@ -142,7 +142,7 @@ class MetricsService {
     limit?: number;
     offset?: number;
   } = {}): Promise<{ data: UserActivity[]; total: number }> {
-    return apiClient.get<{ data: UserActivity[]; total: number }>(
+    return getApiClient().get<{ data: UserActivity[]; total: number }>(
       `${this.basePath}/user-activity`,
       { params }
     );
@@ -150,12 +150,12 @@ class MetricsService {
 
   // Database Metrics
   public async getDatabaseMetrics(): Promise<DatabaseMetrics> {
-    return apiClient.get<DatabaseMetrics>(`${this.basePath}/database`);
+    return getApiClient().get<DatabaseMetrics>(`${this.basePath}/database`);
   }
 
   // Custom Metrics
   public async queryMetrics(queries: MetricQuery[]): Promise<MetricResponse[]> {
-    return apiClient.post<MetricResponse[]>(
+    return getApiClient().post<MetricResponse[]>(
       `${this.basePath}/query`,
       { queries },
       { params: { queries } as any } // Cast to any to avoid type issues with the request config
@@ -176,7 +176,7 @@ class MetricsService {
     }>;
     total: number;
   }> {
-    return apiClient.get<{
+    return getApiClient().get<{
       errors: Array<{
         id: string;
         message: string;
@@ -212,7 +212,7 @@ class MetricsService {
       connectionTime: number;
     };
   }> {
-    return apiClient.get<{
+    return getApiClient().get<{
       pageLoad: {
         average: number;
         p50: number;
@@ -240,7 +240,7 @@ class MetricsService {
     properties: Record<string, any> = {},
     userId?: string
   ): Promise<void> {
-    return apiClient.post<void>(
+    return getApiClient().post<void>(
       `${this.basePath}/events`,
       { eventName, properties, userId }
     );
@@ -257,7 +257,7 @@ class MetricsService {
     }>;
     timestamp: string;
   }> {
-    return apiClient.get<{
+    return getApiClient().get<{
       status: 'healthy' | 'degraded' | 'unhealthy';
       services: Array<{
         name: string;

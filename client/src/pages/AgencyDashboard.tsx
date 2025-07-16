@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -133,21 +133,21 @@ export default function AgencyDashboard() {
           </Button>
           
           <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
-            <Link href="/ai-generator">
+            <Link to="/ai-generator">
               <Sparkles className="h-5 w-5" />
               AI Proposal Generator
             </Link>
           </Button>
           
           <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
-            <Link href="/analytics">
+            <Link to="/analytics">
               <BarChart3 className="h-5 w-5" />
               Client Analytics
             </Link>
           </Button>
           
           <Button variant="outline" className="h-16 flex items-center justify-center gap-3" asChild>
-            <Link href="/settings">
+            <Link to="/settings">
               <Settings className="h-5 w-5" />
               Agency Settings
             </Link>

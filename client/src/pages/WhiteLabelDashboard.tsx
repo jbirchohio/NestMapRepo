@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import WhiteLabelPreview from '@/components/WhiteLabelPreview';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
 import { CheckCircle, AlertCircle, ChevronRight, Globe, Palette, Settings } from 'lucide-react';
-import api from '@/services/api/apiClient';
+import getApiClient from '@/services/api/apiClient';
 
 interface WhiteLabelStatus {
   organization: {
@@ -60,7 +60,7 @@ export default function WhiteLabelDashboard() {
   const fetchStatus = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await api.get<WhiteLabelStatus>('/api/white-label/status');
+      const response = await getApiClient().get<WhiteLabelStatus>('/api/white-label/status');
       setStatus(response);
     } catch (error) {
       console.error('Error fetching white label status:', error);
@@ -77,7 +77,7 @@ export default function WhiteLabelDashboard() {
   // Activate white label
   const activateWhiteLabel = async () => {
     try {
-      await api.post<void>('/api/white-label/activate');
+      await getApiClient().post<void>('/api/white-label/activate');
       toast({
         title: 'Success',
         description: 'White label features have been activated!',

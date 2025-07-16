@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { getApiClient } from './apiClient';
 
 export interface FileUploadResponse {
   id: string;
@@ -42,7 +42,7 @@ class FileService {
       formData.append('metadata', JSON.stringify(metadata));
     }
 
-    return apiClient.post<FileUploadResponse>(
+    return getApiClient().post<FileUploadResponse>(
       `${this.basePath}/upload`,
       formData,
       {
@@ -78,7 +78,7 @@ class FileService {
   }
 
   public async getFileUrl(fileId: string, config?: RequestConfig): Promise<string> {
-    return apiClient.get<string>(`${this.basePath}/${fileId}/url`, config);
+    return getApiClient().get<string>(`${this.basePath}/${fileId}/url`, config);
   }
 
   public async downloadFile(
@@ -86,7 +86,7 @@ class FileService {
     fileName?: string,
     config?: RequestConfig
   ): Promise<void> {
-    const response = await apiClient.get<Blob>(
+    const response = await getApiClient().get<Blob>(
       `${this.basePath}/${fileId}/download`,
       {
         ...config,
@@ -105,7 +105,7 @@ class FileService {
   }
 
   public async deleteFile(fileId: string, config?: RequestConfig): Promise<void> {
-    return apiClient.delete<void>(`${this.basePath}/${fileId}`, config);
+    return getApiClient().delete<void>(`${this.basePath}/${fileId}`, config);
   }
 
   public async updateFileMetadata(
@@ -113,7 +113,7 @@ class FileService {
     metadata: Partial<FileMetadata>,
     config?: RequestConfig
   ): Promise<FileUploadResponse> {
-    return apiClient.patch<FileUploadResponse>(
+    return getApiClient().patch<FileUploadResponse>(
       `${this.basePath}/${fileId}/metadata`,
       metadata,
       config
@@ -121,12 +121,12 @@ class FileService {
   }
 
   public async getFileMetadata(fileId: string, config?: RequestConfig): Promise<FileMetadata> {
-    return apiClient.get<FileMetadata>(`${this.basePath}/${fileId}/metadata`, config);
+    return getApiClient().get<FileMetadata>(`${this.basePath}/${fileId}/metadata`, config);
   }
 
   public async generateFileUrl(fileId: string, expiresIn?: number): Promise<string> {
     const params = expiresIn ? { expiresIn } : undefined;
-    const response = await apiClient.get<{ url: string }>(
+    const response = await getApiClient().get<{ url: string }>(
       `${this.basePath}/${fileId}/generate-url`,
       { params }
     );

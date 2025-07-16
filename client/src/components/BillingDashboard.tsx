@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   CreditCard, 
@@ -32,13 +32,13 @@ interface UserPermissions {
 }
 
 export default function BillingDashboard() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   // Check user permissions for billing access
   const { data: userPermissions } = useQuery<UserPermissions>({
     queryKey: ['/api/user/permissions'],
-    enabled: !!user,
+    enabled: isAuthenticated,
   });
 
   const hasBillingAccess = userPermissions && (
@@ -82,7 +82,7 @@ export default function BillingDashboard() {
         organizationId: (user as any)?.organizationId,
         plan,
         customerEmail: user?.email,
-        customerName: user?.username || user?.email
+        customerName: user?.name || user?.email
       });
       return response.json();
     },

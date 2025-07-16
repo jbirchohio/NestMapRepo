@@ -1,15 +1,14 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import type { JwtPayload, AuthTokens } from '@/types/api';
-import { TokenManager } from '@/utils/tokenManager';
-import { apiClient } from '@/services/api/apiClient';
+import type { JwtPayload } from '@/types/api';
+import { getApiClient } from '@/services/api/apiClient';
 import { SessionLockout } from '@/utils/sessionLockout';
-import { jwtDecode } from 'jwt-decode';
+import { useRouter } from 'next/navigation';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import { Session } from 'next-auth';
 
-// Constants
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-const SESSION_WARNING_THRESHOLD = 5 * 60 * 1000; // 5 minutes before session expires
+// Constants for session management
+// These are now handled by NextAuth before session expires
 
 // Interfaces
 interface DecodedJwt extends Omit<JwtPayload, 'organization_id'> {
@@ -39,7 +38,6 @@ interface AuthContextType {
   loading: boolean;
   authReady: boolean;
   error: string | null;
-  roleType: 'corporate' | 'agency' | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -58,269 +56,268 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Utility functions
-function decodeToken(token: string | null): DecodedJwt | null {
-  if (!token) return null;
+function extractUserFromSession(session: Session | null): DecodedJwt | null {
+  if (!session?.user) return null;
   try {
-    return jwtDecode<DecodedJwt>(token);
+    // NextAuth session already contains decoded token data
+    return {
+      sub: session.user.id as string,
+      email: session.user.email as string,
+      name: session.user.name as string,
+      role: (session.user as any).role || 'user',
+      organization_id: (session.user as any).organizationId || 0,
+      permissions: (session.user as any).permissions || [],
+      exp: 0 // NextAuth handles token expiration
+    };
   } catch (error) {
-    console.error('Error decoding token:', error);
+    console.error('Error extracting user from session:', error);
     return null;
   }
 }
 
-function isTokenExpired(token: string | null): boolean {
-  const decoded = decodeToken(token);
-  if (!decoded) return true;
-  const now = Date.now() / 1000;
-  return decoded.exp < now;
-}
+// NextAuth handles session expiration internally
 
-// Helper function to determine role type from user role
-function getRoleType(userRole: string | null): 'corporate' | 'agency' | null {
-  if (!userRole) return null;
-  
-  // Map user roles to role types
-  const roleMapping: Record<string, 'corporate' | 'agency'> = {
-    'admin': 'corporate',
-    'user': 'corporate',
-    'corporate': 'corporate',
-    'agency': 'agency',
-    'travel_agent': 'agency',
-    'agent': 'agency',
-  };
-  
-  return roleMapping[userRole.toLowerCase()] || 'corporate';
-}
+// NextAuth handles role determination directly from the session
 
 // Provider component
 const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactElement => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
-  const tokenManager = TokenManager.getInstance(navigate);
-  const sessionLockout = SessionLockout.getInstance();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [authReady, setAuthReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+  const { data: session, status } = useSession();
+  
+  // Initialize session lockout
+  const sessionLockout = useMemo(() => SessionLockout.getInstance(), []);
 
-  // Auth signOut function that can be used throughout the component
-  const signOut = useCallback(async () => {
+
+
+  // State for user and auth status
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(status === 'loading');
+  const [authReady, setAuthReady] = useState(status !== 'loading');
+  const [error, setError] = useState<string | null>(null);
+
+  // Sign out function
+  const handleSignOut = useCallback(async () => {
     try {
-      await apiClient.post<void>('/auth/logout');
-      tokenManager.clearTokens();
+      setLoading(true);
+      
+      // Use NextAuth signOut
+      await signOut({ redirect: false });
+      
+      // Clear user data
       setUser(null);
-      navigate('/login');
+      
+      // Navigate to login page
+      router.push('/login');
     } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear tokens and redirect even if API call fails
-      tokenManager.clearTokens();
+      console.error('Sign out error:', error);
+      // Still clear user data even if API call fails
       setUser(null);
-      navigate('/login');
+      router.push('/login');
+    } finally {
+      setLoading(false);
     }
-  }, [tokenManager, navigate, setUser]);
+  }, [router]);
+
+  // Sign in function
+  const handleSignIn = useCallback(async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Check if account is locked out
+      if (sessionLockout.isLockedOut(email)) {
+        const status = sessionLockout.getLockoutStatus(email);
+        const minutesLeft = Math.ceil(status.remainingTime / 60000);
+        throw new Error(`Account is locked. Try again in ${minutesLeft} minutes.`);
+      }
+
+      // Use NextAuth signIn
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password
+      });
+      
+      if (!result?.ok) {
+        throw new Error(result?.error || 'Invalid credentials');
+      }
+      
+      // Reset login attempts on successful login
+      sessionLockout.unlockAccount(email);
+      
+      // Navigate to dashboard based on role
+      // Role-based navigation will be handled in the useEffect that watches session changes
+    } catch (error) {
+      console.error('Sign in error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
+      setError(errorMessage);
+      
+      // Increment login attempts
+      sessionLockout.recordFailedAttempt(email);
+      
+      // Check if account should be locked after this attempt
+      if (sessionLockout.isLockedOut(email)) {
+        const status = sessionLockout.getLockoutStatus(email);
+        const minutesLeft = Math.ceil(status.remainingTime / 60000);
+        setError(`Too many failed attempts. Account locked for ${minutesLeft} minutes.`);
+      }
+      
+      toast({
+        title: 'Authentication Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [sessionLockout, toast]);
+
+  // Sign in with provider (OAuth)
+  const handleSignInWithProvider = useCallback(async (provider: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Use NextAuth signIn with provider
+      await signIn(provider, { redirect: false });
+      
+      // Navigation will be handled by the session change effect
+    } catch (error) {
+      console.error(`Sign in with ${provider} error:`, error);
+      const errorMessage = error instanceof Error ? error.message : `Failed to sign in with ${provider}`;
+      setError(errorMessage);
+      
+      toast({
+        title: 'Authentication Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   // Initialize auth state
   useEffect(() => {
-    // Token refresh function - used within this effect and actually called
-    const refreshAuthToken = async () => {
-      try {
-        const accessToken = tokenManager.getAccessToken();
-        const refreshToken = tokenManager.getRefreshToken();
-        
-        if (accessToken && refreshToken) {
-          const response = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ refreshToken })
-          });
-
-          if (response.ok) {
-            const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await response.json();
-            tokenManager.setTokens(newAccessToken, newRefreshToken);
-            
-            const decoded = decodeToken(newAccessToken);
-            if (decoded) {
-              const user: User = {
-                id: parseInt(decoded.sub, 10),
-                email: decoded.email,
-                name: decoded.name,
-                role: decoded.role,
-                organizationId: decoded.organization_id,
-                permissions: decoded.permissions || [],
-                displayName: decoded.name
-              };
-              setUser(user);
-            }
-          } else {
-            throw new Error('Failed to refresh token');
-          }
-        }
-      } catch (error) {
-        console.error('Token refresh failed:', error);
-        // Call the signOut function defined at component level
-        await signOut();
-      }
-    };
-
     const initializeAuth = async () => {
       try {
-        const accessToken = tokenManager.getAccessToken();
-        if (accessToken) {
-          const decoded = decodeToken(accessToken);
-          if (decoded && !isTokenExpired(accessToken)) {
-            const user: User = {
-              id: parseInt(decoded.sub, 10),
-              email: decoded.email || '',
-              name: decoded.name || '',
-              role: decoded.role || 'user',
-              organizationId: decoded.organization_id || 0,
-              permissions: decoded.permissions || [],
-              displayName: decoded.name || ''
-            };
-            setUser(user);
-          } else {
-            // Token is expired, try to refresh it
-            await refreshAuthToken();
-          }
+        setLoading(true);
+        
+        // Initialize session lockout
+        sessionLockout.initialize();
+        
+        // Initialize user data
+        const decoded = extractUserFromSession(session);
+        if (decoded) {
+          setUser({
+            id: parseInt(decoded.sub, 10),
+            email: decoded.email,
+            name: decoded.name || '',
+            role: decoded.role,
+            organizationId: decoded.organization_id,
+            permissions: decoded.permissions || []
+          });
+          // Role type is now derived directly from user.role when needed
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
       } finally {
-        setLoading(false);
         setAuthReady(true);
+        setLoading(false);
       }
     };
 
     initializeAuth();
-  }, []);
+  }, [session, sessionLockout]);
 
-  // Cleanup on unmount
+  // Watch for session changes
   useEffect(() => {
-    return () => {
-      tokenManager.clearTokens();
-    };
-  }, [tokenManager]);
-
-  // Handle session timeout
-  useEffect(() => {
-    const handleIdle = () => {
-      const now = Date.now();
-      const idleTime = now - lastActivity;
-      
-      if (idleTime > SESSION_TIMEOUT) {
-        const signOut = async () => {
-          tokenManager.clearTokens();
+    const handleSessionChange = async () => {
+      try {
+        // Initialize user data
+        const decoded = extractUserFromSession(session);
+        if (decoded) {
+          setUser({
+            id: parseInt(decoded.sub, 10),
+            email: decoded.email,
+            name: decoded.name || '',
+            role: decoded.role,
+            organizationId: decoded.organization_id,
+            permissions: decoded.permissions || []
+          });
+          // Role type is now derived directly from user.role when needed
+        } else {
+          // Clear user data if session is invalid
           setUser(null);
-          navigate('/login');
-        };
-        signOut();
-        toast({
-          title: 'Session Expiring Soon',
-          description: 'Your session will expire in 5 minutes',
-          variant: 'default'
-        });
-      } else if (idleTime > SESSION_TIMEOUT - SESSION_WARNING_THRESHOLD) {
-        toast({
-          title: 'Session Warning',
-          description: 'Your session will expire soon. Please continue using the app to stay active.',
-          variant: 'default'
-        });
+        }
+      } catch (error) {
+        console.error('Error handling session change:', error);
       }
     };
 
-    const interval = setInterval(() => {
-      setLastActivity(Date.now());
-    }, 1000);
+    handleSessionChange();
+  }, [session]);
 
-    const timeout = setTimeout(handleIdle, SESSION_TIMEOUT - SESSION_WARNING_THRESHOLD);
+  // Define missing functions
+  const handleSignUp = useCallback(async (email: string, password: string, username: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Register user through API
+      await getApiClient().post('/auth/register', { email, password, username });
+      
+      // Sign in with the new credentials
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password
+      });
+      
+      if (!result?.ok) {
+        throw new Error(result?.error || 'Registration successful but sign-in failed');
+      }
+      
+      // Navigate to onboarding
+      router.push('/onboarding');
+      
+      toast({
+        title: 'Account created',
+        description: 'Your account has been created successfully!',
+        variant: 'default'
+      });
+    } catch (error) {
+      console.error('Sign up error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign up';
+      setError(errorMessage);
+      
+      toast({
+        title: 'Registration Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [router, toast]);
 
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [lastActivity, signOut, toast]);
+  // Refresh session
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    // NextAuth handles session refreshing automatically
+    return !!session;
+  }, [session]);
 
-  // Helper methods
-  const handleError = useCallback((error: Error) => {
-    console.error('Auth error:', error);
-    setError(error.message);
-    toast({
-      title: 'Authentication Error',
-      description: error.message,
-      variant: 'destructive'
-    });
-  }, [toast, setError]);
-
-  const incrementLoginAttempts = useCallback((email: string): void => {
-    sessionLockout.recordFailedAttempt(window.location.hostname, email);
-  }, [sessionLockout]);
-
-  const getLoginAttempts = useCallback((email: string): number => {
+  // Get login attempts for an email
+  const getLoginAttemptsCount = useCallback((email: string): number => {
     const status = sessionLockout.getLockoutStatus(email);
     return status.attempts;
   }, [sessionLockout]);
 
-  // Authentication methods are now defined above
-
-  const signIn = useCallback(async (email: string, password: string) => {
-    try {
-      const response = await apiClient.post<AuthTokens & { user: User }>('/auth/login', { email, password });
-      const { accessToken, refreshToken, user } = response;
-      tokenManager.setTokens(accessToken, refreshToken);
-      setUser(user);
-      incrementLoginAttempts(email);
-    } catch (error) {
-      handleError(error as Error);
-      incrementLoginAttempts(email);
-    }
-  }, [tokenManager, setUser, incrementLoginAttempts, handleError]);
-
-  const signUp = useCallback(async (email: string, password: string, username: string) => {
-    try {
-      const response = await apiClient.post<AuthTokens & { user: User }>('/auth/signup', { email, password, username });
-      const { accessToken, refreshToken, user } = response;
-      tokenManager.setTokens(accessToken, refreshToken);
-      setUser(user);
-    } catch (error) {
-      handleError(error as Error);
-    }
-  }, [tokenManager, setUser, handleError]);
-
-
-
-  const signInWithProvider = useCallback(async (provider: string) => {
-    try {
-      const response = await apiClient.post<AuthTokens & { user: User }>(`/auth/${provider}`);
-      const { accessToken, refreshToken, user } = response;
-      tokenManager.setTokens(accessToken, refreshToken);
-      setUser(user);
-    } catch (error) {
-      handleError(error as Error);
-    }
-  }, [tokenManager, setUser, handleError]);
-
-  const refreshToken = useCallback(async () => {
-    try {
-      const accessToken = tokenManager.getAccessToken();
-      if (!accessToken) {
-        return false;
-      }
-      
-      const response = await apiClient.post<{ accessToken: string }>('/auth/refresh', {
-        refreshToken: tokenManager.getRefreshToken()
-      });
-
-      const { accessToken: newAccessToken } = response;
-      tokenManager.setTokens(newAccessToken, tokenManager.getRefreshToken()!);
-      return true;
-    } catch (error) {
-      handleError(error as Error);
-      return false;
-    }
-  }, [tokenManager, handleError]);
+  // Increment login attempts for an email
+  const incrementLoginAttemptsCount = useCallback((email: string): void => {
+    sessionLockout.recordFailedAttempt(email);
+  }, [sessionLockout]);
 
   // Context value
   const value: AuthContextType = {
@@ -328,18 +325,17 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
     loading,
     authReady,
     error,
-    roleType: getRoleType(user?.role || null),
-    signIn,
-    signUp,
-    signOut,
-    signInWithProvider,
+    signIn: handleSignIn,
+    signUp: handleSignUp,
+    signOut: handleSignOut,
+    signInWithProvider: handleSignInWithProvider,
     refreshToken,
-    getLoginAttempts,
-    incrementLoginAttempts,
+    getLoginAttempts: getLoginAttemptsCount,
+    incrementLoginAttempts: incrementLoginAttemptsCount,
     setAccountLockout: (email: string) => {
-      sessionLockout.recordFailedAttempt(window.location.hostname, email);
+      sessionLockout.recordFailedAttempt(email);
       sessionLockout.clearAllLockouts();
-      sessionLockout.recordFailedAttempt(window.location.hostname, email);
+      sessionLockout.recordFailedAttempt(email);
     },
     isAuthenticated: () => !!user,
     hasPermission: (permission: string) => user?.permissions?.includes(permission) ?? false,

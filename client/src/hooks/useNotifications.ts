@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Notification } from '@/types/notification';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from './useAuth';
 
 interface UseNotificationsReturn {
   notifications: Notification[];
@@ -22,17 +22,18 @@ export function useNotifications(): UseNotificationsReturn {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const fetchNotifications = useCallback(async (): Promise<void> => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !user?.id) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // Replace with actual API call
       const response = await fetch(`/api/notifications?userId=${user.id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${user.accessToken}`,
+          'Content-Type': 'application/json',
         },
+        credentials: 'include',
       });
 
       if (!response.ok) {

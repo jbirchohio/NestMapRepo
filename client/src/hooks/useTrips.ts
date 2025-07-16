@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tripService } from '../services/api/tripService';
-import { useAuth } from '../contexts/auth/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { CreateTripDTO, UpdateTripDTO, GetTripsParams, TripCardDTO } from '../types/dtos/trip';
 
 export const useTrips = (params?: GetTripsParams) => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const isCorporate = user?.role === 'corporate';
 
   return useQuery({
@@ -13,7 +13,7 @@ export const useTrips = (params?: GetTripsParams) => {
       isCorporate 
         ? tripService.getCorporateTrips(params)
         : tripService.getTrips(params),
-    enabled: !!user,
+    enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

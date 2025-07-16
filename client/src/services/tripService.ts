@@ -1,4 +1,4 @@
-import apiClient from '@/services/api/apiClient';
+import { getApiClient } from '@/services/api/apiClient';
 import { GeneratedTrip } from '@/lib/types';
 
 export interface GenerateTripParams {
@@ -24,12 +24,12 @@ class TripService {
   }
 
   public async generateTrip(params: GenerateTripParams): Promise<GeneratedTrip> {
-    const response = await apiClient.post<{ data: GeneratedTrip }>('/trips/generate', params);
+    const response = await getApiClient().post<{ data: GeneratedTrip }>('/trips/generate', params);
     return response.data;
   }
 
   public async createClientItinerary(params: CreateClientItineraryParams): Promise<{ trackingCode: string }> {
-    const response = await apiClient.post<{ data: { trackingCode: string } }>(
+    const response = await getApiClient().post<{ data: { trackingCode: string } }>(
       '/client-itineraries',
       params
     );
@@ -37,7 +37,7 @@ class TripService {
   }
 
   public async getTripByTrackingCode(trackingCode: string): Promise<GeneratedTrip> {
-    const response = await apiClient.get<{ data: GeneratedTrip }>(`/trips/track/${trackingCode}`);
+    const response = await getApiClient().get<{ data: GeneratedTrip }>(`/trips/track/${trackingCode}`);
     return response.data;
   }
 
@@ -46,7 +46,7 @@ class TripService {
    * The backend should return an object: { share_url: string }
    */
   public async shareTripWithClient(trackingCode: string): Promise<{ share_url: string }> {
-    const response = await apiClient.post<{
+    const response = await getApiClient().post<{
       data: { share_url: string; } | PromiseLike<{ share_url: string; }>; share_url: string 
 }>(
       '/client-itineraries/share',
@@ -60,7 +60,7 @@ class TripService {
    * PATCH /trips/{tripId}/status with body { status: string }
    */
   public async updateTripStatus(tripId: string, status: string): Promise<void> {
-    await apiClient.patch(`/trips/${tripId}/status`, { status });
+    await getApiClient().patch(`/trips/${tripId}/status`, { status });
   }
 }
 

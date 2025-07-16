@@ -1,9 +1,14 @@
 import React, { Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import { RouteObject } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ProtectedRoute } from './ProtectedRoute';
+
+interface RouteObject {
+  path: string;
+  element?: React.ReactNode;
+  children?: RouteObject[];
+}
 
 interface RouteRendererProps {
   routes: RouteObject[];
@@ -17,34 +22,35 @@ const LoadingFallback = () => (
 );
 
 /**
- * Recursively renders routes with proper error boundaries and loading states
+ * Renders routes with proper error boundaries and loading states
+ * Adapted for Next.js routing
  */
 export const RouteRenderer: React.FC<RouteRendererProps> = ({ routes }) => {
+  const pathname = usePathname();
+  
+  // Find the current route based on pathname
+  const findMatchingRoute = (routes: RouteObject[], path: string): RouteObject | null => {
+    for (const route of routes) {
+      if (route.path === path) {
+        return route;
+      }
+      
+      if (route.children && route.children.length > 0) {
+        const childMatch = findMatchingRoute(route.children, path);
+        if (childMatch) return childMatch;
+      }
+    }
+    return null;
+  };
+  
+  const currentRoute = findMatchingRoute(routes, pathname || '/');
+  
   return (
-    <Routes>
-      {routes.map((route) => {
-        const Element = route.element as React.ComponentType | undefined;
-        const hasChildren = route.children && route.children.length > 0;
-
-        return (
-          <Route
-            key={route.path || 'root'}
-            path={route.path}
-            element={
-              <ErrorBoundary>
-                <Suspense fallback={<LoadingFallback />}>
-                  {Element && <Element />}
-                </Suspense>
-              </ErrorBoundary>
-            }
-          >
-            {hasChildren && route.children && (
-              <RouteRenderer routes={route.children} />
-            )}
-          </Route>
-        );
-      })}
-    </Routes>
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingFallback />}>
+        {currentRoute?.element}
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

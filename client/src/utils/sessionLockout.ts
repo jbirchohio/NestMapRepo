@@ -1,5 +1,5 @@
 
-import { SecureCookie } from './SecureCookie';
+// Using localStorage instead of SecureCookie for NextAuth compatibility
 
 export interface SessionLockoutConfig {
   maxAttempts: number;
@@ -15,7 +15,6 @@ export class SessionLockout {
 
   private constructor(config?: SessionLockoutConfig) {
     this.attempts = new Map();
-    this.attempts = new Map();
     this.lockouts = new Map();
     this.config = {
       maxAttempts: 5,
@@ -23,6 +22,7 @@ export class SessionLockout {
       attemptWindow: 15 * 60 * 1000, // 15 minutes
       ...config
     };
+    this.loadAttemptsFromStorage();
   }
 
   public static getInstance(config?: SessionLockoutConfig): SessionLockout {
@@ -30,6 +30,13 @@ export class SessionLockout {
       SessionLockout.instance = new SessionLockout(config);
     }
     return SessionLockout.instance;
+  }
+  
+  /**
+   * Initialize the session lockout by loading data from storage
+   */
+  public initialize(): void {
+    this.loadAttemptsFromStorage();
   }
 
   /**
@@ -90,15 +97,7 @@ export class SessionLockout {
   private lockoutAccount(key: string): void {
     const now = Date.now();
     this.lockouts.set(key, { timestamp: now });
-    
-    // Store lockout in secure storage
-    SecureCookie.set(`lockout_${key}`, now.toString(), {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      path: '/',
-      maxAge: this.config.lockoutDuration / 1000
-    });
+    this.saveAttemptsToStorage();
   }
 
   /**
@@ -108,7 +107,7 @@ export class SessionLockout {
   public unlockAccount(key: string): void {
     if (this.lockouts.has(key)) {
       this.lockouts.delete(key);
-      SecureCookie.remove(`lockout_${key}`);
+      this.saveAttemptsToStorage();
     }
   }
 
@@ -119,6 +118,7 @@ export class SessionLockout {
     this.lockouts.forEach((_, key) => {
       this.unlockAccount(key);
     });
+    this.clearLockouts();
   }
 
   /**
@@ -146,5 +146,51 @@ export class SessionLockout {
       remainingTime,
       attempts: attempt.count
     };
+  }
+
+  private saveAttemptsToStorage(): void {
+    try {
+      const attemptsObj: Record<string, { count: number; timestamp: number }> = {};
+      this.attempts.forEach((value, key) => {
+        attemptsObj[key] = value;
+      });
+
+      const lockoutsObj: Record<string, { timestamp: number }> = {};
+      this.lockouts.forEach((value, key) => {
+        lockoutsObj[key] = value;
+      });
+
+      localStorage.setItem('login_attempts', JSON.stringify(attemptsObj));
+      localStorage.setItem('login_lockouts', JSON.stringify(lockoutsObj));
+    } catch (error) {
+      console.error('Failed to save login attempts to storage:', error);
+    }
+  }
+
+  private loadAttemptsFromStorage(): void {
+    try {
+      const storedAttempts = localStorage.getItem('login_attempts');
+      if (storedAttempts) {
+        const parsed = JSON.parse(storedAttempts);
+        Object.entries(parsed).forEach(([key, value]) => {
+          this.attempts.set(key, value as { count: number; timestamp: number });
+        });
+      }
+
+      const storedLockouts = localStorage.getItem('login_lockouts');
+      if (storedLockouts) {
+        const parsed = JSON.parse(storedLockouts);
+        Object.entries(parsed).forEach(([key, value]) => {
+          this.lockouts.set(key, value as { timestamp: number });
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load login attempts from storage:', error);
+    }
+  }
+
+  public clearLockouts(): void {
+    this.lockouts.clear();
+    localStorage.removeItem('login_lockouts');
   }
 }

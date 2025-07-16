@@ -1,18 +1,18 @@
-import { apiClient } from '../apiClient';
+import getApiClient from '../apiClient';
 
 describe('ApiClient', () => {
   it('should be defined', () => {
-    expect(apiClient).toBeDefined();
+    expect(getApiClient()).toBeDefined();
   });
 
   it('should have the correct base URL', () => {
     // The base URL should be set based on the environment
-    const client = (apiClient as any).client as import('axios').AxiosInstance;
+    const client = (getApiClient() as any).client as import('axios').AxiosInstance;
     expect(client.defaults.baseURL).toBeTruthy();
   });
 
   it('should have request and response interceptors', () => {
-    const client = (apiClient as any).client as import('axios').AxiosInstance;
+    const client = (getApiClient() as any).client as import('axios').AxiosInstance;
     // Check if interceptors are defined (can't check handlers directly as they're private)
     expect(client.interceptors.request).toBeDefined();
     expect(client.interceptors.response).toBeDefined();

@@ -11,6 +11,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@auth/core": "^0.40.0",
     "@heroicons/react": "^2.1.1",
     "@hookform/resolvers": "^5.1.1",
     "@radix-ui/react-accordion": "^1.1.2",
@@ -55,6 +56,8 @@
     "input-otp": "^1.4.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.294.0",
+    "next": "^15.4.1",
+    "next-auth": "^4.24.11",
     "next-themes": "^0.2.1",
     "react": "^18.2.0",
     "react-day-picker": "^9.8.0",
@@ -75,8 +78,9 @@
   "devDependencies": {
     "@types/crypto-js": "^4.2.1",
     "@types/jest": "^30.0.0",
+    "@types/next": "^9.0.0",
     "@types/node": "^20.0.0",
-    "@types/react": "^18.2.0",
+    "@types/react": "^18.3.23",
     "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",

@@ -1,6 +1,7 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,10 +12,40 @@ export const ProtectedRoute = ({
   children, 
   requiredRoles = [] 
 }: ProtectedRouteProps) => {
-  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
-  if (isLoading) {
+  useEffect(() => {
+    const checkAuth = async () => {
+      // If still loading auth state, wait
+      if (isLoading) return;
+
+      // If not authenticated, redirect to login
+      if (!isAuthenticated || !user) {
+        navigate(`/login?callbackUrl=${encodeURIComponent(location.pathname + location.search)}`);
+        return;
+      }
+
+      // Check if user has required roles
+      if (requiredRoles.length > 0 && !requiredRoles.some(role => user.role?.includes(role))) {
+        // User is authenticated but doesn't have required role
+        navigate('/unauthorized');
+        return;
+      }
+
+      // All checks passed
+      setIsAuthorized(true);
+      setIsChecking(false);
+    };
+
+    checkAuth();
+  }, [isAuthenticated, isLoading, navigate, location, requiredRoles, user]);
+
+  // Show loading state while checking auth
+  if (isLoading || isChecking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" />
@@ -22,17 +53,10 @@ export const ProtectedRoute = ({
     );
   }
 
-  // If user is not authenticated, redirect to login
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  // If not authorized, we've already handled the redirect
+  if (!isAuthorized) {
+    return null;
   }
-
-  // Check if user has required roles
-  if (requiredRoles.length > 0 && !requiredRoles.some(role => user.role?.includes(role))) {
-    // User is authenticated but doesn't have required role
-    return <Navigate to="/unauthorized" replace />;
-  }
-
 
   return <>{children}</>;
 };

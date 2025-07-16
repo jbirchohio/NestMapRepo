@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRoute } from "wouter";
+import { useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import AppShell from "@/components/AppShell";
@@ -14,7 +14,7 @@ import { ClientActivity, MapMarker, MapRoute } from "@/lib/types";
 import { getDaysBetweenDates } from "@/lib/constants";
 
 export default function TripPlanner() {
-  const [, params] = useRoute("/trip/:id");
+  const params = useParams();
   const tripId = params?.id || "";
   const { toast } = useToast();
   

@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback, ReactNode } from 'react';
-import { useLocation, Link } from 'wouter';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MenuIcon, XIcon, BarChartIcon, CheckIcon, FileTextIcon, HomeIcon } from '../icons';
 import { MobileMenu } from './MobileMenu';
 import { DesktopNavigation } from './DesktopNavigation';
@@ -24,8 +23,8 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   onNotificationClick,
   onMarkAllAsRead,
 }) => {
-  const [location] = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // State for mobile menu and dropdowns
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -106,7 +105,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   // Close mobile menu on route change
   useEffect(() => {
     closeAllMenus();
-  }, [location, closeAllMenus]);
+  }, [navigate, closeAllMenus]);
 
   // Toggle mobile menu
   const toggleMobileMenu = useCallback((): void => {
@@ -149,7 +148,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   const handleSignOut = useCallback(async () => {
     try {
       await onSignOut();
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -179,7 +178,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
 
           {/* Logo */}
           <div className="flex flex-shrink-0 items-center">
-            <Link href="/" className="text-xl font-bold text-gray-900">
+            <Link to="/" className="text-xl font-bold text-gray-900">
               NestMap
             </Link>
           </div>

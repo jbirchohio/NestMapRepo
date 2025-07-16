@@ -1,11 +1,11 @@
 import CorporateTripOptimizer from "@/components/CorporateTripOptimizer";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
 
 export default function TripOptimizer() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   // Check user permissions for optimization access
   const { data: userPermissions } = useQuery({
@@ -17,7 +17,7 @@ export default function TripOptimizer() {
       const data = await response.json();
       return data.permissions || [];
     },
-    enabled: !!user,
+    enabled: isAuthenticated,
   });
 
   const hasOptimizerAccess = userPermissions && (

@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { NavigationItem } from './types';
 
 interface NavigationLinkProps extends Omit<NavigationItem, 'requiresAuth'> {
@@ -15,7 +15,7 @@ export const NavigationLink: React.FC<NavigationLinkProps> = ({
   onClick,
 }) => (
   <Link
-    href={href}
+    to={href}
     aria-label={ariaLabel}
     className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${className}`}
     onClick={onClick}

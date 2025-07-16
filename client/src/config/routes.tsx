@@ -30,6 +30,10 @@ function lazyLoad<T extends ComponentType<any>>(
 // Public routes (no authentication required)
 export const publicRoutes: RouteObject[] = [
   {
+    path: '/',
+    element: React.createElement(lazyLoad(() => import('@/pages/Home'))),
+  },
+  {
     path: '/login',
     element: React.createElement(lazyLoad(() => import('@/pages/Login'))),
   },
@@ -46,10 +50,6 @@ export const publicRoutes: RouteObject[] = [
 // Protected routes (require authentication)
 export const protectedRoutes: RouteObject[] = [
   // Dashboard routes
-  {
-    path: '/',
-    element: lazyLoad(() => import('@/pages/Home')),
-  },
   {
     path: '/dashboard',
     element: lazyLoad(() => import('@/pages/Dashboard')),

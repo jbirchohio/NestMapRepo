@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { analyticsService } from '../services/api/analyticsService';
-import { useAuth } from '../contexts/auth/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { AnalyticsFilterParams, AgencyAnalyticsDTO, CorporateAnalyticsDTO } from '../types/dtos/analytics';
 
 export const useAnalytics = (params?: AnalyticsFilterParams) => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const isCorporate = user?.role === 'corporate';
 
   return useQuery({
@@ -13,7 +13,7 @@ export const useAnalytics = (params?: AnalyticsFilterParams) => {
       isCorporate 
         ? analyticsService.getCorporateAnalytics(params)
         : analyticsService.getAgencyAnalytics(params),
-    enabled: !!user,
+    enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +35,7 @@ interface SignupFormProps {
 }
 
 export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps) {
-  const { signUp } = useAuth();
+  const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -53,19 +53,47 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
     },
   });
 
-  const onSubmit = async (values: SignupFormValues) => {
+  const handleSubmit = async (data: SignupFormValues) => {
+    setIsLoading(true);
+    setErrorMessage("");
+
     try {
-      setIsLoading(true);
-      setErrorMessage("");
+      // Register user with NextAuth
+      const result = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          company: data.company,
+          jobTitle: data.jobTitle,
+          teamSize: data.teamSize,
+          useCase: data.useCase
+        })
+      });
       
-      await signUp(values.email, values.password, values.name);
+      if (!result.ok) {
+        const error = await result.json();
+        throw new Error(error.message || 'Registration failed');
+      }
       
+      // Sign in the user after successful registration
+      await signIn(data.email, data.password, {
+        callbackUrl: '/dashboard'
+      });
+      
+      // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error: Error | unknown) {
-      const err = error as Error;
-      setErrorMessage(err.message || "Failed to sign up. Please try again.");
+    } catch (error) {
+      console.error("Signup error:", error);
+      setErrorMessage(
+        error instanceof Error 
+          ? error.message 
+          : "An unexpected error occurred. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +110,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
           Join professionals using our travel platform
         </CardDescription>
       </CardHeader>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
         <CardContent className="space-y-4 px-6">
           {errorMessage && (
             <Alert variant="destructive">

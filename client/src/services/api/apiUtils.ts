@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import { getApiClient } from './apiClient';
 
 /**
  * Utility functions for handling API responses and common patterns
@@ -72,7 +72,7 @@ export function debounceApi<T extends (...args: any[]) => Promise<any>>(
 
     // Cancel any pending requests if they support it
     if (pendingPromise) {
-      apiClient.cancelRequest('debounced');
+      getApiClient().cancelRequest('debounced');
     }
 
     // Create a new promise that will be resolved after the debounce time
@@ -83,7 +83,7 @@ export function debounceApi<T extends (...args: any[]) => Promise<any>>(
           const result = await pendingPromise;
           resolve(result);
         } catch (error) {
-          if (!apiClient.isCancel(error)) {
+          if (!getApiClient().isCancel(error)) {
             reject(error);
           }
         } finally {

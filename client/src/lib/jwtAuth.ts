@@ -2,7 +2,7 @@
  * JWT-only Authentication System
  * Uses the API client for authentication requests
  */
-import { apiClient } from '../services/api/apiClient.js';
+import { getApiClient } from '../services/api/apiClient';
 
 interface User {
   id: number;
@@ -50,20 +50,30 @@ class JWTAuth {
 
   async signIn(email: string, password: string): Promise<{ user: User | null; error: Error | null }> {
     try {
-      const data = await apiClient.post<AuthResponse>('/auth/login', {
+      const apiClient = getApiClient();
+      const response = await apiClient.post<{ data: AuthResponse }>('/auth/login', {
         email,
         password
       });
       
-      if (!data.token || !data.user) {
-        throw new Error('Invalid response from server');
+      const responseData = response.data;
+      if (!responseData) {
+        throw new Error('No response data received');
       }
       
-      this.token = data.token;
-      this.user = data.user;
+      // The actual response structure from the API
+      const authData = (responseData as any).data || responseData;
+      if (!authData.token || !authData.user) {
+        throw new Error('Invalid response format from server');
+      }
       
-      localStorage.setItem('auth_token', this.token);
-      this.updateAuthState(this.user, this.token);
+      this.token = authData.token;
+      this.user = authData.user;
+      
+      if (this.token) {
+        localStorage.setItem('auth_token', this.token);
+        this.updateAuthState(this.user, this.token);
+      }
       
       return { user: this.user, error: null };
     } catch (error) {
@@ -77,21 +87,31 @@ class JWTAuth {
 
   async signUp(email: string, password: string, username: string): Promise<{ user: User | null; error: Error | null }> {
     try {
-      const data = await apiClient.post<AuthResponse>('/auth/register', {
+      const apiClient = getApiClient();
+      const response = await apiClient.post<{ data: AuthResponse }>('/auth/register', {
         email,
         password,
         username
       });
       
-      if (!data.token || !data.user) {
-        throw new Error('Invalid response from server');
+      const responseData = response.data;
+      if (!responseData) {
+        throw new Error('No response data received');
       }
       
-      this.token = data.token;
-      this.user = data.user;
+      // The actual response structure from the API
+      const authData = (responseData as any).data || responseData;
+      if (!authData.token || !authData.user) {
+        throw new Error('Invalid response format from server');
+      }
       
-      localStorage.setItem('auth_token', this.token);
-      this.updateAuthState(this.user, this.token);
+      this.token = authData.token;
+      this.user = authData.user;
+      
+      if (this.token) {
+        localStorage.setItem('auth_token', this.token);
+        this.updateAuthState(this.user, this.token);
+      }
       
       return { user: this.user, error: null };
     } catch (error) {

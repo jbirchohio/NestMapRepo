@@ -1,4 +1,4 @@
-import apiClient from './apiClient.js';
+import { getApiClient } from './apiClient';
 import type { 
   AgencyAnalyticsDTO, 
   CorporateAnalyticsDTO, 
@@ -28,7 +28,7 @@ class AnalyticsService {
     params?: AnalyticsFilterParams, 
     config?: RequestConfig
   ): Promise<AgencyAnalyticsDTO> {
-    return apiClient.get<AgencyAnalyticsDTO>(
+    return getApiClient().get<AgencyAnalyticsDTO>(
       `${this.basePath}/agency`, 
       { ...config, params }
     );
@@ -39,7 +39,7 @@ class AnalyticsService {
     params?: AnalyticsFilterParams,
     config?: RequestConfig
   ): Promise<CorporateAnalyticsDTO> {
-    return apiClient.get<CorporateAnalyticsDTO>(
+    return getApiClient().get<CorporateAnalyticsDTO>(
       `${this.basePath}/corporate`, 
       { ...config, params }
     );
@@ -50,7 +50,7 @@ class AnalyticsService {
     tripId: string, 
     config?: RequestConfig
   ): Promise<TripAnalyticsDTO> {
-    return apiClient.get<TripAnalyticsDTO>(
+    return getApiClient().get<TripAnalyticsDTO>(
       `${this.basePath}/trips/${tripId}`, 
       config
     );
@@ -62,7 +62,7 @@ class AnalyticsService {
     params?: Omit<AnalyticsFilterParams, 'userId'>,
     config?: RequestConfig
   ): Promise<UserAnalyticsDTO> {
-    return apiClient.get<UserAnalyticsDTO>(
+    return getApiClient().get<UserAnalyticsDTO>(
       `${this.basePath}/users/${userId}`, 
       { ...config, params }
     );

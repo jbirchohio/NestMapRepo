@@ -1,156 +1,171 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'wouter';
-import { User } from '../types/user';
+import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react';
+import { demoLogin } from '@/lib/nextauth';
+import config from '@/config/env';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  organizationId: number;
+  accessToken: string;
+}
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
 }
 
 export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    isLoading: true,
-    error: null,
-  });
-
-  const [, navigate] = useLocation();
-
-  // Initialize auth state from localStorage
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
+  // Use a try-catch block to handle potential NextAuth errors in Vite environment
+  try {
+    const { data: session, status } = useSession();
     
-    if (token && user) {
-      try {
-        const parsedUser = JSON.parse(user);
-        setState({
-          user: parsedUser,
-          token,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
-      } catch (error) {
-        console.error('Failed to parse user data', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setState(prev => ({
-          ...prev,
-          isLoading: false,
-          error: 'Failed to load user data',
-        }));
-      }
-    } else {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-      }));
-    }
-  }, []);
+    const state: AuthState = {
+      user: session?.user as User || null,
+      isAuthenticated: status === 'authenticated',
+      isLoading: status === 'loading',
+      error: null, // NextAuth handles errors through callbacks
+    };
 
-  const login = useCallback(async (email: string, password: string) => {
+
+  const signIn = async (email: string, password: string, options: { callbackUrl?: string } = {}) => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      const result = await nextAuthSignIn('credentials', {
+        redirect: false,
+        email,
+        password,
+        callbackUrl: options.callbackUrl || '/dashboard',
+      });
+
+      if (result?.error) {
+        // Map common error messages to user-friendly ones
+        const errorMessage = result.error === 'CredentialsSignin' 
+          ? 'Invalid email or password' 
+          : result.error;
+        throw new Error(errorMessage);
+      }
+
+      // If we have a URL, let the component handle the redirect
+      // This allows for better loading states and error handling in the UI
+      return result?.url || '/dashboard';
+    } catch (error) {
+      console.error('Sign in failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      throw new Error(errorMessage);
+    }
+  };
+
+  const signInWithProvider = async (
+    provider: 'google' | 'github' | 'microsoft',
+    options: { callbackUrl?: string } = {}
+  ) => {
+    try {
+      await nextAuthSignIn(provider, {
+        callbackUrl: options.callbackUrl || '/dashboard',
+        redirect: true,
+      });
+    } catch (error) {
+      console.error(`Sign in with ${provider} failed:`, error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : `Failed to sign in with ${provider}`;
+      throw new Error(errorMessage);
+    }
+  };
+
+  const signOut = async (options: { callbackUrl?: string } = {}) => {
+    try {
+      await nextAuthSignOut({ 
+        callbackUrl: options.callbackUrl || '/login',
+        redirect: true,
+      });
+    } catch (error) {
+      console.error('Sign out failed:', error);
+      throw new Error('Failed to sign out. Please try again.');
+    }
+  };
+
+  const hasRole = (requiredRole: string): boolean => {
+    if (!state.user) return false;
+    return state.user.role === requiredRole;
+  };
+
+  const hasAnyRole = (requiredRoles: string[]): boolean => {
+    if (!state.user) return false;
+    return requiredRoles.includes(state.user.role);
+  };
+
+  const getAccessToken = (): string | null => {
+    return state.user?.accessToken || null;
+  };
+
+  const handleDemoLogin = async () => {
+    try {
+      // Use the demoLogin function from nextauth.ts
+      const data = await demoLogin();
       
-      // Replace with actual API call
-      const response = await fetch('/api/auth/login', {
+      // Use the demo credentials to sign in
+      return await signIn(data.email, data.password, { callbackUrl: '/dashboard' });
+    } catch (error) {
+      console.error('Demo login error:', error);
+      throw error;
+    }
+  };
+
+  const continueAsGuest = async () => {
+    try {
+      // Call the guest login endpoint
+      const response = await fetch(`${config.API_BASE_URL}/auth/guest-access`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        throw new Error('Failed to continue as guest');
       }
 
-      const { user, token } = await response.json();
+      const data = await response.json();
       
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      setState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-      
-      return user;
+      // Use the guest credentials to sign in
+      return await signIn(data.email, data.password, { callbackUrl: '/app' });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
+      console.error('Guest login error:', error);
       throw error;
     }
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setState({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-    });
-    navigate('/login');
-  }, [navigate]);
-
-  const register = useCallback(async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      // Replace with actual API call
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
-      }
-
-      return await response.json();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
-      throw error;
-    } finally {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-      }));
-    }
-  }, []);
+  };
 
   return {
     ...state,
-    login,
-    logout,
-    register,
+    signIn,
+    signInWithProvider,
+    signOut,
+    hasRole,
+    hasAnyRole,
+    getAccessToken,
+    demoLogin: handleDemoLogin,
+    continueAsGuest,
   };
+} catch (error) {
+  console.error('Error in useAuth hook:', error);
+  // Provide a fallback state if NextAuth fails to initialize
+  return {
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    error: 'Authentication system failed to initialize',
+    signIn: async () => { throw new Error('Auth system not available'); },
+    signInWithProvider: async () => { throw new Error('Auth system not available'); },
+    signOut: async () => { throw new Error('Auth system not available'); },
+    demoLogin: async () => { throw new Error('Auth system not available'); },
+    continueAsGuest: async () => { throw new Error('Auth system not available'); },
+    hasRole: () => false,
+    hasAnyRole: () => false,
+    getAccessToken: () => null,
+  };
+}
 }
 
 export default useAuth;

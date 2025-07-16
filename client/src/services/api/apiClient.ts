@@ -1,16 +1,14 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig, RawAxiosRequestHeaders } from 'axios';
-import { SecurityUtils } from '@/utils/securityUtils';
-import { TokenManager } from '@/utils/tokenManager';
-import { SessionSecurity } from '@/utils/sessionSecurity';
-import { CSRFTokenManager } from '@/utils/csrfTokenManager';
 import { ErrorLogger } from '@/utils/errorLogger';
 import { PerformanceMonitor } from '@/utils/performanceMonitor';
 import { ApiResponse, ApiErrorResponse, PerformanceMetrics } from '@/types/api';
+import { getSession } from 'next-auth/react';
 
 interface ApiClientConfig {
   baseUrl: string;
   timeout?: number;
   headers?: Record<string, string>;
+  navigate?: () => void;
 }
 
 interface ExtendedRequestConfig extends Omit<AxiosRequestConfig, 'method' | 'url'> {
@@ -21,15 +19,11 @@ type RequestConfig = ExtendedRequestConfig;
 
 export class ApiClient {
   private client: AxiosInstance;
-  private securityUtils: SecurityUtils;
-  private tokenManager: TokenManager;
-  private sessionSecurity: SessionSecurity;
-  // Rate limiter is initialized but not currently used - keeping for future rate limiting
-  private csrfManager: CSRFTokenManager;
   private errorLogger: ErrorLogger;
   private performanceMonitor: PerformanceMonitor;
   private securityAuditInterval: ReturnType<typeof setInterval> | null = null;
   private cancelSources: Map<string, AbortController> = new Map();
+  public navigate?: () => void;
 
   constructor(config: ApiClientConfig) {
     const defaultHeaders: RawAxiosRequestHeaders = {
@@ -43,15 +37,11 @@ export class ApiClient {
       headers: defaultHeaders
     });
 
-    this.securityUtils = SecurityUtils.getInstance();
-    this.tokenManager = TokenManager.getInstance();
-    this.sessionSecurity = SessionSecurity.getInstance();
-    this.csrfManager = CSRFTokenManager.getInstance();
+    this.navigate = config.navigate;
     this.errorLogger = ErrorLogger.getInstance();
     this.performanceMonitor = PerformanceMonitor.getInstance();
 
     this.setupInterceptors();
-    this.setupSecurityAudit();
 
     // Clean up on page unload
     if (typeof window !== 'undefined') {
@@ -152,31 +142,17 @@ export class ApiClient {
       async (config: InternalAxiosRequestConfig) => {
         try {
           // Start performance monitoring
-          const metrics = this.performanceMonitor.startRequest(config);
+          const metrics = await this.performanceMonitor.startRequest(config);
           (config as InternalAxiosRequestConfig & { metrics?: PerformanceMetrics }).metrics = metrics;
 
-          // Add security headers
-          const securityHeaders = this.securityUtils.getSecurityHeaders();
-          Object.entries(securityHeaders).forEach(([key, value]) => {
-            if (value !== undefined) {
-              config.headers[key] = value;
-            }
-          });
+          // Add basic security headers
+          config.headers.set('X-Requested-With', 'XMLHttpRequest');
 
-          // Add CSRF token
-          const csrfHeader = this.csrfManager.getCSRFHeader();
-          if (csrfHeader?.['X-CSRF-Token']) {
-            config.headers['X-CSRF-Token'] = csrfHeader['X-CSRF-Token'];
+          // Add Authorization token from NextAuth session
+          const session = await getSession();
+          if (session?.user?.accessToken) {
+            config.headers.set('Authorization', `Bearer ${session.user.accessToken}`);
           }
-
-          // Add Authorization token
-          const token = await this.tokenManager.getAccessToken();
-          if (token) {
-            config.headers.set('Authorization', `Bearer ${token}`);
-          }
-
-          // Request data validation can be added here if needed
-          // Example: this.validateRequestData(config.data);
 
           return config;
         } catch (error) {
@@ -225,20 +201,12 @@ export class ApiClient {
             this.performanceMonitor.endWithError(error.config.metrics, error);
           }
 
-          // Handle token errors
+          // Handle authentication errors
           if (error.response?.status === 401) {
-            await this.handleTokenError(error);
-          }
-
-          // Handle session errors
-          if (error.response?.status === 403) {
-            await this.handleSessionError(error);
-          }
-
-          // Audit security context
-          const securityContext = this.securityUtils.getSecurityContext();
-          if (securityContext) {
-            this.securityUtils.reportSecurityContext(securityContext);
+            // Redirect to login page if we have navigation function
+            if (this.navigate) {
+              this.navigate();
+            }
           }
 
           return Promise.reject(error);
@@ -251,36 +219,6 @@ export class ApiClient {
         }
       }
     );
-  }
-
-  private async handleTokenError(_error: AxiosError<ApiResponse>): Promise<void> {
-    try {
-      this.tokenManager.destroyTokens();
-    } catch (err) {
-      this.errorLogger.logError(err as Error, {
-        type: 'TokenError',
-        context: {
-          token: this.tokenManager.getAccessToken(),
-          session: this.sessionSecurity.getSessionId()
-        }
-      });
-      this.sessionSecurity.destroySession();
-      this.csrfManager.clearToken();
-    }
-  }
-
-  private async handleSessionError(error: AxiosError<ApiResponse>): Promise<void> {
-    try {
-      await this.sessionSecurity.handleSessionError(error);
-    } catch (error) {
-      this.errorLogger.logError(error as Error, {
-        type: 'SessionError',
-        context: {
-          session: this.sessionSecurity.getSessionId()
-        }
-      });
-      this.sessionSecurity.destroySession();
-    }
   }
 
   private async handleRequestError<T>(error: AxiosError<ApiResponse>): Promise<T> {
@@ -304,29 +242,7 @@ export class ApiClient {
     } as ApiErrorResponse;
   }
 
-  private setupSecurityAudit(): void {
-    // Run security audit every 5 minutes
-    this.securityAuditInterval = setInterval(() => {
-      this.performSecurityAudit();
-    }, 5 * 60 * 1000);
-  }
-
-  private async performSecurityAudit(): Promise<void> {
-    try {
-      const auditResult = await this.securityUtils.performSecurityAudit();
-      if (!auditResult.success) {
-        this.errorLogger.logError(new Error('Security audit failed'), {
-          type: 'SecurityAudit',
-          details: auditResult.details
-        });
-      }
-    } catch (err) {
-      // Log the error but don't throw to prevent unhandled promise rejections
-      this.errorLogger.logError(err as Error, {
-        type: 'SecurityAuditError'
-      });
-    }
-  }
+  // Security audit functionality removed as part of NextAuth migration
 
   /**
    * Clean up resources when the client is no longer needed
@@ -339,11 +255,46 @@ export class ApiClient {
   }
 }
 
-// Create and export a singleton instance
-const apiClientInstance = new ApiClient({
-  baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 30000
-});
+// Create and export a function to initialize the API client with required dependencies
+export const createApiClient = (navigate?: () => void) => {
+  return new ApiClient({
+    baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
+    timeout: 30000,
+    navigate
+  });
+};
 
-// Export the instance as default and named export
-export { apiClientInstance as apiClient, apiClientInstance as default };
+// For backward compatibility, export a default instance with a warning
+let defaultApiClient: ApiClient | null = null;
+
+/**
+ * Get or create an API client instance
+ * @param navigate Optional navigation function for handling redirects
+ * @returns ApiClient instance
+ */
+export const getApiClient = (navigate?: () => void): ApiClient => {
+  // If we don't have a default instance, create one
+  if (!defaultApiClient) {
+    if (!navigate) {
+      console.warn('Creating ApiClient without navigate function. This may cause issues with authentication.');
+    }
+    
+    defaultApiClient = new ApiClient({
+      baseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
+      timeout: 30000,
+      navigate: navigate || (() => {
+        console.warn('No navigation function provided. Authentication redirects will not work.');
+      })
+    });
+  }
+  // If a new navigate function is provided, update the client's navigate function
+  else if (navigate && defaultApiClient) {
+    // Update the navigate function if needed
+    defaultApiClient.navigate = navigate;
+  }
+  
+  return defaultApiClient;
+};
+
+// Export a default instance that will be initialized when needed
+export default getApiClient;

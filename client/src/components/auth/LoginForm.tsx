@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,10 +18,9 @@ import {
   CardTitle 
 } from '../../components/ui/card.js';
 import { Alert, AlertDescription } from '../../components/ui/alert.js';
-import { apiClient } from '../../services/api/apiClient.js';
 
 // Local imports with explicit .js extensions for Node16/NodeNext module resolution
-import { useAuth } from '../../contexts/auth/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 // Type definitions for the form
 type LoginFormValues = {
@@ -29,23 +28,7 @@ type LoginFormValues = {
   password: string;
 };
 
-// User interface to replace 'any' type
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  role?: string;
-  organizationId?: string;
-  preferences?: Record<string, unknown>;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
-// Type for the signIn function return value
-interface SignInResult {
-  user: User;
-  error: Error | null;
-}
 
 // Extend Window interface to include React type definitions
 declare global {
@@ -85,44 +68,21 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
   
   const { register, formState: { errors } } = form;
 
-  const checkSuperAdminPermissions = async () => {
-    try {
-      const response = await apiClient.get<{ permissions: string[] }>('/user/permissions');
-      const permissions = response?.permissions || [];
-      
-      // If user has superadmin permissions, redirect to superadmin dashboard
-      if (permissions.includes('manage_organizations') || permissions.includes('manage_users')) {
-        window.location.href = '/superadmin';
-        return true;
-      }
-    } catch (error) {
-      console.warn('Could not check permissions:', error);
-    }
-    return false;
-  };
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setIsLoading(true);
       setErrorMessage("");
       
-      // Sign in the user
-      const result = await signIn(values.email, values.password);
+      // Sign in the user using the useAuth hook's signIn function
+      await signIn(values.email, values.password, {
+        callbackUrl: '/dashboard',
+      });
       
-      // Check if there was an error during sign in
-      if (result?.error) {
-        throw new Error(result.error.message || 'Failed to sign in. Please try again.');
-      }
+      // If sign in is successful, the rest will be handled by the auth flow
       
-      if (!result?.user) {
-        throw new Error('No user returned from sign in');
-      }
-      
-      // Check for superadmin permissions
-      const isSuperAdmin = await checkSuperAdminPermissions();
-      
-      // If not a superadmin, proceed with normal flow
-      if (!isSuperAdmin && onSuccess) {
+      // If we have an onSuccess callback, call it
+      if (onSuccess) {
         onSuccess();
       }
     } catch (error: Error | unknown) {

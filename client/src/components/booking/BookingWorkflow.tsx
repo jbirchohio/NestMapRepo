@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { format, addDays } from 'date-fns';
 import { ClientInfoStep } from './steps/ClientInfoStep';
 import { FlightSelectionStep } from './steps/FlightSelectionStep';
@@ -12,7 +12,7 @@ import { ConfirmationStep } from './steps/ConfirmationStep';
 import { BookingStep, ClientInfo, CabinType } from './types/booking';
 
 export const BookingWorkflow = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -96,7 +96,7 @@ export const BookingWorkflow = () => {
       });
       
       // Navigate to booking confirmation page
-      navigate('/bookings/confirmation');
+      router.push('/bookings/confirmation');
     } catch (error) {
       console.error('Booking failed:', error);
       toast({
@@ -105,7 +105,7 @@ export const BookingWorkflow = () => {
         variant: 'destructive',
       });
     }
-  }, [formData, navigate, toast, user?.id]);
+  }, [formData, router, toast, user?.id]);
 
   // Render the current step
   const renderStep = () => {

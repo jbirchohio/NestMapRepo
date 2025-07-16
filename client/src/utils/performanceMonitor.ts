@@ -1,9 +1,7 @@
 import { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { ErrorLogger } from './errorLogger';
-
-import { SessionSecurity } from './sessionSecurity';
-import { SecureCookie } from './SecureCookie';
-import apiClient from '@/services/api/apiClient';
+import { getSession } from 'next-auth/react';
+import { getApiClient } from '@/services/api/apiClient';
 
 export interface PerformanceMetrics {
   timestamp: string;
@@ -25,14 +23,12 @@ export interface PerformanceMetrics {
 
 export class PerformanceMonitor {
   private static instance: PerformanceMonitor;
-  private sessionSecurity: SessionSecurity;
   private metrics: PerformanceMetrics[];
   private maxMetrics: number;
   private logInterval: NodeJS.Timeout | null = null;
   private errorLogger: ErrorLogger;
 
   private constructor() {
-    this.sessionSecurity = SessionSecurity.getInstance();
     this.metrics = [];
     this.maxMetrics = 1000;
     this.errorLogger = ErrorLogger.getInstance();
@@ -59,8 +55,10 @@ export class PerformanceMonitor {
     }
   }
 
-  public startRequest(config: AxiosRequestConfig<unknown>): PerformanceMetrics {
+  public async startRequest(config: AxiosRequestConfig<unknown>): Promise<PerformanceMetrics> {
     const startTime = Date.now();
+    const session = await getSession();
+    
     const metrics: PerformanceMetrics = {
       timestamp: new Date().toISOString(),
       requestTime: startTime,
@@ -70,10 +68,10 @@ export class PerformanceMonitor {
       url: config.url || '',
       status: null,
       size: 0,
-      userId: this.sessionSecurity.getUserId(),
-      sessionId: this.sessionSecurity.getSessionId(),
-      ipAddress: this.sessionSecurity.getIp(),
-      userAgent: this.sessionSecurity.getUserAgent(),
+      userId: session?.user?.id || null,
+      sessionId: session?.user?.accessToken ? 'active' : null,
+      ipAddress: null, // No longer tracking IP in client
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : null,
       success: false,
       errorType: null,
       errorMessage: null
@@ -124,7 +122,7 @@ export class PerformanceMonitor {
   private async sendMetricsToBackend(metrics: PerformanceMetrics): Promise<void> {
     try {
       // apiClient.post will handle JSON.stringify internally for object payloads
-      await apiClient.post('/metrics', metrics);
+      await getApiClient().post('/metrics', metrics);
     } catch (error: unknown) {
       // Log the error that occurred during sending metrics
       const errToLog = error instanceof Error ? error : new Error(String(error));
@@ -135,7 +133,7 @@ export class PerformanceMonitor {
 
       // Store failed metrics for retry
       let pendingMetricsList: PerformanceMetrics[] = [];
-      const pendingMetricsRaw = SecureCookie.get('pending_metrics');
+      const pendingMetricsRaw = localStorage.getItem('pending_metrics');
       if (pendingMetricsRaw) {
         try {
           pendingMetricsList = JSON.parse(pendingMetricsRaw) as PerformanceMetrics[];
@@ -149,13 +147,7 @@ export class PerformanceMonitor {
         }
       }
       pendingMetricsList.push(metrics);
-      SecureCookie.set('pending_metrics', JSON.stringify(pendingMetricsList), {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 86400 // 24 hours
-      });
+      localStorage.setItem('pending_metrics', JSON.stringify(pendingMetricsList));
     }
   }
 
@@ -165,7 +157,7 @@ export class PerformanceMonitor {
 
   public clearMetrics(): void {
     this.metrics = [];
-    SecureCookie.remove('pending_metrics');
+    localStorage.removeItem('pending_metrics');
   }
 
   public destroy(): void {
@@ -177,7 +169,7 @@ export class PerformanceMonitor {
 
   public retryFailedMetrics(): void {
     try {
-      const pendingMetricsRaw = SecureCookie.get('pending_metrics');
+      const pendingMetricsRaw = localStorage.getItem('pending_metrics');
       if (pendingMetricsRaw) {
         let metricsToRetry: PerformanceMetrics[] = [];
         try {
@@ -188,14 +180,14 @@ export class PerformanceMonitor {
             type: 'PendingMetricsParseErrorOnRetry',
             context: { rawValue: pendingMetricsRaw?.substring(0, 100) } // Log a snippet
           });
-          SecureCookie.remove('pending_metrics'); // Clear corrupted cookie
+          localStorage.removeItem('pending_metrics'); // Clear corrupted cookie
           return;
         }
 
         if (metricsToRetry.length > 0) {
           // Assuming sendMetricsToBackend handles its own errors and retries by adding to cookie.
           // We'll clear the cookie here and let sendMetricsToBackend repopulate if individual sends fail.
-          SecureCookie.remove('pending_metrics'); 
+          localStorage.removeItem('pending_metrics'); 
           for (const metric of metricsToRetry) {
             // Not awaiting, as sendMetricsToBackend will handle its own persistence logic.
             this.sendMetricsToBackend(metric);
@@ -207,7 +199,7 @@ export class PerformanceMonitor {
       this.errorLogger.logError(errToLog, {
         type: 'MetricsRetryError',
         context: {
-          hasPendingMetrics: !!SecureCookie.get('pending_metrics')
+          hasPendingMetrics: !!localStorage.getItem('pending_metrics')
         }
       });
     }

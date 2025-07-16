@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +10,7 @@ import NewTripModal from "@/components/NewTripModal";
 import SwipeableTrip from "@/components/SwipeableTrip";
 import RenameTripDialog from "@/components/RenameTripDialog";
 import TripTemplates from "@/components/TripTemplates";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import AuthModal from "@/components/auth/AuthModal";
 import RoleBasedRedirect from "@/components/RoleBasedRedirect";
 import { PrimaryButton } from "@/components/ui/primary-button";
@@ -19,22 +19,29 @@ import { motion } from "framer-motion";
 import { UserRound, LogOut, BarChart3, CheckCircle, Plus, Users, Plane, Brain, Sparkles } from "lucide-react";
 
 export default function Home() {
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [tripToRename, setTripToRename] = useState<ClientTrip | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "signup">("login");
   
-  const { user, authReady, signOut } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth();
   const userId = user?.id ?? null;
   const queryClient = useQueryClient();
   
-  // Routing is now handled by RoleBasedRedirect component
-  
   // Get user ID from authentication or use guest mode
-  const effectiveUserId = userId ?? -1; // Use database userId or -1 for guest mode
+  const effectiveUserId = userId ? Number(userId) : -1; // Ensure it's a number
   const isGuestMode = effectiveUserId === -1;
+  
+  // Home page is now accessible without authentication
+  // We'll show different content based on authentication status
+  useEffect(() => {
+    // Close auth modal if user becomes authenticated
+    if (isAuthenticated && isAuthModalOpen) {
+      setIsAuthModalOpen(false);
+    }
+  }, [isAuthenticated, isAuthModalOpen]);
 
   // Guest trip storage
   const getGuestTrips = () => {
@@ -48,7 +55,7 @@ export default function Home() {
 
   // Fetch trips based on authentication status
   const tripsQuery = useQuery<ClientTrip[]>({
-    queryKey: [API_ENDPOINTS.TRIPS, effectiveUserId],
+    queryKey: [API_ENDPOINTS.TRIPS, effectiveUserId.toString()], // Ensure string key
     queryFn: async () => {
       if (isGuestMode) {
         // Return guest trips for unauthenticated users
@@ -82,11 +89,11 @@ export default function Home() {
   
   const handleTripCreated = (tripId: number) => {
     setIsNewTripModalOpen(false);
-    setLocation(`/trip/${tripId}`);
+    navigate(`/trip/${tripId}`);
   };
   
   const handleNavigateToTrip = (tripId: string) => {
-    setLocation(`/trip/${tripId}`);
+    navigate(`/trip/${tripId}`);
   };
   
   const handleOpenRenameDialog = (trip: ClientTrip) => {
@@ -110,16 +117,18 @@ export default function Home() {
   };
   
   const handleSignOut = async () => {
-    await signOut();
-    queryClient.invalidateQueries({
-      queryKey: [API_ENDPOINTS.TRIPS],
-    });
+    try {
+      await signOut({ callbackUrl: '/' });
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-electric-50/30 to-electric-100/50 dark:from-dark-900 dark:via-electric-900/10 dark:to-electric-800/20">
       {/* Handle automatic routing for authenticated users */}
-      {user && authReady && <RoleBasedRedirect />}
+      {user && <RoleBasedRedirect />}
       <NewTripModal 
         isOpen={isNewTripModalOpen} 
         onClose={() => setIsNewTripModalOpen(false)} 
@@ -271,7 +280,7 @@ export default function Home() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => setLocation('/analytics')}
+                  onClick={() => navigate('/analytics')}
                   title="Analytics Dashboard"
                   className="text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
                 >
@@ -281,7 +290,7 @@ export default function Home() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => setLocation('/team')}
+                  onClick={() => navigate('/team')}
                   title="Team Management"
                   className="text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
                 >
@@ -291,7 +300,7 @@ export default function Home() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => setLocation('/billing')}
+                  onClick={() => navigate('/billing')}
                   title="Billing & Subscription"
                   className="text-electric-600 hover:text-electric-700 hover:bg-electric-50 dark:text-electric-400 dark:hover:text-electric-300 dark:hover:bg-electric-900/20"
                 >

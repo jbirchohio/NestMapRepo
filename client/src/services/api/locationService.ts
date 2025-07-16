@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import { getApiClient } from './apiClient';
 
 export interface LocationSuggestion {
   id: string;
@@ -66,7 +66,7 @@ class LocationService {
     params: SearchLocationParams,
     config?: RequestConfig
   ): Promise<LocationSuggestion[]> {
-    return apiClient.get<LocationSuggestion[]>(
+    return getApiClient().get<LocationSuggestion[]>(
       `${this.basePath}/search`,
       { ...config, params }
     );
@@ -76,7 +76,7 @@ class LocationService {
     placeId: string,
     config?: RequestConfig
   ): Promise<LocationDetails> {
-    return apiClient.get<LocationDetails>(
+    return getApiClient().get<LocationDetails>(
       `${this.basePath}/${placeId}`,
       config
     );
@@ -87,7 +87,7 @@ class LocationService {
     maxWidth = 400,
     config?: RequestConfig
   ): Promise<string> {
-    return apiClient.get<string>(
+    return getApiClient().get<string>(
       `${this.basePath}/photos/${photoReference}`,
       {
         ...config,
@@ -102,7 +102,7 @@ class LocationService {
     sessionToken: string,
     config?: RequestConfig
   ): Promise<LocationSuggestion[]> {
-    return apiClient.get<LocationSuggestion[]>(
+    return getApiClient().get<LocationSuggestion[]>(
       `${this.basePath}/autocomplete`,
       {
         ...config,
@@ -116,7 +116,7 @@ class LocationService {
     lng: number,
     config?: RequestConfig
   ): Promise<LocationSuggestion> {
-    return apiClient.get<LocationSuggestion>(
+    return getApiClient().get<LocationSuggestion>(
       `${this.basePath}/reverse`,
       {
         ...config,

@@ -1,3 +1,5 @@
+// React import is needed for JSX transformation even if not directly referenced
+import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
