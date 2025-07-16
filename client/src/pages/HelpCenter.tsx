@@ -211,7 +211,6 @@ export default function HelpCenter() {
                   </CardHeader>
                   <CardContent>
                     <div className="w-full">
-                      {/* @ts-expect-error - Radix UI typing issues with children prop */}
                       <Accordion.Root
                         type="single"
                         collapsible
@@ -221,21 +220,17 @@ export default function HelpCenter() {
                         {category.questions.map((qa, qaIndex) => {
                           const itemValue = `item-${index}-${qaIndex}`;
                           return (
-                            // @ts-expect-error - Radix UI typing issues with children prop
                             <Accordion.Item 
                               key={itemValue} 
                               value={itemValue}
                               className="border-b"
                             >
-                              {/* @ts-expect-error - Radix UI typing issues with children prop */}
                               <Accordion.Header className="flex">
-                                {/* @ts-expect-error - Radix UI typing issues with children prop */}
                                 <Accordion.Trigger className="flex flex-1 items-center justify-between py-4 font-medium transition-all hover:no-underline text-left">
                                   <span className="flex-1 text-left">{qa.question}</span>
                                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                                 </Accordion.Trigger>
                               </Accordion.Header>
-                              {/* @ts-expect-error - Radix UI typing issues with children prop */}
                               <Accordion.Content className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                                 <div className="pb-4 pt-0 text-slate-600 dark:text-slate-400">
                                   {qa.answer}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -69,12 +69,12 @@ export default function CorporateDashboard() {
   const [selectedCard, setSelectedCard] = useState<CorporateCard | null>(null);
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [addFundsAmount, setAddFundsAmount] = useState("");
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const handleOnboardingTaskClick = (_taskId: string, url: string) => {
-    setLocation(url);
+    navigate(url);
   };
 
   const { data: trips = [], isLoading: tripsLoading } = useQuery<Trip[]>({
@@ -359,7 +359,7 @@ export default function CorporateDashboard() {
                     <div 
                       key={trip.id} 
                       className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:shadow-md hover:bg-muted/50 transition-all"
-                      onClick={() => setLocation(`/trip/${trip.id}`)}
+                      onClick={() => navigate(`/trip/${trip.id}`)}
                     >
                       <div className="flex items-center gap-3">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -427,7 +427,7 @@ export default function CorporateDashboard() {
                     <div 
                       key={trip.id} 
                       className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:shadow-md hover:bg-muted/50 transition-all"
-                      onClick={() => setLocation(`/trip/${trip.id}`)}
+                      onClick={() => navigate(`/trip/${trip.id}`)}
                     >
                       <div className="flex items-center gap-3">
                         <Calendar className="h-4 w-4 text-muted-foreground" />

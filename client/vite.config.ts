@@ -56,13 +56,20 @@ export default defineConfig(({ mode }) => {
       open: true,
       strictPort: true,
       proxy: {
-        // Proxy API requests to your backend server
-        '/api/auth': {
-          target: env.API_URL || 'http://localhost:8000',
+        // Proxy all API requests to the backend server
+        '^/api/(?!auth)': {
+          target: env.API_URL || 'http://localhost:3001',
           changeOrigin: true,
           secure: false,
+          rewrite: (path) => path.replace(/^\/api/, '') // Remove /api prefix when forwarding
         },
-      },
+        // Keep the auth proxy for NextAuth
+        '/api/auth': {
+          target: env.API_URL || 'http://localhost:3001',
+          changeOrigin: true,
+          secure: false
+        }
+      }
     },
     build: {
       outDir: 'dist',

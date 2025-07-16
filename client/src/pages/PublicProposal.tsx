@@ -20,7 +20,42 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
   const [viewStartTime] = useState(Date.now());
   const { toast } = useToast();
 
-  const { data: proposal, isLoading, error } = useQuery({
+  interface Proposal {
+    proposalData?: {
+      costBreakdown?: Record<string, number>;
+      validUntil?: string;
+    };
+    clientName?: string;
+    agentName?: string;
+    createdAt?: string;
+    linkExpiration?: string;
+    trip?: {
+      city?: string;
+      country?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+    activities?: Array<{
+      time: string;
+      title: string;
+      locationName: string;
+      notes?: string;
+      tag?: string;
+    }>;
+    signatureData?: {
+      signed?: boolean;
+      signerName?: string;
+      signedAt?: string;
+    };
+    companyName?: string;
+    contactInfo?: {
+      email?: string;
+      phone?: string;
+      website?: string;
+    };
+  }
+  
+  const { data: proposal, isLoading, error } = useQuery<Proposal>({
     queryKey: ["/api/public-proposals", proposalId, password],
     enabled: !isPasswordRequired || password.length > 0,
   });
@@ -82,7 +117,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
   }, [proposal]);
 
   // Handle password protection
-  if (error?.status === 401) {
+  if ((error as any)?.status === 401) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -115,7 +150,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
   }
 
   // Handle expired proposals
-  if (error?.status === 410) {
+  if ((error as any)?.status === 410) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -190,7 +225,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                 <span>Prepared by {proposal.agentName}</span>
                 <span>•</span>
-                <span>{new Date(proposal.createdAt).toLocaleDateString()}</span>
+                <span>{new Date(proposal.createdAt ?? "").toLocaleDateString()}</span>
                 {proposal.linkExpiration && (
                   <>
                     <span>•</span>
@@ -234,7 +269,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
               <div>
                 <h4 className="font-medium text-gray-900 dark:text-white">Duration</h4>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {new Date(proposal.trip?.startDate).toLocaleDateString()} - {new Date(proposal.trip?.endDate).toLocaleDateString()}
+                  {proposal.trip?.startDate ? new Date(proposal.trip.startDate).toLocaleDateString() : "N/A"} - {proposal.trip?.endDate ? new Date(proposal.trip.endDate).toLocaleDateString() : "N/A"}
                 </p>
               </div>
               <div>
@@ -345,7 +380,7 @@ export default function PublicProposal({ proposalId }: PublicProposalViewProps) 
               <div className="flex items-center justify-center gap-3 text-green-700 dark:text-green-300">
                 <CheckCircle className="w-6 h-6" />
                 <span className="font-medium">
-                  Signed by {proposal.signatureData.signerName} on {new Date(proposal.signatureData.signedAt).toLocaleDateString()}
+                  Signed by {proposal.signatureData.signerName} on {proposal.signatureData.signedAt ? new Date(proposal.signatureData.signedAt).toLocaleDateString() : "N/A"}
                 </span>
               </div>
             </CardContent>

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,7 +51,7 @@ export default function AdminLogs() {
     data,
     isLoading,
     refetch
-  } = useQuery({
+  } = useQuery<LogsResponse>({
     queryKey: ['adminLogs', filterAction, searchTerm, currentPage],
     queryFn: async (): Promise<LogsResponse> => {
       const params = new URLSearchParams({
@@ -68,19 +68,23 @@ export default function AdminLogs() {
       }
 
       const response = await apiRequest('GET', `/api/admin/logs?${params.toString()}`);
-      return response as unknown as LogsResponse;
+      return response as LogsResponse;
     },
-    onSuccess: (response) => {
-      if (currentPage === 1) {
-        setAllLogs(response.logs);
-      } else {
-        setAllLogs(prev => [...prev, ...response.logs]);
-      }
-    },
-    keepPreviousData: true
+    placeholderData: (previousData) => previousData,
   });
 
-  const hasNextPage = data ? data.pagination.page < data.pagination.pages : false;
+  // Update allLogs when data changes
+  useEffect(() => {
+    if (data) {
+      if (currentPage === 1) {
+        setAllLogs(data.logs);
+      } else {
+        setAllLogs(prev => [...prev, ...data.logs]);
+      }
+    }
+  }, [data, currentPage]);
+
+  const hasNextPage = data?.pagination ? data.pagination.page < data.pagination.pages : false;
 
   const loadMore = () => {
     if (hasNextPage && !isLoading) {

@@ -48,37 +48,37 @@ export default function SuperadminClean() {
   const queryClient = useQueryClient();
 
   // Individual API queries for each section (original working approach)
-  const { data: organizations = [] } = useQuery({
+  const { data: organizations = [] } = useQuery<Organization[]>({
     queryKey: ['/api/superadmin/organizations'],
     retry: false
   });
 
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ['/api/superadmin/users'],
     retry: false
   });
 
-  const { data: activeSessions = [] } = useQuery({
+  const { data: activeSessions = [] } = useQuery<any[]>({
     queryKey: ['/api/superadmin/sessions'],
     retry: false
   });
 
-  const { data: backgroundJobs = [] } = useQuery({
+  const { data: backgroundJobs = [] } = useQuery<any[]>({
     queryKey: ['/api/superadmin/jobs'],
     retry: false
   });
 
-  const { data: auditLogs = [] } = useQuery({
+  const { data: auditLogs = [] } = useQuery<AuditLog[]>({
     queryKey: ['/api/superadmin/activity'],
     retry: false
   });
 
-  const { data: billingData = [] } = useQuery({
+  const { data: billingData = [] } = useQuery<any[]>({
     queryKey: ['/api/superadmin/billing'],
     retry: false
   });
 
-  const { data: featureFlags = [] } = useQuery({
+  const { data: featureFlags = [] } = useQuery<any[]>({
     queryKey: ['/api/superadmin/flags'],
     retry: false
   });

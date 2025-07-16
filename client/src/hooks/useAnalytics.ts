@@ -7,12 +7,14 @@ export const useAnalytics = (params?: AnalyticsFilterParams) => {
   const { user, isAuthenticated } = useAuth();
   const isCorporate = user?.role === 'corporate';
 
-  return useQuery({
+  return useQuery<CorporateAnalyticsDTO | AgencyAnalyticsDTO>({
     queryKey: ['analytics', { ...params, isCorporate }],
-    queryFn: () => 
-      isCorporate 
-        ? analyticsService.getCorporateAnalytics(params)
-        : analyticsService.getAgencyAnalytics(params),
+    queryFn: async () => {
+      if (isCorporate) {
+        return analyticsService.getCorporateAnalytics(params);
+      }
+      return analyticsService.getAgencyAnalytics(params);
+    },
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

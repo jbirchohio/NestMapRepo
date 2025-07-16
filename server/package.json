@@ -19,6 +19,7 @@
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.4.19",
     "@nestjs/jwt": "^10.0.0",
+    "@nestjs/platform-express": "^11.1.3",
     "@shared/schema": "workspace:*",
     "bcrypt": "^5.1.1",
     "csv-stringify": "^6.6.0",

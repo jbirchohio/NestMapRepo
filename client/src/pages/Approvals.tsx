@@ -11,6 +11,19 @@ import { CheckCircle, XCircle, Clock, AlertTriangle, User, Calendar, DollarSign 
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
+interface ApiResponse<T> {
+  data: T;
+  // Add other common API response fields if needed
+}
+
+interface ApprovalRule {
+  id: string;
+  name: string;
+  entityType: string;
+  autoApprove: boolean;
+  conditions: any[]; // Define more specific type if possible
+}
+
 interface ApprovalRequest {
   id: number;
   entityType: string;
@@ -44,12 +57,12 @@ export default function Approvals() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: pendingRequests, isLoading } = useQuery({
+  const { data: pendingRequests, isLoading } = useQuery<ApiResponse<ApprovalRequest[]>>({
     queryKey: ['/api/approvals/pending'],
     refetchInterval: 30000 // Refresh every 30 seconds
   });
 
-  const { data: approvalRules } = useQuery({
+  const { data: approvalRules } = useQuery<ApiResponse<ApprovalRule[]>>({
     queryKey: ['/api/approvals/rules']
   });
 
@@ -146,13 +159,13 @@ export default function Approvals() {
       <Tabs defaultValue="pending" className="space-y-6">
         <TabsList>
           <TabsTrigger value="pending">
-            Pending Requests ({pendingRequests?.length || 0})
+            Pending Requests ({pendingRequests?.data?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="rules">Approval Rules</TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
-          {!pendingRequests?.length ? (
+          {!pendingRequests?.data?.length ? (
             <Card>
               <CardContent className="py-8 text-center">
                 <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
@@ -165,7 +178,7 @@ export default function Approvals() {
               </CardContent>
             </Card>
           ) : (
-            pendingRequests.map((request: ApprovalRequest) => {
+            pendingRequests.data.map((request) => {
               const PriorityIcon = priorityConfig[request.priority as keyof typeof priorityConfig]?.icon || Clock;
               const isOverdue = request.dueDate && new Date(request.dueDate) < new Date();
               
@@ -278,9 +291,9 @@ export default function Approvals() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {approvalRules?.length ? (
+              {approvalRules?.data?.length ? (
                 <div className="space-y-4">
-                  {approvalRules.map((rule: any) => (
+                  {approvalRules.data.map((rule) => (
                     <div key={rule.id} className="p-4 border rounded-lg">
                       <h3 className="font-medium">{rule.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

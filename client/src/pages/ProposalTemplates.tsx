@@ -55,13 +55,39 @@ const templateSchema = z.object({
 
 type TemplateFormData = z.infer<typeof templateSchema>;
 
+interface ProposalTemplate extends Omit<TemplateFormData, 'id' | 'createdAt' | 'updatedAt'> {
+  id: number;
+  isShared: boolean;
+  branding: TemplateFormData['branding'] & {
+    logo?: string;
+  };
+  pricingRules: TemplateFormData['pricingRules'] & {
+    discounts: Array<{
+      condition: string;
+      percentage: number;
+      [key: string]: any;
+    }>;
+  };
+  sections: TemplateFormData['sections'] & {
+    customSections: Array<{
+      title: string;
+      content: string;
+      order: number;
+      id?: string;
+    }>;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function ProposalTemplates() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: templates, isLoading } = useQuery({
+  const { data: templates = [], isLoading } = useQuery<ProposalTemplate[]>({
     queryKey: ["/api/proposal-templates"],
+    placeholderData: []
   });
 
   const createTemplate = useMutation({
@@ -200,7 +226,7 @@ export default function ProposalTemplates() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates?.map((template: any) => (
+        {templates.map((template) => (
           <Card key={template.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex justify-between items-start">

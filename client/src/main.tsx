@@ -1,5 +1,3 @@
-// React import is needed for JSX transformation even if not directly referenced
-import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
@@ -12,4 +10,9 @@ if (!root) {
   throw new Error("Root element not found in the document!");
 }
 
-createRoot(root).render(<App />);
+// Render just the App component without any providers
+createRoot(root).render(
+  <div style={{ minHeight: '100vh' }}>
+    <App />
+  </div>
+);

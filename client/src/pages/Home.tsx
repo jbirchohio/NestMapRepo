@@ -36,12 +36,9 @@ export default function Home() {
   
   // Home page is now accessible without authentication
   // We'll show different content based on authentication status
-  useEffect(() => {
-    // Close auth modal if user becomes authenticated
-    if (isAuthenticated && isAuthModalOpen) {
-      setIsAuthModalOpen(false);
-    }
-  }, [isAuthenticated, isAuthModalOpen]);
+  
+  // Removed the auto-close effect to prevent the modal from disappearing
+  // The modal will now stay open until explicitly closed by the user
 
   // Guest trip storage
   const getGuestTrips = () => {
@@ -143,9 +140,8 @@ export default function Home() {
         defaultView={authView}
         onSuccess={() => {
           setIsAuthModalOpen(false);
-          queryClient.invalidateQueries({
-            queryKey: [API_ENDPOINTS.TRIPS],
-          });
+          // Invalidate queries to refresh data after successful auth
+          queryClient.invalidateQueries({ queryKey: ['user'] });
         }}
       />
 

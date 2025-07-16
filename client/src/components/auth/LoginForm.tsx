@@ -116,6 +116,7 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
             <Input
               id="email"
               type="email"
+              autoComplete="email"
               placeholder="Enter your email address"
               {...register("email")}
             />
@@ -139,6 +140,7 @@ export default function LoginForm({ onSuccess, onToggleForm }: LoginFormProps) {
             <Input
               id="password"
               type="password"
+              autoComplete="current-password"
               {...register("password")}
             />
             {errors.password && (

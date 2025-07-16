@@ -54,10 +54,14 @@ interface Activity {
 
 // Extended types with additional client-side properties
 export interface ClientTrip extends Omit<Trip, 'cityLatitude' | 'cityLongitude'> {
+  country: string;
   days?: Date[];
   city?: string;
   location?: string;
   completed?: boolean;
+  status?: 'Active' | 'Completed';
+  startDate: string;
+  endDate: string;
   // City coordinates for map centering
   cityLatitude?: number;
   cityLongitude?: number;

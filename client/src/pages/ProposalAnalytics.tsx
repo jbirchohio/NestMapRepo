@@ -1,5 +1,38 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+
+interface ProposalAnalyticsData {
+  overview: {
+    totalProposals: number;
+    totalViews: number;
+    averageViewTime: number;
+    conversionRate: number;
+    totalSigned: number;
+    totalRevenue: number;
+  };
+  viewsOverTime: Array<{
+    date: string;
+    views: number;
+    opens: number;
+  }>;
+  sectionViews: Array<{
+    section: string;
+    views: number;
+    avgTime: number;
+  }>;
+  conversionFunnel: Array<{
+    stage: string;
+    count: number;
+    percentage: number;
+  }>;
+}
+
+interface Proposal {
+  id: number;
+  clientName: string;
+  createdAt: string;
+  [key: string]: any;
+}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,12 +45,26 @@ export default function ProposalAnalytics() {
   const [timeRange, setTimeRange] = useState("30d");
   const [selectedProposal, setSelectedProposal] = useState<string>("all");
 
-  const { data: analytics, isLoading } = useQuery({
+  const { data: analytics = {} as ProposalAnalyticsData, isLoading } = useQuery<ProposalAnalyticsData>({
     queryKey: ["/api/proposal-analytics", timeRange, selectedProposal],
+    placeholderData: {
+      overview: {
+        totalProposals: 0,
+        totalViews: 0,
+        averageViewTime: 0,
+        conversionRate: 0,
+        totalSigned: 0,
+        totalRevenue: 0
+      },
+      viewsOverTime: [],
+      sectionViews: [],
+      conversionFunnel: []
+    }
   });
 
-  const { data: proposals } = useQuery({
+  const { data: proposals = [] } = useQuery<Proposal[]>({
     queryKey: ["/api/proposals"],
+    placeholderData: []
   });
 
   if (isLoading) {
@@ -36,40 +83,13 @@ export default function ProposalAnalytics() {
     );
   }
 
-  const stats = analytics?.overview || {
-    totalProposals: 24,
-    totalViews: 186,
-    averageViewTime: 4.2,
-    conversionRate: 18.5,
-    totalSigned: 7,
-    totalRevenue: 125400
-  };
+  const stats = analytics.overview;
 
-  const viewsData = analytics?.viewsOverTime || [
-    { date: "2024-01-01", views: 12, opens: 8 },
-    { date: "2024-01-02", views: 18, opens: 12 },
-    { date: "2024-01-03", views: 15, opens: 10 },
-    { date: "2024-01-04", views: 22, opens: 16 },
-    { date: "2024-01-05", views: 28, opens: 20 },
-    { date: "2024-01-06", views: 24, opens: 18 },
-    { date: "2024-01-07", views: 32, opens: 24 }
-  ];
+  const viewsData = analytics.viewsOverTime;
 
-  const sectionData = analytics?.sectionViews || [
-    { section: "Cost Breakdown", views: 156, avgTime: 2.4 },
-    { section: "Itinerary", views: 134, avgTime: 3.8 },
-    { section: "Terms", views: 89, avgTime: 1.2 },
-    { section: "About Us", views: 67, avgTime: 0.8 },
-    { section: "Custom Sections", views: 45, avgTime: 1.5 }
-  ];
+  const sectionData = analytics.sectionViews;
 
-  const conversionFunnel = analytics?.conversionFunnel || [
-    { stage: "Sent", count: 24, percentage: 100 },
-    { stage: "Opened", count: 20, percentage: 83.3 },
-    { stage: "Viewed >30s", count: 16, percentage: 66.7 },
-    { stage: "Downloaded", count: 12, percentage: 50.0 },
-    { stage: "Signed", count: 7, percentage: 29.2 }
-  ];
+  const conversionFunnel = analytics.conversionFunnel;
 
   return (
     <div className="p-6 space-y-6">
@@ -96,7 +116,7 @@ export default function ProposalAnalytics() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Proposals</SelectItem>
-              {proposals?.map((proposal: any) => (
+              {proposals.map((proposal) => (
                 <SelectItem key={proposal.id} value={proposal.id.toString()}>
                   {proposal.clientName} - {new Date(proposal.createdAt).toLocaleDateString()}
                 </SelectItem>

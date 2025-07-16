@@ -1,5 +1,4 @@
-import React from 'react';
-import { Plane, User, Settings, Home as HomeIcon } from 'lucide-react';
+import { Plane, User, Settings } from 'lucide-react';
 
 export default function TestHome() {
   return (

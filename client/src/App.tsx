@@ -1,14 +1,11 @@
 import { Suspense } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MainLayout from '@/layouts/MainLayout';
-
-import { WhiteLabelProvider } from '@/contexts/WhiteLabelContext';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { WhiteLabelProvider } from '@/contexts/WhiteLabelContext';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -17,7 +14,7 @@ import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import Dashboard from '@/pages/Dashboard';
-import TestHome from '@/pages/TestHome';
+import MainLayout from '@/layouts/MainLayout';
 
 // Loading component for Suspense fallback
 const PageLoading = () => (
@@ -32,22 +29,25 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Router>
+          <Router
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
             <WhiteLabelProvider>
               <ErrorBoundary>
                 <Suspense fallback={<PageLoading />}>
                   <Routes>
                     <Route path="/" element={<MainLayout><Home /></MainLayout>} />
-                    <Route path="/test" element={<MainLayout><TestHome /></MainLayout>} />
                     <Route path="/login" element={<MainLayout hideNav><Login /></MainLayout>} />
                     <Route path="/signup" element={<MainLayout hideNav><Signup /></MainLayout>} />
                     <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
                     {/* Add more routes as needed */}
                   </Routes>
                 </Suspense>
+                <Toaster />
               </ErrorBoundary>
-              <Toaster />
-              <ReactQueryDevtools initialIsOpen={false} />
             </WhiteLabelProvider>
           </Router>
         </TooltipProvider>

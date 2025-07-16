@@ -45,7 +45,7 @@ export default function Dashboard() {
   const trips = useMemo(() => (tripsData?.data || []) as TripDTO[], [tripsData]);
 
   const handleOnboardingTaskClick = (_taskId: string, url: string) => {
-    navigate.push(url);
+    navigate(url);
   };
 
   const analytics = useMemo(() => {

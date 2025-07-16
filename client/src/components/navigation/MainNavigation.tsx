@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, ReactNode } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MenuIcon, XIcon, BarChartIcon, CheckIcon, FileTextIcon, HomeIcon } from '../icons';
 import { MobileMenu } from './MobileMenu';
 import { DesktopNavigation } from './DesktopNavigation';
@@ -24,7 +24,6 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   onMarkAllAsRead,
 }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   
   // State for mobile menu and dropdowns
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

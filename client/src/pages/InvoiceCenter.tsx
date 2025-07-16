@@ -32,17 +32,43 @@ const invoiceSchema = z.object({
 
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
+interface Invoice {
+  id: number;
+  clientName: string;
+  amount: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  invoiceNumber: string;
+  dueDate: string;
+  proposalId?: number;
+  [key: string]: any;
+}
+
+interface Proposal {
+  id: number;
+  clientName: string;
+  clientEmail: string;
+  status: string;
+  updatedAt: string;
+  proposalData?: {
+    estimatedCost?: number;
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export default function InvoiceCenter() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const { toast } = useToast();
 
-  const { data: invoices, isLoading } = useQuery({
+  const { data: invoices = [], isLoading } = useQuery<Invoice[]>({
     queryKey: ["/api/invoices"],
+    placeholderData: []
   });
 
-  const { data: proposals } = useQuery({
+  const { data: proposals = [] } = useQuery<Proposal[]>({
     queryKey: ["/api/proposals"],
+    placeholderData: []
   });
 
   const createInvoice = useMutation({
@@ -147,10 +173,10 @@ export default function InvoiceCenter() {
   }
 
   const stats = {
-    totalInvoices: invoices?.length || 0,
-    totalRevenue: invoices?.reduce((sum: number, inv: any) => sum + (inv.amount / 100), 0) || 0,
-    paidInvoices: invoices?.filter((inv: any) => inv.status === 'paid').length || 0,
-    pendingInvoices: invoices?.filter((inv: any) => inv.status === 'sent').length || 0
+    totalInvoices: invoices.length,
+    totalRevenue: invoices.reduce((sum, inv) => sum + (inv.amount / 100), 0),
+    paidInvoices: invoices.filter(inv => inv.status === 'paid').length,
+    pendingInvoices: invoices.filter(inv => inv.status === 'sent').length
   };
 
   return (
@@ -226,7 +252,7 @@ export default function InvoiceCenter() {
       </div>
 
       {/* Convertible Proposals */}
-      {proposals && proposals.some((p: any) => p.status === 'signed' && !invoices?.some((inv: any) => inv.proposalId === p.id)) && (
+      {proposals.some(p => p.status === 'signed' && !invoices.some(inv => inv.proposalId === p.id)) && (
         <Card>
           <CardHeader>
             <CardTitle>Ready to Convert</CardTitle>
@@ -235,8 +261,8 @@ export default function InvoiceCenter() {
           <CardContent>
             <div className="space-y-2">
               {proposals
-                .filter((p: any) => p.status === 'signed' && !invoices?.some((inv: any) => inv.proposalId === p.id))
-                .map((proposal: any) => (
+                .filter(p => p.status === 'signed' && !invoices.some(inv => inv.proposalId === p.id))
+                .map((proposal) => (
                   <div key={proposal.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <h4 className="font-medium">{proposal.clientName}</h4>
@@ -266,7 +292,7 @@ export default function InvoiceCenter() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {invoices?.map((invoice: any) => (
+            {invoices.map((invoice) => (
               <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">

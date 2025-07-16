@@ -124,6 +124,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
             <Input
               id="email"
               type="email"
+              autoComplete="email"
               placeholder="Enter your email address"
               {...form.register("email")}
             />
@@ -137,6 +138,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
             <Input
               id="name"
               type="text"
+              autoComplete="name"
               placeholder="Your Name"
               {...form.register("name")}
             />
@@ -150,6 +152,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
             <Input
               id="password"
               type="password"
+              autoComplete="new-password"
               {...form.register("password")}
             />
             {form.formState.errors.password && (
@@ -162,6 +165,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
             <Input
               id="passwordConfirm"
               type="password"
+              autoComplete="new-password"
               {...form.register("passwordConfirm")}
             />
             {form.formState.errors.passwordConfirm && (
@@ -179,6 +183,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
                 <Input
                   id="company"
                   type="text"
+                  autoComplete="organization"
                   placeholder="Your Company"
                   {...form.register("company")}
                 />
@@ -192,6 +197,7 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
                 <Input
                   id="jobTitle"
                   type="text"
+                  autoComplete="organization-title"
                   placeholder="e.g., Travel Manager, Operations Director"
                   {...form.register("jobTitle")}
                 />

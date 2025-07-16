@@ -52,102 +52,102 @@ export const protectedRoutes: RouteObject[] = [
   // Dashboard routes
   {
     path: '/dashboard',
-    element: lazyLoad(() => import('@/pages/Dashboard')),
+    element: React.createElement(lazyLoad(() => import('@/pages/Dashboard'))),
   },
   {
     path: '/enterprise-dashboard',
-    element: lazyLoad(() => import('@/pages/EnterpriseDashboard')),
+    element: React.createElement(lazyLoad(() => import('@/pages/EnterpriseDashboard'))),
   },
   {
     path: '/corporate-dashboard',
-    element: lazyLoad(() => import('@/pages/CorporateDashboard')),
+    element: React.createElement(lazyLoad(() => import('@/pages/CorporateDashboard'))),
   },
   {
     path: '/agency-dashboard',
-    element: lazyLoad(() => import('@/pages/AgencyDashboard')),
+    element: React.createElement(lazyLoad(() => import('@/pages/AgencyDashboard'))),
   },
   {
     path: '/performance-dashboard',
-    element: lazyLoad(() => import('@/pages/PerformanceDashboard')),
+    element: React.createElement(lazyLoad(() => import('@/pages/PerformanceDashboard'))),
   },
 
   // Trip routes
   {
     path: '/trip-planner',
-    element: lazyLoad(() => import('@/pages/TripPlanner')),
+    element: React.createElement(lazyLoad(() => import('@/pages/TripPlanner'))),
   },
   {
     path: '/simple-share',
-    element: lazyLoad(() => import('@/pages/SimpleShare')),
+    element: React.createElement(lazyLoad(() => import('@/pages/SimpleShare'))),
   },
   {
     path: '/trip-optimizer',
-    element: lazyLoad(() => import('@/pages/TripOptimizer')),
+    element: React.createElement(lazyLoad(() => import('@/pages/TripOptimizer'))),
   },
   {
     path: '/ai-trip-generator',
-    element: lazyLoad(() => import('@/pages/AITripGenerator')),
+    element: React.createElement(lazyLoad(() => import('@/pages/AITripGenerator'))),
   },
 
   // B2B feature routes
   {
     path: '/analytics',
-    element: lazyLoad(() => import('@/pages/Analytics')),
+    element: React.createElement(lazyLoad(() => import('@/pages/Analytics'))),
   },
   {
     path: '/approvals',
-    element: lazyLoad(() => import('@/pages/Approvals')),
+    element: React.createElement(lazyLoad(() => import('@/pages/Approvals'))),
   },
   {
     path: '/invoice-center',
-    element: lazyLoad(() => import('@/pages/InvoiceCenter')),
+    element: React.createElement(lazyLoad(() => import('@/pages/InvoiceCenter'))),
   },
 
   // Invoice routes
   {
     path: '/invoice/:id',
-    element: lazyLoad(() => import('@/pages/InvoiceView')),
+    element: React.createElement(lazyLoad(() => import('@/pages/InvoiceView'))),
   },
   {
     path: '/invoice/success',
-    element: lazyLoad(() => import('@/pages/InvoiceSuccess')),
+    element: React.createElement(lazyLoad(() => import('@/pages/InvoiceSuccess'))),
   },
   {
     path: '/invoice/failure',
-    element: lazyLoad(() => import('@/pages/InvoiceFailure')),
+    element: React.createElement(lazyLoad(() => import('@/pages/InvoiceFailure'))),
   },
 
   // Booking routes
   {
     path: '/flights',
     children: [
-      { path: 'search', element: lazyLoad(() => import('@/pages/FlightSearch')) },
-      { path: 'book', element: lazyLoad(() => import('@/pages/FlightBooking')) },
-      { path: 'results', element: lazyLoad(() => import('@/pages/FlightResults')) },
-      { path: 'sequential', element: lazyLoad(() => import('@/pages/SequentialBookingFlights')) },
+      { path: 'search', element: React.createElement(lazyLoad(() => import('@/pages/FlightSearch'))) },
+      { path: 'book', element: React.createElement(lazyLoad(() => import('@/pages/FlightBooking'))) },
+      { path: 'results', element: React.createElement(lazyLoad(() => import('@/pages/FlightResults'))) },
+      { path: 'sequential', element: React.createElement(lazyLoad(() => import('@/pages/SequentialBookingFlights'))) },
     ],
   },
   {
     path: '/bookings',
-    element: lazyLoad(() => import('@/pages/Bookings')),
+    element: React.createElement(lazyLoad(() => import('@/pages/Bookings'))),
   },
   {
     path: '/booking-confirmation',
-    element: lazyLoad(() => import('@/pages/BookingConfirmation')),
+    element: React.createElement(lazyLoad(() => import('@/pages/BookingConfirmation'))),
   },
 
   // Settings routes
   {
     path: '/settings',
     children: [
-      { index: true, element: lazyLoad(() => import('@/pages/Settings')) },
-      { path: 'profile', element: lazyLoad(() => import('@/pages/ProfileSettings')) },
-      { path: 'calendar', element: lazyLoad(() => import('@/pages/CalendarSettings')) },
-      { path: 'team', element: lazyLoad(() => import('@/components/TeamManagement')) },
-      { path: 'billing', element: lazyLoad(() => import('@/components/BillingDashboard')) },
-      { path: 'white-label', element: lazyLoad(() => import('@/components/WhiteLabelSettings')) },
-      { path: 'branding', element: lazyLoad(() => import('@/pages/BrandingSetup')) },
-      { path: 'help', element: lazyLoad(() => import('@/pages/HelpCenter')) },
+      { index: true, element: React.createElement(lazyLoad(() => import('@/pages/Settings'))) },
+      { path: 'profile', element: React.createElement(lazyLoad(() => import('@/pages/ProfileSettings'))) },
+      { path: 'calendar', element: React.createElement(lazyLoad(() => import('@/pages/CalendarSettings'))) },
+      { path: 'team', element: React.createElement(lazyLoad(() => import('@/components/TeamManagement'))) },
+      { path: 'billing', element: React.createElement(lazyLoad(() => import('@/components/BillingDashboard'))) },
+      { path: 'white-label', element: React.createElement(lazyLoad(() => import('@/components/WhiteLabelSettings'))) },
+      { path: 'branding', element: React.createElement(lazyLoad(() => import('@/pages/BrandingSetup'))) },
+      { path: 'help', element: React.createElement(lazyLoad(() => import('@/pages/HelpCenter'))) },
     ],
   },
 
@@ -155,8 +155,8 @@ export const protectedRoutes: RouteObject[] = [
   {
     path: '/finance',
     children: [
-      { path: 'corporate-cards', element: lazyLoad(() => import('@/pages/CorporateCards')) },
-      { path: 'funding', element: lazyLoad(() => import('@/pages/OrganizationFunding')) },
+      { path: 'corporate-cards', element: React.createElement(lazyLoad(() => import('@/pages/CorporateCards'))) },
+      { path: 'funding', element: React.createElement(lazyLoad(() => import('@/pages/OrganizationFunding'))) },
     ],
   },
 ];
@@ -166,13 +166,13 @@ export const adminRoutes: RouteObject[] = [
   {
     path: '/admin',
     children: [
-      { index: true, element: lazyLoad(() => import('@/pages/AdminDashboard')) },
-      { path: 'roles', element: lazyLoad(() => import('@/pages/AdminRoles')) },
-      { path: 'security', element: lazyLoad(() => import('@/pages/AdminSecurity')) },
-      { path: 'settings', element: lazyLoad(() => import('@/pages/AdminSettings')) },
-      { path: 'logs', element: lazyLoad(() => import('@/pages/AdminLogs')) },
-      { path: 'metrics', element: lazyLoad(() => import('@/pages/AdminSystemMetrics')) },
-      { path: 'user-activity', element: lazyLoad(() => import('@/pages/AdminUserActivity')) },
+      { index: true, element: React.createElement(lazyLoad(() => import('@/pages/AdminDashboard'))) },
+      { path: 'roles', element: React.createElement(lazyLoad(() => import('@/pages/AdminRoles'))) },
+      { path: 'security', element: React.createElement(lazyLoad(() => import('@/pages/AdminSecurity'))) },
+      { path: 'settings', element: React.createElement(lazyLoad(() => import('@/pages/AdminSettings'))) },
+      { path: 'logs', element: React.createElement(lazyLoad(() => import('@/pages/AdminLogs'))) },
+      { path: 'metrics', element: React.createElement(lazyLoad(() => import('@/pages/AdminSystemMetrics'))) },
+      { path: 'user-activity', element: React.createElement(lazyLoad(() => import('@/pages/AdminUserActivity'))) },
     ],
   },
 ];
@@ -182,10 +182,10 @@ export const superadminRoutes: RouteObject[] = [
   {
     path: '/superadmin',
     children: [
-      { index: true, element: lazyLoad(() => import('@/pages/SuperadminClean')) },
+      { index: true, element: React.createElement(lazyLoad(() => import('@/pages/SuperadminClean'))) },
       { 
         path: 'organizations/:id', 
-        element: lazyLoad(() => import('@/pages/SuperadminOrganizationDetail')) 
+        element: React.createElement(lazyLoad(() => import('@/pages/SuperadminOrganizationDetail'))) 
       },
     ],
   },
@@ -194,7 +194,7 @@ export const superadminRoutes: RouteObject[] = [
 // 404 route
 export const notFoundRoute: RouteObject = {
   path: '*',
-  element: lazyLoad(() => import('@/pages/not-found')),
+  element: React.createElement(lazyLoad(() => import('@/pages/not-found'))),
 };
 
 // Helper function to find a route by path

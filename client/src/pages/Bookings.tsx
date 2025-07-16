@@ -1,19 +1,43 @@
-import BookingWorkflow from "@/components/BookingWorkflow";
-import { TripTeamManagement } from "@/components/TripTeamManagement";
+// Hooks
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { useQuery } from "@tanstack/react-query";
+
+// UI Components
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+
+// Icons
 import { Shield, Users, Plane, Sparkles } from "lucide-react";
+
+// Components
+import BookingWorkflow from "@/components/BookingWorkflow";
+import { TripTeamManagement } from "@/components/TripTeamManagement";
+
+// Animation
+import { motion } from "framer-motion";
+
+// Types
+interface Trip {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate?: string;
+  end_date?: string; // For backward compatibility
+  // Add other trip properties as needed
+}
+
+interface ApiResponse<T> {
+  data: T;
+  // Add other common API response fields if needed
+}
 
 export default function Bookings() {
   const { user } = useAuth();
   
   // Check user permissions for booking access
-  const { data: userPermissions } = useQuery({
+  const { data: userPermissions } = useQuery<{ permissions: any }>({
     queryKey: ['/api/user/permissions'],
     queryFn: async () => {
       const response = await fetch('/api/user/permissions', {
@@ -26,19 +50,42 @@ export default function Bookings() {
     enabled: !!user,
   });
 
-  // Get trips for team management context - always call this hook
-  const { data: trips = [] } = useQuery({
+  // Get trips for team management context
+  const { data: tripsResponse } = useQuery<ApiResponse<Trip[]>>({
     queryKey: ['/api/trips/corporate'],
+    queryFn: async () => {
+      const response = await fetch('/api/trips/corporate', {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch trips');
+      return response.json();
+    },
     enabled: !!user,
+    placeholderData: { data: [] },
   });
+  
+  const trips = tripsResponse?.data || [];
 
-  const hasBookingAccess = userPermissions && (
-    userPermissions.canCreateTrips || 
-    userPermissions.canViewTrips ||
-    userPermissions.canManageOrganization ||
-    userPermissions.canAccessAdmin ||
+  const hasBookingAccess = userPermissions?.permissions && (
+    userPermissions.permissions.canCreateTrips || 
+    userPermissions.permissions.canViewTrips ||
+    userPermissions.permissions.canManageOrganization ||
+    userPermissions.permissions.canAccessAdmin ||
     user?.role === 'admin'
   );
+  
+  // Filter to show only current and future trips
+  const getCurrentAndUpcomingTrips = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return trips.filter((trip) => {
+      const tripEndDate = new Date(trip.endDate || trip.end_date || '');
+      return tripEndDate >= today;
+    });
+  };
+  
+  const currentAndUpcomingTrips = getCurrentAndUpcomingTrips();
 
   if (!user) {
     return (
@@ -153,15 +200,6 @@ export default function Bookings() {
               </CardHeader>
               <CardContent>
                 {(() => {
-                  // Filter to show only current and future trips
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  
-                  const currentAndUpcomingTrips = trips.filter((trip: any) => {
-                    const tripEndDate = new Date(trip.endDate || trip.end_date);
-                    return tripEndDate >= today;
-                  });
-
                   if (currentAndUpcomingTrips.length === 0) {
                     return (
                       <div className="text-center py-8 text-muted-foreground">

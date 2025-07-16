@@ -2,7 +2,10 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
     fontFamily: {
       sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -186,5 +189,28 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+    function({ addUtilities }) {
+      const newUtilities = {
+        '.shadow-glow': {
+          '--tw-shadow': '0 0 15px rgba(59, 130, 246, 0.5)',
+          '--tw-shadow-colored': '0 0 15px var(--tw-shadow-color)',
+          'box-shadow': 'var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)',
+        },
+        '.shadow-glow-lg': {
+          '--tw-shadow': '0 0 25px rgba(59, 130, 246, 0.7)',
+          '--tw-shadow-colored': '0 0 25px var(--tw-shadow-color)',
+          'box-shadow': 'var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)',
+        },
+        '.shadow-glow-xl': {
+          '--tw-shadow': '0 0 35px rgba(59, 130, 246, 0.9)',
+          '--tw-shadow-colored': '0 0 35px var(--tw-shadow-color)',
+          'box-shadow': 'var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)',
+        },
+      }
+      addUtilities(newUtilities, ['hover', 'focus'])
+    }
+  ],
 } satisfies Config;

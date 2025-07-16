@@ -128,25 +128,57 @@ export default function TripPlanner() {
   
   // Sort activities by time
   const sortedActivities = [...filteredActivities].sort((a, b) => {
-    return a.time.localeCompare(b.time);
+    // Fallback to empty string if time is undefined
+    const timeA = a.time || '';
+    const timeB = b.time || '';
+    return timeA.localeCompare(timeB);
   });
   
   // Prepare map markers - include all activities with coordinates (both completed and pending)
   const mapMarkers: MapMarker[] = sortedActivities
     .filter(activity => {
       // Only include activities with valid coordinates
-      const hasLat = activity.latitude && activity.latitude !== "0" && !isNaN(parseFloat(activity.latitude));
-      const hasLng = activity.longitude && activity.longitude !== "0" && !isNaN(parseFloat(activity.longitude));
-      return hasLat && hasLng;
+      const lat = activity.latitude;
+      const lng = activity.longitude;
+      
+      // Handle both string and number types for latitude/longitude
+      const parseCoordinate = (coord: string | number | undefined | null): number | null => {
+        if (coord === undefined || coord === null) return null;
+        // Ensure we pass a string to parseFloat
+        const coordStr = String(coord).trim();
+        if (!coordStr) return null;
+        const num = parseFloat(coordStr);
+        return !isNaN(num) && isFinite(num) ? num : null;
+      };
+      
+      const latNum = parseCoordinate(lat);
+      const lngNum = parseCoordinate(lng);
+      
+      return latNum !== null && lngNum !== null;
     })
-    .map((activity, index) => ({
-      id: activity.id,
-      latitude: parseFloat(activity.latitude || "0"),
-      longitude: parseFloat(activity.longitude || "0"),
-      label: String.fromCharCode(65 + index), // A, B, C, etc.
-      activity,
-      completed: activity.completed || false, // Pass completion status to map component
-    }));
+    .map((activity, index) => {
+      // Safe parsing of coordinates
+      const parseSafe = (coord: string | number | undefined | null): number => {
+        if (coord === undefined || coord === null) return 0;
+        // Ensure we pass a string to parseFloat
+        const coordStr = String(coord).trim();
+        if (!coordStr) return 0;
+        const num = parseFloat(coordStr);
+        return !isNaN(num) && isFinite(num) ? num : 0;
+      };
+      
+      // Ensure ID is a string as expected by MapMarker interface
+      const markerId = activity.id !== undefined ? String(activity.id) : `activity-${index}`;
+      
+      return {
+        id: markerId,
+        latitude: parseSafe(activity.latitude),
+        longitude: parseSafe(activity.longitude),
+        label: String.fromCharCode(65 + index), // A, B, C, etc.
+        activity,
+        completed: activity.completed || false, // Pass completion status to map component
+      };
+    });
   
   // Prepare map routes (simplified for now)
   const mapRoutes: MapRoute[] = mapMarkers.length > 1 
@@ -158,16 +190,13 @@ export default function TripPlanner() {
       }]
     : [];
   
-  // Calculate map center based on markers or trip city coordinates
-  const mapCenter = mapMarkers.length > 0
-    ? [
-        mapMarkers.reduce((sum, marker) => sum + marker.longitude, 0) / mapMarkers.length,
-        mapMarkers.reduce((sum, marker) => sum + marker.latitude, 0) / mapMarkers.length,
-      ] as [number, number]
-    : (trip?.cityLatitude && trip?.cityLongitude && 
-       !isNaN(parseFloat(trip.cityLatitude)) && !isNaN(parseFloat(trip.cityLongitude)))
-    ? [parseFloat(trip.cityLongitude), parseFloat(trip.cityLatitude)] as [number, number]
-    : [-74.006, 40.7128] as [number, number]; // Default to NYC coordinates instead of undefined
+  // Calculate map center - use first marker or trip city coordinates
+  const mapCenter: [number, number] = mapMarkers.length > 0 
+    ? [mapMarkers[0].longitude, mapMarkers[0].latitude]
+    : (trip?.cityLatitude !== undefined && trip?.cityLongitude !== undefined && 
+       !isNaN(Number(trip.cityLatitude)) && !isNaN(Number(trip.cityLongitude)))
+    ? [Number(trip.cityLongitude), Number(trip.cityLatitude)] as [number, number]
+    : [-74.006, 40.7128] as [number, number]; // Default to NYC coordinates
 
   // Debug map center calculation
   console.log('Map center calculation debug:', {
@@ -176,10 +205,10 @@ export default function TripPlanner() {
     tripCityLat: trip?.cityLatitude,
     tripCityLng: trip?.cityLongitude,
     tripObject: trip,
-    parsedLat: trip?.cityLatitude ? parseFloat(trip.cityLatitude) : 'no lat',
-    parsedLng: trip?.cityLongitude ? parseFloat(trip.cityLongitude) : 'no lng',
-    isValidLat: trip?.cityLatitude ? !isNaN(parseFloat(trip.cityLatitude)) : false,
-    isValidLng: trip?.cityLongitude ? !isNaN(parseFloat(trip.cityLongitude)) : false,
+    parsedLat: trip?.cityLatitude !== undefined ? Number(trip.cityLatitude) : 'no lat',
+    parsedLng: trip?.cityLongitude !== undefined ? Number(trip.cityLongitude) : 'no lng',
+    isValidLat: trip?.cityLatitude !== undefined ? !isNaN(Number(trip.cityLatitude)) : false,
+    isValidLng: trip?.cityLongitude !== undefined ? !isNaN(Number(trip.cityLongitude)) : false,
     calculatedCenter: mapCenter
   });
   

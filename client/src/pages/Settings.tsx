@@ -48,6 +48,19 @@ interface OrganizationPlan {
   white_label_enabled: boolean;
 }
 
+interface WhiteLabelConfig {
+  config?: {
+    companyName?: string;
+    logoUrl?: string;
+    tagline?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    accentColor?: string;
+    customDomain?: string;
+    supportEmail?: string;
+  };
+}
+
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -67,7 +80,7 @@ export default function Settings() {
   });
 
   // Get white label config
-  const { data: whiteLabelConfig } = useQuery({
+  const { data: whiteLabelConfig } = useQuery<WhiteLabelConfig>({
     queryKey: ['/api/white-label/config'],
     enabled: !!user,
   });
