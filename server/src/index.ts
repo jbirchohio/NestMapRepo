@@ -1,47 +1,84 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module.js';
+import { config } from 'dotenv';
+import path from 'path';
+import app from './app.js';
+import { logger } from './utils/logger.js';
+import { connectDatabase } from './db/connection.js';
 
-// Simple logger for the bootstrap process
-const logger = {
-  log: (message: string) => console.log(`[${new Date().toISOString()}] ${message}`),
-  error: (message: string, error?: any) => {
-    console.error(`[${new Date().toISOString()}] ERROR: ${message}`, error || '');
-  }
-};
+// Load environment variables from parent directory
+config({ path: path.resolve(process.cwd(), '../.env') });
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const port = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || 'localhost';
 
-  // Enable CORS for development
-  app.enableCors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    credentials: true,
-  });
+async function startServer() {
+  try {
+    // Initialize database connection (optional for testing)
+    try {
+      await connectDatabase();
+      logger.info('Database connected successfully');
+    } catch (dbError: any) {
+      logger.warn('Database connection failed, continuing without database:', dbError.message);
+    }
 
-  // Add global prefix
-  app.setGlobalPrefix('api');
+    // Start the server using http.createServer for better control
+    const http = require('http');
+    
+    const server = http.createServer(app);
+    
+    server.listen(Number(PORT), HOST, () => {
+      const address = server.address();
+      const actualPort = typeof address === 'string' ? PORT : address?.port || PORT;
+      const actualHost = HOST || 'localhost';
+      
+      logger.info(`🚀 Server is running on: http://${actualHost}:${actualPort}`);
+      logger.info(`📋 Health check: http://${actualHost}:${actualPort}/health`);
+      logger.info(`🔐 Auth API: http://${actualHost}:${actualPort}/api/auth`);
+      logger.info(`✈️  Flights API: http://${actualHost}:${actualPort}/api/flights`);
+      logger.info(`🏢 Organizations API: http://${actualHost}:${actualPort}/api/organizations`);
+      logger.info(`🗺️  Trips API: http://${actualHost}:${actualPort}/api/trips`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+    
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.syscall !== 'listen') {
+        throw error;
+      }
 
-  // Health check endpoint
-  app.get('/health', (_req, res) => {
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      message: 'Server is running',
-      api: {
-        templates: `/api/templates`,
-        createTrip: `/api/templates/:templateId/create-trip`
+      switch (error.code) {
+        case 'EACCES':
+          logger.error(`Port ${PORT} requires elevated privileges`);
+          process.exit(1);
+          break;
+        case 'EADDRINUSE':
+          logger.error(`Port ${PORT} is already in use`);
+          process.exit(1);
+          break;
+        default:
+          throw error;
       }
     });
-  });
 
-  await app.listen(port);
-  logger.log(`Application is running on: http://localhost:${port}`);
-  logger.log(`Health check: http://localhost:${port}/api/health`);
-  logger.log(`Templates API: http://localhost:${port}/api/templates`);
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      logger.info('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        logger.info('Process terminated');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      logger.info('SIGINT received, shutting down gracefully');
+      server.close(() => {
+        logger.info('Process terminated');
+        process.exit(0);
+      });
+    });
+
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
 }
 
-bootstrap().catch(err => {
-  console.error('Failed to bootstrap the application', err);
-  process.exit(1);
-});
+startServer();

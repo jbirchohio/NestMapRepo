@@ -1,13 +1,10 @@
 import { Router, Request, Response } from 'express';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
 import { z } from 'zod';
-import { insertTripSchema } from '../db/schema.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess, addOrganizationScope } from '../middleware/organizationContext.js';
-import { enforceTripLimit } from '../middleware/subscription-limits.js';
-import { storage } from '../storage.js';
-import { generatePdfBuffer } from '../utils/pdfHelper.js';
-import { generateAIProposal } from '../proposalGenerator.js';
+import { db } from '../db-connection.js';
+import { trips, insertTripSchema } from '../db/schema.js';
+import { authenticate } from '../middleware/secureAuth.js';
+import { injectOrganizationContext } from '../middleware/organizationScoping.js';
+import { eq, and, desc } from 'drizzle-orm';
 import { logUserActivity } from '../utils/activityLogger.js';
 import { tripController } from '../src/trips/trip.container.js';
 

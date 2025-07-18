@@ -1,21 +1,11 @@
-import { AuthUser, UserRole } from './auth-user.js';
+import { AuthUser, UserRole } from './auth-user';
 
 // This file extends the Express Request type to include our custom properties
 
 declare global {
   namespace Express {
-    // Simplified User interface that matches AuthUser
-    interface User {
-      id: string;
-      email: string;
-      role: UserRole;
-      organizationId: string | null;
-      sessionId?: string;
-      permissions: string[];
-      displayName?: string;
-      organization_id?: string;
-      [key: string]: any;
-    }
+    // Re-export AuthUser as the standard Express User type
+    interface User extends AuthUser {}
 
     // Extend the Request interface with our custom properties
     interface Request {

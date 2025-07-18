@@ -12,7 +12,7 @@
     "paths": {
       "@shared/*": ["../shared/*"]
     },
-    "types": ["node"],
+    "types": ["node", "express"],
     "module": "ES2020",
     "moduleResolution": "node",
     "esModuleInterop": true,

@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { authenticate } from '../middleware/secureAuth.js';
+import { injectOrganizationContext } from '../middleware/organizationScoping.js';
 import { z } from 'zod';
 import { asyncHandler } from '../utils/routeHelpers.js';
 
@@ -75,9 +75,8 @@ interface FlightSearchParams {
 const router = Router();
 
 // Apply middleware to all routes
-router.use(validateJWT);
+router.use(authenticate);
 router.use(injectOrganizationContext);
-router.use(validateOrganizationAccess);
 
 // Flight search schema validation
 const flightSearchSchema = z.object({

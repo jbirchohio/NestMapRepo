@@ -1,9 +1,8 @@
-import { IAuthService } from '../interfaces/auth.service.interface.js';
-import { AuthResponse, LoginDto, RefreshTokenDto, UserRole } from '../dtos/auth.dto.js';
-import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface.js';
-import { IUserRepository } from '../repositories/user.repository.js';
-// Create a local logger instance (replace with your logger implementation)
-const logger = console;
+import { IAuthService } from '../interfaces/auth.service.interface';
+import { AuthResponse, LoginDto, RefreshTokenDto, UserRole } from '../dtos/auth.dto';
+import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface';
+import { IUserRepository } from '../repositories/user.repository';
+import logger from '../../utils/logger';
 
 export class AuthService implements IAuthService {
   private readonly logger = logger;
@@ -32,25 +31,14 @@ export class AuthService implements IAuthService {
 
     // Generate tokens
     const accessToken = this.generateAccessToken(user.id, user.role as UserRole);
-    const refreshTokenString = this.generateRefreshToken();
-
-    // Store refresh token
-    const refreshToken = await this.refreshTokenRepository.create({
-      userId: user.id,
-      token: refreshTokenString,
-      expiresAt: new Date(Date.now() + this.REFRESH_TOKEN_EXPIRES_IN * 1000),
-      revoked: false,
-      revokedAt: null,
-      ipAddress: ip,
-      userAgent
-    });
+    const refreshTokenString = await this.createRefreshToken(user.id, ip, userAgent);
 
     const now = Math.floor(Date.now() / 1000);
     const expiresIn = 15 * 60; // 15 minutes in seconds
 
     return {
       accessToken,
-      refreshToken: refreshToken.token,
+      refreshToken: refreshTokenString,
       accessTokenExpiresAt: now + expiresIn,
       refreshTokenExpiresAt: now + this.REFRESH_TOKEN_EXPIRES_IN,
       user: {
@@ -85,28 +73,17 @@ export class AuthService implements IAuthService {
 
     // Generate new tokens
     const newAccessToken = this.generateAccessToken(user.id, user.role as UserRole);
-    const newRefreshTokenString = this.generateRefreshToken();
+    const newRefreshTokenString = await this.createRefreshToken(user.id, ip, userAgent);
 
     // Revoke old refresh token
-    await this.refreshTokenRepository.revokeByToken(refreshToken);
-
-    // Store new refresh token
-    const newRefreshToken = await this.refreshTokenRepository.create({
-      userId: user.id,
-      token: newRefreshTokenString,
-      expiresAt: new Date(Date.now() + this.REFRESH_TOKEN_EXPIRES_IN * 1000),
-      revoked: false,
-      revokedAt: null,
-      ipAddress: ip,
-      userAgent
-    });
+    await this.revokeRefreshToken(refreshToken);
 
     const now = Math.floor(Date.now() / 1000);
     const expiresIn = 15 * 60; // 15 minutes in seconds
 
     return {
       accessToken: newAccessToken,
-      refreshToken: newRefreshToken.token,
+      refreshToken: newRefreshTokenString,
       accessTokenExpiresAt: now + expiresIn,
       refreshTokenExpiresAt: now + this.REFRESH_TOKEN_EXPIRES_IN,
       user: {
@@ -126,7 +103,7 @@ export class AuthService implements IAuthService {
 
   async logout(refreshToken: string): Promise<void> {
     // Revoke refresh token
-    await this.refreshTokenRepository.revokeByToken(refreshToken);
+    await this.revokeRefreshToken(refreshToken);
 
     // For now, we rely on short-lived access tokens
     this.logger.info('User logged out successfully');
@@ -159,8 +136,27 @@ export class AuthService implements IAuthService {
     throw new Error('Password reset functionality is not yet implemented');
   }
 
+  async createRefreshToken(userId: string, ip: string, userAgent: string): Promise<string> {
+    const refreshToken = await this.refreshTokenRepository.create({
+      userId,
+      token: this.generateRandomToken(),
+      expiresAt: new Date(Date.now() + this.REFRESH_TOKEN_EXPIRES_IN * 1000),
+      ipAddress: ip,
+      userAgent,
+      revoked: false,
+    });
+    return refreshToken.token;
+  }
+
+  private async revokeRefreshToken(token: string): Promise<void> {
+    const refreshToken = await this.refreshTokenRepository.findByToken(token);
+    if (refreshToken) {
+      await this.refreshTokenRepository.revokeToken(refreshToken.id);
+    }
+  }
+
   async revokeAllSessions(userId: string): Promise<void> {
-    await this.refreshTokenRepository.revokeByUserId(userId);
+    await this.refreshTokenRepository.revokeTokensForUser(userId);
     this.logger.info(`All sessions revoked for user: ${userId}`);
   }
 
@@ -179,7 +175,7 @@ export class AuthService implements IAuthService {
     return `Bearer.${encodedPayload}.signature`;
   }
 
-  private generateRefreshToken(): string {
+  private generateRandomToken(): string {
     return Math.random().toString(36).substring(2) + Date.now().toString(36) + Math.random().toString(36).substring(2);
   }
 }

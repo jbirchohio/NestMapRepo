@@ -1,4 +1,14 @@
-// Minimal Express types to avoid compilation errors
+// Minimal type fixes for Express imports
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+      [key: string]: any;
+    }
+  }
+}
+
+// Temporary type fixes for missing Express exports
 declare module 'express' {
   export interface Request {
     body?: any;
@@ -8,6 +18,8 @@ declare module 'express' {
     ip?: string;
     method?: string;
     path?: string;
+    originalUrl?: string;
+    baseUrl?: string;
     cookies?: any;
     socket?: any;
     user?: any;
@@ -15,13 +27,15 @@ declare module 'express' {
   }
 
   export interface Response {
-    status(code: number): Response;
-    json(data: any): Response;
-    send(data: any): Response;
-    setHeader(name: string, value: string): void;
+    status(code: number): any;
+    json(data: any): any;
+    send(data: any): any;
+    setHeader(name: string, value: string): any;
     getHeader(name: string): string | undefined;
-    cookie(name: string, value: string, options?: any): Response;
-    clearCookie(name: string, options?: any): Response;
+    cookie(name: string, value: string, options?: any): any;
+    clearCookie(name: string, options?: any): any;
+    redirect(url: string): any;
+    redirect(status: number, url: string): any;
     [key: string]: any;
   }
 
@@ -30,16 +44,34 @@ declare module 'express' {
   }
 
   export interface RequestHandler {
-    (req: Request, res: Response, next: NextFunction): void | Promise<void>;
+    (req: any, res: any, next: any): any;
   }
 
   export interface Router {
-    get(path: string, ...handlers: RequestHandler[]): void;
-    post(path: string, ...handlers: RequestHandler[]): void;
-    put(path: string, ...handlers: RequestHandler[]): void;
-    delete(path: string, ...handlers: RequestHandler[]): void;
-    patch(path: string, ...handlers: RequestHandler[]): void;
+    get(path: string, ...handlers: any[]): any;
+    post(path: string, ...handlers: any[]): any;
+    put(path: string, ...handlers: any[]): any;
+    delete(path: string, ...handlers: any[]): any;
+    patch(path: string, ...handlers: any[]): any;
+    use(...args: any[]): any;
   }
+
+  const express: {
+    (): {
+      get(path: string, ...handlers: any[]): any;
+      post(path: string, ...handlers: any[]): any;
+      put(path: string, ...handlers: any[]): any;
+      delete(path: string, ...handlers: any[]): any;
+      patch(path: string, ...handlers: any[]): any;
+      use(...args: any[]): any;
+      listen(port: number, callback?: () => void): any;
+    };
+    json(options?: any): any;
+    urlencoded(options?: any): any;
+    Router(options?: any): Router;
+  };
+  
+  export = express;
 }
 
 declare module 'bcrypt' {
@@ -51,6 +83,13 @@ declare module 'jsonwebtoken' {
   export function sign(payload: any, secret: string, options?: any): string;
   export function verify(token: string, secret: string, options?: any): any;
   export function decode(token: string, options?: any): any;
+  export class TokenExpiredError extends Error {
+    name: 'TokenExpiredError';
+    expiredAt: Date;
+  }
+  export class JsonWebTokenError extends Error {
+    name: 'JsonWebTokenError';
+  }
 }
 
 declare module 'drizzle-orm' {
@@ -91,6 +130,9 @@ declare module 'morgan' {
   export interface StreamOptions {
     write(str: string): void;
   }
+  
+  function morgan(format: string, options?: { stream?: StreamOptions }): any;
+  export = morgan;
 }
 
 declare module 'logform' {

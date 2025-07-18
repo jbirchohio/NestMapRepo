@@ -3,6 +3,14 @@ export interface LoginDto {
   password: string;
 }
 
+export interface RegisterDto {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  organizationId?: string;
+}
+
 export interface RefreshTokenDto {
   refreshToken: string;
 }

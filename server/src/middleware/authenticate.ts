@@ -2,17 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../auth/services/jwtAuthService';
 import { TokenPayload } from '../auth/jwt/types';
 
-// Import the AuthUser type from the project's type definitions
-import type { AuthUser } from '../types/auth-user.js';
-
-// Extend Express Request type to include user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthUser;
-    }
-  }
-}
+// The Express Request type is already extended in express.d.ts
 
 export async function authenticate(
   req: Request,

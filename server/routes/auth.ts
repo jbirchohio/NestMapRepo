@@ -4,12 +4,13 @@ import { AuthContainer } from '../src/auth/auth.container.js';
 
 // Import validation schemas from DTOs to avoid duplication
 import { 
-  loginSchema, 
+  loginSchema,
+  registerSchema,
   refreshTokenSchema, 
   logoutSchema,
   requestPasswordResetSchema,
   resetPasswordSchema 
-} from '../src/auth/dtos/auth.dto.js';
+} from '../src/auth/validation/auth.schemas.js';
 
 // Import middleware
 import { authRateLimit } from '../middleware/comprehensive-rate-limiting.js';
@@ -30,6 +31,14 @@ export const createAuthRouter = (configService: ConfigService): Router => {
     authRateLimit, // Apply comprehensive auth rate limiting
     validateRequest(loginSchema),
     ...authContainer.authController.login
+  );
+
+  // Register route
+  router.post(
+    '/register',
+    authRateLimit, // Apply comprehensive auth rate limiting
+    validateRequest(registerSchema),
+    ...authContainer.authController.register
   );
 
   // Refresh token route

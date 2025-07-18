@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['index.ts'],
   format: ['esm'],
   dts: false, // Disable dts for now to isolate the issue
   sourcemap: true,
@@ -19,16 +19,24 @@ export default defineConfig({
     // External dependencies
     '@shared/schema',
     'drizzle-orm',
-    '@nestjs/common',
-    '@nestjs/core',
-    '@nestjs/config',
-    '@nestjs/jwt',
+    'drizzle-zod',
     'express',
+    'bcrypt',
+    'cors',
+    'helmet',
+    'jsonwebtoken',
+    'morgan',
+    'winston',
+    'zod',
+    'postgres',
+    'express-rate-limit',
     'handlebars',
     'nodemailer',
     'puppeteer',
-    'reflect-metadata',
-    'rxjs'
+    'uuid',
+    'ioredis',
+    'csv-stringify',
+    'dotenv'
   ],
   noExternal: [],
   minify: false,

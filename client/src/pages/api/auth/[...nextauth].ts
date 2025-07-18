@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth';
+import NextAuth, { DefaultSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { jwtDecode } from 'jwt-decode';
 import { AxiosResponse } from 'axios';
@@ -52,8 +52,9 @@ declare module 'next-auth' {
       role: string;
       organizationId: number;
       accessToken: string;
-    };
+    } & DefaultSession['user'];
   }
+  
   interface User {
     id: string;
     email: string;
@@ -62,6 +63,7 @@ declare module 'next-auth' {
     organizationId: number;
     accessToken: string;
     refreshToken: string;
+    emailVerified?: Date | null;
   }
 }
 
@@ -150,14 +152,19 @@ export default NextAuth({
     },
     async session({ session, token }) {
       if (token) {
-        session.user = {
+        // Create a new session user object that includes our custom fields
+        const sessionUser = {
+          ...session.user,  // Keep all existing user properties
           id: token.id,
-          email: token.email,
-          name: token.name,
+          email: token.email || session.user?.email || '',
+          name: token.name || session.user?.name || '',
           role: token.role,
           organizationId: token.organizationId,
           accessToken: token.accessToken
         };
+        
+        // Assign the typed user back to the session
+        session.user = sessionUser as any; // Type assertion to avoid complex type issues
       }
       return session;
     },

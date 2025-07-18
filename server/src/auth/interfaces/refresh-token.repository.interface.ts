@@ -1,19 +1,20 @@
 export interface RefreshToken {
   id: string;
-  createdAt: Date;
   userId: string;
   token: string;
   expiresAt: Date;
+  createdAt: Date;
   revoked: boolean;
-  revokedAt: Date | null;
-  ipAddress: string | null;
-  userAgent: string | null;
+  replacedByToken?: string | null;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
 export interface RefreshTokenRepository {
-  create(token: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken>;
-  findByToken(token: string): Promise<RefreshToken | undefined>;
-  revokeByUserId(userId: string): Promise<void>;
-  revokeByToken(token: string): Promise<void>;
-  deleteExpired(): Promise<number>;
+  create(tokenData: Omit<RefreshToken, 'id' | 'createdAt'>): Promise<RefreshToken>;
+  findById(id: string): Promise<RefreshToken | null>;
+  findByToken(token: string): Promise<RefreshToken | null>;
+  revokeToken(tokenId: string, replacedByToken?: string): Promise<void>;
+  revokeTokensForUser(userId: string): Promise<void>;
+  deleteExpiredTokens(): Promise<void>;
 }

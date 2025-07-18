@@ -28,7 +28,6 @@ interface Booking {
   createdAt: Date;
   updatedAt: Date;
 }
-import { AuthUser } from '../../types/auth-user';
 
 // Services and utilities
 import { BookingService } from '../services/booking.service';
@@ -44,18 +43,6 @@ interface ConfirmationDetails {
 
 interface CancellationDetails {
   reason?: string;
-}
-
-// Extend Express Request type to include user
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace Express {
-    interface Request {
-      user?: AuthUser;
-      organizationId?: string;
-      organizationFilter?: (orgId: string | null) => boolean;
-    }
-  }
 }
 
 /**

@@ -1,68 +1,136 @@
 import 'dotenv/config.js';
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
 import http from 'http';
 import { logger } from './utils/logger.js';
 
-// Import SecureAuth middleware as JWT source of truth
+// Import authentication middleware
 import { authenticate } from './middleware/secureAuth.js';
+
+// Import route handlers
+import authRoutes from './routes/auth-simple.js';
+import flightRoutes from './routes/flights.js';
+import organizationRoutes from './routes/organizations.js';
+import tripRoutes from './routes/trips-simple.js';
+import aiRoutes from './routes/ai-routes.js';
+import enterpriseRoutes from './routes/enterprise-routes.js';
+import comprehensiveRoutes from './routes/comprehensive-routes.js';
 
 // Create Express app
 const app = express();
 
 // Configuration
 const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development.js';
-const HOST = process.env.HOST || '0.0.0.0';
+const HOST = process.env.HOST || 'localhost';
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173'];
 
-// Basic middleware
+// Basic security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://api.duffel.com"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// CORS configuration
+app.use(cors({
+  origin: ALLOWED_ORIGINS,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
+
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// CORS middleware
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-    return;
-  }
-  next();
-});
+// Request logging
+if (NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    logger.info(`${req.method} ${req.path}`, {
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+    next();
+  });
+}
+
+// Public routes (no authentication required)
+app.use('/api/auth', authRoutes);
+
+// Protected routes (require JWT authentication)
+app.use('/api/flights', authenticate, flightRoutes);
+app.use('/api/organizations', authenticate, organizationRoutes);
+app.use('/api/trips', authenticate, tripRoutes);
+app.use('/api/ai', authenticate, aiRoutes);
+app.use('/api/enterprise', authenticate, enterpriseRoutes);
+app.use('/api/comprehensive', authenticate, comprehensiveRoutes);
 
 // Health check route
 app.get('/health', (_req, res) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
-    environment: NODE_ENV 
+    version: '1.0.0',
+    environment: NODE_ENV
   });
 });
 
-// Protected route example using SecureAuth
-app.get('/api/auth/me', authenticate, (req, res) => {
-  res.json({ 
-    success: true,
-    user: req.user,
-    message: 'Authenticated successfully via SecureAuth'
-  });
-});
-
-// Basic API routes
-app.get('/api/test', (_req, res) => {
-  res.json({ 
-    message: 'API is working',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Error handling middleware
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  logger.error('Unhandled error:', err);
-  res.status(500).json({ 
-    success: false, 
-    error: 'Internal server error' 
+// Global error handler
+app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  logger.error('Unhandled error:', error);
+  
+  if (NODE_ENV === 'production') {
+    return res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred'
+    });
+  }
+  
+  if (error.name === 'UnauthorizedError' || error.status === 401) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required',
+      message: 'Please provide valid authentication credentials'
+    });
+  }
+  
+  if (error.name === 'ForbiddenError' || error.status === 403) {
+    return res.status(403).json({
+      success: false,
+      error: 'Access forbidden',
+      message: 'You do not have permission to access this resource'
+    });
+  }
+  
+  if (error.status === 400) {
+    return res.status(400).json({
+      success: false,
+      error: 'Bad request',
+      message: error.message || 'Invalid request'
+    });
+  }
+  
+  // Default error response (don't expose internal details)
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  res.status(error.status || 500).json({
+    success: false,
+    error: 'Internal server error',
+    message: isDevelopment ? error.message : 'Something went wrong',
+    ...(isDevelopment && { stack: error.stack })
   });
 });
 

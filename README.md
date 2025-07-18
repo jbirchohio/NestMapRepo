@@ -24,7 +24,7 @@ Enterprise-grade travel management platform with authentic flight data integrati
 
 1. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 2. Set up environment variables:
@@ -35,27 +35,38 @@ cp .env.example .env
 
 3. Run database migrations:
 ```bash
-npm run db:push
+pnpm run db:push
 ```
 
 4. Start the development server:
 ```bash
-npm run dev
+# Start backend server
+cd server && pnpm dev
+
+# Start frontend (in another terminal)
+cd client && pnpm dev
 ```
 
-The application will be available at `http://localhost:5000`
+The backend will be available at `http://localhost:3000`
+The frontend will be available at `http://localhost:5173`
 
 ## Environment Variables
 
 Required variables:
 - `DATABASE_URL` - PostgreSQL connection string
 - `JWT_SECRET` - Secret for JWT token signing
+- `JWT_ACCESS_EXPIRES_IN` - JWT access token expiration (default: 15m)
+- `JWT_REFRESH_EXPIRES_IN` - JWT refresh token expiration (default: 7d)
 - `DUFFEL_API_KEY` - Duffel API key for flight data
 - `OPENAI_API_KEY` - OpenAI API for AI features
 
 Optional variables:
 - `STRIPE_SECRET_KEY` - For payment processing
 - `VITE_STRIPE_PUBLIC_KEY` - Stripe public key
+- `ALLOWED_ORIGINS` - Comma-separated list of allowed CORS origins
+- `NODE_ENV` - Environment (development/production)
+- `PORT` - Server port (default: 3000)
+- `HOST` - Server host (default: 0.0.0.0)
 
 ## API Endpoints
 
@@ -63,25 +74,50 @@ Optional variables:
 - `POST /api/auth/login` - User login
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user (protected)
 
 ### Flights
 - `POST /api/flights/search` - Search flights (Duffel API)
 - `GET /api/flights/offers/:id` - Get flight offer details
 - `POST /api/flights/book` - Book flight
+- `GET /api/flights/airports/search` - Search airports
 
 ### Organizations
 - `GET /api/organizations` - List organizations
 - `POST /api/organizations` - Create organization
 - `PUT /api/organizations/:id` - Update organization
+- `GET /api/organizations/:id` - Get organization details
+- `GET /api/organizations/:id/members` - Get organization members
+
+### White Label Branding
+- `GET /api/branding/theme` - Get organization theme
+- `PUT /api/branding/theme` - Update organization theme
+- `GET /api/branding/css` - Get organization CSS
+- `GET /api/branding/assets` - Get branding assets
+- `POST /api/branding/preview` - Preview theme changes
+
+### Trips
+- `GET /api/trips` - List trips
+- `POST /api/trips` - Create trip
+- `PUT /api/trips/:id` - Update trip
+- `DELETE /api/trips/:id` - Delete trip
+
+### Health Check
+- `GET /health` - Server health status
 
 ## Security Features
 
-- JWT-based authentication with secure token validation
-- Role-based access control (RBAC)
-- Rate limiting on all endpoints
-- SQL injection prevention
-- CORS configuration
-- Comprehensive audit logging
+- **JWT-only Authentication**: Secure token-based authentication (no sessions)
+- **Role-based Access Control**: Enterprise security with granular permissions
+- **Comprehensive Rate Limiting**: Multi-layer protection (global, auth, API-specific)
+- **Input Validation & Sanitization**: Prevents XSS and injection attacks
+- **SQL Injection Prevention**: Middleware to detect and block malicious queries
+- **Security Headers**: Helmet.js with CSP, HSTS, and XSS protection
+- **Organization Security**: Enforces tenant isolation
+- **CORS Configuration**: Proper origin validation and security headers
+- **Comprehensive Audit Logging**: Tracks all user actions and system events
+- **Request Size Validation**: Prevents oversized payloads
+- **File Upload Validation**: Type and size checks for uploads
 
 ## Flight Integration
 

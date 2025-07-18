@@ -1,10 +1,7 @@
 import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index, type AnyPgColumn } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm/sql';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-
-// Import types to avoid circular dependencies
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 declare global {
   // This allows us to use the types before they're defined
@@ -55,46 +52,7 @@ export type UserRoleType = typeof USER_ROLES[keyof typeof USER_ROLES];
 // Table Definitions
 // ======================
 
-// Users table
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  email: text('email').notNull().unique(),
-  username: text('username').notNull().unique(),
-  firstName: text('first_name'),
-  lastName: text('last_name'),
-  passwordHash: text('password_hash').notNull(),
-  passwordChangedAt: timestamp('password_changed_at'),
-  passwordResetToken: text('password_reset_token'),
-  passwordResetExpires: timestamp('password_reset_expires'),
-  resetToken: text('reset_token'),
-  resetTokenExpires: timestamp('reset_token_expires'),
-  failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
-  lockedUntil: timestamp('locked_until'),
-  mfaSecret: text('mfa_secret'),
-  lastLoginAt: timestamp('last_login_at'),
-  lastLoginIp: text('last_login_ip'),
-  role: userRoleEnum('role').notNull().default('member'),
-  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
-  emailVerified: boolean('email_verified').notNull().default(false),
-  isActive: boolean('is_active').notNull().default(true),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow()
-}, (table) => ({
-  lockedUntilIdx: index('users_locked_until_idx').on(table.lockedUntil),
-  isActiveIdx: index('users_is_active_idx').on(table.isActive),
-  userActiveIdx: index('users_active_composite_idx').on(
-    table.isActive, 
-    table.lockedUntil, 
-    table.emailVerified
-  ),
-  orgUserIdx: index('users_org_composite_idx').on(
-    table.organizationId, 
-    table.isActive, 
-    table.role
-  )
-}));
-
-// Organizations table
+// Organizations table (must be defined before users table due to foreign key reference)
 export const organizations = pgTable('organizations', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
@@ -139,7 +97,44 @@ export const organizations = pgTable('organizations', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-
+// Users table
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  username: text('username').notNull().unique(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  passwordHash: text('password_hash').notNull(),
+  passwordChangedAt: timestamp('password_changed_at'),
+  passwordResetToken: text('password_reset_token'),
+  passwordResetExpires: timestamp('password_reset_expires'),
+  resetToken: text('reset_token'),
+  resetTokenExpires: timestamp('reset_token_expires'),
+  failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
+  lockedUntil: timestamp('locked_until'),
+  mfaSecret: text('mfa_secret'),
+  lastLoginAt: timestamp('last_login_at'),
+  lastLoginIp: text('last_login_ip'),
+  role: userRoleEnum('role').notNull().default('member'),
+  organizationId: uuid('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+  lockedUntilIdx: index('users_locked_until_idx').on(table.lockedUntil),
+  isActiveIdx: index('users_is_active_idx').on(table.isActive),
+  userActiveIdx: index('users_active_composite_idx').on(
+    table.isActive, 
+    table.lockedUntil, 
+    table.emailVerified
+  ),
+  orgUserIdx: index('users_org_composite_idx').on(
+    table.organizationId, 
+    table.isActive, 
+    table.role
+  )
+}));
 
 // Trip Travelers junction table
 export const tripTravelers = pgTable('trip_travelers', {
@@ -170,8 +165,6 @@ export const cardholders = pgTable('cardholders', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-
-
 // Password history table
 export const passwordHistory = pgTable('password_history', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -179,8 +172,6 @@ export const passwordHistory = pgTable('password_history', {
   passwordHash: text('password_hash').notNull(),
   changedAt: timestamp('changed_at').notNull().defaultNow(),
 });
-
-
 
 // Refresh tokens
 export const refreshTokens = pgTable('refresh_tokens', {
@@ -199,28 +190,24 @@ export const refreshTokens = pgTable('refresh_tokens', {
   userIdIdx: index('refresh_tokens_user_id_idx').on(table.userId),
   expiresAtIdx: index('refresh_tokens_expires_at_idx').on(table.expiresAt),
   revokedIdx: index('refresh_tokens_revoked_idx').on(table.revoked),
-  
   // Composite index for token validation (most common query)
   tokenValidationIdx: index('refresh_tokens_validation_idx').on(
     table.token,
     table.revoked,
     table.expiresAt
   ),
-  
   // Composite index for user token management
   userTokensIdx: index('refresh_tokens_user_tokens_idx').on(
     table.userId,
     table.revoked,
     table.expiresAt
   ),
-  
   // Index for cleanup of expired tokens
   cleanupIdx: index('refresh_tokens_cleanup_idx').on(
     table.expiresAt,
     table.revoked
   )
 }));
-
 
 // Additional Enums for new tables
 export const cardTransactionTypeEnum = pgEnum('card_transaction_type', ['purchase', 'refund', 'fee', 'withdrawal', 'adjustment']);
@@ -489,7 +476,7 @@ export const spendPolicies = pgTable("spend_policies", {
   allowedHours: jsonb("allowed_hours").$type<Record<string, any>>(),
   allowedCountries: jsonb("allowed_countries").$type<Record<string, any>>(),
   blockedCountries: jsonb("blocked_countries").$type<Record<string, any>>(),
-  createdBy: uuid("created_by").references(() => users.id).notNull(),
+  createdBy: uuid("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -814,7 +801,6 @@ export const superadminAuditLogs = auditLogsTableDefinition;
 // General audit logs (alias to the main auditLogs table)
 export const auditLogs = auditLogsTableDefinition;
 
-
 // Base schemas without validation
 export const baseUserSchema = createInsertSchema(users);
 export const baseOrganizationSchema = createInsertSchema(organizations);
@@ -902,7 +888,6 @@ export const selectCorporateCardSchema = createSelectSchema(corporateCards);
 
 export const insertCardholderSchema = createInsertSchema(cardholders);
 export const selectCardholderSchema = createSelectSchema(cardholders);
-
 
 // Zod schemas for Expenses, Budgets, CustomDomains
 export const insertExpenseSchema = createInsertSchema(expenses, {

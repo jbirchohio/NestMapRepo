@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { IAuthService } from './interfaces/auth.service.interface';
-import { LoginDto, RefreshTokenDto, RequestPasswordResetDto, ResetPasswordDto } from './dtos/auth.dto';
+import { LoginDto, RegisterDto, RefreshTokenDto, RequestPasswordResetDto, ResetPasswordDto } from './dtos/auth.dto';
 
 /**
  * Auth Controller implementation with proper Express types
@@ -21,6 +21,23 @@ export class AuthController {
       const response = await this.authService.login(loginData, ip, userAgent);
       
       res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Register user
+   */
+  async register(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+      const userAgent = req.headers['user-agent'] || '';
+      
+      const registerData: RegisterDto = req.body;
+      const response = await this.authService.register(registerData, ip, userAgent);
+      
+      res.status(201).json(response);
     } catch (error) {
       next(error);
     }

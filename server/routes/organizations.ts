@@ -1,296 +1,298 @@
-import { Router, Request, Response } from 'express';
+/**
+ * Organization Routes
+ * Implements the required organization endpoints from improve.md
+ */
+
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { insertOrganizationSchema } from '../shared/src/schema.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import { validateAndSanitizeRequest } from '../middleware/inputValidation.js';
-import { storage } from '../storage.js';
-import { getOrganizationAnalytics } from '../analytics.js';
-import { db } from '../db.js';
-import { users } from '../shared/src/schema.js';
-import { eq } from 'drizzle-orm';
+import { db } from '../db-connection.js';
+import { organizations, users } from '../db/schema.js';
+import { eq, and, desc } from 'drizzle-orm';
+import { authenticate } from '../middleware/secureAuth.js';
+import { validateRequest } from '../middleware/input-validation.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
 // Apply authentication to all organization routes
-router.use(validateJWT);
+router.use(authenticate);
 
-// Zod Schemas for validation
-const orgIdParamSchema = z.object({
-  id: z.coerce.number().int().positive("Invalid Organization ID"),
+// Validation schemas
+const createOrganizationSchema = z.object({
+  name: z.string().min(1, 'Organization name is required').max(255),
+  slug: z.string().min(1, 'Organization slug is required').max(255),
+  plan: z.enum(['free', 'pro', 'enterprise']).default('free'),
+  settings: z.object({
+    timezone: z.string().optional(),
+    locale: z.string().optional(),
+    whiteLabel: z.object({
+      enabled: z.boolean(),
+      logoUrl: z.string().url().optional(),
+      primaryColor: z.string().optional()
+    }).optional()
+  }).optional(),
+  billingEmail: z.string().email().optional()
 });
 
-const orgAndUserIdParamsSchema = z.object({
-  id: z.coerce.number().int().positive("Invalid Organization ID"),
-  userId: z.coerce.number().int().positive("Invalid User ID"),
+const updateOrganizationSchema = createOrganizationSchema.partial();
+
+const orgIdSchema = z.object({
+  id: z.string().uuid('Invalid organization ID')
 });
 
-const inviteMemberBodySchema = z.object({
-  email: z.string().email("Invalid email format"),
-  org_role: z.string().optional(), // Consider using an enum if roles are predefined
-});
-
-const updateMemberBodySchema = z.object({
-  org_role: z.string().optional(), // Consider enum
-  permissions: z.array(z.string()).optional(), // Consider more specific permission types
-});
-
-// Add users endpoint for card issuance dropdown (matches frontend API call) - MUST be before /:id route
-router.get('/users', async (req: Request, res: Response) => {
+/**
+ * GET /api/organizations
+ * List organizations (admin only or user's organization)
+ */
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Dynamically resolve organization ID from authenticated user
-    let targetOrgId: number | null = null;
+    const user = (req as any).user;
     
-    // Use authenticated user's organization ID
-    if (req.user?.organizationId) {
-      targetOrgId = req.user.organizationId;
-    } else if (req.user?.userId) {
-      // Fallback: get organization from database
-      const [userWithOrg] = await db
-        .select({ organization_id: users.organization_id })
-        .from(users)
-        .where(eq(users.id, req.user.userId))
-        .limit(1);
-      
-      if (userWithOrg?.organization_id) {
-        targetOrgId = userWithOrg.organization_id;
-      }
-    }
-    
-    // If no organization found, return error
-    if (!targetOrgId) {
-      return res.status(400).json({ 
-        error: 'No organization context found',
-        message: 'User must be associated with an organization to access this endpoint'
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
       });
     }
 
-    const organizationUsers = await db
-      .select({
-        id: users.id,
-        display_name: users.display_name,
-        email: users.email,
-        role: users.role,
-        organization_id: users.organization_id,
-        username: users.username
+    let orgs;
+    
+    // Super admin can see all organizations
+    if (user.role === 'super_admin') {
+      orgs = await db
+        .select({
+          id: organizations.id,
+          name: organizations.name,
+          slug: organizations.slug,
+          plan: organizations.plan,
+          settings: organizations.settings,
+          billingEmail: organizations.billingEmail,
+          subscriptionStatus: organizations.subscriptionStatus,
+          createdAt: organizations.createdAt,
+          updatedAt: organizations.updatedAt
+        })
+        .from(organizations)
+        .orderBy(desc(organizations.createdAt));
+    } else {
+      // Regular users can only see their own organization
+      if (!user.organizationId) {
+        return res.status(403).json({
+          success: false,
+          error: 'No organization access'
+        });
+      }
+      
+      orgs = await db
+        .select({
+          id: organizations.id,
+          name: organizations.name,
+          slug: organizations.slug,
+          plan: organizations.plan,
+          settings: organizations.settings,
+          billingEmail: organizations.billingEmail,
+          subscriptionStatus: organizations.subscriptionStatus,
+          createdAt: organizations.createdAt,
+          updatedAt: organizations.updatedAt
+        })
+        .from(organizations)
+        .where(eq(organizations.id, user.organizationId));
+    }
+
+    res.json({
+      success: true,
+      data: orgs
+    });
+  } catch (error) {
+    logger.error('Error fetching organizations:', error);
+    next(error);
+  }
+});
+
+/**
+ * POST /api/organizations
+ * Create new organization (admin only)
+ */
+router.post('/', validateRequest(createOrganizationSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = (req as any).user;
+    
+    if (!user || user.role !== 'super_admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      });
+    }
+
+    const orgData = req.body;
+    
+    const [newOrg] = await db
+      .insert(organizations)
+      .values({
+        ...orgData,
+        createdAt: new Date(),
+        updatedAt: new Date()
       })
-      .from(users)
-      .where(eq(users.organization_id, targetOrgId))
-      .orderBy(users.display_name);
+      .returning();
 
-    console.log(`Found ${organizationUsers.length} users for organization ${targetOrgId}`);
-    res.json(organizationUsers);
+    logger.info('Organization created:', { organizationId: newOrg.id, name: newOrg.name });
+
+    res.status(201).json({
+      success: true,
+      data: newOrg
+    });
   } catch (error) {
-    console.error('Error fetching organization users:', error);
-    res.status(500).json({ message: "Failed to fetch organization users" });
+    logger.error('Error creating organization:', error);
+    next(error);
   }
 });
 
-// Get organization details
-router.get("/:id", validateAndSanitizeRequest({ params: orgIdParamSchema }), async (req: Request, res: Response) => {
+/**
+ * PUT /api/organizations/:id
+ * Update organization
+ */
+router.put('/:id', validateRequest(updateOrganizationSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orgId = req.params.id;
-
-    // Verify user can access this organization
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this organization" });
+    const user = (req as any).user;
+    const { id } = req.params;
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
     }
 
-    const organization = await storage.getOrganization(orgId);
-    if (!organization) {
-      return res.status(404).json({ message: "Organization not found" });
+    // Check if user can update this organization
+    if (user.role !== 'super_admin' && user.organizationId !== id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
     }
 
-    res.json(organization);
-  } catch (error) {
-    console.error("Error fetching organization:", error);
-    res.status(500).json({ message: "Could not fetch organization details" });
-  }
-});
-
-// Update organization (admin only)
-router.put("/:id", requireOrgPermission('manage_organization'), validateAndSanitizeRequest({ params: orgIdParamSchema, body: insertOrganizationSchema.partial() }), async (req: Request, res: Response) => {
-  try {
-    const orgId = req.params.id;
     const updateData = req.body;
+    
+    const [updatedOrg] = await db
+      .update(organizations)
+      .set({
+        ...updateData,
+        updatedAt: new Date()
+      })
+      .where(eq(organizations.id, id))
+      .returning();
 
-    // Verify user can modify this organization
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot modify this organization" });
+    if (!updatedOrg) {
+      return res.status(404).json({
+        success: false,
+        error: 'Organization not found'
+      });
     }
 
-    const updatedOrganization = await storage.updateOrganization(orgId, updateData);
+    logger.info('Organization updated:', { organizationId: id });
 
-    if (!updatedOrganization) {
-      return res.status(404).json({ message: "Organization not found" });
-    }
-
-    res.json(updatedOrganization);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Invalid organization data", errors: error.errors });
-    }
-    console.error("Error updating organization:", error);
-    res.status(500).json({ message: "Could not update organization" });
-  }
-});
-
-// Get organization members
-router.get("/:id/members", requireOrgPermission('view_members'), validateAndSanitizeRequest({ params: orgIdParamSchema }), async (req: Request, res: Response) => {
-  try {
-    const orgId = req.params.id;
-
-    // Verify user can access this organization
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this organization's members" });
-    }
-
-    const members = await storage.getOrganizationMembers(orgId);
-    res.json(members);
-  } catch (error) {
-    console.error("Error fetching organization members:", error);
-    res.status(500).json({ message: "Could not fetch organization members" });
-  }
-});
-
-// Invite member to organization
-router.post("/:id/invite", requireOrgPermission('invite_members'), validateAndSanitizeRequest({ params: orgIdParamSchema, body: inviteMemberBodySchema }), async (req: Request, res: Response) => {
-  try {
-    const orgId = req.params.id;
-    const { email, org_role = 'member' } = req.body;
-
-    // Verify user can invite to this organization
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot invite members to this organization" });
-    }
-
-    // Create invitation
-    const invitation = await storage.createInvitation({
-      email,
-      organizationId: orgId,
-      invitedBy: req.user!.userId,
-      role: org_role,
-      token: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+    res.json({
+      success: true,
+      data: updatedOrg
     });
-
-    res.status(201).json({ message: "Invitation sent successfully", invitation });
   } catch (error) {
-    console.error("Error creating invitation:", error);
-    res.status(500).json({ message: "Could not send invitation" });
+    logger.error('Error updating organization:', error);
+    next(error);
   }
 });
 
-// Update member role
-router.put("/:id/members/:userId", requireOrgPermission('manage_members'), validateAndSanitizeRequest({ params: orgAndUserIdParamsSchema, body: updateMemberBodySchema }), async (req: Request, res: Response) => {
+/**
+ * GET /api/organizations/:id
+ * Get organization details
+ */
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orgId = req.params.id;
-    const userId = req.params.userId;
-    const { org_role, permissions } = req.body;
-
-    // Verify user can manage this organization
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot manage this organization's members" });
+    const user = (req as any).user;
+    const { id } = req.params;
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
     }
 
-    const updatedMember = await storage.updateOrganizationMember(orgId, userId, {
-      org_role,
-      permissions
+    // Check if user can access this organization
+    if (user.role !== 'super_admin' && user.organizationId !== id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
+    }
+
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, id))
+      .limit(1);
+
+    if (!org) {
+      return res.status(404).json({
+        success: false,
+        error: 'Organization not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: org
     });
-
-    if (!updatedMember) {
-      return res.status(404).json({ message: "Organization member not found" });
-    }
-
-    res.json(updatedMember);
   } catch (error) {
-    console.error("Error updating organization member:", error);
-    res.status(500).json({ message: "Could not update organization member" });
+    logger.error('Error fetching organization:', error);
+    next(error);
   }
 });
 
-// Remove member from organization
-router.delete("/:id/members/:userId", requireOrgPermission('manage_members'), validateAndSanitizeRequest({ params: orgAndUserIdParamsSchema }), async (req: Request, res: Response) => {
+/**
+ * GET /api/organizations/:id/members
+ * Get organization members
+ */
+router.get('/:id/members', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orgId = req.params.id;
-    const userId = req.params.userId;
-
-    // Verify user can manage this organization
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot manage this organization's members" });
+    const user = (req as any).user;
+    const { id } = req.params;
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
     }
 
-    // Prevent removing self
-    if (userId === req.user?.userId) {
-      return res.status(400).json({ message: "Cannot remove yourself from the organization" });
-    }
-
-    const success = await storage.removeOrganizationMember(orgId, userId);
-    if (!success) {
-      return res.status(404).json({ message: "Organization member not found" });
-    }
-
-    res.json({ message: "Member removed from organization successfully" });
-  } catch (error) {
-    console.error("Error removing organization member:", error);
-    res.status(500).json({ message: "Could not remove organization member" });
-  }
-});
-
-// Get organization analytics
-router.get("/:id/analytics", requireOrgPermission('access_analytics'), validateAndSanitizeRequest({ params: orgIdParamSchema }), async (req: Request, res: Response) => {
-  try {
-    const orgId = req.params.id;
-
-    // Verify user can access this organization's analytics
-    const userOrgId = req.user?.organizationId;
-    if (req.user?.role !== 'super_admin' && userOrgId !== orgId) {
-      return res.status(403).json({ message: "Access denied: Cannot access this organization's analytics" });
-    }
-
-    const analytics = await getOrganizationAnalytics(orgId);
-    res.json(analytics);
-  } catch (error) {
-    console.error("Error fetching organization analytics:", error);
-    res.status(500).json({ message: "Could not fetch organization analytics" });
-  }
-});
-
-// Add members endpoint for organization management
-router.get('/members', async (req: Request, res: Response) => {
-  try {
-    const userOrgId = req.user?.organizationId;
-    if (!userOrgId) {
-      return res.status(400).json({ message: "Organization context required" });
+    // Check if user can access this organization
+    if (user.role !== 'super_admin' && user.organizationId !== id) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied'
+      });
     }
 
     const members = await db
       .select({
         id: users.id,
-        display_name: users.display_name,
         email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
         role: users.role,
-        organization_id: users.organization_id,
-        created_at: users.created_at,
-        avatar_url: users.avatar_url
+        createdAt: users.createdAt,
+        lastLoginAt: users.lastLoginAt
       })
       .from(users)
-      .where(eq(users.organization_id, userOrgId))
-      .orderBy(users.display_name);
+      .where(eq(users.organizationId, id))
+      .orderBy(users.firstName);
 
-    res.json(members);
+    res.json({
+      success: true,
+      data: members
+    });
   } catch (error) {
-    console.error('Error fetching organization members:', error);
-    res.status(500).json({ message: "Failed to fetch organization members" });
+    logger.error('Error fetching organization members:', error);
+    next(error);
   }
 });
 
-// Export the router
 export default router;

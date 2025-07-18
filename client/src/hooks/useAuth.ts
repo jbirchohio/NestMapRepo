@@ -1,5 +1,4 @@
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from 'next-auth/react';
-import { demoLogin } from '@/lib/nextauth';
 import config from '@/config/env';
 
 interface User {
@@ -102,19 +101,6 @@ export function useAuth() {
     return state.user?.accessToken || null;
   };
 
-  const handleDemoLogin = async () => {
-    try {
-      // Use the demoLogin function from nextauth.ts
-      const data = await demoLogin();
-      
-      // Use the demo credentials to sign in
-      return await signIn(data.email, data.password, { callbackUrl: '/dashboard' });
-    } catch (error) {
-      console.error('Demo login error:', error);
-      throw error;
-    }
-  };
-
   const continueAsGuest = async () => {
     try {
       // Call the guest login endpoint
@@ -145,7 +131,6 @@ export function useAuth() {
     hasRole,
     hasAnyRole,
     getAccessToken,
-    demoLogin: handleDemoLogin,
     continueAsGuest,
   };
 } catch (error) {
