@@ -14,8 +14,13 @@ import { z } from 'zod';
 import { authenticate } from '../middleware/secureAuth.js';
 import { asyncHandler } from '../utils/routeHelpers.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { EnhancedApprovalWorkflow } from '../enhancedApprovalWorkflow';
+import { CommunicationIntegrationService } from '../communicationIntegration';
+import { auditLogger } from '../auditLogger';
 
 const router = Router();
+const enhancedApprovalWorkflow = EnhancedApprovalWorkflow.getInstance();
+const communicationService = CommunicationIntegrationService.getInstance();
 
 // Apply middleware to all approval routes
 router.use(authenticate);
@@ -382,5 +387,227 @@ async function applyApprovedChanges(request: any): Promise<void> {
     console.error('Error applying approved changes:', error);
   }
 }
+
+// Get all approval requests (enhanced)
+router.get('/requests', asyncHandler(async (req, res) => {
+  try {
+    const organizationId = req.user.organization_id;
+    const { status, entityType, priority } = req.query;
+    
+    const requests = await enhancedApprovalWorkflow.getApprovalRequests(organizationId, {
+      status: status as string,
+      entityType: entityType as string,
+      priority: priority as string
+    });
+
+    await auditLogger.log({
+      action: 'approval_requests_viewed',
+      userId: req.user.id,
+      organizationId,
+      details: { 
+        filters: { status, entityType, priority },
+        requestCount: requests.length 
+      }
+    });
+
+    res.json(requests);
+  } catch (error) {
+    console.error('Error fetching approval requests:', error);
+    res.status(500).json({ error: 'Failed to fetch approval requests' });
+  }
+}));
+
+// Process approval request (approve/reject)
+router.post('/requests/:requestId/process', asyncHandler(async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { action, comments } = req.body;
+    const organizationId = req.user.organization_id;
+
+    if (!['approved', 'rejected'].includes(action)) {
+      return res.status(400).json({ error: 'Invalid action. Must be approved or rejected' });
+    }
+
+    const result = await enhancedApprovalWorkflow.processApproval(
+      requestId,
+      req.user.id,
+      action,
+      comments
+    );
+
+    // Send notification about the approval decision
+    await communicationService.sendNotification(organizationId, {
+      title: `Approval Request ${action}`,
+      message: `Your approval request has been ${action}`,
+      type: 'approval_decision',
+      priority: 'normal',
+      recipients: [result.requesterId],
+      data: {
+        requestId,
+        action,
+        comments,
+        approverId: req.user.id
+      }
+    });
+
+    await auditLogger.log({
+      action: 'approval_request_processed',
+      userId: req.user.id,
+      organizationId,
+      details: { requestId, action, comments }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error processing approval request:', error);
+    res.status(500).json({ error: 'Failed to process approval request' });
+  }
+}));
+
+// Add comment to approval request
+router.post('/requests/:requestId/comments', asyncHandler(async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { comment } = req.body;
+    const organizationId = req.user.organization_id;
+
+    const commentResult = await enhancedApprovalWorkflow.addComment(
+      requestId,
+      req.user.id,
+      comment
+    );
+
+    await auditLogger.log({
+      action: 'approval_comment_added',
+      userId: req.user.id,
+      organizationId,
+      details: { requestId, commentId: commentResult.id }
+    });
+
+    res.json(commentResult);
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+}));
+
+// Get comments for approval request
+router.get('/requests/:requestId/comments', asyncHandler(async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    
+    const comments = await enhancedApprovalWorkflow.getComments(requestId);
+    
+    res.json(comments);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ error: 'Failed to fetch comments' });
+  }
+}));
+
+// Get approval templates
+router.get('/templates', asyncHandler(async (req, res) => {
+  try {
+    const organizationId = req.user.organization_id;
+    
+    const templates = await enhancedApprovalWorkflow.getApprovalTemplates(organizationId);
+    
+    res.json(templates);
+  } catch (error) {
+    console.error('Error fetching approval templates:', error);
+    res.status(500).json({ error: 'Failed to fetch approval templates' });
+  }
+}));
+
+// Create approval template
+router.post('/templates', asyncHandler(async (req, res) => {
+  try {
+    const organizationId = req.user.organization_id;
+    const templateData = req.body;
+
+    // Only admins can create templates
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin role required to create approval templates' });
+    }
+
+    const template = await enhancedApprovalWorkflow.createApprovalTemplate(
+      organizationId,
+      templateData
+    );
+
+    await auditLogger.log({
+      action: 'approval_template_created',
+      userId: req.user.id,
+      organizationId,
+      details: { templateId: template.id, templateName: template.name }
+    });
+
+    res.json(template);
+  } catch (error) {
+    console.error('Error creating approval template:', error);
+    res.status(500).json({ error: 'Failed to create approval template' });
+  }
+}));
+
+// Delegate approval
+router.post('/requests/:requestId/delegate', asyncHandler(async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { delegateToUserId, reason } = req.body;
+    const organizationId = req.user.organization_id;
+
+    const result = await enhancedApprovalWorkflow.delegateApproval(
+      requestId,
+      req.user.id,
+      delegateToUserId,
+      reason
+    );
+
+    // Notify the delegate
+    await communicationService.sendNotification(organizationId, {
+      title: 'Approval Delegated to You',
+      message: `An approval request has been delegated to you`,
+      type: 'approval_delegation',
+      priority: 'normal',
+      recipients: [delegateToUserId],
+      data: {
+        requestId,
+        delegatedBy: req.user.id,
+        reason
+      }
+    });
+
+    await auditLogger.log({
+      action: 'approval_delegated',
+      userId: req.user.id,
+      organizationId,
+      details: { requestId, delegateToUserId, reason }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error delegating approval:', error);
+    res.status(500).json({ error: 'Failed to delegate approval' });
+  }
+}));
+
+// Get approval statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  try {
+    const organizationId = req.user.organization_id;
+    const { startDate, endDate } = req.query;
+    
+    const stats = await enhancedApprovalWorkflow.getApprovalStatistics(
+      organizationId,
+      startDate as string,
+      endDate as string
+    );
+    
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching approval statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch approval statistics' });
+  }
+}));
 
 export default router;

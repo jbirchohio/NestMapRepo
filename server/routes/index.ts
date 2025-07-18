@@ -33,6 +33,11 @@ import healthRoutes from './health.js';
 import notificationsRoutes from './notifications.js';
 import flightRoutes from './flights.js';
 import exportRoutes from './export.js';
+import complianceRoutes from './compliance.js';
+import policiesRoutes from './policies.js';
+import mfaRoutes from './mfa.js';
+import localizationRoutes from './localization.js';
+import communicationRoutes from './communication.js';
 
 // Test routes (development only)
 import testRoutes from './test.routes.js';
@@ -78,6 +83,13 @@ router.use('/health', healthRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/flights', flightRoutes);
 router.use('/export', exportRoutes);
+
+// Enterprise feature routes
+router.use('/compliance', complianceRoutes);
+router.use('/policies', policiesRoutes);
+router.use('/mfa', mfaRoutes);
+router.use('/localization', localizationRoutes);
+router.use('/communication', communicationRoutes);
 
 // Import and register simplified white label routes
 import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified.js';

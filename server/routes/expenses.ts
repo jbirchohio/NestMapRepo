@@ -7,6 +7,8 @@ import { authenticate as validateJWT } from '../middleware/secureAuth.js';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
 import { z } from 'zod';
 import { approvalEngine } from '../approvalEngine.js';
+import { ExpenseIntegrationService } from '../expenseIntegration';
+import { auditLogger } from '../auditLogger';
 
 // Validation schemas
 const insertExpenseSchema = z.object({
@@ -34,6 +36,7 @@ const insertExpenseSchema = z.object({
 });
 
 const router = Router();
+const expenseIntegrationService = ExpenseIntegrationService.getInstance();
 
 // Apply middleware to all routes
 router.use(validateJWT);
@@ -561,5 +564,317 @@ async function checkUpdateRequiresApproval(
   
   return false;
 }
+
+// Get expense integration providers
+router.get('/integrations/providers', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const organizationId = req.user.organization_id;
+    const providers = await expenseIntegrationService.getProviders(organizationId);
+
+    res.json(providers);
+  } catch (error) {
+    console.error('Error fetching expense integration providers:', error);
+    res.status(500).json({ error: 'Failed to fetch expense integration providers' });
+  }
+});
+
+// Configure expense integration provider
+router.post('/integrations/providers', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    // Only admins can configure integrations
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin role required to configure integrations' });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { provider, config } = req.body;
+
+    if (!provider || !config) {
+      return res.status(400).json({ error: 'Provider and config are required' });
+    }
+
+    const result = await expenseIntegrationService.configureProvider(
+      organizationId,
+      provider,
+      config
+    );
+
+    await auditLogger.log({
+      action: 'expense_integration_configured',
+      userId: req.user.id,
+      organizationId,
+      details: { provider, enabled: config.enabled }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error configuring expense integration provider:', error);
+    res.status(500).json({ error: 'Failed to configure expense integration provider' });
+  }
+});
+
+// Sync expenses from external provider
+router.post('/integrations/sync', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { provider, startDate, endDate } = req.body;
+
+    if (!provider) {
+      return res.status(400).json({ error: 'Provider is required' });
+    }
+
+    const result = await expenseIntegrationService.syncExpenses(
+      organizationId,
+      req.user.id,
+      provider,
+      { startDate, endDate }
+    );
+
+    await auditLogger.log({
+      action: 'expenses_synced',
+      userId: req.user.id,
+      organizationId,
+      details: { 
+        provider, 
+        syncedCount: result.syncedCount,
+        errorCount: result.errors.length
+      }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error syncing expenses:', error);
+    res.status(500).json({ error: 'Failed to sync expenses' });
+  }
+});
+
+// Export expenses to external provider
+router.post('/integrations/export', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { provider, expenseIds, reportName } = req.body;
+
+    if (!provider || !expenseIds || !Array.isArray(expenseIds)) {
+      return res.status(400).json({ error: 'Provider and expense IDs are required' });
+    }
+
+    const result = await expenseIntegrationService.exportExpenses(
+      organizationId,
+      req.user.id,
+      provider,
+      expenseIds,
+      reportName
+    );
+
+    await auditLogger.log({
+      action: 'expenses_exported',
+      userId: req.user.id,
+      organizationId,
+      details: { 
+        provider, 
+        expenseCount: expenseIds.length,
+        reportName,
+        exportId: result.exportId
+      }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error exporting expenses:', error);
+    res.status(500).json({ error: 'Failed to export expenses' });
+  }
+});
+
+// Get sync history
+router.get('/integrations/sync-history', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { provider, limit = 20 } = req.query;
+
+    const history = await expenseIntegrationService.getSyncHistory(
+      organizationId,
+      provider as string,
+      parseInt(limit as string)
+    );
+
+    res.json(history);
+  } catch (error) {
+    console.error('Error fetching sync history:', error);
+    res.status(500).json({ error: 'Failed to fetch sync history' });
+  }
+});
+
+// Test integration connection
+router.post('/integrations/test/:provider', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    // Only admins can test integrations
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin role required to test integrations' });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { provider } = req.params;
+
+    const result = await expenseIntegrationService.testConnection(
+      organizationId,
+      provider
+    );
+
+    await auditLogger.log({
+      action: 'expense_integration_tested',
+      userId: req.user.id,
+      organizationId,
+      details: { provider, success: result.success }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error testing integration connection:', error);
+    res.status(500).json({ error: 'Failed to test integration connection' });
+  }
+});
+
+// Get integration statistics
+router.get('/integrations/stats', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { startDate, endDate } = req.query;
+
+    const stats = await expenseIntegrationService.getIntegrationStats(
+      organizationId,
+      startDate as string,
+      endDate as string
+    );
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching integration statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch integration statistics' });
+  }
+});
+
+// Refresh integration tokens
+router.post('/integrations/refresh-tokens', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    // Only admins can refresh tokens
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin role required to refresh tokens' });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { provider } = req.body;
+
+    const result = await expenseIntegrationService.refreshTokens(
+      organizationId,
+      provider
+    );
+
+    await auditLogger.log({
+      action: 'expense_integration_tokens_refreshed',
+      userId: req.user.id,
+      organizationId,
+      details: { provider, success: result.success }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error refreshing integration tokens:', error);
+    res.status(500).json({ error: 'Failed to refresh integration tokens' });
+  }
+});
+
+// Get expense categories from provider
+router.get('/integrations/:provider/categories', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { provider } = req.params;
+
+    const categories = await expenseIntegrationService.getExpenseCategories(
+      organizationId,
+      provider
+    );
+
+    res.json(categories);
+  } catch (error) {
+    console.error('Error fetching expense categories:', error);
+    res.status(500).json({ error: 'Failed to fetch expense categories' });
+  }
+});
+
+// Map expense categories
+router.post('/integrations/:provider/categories/map', async (req, res) => {
+  try {
+    if (!req.user?.organization_id) {
+      return res.status(401).json({ error: "Organization membership required" });
+    }
+
+    // Only admins can map categories
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Admin role required to map categories' });
+    }
+
+    const organizationId = req.user.organization_id;
+    const { provider } = req.params;
+    const { categoryMappings } = req.body;
+
+    if (!categoryMappings || !Array.isArray(categoryMappings)) {
+      return res.status(400).json({ error: 'Category mappings are required' });
+    }
+
+    const result = await expenseIntegrationService.mapExpenseCategories(
+      organizationId,
+      provider,
+      categoryMappings
+    );
+
+    await auditLogger.log({
+      action: 'expense_categories_mapped',
+      userId: req.user.id,
+      organizationId,
+      details: { provider, mappingCount: categoryMappings.length }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error mapping expense categories:', error);
+    res.status(500).json({ error: 'Failed to map expense categories' });
+  }
+});
 
 export default router;
