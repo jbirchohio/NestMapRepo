@@ -52,6 +52,55 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
       requiresAuth: true
     },
     {
+      name: 'Voice Assistant',
+      href: '/voice-assistant',
+      icon: <HomeIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Voice Assistant',
+      requiresAuth: true
+    },
+    {
+      name: 'Enterprise Integration',
+      href: '/enterprise-integration',
+      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Enterprise Integration',
+      requiresAuth: true
+    },
+    {
+      name: 'Custom Reports',
+      href: '/custom-reports',
+      icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Custom Reports',
+      requiresAuth: true
+    },
+    {
+      name: 'Smart City',
+      href: '/smart-city',
+      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Smart City',
+      requiresAuth: true
+    },
+    {
+      name: 'Marketplace',
+      href: '/marketplace',
+      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Marketplace',
+      requiresAuth: true
+    },
+    {
+      name: 'Autonomous Vehicles',
+      href: '/autonomous-vehicles',
+      icon: <HomeIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Autonomous Vehicles',
+      requiresAuth: true
+    },
+    {
+      name: 'Automation',
+      href: '/automation',
+      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Automation',
+      requiresAuth: true
+    },
+    {
       name: 'Analytics',
       href: '/analytics',
       icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,

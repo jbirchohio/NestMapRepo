@@ -16,6 +16,23 @@ import tripRoutes from './routes/trips-simple.js';
 import aiRoutes from './routes/ai-routes.js';
 import enterpriseRoutes from './routes/enterprise-routes.js';
 import comprehensiveRoutes from './routes/comprehensive-routes.js';
+import onboardingFeedbackRoutes from './routes/onboarding-feedback.js';
+
+// Phase 1 Innovation Roadmap Routes
+import voiceRoutes from './routes/voice.js';
+import disruptionAlertsRoutes from './routes/disruption-alerts.js';
+import offlineRoutes from './routes/offline.js';
+
+// Phase 2 Innovation Roadmap Routes
+import advancedAnalyticsRoutes from './routes/advanced-analytics.js';
+import customReportingRoutes from './routes/custom-reporting.js';
+import enterpriseIntegrationRoutes from './routes/enterprise-integration.js';
+
+// Phase 3 Innovation Roadmap Routes (Market Domination)
+import platformEcosystemRoutes from './routes/platform-ecosystem.js';
+import predictiveBusinessIntelligenceRoutes from './routes/predictive-business-intelligence.js';
+import iotSmartCityRoutes from './routes/iot-smart-city.js';
+import automationOrchestrationRoutes from './routes/automation-orchestration.js';
 
 // Create Express app
 const app = express();
@@ -77,6 +94,23 @@ app.use('/api/trips', authenticate, tripRoutes);
 app.use('/api/ai', authenticate, aiRoutes);
 app.use('/api/enterprise', authenticate, enterpriseRoutes);
 app.use('/api/comprehensive', authenticate, comprehensiveRoutes);
+app.use('/api/onboarding-feedback', authenticate, onboardingFeedbackRoutes);
+
+// Phase 1 Innovation Roadmap Routes (Voice-First Interface)
+app.use('/api/voice', authenticate, voiceRoutes);
+app.use('/api/disruption-alerts', authenticate, disruptionAlertsRoutes);
+app.use('/api/offline', authenticate, offlineRoutes);
+
+// Phase 2 Innovation Roadmap Routes (Enterprise-Grade Features)
+app.use('/api/advanced-analytics', authenticate, advancedAnalyticsRoutes);
+app.use('/api/custom-reporting', authenticate, customReportingRoutes);
+app.use('/api/enterprise-integration', authenticate, enterpriseIntegrationRoutes);
+
+// Phase 3 Innovation Roadmap Routes (Market Domination)
+app.use('/api/platform-ecosystem', authenticate, platformEcosystemRoutes);
+app.use('/api/predictive-business-intelligence', authenticate, predictiveBusinessIntelligenceRoutes);
+app.use('/api/iot-smart-city', authenticate, iotSmartCityRoutes);
+app.use('/api/automation-orchestration', authenticate, automationOrchestrationRoutes);
 
 // Health check route
 app.get('/health', (_req, res) => {

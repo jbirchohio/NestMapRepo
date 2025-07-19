@@ -358,14 +358,8 @@ class VoiceInterfaceService extends EventEmitter {
     const { entities } = command;
     const { tripId, infoType } = entities;
     
-    // Mock trip information - in real implementation, fetch from database
-    const tripInfo = {
-      destination: "London, UK",
-      dates: "March 15-22, 2024",
-      flights: "Confirmed - UA123 departing 8:30 AM",
-      hotel: "Confirmed - Hilton London Metropole",
-      status: "All confirmed"
-    };
+    // Get real trip information from database
+    const tripInfo = await this.getTripInformation(tripId);
     
     let responseText = "Here's your trip information: ";
     if (infoType === 'flights') {
@@ -395,13 +389,8 @@ class VoiceInterfaceService extends EventEmitter {
       };
     }
     
-    // Mock weather data - in real implementation, fetch from weather API
-    const weather = {
-      location: location,
-      temperature: "22°C",
-      condition: "partly cloudy",
-      forecast: "Light rain expected in the afternoon"
-    };
+    // Get real weather data from API
+    const weather = await this.getWeatherData(location, date);
     
     let responseText = `The weather in ${weather.location} is ${weather.temperature} and ${weather.condition}`;
     if (date) responseText += ` for ${date}`;
@@ -426,15 +415,8 @@ class VoiceInterfaceService extends EventEmitter {
       };
     }
     
-    // Mock flight status - in real implementation, fetch from airline APIs
-    const flightStatus = {
-      flight: flightNumber,
-      status: "On time",
-      departure: "8:30 AM",
-      arrival: "2:45 PM",
-      gate: "B12",
-      delay: null
-    };
+    // Get real flight status from API
+    const flightStatus = await this.getFlightStatus(flightNumber, date);
     
     let responseText = `Flight ${flightStatus.flight} is ${flightStatus.status}`;
     if (flightStatus.delay) {
@@ -457,12 +439,8 @@ class VoiceInterfaceService extends EventEmitter {
     const recommendationType = type || 'general';
     const targetLocation = location || 'your destination';
     
-    // Mock recommendations - in real implementation, use AI and data
-    const recommendations = {
-      restaurants: ["The Ivy", "Dishoom", "Sketch"],
-      activities: ["British Museum", "London Eye", "Tower Bridge"],
-      hotels: ["Hilton London Metropole", "The Shard", "Claridge's"]
-    };
+    // Get real recommendations using AI and location data
+    const recommendations = await this.getLocationRecommendations(targetLocation, recommendationType, budget, preferences);
     
     let responseText = `Here are my ${recommendationType} recommendations for ${targetLocation}: `;
     
@@ -641,6 +619,211 @@ class VoiceInterfaceService extends EventEmitter {
     setInterval(() => {
       this.cleanupSessions();
     }, 5 * 60 * 1000); // Every 5 minutes
+  }
+
+  // Real recommendation system using AI and location APIs
+  private async getLocationRecommendations(
+    location: string, 
+    type: string, 
+    budget?: string, 
+    preferences?: string[]
+  ): Promise<{ restaurants: string[]; activities: string[]; hotels: string[] }> {
+    try {
+      // Use OpenAI to generate contextual recommendations
+      const openai = new (await import('openai')).default({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+
+      if (!process.env.OPENAI_API_KEY) {
+        return this.getFallbackRecommendations(location, type);
+      }
+
+      const budgetText = budget ? ` with a ${budget} budget` : '';
+      const preferencesText = preferences?.length ? ` considering preferences: ${preferences.join(', ')}` : '';
+      
+      const prompt = `Provide specific, real ${type === 'general' ? 'restaurant, activity, and hotel' : type} recommendations for ${location}${budgetText}${preferencesText}. 
+
+Format as JSON with arrays for restaurants, activities, and hotels. Include only real, well-known establishments. Limit to 3-5 items per category.`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 500
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (content) {
+        try {
+          const parsed = JSON.parse(content);
+          return {
+            restaurants: parsed.restaurants || [],
+            activities: parsed.activities || [],
+            hotels: parsed.hotels || []
+          };
+        } catch (parseError) {
+          console.warn('Failed to parse AI recommendations, using fallback');
+        }
+      }
+    } catch (error) {
+      console.error('Error getting AI recommendations:', error);
+    }
+
+    return this.getFallbackRecommendations(location, type);
+  }
+
+  private getFallbackRecommendations(location: string, type: string): { restaurants: string[]; activities: string[]; hotels: string[] } {
+    // Location-specific fallback recommendations
+    const locationData: Record<string, any> = {
+      'london': {
+        restaurants: ['Dishoom', 'The Ivy', 'Sketch', 'Duck & Waffle', 'Hawksmoor'],
+        activities: ['British Museum', 'London Eye', 'Tower Bridge', 'Tate Modern', 'Hyde Park'],
+        hotels: ['The Shard', 'Claridge\'s', 'The Savoy', 'Hilton London Metropole', 'Premier Inn']
+      },
+      'new york': {
+        restaurants: ['Le Bernardin', 'Eleven Madison Park', 'Peter Luger', 'Katz\'s Deli', 'Joe\'s Pizza'],
+        activities: ['Central Park', 'Statue of Liberty', 'Times Square', 'Metropolitan Museum', 'Brooklyn Bridge'],
+        hotels: ['The Plaza', 'The St. Regis', 'Pod Hotels', 'The High Line Hotel', 'citizenM']
+      },
+      'paris': {
+        restaurants: ['Le Comptoir du Relais', 'L\'As du Fallafel', 'Breizh Café', 'Pierre Hermé', 'Du Pain et des Idées'],
+        activities: ['Eiffel Tower', 'Louvre Museum', 'Notre-Dame', 'Montmartre', 'Seine River Cruise'],
+        hotels: ['Hotel des Grands Boulevards', 'Le Meurice', 'Hotel Malte Opera', 'Generator Paris', 'Hotel National']
+      },
+      'tokyo': {
+        restaurants: ['Sukiyabashi Jiro', 'Ramen Yashichi', 'Tsuta', 'Nabezo', 'Gonpachi'],
+        activities: ['Senso-ji Temple', 'Tokyo Skytree', 'Shibuya Crossing', 'Meiji Shrine', 'Tsukiji Market'],
+        hotels: ['Park Hyatt Tokyo', 'Aman Tokyo', 'Capsule Hotel', 'Hotel Ryumeikan', 'Shinjuku Granbell Hotel']
+      }
+    };
+
+    const locationKey = location.toLowerCase();
+    const data = locationData[locationKey] || {
+      restaurants: ['Local Restaurant', 'Popular Eatery', 'Recommended Café'],
+      activities: ['City Tour', 'Local Museum', 'Historic Site'],
+      hotels: ['Business Hotel', 'Boutique Hotel', 'Chain Hotel']
+    };
+
+    return data;
+  }
+
+  // Real trip information from database
+  private async getTripInformation(tripId?: string): Promise<any> {
+    try {
+      // Import database connection
+      const { db } = await import('../db/db.js');
+      const { trips } = await import('../db/schema.js');
+      const { eq, desc } = await import('drizzle-orm');
+
+      if (tripId) {
+        const trip = await db.select().from(trips).where(eq(trips.id, tripId)).limit(1);
+        if (trip.length > 0) {
+          const tripData = trip[0];
+          return {
+            destination: tripData.location || tripData.city || tripData.title || 'Trip destination',
+            dates: `${tripData.startDate?.toDateString()} to ${tripData.endDate?.toDateString()}`,
+            flights: 'Flight details pending',
+            hotel: tripData.hotel || 'Hotel details pending',
+            status: tripData.completed ? 'Completed' : 'Active'
+          };
+        }
+      }
+
+      // Fallback to most recent trip if no tripId provided
+      const recentTrips = await db.select().from(trips).orderBy(desc(trips.createdAt)).limit(1);
+      if (recentTrips.length > 0) {
+        const tripData = recentTrips[0];
+        return {
+          destination: tripData.location || tripData.city || tripData.title || 'Trip destination',
+          dates: `${tripData.startDate?.toDateString()} to ${tripData.endDate?.toDateString()}`,
+          flights: 'Flight details pending',
+          hotel: tripData.hotel || 'Hotel details pending',
+          status: tripData.completed ? 'Completed' : 'Active'
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching trip information:', error);
+    }
+
+    // Fallback trip information
+    return {
+      destination: 'Your upcoming destination',
+      dates: 'Dates to be confirmed',
+      flights: 'Flight details pending',
+      hotel: 'Hotel details pending',
+      status: 'Planning in progress'
+    };
+  }
+
+  // Real flight status from API
+  private async getFlightStatus(flightNumber: string, date?: string): Promise<any> {
+    try {
+      // Try AviationStack API first
+      if (process.env.AVIATIONSTACK_API_KEY) {
+        const response = await fetch(
+          `http://api.aviationstack.com/v1/flights?access_key=${process.env.AVIATIONSTACK_API_KEY}&flight_iata=${flightNumber}&limit=1`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.length > 0) {
+            const flight = data.data[0];
+            return {
+              flight: flightNumber,
+              status: flight.flight_status || 'Unknown',
+              departure: flight.departure?.scheduled || 'TBD',
+              arrival: flight.arrival?.scheduled || 'TBD',
+              gate: flight.departure?.gate || 'TBD',
+              delay: flight.departure?.delay ? `${flight.departure.delay} minutes` : null
+            };
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching flight status:', error);
+    }
+
+    // Fallback flight status
+    return {
+      flight: flightNumber,
+      status: 'Status unavailable',
+      departure: 'Check with airline',
+      arrival: 'Check with airline',
+      gate: 'TBD',
+      delay: null
+    };
+  }
+
+  // Real weather data from API
+  private async getWeatherData(location: string, date?: string): Promise<any> {
+    try {
+      // Use OpenWeatherMap API
+      if (process.env.OPENWEATHER_API_KEY) {
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)}&appid=${process.env.OPENWEATHER_API_KEY}&units=metric`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            location: data.name || location,
+            temperature: `${Math.round(data.main.temp)}°C`,
+            condition: data.weather[0]?.description || 'Unknown',
+            forecast: `Feels like ${Math.round(data.main.feels_like)}°C. Humidity: ${data.main.humidity}%`
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+    }
+
+    // Fallback weather data
+    return {
+      location: location,
+      temperature: 'Temperature unavailable',
+      condition: 'Weather data unavailable',
+      forecast: 'Please check local weather services'
+    };
   }
 }
 

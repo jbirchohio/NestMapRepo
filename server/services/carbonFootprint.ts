@@ -48,7 +48,7 @@ class CarbonFootprintService extends EventEmitter {
     // Calculate flight emissions
     if (tripData.flights) {
       for (const flight of tripData.flights) {
-        const distance = this.calculateFlightDistance(flight.origin, flight.destination);
+        const distance = await this.calculateFlightDistance(flight.origin, flight.destination);
         const factor = flight.domestic ? 'flight_domestic' : 'flight_international';
         const emissions = distance * this.emissionFactors.get(factor)!;
         totalEmissions += emissions;
@@ -93,13 +93,30 @@ class CarbonFootprintService extends EventEmitter {
     return footprint;
   }
 
-  private calculateFlightDistance(origin: string, destination: string): number {
-    // Mock distance calculation - in real implementation, use actual coordinates
+  private async calculateFlightDistance(origin: string, destination: string): Promise<number> {
+    try {
+      // Use real distance calculation with airport coordinates
+      const airportCoords = await this.getAirportCoordinates(origin, destination);
+      
+      if (airportCoords.origin && airportCoords.destination) {
+        return this.haversineDistance(
+          airportCoords.origin.lat,
+          airportCoords.origin.lng,
+          airportCoords.destination.lat,
+          airportCoords.destination.lng
+        );
+      }
+    } catch (error) {
+      console.error('Error calculating flight distance:', error);
+    }
+
+    // Fallback distances for common routes
     const distances: Record<string, number> = {
-      'JFK-LAX': 3944,
-      'LAX-JFK': 3944,
-      'JFK-LHR': 5585,
-      'LHR-JFK': 5585
+      'JFK-LAX': 3944, 'LAX-JFK': 3944,
+      'JFK-LHR': 5585, 'LHR-JFK': 5585,
+      'LAX-LHR': 8756, 'LHR-LAX': 8756,
+      'JFK-CDG': 5837, 'CDG-JFK': 5837,
+      'LAX-NRT': 8818, 'NRT-LAX': 8818
     };
     return distances[`${origin}-${destination}`] || 1000;
   }
@@ -220,6 +237,48 @@ class CarbonFootprintService extends EventEmitter {
     
     const offsetPercentage = totalEmissions > 0 ? (offsetEmissions / totalEmissions) * 100 : 0;
     return Math.min(offsetPercentage + 20, 100); // Base score + offset bonus
+  }
+
+  // Real airport coordinates lookup
+  private async getAirportCoordinates(origin: string, destination: string): Promise<{
+    origin?: { lat: number; lng: number };
+    destination?: { lat: number; lng: number };
+  }> {
+    // Airport coordinates database (major airports)
+    const airportCoords: Record<string, { lat: number; lng: number }> = {
+      'JFK': { lat: 40.6413, lng: -73.7781 },
+      'LAX': { lat: 33.9425, lng: -118.4081 },
+      'LHR': { lat: 51.4700, lng: -0.4543 },
+      'CDG': { lat: 49.0097, lng: 2.5479 },
+      'NRT': { lat: 35.7720, lng: 140.3929 },
+      'DXB': { lat: 25.2532, lng: 55.3657 },
+      'SIN': { lat: 1.3644, lng: 103.9915 },
+      'HKG': { lat: 22.3080, lng: 113.9185 },
+      'FRA': { lat: 50.0379, lng: 8.5622 },
+      'AMS': { lat: 52.3105, lng: 4.7683 }
+    };
+
+    return {
+      origin: airportCoords[origin],
+      destination: airportCoords[destination]
+    };
+  }
+
+  // Haversine distance calculation
+  private haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = this.toRadians(lat2 - lat1);
+    const dLng = this.toRadians(lng2 - lng1);
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  private toRadians(degrees: number): number {
+    return degrees * (Math.PI / 180);
   }
 }
 
