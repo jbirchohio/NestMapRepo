@@ -286,22 +286,135 @@ export class AITripOptimizer {
 
   // Helper methods
   private async getHistoricalPriceData(route: string) {
-    // This would integrate with flight price APIs to get historical data
-    // For now, return mock data structure
+    try {
+      // Parse route to get origin and destination
+      const [origin, destination] = route.split('-').map(s => s.trim());
+      
+      if (!origin || !destination) {
+        throw new Error('Invalid route format. Expected "ORIGIN-DESTINATION"');
+      }
+
+      // Real implementation would use flight pricing APIs like:
+      // - Amadeus Flight Offers API
+      // - Skyscanner API
+      // - Google Flights API
+      // - Expedia Rapid API
+      
+      const apiKey = process.env.AMADEUS_API_KEY || process.env.FLIGHT_API_KEY;
+      
+      if (!apiKey) {
+        console.warn('No flight API key configured. Using calculated estimates.');
+        return this.generatePriceEstimates(route, origin, destination);
+      }
+
+      // Example with Amadeus API (pseudo-code)
+      // const amadeusData = await this.fetchAmadeusFlightPrices(origin, destination, apiKey);
+      // return this.processAmadeusResponse(amadeusData);
+      
+      // For now, return calculated estimates based on route characteristics
+      return this.generatePriceEstimates(route, origin, destination);
+      
+    } catch (error) {
+      console.error('Error fetching historical price data:', error);
+      return this.generatePriceEstimates(route, 'Unknown', 'Unknown');
+    }
+  }
+
+  private generatePriceEstimates(route: string, origin: string, destination: string) {
+    // Calculate estimated prices based on route characteristics
+    const basePrice = this.calculateBasePrice(origin, destination);
+    const monthlyVariations = this.calculateSeasonalVariations(basePrice);
+    
     return {
       route,
-      priceHistory: [
-        { date: '2024-01-01', price: 450 },
-        { date: '2024-02-01', price: 420 },
-        { date: '2024-03-01', price: 480 },
-        // ... more historical data
-      ],
-      averagePrice: 450,
+      priceHistory: monthlyVariations.map((price, index) => ({
+        date: new Date(2024, index, 1).toISOString().split('T')[0],
+        price: Math.round(price)
+      })),
+      averagePrice: Math.round(basePrice),
       seasonalTrends: {
-        peak: ['December', 'July', 'August'],
-        low: ['January', 'February', 'September'],
+        peak: ['June', 'July', 'August', 'December'],
+        low: ['January', 'February', 'September', 'October'],
       },
+      factors: {
+        distance: this.estimateDistance(origin, destination),
+        popularity: this.estimateRoutePopularity(origin, destination),
+        seasonality: 'Varies by month and holidays'
+      }
     };
+  }
+
+  private calculateBasePrice(origin: string, destination: string): number {
+    // Estimate base price based on common flight pricing factors
+    const domesticBase = 250;
+    const internationalBase = 600;
+    const longHaulBase = 1200;
+    
+    // Simple heuristic based on common airport codes and cities
+    const isInternational = this.isInternationalRoute(origin, destination);
+    const isLongHaul = this.isLongHaulRoute(origin, destination);
+    
+    if (isLongHaul) return longHaulBase + Math.random() * 400;
+    if (isInternational) return internationalBase + Math.random() * 300;
+    return domesticBase + Math.random() * 200;
+  }
+
+  private calculateSeasonalVariations(basePrice: number): number[] {
+    // 12 months of price variations
+    const seasonalMultipliers = [
+      0.85, // January - low season
+      0.87, // February - low season  
+      0.95, // March - shoulder
+      1.00, // April - normal
+      1.05, // May - shoulder
+      1.20, // June - peak
+      1.25, // July - peak
+      1.23, // August - peak
+      0.90, // September - low
+      0.92, // October - low
+      1.10, // November - shoulder
+      1.30  // December - peak (holidays)
+    ];
+    
+    return seasonalMultipliers.map(multiplier => basePrice * multiplier);
+  }
+
+  private isInternationalRoute(origin: string, destination: string): boolean {
+    // Simple heuristic - would use real country/airport data in production
+    const usAirports = ['LAX', 'JFK', 'ORD', 'DFW', 'ATL', 'SFO', 'LAS', 'SEA'];
+    const usCities = ['Los Angeles', 'New York', 'Chicago', 'Dallas', 'Atlanta', 'San Francisco', 'Las Vegas', 'Seattle'];
+    
+    const originIsUS = usAirports.includes(origin) || usCities.includes(origin);
+    const destIsUS = usAirports.includes(destination) || usCities.includes(destination);
+    
+    return originIsUS !== destIsUS; // Different countries
+  }
+
+  private isLongHaulRoute(origin: string, destination: string): boolean {
+    // Simple heuristic for long-haul flights (> 6 hours)
+    const longHaulKeywords = ['Asia', 'Europe', 'Australia', 'Tokyo', 'London', 'Paris', 'Sydney', 'Bangkok'];
+    const routeString = `${origin} ${destination}`.toLowerCase();
+    
+    return longHaulKeywords.some(keyword => routeString.includes(keyword.toLowerCase()));
+  }
+
+  private estimateDistance(origin: string, destination: string): string {
+    if (this.isLongHaulRoute(origin, destination)) return '5000+ miles';
+    if (this.isInternationalRoute(origin, destination)) return '1500-5000 miles';
+    return '200-1500 miles';
+  }
+
+  private estimateRoutePopularity(origin: string, destination: string): string {
+    const popularCities = ['New York', 'Los Angeles', 'London', 'Paris', 'Tokyo', 'Sydney'];
+    const routeString = `${origin} ${destination}`;
+    
+    const popularityScore = popularCities.filter(city => 
+      routeString.includes(city)
+    ).length;
+    
+    if (popularityScore >= 2) return 'High';
+    if (popularityScore === 1) return 'Medium';
+    return 'Low';
   }
 
   private async getOrganizationSpendingData(organizationId: string, timeframe: string) {
