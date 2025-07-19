@@ -171,24 +171,47 @@ export class UserRepositoryImpl implements IUserRepository {
       .where(eq(users.id, userId));
   }
 
-  // Create method
+  // Create method - real database implementation
   async create(userData: Omit<IUser, 'id' | 'createdAt' | 'updatedAt'>): Promise<IUser> {
-    // Create a user with default values
-    const user = {
-      id: uuidv4(),
+    const userId = uuidv4();
+    const now = new Date();
+    
+    // Create user data with generated ID and timestamps
+    const userToInsert = {
+      id: userId,
       ...userData,
       email: userData.email.toLowerCase().trim(),
       emailVerified: userData.emailVerified ?? false,
       isActive: userData.isActive ?? true,
       failedLoginAttempts: 0,
       lockedUntil: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: now,
+      updatedAt: now
     };
 
-    // For the mock implementation, we'll just return the user as if it was inserted
-    // In a real DB implementation, we would insert and return the result
-    return user;
+    try {
+      // Insert into database and return the created user
+      const [insertedUser] = await db
+        .insert(users)
+        .values(userToInsert)
+        .returning();
+      
+      return insertedUser as IUser;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      
+      // Check for unique constraint violations
+      if (error instanceof Error && error.message.includes('unique')) {
+        if (error.message.includes('email')) {
+          throw new Error('Email already exists');
+        }
+        if (error.message.includes('username')) {
+          throw new Error('Username already exists');
+        }
+      }
+      
+      throw new Error('Failed to create user');
+    }
   }
 
   async update(id: string, userData: Partial<IUser>): Promise<IUser | null> {

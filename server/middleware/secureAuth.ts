@@ -225,8 +225,12 @@ export const resetAuthRateLimit = (req: Request, res: Response, next: NextFuncti
   next();
 };
 
+// Alias for backwards compatibility
+export const secureAuth = authenticate;
+
 export default {
   authenticate,
+  secureAuth,
   verifyRefreshToken,
   requireRole,
   rateLimitAuth,

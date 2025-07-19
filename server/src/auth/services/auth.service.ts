@@ -3,6 +3,8 @@ import { AuthResponse, LoginDto, RefreshTokenDto, UserRole } from '../dtos/auth.
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface';
 import { IUserRepository } from '../repositories/user.repository';
 import logger from '../../utils/logger';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 export class AuthService implements IAuthService {
   private readonly logger = logger;
@@ -23,11 +25,21 @@ export class AuthService implements IAuthService {
       throw new Error('Invalid credentials');
     }
 
-    // Verify password (simplified for compilation)
-    const isPasswordValid = password === (user as unknown as { password: string }).password;
+    // Check if account is locked
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      throw new Error('Account is temporarily locked due to multiple failed login attempts');
+    }
+
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
+      // Increment failed login attempts
+      await this.userRepository.incrementFailedLoginAttempts(user.id);
       throw new Error('Invalid credentials');
     }
+
+    // Reset failed login attempts on successful login
+    await this.userRepository.resetFailedLoginAttempts(user.id);
 
     // Generate tokens
     const accessToken = this.generateAccessToken(user.id, user.role as UserRole);
@@ -112,28 +124,50 @@ export class AuthService implements IAuthService {
   async requestPasswordReset(email: string): Promise<void> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      // Don't reveal if user exists
+      // Don't reveal if user exists for security
       this.logger.info(`Password reset requested for non-existent email: ${email}`);
       return;
     }
 
-    this.logger.info(`Password reset requested for user: ${user.id}`);
+    // Generate a secure reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiry
+
+    // Store the reset token in the database
+    await this.userRepository.setPasswordResetToken(user.id, resetToken, resetTokenExpires);
+
+    // In a real implementation, send email with reset link
+    // await emailService.sendPasswordResetEmail(user.email, resetToken);
+    
+    this.logger.info(`Password reset token generated for user: ${user.id}`);
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    this.logger.info(`Password reset attempted with token: ${token.substring(0, 8)}...`);
+    // Find user by reset token
+    const user = await this.userRepository.findByResetToken(token);
     
-    // TODO: Implement actual password reset logic
-    // 1. Verify the reset token is valid and not expired
-    // 2. Find the user associated with the token
-    // 3. Hash the new password
-    // 4. Update the user's password in the database
-    // 5. Invalidate the used token
+    if (!user || !user.resetTokenExpires || user.resetTokenExpires < new Date()) {
+      throw new Error('Invalid or expired reset token');
+    }
+
+    // Hash the new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update user's password and clear reset token
+    await this.userRepository.update(user.id, {
+      passwordHash: hashedPassword,
+      passwordChangedAt: new Date(),
+      resetToken: null,
+      resetTokenExpires: null,
+      failedLoginAttempts: 0, // Reset failed attempts
+      lockedUntil: null // Unlock account if it was locked
+    });
+
+    // Clear reset token
+    await this.userRepository.clearPasswordResetToken(user.id);
     
-    // For now, we'll just log that we received the new password
-    // and throw a not implemented error
-    this.logger.debug(`New password received (not hashed): ${newPassword ? '[HIDDEN]' : 'undefined'}`);
-    throw new Error('Password reset functionality is not yet implemented');
+    this.logger.info(`Password successfully reset for user: ${user.id}`);
   }
 
   async createRefreshToken(userId: string, ip: string, userAgent: string): Promise<string> {

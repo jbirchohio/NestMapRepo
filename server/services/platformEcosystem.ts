@@ -893,3 +893,4 @@ class PlatformEcosystemService extends EventEmitter {
 }
 
 export const platformEcosystemService = new PlatformEcosystemService();
+export default PlatformEcosystemService;

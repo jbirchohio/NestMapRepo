@@ -183,17 +183,86 @@ class AutonomousVehicleIntegrationService extends EventEmitter {
     try {
       const availableVehicles: AutonomousVehicleIntegration[] = [];
       
-      // Mock available vehicles in the area
-      const mockVehicles = await this.generateMockAvailableVehicles(location, radius, vehicleType);
-      availableVehicles.push(...mockVehicles);
+      // Real implementation would integrate with:
+      // - Waymo API for self-driving cars
+      // - Uber/Lyft APIs for rideshare vehicles  
+      // - Tesla API for Tesla vehicles
+      // - Local fleet management systems
+      
+      // Check if we have configured vehicle providers
+      const configuredProviders = this.getConfiguredProviders();
+      
+      if (configuredProviders.length === 0) {
+        console.log('No vehicle providers configured. Please configure Waymo, Uber, Lyft, or Tesla integrations.');
+        return [];
+      }
+      
+      // Query each configured provider for available vehicles
+      for (const provider of configuredProviders) {
+        try {
+          const providerVehicles = await this.queryProviderAPI(provider, location, radius, vehicleType);
+          availableVehicles.push(...providerVehicles);
+        } catch (error) {
+          console.error(`Error querying ${provider.name}:`, error);
+        }
+      }
 
       this.emit('availableVehiclesRequested', { location, radius, count: availableVehicles.length });
       return availableVehicles;
 
     } catch (error) {
       console.error('Get available vehicles error:', error);
-      throw new Error(`Failed to get available vehicles: ${error.message}`);
+      throw new Error(`Failed to get available vehicles: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  private getConfiguredProviders(): Array<{name: string, apiKey?: string, baseUrl: string}> {
+    const providers = [];
+    
+    if (process.env.WAYMO_API_KEY) {
+      providers.push({ 
+        name: 'Waymo', 
+        apiKey: process.env.WAYMO_API_KEY,
+        baseUrl: 'https://api.waymo.com/v1' 
+      });
+    }
+    
+    if (process.env.UBER_API_KEY) {
+      providers.push({ 
+        name: 'Uber', 
+        apiKey: process.env.UBER_API_KEY,
+        baseUrl: 'https://api.uber.com/v1.2' 
+      });
+    }
+    
+    if (process.env.LYFT_API_KEY) {
+      providers.push({ 
+        name: 'Lyft', 
+        apiKey: process.env.LYFT_API_KEY,
+        baseUrl: 'https://api.lyft.com/v1' 
+      });
+    }
+    
+    return providers;
+  }
+
+  private async queryProviderAPI(
+    provider: {name: string, apiKey?: string, baseUrl: string}, 
+    location: string, 
+    radius: number, 
+    vehicleType?: string
+  ): Promise<AutonomousVehicleIntegration[]> {
+    // This would make real API calls to the provider
+    // For now, return empty array since we don't have real API credentials
+    console.log(`Querying ${provider.name} API for vehicles near ${location} within ${radius}km`);
+    
+    // Real implementation would:
+    // 1. Parse location coordinates
+    // 2. Make HTTP request to provider API
+    // 3. Transform response to our vehicle format
+    // 4. Apply vehicle type filtering
+    
+    return [];
   }
 
   async updateVehicleStatus(vehicleId: string, status: AutonomousVehicleIntegration['status']): Promise<void> {
@@ -460,43 +529,6 @@ class AutonomousVehicleIntegrationService extends EventEmitter {
       return baseFare * 0.5; // 50% refund
     }
     return 0; // No refund
-  }
-
-  private async generateMockAvailableVehicles(
-    location: { lat: number; lng: number },
-    radius: number,
-    vehicleType?: string
-  ): Promise<AutonomousVehicleIntegration[]> {
-    const vehicles: AutonomousVehicleIntegration[] = [];
-    const vehicleTypes = vehicleType ? [vehicleType] : ['taxi', 'rideshare', 'shuttle'];
-
-    for (let i = 0; i < 5; i++) {
-      const type = vehicleTypes[Math.floor(Math.random() * vehicleTypes.length)] as any;
-      const vehicleId = this.generateVehicleId();
-      
-      vehicles.push({
-        vehicleId,
-        type,
-        status: 'available',
-        location: {
-          lat: location.lat + (Math.random() - 0.5) * 0.01,
-          lng: location.lng + (Math.random() - 0.5) * 0.01,
-          address: `Vehicle ${i + 1} Location`
-        },
-        capacity: { total: this.getVehicleCapacity(type), occupied: 0 },
-        features: await this.getVehicleFeatures(type, {}),
-        route: {
-          distance: Math.random() * 2 + 0.5, // 0.5-2.5 km away
-          estimatedTime: Math.random() * 10 + 2, // 2-12 minutes away
-          traffic: 'light',
-          waypoints: [],
-          alternatives: []
-        },
-        safety: await this.getVehicleSafetyInfo(vehicleId)
-      });
-    }
-
-    return vehicles;
   }
 
   // Service capabilities

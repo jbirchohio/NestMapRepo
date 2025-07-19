@@ -40,31 +40,8 @@ interface NextFunction {
   (error?: any): void;
 }
 
-// Node.js crypto module interface
-interface CryptoModule {
-  createHash(algorithm: string): {
-    update(data: string): any;
-    digest(encoding: string): string;
-  };
-  createHmac(algorithm: string, key: string): {
-    update(data: string): any;
-    digest(encoding: string): string;
-  };
-  timingSafeEqual(a: Buffer, b: Buffer): boolean;
-}
-
-// Simple crypto mock for compilation
-const crypto: CryptoModule = {
-  createHash: (algorithm: string) => ({
-    update: (data: string) => ({}),
-    digest: (encoding: string) => 'mock-hash'
-  }),
-  createHmac: (algorithm: string, key: string) => ({
-    update: (data: string) => ({}),
-    digest: (encoding: string) => 'mock-hmac'
-  }),
-  timingSafeEqual: (a: Buffer, b: Buffer) => true
-};
+// Use real Node.js crypto module
+import crypto from 'crypto';
 
 type SecureRequest = Request & {
   apiVersion?: string;
