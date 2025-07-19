@@ -171,9 +171,24 @@ export class OrganizationFundingService {
           break;
 
         case 'credit_line':
-          // For credit lines, this would involve Stripe Capital API
-          // This is a simplified implementation
-          fundingSourceId = 'credit_line_placeholder.js';
+          // For credit lines, integrate with Stripe Capital API
+          try {
+            const creditLine = await this.stripe.issuing.cards.create({
+              cardholder: organization.name,
+              currency: 'usd',
+              type: 'virtual',
+              spending_controls: {
+                spending_limits: [{
+                  amount: amount * 100, // Convert to cents
+                  interval: 'monthly'
+                }]
+              }
+            });
+            fundingSourceId = creditLine.id;
+          } catch (error) {
+            console.error('Error creating credit line:', error);
+            throw new Error('Failed to create credit line funding source');
+          }
           break;
 
         case 'stripe_balance':
@@ -255,7 +270,7 @@ export class OrganizationFundingService {
           dob: {
             day: 1,
             month: 1,
-            year: 2020, // Company formation date placeholder
+            year: org[0].createdAt ? new Date(org[0].createdAt).getFullYear() : new Date().getFullYear(),
           },
         },
       }, {

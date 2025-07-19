@@ -323,3 +323,6 @@ export function validateOrganizationData<T extends { organizationId?: string }>(
     organizationId: req.organizationId
   };
 }
+
+// Alias for backwards compatibility
+export const organizationScoping = injectOrganizationContext;

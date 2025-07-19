@@ -1,5 +1,8 @@
-// Local type definitions to avoid external dependencies
-interface Request {
+import { Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
+
+// Local type definitions for compatibility
+interface LocalRequest {
   params?: Record<string, string>;
   body?: Record<string, unknown>;
   query?: Record<string, unknown>;
@@ -10,15 +13,15 @@ interface Request {
   [key: string]: unknown;
 }
 
-interface Response {
-  status(code: number): Response;
-  json(data: Record<string, unknown>): Response;
-  send(data: unknown): Response;
+interface LocalResponse {
+  status(code: number): LocalResponse;
+  json(data: Record<string, unknown>): LocalResponse;
+  send(data: unknown): LocalResponse;
   setHeader(name: string, value: string): void;
   getHeader(name: string): string | undefined;
 }
 
-interface NextFunction {
+interface LocalNextFunction {
   (error?: Error | string | null): void;
 }
 
@@ -26,53 +29,145 @@ interface RequestHandler {
   (req: Request, res: Response, next: NextFunction): void;
 }
 
-// Mock rate limiting implementation
-const rateLimit = (options: {
+/**
+ * Real rate limiting implementation using express-rate-limit
+ */
+const createRateLimiter = (options: {
   windowMs: number;
   max: number;
-  standardHeaders: boolean;
-  legacyHeaders: boolean;
-  skip: (req: Request) => boolean;
-  handler: (req: Request, res: Response) => void;
-}): RequestHandler => {
-  return (req: Request, _res: Response, next: NextFunction) => {
-    if (options.skip(req)) {
-      return next();
-    }
-    // Simple rate limiting logic would go here
-    // For now, just pass through
-    next();
-  };
+  standardHeaders?: boolean;
+  legacyHeaders?: boolean;
+  skip?: (req: Request) => boolean;
+  handler?: (req: Request, res: Response) => void;
+  keyGenerator?: (req: Request) => string;
+}) => {
+  return rateLimit({
+    windowMs: options.windowMs,
+    max: options.max,
+    standardHeaders: options.standardHeaders ?? true,
+    legacyHeaders: options.legacyHeaders ?? false,
+    skip: options.skip || (() => false),
+    handler: options.handler || ((req: Request, res: Response) => {
+      res.status(429).json({
+        success: false,
+        error: 'Too many requests, please try again later.',
+        retryAfter: Math.ceil(options.windowMs / 1000),
+        timestamp: new Date().toISOString()
+      });
+    }),
+    keyGenerator: options.keyGenerator || ((req: Request) => {
+      return req.ip || 'unknown';
+    })
+  });
 };
 
-// Rate limiting configuration
-const limiter = rateLimit({
+// General API rate limiter
+const generalLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
+  max: 1000, // limit each IP to 1000 requests per windowMs
   skip: (req: Request) => {
     // Skip rate limiting for certain paths or in development
-    const skipPaths = ['/health', '/api/health'];
+    const skipPaths = ['/health', '/api/health', '/api/public'];
     return process.env.NODE_ENV === 'development' || 
            skipPaths.some(path => req.path?.startsWith(path));
-  },
-  // Handler for rate limit exceeded
-  handler: (_req: Request, res: Response) => {
+  }
+});
+
+// Authentication endpoints rate limiter (more restrictive)
+const authLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 requests per windowMs for auth endpoints
+  handler: (req: Request, res: Response) => {
     res.status(429).json({
-      error: 'Too many requests, please try again later.',
-      status: 429
+      success: false,
+      error: 'Too many authentication attempts, please try again later.',
+      retryAfter: 900, // 15 minutes
+      timestamp: new Date().toISOString()
     });
   }
 });
 
+// Password reset rate limiter (very restrictive)
+const passwordResetLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // limit each IP to 3 password reset requests per hour
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      success: false,
+      error: 'Too many password reset attempts, please try again later.',
+      retryAfter: 3600, // 1 hour
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// API key rate limiter (for API access)
+const apiKeyLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // limit each API key to 100 requests per minute
+  keyGenerator: (req: Request) => {
+    // Use API key from Authorization header or query param
+    const apiKey = req.headers.authorization?.replace('Bearer ', '') || 
+                   req.query.api_key as string ||
+                   req.ip || 'unknown';
+    return `api_${apiKey}`;
+  },
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      success: false,
+      error: 'API rate limit exceeded. Please upgrade your plan for higher limits.',
+      retryAfter: 60,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Upload rate limiter (for file uploads)
+const uploadLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50, // limit each IP to 50 uploads per hour
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      success: false,
+      error: 'Upload rate limit exceeded, please try again later.',
+      retryAfter: 3600,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Main rate limiter middleware for auth endpoints
 export const rateLimiterMiddleware: RequestHandler = (req, res, next) => {
-  // Skip rate limiting for non-authentication endpoints
-  // Check if path exists and then verify if it starts with the auth endpoint path
-  if (!req.path || !req.path.startsWith('/api/auth')) {
-    return next();
+  // Apply different rate limits based on endpoint
+  if (req.path?.includes('/api/auth/login') || req.path?.includes('/api/auth/register')) {
+    return authLimiter(req, res, next);
   }
   
-  // Apply rate limiting for auth endpoints
-  return limiter(req, res, next);
+  if (req.path?.includes('/api/auth/reset-password')) {
+    return passwordResetLimiter(req, res, next);
+  }
+  
+  if (req.path?.includes('/api/upload')) {
+    return uploadLimiter(req, res, next);
+  }
+  
+  // Check if this is an API endpoint with API key
+  if (req.headers.authorization?.startsWith('Bearer ') || req.query.api_key) {
+    return apiKeyLimiter(req, res, next);
+  }
+  
+  // Apply general rate limiting for other endpoints
+  if (req.path?.startsWith('/api/')) {
+    return generalLimiter(req, res, next);
+  }
+  
+  // Skip rate limiting for non-API endpoints
+  return next();
 };
+
+// Export individual limiters for specific use cases
+export const authRateLimiter = authLimiter;
+export const passwordResetRateLimiter = passwordResetLimiter;
+export const uploadRateLimiter = uploadLimiter;
+export const apiKeyRateLimiter = apiKeyLimiter;
+export const generalRateLimiter = generalLimiter;
