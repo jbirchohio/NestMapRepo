@@ -1,30 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
 
-// Local type definitions for compatibility
-interface LocalRequest {
-  params?: Record<string, string>;
-  body?: Record<string, unknown>;
-  query?: Record<string, unknown>;
-  headers?: Record<string, string | string[]>;
-  path?: string;
-  ip?: string;
-  method?: string;
-  [key: string]: unknown;
-}
-
-interface LocalResponse {
-  status(code: number): LocalResponse;
-  json(data: Record<string, unknown>): LocalResponse;
-  send(data: unknown): LocalResponse;
-  setHeader(name: string, value: string): void;
-  getHeader(name: string): string | undefined;
-}
-
-interface LocalNextFunction {
-  (error?: Error | string | null): void;
-}
-
+// Define the type for our request handler function
 interface RequestHandler {
   (req: Request, res: Response, next: NextFunction): void;
 }

@@ -14,7 +14,7 @@ import jwtUtils, {
   TokenVerificationResult 
 } from '../jwt';
 import { IAuthService } from '../interfaces/auth.service.interface';
-import { AuthResponse, LoginDto, RefreshTokenDto } from '../dtos/auth.dto';
+import { AuthResponse, LoginDto, RefreshTokenDto, RegisterDto } from '../dtos/auth.dto';
 
 /**
  * Service handling JWT authentication operations
@@ -116,6 +116,56 @@ export class JwtAuthService implements IAuthService {
         firstName: null,
         lastName: null,
         emailVerified: true, // Assume verified for demo
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      ...tokens
+    };
+  }
+
+  /**
+   * Register implementation with user creation
+   */
+  async register(registerData: RegisterDto, ip: string, userAgent: string): Promise<AuthResponse> {
+    // Log security information
+    console.log(`Registration attempt from IP: ${ip}, User Agent: ${userAgent}`);
+    
+    const { email, password, firstName, lastName } = registerData;
+    
+    // Basic validation
+    if (!email || !password || !firstName || !lastName) {
+      throw new Error('Missing required registration fields');
+    }
+    
+    if (!email.includes('@')) {
+      throw new Error('Invalid email format');
+    }
+    
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
+    }
+    
+    // In a real implementation, check if user already exists and create new user
+    // For now, we'll simulate user creation and return auth tokens
+    const userId = Buffer.from(email).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 16);
+    
+    // Generate tokens
+    const tokens = await this.generateTokenPair(userId, 'member');
+    
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+      refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
+      tokenType: 'Bearer',
+      expiresIn: 3600, // 1 hour in seconds
+      user: {
+        id: userId,
+        email,
+        role: 'member' as const,
+        firstName,
+        lastName,
+        emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date()
       },
