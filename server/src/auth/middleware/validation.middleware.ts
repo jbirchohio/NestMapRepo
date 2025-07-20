@@ -1,29 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { z, ZodError, AnyZodObject } from 'zod';
 
-// Local type definitions to match Express types
-interface LocalRequest {
-  params?: Record<string, string>;
-  body?: Record<string, unknown>;
-  query?: Record<string, unknown>;
-  headers?: Record<string, string | string[]>;
-  path?: string;
-  ip?: string;
-  method?: string;
-  [key: string]: unknown;
-}
-
-interface LocalResponse {
-  status(code: number): LocalResponse;
-  json(data: Record<string, unknown>): LocalResponse;
-  send(data: unknown): LocalResponse;
-  setHeader(name: string, value: string): void;
-  getHeader(name: string): string | undefined;
-}
-
-interface LocalNextFunction {
-  (error?: Error | string | null): void;
-}
+// Export the AnyZodObject type so it can be imported by other modules
+export type { AnyZodObject };
 
 /**
  * Real validation middleware using Zod
