@@ -188,4 +188,30 @@ router.post('/logout', (_req: Request, res: Response) => {
   });
 });
 
+// POST /api/auth/guest-access
+router.post('/guest-access', async (_req: Request, res: Response) => {
+  try {
+    // Create a temporary guest user for demo purposes
+    const guestCredentials = {
+      email: 'guest@demo.com',
+      password: 'demo123',
+      username: 'guest_user',
+    };
+
+    logger.info('Guest access requested');
+
+    res.json({
+      success: true,
+      data: guestCredentials,
+    });
+  } catch (error) {
+    logger.error('Guest access error:', error);
+    
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to create guest access' },
+    });
+  }
+});
+
 export default router;

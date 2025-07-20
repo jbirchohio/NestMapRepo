@@ -38,6 +38,8 @@ async function startServer() {
       logger.info(`📋 Bookings API: http://${actualHost}:${actualPort}/api/bookings`);
       logger.info(`✅ Approvals API: http://${actualHost}:${actualPort}/api/approvals`);
       logger.info(`📊 Analytics API: http://${actualHost}:${actualPort}/api/analytics`);
+      logger.info(`📄 Invoices API: http://${actualHost}:${actualPort}/api/invoices`);
+      logger.info(`💳 Corporate Cards API: http://${actualHost}:${actualPort}/api/corporate-cards`);
       logger.info(`✈️  Flights API: http://${actualHost}:${actualPort}/api/flights`);
       logger.info(`🏢 Organizations API: http://${actualHost}:${actualPort}/api/organizations`);
       logger.info(`🗺️  Trips API: http://${actualHost}:${actualPort}/api/trips`);
