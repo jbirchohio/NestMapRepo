@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, In
 import { ErrorLogger } from '@/utils/errorLogger';
 import { PerformanceMonitor } from '@/utils/performanceMonitor';
 import { ApiResponse, ApiErrorResponse, PerformanceMetrics } from '@/types/api';
-import { getSession } from 'next-auth/react';
+import { jwtAuth } from '@/lib/jwtAuth';
 
 interface ApiClientConfig {
   baseUrl: string;
@@ -148,10 +148,10 @@ export class ApiClient {
           // Add basic security headers
           config.headers.set('X-Requested-With', 'XMLHttpRequest');
 
-          // Add Authorization token from NextAuth session
-          const session = await getSession();
-          if (session?.user?.accessToken) {
-            config.headers.set('Authorization', `Bearer ${session.user.accessToken}`);
+          // Add Authorization token from JWT auth
+          const token = jwtAuth.getToken();
+          if (token) {
+            config.headers.set('Authorization', `Bearer ${token}`);
           }
 
           return config;

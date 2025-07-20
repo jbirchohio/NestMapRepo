@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import { getSession } from 'next-auth/react';
+import { jwtAuth } from '@/lib/jwtAuth';
 import { SecurityHeaders, SanitizedError } from './types';
 
 export class SecurityUtils {
@@ -94,13 +94,13 @@ export class SecurityUtils {
   }
 
   public async refreshSession(): Promise<boolean> {
-    const session = await getSession();
-    return !!session;
+    const token = jwtAuth.getToken();
+    return !!token;
   }
 
   public async validateSession(): Promise<boolean> {
-    const session = await getSession();
-    return !!session?.user?.accessToken;
+    const token = jwtAuth.getToken();
+    return !!token;
   }
 
   public validateRequest(): boolean {
@@ -137,10 +137,11 @@ export class SecurityUtils {
   }
 
   public async getSessionDetails(): Promise<Record<string, any>> {
-    const session = await getSession();
+    const user = jwtAuth.getUser();
+    const token = jwtAuth.getToken();
     return {
-      userId: session?.user?.id || null,
-      sessionId: session ? 'active' : null,
+      userId: user?.id?.toString() || null,
+      sessionId: token ? 'active' : null,
       ipAddress: null, // No longer tracking IP in client
       userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : null
     };

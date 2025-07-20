@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios';
-import { getSession } from 'next-auth/react';
+import { jwtAuth } from '@/lib/jwtAuth';
 import { getApiClient } from '@/services/api/apiClient';
 
 export interface ErrorLog {
@@ -48,10 +48,11 @@ export class ErrorLogger {
   }
 
   private async getSecurityContext(): Promise<Record<string, any>> {
-    const session = await getSession();
+    const user = jwtAuth.getUser();
+    const token = jwtAuth.getToken();
     return {
-      userId: session?.user?.id || null,
-      sessionId: session?.user?.accessToken ? 'active' : null,
+      userId: user?.id || null,
+      sessionId: token ? 'active' : null,
       ipAddress: null, // No longer tracking IP in client
       userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : null
     };
@@ -92,9 +93,9 @@ export class ErrorLogger {
       this.errorLogs.push(errorLog);
       this.rotateLogs();
 
-      // Send to backend if session exists
-      const session = await getSession();
-      if (session?.user?.accessToken) {
+      // Send to backend if authenticated
+      const token = jwtAuth.getToken();
+      if (token) {
         this.sendErrorToBackend(errorLog);
       }
 

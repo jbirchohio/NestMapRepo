@@ -83,6 +83,7 @@ import aiRoutes from './routes/ai-routes';
 import enterpriseRoutes from './routes/enterprise-routes';
 import comprehensiveRoutes from './routes/comprehensive-routes';
 import onboardingFeedbackRoutes from './routes/onboarding-feedback';
+import metricsRoutes from './routes/metrics';
 
 // Phase 1 Innovation Roadmap Routes
 import voiceRoutes from './routes/voice';
@@ -161,6 +162,7 @@ app.use('/api/ai', authenticate, aiRoutes);
 app.use('/api/enterprise', authenticate, enterpriseRoutes);
 app.use('/api/comprehensive', authenticate, comprehensiveRoutes);
 app.use('/api/onboarding-feedback', authenticate, onboardingFeedbackRoutes);
+app.use('/api/metrics', authenticate, metricsRoutes);
 
 // Phase 1 Innovation Roadmap Routes (Voice-First Interface)
 app.use('/api/voice', authenticate, voiceRoutes);

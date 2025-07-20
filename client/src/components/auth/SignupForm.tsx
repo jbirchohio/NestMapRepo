@@ -35,7 +35,7 @@ interface SignupFormProps {
 }
 
 export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps) {
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -58,28 +58,9 @@ export default function SignupForm({ onSuccess, onToggleForm }: SignupFormProps)
     setErrorMessage("");
 
     try {
-      // Register user with NextAuth
-      const result = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          name: data.name,
-          company: data.company,
-          jobTitle: data.jobTitle,
-          teamSize: data.teamSize,
-          useCase: data.useCase
-        })
-      });
-      
-      if (!result.ok) {
-        const error = await result.json();
-        throw new Error(error.message || 'Registration failed');
-      }
-      
-      // Sign in the user after successful registration
-      await signIn(data.email, data.password, {
+      // Register user with JWT auth system
+      // Note: The backend expects username, but we'll use name as username
+      await signUp(data.email, data.password, data.name, {
         callbackUrl: '/dashboard'
       });
       

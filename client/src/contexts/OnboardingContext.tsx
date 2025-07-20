@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 
 export type UserRole = 'admin' | 'travel_manager' | 'traveler';
 
@@ -159,11 +159,15 @@ interface OnboardingProviderProps {
 }
 
 export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children }) => {
-  const { data: session } = useSession();
-  const user = session?.user;
+  const { user, isLoading } = useAuth();
   const [flow, setFlow] = useState<OnboardingFlow | null>(null);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(isLoading);
   const [error] = useState<string | null>(null);
+
+  // Update loading state when auth loading changes
+  useEffect(() => {
+    setLoading(isLoading);
+  }, [isLoading]);
 
   // Load onboarding state from localStorage
   useEffect(() => {

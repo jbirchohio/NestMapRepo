@@ -1,6 +1,6 @@
 import { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { ErrorLogger } from './errorLogger';
-import { getSession } from 'next-auth/react';
+import { jwtAuth } from '@/lib/jwtAuth';
 import { getApiClient } from '@/services/api/apiClient';
 
 export interface PerformanceMetrics {
@@ -57,7 +57,8 @@ export class PerformanceMonitor {
 
   public async startRequest(config: AxiosRequestConfig<unknown>): Promise<PerformanceMetrics> {
     const startTime = Date.now();
-    const session = await getSession();
+    const user = jwtAuth.getUser();
+    const token = jwtAuth.getToken();
     
     const metrics: PerformanceMetrics = {
       timestamp: new Date().toISOString(),
@@ -68,8 +69,8 @@ export class PerformanceMonitor {
       url: config.url || '',
       status: null,
       size: 0,
-      userId: session?.user?.id || null,
-      sessionId: session?.user?.accessToken ? 'active' : null,
+      userId: user?.id?.toString() || null,
+      sessionId: token ? 'active' : null,
       ipAddress: null, // No longer tracking IP in client
       userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : null,
       success: false,
