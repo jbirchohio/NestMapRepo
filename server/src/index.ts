@@ -33,6 +33,11 @@ async function startServer() {
       logger.info(`🚀 Server is running on: http://${actualHost}:${actualPort}`);
       logger.info(`📋 Health check: http://${actualHost}:${actualPort}/health`);
       logger.info(`🔐 Auth API: http://${actualHost}:${actualPort}/api/auth`);
+      logger.info(`👤 User API: http://${actualHost}:${actualPort}/api/user`);
+      logger.info(`🛡️  Admin API: http://${actualHost}:${actualPort}/api/admin`);
+      logger.info(`📋 Bookings API: http://${actualHost}:${actualPort}/api/bookings`);
+      logger.info(`✅ Approvals API: http://${actualHost}:${actualPort}/api/approvals`);
+      logger.info(`📊 Analytics API: http://${actualHost}:${actualPort}/api/analytics`);
       logger.info(`✈️  Flights API: http://${actualHost}:${actualPort}/api/flights`);
       logger.info(`🏢 Organizations API: http://${actualHost}:${actualPort}/api/organizations`);
       logger.info(`🗺️  Trips API: http://${actualHost}:${actualPort}/api/trips`);

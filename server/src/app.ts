@@ -8,7 +8,11 @@ import { logger } from './utils/logger';
 
 // Import routes
 import authRoutes from './routes/auth';
-import nextAuthRoutes from './routes/nextauth';
+import adminRoutes from './routes/admin';
+import userRoutes from './routes/user';
+import bookingRoutes from './routes/bookings';
+import approvalRoutes from './routes/approvals';
+import analyticsRoutes from './routes/analytics';
 import flightRoutes from './routes/flights';
 import organizationRoutes from './routes/organizations';
 import tripRoutes from './routes/trips';
@@ -77,8 +81,12 @@ app.get('/health', (_req, res) => {
 });
 
 // API routes
-app.use('/api', nextAuthRoutes); // NextAuth.js routes (handles /api/auth/*)
-app.use('/api/auth', authRoutes); // Custom auth routes (fallback)
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/approvals', approvalRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/flights', flightRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/trips', tripRoutes);
