@@ -18,14 +18,22 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
+  username: z.string().min(1),
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
   organizationId: z.string().optional(),
 });
 
 // JWT helper functions
-const generateToken = (userId: string, organizationId?: string) => {
-  const payload = { userId, organizationId };
+const generateToken = (user: any) => {
+  const payload = { 
+    userId: user.id, 
+    organizationId: user.organizationId,
+    email: user.email,
+    role: user.role,
+    firstName: user.firstName,
+    lastName: user.lastName
+  };
   return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '24h' });
 };
 
@@ -56,7 +64,7 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     // Generate JWT token
-    const token = generateToken(user.id, user.organizationId || undefined);
+    const token = generateToken(user);
 
     // Update last login
     await db.update(users).set({
@@ -72,6 +80,7 @@ router.post('/login', async (req: Request, res: Response) => {
         user: {
           id: user.id,
           email: user.email,
+          username: user.username,
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
@@ -99,7 +108,7 @@ router.post('/login', async (req: Request, res: Response) => {
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, organizationId } = registerSchema.parse(req.body);
+    const { email, password, username, firstName, lastName, organizationId } = registerSchema.parse(req.body);
     
     const db = getDatabase();
     
@@ -120,9 +129,9 @@ router.post('/register', async (req: Request, res: Response) => {
     const [newUser] = await db.insert(users).values({
       email,
       passwordHash: hashedPassword,
-      username: email, // Use email as username for now
-      firstName,
-      lastName,
+      username: username,
+      firstName: firstName || '',
+      lastName: lastName || '',
       organizationId,
       role: 'member',
       isActive: true,
@@ -130,6 +139,7 @@ router.post('/register', async (req: Request, res: Response) => {
     }).returning({
       id: users.id,
       email: users.email,
+      username: users.username,
       firstName: users.firstName,
       lastName: users.lastName,
       role: users.role,
@@ -137,7 +147,7 @@ router.post('/register', async (req: Request, res: Response) => {
     });
 
     // Generate JWT token
-    const token = generateToken(newUser.id, newUser.organizationId || undefined);
+    const token = generateToken(newUser);
 
     logger.info(`New user registered: ${newUser.email}`);
 
@@ -176,6 +186,32 @@ router.post('/logout', (_req: Request, res: Response) => {
     success: true,
     message: 'Logged out successfully',
   });
+});
+
+// POST /api/auth/guest-access
+router.post('/guest-access', async (_req: Request, res: Response) => {
+  try {
+    // Create a temporary guest user for demo purposes
+    const guestCredentials = {
+      email: 'guest@demo.com',
+      password: 'demo123',
+      username: 'guest_user',
+    };
+
+    logger.info('Guest access requested');
+
+    res.json({
+      success: true,
+      data: guestCredentials,
+    });
+  } catch (error) {
+    logger.error('Guest access error:', error);
+    
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to create guest access' },
+    });
+  }
 });
 
 export default router;

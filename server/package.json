@@ -15,7 +15,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@auth/express": "^0.11.0",
     "@shared/schema": "workspace:*",
     "axios": "^1.10.0",
     "bcrypt": "^5.1.1",
@@ -31,7 +30,6 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.0.2",
-    "next-auth": "5.0.0-beta.29",
     "nodemailer": "^6.9.8",
     "postgres": "^3.4.3",
     "puppeteer": "^21.0.0",

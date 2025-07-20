@@ -19,6 +19,10 @@ declare global {
 interface JWTPayload {
   userId: string;
   organizationId?: string;
+  email?: string;
+  role?: string;
+  firstName?: string;
+  lastName?: string;
   iat?: number;
   exp?: number;
 }
@@ -51,12 +55,12 @@ export const authenticateJWT = async (
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET) as JWTPayload;
     
-    // TODO: Optionally fetch user details from database to get role, email, etc.
-    // For now, we'll use the basic info from the token
+    // Set user information from token
     req.user = {
       userId: decoded.userId,
       organizationId: decoded.organizationId,
-      // role and email would be fetched from DB in a complete implementation
+      role: decoded.role,
+      email: decoded.email,
     };
 
     next();
