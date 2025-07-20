@@ -15,7 +15,7 @@ import RoleBasedRedirect from "@/components/RoleBasedRedirect";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { motion } from "framer-motion";
-import { UserRound, LogOut, BarChart3, CheckCircle, Plus, Users, Plane, Brain, Sparkles } from "lucide-react";
+import { UserRound, LogOut, BarChart3, CheckCircle, Plus, Users, Plane, Brain, Sparkles, X } from "lucide-react";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -172,7 +172,7 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className="text-5xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-electric-600 via-electric-500 to-electric-700 bg-clip-text text-transparent mb-6"
               >
-                Travel Reimagined
+                AI-powered corporate travel management. Predictable. Built for enterprise scale.
               </motion.h1>
               
               <motion.p
@@ -181,7 +181,7 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="text-xl sm:text-2xl text-electric-700 dark:text-electric-300 mb-4 max-w-3xl mx-auto"
               >
-                The AI-powered corporate travel platform that transforms how teams plan, book, and manage business travel
+                For organizations managing 50+ travelers or $500K+ travel spend annually.
               </motion.p>
               
               <motion.p
@@ -190,7 +190,7 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.5 }}
                 className="text-lg text-electric-600/80 dark:text-electric-400/80 mb-12 max-w-2xl mx-auto"
               >
-                Seamlessly integrate corporate cards, expense management, and intelligent booking workflows
+                Enterprise integrations, automation, compliance, and comprehensive reporting for corporate travel programs
               </motion.p>
               
               <motion.div
@@ -210,11 +210,10 @@ export default function Home() {
                 ) : (
                   <div className="flex flex-col sm:flex-row gap-4">
                     <PrimaryButton
-                      onClick={handleSignUpClick}
+                      onClick={() => window.open('#contact', '_self')}
                       className="text-lg px-8 py-4"
                     >
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Get Started
+                      Schedule a Discovery Call
                     </PrimaryButton>
                     <Button
                       onClick={handleSignInClick}
@@ -235,26 +234,117 @@ export default function Home() {
               >
                 <AnimatedCard className="p-6 text-center bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50">
                   <Brain className="h-12 w-12 text-electric-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">AI-Powered Planning</h3>
-                  <p className="text-electric-600 dark:text-electric-400">Intelligent recommendations and automated itinerary generation</p>
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">Enterprise Automation</h3>
+                  <p className="text-electric-600 dark:text-electric-400">AI-powered booking workflows with policy compliance and approval routing</p>
                 </AnimatedCard>
                 
                 <AnimatedCard className="p-6 text-center bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50">
                   <Users className="h-12 w-12 text-electric-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">Team Collaboration</h3>
-                  <p className="text-electric-600 dark:text-electric-400">Real-time collaboration tools for seamless trip coordination</p>
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">Scale & Integration</h3>
+                  <p className="text-electric-600 dark:text-electric-400">Seamless ERP, HR, and expense system integrations for enterprise-grade deployment</p>
                 </AnimatedCard>
                 
                 <AnimatedCard className="p-6 text-center bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50">
                   <BarChart3 className="h-12 w-12 text-electric-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">Enterprise Analytics</h3>
-                  <p className="text-electric-600 dark:text-electric-400">Comprehensive reporting and travel spend optimization</p>
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">Advanced Analytics</h3>
+                  <p className="text-electric-600 dark:text-electric-400">Comprehensive spend optimization and predictive travel intelligence</p>
                 </AnimatedCard>
               </motion.div>
             </motion.div>
           </div>
         </div>
       </div>
+
+      {/* Qualification Section */}
+      {!user && (
+        <div className="bg-white/60 dark:bg-dark-800/60 backdrop-blur-sm py-16">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="max-w-4xl mx-auto text-center"
+            >
+              <h2 className="text-3xl font-bold text-electric-900 dark:text-electric-100 mb-8">
+                Who We're Built For
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-6">
+                  <h3 className="text-xl font-semibold text-green-800 dark:text-green-200 mb-4">Perfect Fit</h3>
+                  <ul className="space-y-3 text-left">
+                    <li className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                      <span className="text-green-700 dark:text-green-300">100+ employees or 50+ active travelers annually</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                      <span className="text-green-700 dark:text-green-300">$500K+ corporate travel spend</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                      <span className="text-green-700 dark:text-green-300">Enterprise integrations, automation, compliance, reporting needs</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-6">
+                  <h3 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-4">Not a Fit For</h3>
+                  <ul className="space-y-3 text-left">
+                    <li className="flex items-start">
+                      <X className="h-5 w-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
+                      <span className="text-red-700 dark:text-red-300">Small businesses, fewer than 20 travelers</span>
+                    </li>
+                    <li className="flex items-start">
+                      <X className="h-5 w-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
+                      <span className="text-red-700 dark:text-red-300">Booking-only tools with no automation or analytics needs</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      )}
+
+      {/* Pricing Guidance Section */}
+      {!user && (
+        <div className="bg-electric-50/30 dark:bg-electric-900/10 py-16">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="max-w-4xl mx-auto text-center"
+            >
+              <h2 className="text-3xl font-bold text-electric-900 dark:text-electric-100 mb-8">
+                Pricing Guidance
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">100–250 employees</h3>
+                  <p className="text-2xl font-bold text-electric-600 dark:text-electric-400 mb-2">Starting at $12K/year</p>
+                </div>
+                
+                <div className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">251–750 employees</h3>
+                  <p className="text-2xl font-bold text-electric-600 dark:text-electric-400 mb-2">$24K/year</p>
+                </div>
+                
+                <div className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">751–2,000 employees</h3>
+                  <p className="text-2xl font-bold text-electric-600 dark:text-electric-400 mb-2">$48K/year</p>
+                </div>
+              </div>
+              
+              <p className="text-lg text-electric-600 dark:text-electric-400 font-medium">
+                No hidden fees, no per-transaction charges.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      )}
 
       {/* Content Section */}
       <div className="container mx-auto px-4 py-8">
@@ -375,11 +465,11 @@ export default function Home() {
                 No trips yet
               </h3>
               <p className="text-electric-600 dark:text-electric-400 mb-6">
-                Start planning your first trip to see it here
+                Start planning your next business trip to see it here
               </p>
               <PrimaryButton onClick={handleCreateNewTrip}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Your First Trip
+                Plan Business Trip
               </PrimaryButton>
             </div>
           </div>
@@ -394,6 +484,24 @@ export default function Home() {
                 setIsAuthModalOpen(true);
               }}
             />
+          </div>
+        )}
+
+        {/* Enterprise CTA Footer */}
+        {!user && (
+          <div className="mt-16 bg-gradient-to-r from-electric-600 to-electric-700 text-white py-16 rounded-xl">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Corporate Travel?</h2>
+              <p className="text-xl text-electric-100 mb-8 max-w-2xl mx-auto">
+                Schedule a Discovery Call → Tailored demo. No hard sell.
+              </p>
+              <PrimaryButton
+                onClick={() => window.open('#contact', '_self')}
+                className="bg-white text-electric-600 hover:bg-electric-50 text-lg px-8 py-4"
+              >
+                Schedule a Discovery Call
+              </PrimaryButton>
+            </div>
           </div>
         )}
       </div>

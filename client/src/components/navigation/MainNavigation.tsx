@@ -35,7 +35,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
 
-  // Navigation items
+  // Navigation items - simplified for enterprise landing page
   const navigationItems: NavigationItem[] = [
     {
       name: 'Home',
@@ -45,81 +45,32 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
       requiresAuth: false
     },
     {
-      name: 'Dashboard',
-      href: '/dashboard',
+      name: 'Features',
+      href: '#features',
       icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Dashboard',
-      requiresAuth: true
+      ariaLabel: 'Features',
+      requiresAuth: false
     },
     {
-      name: 'Voice Assistant',
-      href: '/voice-assistant',
-      icon: <HomeIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Voice Assistant',
-      requiresAuth: true
-    },
-    {
-      name: 'Enterprise Integration',
-      href: '/enterprise-integration',
-      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Enterprise Integration',
-      requiresAuth: true
-    },
-    {
-      name: 'Custom Reports',
-      href: '/custom-reports',
+      name: 'Pricing',
+      href: '#pricing',
       icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Custom Reports',
-      requiresAuth: true
+      ariaLabel: 'Pricing',
+      requiresAuth: false
     },
     {
-      name: 'Smart City',
-      href: '/smart-city',
-      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Smart City',
-      requiresAuth: true
-    },
-    {
-      name: 'Marketplace',
-      href: '/marketplace',
+      name: 'About',
+      href: '#about',
       icon: <CheckIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Marketplace',
-      requiresAuth: true
+      ariaLabel: 'About',
+      requiresAuth: false
     },
     {
-      name: 'Autonomous Vehicles',
-      href: '/autonomous-vehicles',
+      name: 'Contact',
+      href: '#contact',
       icon: <HomeIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Autonomous Vehicles',
-      requiresAuth: true
-    },
-    {
-      name: 'Automation',
-      href: '/automation',
-      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Automation',
-      requiresAuth: true
-    },
-    {
-      name: 'Analytics',
-      href: '/analytics',
-      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Analytics',
-      requiresAuth: true
-    },
-    {
-      name: 'Approvals',
-      href: '/approvals',
-      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Approvals',
-      requiresAuth: true
-    },
-    {
-      name: 'Invoices',
-      href: '/invoice-center',
-      icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Invoices',
-      requiresAuth: true
+      ariaLabel: 'Contact',
+      requiresAuth: false
     },
   ];
 
