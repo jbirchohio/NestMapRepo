@@ -214,44 +214,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Pricing Guidance Section */}
-      {!user && (
-        <div className="bg-electric-50/30 dark:bg-electric-900/10 py-16">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="max-w-4xl mx-auto text-center"
-            >
-              <h2 className="text-3xl font-bold text-electric-900 dark:text-electric-100 mb-8">
-                Pricing Guidance
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">100–250 employees</h3>
-                  <p className="text-2xl font-bold text-electric-600 dark:text-electric-400 mb-2">Starting at $12K/year</p>
-                </div>
-                
-                <div className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">251–750 employees</h3>
-                  <p className="text-2xl font-bold text-electric-600 dark:text-electric-400 mb-2">$24K/year</p>
-                </div>
-                
-                <div className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm border border-electric-200/50 dark:border-electric-700/50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold text-electric-900 dark:text-electric-100 mb-2">751–2,000 employees</h3>
-                  <p className="text-2xl font-bold text-electric-600 dark:text-electric-400 mb-2">$48K/year</p>
-                </div>
-              </div>
-              
-              <p className="text-lg text-electric-600 dark:text-electric-400 font-medium">
-                No hidden fees, no per-transaction charges.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      )}
+
 
       {/* Comparison Section */}
       {!user && (
@@ -264,7 +227,7 @@ export default function Home() {
               className="max-w-6xl mx-auto text-center"
             >
               <h2 className="text-3xl font-bold text-electric-900 dark:text-electric-100 mb-8">
-                Why Enterprise Leaders Choose NestMap
+              Why NestMap is Built for Enterprise Leaders
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -343,6 +306,160 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Features Section */}
+      <section id="features" className="py-16">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-electric-900 dark:text-electric-100 mb-6">
+              Enterprise-Grade Features
+            </h2>
+            <p className="text-xl text-electric-600 dark:text-electric-400 max-w-3xl mx-auto">
+              Everything your organization needs to manage corporate travel efficiently and cost-effectively
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: <Brain className="h-8 w-8" />,
+                title: "AI-Powered Intelligence",
+                description: "Smart recommendations, predictive analytics, and automated optimization for better travel decisions."
+              },
+              {
+                icon: <Users className="h-8 w-8" />,
+                title: "Enterprise Integration",
+                description: "Seamless integration with HR, Finance, and Communication platforms your team already uses."
+              },
+              {
+                icon: <BarChart3 className="h-8 w-8" />,
+                title: "Advanced Analytics",
+                description: "Real-time dashboards, custom reports, and business intelligence for data-driven decisions."
+              },
+              {
+                icon: <CheckCircle className="h-8 w-8" />,
+                title: "Policy Compliance",
+                description: "Automated policy enforcement, approval workflows, and compliance monitoring."
+              },
+              {
+                icon: <Plane className="h-8 w-8" />,
+                title: "Global Inventory",
+                description: "Access to flights, hotels, and ground transportation worldwide with negotiated corporate rates."
+              },
+              {
+                icon: <BarChart3 className="h-8 w-8" />,
+                title: "Cost Optimization",
+                description: "Intelligent spend analysis, budget tracking, and cost-saving recommendations."
+              }
+            ].map((feature, index) => (
+              <AnimatedCard key={index} className="p-6 text-center">
+                <div className="flex justify-center mb-4">
+                  <div className="h-16 w-16 bg-gradient-to-br from-electric-400 to-electric-600 rounded-xl flex items-center justify-center text-white">
+                    {feature.icon}
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-electric-900 dark:text-electric-100 mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-electric-600 dark:text-electric-400">
+                  {feature.description}
+                </p>
+              </AnimatedCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-16 bg-electric-50/50 dark:bg-electric-900/20">
+  <div className="container mx-auto px-4">
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      viewport={{ once: true }}
+      className="text-center mb-16"
+    >
+      <h2 className="text-4xl font-bold text-electric-900 dark:text-electric-100 mb-6">
+        Enterprise Pricing
+      </h2>
+      <p className="text-xl text-electric-600 dark:text-electric-400 max-w-3xl mx-auto mb-4">
+        Transparent, scalable pricing for organizations managing 50+ travelers or $500K+ in corporate travel spend annually.
+      </p>
+      <p className="text-electric-600 dark:text-electric-400 max-w-3xl mx-auto mb-8">
+        All plans include full access to the NestMap platform: AI-powered automation, advanced analytics, enterprise-grade integrations, policy compliance tools, and 24/7 support.
+      </p>
+    </motion.div>
+
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+  {[
+    {
+      name: "Growing Organizations",
+      price: "$12K",
+      description: "100–250 employees (~20–75 travelers)"
+    },
+    {
+      name: "Mid-Market Enterprise",
+      price: "$24K",
+      description: "251–750 employees (~75–200 travelers)"
+    },
+    {
+      name: "Large Enterprise",
+      price: "$48K",
+      description: "751–2,000 employees (~200–300 travelers)"
+    }
+  ].map((plan, index) => (
+    <AnimatedCard
+      key={index}
+      className="p-8 text-center"
+    >
+      <h3 className="text-xl font-bold text-electric-900 dark:text-electric-100 mb-1">
+        {plan.name}
+      </h3>
+      <p className="text-sm text-electric-600 dark:text-electric-400 mb-3">
+        {plan.description}
+      </p>
+
+      <div className="flex justify-center items-baseline mb-2">
+        <span className="text-3xl font-bold text-electric-900 dark:text-electric-100">
+          {plan.price}
+        </span>
+        <span className="ml-1 text-sm text-electric-600 dark:text-electric-400">
+          /year
+        </span>
+      </div>
+
+      <p className="text-sm text-electric-600 dark:text-electric-400 mb-4">
+        All features included — no transaction fees.
+      </p>
+
+      <PrimaryButton
+        onClick={handleScheduleCall}
+        className="w-full bg-electric-100 hover:bg-electric-200 text-electric-700"
+      >
+        Contact Sales
+      </PrimaryButton>
+    </AnimatedCard>
+  ))}
+</div>
+
+    <div className="text-center mt-12">
+      <p className="text-lg text-electric-600 dark:text-electric-400 font-medium mb-2">
+        No hidden fees. No upcharges. Just predictable pricing based on your organization's scale.
+      </p>
+      <p className="text-sm text-electric-500 dark:text-electric-500">
+        2,000+ employees or complex global programs? Contact us for tailored pricing.
+      </p>
+    </div>
+  </div>
+</section>
+
 
       {/* Enterprise CTA Footer */}
       {!user && (

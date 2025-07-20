@@ -79,14 +79,14 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
     },
     {
       name: 'Features',
-      href: '/#features',
+      href: '#features',
       icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Features',
       requiresAuth: false
     },
     {
       name: 'Pricing',
-      href: '/#pricing',
+      href: '#pricing',
       icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Pricing',
       requiresAuth: false

@@ -22,9 +22,13 @@ export function useAuth() {
   try {
     const { data: session, status } = useSession();
     
+    // In Vite environment, NextAuth might not work properly
+    // Provide explicit fallback for unauthenticated state
+    const isActuallyAuthenticated = status === 'authenticated' && !!session?.user;
+    
     const state: AuthState = {
-      user: session?.user as User || null,
-      isAuthenticated: status === 'authenticated',
+      user: isActuallyAuthenticated ? (session.user as User) : null,
+      isAuthenticated: isActuallyAuthenticated,
       isLoading: status === 'loading',
       error: null, // NextAuth handles errors through callbacks
     };
@@ -133,24 +137,38 @@ export function useAuth() {
     getAccessToken,
     continueAsGuest,
   };
-} catch (error) {
-  console.error('Error in useAuth hook:', error);
-  // Provide a fallback state if NextAuth fails to initialize
-  return {
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: 'Authentication system failed to initialize',
-    signIn: async () => { throw new Error('Auth system not available'); },
-    signInWithProvider: async () => { throw new Error('Auth system not available'); },
-    signOut: async () => { throw new Error('Auth system not available'); },
-    demoLogin: async () => { throw new Error('Auth system not available'); },
-    continueAsGuest: async () => { throw new Error('Auth system not available'); },
-    hasRole: () => false,
-    hasAnyRole: () => false,
-    getAccessToken: () => null,
-  };
-}
+  } catch (error) {
+    console.warn('NextAuth not properly initialized in Vite environment:', error);
+    // Provide a fallback state if NextAuth fails to initialize
+    // This is common in Vite/React Router environments
+    return {
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null, // Don't show error for expected NextAuth/Vite incompatibility
+      signIn: async (_email: string, _password: string, _options: { callbackUrl?: string } = {}) => {
+        // Fallback: redirect to login page or show auth modal
+        console.log('Auth system not available, redirecting to login');
+        window.location.href = '/login';
+        return '/login';
+      },
+      signInWithProvider: async () => { 
+        console.log('Provider auth not available');
+        throw new Error('Provider authentication not available'); 
+      },
+      signOut: async () => { 
+        console.log('Sign out not available');
+        window.location.href = '/';
+      },
+      continueAsGuest: async () => { 
+        console.log('Guest mode not available');
+        throw new Error('Guest mode not available'); 
+      },
+      hasRole: () => false,
+      hasAnyRole: () => false,
+      getAccessToken: () => null,
+    };
+  }
 }
 
 export default useAuth;
