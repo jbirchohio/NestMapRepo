@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { db } from '../db.js';
-import { organizations, users, customDomains, whiteLabelRequests, organizationRoles, insertOrganizationRoleSchema } from '../../shared/src/schema.js';
-import { auditLogs } from '../db/auditLog.js';
+import { db } from '../db';
+import { organizations, users, customDomains, whiteLabelRequests, organizationRoles, insertOrganizationRoleSchema } from '../../shared/src/schema';
+import { auditLogs } from '../db/auditLog';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { validateAndSanitizeRequest } from '../middleware/validation.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { validateAndSanitizeRequest } from '../middleware/validation';
 
 // Placeholder for admin role check middleware - this would need to be implemented
 const requireRole = (role: string) => (req: Request, res: Response, next: Function) => {

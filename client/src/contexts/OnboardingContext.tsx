@@ -162,8 +162,8 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
   const { data: session } = useSession();
   const user = session?.user;
   const [flow, setFlow] = useState<OnboardingFlow | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading] = useState(false);
+  const [error] = useState<string | null>(null);
 
   // Load onboarding state from localStorage
   useEffect(() => {

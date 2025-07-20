@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,13 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   CheckCircle, 
   XCircle, 
   Clock, 
-  User, 
-  MessageSquare,
+
   AlertTriangle,
   FileText,
   Calendar,
@@ -84,28 +82,33 @@ export default function ApprovalWorkflowPanel() {
   // Fetch approval requests
   const { data: requests, isLoading, refetch } = useQuery<ApprovalRequest[]>({
     queryKey: ['/api/approvals/requests'],
-    queryFn: () => apiRequest('/api/approvals/requests')
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/approvals/requests');
+      return response.data;
+    }
   });
 
   // Fetch comments for selected request
   const { data: comments } = useQuery<ApprovalComment[]>({
     queryKey: ['/api/approvals/requests', selectedRequest?.id, 'comments'],
-    queryFn: () => apiRequest(`/api/approvals/requests/${selectedRequest?.id}/comments`),
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/approvals/requests/${selectedRequest?.id}/comments`);
+      return response.data;
+    },
     enabled: !!selectedRequest?.id
   });
 
   // Process approval action
   const processApprovalMutation = useMutation({
-    mutationFn: ({ requestId, action, comments }: { 
+    mutationFn: async ({ requestId, action, comments }: { 
       requestId: string; 
       action: 'approved' | 'rejected'; 
       comments?: string 
-    }) =>
-      apiRequest(`/api/approvals/requests/${requestId}/process`, {
-        method: 'POST',
-        body: { action, comments }
-      }),
-    onSuccess: (data, variables) => {
+    }) => {
+      const response = await apiRequest('POST', `/api/approvals/requests/${requestId}/process`, { action, comments });
+      return response;
+    },
+    onSuccess: (_, variables) => {
       toast({
         title: `Request ${variables.action === 'approved' ? 'Approved' : 'Rejected'}`,
         description: `The approval request has been ${variables.action}`
@@ -125,11 +128,10 @@ export default function ApprovalWorkflowPanel() {
 
   // Add comment
   const addCommentMutation = useMutation({
-    mutationFn: ({ requestId, comment }: { requestId: string; comment: string }) =>
-      apiRequest(`/api/approvals/requests/${requestId}/comments`, {
-        method: 'POST',
-        body: { comment }
-      }),
+    mutationFn: async ({ requestId, comment }: { requestId: string; comment: string }) => {
+      const response = await apiRequest('POST', `/api/approvals/requests/${requestId}/comments`, { comment });
+      return response;
+    },
     onSuccess: () => {
       toast({
         title: 'Comment Added',
@@ -216,8 +218,9 @@ export default function ApprovalWorkflowPanel() {
   };
 
   const hasAlreadyApproved = (request: ApprovalRequest) => {
+    if (!user?.id) return false;
     return request.approvals.some(approval => 
-      approval.approverId === user?.id && approval.level === request.currentLevel
+      approval.approverId === Number(user.id) && approval.level === request.currentLevel
     );
   };
 
@@ -415,8 +418,8 @@ export default function ApprovalWorkflowPanel() {
               <div>
                 <h4 className="font-medium mb-4">Approval Flow</h4>
                 <div className="space-y-3">
-                  {selectedRequest.requiredApprovers.map((level, index) => (
-                    <div key={level.level} className="flex items-center gap-3">
+                  {selectedRequest.requiredApprovers.map((level) => (
+                    <div key={level.level} className="flex items-center justify-between p-2 border-b">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                         level.level < selectedRequest.currentLevel ? 'bg-green-100 text-green-700' :
                         level.level === selectedRequest.currentLevel ? 'bg-yellow-100 text-yellow-700' :
@@ -449,11 +452,9 @@ export default function ApprovalWorkflowPanel() {
                   <div className="space-y-3">
                     {selectedRequest.approvals.map((approval) => (
                       <div key={approval.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>
-                            {approval.approverName.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="h-8 w-8 overflow-hidden rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                          {approval.approverName.split(' ').map(n => n[0] || '').join('')}
+                        </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{approval.approverName}</span>
@@ -480,11 +481,9 @@ export default function ApprovalWorkflowPanel() {
                 <div className="space-y-3 max-h-60 overflow-y-auto">
                   {comments?.map((comment) => (
                     <div key={comment.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>
-                          {comment.userName.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="h-8 w-8 overflow-hidden rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                        {comment.userName.split(' ').map(n => n[0] || '').join('')}
+                      </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{comment.userName}</span>

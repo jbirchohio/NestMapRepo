@@ -16,11 +16,11 @@ interface DuffelHotelSearchParams {
 }
 
 export class DuffelProvider {
-  private baseUrl = 'https://api.duffel.com.js';
+  private baseUrl = 'https://api.duffel.com';
   private apiKey: string;
 
   constructor() {
-    this.apiKey = process.env.DUFFEL_API_KEY || '.js';
+    this.apiKey = process.env.DUFFEL_API_KEY || ''
     if (!this.apiKey) {
       console.warn('Duffel API key not configured - travel search will not work');
     }

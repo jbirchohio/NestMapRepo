@@ -4,17 +4,18 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
-import { logger } from './utils/logger.js';
+import { logger } from './utils/logger';
 
 // Import routes
-import authRoutes from './routes/auth.js';
-import flightRoutes from './routes/flights.js';
-import organizationRoutes from './routes/organizations.js';
-import tripRoutes from './routes/trips.js';
+import authRoutes from './routes/auth';
+import nextAuthRoutes from './routes/nextauth';
+import flightRoutes from './routes/flights';
+import organizationRoutes from './routes/organizations';
+import tripRoutes from './routes/trips';
 
 // Import middleware
-import { errorHandler } from './middleware/errorHandler.js';
-import { notFound } from './middleware/notFound.js';
+import { errorHandler } from './middleware/errorHandler';
+import { notFound } from './middleware/notFound';
 
 // Load environment variables
 config();
@@ -76,7 +77,8 @@ app.get('/health', (_req, res) => {
 });
 
 // API routes
-app.use('/api/auth', authRoutes);
+app.use('/api', nextAuthRoutes); // NextAuth.js routes (handles /api/auth/*)
+app.use('/api/auth', authRoutes); // Custom auth routes (fallback)
 app.use('/api/flights', flightRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/trips', tripRoutes);

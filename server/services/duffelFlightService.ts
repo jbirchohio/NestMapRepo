@@ -51,7 +51,7 @@ export interface FlightSearchParams {
     children?: number;
     infants?: number;
   };
-  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first.js';
+  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first';
 }
 
 export interface FlightOffer {
@@ -134,10 +134,10 @@ export interface BookingRequest {
     born_on: string;
     email: string;
     phone_number: string;
-    gender: 'M' | 'F.js';
+    gender: 'M' | 'F';
   }>;
   payment: {
-    type: 'balance.js';
+    type: 'balance';
   };
 }
 

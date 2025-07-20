@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { requireSuperadmin } from '../../shared/src/schema.js';
-import * as featureFlagsController from './controllers.js';
-import * as featureFlagsValidators from './validators.js';
+import { requireSuperadmin } from '../../shared/src/schema';
+import * as featureFlagsController from './controllers';
+import * as featureFlagsValidators from './validators';
 
 const router = Router();
 

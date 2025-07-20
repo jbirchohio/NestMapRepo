@@ -35,11 +35,11 @@ interface KiwiCarSearchParams {
 }
 
 export class KiwiProvider {
-  private baseUrl = 'https://api.tequila.kiwi.com.js';
+  private baseUrl = 'https://api.tequila.kiwi.com';
   private apiKey: string;
 
   constructor() {
-    this.apiKey = process.env.KIWI_API_KEY || '.js';
+    this.apiKey = process.env.KIWI_API_KEY || ''
     if (!this.apiKey) {
       console.warn('KIWI_API_KEY not configured - flight and hotel search will not work');
     }

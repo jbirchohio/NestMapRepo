@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { users, organizations, trips } from '../db/schema.js';
+import { db } from '../db-connection';
+import { users, organizations, trips } from '../db/schema';
 import { eq, and, gte, lte, desc, count, sum, avg } from 'drizzle-orm';
 
 // Global scalability schemas

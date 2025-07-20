@@ -1,8 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticate } from '../middleware/secureAuth.js';
-import { addOrganizationScope } from '../middleware/organizationScope.js';
-import { customReportingEngineService } from '../services/customReportingEngine.js';
+import { authenticate } from '../middleware/secureAuth';
+import { addOrganizationScope } from '../middleware/organizationScope';
+import { customReportingEngineService } from '../services/customReportingEngine';
 
 const router = express.Router();
 

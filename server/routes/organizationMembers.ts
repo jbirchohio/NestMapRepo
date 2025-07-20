@@ -4,14 +4,14 @@
  */
 
 import { Router, Response } from 'express';
-import type { AuthenticatedRequest } from '../src/types/auth-user.js';
-import { db } from '../db.js';
-import { users, organizationMembers } from '../shared/src/schema.js';
+import type { AuthenticatedRequest } from '../src/types/auth-user';
+import { db } from '../db';
+import { users, organizationMembers } from '../shared/src/schema';
 import { eq, sql, and } from 'drizzle-orm';
-import { requireOrgPermission } from '../middleware/organizationRoleMiddleware.js';
-import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { requireOrgPermission } from '../middleware/organizationRoleMiddleware';
+import { OrganizationRole, getRoleDescription, canAssignRole } from '../rbac/organizationRoles';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
 
 const router = Router();

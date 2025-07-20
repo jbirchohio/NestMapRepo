@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { CarbonFootprint, CarbonReduction } from './types/interfaces/carbon.js';
+import { CarbonFootprint, CarbonReduction } from './types/interfaces/carbon';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -368,8 +368,8 @@ async function calculateFlightEmissions(flight: any): Promise<number> {
     flight.bookingData?.destination
   );
   
-  const aircraftType = flight.bookingData?.aircraftType || 'A320.js';
-  const cabinClass = flight.bookingData?.cabinClass || 'economy.js';
+  const aircraftType = flight.bookingData?.aircraftType || 'A320';
+  const cabinClass = flight.bookingData?.cabinClass || 'economy';
   
   // Emission factors (kg CO2 per km per passenger)
   const emissionFactors = {
@@ -683,7 +683,7 @@ function generateExpenseBreakdown(expenses: any[]): ExpenseBreakdown {
   };
 
   expenses.forEach(expense => {
-    const category = expense.category || 'miscellaneous.js';
+    const category = expense.category || 'miscellaneous';
     if (breakdown.hasOwnProperty(category)) {
       breakdown[category as keyof typeof breakdown] += expense.amount || 0;
     } else {

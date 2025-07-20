@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { UnauthorizedError } from '../src/common/errors.js';
+import { UnauthorizedError } from '../src/common/errors';
 
 // Schema for organization access validation
 const organizationAccessSchema = z.object({

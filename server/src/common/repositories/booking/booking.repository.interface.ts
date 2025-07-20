@@ -1,5 +1,5 @@
-import { type Booking } from '../../../db/bookingSchema.js';
-import { BaseRepository } from '../base.repository.interface.js';
+import { type Booking } from '../../../db/bookingSchema';
+import { BaseRepository } from '../base.repository.interface';
 
 // Define BookingConfirmationDetails type if it doesn't exist
 export type BookingConfirmationDetails = Record<string, any>;

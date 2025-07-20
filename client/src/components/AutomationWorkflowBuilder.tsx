@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,13 +14,11 @@ import {
   Plus, 
   Trash2, 
   Play, 
-  Pause, 
   Settings,
   GitBranch,
   Clock,
   Mail,
   MessageSquare,
-  Calendar,
   FileText,
   Database,
   Webhook
@@ -97,7 +95,7 @@ export default function AutomationWorkflowBuilder() {
   const [selectedTab, setSelectedTab] = useState('builder');
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
 
-  const { data: workflows, isLoading } = useQuery({
+  const { data: workflows } = useQuery({
     queryKey: ['/api/automation/workflows'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/automation/workflows');

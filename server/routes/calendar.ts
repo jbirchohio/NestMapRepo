@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { eq, and } from 'drizzle-orm';
-import { db } from '../db.js';
-import { calendarIntegrations, trips, activities } from '../shared/src/schema.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { db } from '../db';
+import { calendarIntegrations, trips, activities } from '../shared/src/schema';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
 
 const router = Router();
@@ -173,7 +173,7 @@ function generateICalendar(trip: any, activities: any[]): string {
   // Activity events
   activities.forEach((activity, index) => {
     const activityDate = new Date(activity.date);
-    const timeString = activity.time || '09:00.js';
+    const timeString = activity.time || '09:00';
     const [hours, minutes] = timeString.split(':');
     activityDate.setHours(parseInt(hours), parseInt(minutes));
     
@@ -228,7 +228,7 @@ function formatDate(date: Date): string {
 }
 
 function formatDateTime(date: Date): string {
-  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z.js';
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 }
 
 function addHour(timeString: string): string {

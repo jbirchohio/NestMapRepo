@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Mic, 
@@ -16,7 +14,6 @@ import {
   MapPin,
   Cloud,
   Calendar,
-  User,
   Settings
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
@@ -58,17 +55,18 @@ export default function VoiceInterface() {
     timestamp: Date;
     data?: any;
   }>>([]);
-  const [session, setSession] = useState<VoiceSession | null>(null);
+  const [session] = useState<VoiceSession | null>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [selectedTab, setSelectedTab] = useState('voice');
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition: typeof window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       
       recognitionRef.current.continuous = false;
@@ -191,16 +189,16 @@ export default function VoiceInterface() {
   const speakText = (text: string) => {
     if (synthRef.current && voiceEnabled) {
       synthRef.current.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.volume = 0.8;
+      utteranceRef.current = new SpeechSynthesisUtterance(text);
+      utteranceRef.current.rate = 0.9;
+      utteranceRef.current.pitch = 1;
+      utteranceRef.current.volume = 0.8;
       
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utteranceRef.current.onstart = () => setIsSpeaking(true);
+      utteranceRef.current.onend = () => setIsSpeaking(false);
+      utteranceRef.current.onerror = () => setIsSpeaking(false);
 
-      synthRef.current.speak(utterance);
+      synthRef.current.speak(utteranceRef.current);
     }
   };
 

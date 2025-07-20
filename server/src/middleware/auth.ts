@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger';
 
 // Extend Request interface to include user
 declare global {

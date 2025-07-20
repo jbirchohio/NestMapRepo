@@ -1,10 +1,10 @@
-import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient.js";
-import { calculateTripCost } from "./utils/tripCost.js";
-import { detectTripConflicts } from "./services/conflictDetector.js";
-import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "./predictiveAI.js";
-import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer.js";
-import { calculateCarbonFootprint } from "./carbonTracker.js";
-import { searchFlights, searchHotels } from "./bookingProviders.js";
+import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
+import { calculateTripCost } from "./utils/tripCost";
+import { detectTripConflicts } from "./services/conflictDetector";
+import { predictFlightPrices, predictCrowdLevels, generateWeatherAdaptiveItinerary } from "./predictiveAI";
+import { optimizeScheduleIntelligently, detectScheduleConflicts } from "./smartOptimizer";
+import { calculateCarbonFootprint } from "./carbonTracker";
+import { searchFlights, searchHotels } from "./bookingProviders";
 
 interface BusinessTripRequest {
   clientName: string;
@@ -20,7 +20,7 @@ interface BusinessTripRequest {
   };
   preferences: {
     foodTypes: string[];
-    accommodationType: 'luxury' | 'business' | 'budget.js';
+    accommodationType: 'luxury' | 'business' | 'budget';
     activityTypes: string[];
     dietaryRestrictions?: string[];
     accessibility?: string[];

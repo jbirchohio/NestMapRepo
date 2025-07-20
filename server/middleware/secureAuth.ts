@@ -15,13 +15,13 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/secureJwt.js';
-import { redis } from '../db/redis.js';
-import { logger } from '../utils/logger.js';
-import type { TokenPayload, TokenType, VerifyTokenResult } from '../types/jwt.d.js';
+import { verifyToken } from '../utils/secureJwt';
+// Redis removed for simplified deployment
+import { logger } from '../utils/logger';
+import type { TokenPayload, TokenType, VerifyTokenResult } from '../types/jwt.d';
 
 // Import the AuthUser type from the project's types
-import type { AuthUser } from '../src/types/auth-user.js';
+import type { AuthUser } from '../src/types/auth-user';
 
 // Extend Express Request type to include our custom properties
 declare global {
@@ -182,7 +182,7 @@ export const requireRole = (roles: string | string[]) => {
 
 // Rate limiting middleware for authentication endpoints
 export const rateLimitAuth = (req: Request, res: Response, next: NextFunction) => {
-  const ip = req.ip || req.connection.remoteAddress || '.js';
+  const ip = req.ip || req.connection.remoteAddress || ''
   const key = `auth:${ip}`;
   
   // Allow 5 failed attempts per 15 minutes
@@ -213,7 +213,7 @@ export const rateLimitAuth = (req: Request, res: Response, next: NextFunction) =
 
 // Middleware to reset rate limit on successful authentication
 export const resetAuthRateLimit = (req: Request, res: Response, next: NextFunction) => {
-  const ip = req.ip || req.connection.remoteAddress || '.js';
+  const ip = req.ip || req.connection.remoteAddress || ''
   const key = `auth:${ip}`;
   
   // Delete the rate limit key on successful authentication

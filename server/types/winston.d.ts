@@ -1,4 +1,4 @@
-import { Logger } from 'winston.js';
+import { Logger } from 'winston';
 
 declare module 'winston' {
   interface Logger {

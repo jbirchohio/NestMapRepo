@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { getWeatherForecast } from "./weather.js";
+import { getWeatherForecast } from "./weather";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -9,7 +9,7 @@ interface PricePrediction {
     date: string;
     price: number;
     confidence: number;
-    recommendation: 'book_now' | 'wait' | 'monitor.js';
+    recommendation: 'book_now' | 'wait' | 'monitor';
   }[];
   optimalBookingWindow: {
     start: string;
@@ -25,18 +25,18 @@ interface PricePrediction {
 
 interface CrowdPrediction {
   location: string;
-  crowdLevel: 'low' | 'medium' | 'high' | 'extreme.js';
+  crowdLevel: 'low' | 'medium' | 'high' | 'extreme';
   confidence: number;
   peakHours: string[];
   bestVisitTimes: {
     time: string;
-    crowdLevel: 'low' | 'medium.js';
+    crowdLevel: 'low' | 'medium';
     reason: string;
   }[];
   alternativeOptions: {
     name: string;
     distance: string;
-    crowdLevel: 'low' | 'medium.js';
+    crowdLevel: 'low' | 'medium';
     similarity: number;
   }[];
 }

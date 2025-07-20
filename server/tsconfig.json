@@ -13,8 +13,8 @@
       "@shared/*": ["../shared/*"]
     },
     "types": ["node", "express"],
-    "module": "ES2020",
-    "moduleResolution": "node",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "allowJs": true,

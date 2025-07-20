@@ -1,6 +1,6 @@
-import Stripe from 'stripe.js';
-import { StripeIssuingService, CardIssuanceRequest, CardControlsUpdate } from '../../shared/src/schema.js';
-import { storage } from '../../shared/src/schema.js';
+import Stripe from 'stripe';
+import { StripeIssuingService, CardIssuanceRequest, CardControlsUpdate } from '../../shared/src/schema';
+import { storage } from '../../shared/src/schema';
 
 // Mock dependencies
 jest.mock('stripe');
@@ -13,11 +13,11 @@ describe('Stripe Issuing Service', () => {
   // Sample test data
   const mockUserId = 123;
   const mockOrgId = 456;
-  const mockCardholderName = 'John Doe.js';
-  const mockEmail = 'john.doe@example.com.js';
-  const mockPhone = '+15555555555.js';
-  const mockCardId = 'ic_mock123.js';
-  const mockCardholderId = 'ich_mock123.js';
+  const mockCardholderName = 'John Doe';
+  const mockEmail = 'john.doe@example.com';
+  const mockPhone = '+15555555555';
+  const mockCardId = 'ic_mock123';
+  const mockCardholderId = 'ich_mock123';
   
   beforeEach(() => {
     // Clear all mocks before each test

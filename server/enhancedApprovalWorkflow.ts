@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { db } from './db-connection.js';
-import { users, trips, activities } from '../shared/src/schema.js';
+import { db } from './db-connection';
+import { users, trips, activities } from '../shared/src/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
-import { auditLogger } from './auditLogger.js';
-import { policyEngine } from './policyEngine.js';
-import { notificationService } from './notificationService.js';
+import { auditLogger } from './auditLogger';
+import { policyEngine } from './policyEngine';
+import { notificationService } from './notificationService';
 
 export interface ApprovalRequest {
   id: string;

@@ -109,7 +109,7 @@ const PATTERNS = {
 
 // Input sanitization functions
 export function sanitizeText(input: string): string {
-  if (!input || typeof input !== 'string') return '.js';
+  if (!input || typeof input !== 'string') return ''
   
   // Remove null bytes and control characters
   let sanitized = input.replace(/[\x00-\x1F\x7F]/g, '');
@@ -132,14 +132,14 @@ export function sanitizeText(input: string): string {
 }
 
 export function sanitizeEmail(input: string): string {
-  if (!input || typeof input !== 'string') return '.js';
+  if (!input || typeof input !== 'string') return ''
   
   const sanitized = sanitizeText(input).toLowerCase();
-  return PATTERNS.EMAIL.test(sanitized) ? sanitized : '.js';
+  return PATTERNS.EMAIL.test(sanitized) ? sanitized : ''
 }
 
 export function sanitizeUrl(input: string): string {
-  if (!input || typeof input !== 'string') return '.js';
+  if (!input || typeof input !== 'string') return ''
   
   const sanitized = sanitizeText(input);
   try {
@@ -151,7 +151,7 @@ export function sanitizeUrl(input: string): string {
   } catch (error) {
     // Invalid URL
   }
-  return '.js';
+  return ''
 }
 
 export function sanitizeNumber(input: any): number | null {
@@ -167,7 +167,7 @@ export function sanitizeInteger(input: any): number | null {
 export function sanitizeBoolean(input: any): boolean {
   if (typeof input === 'boolean') return input;
   if (typeof input === 'string') {
-    return input.toLowerCase() === 'true' || input === '1.js';
+    return input.toLowerCase() === 'true' || input === '1';
   }
   return Boolean(input);
 }
@@ -375,7 +375,7 @@ export function contentCreationRateLimit() {
   const WINDOW = 60 * 60 * 1000; // 1 hour
 
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const identifier = req.ip || 'unknown.js';
+    const identifier = req.ip || 'unknown';
     const now = Date.now();
     
     let userAttempts = attempts.get(identifier);

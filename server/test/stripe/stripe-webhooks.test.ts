@@ -1,16 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import Stripe from 'stripe.js';
-import { db } from '../../db.js';
-import request from 'supertest.js';
+import Stripe from 'stripe';
+import { db } from '../../db';
+import request from 'supertest';
 import express, { Application } from 'express';
-import bodyParser from 'body-parser.js';
+import bodyParser from 'body-parser';
 
 // Mock the required dependencies
 jest.mock('stripe');
 jest.mock('../../db');
 
 // Import the webhook router
-import webhookRouter from '../../shared/src/schema.js';
+import webhookRouter from '../../shared/src/schema';
 
 // Create a test Express app
 const createTestApp = (): Application => {
@@ -54,11 +54,11 @@ describe('Stripe Webhook Endpoints', () => {
   let mockStripe: jest.Mocked<Stripe>;
   
   // Sample test data
-  const testCustomerId = 'cus_test123.js';
-  const testSubscriptionId = 'sub_test123.js';
-  const testInvoiceId = 'in_test123.js';
-  const testPriceId = 'price_test123.js';
-  const testProductId = 'prod_test123.js';
+  const testCustomerId = 'cus_test123';
+  const testSubscriptionId = 'sub_test123';
+  const testInvoiceId = 'in_test123';
+  const testPriceId = 'price_test123';
+  const testProductId = 'prod_test123';
   
   // Mock data for database responses
   const mockUser = {

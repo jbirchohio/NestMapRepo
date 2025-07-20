@@ -1,17 +1,17 @@
 import express, { Response, NextFunction, RequestHandler, Router } from 'express';
-import type { ParamsDictionary, Request } from 'express-serve-static-core.js';
-import type { ParsedQs } from 'qs.js';
+import type { ParamsDictionary, Request } from 'express-serve-static-core';
+import type { ParsedQs } from 'qs';
 
 
-import { db } from '../db/db.js';
-import { organizations } from '../db/schema.js';
-import { invoices } from '../db/invoiceSchema.js';
-import secureAuth from '../middleware/secureAuth.js';
-import { requireOrganizationContext } from '../middleware/organization.js';
+import { db } from '../db/db';
+import { organizations } from '../db/schema';
+import { invoices } from '../db/invoiceSchema';
+import secureAuth from '../middleware/secureAuth';
+import { requireOrganizationContext } from '../middleware/organization';
 import { eq, and } from 'drizzle-orm';
-import type { User } from '../types/user.js';
-import type { AuthenticatedRequest } from '../src/types/auth-user.js';
-import { stripe } from '../stripe.js';
+import type { User } from '../types/user';
+import type { AuthenticatedRequest } from '../src/types/auth-user';
+import { stripe } from '../stripe';
 
 type AsyncRequestHandler<T = Request> = (req: T, res: Response, next: NextFunction) => Promise<void>;
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,12 +50,18 @@ export default function MFASetup() {
   // Fetch user's MFA methods
   const { data: methods, isLoading, refetch } = useQuery<MFAMethod[]>({
     queryKey: ['/api/mfa/methods'],
-    queryFn: () => apiRequest('/api/mfa/methods')
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/mfa/methods');
+      return response.data;
+    }
   });
 
   // Setup TOTP
   const setupTOTPMutation = useMutation({
-    mutationFn: () => apiRequest('/api/mfa/setup/totp', { method: 'POST' }),
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/mfa/setup/totp');
+      return response.data;
+    },
     onSuccess: (data: TOTPSetup) => {
       setTotpSetup(data);
       setActiveTab('totp');
@@ -64,7 +70,7 @@ export default function MFASetup() {
         description: 'Scan the QR code with your authenticator app'
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: 'Setup Failed',
         description: 'Failed to setup TOTP authentication',
@@ -75,10 +81,10 @@ export default function MFASetup() {
 
   // Verify TOTP
   const verifyTOTPMutation = useMutation({
-    mutationFn: (code: string) => apiRequest('/api/mfa/verify/totp', {
-      method: 'POST',
-      body: { code }
-    }),
+    mutationFn: async (code: string) => {
+      const response = await apiRequest('POST', '/api/mfa/verify/totp', { code });
+      return response.data;
+    },
     onSuccess: (data) => {
       if (data.success) {
         toast({
@@ -101,10 +107,10 @@ export default function MFASetup() {
 
   // Setup SMS
   const setupSMSMutation = useMutation({
-    mutationFn: (phoneNumber: string) => apiRequest('/api/mfa/setup/sms', {
-      method: 'POST',
-      body: { phoneNumber }
-    }),
+    mutationFn: async (phoneNumber: string) => {
+      const response = await apiRequest('POST', '/api/mfa/setup/sms', { phoneNumber });
+      return response.data;
+    },
     onSuccess: () => {
       toast({
         title: 'SMS Code Sent',
@@ -122,9 +128,10 @@ export default function MFASetup() {
 
   // Disable MFA method
   const disableMethodMutation = useMutation({
-    mutationFn: (methodId: string) => apiRequest(`/api/mfa/methods/${methodId}`, {
-      method: 'DELETE'
-    }),
+    mutationFn: async (methodId: string) => {
+      const response = await apiRequest('DELETE', `/api/mfa/methods/${methodId}`);
+      return response.data;
+    },
     onSuccess: () => {
       toast({
         title: 'MFA Method Disabled',

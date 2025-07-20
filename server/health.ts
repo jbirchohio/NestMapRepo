@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { pool } from "./db-connection.js";
+import { pool } from "./db-connection";
 
 /**
  * Standard health check handler that works across all platforms

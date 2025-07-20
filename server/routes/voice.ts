@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
-import { voiceInterfaceService } from '../services/voiceInterface.js';
-import { authenticate } from '../middleware/secureAuth.js';
-import { addOrganizationScope } from '../middleware/organizationScoping.js';
+import { voiceInterfaceService } from '../services/voiceInterface';
+import { authenticate } from '../middleware/secureAuth';
+import { addOrganizationScope } from '../middleware/organizationScoping';
 
 const router = Router();
 

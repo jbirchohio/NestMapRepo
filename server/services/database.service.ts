@@ -1,9 +1,9 @@
-import { Pool, PoolConfig } from 'pg.js';
-import { createClient } from 'redis.js';
-import { drizzle } from 'drizzle-orm/node-postgres.js';
-import * as schema from "../../shared/src/schema.js";
-import config from '../config.js';
-import { logger } from '../utils/logger.js';
+import { Pool, PoolConfig } from 'pg';
+// Redis removed for simplified deployment
+import { drizzle } from 'drizzle-orm/node-postgres';
+import * as schema from "../../shared/src/schema";
+import config from '../config';
+import { logger } from '../utils/logger';
 
 type QueryResult<T = any> = {
   rows: T[];

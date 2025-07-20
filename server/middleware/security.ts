@@ -1,5 +1,5 @@
 import { type Request as ExpressRequest, type Response, type NextFunction, type Application } from 'express';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger';
 
 // Define the user type that will be added to the request
 export interface AuthUser {

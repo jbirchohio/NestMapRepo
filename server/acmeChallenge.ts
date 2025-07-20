@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { db } from './db-connection.js';
-import { customDomains } from './db/schema.js';
+import { db } from './db-connection';
+import { customDomains } from './db/schema';
 import { eq } from 'drizzle-orm';
 
 interface ACMEChallenge {

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { Logger } from '@nestjs/common.js';
+import { Logger } from '@nestjs/common';
 import { 
   errorHandlerMiddleware, 
   createApiError, 
   ErrorType,
   asyncHandler
-} from './error-handler.middleware.js';
+} from './error-handler.middleware';
 
 describe('Error Handler Middleware', () => {
   let mockRequest: Partial<Request>;

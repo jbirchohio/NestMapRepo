@@ -58,14 +58,14 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // Proxy all API requests to the backend server
         '^/api/(?!auth)': {
-          target: env.API_URL || 'http://localhost:3001',
+          target: env.API_URL || 'http://localhost:5000',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, '') // Remove /api prefix when forwarding
         },
         // Keep the auth proxy for NextAuth
         '/api/auth': {
-          target: env.API_URL || 'http://localhost:3001',
+          target: env.API_URL || 'http://localhost:5000',
           changeOrigin: true,
           secure: false
         }

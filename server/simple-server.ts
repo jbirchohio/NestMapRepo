@@ -1,10 +1,10 @@
 import express from 'express';
-import http from 'http.js';
-import { authenticate } from './middleware/secureAuth.js';
+import http from 'http';
+import { authenticate } from './middleware/secureAuth';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0.js';
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Basic middleware
 app.use(expresson({ limit: '10mb' }));

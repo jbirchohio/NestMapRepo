@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common/index.js';
-import { db } from '../../../db/db.js';
-import * as schema from '../../../db/schema.js';
-import { OrganizationRepository } from './organization.repository.interface.js';
+import { Injectable } from '@nestjs/common/index';
+import { db } from '../../../db/db';
+import * as schema from '../../../db/schema';
+import { OrganizationRepository } from './organization.repository.interface';
 import { eq } from 'drizzle-orm';
-import { BaseRepositoryImpl } from '../base.repository.js';
+import { BaseRepositoryImpl } from '../base.repository';
 
 @Injectable()
 export class OrganizationRepositoryImpl extends BaseRepositoryImpl<schema.Organization, string, Omit<schema.Organization, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<schema.Organization, 'id' | 'createdAt' | 'updatedAt'>>> implements OrganizationRepository {

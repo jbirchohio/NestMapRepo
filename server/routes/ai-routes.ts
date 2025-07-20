@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { aiTripOptimizer } from '../services/ai-trip-optimizer.js';
-import { contextualAIAssistant } from '../services/contextual-ai-assistant.js';
-import { authenticate } from '../middleware/secureAuth.js';
-import { injectOrganizationContext } from '../middleware/organizationScoping.js';
-import { validateRequest } from '../middleware/validation.js';
+import { aiTripOptimizer } from '../services/ai-trip-optimizer';
+import { contextualAIAssistant } from '../services/contextual-ai-assistant';
+import { authenticate } from '../middleware/secureAuth';
+import { injectOrganizationContext } from '../middleware/organizationScoping';
+import { validateRequest } from '../middleware/validation';
 
 const router = Router();
 

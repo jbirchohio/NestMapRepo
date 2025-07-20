@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { db } from '../../db.js';
-import { organizations, organizationMembers, users } from '../../shared/src/schema.js';
+import { db } from '../../db';
+import { organizations, organizationMembers, users } from '../../shared/src/schema';
 import { eq, desc, sql } from 'drizzle-orm';
-import { logSuperadminAction } from '../audit-logs/audit-service.js';
+import { logSuperadminAction } from '../audit-logs/audit-service';
 
 // Get all organizations
 export const getOrganizations = async (req: Request, res: Response) => {

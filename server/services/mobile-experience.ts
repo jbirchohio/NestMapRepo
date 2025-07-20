@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { trips, users } from '../db/schema.js';
+import { db } from '../db-connection';
+import { trips, users } from '../db/schema';
 import { eq, and, gte } from 'drizzle-orm';
 
 // Mobile experience schemas

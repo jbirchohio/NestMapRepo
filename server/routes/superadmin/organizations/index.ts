@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { requireSuperadmin } from '../../shared/src/schema.js';
-import { validateOrganizationAccess } from '../../shared/src/schema.js';
-import * as organizationsController from './controllers.js';
-import * as organizationsValidators from './validators.js';
+import { requireSuperadmin } from '../../shared/src/schema';
+import { validateOrganizationAccess } from '../../shared/src/schema';
+import * as organizationsController from './controllers';
+import * as organizationsValidators from './validators';
 
 const router = Router();
 

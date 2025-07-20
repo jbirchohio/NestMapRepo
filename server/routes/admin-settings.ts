@@ -1,9 +1,9 @@
 import type { Express } from "express";
-import { db } from "../db.js";
+import { db } from "../db";
 import { eq, count } from "drizzle-orm";
-import { adminSettings, adminAuditLog } from "../shared/src/schema.js";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { adminSettings, adminAuditLog } from "../shared/src/schema";
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 interface SystemSettings {
   general: {
@@ -254,9 +254,9 @@ export function registerAdminSettingsRoutes(app: Express) {
         .orderBy(adminAuditLog.timestamp);
 
       // Generate CSV content
-      const csvHeader = 'ID,Admin User ID,Action,IP Address,Timestamp,Details\n.js';
+      const csvHeader = 'ID,Admin User ID,Action,IP Address,Timestamp,Details\n';
       const csvRows = logs.map(log => {
-        const details = log.action_data ? JSON.stringify(log.action_data).replace(/"/g, '""') : '.js';
+        const details = log.action_data ? JSON.stringify(log.action_data).replace(/"/g, '""') : ''
         return `${log.id},"${log.admin_user_id}","${log.action_type}","${log.ip_address || ''}","${log.timestamp}","${details}"`;
       }).join('\n');
 

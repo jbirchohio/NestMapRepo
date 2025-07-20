@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { trips, users, organizations } from '../db/schema.js';
+import { db } from '../db-connection';
+import { trips, users, organizations } from '../db/schema';
 import { eq, and, gte, lte, desc, count, sum, avg, sql } from 'drizzle-orm';
 import OpenAI from 'openai';
 

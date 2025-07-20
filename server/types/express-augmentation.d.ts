@@ -1,5 +1,5 @@
 // Express type augmentation for request/response objects
-import { AuthUser } from '../src/types/auth-user.js';
+import { AuthUser } from '../src/types/auth-user';
 
 // Define JWTUser type for authentication
 interface JWTUser {

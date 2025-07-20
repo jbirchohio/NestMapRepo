@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ParamsDictionary } from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
-import { AuthUser } from '../../src/types/auth-user.js';
+import { AuthUser } from '../../src/types/auth-user';
 
 // Define JWTUser type for authentication
 interface JWTUser {

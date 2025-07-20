@@ -1,4 +1,4 @@
-import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient.js";
+import { getOpenAIClient, OPENAI_MODEL } from "./services/openaiClient";
 
 /**
  * Finds a location using AI to handle fuzzy search and returns multiple potential matches

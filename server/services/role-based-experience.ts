@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { users, organizations } from '../db/schema.js';
+import { db } from '../db-connection';
+import { users, organizations } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 
 // Role-based schemas

@@ -1,8 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
-import { authenticate } from '../middleware/secureAuth.js';
-import { addOrganizationScope } from '../middleware/organizationScope.js';
-import { enterpriseIntegrationHubService } from '../services/enterpriseIntegrationHub.js';
+import { authenticate } from '../middleware/secureAuth';
+import { addOrganizationScope } from '../middleware/organizationScope';
+import { enterpriseIntegrationHubService } from '../services/enterpriseIntegrationHub';
 
 const router = express.Router();
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { requireSuperadmin } from '../../shared/src/schema.js';
-import * as billingController from './controllers.js';
-import * as billingValidators from './validators.js';
+import { requireSuperadmin } from '../../shared/src/schema';
+import * as billingController from './controllers';
+import * as billingValidators from './validators';
 
 const router = Router();
 

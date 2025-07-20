@@ -1,12 +1,12 @@
 import type { Express, Request, Response } from "express";
-import { db } from "../db.js";
-import { customDomains, organizations, whiteLabelSettings } from "../db/schema.js";
+import { db } from "../db";
+import { customDomains, organizations, whiteLabelSettings } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
-import { promises as dns } from 'dns.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import type { AuthenticatedRequest } from '../src/types/auth-user.js';
+import { promises as dns } from 'dns';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import type { AuthenticatedRequest } from '../src/types/auth-user';
 
 interface Domain {
   id: number;
@@ -93,7 +93,7 @@ export function registerDomainRoutes(app: Express) {
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      const plan = organization.plan || 'basic.js';
+      const plan = organization.plan || 'basic';
       const hasAccess = ['pro', 'business', 'enterprise'].includes(plan);
 
       if (!hasAccess) {
@@ -326,7 +326,7 @@ export function registerDomainRoutes(app: Express) {
         .where(eq(whiteLabelSettings.organization_id, organizationId))
         .limit(1);
 
-      const plan = organization?.plan || 'basic.js';
+      const plan = organization?.plan || 'basic';
       const hasAccess = ['pro', 'business', 'enterprise'].includes(plan);
 
       res.json({

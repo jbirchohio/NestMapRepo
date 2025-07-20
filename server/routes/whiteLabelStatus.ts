@@ -1,11 +1,11 @@
 import type { Express, Response } from "express";
-import { db } from "../db.js";
-import { organizations, whiteLabelSettings, customDomains } from "../db/schema.js";
+import { db } from "../db";
+import { organizations, whiteLabelSettings, customDomains } from "../db/schema";
 import { eq, and } from "drizzle-orm";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import { enforceWhiteLabelAccess } from '../middleware/subscription-limits.js';
-import type { AuthenticatedRequest } from '../src/types/auth-user.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { enforceWhiteLabelAccess } from '../middleware/subscription-limits';
+import type { AuthenticatedRequest } from '../src/types/auth-user';
 
 
 export function registerWhiteLabelStatusRoutes(app: Express) {

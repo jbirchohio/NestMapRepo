@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { Logger } from '@nestjs/common.js';
+import { Logger } from '@nestjs/common';
 
 // Define the user type
 export interface AuthUser {
@@ -24,8 +24,8 @@ import {
   requireAdmin,
   requireSuperAdmin,
   requireOwnership
-} from './auth.middleware.js';
-import { ErrorType } from '../types/error.types.js';
+} from './auth.middleware';
+import { ErrorType } from '../types/error.types';
 
 describe('Auth Middleware', () => {
   // Base user for testing

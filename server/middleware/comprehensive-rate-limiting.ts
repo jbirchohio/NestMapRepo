@@ -345,8 +345,8 @@ const comprehensiveRateLimit = new ComprehensiveRateLimit();
  * General API rate limiting middleware
  */
 export const apiRateLimit: express.RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown.js';
-  const userId = req.user?.id || 'anonymous.js';
+  const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
+  const userId = req.user?.id || 'anonymous';
   const key = `global:${ip}:${userId}`;
   
   const result = comprehensiveRateLimit.checkLimit(key, 'global');
@@ -372,7 +372,7 @@ export const apiRateLimit: express.RequestHandler = (req: AuthenticatedRequest, 
  * Authentication-specific rate limiting
  */
 export const authRateLimit: express.RequestHandler = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const ip = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown.js';
+  const ip = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown';
   const key = `auth:${ip}`;
   
   const result = comprehensiveRateLimit.checkLimit(key, 'auth');
@@ -422,8 +422,8 @@ export const organizationRateLimit: express.RequestHandler = (req: Authenticated
  */
 export function tieredRateLimit(tier: string): express.RequestHandler {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown.js';
-    const orgId = req.user?.organizationId || 'none.js';
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const orgId = req.user?.organizationId || 'none';
     const key = `tier:${tier}:${orgId}:${ip}`;
     
     const result = comprehensiveRateLimit.checkLimit(key, tier);
@@ -454,8 +454,8 @@ export function tieredRateLimit(tier: string): express.RequestHandler {
  */
 export function endpointRateLimit(endpointType: string): express.RequestHandler {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown.js';
-    const userId = req.user?.id || 'anonymous.js';
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const userId = req.user?.id || 'anonymous';
     const key = `endpoint:${endpointType}:${ip}:${userId}`;
     
     const result = comprehensiveRateLimit.checkLimit(key, endpointType);

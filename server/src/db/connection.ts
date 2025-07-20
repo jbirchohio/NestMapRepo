@@ -1,8 +1,8 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { logger } from '../utils/logger.js';
-import * as schema from './schema.js';
-import * as tripSchema from './tripSchema.js';
+import { logger } from '../utils/logger';
+import * as schema from './schema';
+import * as tripSchema from './tripSchema';
 
 // Combine all schemas
 const allSchemas = { ...schema, ...tripSchema };

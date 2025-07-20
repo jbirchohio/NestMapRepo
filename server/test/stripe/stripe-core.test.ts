@@ -1,4 +1,4 @@
-import Stripe from 'stripe.js';
+import Stripe from 'stripe';
 import { 
   createStripeCustomer, 
   createSubscription, 
@@ -6,7 +6,7 @@ import {
   cancelSubscription, 
   getSubscriptionDetails, 
   SUBSCRIPTION_PLANS 
-} from '../../shared/src/schema.js';
+} from '../../shared/src/schema';
 
 // Mock Stripe SDK
 jest.mock('stripe');
@@ -72,8 +72,8 @@ describe('Stripe Core Functionality', () => {
   });
   
   test('should create a customer', async () => {
-    const email = 'test@example.com.js';
-    const name = 'Test User.js';
+    const email = 'test@example.com';
+    const name = 'Test User';
     
     const customer = await createStripeCustomer(email, name);
     
@@ -90,8 +90,8 @@ describe('Stripe Core Functionality', () => {
   });
   
   test('should create a subscription', async () => {
-    const customerId = 'cus_mock123.js';
-    const priceId = 'price_mock123.js';
+    const customerId = 'cus_mock123';
+    const priceId = 'price_mock123';
     
     const subscription = await createSubscription(customerId, priceId);
     
@@ -115,8 +115,8 @@ describe('Stripe Core Functionality', () => {
   });
   
   test('should update a subscription', async () => {
-    const subscriptionId = 'sub_mock123.js';
-    const newPriceId = 'price_new456.js';
+    const subscriptionId = 'sub_mock123';
+    const newPriceId = 'price_new456';
     
     const updatedSubscription = await updateSubscription(subscriptionId, newPriceId);
     
@@ -140,7 +140,7 @@ describe('Stripe Core Functionality', () => {
   });
   
   test('should cancel a subscription', async () => {
-    const subscriptionId = 'sub_mock123.js';
+    const subscriptionId = 'sub_mock123';
     
     const canceledSubscription = await cancelSubscription(subscriptionId);
     
@@ -154,7 +154,7 @@ describe('Stripe Core Functionality', () => {
   });
   
   test('should get subscription details', async () => {
-    const subscriptionId = 'sub_mock123.js';
+    const subscriptionId = 'sub_mock123';
     
     const subscriptionDetails = await getSubscriptionDetails(subscriptionId);
     

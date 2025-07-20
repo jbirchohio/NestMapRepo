@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,13 +15,9 @@ import {
   RefreshCw as Sync, 
   CheckCircle, 
   AlertCircle,
-  Settings,
   Plus,
   Trash2,
-  Edit,
   Activity,
-  BarChart3,
-  Calendar
 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -60,10 +54,15 @@ interface SyncActivity {
 export default function EnterpriseIntegrationDashboard() {
   const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState('overview');
-  const [newIntegration, setNewIntegration] = useState({
+  const [newIntegration, setNewIntegration] = useState<{
+    name: string;
+    platform: string;
+    type: 'hr' | 'finance' | 'communication';
+    config: Record<string, any>;
+  }>({
     name: '',
     platform: '',
-    type: 'hr' as const,
+    type: 'hr',
     config: {}
   });
 
@@ -108,7 +107,7 @@ export default function EnterpriseIntegrationDashboard() {
         description: "Enterprise integration has been successfully created."
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Creation Failed",
         description: "Failed to create integration. Please try again.",

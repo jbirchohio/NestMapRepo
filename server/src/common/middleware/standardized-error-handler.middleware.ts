@@ -142,7 +142,7 @@ export const standardizedErrorHandler = (logger: Logger) => {
       }
     } else {
       // For standard errors, convert to internal server error
-      errorResponse.error.message = error.message || 'An unexpected error occurred.js';
+      errorResponse.error.message = error.message || 'An unexpected error occurred';
       
       // Add stack trace in development
       if (process.env.NODE_ENV !== 'production' && error.stack) {

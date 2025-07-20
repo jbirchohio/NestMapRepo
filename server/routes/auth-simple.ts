@@ -1,11 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
-import { db } from '../db-connection.js';
-import { users } from '../db/schema.js';
+import { db } from '../db-connection';
+import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { generateAuthTokens } from '../utils/secureJwt.js';
-import { logger } from '../utils/logger.js';
+import { generateAuthTokens } from '../utils/secureJwt';
+import { logger } from '../utils/logger';
 
 const router = Router();
 

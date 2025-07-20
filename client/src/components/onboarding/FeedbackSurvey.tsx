@@ -12,7 +12,6 @@ import {
   ThumbsUp, 
   ThumbsDown,
   MessageSquare,
-  CheckCircle2,
   AlertCircle,
   Lightbulb
 } from 'lucide-react';
@@ -205,21 +204,26 @@ export const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
               <Label className="text-sm font-medium">
                 What was most helpful during setup? (Optional)
               </Label>
-              <RadioGroup
-                value={feedback.mostHelpfulFeature}
-                onValueChange={(value) => 
-                  setFeedback(prev => ({ ...prev, mostHelpfulFeature: value }))
-                }
-              >
+              <div className="space-y-2">
                 {HELPFUL_FEATURES.map((feature) => (
                   <div key={feature} className="flex items-center space-x-2">
-                    <RadioGroupItem value={feature} id={feature} />
+                    <input
+                      type="radio"
+                      id={feature}
+                      name="mostHelpfulFeature"
+                      value={feature}
+                      checked={feedback.mostHelpfulFeature === feature}
+                      onChange={(e) => 
+                        setFeedback(prev => ({ ...prev, mostHelpfulFeature: e.target.value }))
+                      }
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
                     <Label htmlFor={feature} className="text-sm">
                       {feature}
                     </Label>
                   </div>
                 ))}
-              </RadioGroup>
+              </div>
             </div>
           </div>
         );
@@ -239,34 +243,36 @@ export const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
               <Label className="text-sm font-medium">
                 Are you ready to begin your NestMap pilot?
               </Label>
-              <RadioGroup
-                value={feedback.readyForPilot}
-                onValueChange={(value: 'yes' | 'no' | 'maybe') =>
-                  setFeedback(prev => ({ ...prev, readyForPilot: value }))
-                }
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="yes" id="yes" />
-                  <Label htmlFor="yes" className="flex items-center gap-2">
+              <div className="space-y-2">
+                <RadioGroup
+                  value={feedback.readyForPilot}
+                  onValueChange={(value: string) => 
+                    setFeedback(prev => ({ ...prev, readyForPilot: value as 'yes' | 'no' | 'maybe' }))
+                  }
+                  className="space-y-2"
+                />
+                <div className="flex items-center space-x-2 mt-2">
+                  <RadioGroupItem value="yes" />
+                  <Label className="flex items-center gap-2">
                     <ThumbsUp className="h-4 w-4 text-green-500" />
                     Yes, I'm ready to start!
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="no" id="no" />
-                  <Label htmlFor="no" className="flex items-center gap-2">
+                  <RadioGroupItem value="no" />
+                  <Label className="flex items-center gap-2">
                     <ThumbsDown className="h-4 w-4 text-red-500" />
                     No, I need more setup time
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="maybe" id="maybe" />
-                  <Label htmlFor="maybe" className="flex items-center gap-2">
+                  <RadioGroupItem value="maybe" />
+                  <Label className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-orange-500" />
                     Maybe, I have some concerns
                   </Label>
                 </div>
-              </RadioGroup>
+              </div>
             </div>
 
             {/* Missing Features */}

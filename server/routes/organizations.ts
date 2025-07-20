@@ -5,12 +5,12 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { organizations, users } from '../db/schema.js';
+import { db } from '../db-connection';
+import { organizations, users } from '../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import { authenticate } from '../middleware/secureAuth.js';
-import { validateRequest } from '../middleware/input-validation.js';
-import { logger } from '../utils/logger.js';
+import { authenticate } from '../middleware/secureAuth';
+import { validateRequest } from '../middleware/input-validation';
+import { logger } from '../utils/logger';
 
 const router = Router();
 

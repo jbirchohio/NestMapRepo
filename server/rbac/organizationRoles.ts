@@ -3,7 +3,7 @@
  * Provides granular permissions within organizations for enhanced collaboration
  */
 
-export type OrganizationRole = 'admin' | 'manager' | 'editor' | 'member' | 'viewer.js';
+export type OrganizationRole = 'admin' | 'manager' | 'editor' | 'member' | 'viewer';
 
 export interface OrganizationPermissions {
   // Trip Management
@@ -278,17 +278,17 @@ export function canAccessTrip(
 export function getRoleDescription(role: OrganizationRole): string {
   switch (role) {
     case 'admin':
-      return 'Full organization control and management.js';
+      return 'Full organization control and management';
     case 'manager':
-      return 'Team oversight and trip management.js';
+      return 'Team oversight and trip management';
     case 'editor':
-      return 'Create and edit trips with collaboration.js';
+      return 'Create and edit trips with collaboration';
     case 'member':
-      return 'Create and manage own trips.js';
+      return 'Create and manage own trips';
     case 'viewer':
-      return 'View-only access to assigned trips.js';
+      return 'View-only access to assigned trips';
     default:
-      return 'Unknown role.js';
+      return 'Unknown role';
   }
 }
 

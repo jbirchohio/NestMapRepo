@@ -5,10 +5,10 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { authenticate } from '../middleware/secureAuth.js';
-import { validateRequest } from '../middleware/input-validation.js';
-import { whiteLabelService, WhiteLabelTheme } from '../services/whiteLabelService.js';
-import { logger } from '../utils/logger.js';
+import { authenticate } from '../middleware/secureAuth';
+import { validateRequest } from '../middleware/input-validation';
+import { whiteLabelService, WhiteLabelTheme } from '../services/whiteLabelService';
+import { logger } from '../utils/logger';
 
 const router = Router();
 

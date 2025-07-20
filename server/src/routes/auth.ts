@@ -3,9 +3,9 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { getDatabase } from '../db/connection.js';
-import { users } from '../db/schema.js';
-import { logger } from '../utils/logger.js';
+import { getDatabase } from '../db/connection';
+import { users } from '../db/schema';
+import { logger } from '../utils/logger';
 
 const router = express.Router();
 

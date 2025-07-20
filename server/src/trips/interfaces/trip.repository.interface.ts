@@ -1,7 +1,7 @@
-import * as tripSchema from '../../db/tripSchema.js';
-import * as schema from '../../db/schema.js';
-import { BaseRepository } from '../../common/repositories/base.repository.interface.js';
-import type { CorporateTripDto } from './trip.service.interface.js';
+import * as tripSchema from '../../db/tripSchema';
+import * as schema from '../../db/schema';
+import { BaseRepository } from '../../common/repositories/base.repository.interface';
+import type { CorporateTripDto } from './trip.service.interface';
 
 /**
  * Trip repository interface that extends the base repository interface

@@ -1,7 +1,7 @@
-import { db } from './db.js';
-import { approvalRequests, approvalRules, users, organizations } from './db/schema.js';
+import { db } from './db';
+import { approvalRequests, approvalRules, users, organizations } from './db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
-import type { UserRole } from './db/schema.js';
+import type { UserRole } from './db/schema';
 
 interface ApprovalWorkflowConfig {
   organizationId: string;

@@ -1,17 +1,17 @@
 import express, { Request, Response, NextFunction, RequestHandler } from 'express';
-import { db } from '../db.js';
-import { auditLogs } from '../db/auditLog.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin.js';
-import { injectOrganizationContext } from '../middleware/organizationContext.js';
+import { db } from '../db';
+import { auditLogs } from '../db/auditLog';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { requireSuperadmin, type AuthenticatedRequest } from '../middleware/superadmin';
+import { injectOrganizationContext } from '../middleware/organizationContext';
 
 // Import route modules
-import organizationsRouter from './superadmin/organizations.js';
-import usersRouter from './superadmin/users.js';
-import billingRouter from './superadmin/billing.js';
-import featureFlagsRouter from './superadmin/feature-flags.js';
-import dashboardRouter from './superadmin/dashboard.js';
-import auditLogsRouter from './superadmin/audit-logs.js';
+import organizationsRouter from './superadmin/organizations';
+import usersRouter from './superadmin/users';
+import billingRouter from './superadmin/billing';
+import featureFlagsRouter from './superadmin/feature-flags';
+import dashboardRouter from './superadmin/dashboard';
+import auditLogsRouter from './superadmin/audit-logs';
 
 // Audit logging function
 export const logSuperadminAction = async (

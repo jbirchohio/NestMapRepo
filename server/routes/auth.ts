@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { ConfigService } from '@nestjs/config.js';
-import { AuthContainer } from '../src/auth/auth.container.js';
+import { ConfigService } from '@nestjs/config';
+import { AuthContainer } from '../src/auth/auth.container';
 
 // Import validation schemas from DTOs to avoid duplication
 import { 
@@ -10,11 +10,11 @@ import {
   logoutSchema,
   requestPasswordResetSchema,
   resetPasswordSchema 
-} from '../src/auth/validation/auth.schemas.js';
+} from '../src/auth/validation/auth.schemas';
 
 // Import middleware
-import { authRateLimit } from '../middleware/comprehensive-rate-limiting.js';
-import { validateRequest } from '../src/auth/middleware/validation.middleware.js';
+import { authRateLimit } from '../middleware/comprehensive-rate-limiting';
+import { validateRequest } from '../src/auth/middleware/validation.middleware';
 
 export const createAuthRouter = (configService: ConfigService): Router => {
   const router = Router();

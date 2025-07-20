@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db-connection.js';
-import { users, organizations } from '../src/db/schema.js';
+import { db } from '../db-connection';
+import { users, organizations } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
 
 // Extend Request interface to include organization data

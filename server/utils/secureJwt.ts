@@ -1,7 +1,9 @@
-import { sign, verify, decode, SignOptions } from 'jsonwebtoken.js';
-import { redis } from '../db/redis.js';
-import { logger } from './logger.js';
-import { v4 as uuidv4 } from 'uuid.js';
+import jwt from 'jsonwebtoken';
+const { sign, verify, decode } = jwt;
+type SignOptions = jwt.SignOptions;
+// Redis removed for simplified deployment
+import { logger } from './logger';
+import { v4 as uuidv4 } from 'uuid';
 import { 
   TokenPayload, 
   TokenType, 
@@ -9,15 +11,15 @@ import {
   VerifyTokenResult,
   AuthTokens,
   PasswordResetTokenResult
-} from '../types/jwt.js';
+} from '../types/jwt';
 
 // The JwtPayload interface is extended in jwtService.ts to avoid duplication
 
 // Token secret keys from environment variables
-const JWT_SECRET = process.env.JWT_SECRET || 'your-256-bit-secret.js';
-const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m.js';
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d.js';
-const JWT_PASSWORD_RESET_EXPIRES_IN = process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h.js';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-256-bit-secret';
+const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+const JWT_PASSWORD_RESET_EXPIRES_IN = process.env.JWT_PASSWORD_RESET_EXPIRES_IN || '1h';
 
 /**
  * Generate a cryptographically secure random token ID
@@ -61,11 +63,8 @@ export const generateToken = async (
     { expiresIn: typeof expiresIn === 'string' ? expiresIn : `${expiresIn}s` } as SignOptions
   );
   
-  // Store the token in Redis if it's a refresh token
-  if (type === 'refresh') {
-    const ttl = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
-    await redis.set(`refresh_token:${jti}`, userId, ttl);
-  }
+  // Note: In production, you may want to store refresh tokens in a database
+  // for revocation capabilities. For simplicity, we're using stateless tokens.
 
   return { token, expiresAt };
 };
@@ -85,13 +84,8 @@ export const verifyToken = async (
       throw new Error('Invalid token type');
     }
 
-    // For refresh tokens, check if it's been revoked
-    if (type === 'refresh') {
-      const storedUserId = await redis.get(`refresh_token:${decoded.jti}`);
-      if (!storedUserId || storedUserId !== decoded.userId) {
-        throw new Error('Token has been revoked');
-      }
-    }
+    // Note: Token revocation is not implemented in this simplified version
+    // In production, you may want to check a blacklist or database
 
     const { jti, userId, email, role, iat, exp } = decoded;
     
@@ -107,8 +101,8 @@ export const verifyToken = async (
       }, 
       expired: false 
     };
-  } catch (error: any) {
-    if (error.name === 'TokenExpiredError') {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'TokenExpiredError') {
       const payload = decode(token) as TokenPayload;
       if (!payload) return null;
       
@@ -176,8 +170,7 @@ export async function refreshAccessToken(
   }
   const { payload } = verified;
 
-  // Revoke the old refresh token
-  await redis.del(`refresh_token:${payload.jti}`);
+  // Note: Token revocation not implemented in simplified version
 
   // Generate new tokens
   return generateAuthTokens(payload.userId, payload.email, payload.role);
@@ -216,23 +209,18 @@ export const verifyPasswordResetToken = async (
 
 /**
  * Revoke a token by its ID
+ * Note: Simplified version - token revocation not implemented
  */
 export const revokeToken = async (tokenId: string): Promise<void> => {
-  await redis.del(`refresh_token:${tokenId}`);
+  // In a production environment, you would store revoked tokens in a database
+  logger.info(`Token revocation requested for: ${tokenId} (not implemented in simplified version)`);
 };
 
 /**
  * Revoke all tokens for a user
+ * Note: Simplified version - token revocation not implemented
  */
 export const revokeAllUserTokens = async (userId: string): Promise<void> => {
-  // This would need a more efficient implementation in production
-  // using Redis SCAN would be better for large numbers of tokens
-  const keys = await redis.keys('refresh_token:*');
-  
-  for (const key of keys) {
-    const storedUserId = await redis.get(key);
-    if (storedUserId === userId) {
-      await redis.del(key);
-    }
-  }
+  // In a production environment, you would query a database to revoke all user tokens
+  logger.info(`Token revocation requested for user: ${userId} (not implemented in simplified version)`);
 };

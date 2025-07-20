@@ -32,7 +32,7 @@ interface NotificationEmailParams {
   message: string;
   actionUrl?: string;
   actionText?: string;
-  type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system.js';
+  type: 'trip_shared' | 'booking_confirmed' | 'activity_reminder' | 'team_invite' | 'payment_due' | 'system';
 }
 
 export async function sendNotificationEmail(params: NotificationEmailParams): Promise<boolean> {

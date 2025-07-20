@@ -31,7 +31,7 @@ function getCorsOrigin(): string | string[] {
   }
   
   // Development fallback - clearly marked
-  return process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173.js';
+  return process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173';
 }
 
 // Secure session secret configuration - no insecure defaults in production  
@@ -47,7 +47,7 @@ function getSessionSecret(): string {
   
   // Development fallback - clearly marked as insecure
   console.warn('⚠️  Using development SESSION_SECRET - NOT suitable for production');
-  return process.env.SESSION_SECRET || 'nestmap-dev-secret-INSECURE.js';
+  return process.env.SESSION_SECRET || 'nestmap-dev-secret-INSECURE';
 }
 
 // Database configuration

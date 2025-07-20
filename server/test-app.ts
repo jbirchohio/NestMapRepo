@@ -1,17 +1,17 @@
-import 'dotenv/config.js';
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import apiRoutes from "./routes/index.js";
+import apiRoutes from "./routes/index";
 
 // Security middleware imports
-import { preventSQLInjection, configureCORS } from "./middleware/secureAuth.js";
+import { preventSQLInjection, configureCORS } from "./middleware/secureAuth";
 import { 
   apiVersioning, 
   tieredRateLimit, 
   monitorEndpoints, 
   authenticateApiKey 
-} from "./middleware/api-security.js";
+} from "./middleware/api-security";
 
 // Rate limiting
 import { 
@@ -19,23 +19,23 @@ import {
   authRateLimit, 
   organizationRateLimit, 
   endpointRateLimit 
-} from "./middleware/comprehensive-rate-limiting.js";
+} from "./middleware/comprehensive-rate-limiting";
 
 // Organization and authentication
 import { 
   injectOrganizationContext, 
   resolveDomainOrganization, 
   validateOrganizationAccess 
-} from "./middleware/organizationScoping.js";
+} from "./middleware/organizationScoping";
 
 // Error handling
-import { globalErrorHandler } from "./middleware/globalErrorHandler.js";
+import { globalErrorHandler } from "./middleware/globalErrorHandler";
 
 // Authentication
-import { unifiedAuthMiddleware } from "./middleware/secureAuth.js";
+import { unifiedAuthMiddleware } from "./middleware/secureAuth";
 
 // Request/response processing
-import { caseConversionMiddleware } from "./middleware/caseConverter.js";
+import { caseConversionMiddleware } from "./middleware/caseConverter";
 
 const app = express();
 

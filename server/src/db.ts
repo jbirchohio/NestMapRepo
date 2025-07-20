@@ -7,25 +7,37 @@ import * as schema from "./db/schema";
 // For now, use empty object to avoid import issues
 const superadminSchema = {};
 
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error(
-    "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set. Did you forget to configure Supabase?",
-  );
+// Check if Supabase credentials are available (allow graceful degradation)
+const hasSupabaseCredentials = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!hasSupabaseCredentials) {
+  console.warn('⚠️  Supabase credentials not found in src/db.ts - database features will be limited');
 }
 
-// Create Supabase client for auth and realtime features
-export const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Create Supabase client for auth and realtime features (only if credentials are available)
+export const supabase = hasSupabaseCredentials 
+  ? createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  : null;
 
-// Extract database URL from Supabase
-const supabaseUrl = new URL(process.env.SUPABASE_URL);
-const databaseUrl = `postgresql://postgres.${supabaseUrl.hostname.split('.')[0]}:${process.env.SUPABASE_DB_PASSWORD}@${supabaseUrl.hostname}:5432/postgres`;
+// Create database connection only if credentials are available
+let db: any = null;
+let client: any = null;
 
-// Create PostgreSQL connection for Drizzle
-const client = postgres(databaseUrl, { prepare: false });
-export const db = drizzle(client, { schema: { ...schema, ...superadminSchema } });
+if (hasSupabaseCredentials && process.env.SUPABASE_DB_PASSWORD) {
+  try {
+    // Extract database URL from Supabase
+    const supabaseUrl = new URL(process.env.SUPABASE_URL!);
+    const databaseUrl = `postgresql://postgres.${supabaseUrl.hostname.split('.')[0]}:${process.env.SUPABASE_DB_PASSWORD}@${supabaseUrl.hostname}:5432/postgres`;
+    
+    // Create PostgreSQL connection for Drizzle
+    client = postgres(databaseUrl, { prepare: false });
+    db = drizzle(client, { schema: { ...schema, ...superadminSchema } });
+  } catch (error) {
+    console.error('❌ Error creating database connection in src/db.ts:', error);
+  }
+}
+
+export { db };
 
 // For backward compatibility
 export const pool = {

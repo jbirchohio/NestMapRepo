@@ -1,7 +1,7 @@
 import { OpenAI } from 'openai';
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { trips, organizations, users } from '../db/schema.js';
+import { db } from '../db-connection';
+import { trips, organizations, users } from '../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 const openai = new OpenAI({

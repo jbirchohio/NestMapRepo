@@ -3,9 +3,9 @@
  * Tracks all user actions and system events for security and compliance
  */
 
-import { db } from '../db/db.js';
-import { auditLogs } from '../db/auditLog.js';
-import { logger } from '../utils/logger.js';
+import { db } from '../db/db';
+import { auditLogs } from '../db/auditLog';
+import { logger } from '../utils/logger';
 import { Request } from 'express';
 
 export interface AuditLogEntry {

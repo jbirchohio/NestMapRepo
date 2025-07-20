@@ -1,5 +1,5 @@
-import { stringify } from 'csv-stringify/sync.js';
-import { createEvents } from 'ics.js';
+import { stringify } from 'csv-stringify/sync';
+import { createEvents } from 'ics';
 
 // Converts a trip object to CSV string
 export function exportTripToCSV(trip: any): string {

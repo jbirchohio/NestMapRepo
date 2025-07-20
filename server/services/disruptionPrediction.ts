@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import OpenAI from 'openai';
-import { getWeatherForecast } from '../weather.js';
+import { getWeatherForecast } from '../weather';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

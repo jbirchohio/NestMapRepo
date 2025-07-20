@@ -1,7 +1,7 @@
-import { db } from './db-connection.js';
-import { trips, activities, users, organizations } from '../shared/src/schema.js';
+import { db } from './db-connection';
+import { trips, activities, users, organizations } from '../shared/src/schema';
 import { eq, and, gte, lte, sum, count } from 'drizzle-orm';
-import { auditLogger } from './auditLogger.js';
+import { auditLogger } from './auditLogger';
 
 export interface PolicyRule {
   id: string;

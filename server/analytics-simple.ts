@@ -1,5 +1,5 @@
-import { db } from "./db.js";
-import { trips, users, activities } from "./db/schema.js";
+import { db } from "./db";
+import { trips, users, activities } from "./db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 
 export interface SimpleAnalyticsData {

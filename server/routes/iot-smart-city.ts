@@ -1,8 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
-import IoTSmartCityIntegrationService from '../services/iotSmartCityIntegration.js';
-import { secureAuth } from '../middleware/secureAuth.js';
-import { organizationScoping } from '../middleware/organizationScoping.js';
+import IoTSmartCityIntegrationService from '../services/iotSmartCityIntegration';
+import { secureAuth } from '../middleware/secureAuth';
+import { organizationScoping } from '../middleware/organizationScoping';
 
 const router = express.Router();
 const iotService = new IoTSmartCityIntegrationService();

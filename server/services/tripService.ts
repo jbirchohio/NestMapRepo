@@ -1,4 +1,4 @@
-import { db } from '../db.js';
+import { db } from '../db';
 
 export async function getTripById(tripId: string, organizationId?: string) {
   // Example: Replace with real DB query

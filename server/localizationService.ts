@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { auditLogger } from './auditLogger.js';
+import { auditLogger } from './auditLogger';
 
 export interface LocalizationConfig {
   organizationId: number;

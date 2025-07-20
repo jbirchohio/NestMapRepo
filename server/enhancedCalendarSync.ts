@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import axios from 'axios';
-import { db } from './db-connection.js';
-import { users, trips, activities } from '../shared/src/schema.js';
+import { db } from './db-connection';
+import { users, trips, activities } from '../shared/src/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
-import { auditLogger } from './auditLogger.js';
+import { auditLogger } from './auditLogger';
 import crypto from 'crypto';
 
 export interface CalendarProvider {

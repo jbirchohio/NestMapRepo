@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { predictiveBusinessIntelligenceService } from '../services/predictiveBusinessIntelligence.js';
-import { authenticate } from '../middleware/secureAuth.js';
-import { addOrganizationScope } from '../middleware/organizationScoping.js';
+import { predictiveBusinessIntelligenceService } from '../services/predictiveBusinessIntelligence';
+import { authenticate } from '../middleware/secureAuth';
+import { addOrganizationScope } from '../middleware/organizationScoping';
 
 const router = Router();
 

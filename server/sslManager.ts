@@ -1,6 +1,6 @@
-import crypto from 'crypto.js';
-import fs from 'fs/promises.js';
-import path from 'path.js';
+import crypto from 'crypto';
+import fs from 'fs/promises';
+import path from 'path';
 
 export interface SSLCertificate {
   domain: string;
@@ -21,8 +21,8 @@ export interface ACMEAccount {
  * Let's Encrypt ACME v2 client for SSL certificate management
  */
 export class SSLManager {
-  private readonly acmeDirectoryUrl = 'https://acme-v02.api.letsencrypt.org/directory.js';
-  private readonly stagingDirectoryUrl = 'https://acme-staging-v02.api.letsencrypt.org/directory.js';
+  private readonly acmeDirectoryUrl = 'https://acme-v02.api.letsencrypt.org/directory';
+  private readonly stagingDirectoryUrl = 'https://acme-staging-v02.api.letsencrypt.org/directory';
   private readonly isProduction: boolean;
 
   constructor(isProduction = false) {

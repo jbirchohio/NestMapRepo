@@ -1,8 +1,8 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
-import { dbService } from '../services/database.service.js';
-import { logger } from './logger.js';
+import { dbService } from '../services/database.service';
+import { logger } from './logger';
 
-type OrderDirection = 'asc' | 'desc.js';
+type OrderDirection = 'asc' | 'desc';
 
 interface QueryOptions<T> {
   where?: Record<string, any>;

@@ -1,6 +1,6 @@
-import { QueryBuilder, createQueryBuilder } from '../utils/query-builder.js';
-import { dbService } from '../services/database.service.js';
-import { logger } from '../utils/logger.js';
+import { QueryBuilder, createQueryBuilder } from '../utils/query-builder';
+import { dbService } from '../services/database.service';
+import { logger } from '../utils/logger';
 
 export abstract class BaseDAL<T> {
   protected abstract table: any;

@@ -1,9 +1,9 @@
 import { Inject } from '@nestjs/common';
 import { Logger } from '@nestjs/common/services/logger.service';
-import { BookingRepository } from '../repositories/booking/booking.repository.interface.js';
-import Booking from '../../../../shared/types/bookings.js';
-import { BookingConfirmationDetails } from '../interfaces/booking.interfaces.js';
-import { Injectable } from '@nestjs/common/decorators/core/index.js';
+import { BookingRepository } from '../repositories/booking/booking.repository.interface';
+import Booking from '../../../../shared/types/bookings';
+import { BookingConfirmationDetails } from '../interfaces/booking.interfaces';
+import { Injectable } from '@nestjs/common/decorators/core/index';
 
 /**
  * Service for managing bookings

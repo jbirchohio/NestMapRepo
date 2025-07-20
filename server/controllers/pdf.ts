@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { generatePdfBuffer } from "../utils/pdfHelper.js";
-import { storage } from "../storage.js";
+import { generatePdfBuffer } from "../utils/pdfHelper";
+import { storage } from "../storage";
 
 /**
  * PDF Export Controller - Fixed to return downloadable PDFs

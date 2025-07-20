@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { organizations, users } from '../db/schema.js';
+import { db } from '../db-connection';
+import { organizations, users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import axios from 'axios';
 

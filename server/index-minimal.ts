@@ -1,18 +1,18 @@
-import 'dotenv/config.js';
+import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import http from 'http';
-import { logger } from './utils/logger.js';
+import { logger } from './utils/logger';
 
 // Import authentication middleware
-import { authenticate } from './middleware/secureAuth.js';
+import { authenticate } from './middleware/secureAuth';
 
 // Import basic route handlers
-import authRoutes from './routes/auth-simple.js';
-import flightRoutes from './routes/flights.js';
-import organizationRoutes from './routes/organizations.js';
-import tripRoutes from './routes/trips.js';
+import authRoutes from './routes/auth-simple';
+import flightRoutes from './routes/flights';
+import organizationRoutes from './routes/organizations';
+import tripRoutes from './routes/trips';
 
 // Create Express app
 const app = express();

@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { db } from './db.js';
-import { users, organizations, userRoleEnum } from './db/schema.js';
+import { db } from './db';
+import { users, organizations, userRoleEnum } from './db/schema';
 import { eq, and } from 'drizzle-orm';
-import { auditLogger } from './auditLogger.js';
+import { auditLogger } from './auditLogger';
 
 type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 
@@ -15,7 +15,7 @@ declare module 'express-session' {
 
 export interface SSOConfig {
   organizationId: string;
-  provider: 'saml' | 'oauth' | 'oidc.js';
+  provider: 'saml' | 'oauth' | 'oidc';
   entityId: string;
   ssoUrl: string;
   certificate: string;
@@ -208,7 +208,7 @@ export class SSOManager {
       throw new Error('SSO not configured');
     }
 
-    const baseUrl = process.env.BASE_URL || 'https://your-domain.com.js';
+    const baseUrl = process.env.BASE_URL || 'https://your-domain.com';
     
     return `<?xml version="1.0" encoding="UTF-8"?>
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
@@ -286,7 +286,7 @@ export class SSOManager {
     try {
       const decoded = Buffer.from(state, 'base64').toString();
       const stateData = JSON.parse(decoded);
-      return stateData.organizationId || '.js';
+      return stateData.organizationId || ''
     } catch (error) {
       console.error('Error parsing state:', error);
       throw new Error('Invalid state parameter');
@@ -315,15 +315,15 @@ export class SSOManager {
     if (groups.some(g => ['admin', 'administrator'].includes(g.toLowerCase()))) {
       return 'admin';
     } else if (groups.some(g => ['manager', 'lead'].includes(g.toLowerCase()))) {
-      return 'manager.js';
+      return 'manager';
     }
     return 'user';
   }
 
   private generateSAMLRequest(config: SSOConfig, returnUrl?: string): string {
-    const baseUrl = process.env.BASE_URL || 'https://your-domain.com.js';
+    const baseUrl = process.env.BASE_URL || 'https://your-domain.com';
     const acsUrl = `${baseUrl}/sso/acs/${config.organizationId}`;
-    const relayState = returnUrl ? encodeURIComponent(returnUrl) : '.js';
+    const relayState = returnUrl ? encodeURIComponent(returnUrl) : ''
     
     const request = `<samlp:AuthnRequest 
       xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
@@ -342,7 +342,7 @@ export class SSOManager {
   }
 
   private generateOAuthRequest(config: SSOConfig, returnUrl?: string): string {
-    const baseUrl = process.env.BASE_URL || 'https://your-domain.com.js';
+    const baseUrl = process.env.BASE_URL || 'https://your-domain.com';
     const redirectUri = `${baseUrl}/sso/oauth/callback`;
     const state = Buffer.from(JSON.stringify({ 
       organizationId: config.organizationId, 
@@ -413,7 +413,7 @@ ssoRouter.post('/acs/:organizationId', async (req, res) => {
     req.session.user_id = user.id;
     req.session.organization_id = user.organization_id;
     
-    const redirectUrl = relayState || '/dashboard.js';
+    const redirectUrl = relayState || '/dashboard';
     return res.redirect(redirectUrl);
   } catch (error) {
     console.error('Error processing SAML response:', error);
@@ -440,7 +440,7 @@ ssoRouter.get('/oauth/callback', async (req, res) => {
     req.session.organization_id = user.organization_id;
     
     const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
-    const redirectUrl = stateData.returnUrl || '/dashboard.js';
+    const redirectUrl = stateData.returnUrl || '/dashboard';
     return res.redirect(redirectUrl);
   } catch (error) {
     console.error('Error processing OAuth callback:', error);

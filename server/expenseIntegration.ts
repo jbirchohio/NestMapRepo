@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import axios from 'axios';
-import { db } from './db-connection.js';
-import { auditLogger } from './auditLogger.js';
+import { db } from './db-connection';
+import { auditLogger } from './auditLogger';
 
 export interface ExpenseProvider {
   id: string;

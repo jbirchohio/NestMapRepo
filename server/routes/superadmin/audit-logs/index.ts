@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { requireSuperadmin } from '../../shared/src/schema.js';
-import { getAuditLogs } from './audit-service.js';
+import { requireSuperadmin } from '../../shared/src/schema';
+import { getAuditLogs } from './audit-service';
 
 const router = Router();
 

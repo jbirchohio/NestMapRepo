@@ -1,21 +1,21 @@
 import { Router, type Response, type NextFunction, type RequestHandler, type Request } from 'express';
-import { ParamsDictionary } from 'express-serve-static-core.js';
-import { getAuthContext, requireAuth } from '../utils/authContext.js';
-import { logUserActivity } from '../utils/activityLogger.js';
+import { ParamsDictionary } from 'express-serve-static-core';
+import { getAuthContext, requireAuth } from '../utils/authContext';
+import { logUserActivity } from '../utils/activityLogger';
 
 // Re-export types for backward compatibility
-export type { AuthUser, JWTUser } from '../utils/authContext.js';
+export type { AuthUser, JWTUser } from '../utils/authContext';
 import { z } from 'zod';
-import { v4 as uuidv4 } from 'uuid.js';
+import { v4 as uuidv4 } from 'uuid';
 
 // Import types and schemas
-import type { Activity, ActivityStatus, ActivityType } from '../types/activity.js';
-import { activitySchema, createActivitySchema, updateActivitySchema } from '../types/activity.js';
-import { User } from '../db/schema.js';
+import type { Activity, ActivityStatus, ActivityType } from '../types/activity';
+import { activitySchema, createActivitySchema, updateActivitySchema } from '../types/activity';
+import { User } from '../db/schema';
 
 // Import services
-import activityService from '../services/activity.service.js';
-import { validateOrganizationAccess } from '../middleware/organization.js';
+import activityService from '../services/activity.service';
+import { validateOrganizationAccess } from '../middleware/organization';
 
 // Define JWTUser interface for this file
 interface JWTUser {
@@ -34,7 +34,7 @@ function isJWTUser(user: unknown): user is JWTUser {
   return typeof user === 'object' && user !== null && 
     'id' in user && typeof (user as JWTUser).id === 'string' && 
     'email' in user && typeof (user as JWTUser).email === 'string' && 
-    'role' in user && typeof (user as JWTUser).role === 'string.js';
+    'role' in user && typeof (user as JWTUser).role === 'string';
 }
 
 // Define types for request parameters, body, and query

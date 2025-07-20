@@ -1,4 +1,4 @@
-import webpush from 'web-push.js';
+import webpush from 'web-push';
 
 // Configure VAPID details for web push notifications
 export function configurePushNotifications() {

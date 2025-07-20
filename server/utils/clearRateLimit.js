@@ -1,5 +1,5 @@
 // Emergency rate limit reset utility
-import { clearViolations } from '../middleware/comprehensive-rate-limiting.js';
+import { clearViolations } from '../middleware/comprehensive-rate-limiting';
 
 // Clear violations for the current IP
 const currentIP = '172.31.128.58';

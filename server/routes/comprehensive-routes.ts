@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { roleBasedDashboard } from '../services/role-based-dashboard.js';
-import { securityCompliance } from '../services/security-compliance.js';
-import { advancedAnalytics } from '../services/advanced-analytics.js';
-import { globalScalability } from '../services/global-scalability.js';
-import { authenticate } from '../middleware/secureAuth.js';
-import { injectOrganizationContext } from '../middleware/organizationScoping.js';
-import { validateRequest } from '../middleware/validation.js';
+import { roleBasedDashboard } from '../services/role-based-dashboard';
+import { securityCompliance } from '../services/security-compliance';
+import { advancedAnalytics } from '../services/advanced-analytics';
+import { globalScalability } from '../services/global-scalability';
+import { authenticate } from '../middleware/secureAuth';
+import { injectOrganizationContext } from '../middleware/organizationScoping';
+import { validateRequest } from '../middleware/validation';
 
 const router = Router();
 

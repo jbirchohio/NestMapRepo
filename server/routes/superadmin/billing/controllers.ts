@@ -1,16 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../../db.js';
-import { organizations } from '../../shared/src/schema.js';
-import { auditLogs } from '../../shared/src/schema.js';
+import { db } from '../../db';
+import { organizations } from '../../shared/src/schema';
+import { auditLogs } from '../../shared/src/schema';
 import { eq, sql } from 'drizzle-orm';
-import Stripe from 'stripe.js';
+import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-05-28.basil',
 });
 
-import { logSuperadminAction } from '../audit-logs/audit-service.js';
-import { AuthenticatedRequest } from '../../shared/src/schema.js';
+import { logSuperadminAction } from '../audit-logs/audit-service';
+import { AuthenticatedRequest } from '../../shared/src/schema';
 
 // Get billing overview across all organizations
 export const getBillingOverview = async (req: Request, res: Response) => {
@@ -551,5 +551,5 @@ function getPriceIdForPlan(plan: string): string {
     'enterprise': process.env.STRIPE_ENTERPRISE_PLAN_PRICE_ID || 'price_enterprise_plan',
   };
   
-  return prices[plan] || '.js';
+  return prices[plan] || ''
 }

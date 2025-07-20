@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { trips, insertTripSchema } from '../db/schema.js';
+import { db } from '../db-connection';
+import { trips, insertTripSchema } from '../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 const router = Router();

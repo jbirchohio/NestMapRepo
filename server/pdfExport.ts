@@ -42,7 +42,7 @@ type Trip = {
   destination: string;
   country?: string;
   budget?: number;
-  status?: 'draft' | 'planned' | 'in-progress' | 'completed' | 'cancelled.js';
+  status?: 'draft' | 'planned' | 'in-progress' | 'completed' | 'cancelled';
   tags?: string[];
 };
 
@@ -639,7 +639,7 @@ const htmlTemplate = `
         }
         
         .todo-completed .todo-checkbox::after {
-            content: '✓.js';
+            content: '✓';
             position: absolute;
             top: -2px;
             left: 1px;
@@ -906,8 +906,8 @@ function groupActivitiesByDay(activities: Activity[]) {
     // Sort activities within each day by time
     Object.values(grouped).forEach((day: { date: Date; dayName: string; activities: Activity[] }) => {
         day.activities.sort((a: Activity, b: Activity) => {
-            const timeA = a.time || '00:00.js';
-            const timeB = b.time || '00:00.js';
+            const timeA = a.time || '00:00';
+            const timeB = b.time || '00:00';
             return timeA.localeCompare(timeB);
         });
     });
@@ -1260,7 +1260,7 @@ Handlebars.registerHelper('or', function(this: any, a: any, b: any) {
 
 // Register the formatDate helper
 Handlebars.registerHelper('formatDate', function(this: any, date: string | Date | undefined) {
-  if (!date) return '.js';
+  if (!date) return ''
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('en-US', { 
     year: 'numeric', 

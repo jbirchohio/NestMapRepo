@@ -3,10 +3,7 @@ import Joyride, {
   Step, 
   CallBackProps, 
   STATUS, 
-  EVENTS, 
-  ACTIONS,
-  TooltipRenderProps,
-  LIFECYCLE
+  EVENTS,
 } from 'react-joyride';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,12 +18,13 @@ import {
 } from 'lucide-react';
 import { useOnboarding, UserRole } from '@/contexts/OnboardingContext';
 
-interface TourStep extends Step {
+interface TourStep extends Omit<Step, 'content'> {
   title: string;
   content: string;
   stepId: string;
   role?: UserRole[];
   optional?: boolean;
+  target: string | HTMLElement | Element | null;
 }
 
 // Define tour steps for different roles
@@ -145,8 +143,7 @@ interface TourOverlayProps {
 }
 
 // Custom Tooltip Component
-const CustomTooltip: React.FC<TooltipRenderProps> = ({
-  continuous,
+const CustomTooltip = ({
   index,
   step,
   backProps,
@@ -288,7 +285,7 @@ export const TourOverlay: React.FC<TourOverlayProps> = ({
   }, [isActive, tourKey, steps.length, trackEvent]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, type, index, action, lifecycle } = data;
+    const { status, type, index, action } = data;
 
     if (type === EVENTS.STEP_AFTER) {
       trackEvent('tour_step_completed', { 

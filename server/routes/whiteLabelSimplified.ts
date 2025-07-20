@@ -1,10 +1,10 @@
 import type { Express, Response } from "express";
-import { db } from "../db.js";
-import { organizations, users, whiteLabelSettings } from "../db/schema.js";
+import { db } from "../db";
+import { organizations, users, whiteLabelSettings } from "../db/schema";
 import { eq, and } from "drizzle-orm";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import type { AuthenticatedRequest } from '../src/types/auth-user.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import type { AuthenticatedRequest } from '../src/types/auth-user';
 
 
 export function registerSimplifiedWhiteLabelRoutes(app: Express) {
@@ -101,7 +101,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      const plan = organization.plan || 'basic.js';
+      const plan = organization.plan || 'basic';
       const canAccessWhiteLabel = ['pro', 'business', 'enterprise'].includes(plan);
       const upgradeRequired = !canAccessWhiteLabel;
 
@@ -201,7 +201,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      const plan = organization.plan || 'basic.js';
+      const plan = organization.plan || 'basic';
       const hasAccess = ['pro', 'business', 'enterprise'].includes(plan);
 
       if (!hasAccess) {
@@ -305,7 +305,7 @@ export function registerSimplifiedWhiteLabelRoutes(app: Express) {
         return res.status(404).json({ error: "Organization not found" });
       }
 
-      const plan = organization.plan || 'starter.js';
+      const plan = organization.plan || 'starter';
       const hasAccess = ['professional', 'enterprise'].includes(plan);
       const hasConfigured = organization.white_label_enabled && 
         (organization.primary_color || organization.logo_url);

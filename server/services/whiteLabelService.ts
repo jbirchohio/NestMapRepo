@@ -3,10 +3,10 @@
  * Handles dynamic organization-specific theming and branding
  */
 
-import { db } from '../db/db.js';
-import { organizations } from '../db/schema.js';
+import { db } from '../db/db';
+import { organizations } from '../db/schema';
 import { eq } from 'drizzle-orm';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger';
 
 export interface WhiteLabelTheme {
   enabled: boolean;

@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { enterpriseAnalytics } from '../services/enterprise-analytics.js';
-import { enterpriseIntegrationHub } from '../services/enterprise-integration-hub.js';
-import { roleBasedExperience } from '../services/role-based-experience.js';
-import { mobileExperience } from '../services/mobile-experience.js';
-import { authenticate } from '../middleware/secureAuth.js';
-import { validateRequest } from '../middleware/validation.js';
-import { injectOrganizationContext } from '../middleware/organizationScoping.js';
+import { enterpriseAnalytics } from '../services/enterprise-analytics';
+import { enterpriseIntegrationHub } from '../services/enterprise-integration-hub';
+import { roleBasedExperience } from '../services/role-based-experience';
+import { mobileExperience } from '../services/mobile-experience';
+import { authenticate } from '../middleware/secureAuth';
+import { validateRequest } from '../middleware/validation';
+import { injectOrganizationContext } from '../middleware/organizationScoping';
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Request as ExpressRequest } from 'express';
-import { User } from '../../shared/src/schema.js';
+import { User } from '../../shared/src/schema';
 
 // This file should be used to import the express augmentation
 // The actual global augmentation is in server/@types/express/index.d.ts

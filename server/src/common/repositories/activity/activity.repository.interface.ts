@@ -1,6 +1,6 @@
-import Activity from '../../db/schema.js';
+import Activity from '../../db/schema';
 type ActivityType = typeof Activity;
-import { BaseRepository } from '../base.repository.interface.js';
+import { BaseRepository } from '../base.repository.interface';
 
 export interface ActivityRepository extends BaseRepository<ActivityType, string, Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>>> {
   findById(id: string): Promise<ActivityType | null>;

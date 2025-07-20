@@ -1,2 +1,2 @@
 // Import the consolidated Express type augmentation
-import './express/index.js';
+import './express/index';

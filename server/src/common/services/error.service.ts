@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common/services/logger.service';
-import { ApiError, ErrorType, createApiError } from '../types/index.js';
-import { Injectable } from '@nestjs/common/decorators/index.js';
+import { ApiError, ErrorType, createApiError } from '../types/index';
+import { Injectable } from '@nestjs/common/decorators/index';
 
 /**
  * Centralized service for error handling and creation

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db.js';
-import { auditLogs } from '../db/schema.js';
-import { AuthUser } from '../src/types/auth-user.js';
+import { db } from '../db';
+import { auditLogs } from '../db/schema';
+import { AuthUser } from '../src/types/auth-user';
 
 // Extend Request interface for this middleware
 interface AuthenticatedRequest extends Request {

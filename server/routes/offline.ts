@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { offlineCapabilitiesService } from '../services/offlineCapabilities.js';
-import { authenticate } from '../middleware/secureAuth.js';
-import { addOrganizationScope } from '../middleware/organizationScoping.js';
+import { offlineCapabilitiesService } from '../services/offlineCapabilities';
+import { authenticate } from '../middleware/secureAuth';
+import { addOrganizationScope } from '../middleware/organizationScoping';
 
 const router = Router();
 

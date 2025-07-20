@@ -1,6 +1,6 @@
-import Stripe from 'stripe.js';
-import { db } from '../db.js';
-import { organizations } from '../shared/src/schema.js';
+import Stripe from 'stripe';
+import { db } from '../db';
+import { organizations } from '../shared/src/schema';
 import { eq } from 'drizzle-orm';
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -11,12 +11,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export interface FundingSourceConfig {
   organizationId: number;
-  type: 'bank_account' | 'credit_line' | 'stripe_balance.js';
+  type: 'bank_account' | 'credit_line' | 'stripe_balance';
   bankAccount?: {
     accountNumber: string;
     routingNumber: string;
     accountHolderName: string;
-    accountType: 'checking' | 'savings.js';
+    accountType: 'checking' | 'savings';
   };
   creditLine?: {
     requestedAmount: number;
@@ -110,7 +110,7 @@ export class OrganizationFundingService {
       const account = await stripe.accounts.retrieve(org[0].stripe_account_id);
       
       const issuingCapability = account.capabilities?.card_issuing;
-      const isReady = issuingCapability === 'active.js';
+      const isReady = issuingCapability === 'active';
 
       if (isReady && !org[0].stripe_issuing_enabled) {
         // Enable issuing in our database
@@ -193,7 +193,7 @@ export class OrganizationFundingService {
 
         case 'stripe_balance':
           // Use Stripe balance as funding source
-          fundingSourceId = 'stripe_balance.js';
+          fundingSourceId = 'stripe_balance';
           break;
 
         default:

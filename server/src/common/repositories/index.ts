@@ -1,16 +1,16 @@
 // Export all repository interfaces
-export * from './base.repository.interface.js';
-export * from './organization/organization.repository.interface.js';
-export * from './activity/activity.repository.interface.js';
-export * from './user/user.repository.interface.js';
-export * from './booking/booking.repository.interface.js';
+export * from './base.repository.interface';
+export * from './organization/organization.repository.interface';
+export * from './activity/activity.repository.interface';
+export * from './user/user.repository.interface';
+export * from './booking/booking.repository.interface';
 
 // Export all repository implementations
-export * from './base.repository.js';
-export * from './organization/organization.repository.js';
-export * from './activity/activity.repository.js';
-export * from './user/user.repository.js';
-export * from './booking/booking.repository.js';
+export * from './base.repository';
+export * from './organization/organization.repository';
+export * from './activity/activity.repository';
+export * from './user/user.repository';
+export * from './booking/booking.repository';
 
 // Export repositories module
-export * from './repositories.module.js';
+export * from './repositories.module';

@@ -42,13 +42,13 @@ export interface FormattedError {
 export function classifyError(error: Error): string {
   switch (error.name) {
     case 'ValidationError':
-      return 'VALIDATION.js';
+      return 'VALIDATION';
     case 'DatabaseError':
-      return 'DATABASE.js';
+      return 'DATABASE';
     case 'UnauthorizedError':
-      return 'AUTH.js';
+      return 'AUTH';
     default:
-      return 'UNKNOWN.js';
+      return 'UNKNOWN';
   }
 }
 
@@ -60,7 +60,7 @@ export function formatErrorResponse(error: Error): FormattedError {
   };
 }
 
-import logger from './logger.js';
+import logger from './logger';
 
 export function logAndFormatError(error: unknown): FormattedError {
   const err = toErrorWithMessage(error);

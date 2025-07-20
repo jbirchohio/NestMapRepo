@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
   AlertTriangle, 
   CheckCircle, 
   XCircle, 
-  Clock, 
+ 
   FileText,
   Settings,
   TrendingUp,
@@ -74,28 +74,34 @@ export default function PolicyCompliancePanel() {
   // Fetch compliance metrics
   const { data: metrics, isLoading: metricsLoading } = useQuery<ComplianceMetrics>({
     queryKey: ['/api/compliance/metrics'],
-    queryFn: () => apiRequest('/api/compliance/metrics')
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/compliance/metrics');
+      return response.data;
+    }
   });
 
   // Fetch policy rules
   const { data: rules, isLoading: rulesLoading, refetch: refetchRules } = useQuery<PolicyRule[]>({
     queryKey: ['/api/policies/rules'],
-    queryFn: () => apiRequest('/api/policies/rules')
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/policies/rules');
+      return response.data;
+    }
   });
 
   // Fetch violations
   const { data: violations, isLoading: violationsLoading } = useQuery<PolicyViolation[]>({
     queryKey: ['/api/compliance/violations'],
-    queryFn: () => apiRequest('/api/compliance/violations')
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/compliance/violations');
+      return response.data;
+    }
   });
 
   // Toggle rule enabled/disabled
   const toggleRuleMutation = useMutation({
     mutationFn: ({ ruleId, enabled }: { ruleId: string; enabled: boolean }) =>
-      apiRequest(`/api/policies/rules/${ruleId}`, {
-        method: 'PATCH',
-        body: { enabled }
-      }),
+      apiRequest('PATCH', `/api/policies/rules/${ruleId}`, { enabled }),
     onSuccess: () => {
       toast({
         title: 'Policy Updated',
@@ -115,9 +121,7 @@ export default function PolicyCompliancePanel() {
   // Resolve violation
   const resolveViolationMutation = useMutation({
     mutationFn: (violationId: string) =>
-      apiRequest(`/api/compliance/violations/${violationId}/resolve`, {
-        method: 'POST'
-      }),
+      apiRequest('POST', `/api/compliance/violations/${violationId}/resolve`),
     onSuccess: () => {
       toast({
         title: 'Violation Resolved',

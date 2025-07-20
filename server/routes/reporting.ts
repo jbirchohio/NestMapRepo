@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { eq, and, desc, gte, lte, sql, count } from 'drizzle-orm';
-import { db } from '../db.js';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { db } from '../db';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { 
   trips, 
   expenses, 
@@ -11,7 +11,7 @@ import {
   organizations,
   approvalRequests,
   activities
-} from '../shared/src/schema.js';
+} from '../shared/src/schema';
 
 const router = Router();
 
@@ -225,24 +225,24 @@ router.get('/export/:reportType', async (req, res) => {
     const { format = 'csv', startDate, endDate } = req.query;
 
     let data: any[] = [];
-    let filename = '.js';
+    let filename = ''
 
     switch (reportType) {
       case 'trips':
         data = await exportTripsData(organizationId, startDate as string, endDate as string);
-        filename = 'trips-export.js';
+        filename = 'trips-export';
         break;
       case 'expenses':
         data = await exportExpensesData(organizationId, startDate as string, endDate as string);
-        filename = 'expenses-export.js';
+        filename = 'expenses-export';
         break;
       case 'bookings':
         data = await exportBookingsData(organizationId, startDate as string, endDate as string);
-        filename = 'bookings-export.js';
+        filename = 'bookings-export';
         break;
       case 'compliance':
         data = await exportComplianceData(organizationId, startDate as string, endDate as string);
-        filename = 'compliance-export.js';
+        filename = 'compliance-export';
         break;
       default:
         return res.status(400).json({ error: "Invalid report type" });
@@ -690,7 +690,7 @@ async function exportComplianceData(organizationId: number, startDate?: string, 
 }
 
 function convertToCSV(data: any[]): string {
-  if (!data.length) return '.js';
+  if (!data.length) return ''
   
   const headers = Object.keys(data[0]).join(',');
   const rows = data.map(row => 

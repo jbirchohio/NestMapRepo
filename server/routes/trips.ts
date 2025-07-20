@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { db } from '../db-connection.js';
-import { trips, insertTripSchema } from '../db/schema.js';
-import { authenticate } from '../middleware/secureAuth.js';
-import { injectOrganizationContext } from '../middleware/organizationScoping.js';
+import { db } from '../db-connection';
+import { trips, insertTripSchema } from '../db/schema';
+import { authenticate } from '../middleware/secureAuth';
+import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { eq, and, desc } from 'drizzle-orm';
-import { logUserActivity } from '../utils/activityLogger.js';
-import { tripController } from '../src/trips/trip.container.js';
+import { logUserActivity } from '../utils/activityLogger';
+import { tripController } from '../src/trips/trip.container';
 
 // Zod schema for validating numeric ID parameters
 const idParamSchema = z.object({

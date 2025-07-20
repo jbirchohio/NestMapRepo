@@ -1,15 +1,15 @@
 import { Router } from "express";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from "zod";
 import OpenAI from "openai";
-import { db } from "../db.js";
-import { trips, activities } from "../db/schema.js";
+import { db } from "../db";
+import { trips, activities } from "../db/schema";
 import { eq, and } from "drizzle-orm";
-import { findLocation } from "../aiLocations.js";
-import { fetchEarthquakeAlerts } from "../disasterMonitor.js";
-import { forecastBudget } from "../budgetForecast.js";
-import { reconcilePreferences, type TravelerPreference, generateConsensusItinerary } from "../groupReconciler.js";
+import { findLocation } from "../aiLocations";
+import { fetchEarthquakeAlerts } from "../disasterMonitor";
+import { forecastBudget } from "../budgetForecast";
+import { reconcilePreferences, type TravelerPreference, generateConsensusItinerary } from "../groupReconciler";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -172,9 +172,9 @@ router.post("/suggest-food", async (req, res) => {
 
     const budgetText = budget_range === 'budget' ? 'affordable, budget-friendly' :
                      budget_range === 'mid-range' ? 'mid-range pricing' :
-                     budget_range === 'luxury' ? 'high-end, luxury' : 'varied price ranges.js';
+                     budget_range === 'luxury' ? 'high-end, luxury' : 'varied price ranges';
 
-    const cuisineText = cuisine_type ? ` specializing in ${cuisine_type} cuisine` : '.js';
+    const cuisineText = cuisine_type ? ` specializing in ${cuisine_type} cuisine` : ''
 
     const prompt = `Recommend 5 excellent restaurants in ${city}${cuisineText} with ${budgetText}. 
 
@@ -284,8 +284,8 @@ router.post("/optimize-itinerary", async (req, res) => {
       .map(activity => `- ${activity.title} (${activity.date.toISOString().split('T')[0]}) at ${activity.location_name}: ${activity.notes || 'No description'}`)
       .join('\n');
 
-    const travelStyle = preferences?.travel_style || 'balanced.js';
-    const interests = preferences?.interests?.join(', ') || 'general sightseeing.js';
+    const travelStyle = preferences?.travel_style || 'balanced';
+    const interests = preferences?.interests?.join(', ') || 'general sightseeing';
 
     const prompt = `Analyze and optimize this travel itinerary:
 
@@ -360,7 +360,7 @@ router.post("/suggest-activities", async (req, res) => {
     }
 
     const interestsText = Array.isArray(interests) ? interests.join(', ') : (interests || 'general sightseeing');
-    const durationText = duration ? `${duration} days` : 'a few days.js';
+    const durationText = duration ? `${duration} days` : 'a few days';
 
     const prompt = `Suggest 6 excellent activities and attractions in ${city} for someone interested in ${interestsText}, planning to spend ${durationText} there.
 

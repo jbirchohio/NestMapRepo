@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { disruptionPredictionService } from '../services/disruptionPrediction.js';
-import { authenticate } from '../middleware/secureAuth.js';
-import { addOrganizationScope } from '../middleware/organizationScoping.js';
+import { disruptionPredictionService } from '../services/disruptionPrediction';
+import { authenticate } from '../middleware/secureAuth';
+import { addOrganizationScope } from '../middleware/organizationScoping';
 
 const router = Router();
 

@@ -1,12 +1,12 @@
 import { Express, Router, Request, Response, NextFunction, RequestHandler, RequestHandlerParams } from "express";
-import { db } from "../db.js";
-import { trips, bookings, activities } from "../db/schema.js";
+import { db } from "../db";
+import { trips, bookings, activities } from "../db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
-import { duffelProvider } from "../duffelProvider.js";
-import { AuthUser } from '../src/types/auth-user.js';
-import { asyncHandler } from '../utils/routeHelpers.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import { duffelProvider } from "../duffelProvider";
+import { AuthUser } from '../src/types/auth-user';
+import { asyncHandler } from '../utils/routeHelpers';
 
 // Extend Express types to include our custom properties
 declare global {

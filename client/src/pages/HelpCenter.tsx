@@ -5,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import * as Accordion from '@radix-ui/react-accordion';
-import { ChevronDown } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/hooks/use-toast';
 import { 
   HelpCircle, 
@@ -211,7 +210,7 @@ export default function HelpCenter() {
                   </CardHeader>
                   <CardContent>
                     <div className="w-full">
-                      <Accordion.Root
+                      <Accordion
                         type="single"
                         collapsible
                         className="w-full"
@@ -220,26 +219,21 @@ export default function HelpCenter() {
                         {category.questions.map((qa, qaIndex) => {
                           const itemValue = `item-${index}-${qaIndex}`;
                           return (
-                            <Accordion.Item 
+                            <AccordionItem 
                               key={itemValue} 
                               value={itemValue}
                               className="border-b"
                             >
-                              <Accordion.Header className="flex">
-                                <Accordion.Trigger className="flex flex-1 items-center justify-between py-4 font-medium transition-all hover:no-underline text-left">
-                                  <span className="flex-1 text-left">{qa.question}</span>
-                                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                                </Accordion.Trigger>
-                              </Accordion.Header>
-                              <Accordion.Content className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                                <div className="pb-4 pt-0 text-slate-600 dark:text-slate-400">
-                                  {qa.answer}
-                                </div>
-                              </Accordion.Content>
-                            </Accordion.Item>
+                              <AccordionTrigger className="py-4 font-medium">
+                                {qa.question}
+                              </AccordionTrigger>
+                              <AccordionContent className="text-slate-600 dark:text-slate-400">
+                                {qa.answer}
+                              </AccordionContent>
+                            </AccordionItem>
                           );
                         })}
-                      </Accordion.Root>
+                      </Accordion>
                     </div>
                   </CardContent>
                 </Card>

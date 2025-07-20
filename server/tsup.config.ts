@@ -34,7 +34,6 @@ export default defineConfig({
     'nodemailer',
     'puppeteer',
     'uuid',
-    'ioredis',
     'csv-stringify',
     'dotenv'
   ],

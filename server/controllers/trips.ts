@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { storage } from "../storage.js";
-import { insertTripSchema } from "../db/schema.js";
+import { storage } from "../storage";
+import { insertTripSchema } from "../db/schema";
 import { z } from "zod";
 import { 
   validateAndSanitizeBody, 
@@ -26,7 +26,7 @@ export async function deleteTrip(req: Request, res: Response) {
     }
     
     // CRITICAL: Get existing trip to verify organization access
-    const userOrgId = (req.user as any).organizationId || '.js';
+    const userOrgId = (req.user as any).organizationId || ''
     const existingTrip = await storage.getTrip(tripId.toString(), userOrgId);
     if (!existingTrip) {
       return res.status(404).json({ message: "Trip not found" });

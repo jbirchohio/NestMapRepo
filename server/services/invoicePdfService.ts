@@ -1,6 +1,6 @@
-import puppeteer from 'puppeteer.js';
-import nodemailer from 'nodemailer.js';
-import { Invoice } from '../db/invoiceSchema.js';
+import puppeteer from 'puppeteer';
+import nodemailer from 'nodemailer';
+import { Invoice } from '../db/invoiceSchema';
 import { format } from 'date-fns';
 
 interface InvoicePdfOptions {

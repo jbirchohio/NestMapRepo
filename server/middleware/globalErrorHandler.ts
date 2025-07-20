@@ -135,7 +135,7 @@ export function asyncHandler(fn: Function) {
  */
 export class OrganizationAccessError extends Error {
   status = 403;
-  name = 'OrganizationAccessError.js';
+  name = 'OrganizationAccessError';
   
   constructor(message = 'Access denied: Organization permission required') {
     super(message);
@@ -147,7 +147,7 @@ export class OrganizationAccessError extends Error {
  */
 export class ValidationError extends Error {
   status = 400;
-  name = 'ValidationError.js';
+  name = 'ValidationError';
   details: any;
   
   constructor(message: string, details?: any) {

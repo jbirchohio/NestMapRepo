@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import Stripe from 'stripe.js';
-import { db } from '../db.js';
+import Stripe from 'stripe';
+import { db } from '../db';
 import { eq } from 'drizzle-orm';
-import { NodemailerEmailService } from '../src/email/services/nodemailer-email.service.js';
-import { ConfigService } from '@nestjs/config.js';
-import { invoices } from '../db/invoiceSchema.js';
-import { organizations } from '../db/schema.js';
-import { stripe } from '../stripe.js';
+import { NodemailerEmailService } from '../src/email/services/nodemailer-email.service';
+import { ConfigService } from '@nestjs/config';
+import { invoices } from '../db/invoiceSchema';
+import { organizations } from '../db/schema';
+import { stripe } from '../stripe';
 
 // Extend the Express Request type to include rawBody
 declare global {
@@ -27,7 +27,7 @@ declare global {
       SMTP_USER?: string;
       SMTP_PASSWORD?: string;
       FRONTEND_URL?: string;
-      NODE_ENV?: 'development' | 'production' | 'test.js';
+      NODE_ENV?: 'development' | 'production' | 'test';
     }
   }
 }
@@ -295,13 +295,13 @@ async function handleCapabilityUpdated(capability: Stripe.Capability) {
 
     switch (capability.id) {
       case 'card_issuing':
-        updateData.stripe_issuing_enabled = capability.status === 'active.js';
+        updateData.stripe_issuing_enabled = capability.status === 'active';
         break;
       case 'card_payments':
-        updateData.stripe_payments_enabled = capability.status === 'active.js';
+        updateData.stripe_payments_enabled = capability.status === 'active';
         break;
       case 'transfers':
-        updateData.stripe_transfers_enabled = capability.status === 'active.js';
+        updateData.stripe_transfers_enabled = capability.status === 'active';
         break;
     }
 

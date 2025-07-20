@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import axios from 'axios';
-import { auditLogger } from './auditLogger.js';
-import { localizationService } from './localizationService.js';
+import { auditLogger } from './auditLogger';
+import { localizationService } from './localizationService';
 
 export interface CommunicationProvider {
   id: string;

@@ -1,6 +1,6 @@
 import express from 'express';
 import type { Response, NextFunction, Request as ExpressRequest, RequestHandler } from 'express';
-import { AuthController } from './controllers/auth.controller.js';
+import { AuthController } from './controllers/auth.controller';
 // Import validation schemas
 import { 
   loginSchema, 
@@ -8,10 +8,10 @@ import {
   requestPasswordResetSchema, 
   resetPasswordSchema, 
   logoutSchema 
-} from './validation/auth.schemas.js';
-import { validateRequest, type AnyZodObject } from './middleware/validation.middleware.js';
-import { authenticate } from '../middleware/authenticate.js';
-import { JwtAuthService } from './services/jwtAuthService.js';
+} from './validation/auth.schemas';
+import { validateRequest, type AnyZodObject } from './middleware/validation.middleware';
+import { authenticate } from '../middleware/authenticate';
+import { JwtAuthService } from './services/jwtAuthService';
 
 // Define handler function type
 type HandlerFunction = (req: ExpressRequest, res: Response, next: NextFunction) => void | Promise<void>;

@@ -1,9 +1,9 @@
 // Import MemStorage first to avoid circular dependencies
-import { MemStorage } from './storage/implementations/MemStorage.js';
+import { MemStorage } from './storage/implementations/MemStorage';
 
 // Re-export types and interfaces
-export * from './storage/types.js';
-export * from './storage/implementations/MemStorage.js';
+export * from './storage/types';
+export * from './storage/implementations/MemStorage';
 
 // For backward compatibility
 export { MemStorage as Storage };

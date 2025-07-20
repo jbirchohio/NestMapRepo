@@ -2,7 +2,7 @@ import { pgTable, uuid, text, timestamp, integer, jsonb, pgEnum, index } from 'd
 import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { users, organizations, trips } from './schema.js';
+import { users, organizations, trips } from './schema';
 
 // Proposal status enum
 export const proposalStatusEnum = pgEnum('proposal_status', [

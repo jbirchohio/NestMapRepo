@@ -10,7 +10,6 @@ import {
   Send, 
   Bot, 
   User, 
-  X,
   Lightbulb,
   Clock,
   CheckCircle2,

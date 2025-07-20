@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Response, NextFunction } from 'express';
-import type { AuthenticatedRequest } from './request.js';
+import type { AuthenticatedRequest } from './request';
 
 // Common validation schemas
 export const paginationSchema = z.object({

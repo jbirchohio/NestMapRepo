@@ -1,5 +1,5 @@
-import { type User } from '../../../db/schema.js';
-import { BaseRepository } from '../base.repository.interface.js';
+import { type User } from '../../../db/schema';
+import { BaseRepository } from '../base.repository.interface';
 
 // Define UserBookingPreferences type if it doesn't exist
 export type UserBookingPreferences = Record<string, any>;

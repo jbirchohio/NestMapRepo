@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,17 +13,11 @@ import {
   BarChart3, 
   LineChart, 
   PieChart, 
-  Download, 
   Save, 
-  Play, 
-  Settings,
   Plus,
   Trash2,
-  Calendar,
   Filter,
-  Eye,
-  Share,
-  Clock
+  Eye
 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -112,10 +106,10 @@ export default function CustomReportBuilder() {
     }
   });
   const [selectedTab, setSelectedTab] = useState('fields');
-  const [previewData, setPreviewData] = useState(null);
+  const [previewData, setPreviewData] = useState<{ rows?: any[] } | null>(null);
 
   // Fetch existing reports
-  const { data: reports, isLoading: reportsLoading } = useQuery({
+  const { } = useQuery({
     queryKey: ['/api/custom-reporting/definitions'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/custom-reporting/definitions');
@@ -169,7 +163,11 @@ export default function CustomReportBuilder() {
     }
   });
 
-  const handleDragEnd = useCallback((result: any) => {
+  const handleDragEnd = useCallback((result: { 
+    destination: { droppableId: string; index: number } | null; 
+    source: { droppableId: string; index: number }; 
+    draggableId: string;
+  }) => {
     if (!result.destination) return;
 
     const { source, destination } = result;
@@ -188,9 +186,9 @@ export default function CustomReportBuilder() {
         fields: prev.fields.filter(f => f.id !== result.draggableId)
       }));
     }
-  }, [reportDefinition.fields]);
+  }, []);
 
-  const addFilter = () => {
+  const addFilter = useCallback((): void => {
     const newFilter: ReportFilter = {
       id: `filter_${Date.now()}`,
       field: '',
@@ -201,21 +199,21 @@ export default function CustomReportBuilder() {
       ...prev,
       filters: [...prev.filters, newFilter]
     }));
-  };
+  }, []);
 
-  const updateFilter = (filterId: string, updates: Partial<ReportFilter>) => {
+  const updateFilter = useCallback((filterId: string, updates: Partial<ReportFilter>) => {
     setReportDefinition(prev => ({
       ...prev,
       filters: prev.filters.map(f => f.id === filterId ? { ...f, ...updates } : f)
     }));
-  };
+  }, [reportDefinition]);
 
-  const removeFilter = (filterId: string) => {
+  const removeFilter = useCallback((filterId: string) => {
     setReportDefinition(prev => ({
       ...prev,
       filters: prev.filters.filter(f => f.id !== filterId)
     }));
-  };
+  }, []);
 
   return (
     <div className="w-full space-y-6">
@@ -602,7 +600,7 @@ export default function CustomReportBuilder() {
               <div className="space-y-2">
                 <Label>Recipients</Label>
                 <Textarea
-                  value={reportDefinition.schedule.recipients.join(', ')}
+                  value={reportDefinition.schedule?.recipients?.join(', ') || ''}
                   onChange={(e) => setReportDefinition(prev => ({
                     ...prev,
                     schedule: { 
@@ -637,9 +635,36 @@ export default function CustomReportBuilder() {
                   </div>
                   {/* Preview content would be rendered here based on previewData */}
                   <div className="border rounded-lg p-4">
-                    <p className="text-center text-muted-foreground">
-                      Preview data will be displayed here
-                    </p>
+                    {previewData.rows && previewData.rows.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              {Object.keys(previewData.rows[0]).map((key) => (
+                                <th key={key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  {key}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {previewData.rows.map((row, rowIndex) => (
+                              <tr key={rowIndex}>
+                                {Object.values(row).map((value, colIndex) => (
+                                  <td key={`${rowIndex}-${colIndex}`} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {String(value)}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-center text-muted-foreground">
+                        No preview data available
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>

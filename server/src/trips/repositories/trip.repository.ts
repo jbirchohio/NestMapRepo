@@ -1,11 +1,11 @@
 import { eq } from 'drizzle-orm';
 import { and } from 'drizzle-orm/expressions';
-import { db } from '../../db/db.js';
-import * as tripSchema from '../../db/tripSchema.js';
-import * as schema from '../../db/schema.js';
-import { TripRepository } from '../interfaces/trip.repository.interface.js';
-import { CorporateTripDto } from '../interfaces/trip.service.interface.js';
-import { BaseRepositoryImpl } from '../../common/repositories/base.repository.js';
+import { db } from '../../db/db';
+import * as tripSchema from '../../db/tripSchema';
+import * as schema from '../../db/schema';
+import { TripRepository } from '../interfaces/trip.repository.interface';
+import { CorporateTripDto } from '../interfaces/trip.service.interface';
+import { BaseRepositoryImpl } from '../../common/repositories/base.repository';
 
 export class TripRepositoryImpl extends BaseRepositoryImpl<tripSchema.Trip, string, Omit<tripSchema.Trip, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<tripSchema.Trip, 'id' | 'createdAt' | 'updatedAt'>>> implements TripRepository {
   constructor() {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,16 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Car, 
   MapPin, 
-  Clock, 
   Battery, 
-  Wifi, 
   Shield,
-  Navigation,
-  Zap,
-  Users,
-  Calendar,
-  Route,
-  AlertCircle
+  Users
 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -120,15 +113,6 @@ export default function AutonomousVehicleBooking() {
       return;
     }
     setBookingStep('vehicles');
-  };
-
-  const getAutonomyLevelDescription = (level: number) => {
-    switch (level) {
-      case 3: return 'Conditional Automation';
-      case 4: return 'High Automation';
-      case 5: return 'Full Automation';
-      default: return 'Unknown';
-    }
   };
 
   const getVehicleTypeIcon = (type: string) => {

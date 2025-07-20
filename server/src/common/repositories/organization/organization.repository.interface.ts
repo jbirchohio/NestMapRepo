@@ -1,6 +1,6 @@
 // Use direct type imports to avoid value/type confusion
-import * as schema from '../../../db/schema.js';
-import { BaseRepository } from '../base.repository.interface.js';
+import * as schema from '../../../db/schema';
+import { BaseRepository } from '../base.repository.interface';
 
 // Define OrganizationBookingSettings type if it doesn't exist
 export type OrganizationBookingSettings = Record<string, any>;

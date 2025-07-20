@@ -4,9 +4,9 @@
  */
 
 import type { Express } from "express";
-import { performanceMonitor } from "../performance-monitor.js";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { performanceMonitor } from "../performance-monitor";
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 export function registerPerformanceRoutes(app: Express): void {
   // Apply middleware to all admin performance routes

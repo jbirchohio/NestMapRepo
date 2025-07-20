@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { endpointMonitor } from './api-security.js';
-import { trackEndpointHealth } from '../routes/health.js';
-import { trackRequest } from '../routes/system-metrics.js';
+import { endpointMonitor } from './api-security';
+import { trackEndpointHealth } from '../routes/health';
+import { trackRequest } from '../routes/system-metrics';
 
 interface UnifiedMetrics {
   startTime: bigint;
@@ -106,7 +106,7 @@ export function unifiedMonitoringMiddleware(req: Request, res: Response, next: N
     }
     
     // Memory usage warnings (development-aware thresholds)
-    const isDevelopment = process.env.NODE_ENV === 'development.js';
+    const isDevelopment = process.env.NODE_ENV === 'development';
     const isViteAsset = req.path.startsWith('/src/') || req.path.startsWith('/@');
     const memoryThreshold = isDevelopment && isViteAsset ? 300 * 1024 * 1024 : 50 * 1024 * 1024; // 300MB for Vite assets, 50MB otherwise
     

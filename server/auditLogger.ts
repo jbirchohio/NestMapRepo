@@ -1,5 +1,5 @@
-import { db } from './db.js';
-import { auditLogs } from './db/auditLog.js';
+import { db } from './db';
+import { auditLogs } from './db/auditLog';
 
 interface AuditLogEntry {
   userId: string;

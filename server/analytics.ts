@@ -1,5 +1,5 @@
-import { db } from "./db-connection.js";
-import { trips, activities, users } from "./db/schema.js";
+import { db } from "./db-connection";
+import { trips, activities, users } from "./db/schema";
 import { sql, count, avg, desc, eq, and, gte, countDistinct } from "drizzle-orm";
 
 // Type Definitions
@@ -230,7 +230,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
 // Export function for CSV generation
 export async function exportAnalyticsCSV(_data: AnalyticsData): Promise<string> {
   // Implementation for CSV export
-  return '.js';
+  return ''
 }
 
 // Organization analytics function

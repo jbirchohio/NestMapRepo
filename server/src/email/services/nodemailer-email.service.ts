@@ -11,7 +11,7 @@ import type {
   PasswordResetEmailOptions, 
   PasswordResetConfirmationOptions,
   PaymentReceiptEmailOptions
-} from '../interfaces/email.service.interface.js';
+} from '../interfaces/email.service.interface';
 import * as handlebars from 'handlebars';
 
 const { compile } = handlebars;
@@ -83,7 +83,7 @@ export class NodemailerEmailService implements EmailService {
       
       this.logger.log(`Email sent to ${to} with subject: ${subject}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error.js';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to send email to ${to}: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
       this.errorService.throwInternalServerError(`Failed to send email: ${errorMessage}`, { recipient: to }, error instanceof Error ? error.stack : undefined);
     }
@@ -95,8 +95,8 @@ export class NodemailerEmailService implements EmailService {
   ): Promise<void> {
     const { name, resetUrl, expiryHours } = options;
     
-    const subject = 'Password Reset Request.js';
-    const template = 'password-reset.js';
+    const subject = 'Password Reset Request';
+    const template = 'password-reset';
     const context = {
       name,
       resetUrl,

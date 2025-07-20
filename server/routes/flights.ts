@@ -1,8 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { authenticate } from '../middleware/secureAuth.js';
-import { injectOrganizationContext } from '../middleware/organizationScoping.js';
+import { authenticate } from '../middleware/secureAuth';
+import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { z } from 'zod';
-import { asyncHandler } from '../utils/routeHelpers.js';
+import { asyncHandler } from '../utils/routeHelpers';
 
 // Define types for Duffel API responses
 interface DuffelOffer {
@@ -55,7 +55,7 @@ interface DuffelPassenger {
   id: string;
   given_name?: string;
   family_name?: string;
-  type: 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat.js';
+  type: 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat';
 }
 
 // Define types for search parameters
@@ -69,7 +69,7 @@ interface FlightSearchParams {
     children?: number;
     infants?: number;
   };
-  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first.js';
+  cabin_class?: 'economy' | 'premium_economy' | 'business' | 'first';
 }
 
 const router = Router();

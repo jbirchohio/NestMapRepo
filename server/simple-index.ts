@@ -1,11 +1,11 @@
-import 'dotenv/config.js';
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { authenticate } from './middleware/secureAuth.js';
-import authRoutes from './routes/auth-simple.js';
-import flightRoutes from './routes/flights.js';
-import organizationRoutes from './routes/organizations.js';
-import tripRoutes from './routes/trips.js';
+import { authenticate } from './middleware/secureAuth';
+import authRoutes from './routes/auth-simple';
+import flightRoutes from './routes/flights';
+import organizationRoutes from './routes/organizations';
+import tripRoutes from './routes/trips';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

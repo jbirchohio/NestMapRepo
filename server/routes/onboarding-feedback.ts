@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { secureAuth } from '../middleware/secureAuth.js';
-import { organizationScoping } from '../middleware/organizationScoping.js';
+import { secureAuth } from '../middleware/secureAuth';
+import { organizationScoping } from '../middleware/organizationScoping';
 
 const router = Router();
 

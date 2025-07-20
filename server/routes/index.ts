@@ -1,46 +1,46 @@
 import { Router } from 'express';
 
 // Core routes
-import authRoutes from './auth.js';
-import proposalsRoutes from './proposals.js';
-import tripRoutes from './trips.js';
-import activityRoutes from './activities.js';
-import organizationRoutes from './organizations.js';
-import analyticsRoutes from './analytics.js';
-import paymentsRoutes from './payments.js';
-import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus.js';
+import authRoutes from './auth';
+import proposalsRoutes from './proposals';
+import tripRoutes from './trips';
+import activityRoutes from './activities';
+import organizationRoutes from './organizations';
+import analyticsRoutes from './analytics';
+import paymentsRoutes from './payments';
+import { registerWhiteLabelStatusRoutes } from './whiteLabelStatus';
 
 // Feature routes
-import adminRoutes from './admin.js';
-import invoicesRoutes from './invoices.js';
-import calendarRoutes from './calendar.js';
-import { registerBookingRoutes } from './bookings.js';
-import approvalRoutes from './approvals.js';
-import expenseRoutes from './expenses.js';
-import reportingRoutes from './reporting.js';
-import { registerCorporateCardRoutes } from './corporateCards.js';
-import organizationFundingRoutes from './organizationFunding.js';
-import stripeOAuthRoutes from './stripeOAuth.js';
+import adminRoutes from './admin';
+import invoicesRoutes from './invoices';
+import calendarRoutes from './calendar';
+import { registerBookingRoutes } from './bookings';
+import approvalRoutes from './approvals';
+import expenseRoutes from './expenses';
+import reportingRoutes from './reporting';
+import { registerCorporateCardRoutes } from './corporateCards';
+import organizationFundingRoutes from './organizationFunding';
+import stripeOAuthRoutes from './stripeOAuth';
 // Import modular superadmin routes
-import superadminRoutes from './superadmin/index.js';
-import webhookRoutes from './webhooks.js';
-import subscriptionStatusRoutes from './subscription-status.js';
-import { registerAdminSettingsRoutes } from './admin-settings.js';
-import aiRoutes from './ai.js';
-import billingRoutes from './billing.js';
-import securityRoutes from './security.js';
-import healthRoutes from './health.js';
-import notificationsRoutes from './notifications.js';
-import flightRoutes from './flights.js';
-import exportRoutes from './export.js';
-import complianceRoutes from './compliance.js';
-import policiesRoutes from './policies.js';
-import mfaRoutes from './mfa.js';
-import localizationRoutes from './localization.js';
-import communicationRoutes from './communication.js';
+import superadminRoutes from './superadmin/index';
+import webhookRoutes from './webhooks';
+import subscriptionStatusRoutes from './subscription-status';
+import { registerAdminSettingsRoutes } from './admin-settings';
+import aiRoutes from './ai';
+import billingRoutes from './billing';
+import securityRoutes from './security';
+import healthRoutes from './health';
+import notificationsRoutes from './notifications';
+import flightRoutes from './flights';
+import exportRoutes from './export';
+import complianceRoutes from './compliance';
+import policiesRoutes from './policies';
+import mfaRoutes from './mfa';
+import localizationRoutes from './localization';
+import communicationRoutes from './communication';
 
 // Test routes (development only)
-import testRoutes from './test.routes.js';
+import testRoutes from './test.routes';
 
 const router = Router();
 
@@ -57,7 +57,7 @@ router.use('/analytics', analyticsRoutes);
 
 // Mount admin and feature routes
 router.use('/admin', adminRoutes);
-import customDomainsRoutes from './customDomains.js';
+import customDomainsRoutes from './customDomains';
 
 router.use('/calendar', calendarRoutes);
 router.use('/approvals', approvalRoutes);
@@ -92,7 +92,7 @@ router.use('/localization', localizationRoutes);
 router.use('/communication', communicationRoutes);
 
 // Import and register simplified white label routes
-import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified.js';
+import { registerSimplifiedWhiteLabelRoutes } from './whiteLabelSimplified';
 // Note: This will be handled in the main server file since it needs the app instance
 // router.use('/todos', todosRoutes);
 // router.use('/notes', notesRoutes);
@@ -348,7 +348,7 @@ function getAirportCode(cityName: string): string {
     'netherlands': 'AMS'
   };
 
-  const city = cityName?.toLowerCase().trim() || '.js';
+  const city = cityName?.toLowerCase().trim() || ''
 
   console.log(`Converting city "${cityName}" (normalized: "${city}") to airport code`);
 

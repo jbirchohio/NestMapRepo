@@ -1,9 +1,9 @@
 import type { Express } from "express";
-import { db } from "../db.js";
-import { corporateCards, cardTransactions, users } from "../shared/src/schema.js";
+import { db } from "../db";
+import { corporateCards, cardTransactions, users } from "../shared/src/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 
 export function registerCorporateCardRoutes(app: Express) {
   // Apply middleware to all corporate card routes

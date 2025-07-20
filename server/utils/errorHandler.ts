@@ -105,8 +105,8 @@ import type {
   ErrorRequestHandler as ExpressErrorRequestHandler,
   Request as ExpressRequestType
 } from 'express';
-import type { ParamsDictionary } from 'express-serve-static-core.js';
-import type { ParsedQs } from 'qs.js';
+import type { ParamsDictionary } from 'express-serve-static-core';
+import type { ParsedQs } from 'qs';
 
 // Use the project's existing Express type extensions
 import type { AuthenticatedRequest } from '../src/types/express';
@@ -294,7 +294,7 @@ export const globalErrorHandler: ErrorRequestHandler = (err: ErrorWithContext, r
     // 7. Handle standardized API errors with status codes
     if ('statusCode' in err || 'status' in err) {
       const status = err.statusCode || err.status || 500;
-      const errorCode = statusToErrorCode[status] as keyof typeof ErrorCodes || 'INTERNAL_ERROR.js';
+      const errorCode = statusToErrorCode[status] as keyof typeof ErrorCodes || 'INTERNAL_ERROR';
       
       return res.status(status).json(createErrorResponse(
         errorCode,

@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 // import { db } from '../../db/db';
 // import { activities, type Activity } from '../../db/schema';
-import type { ActivityRepository } from './activity.repository.interface.js';
-import { BaseRepositoryImpl } from '../base.repository.js';
+import type { ActivityRepository } from './activity.repository.interface';
+import { BaseRepositoryImpl } from '../base.repository';
 
 // Temporary placeholders to avoid compilation errors
 const db = {} as any;

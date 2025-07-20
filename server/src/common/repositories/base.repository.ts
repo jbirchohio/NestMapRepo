@@ -1,7 +1,7 @@
-import { logger } from '../../utils/logger.js';
-import { BaseRepository } from './base.repository.interface.js';
+import { logger } from '../../utils/logger';
+import { BaseRepository } from './base.repository.interface';
 import { eq } from 'drizzle-orm';
-import { db } from '../../db.js';
+import { db } from '../../db';
 
 /**
  * Base repository implementation with common CRUD operations

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { authenticate as validateJWT } from '../middleware/secureAuth.js';
-import { getSubscriptionStatus, checkTripLimit, checkUserLimit } from '../middleware/subscription-limits.js';
+import { authenticate as validateJWT } from '../middleware/secureAuth';
+import { getSubscriptionStatus, checkTripLimit, checkUserLimit } from '../middleware/subscription-limits';
 
 const router = Router();
 

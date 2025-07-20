@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { db } from '../../db.js';
+import { db } from '../../db';
 import { 
   superadminFeatureFlags, 
   organizationFeatureFlags,
   organizations
-} from '../../shared/src/schema.js';
+} from '../../shared/src/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { logSuperadminAction } from '../audit-logs/audit-service.js';
+import { logSuperadminAction } from '../audit-logs/audit-service';
 
 // Get all feature flags
 export const getFeatureFlags = async (req: Request, res: Response) => {

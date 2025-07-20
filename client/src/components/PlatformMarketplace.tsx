@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,10 @@ import {
   Download, 
   Star, 
   Search, 
-  Filter,
+
   Package,
   Zap,
-  Shield,
+
   Users,
   TrendingUp,
   CheckCircle,
@@ -55,7 +55,7 @@ export default function PlatformMarketplace() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTab, setSelectedTab] = useState('apps');
 
-  const { data: apps, isLoading: appsLoading } = useQuery({
+  const { data: apps } = useQuery({
     queryKey: ['/api/marketplace/apps', searchQuery, selectedCategory],
     queryFn: async () => {
       const params = new URLSearchParams();

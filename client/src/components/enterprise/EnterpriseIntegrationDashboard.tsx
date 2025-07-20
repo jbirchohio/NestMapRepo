@@ -42,7 +42,7 @@ interface FeatureStatus {
 
 export default function EnterpriseIntegrationDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
+  const [, setSelectedFeature] = useState<string | null>(null);
 
   const enterpriseFeatures: FeatureStatus[] = [
     {

@@ -1,5 +1,5 @@
-import * as tripSchema from '../../db/tripSchema.js';
-import * as schema from '../../db/schema.js';
+import * as tripSchema from '../../db/tripSchema';
+import * as schema from '../../db/schema';
 
 // A DTO for the transformed corporate trip data
 export interface CorporateTripDto {

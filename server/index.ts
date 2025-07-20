@@ -1,38 +1,104 @@
-import 'dotenv/config.js';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+// Get current file path for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+console.log('🔍 Environment Loading Debug:');
+console.log('Current working directory:', process.cwd());
+console.log('Script directory:', __dirname);
+console.log('Script filename:', __filename);
+
+// For bundled builds, try more aggressive path resolution
+const possibleEnvPaths = [
+  // Absolute path first
+  'C:\\Users\\Jonas\\Desktop\\NestMapRepo\\.env',
+  // Relative to current working directory
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '../.env'),
+  // Relative to script location (may not work in bundled builds)
+  path.resolve(__dirname, '../.env'),
+  path.resolve(__dirname, '../../.env'),
+  path.join(__dirname, '..', '.env'),
+  path.join(__dirname, '..', '..', '.env')
+];
+
+let envLoaded = false;
+console.log('🔍 Checking for .env file in the following paths:');
+for (const envPath of possibleEnvPaths) {
+  const exists = fs.existsSync(envPath);
+  console.log(`   ${envPath}: ${exists ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+  if (exists) {
+    console.log(`📁 Loading .env from: ${envPath}`);
+    const result = dotenv.config({ path: envPath });
+    if (result.error) {
+      console.error(`❌ Error loading .env: ${result.error}`);
+    } else {
+      console.log(`✅ Environment loaded successfully`);
+      envLoaded = true;
+      break;
+    }
+  }
+}
+
+if (!envLoaded) {
+  console.warn('⚠️  No .env file found in any of the expected locations');
+  console.warn('⚠️  Trying to load from process.env directly...');
+}
+
+// Final check
+console.log(`📋 Final environment check:`);
+console.log(`   SUPABASE_URL: ${process.env.SUPABASE_URL ? 'SET' : 'NOT SET'}`);
+console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`);
+console.log(`   PORT: ${process.env.PORT || 'undefined'}`);
+
+// If still not loaded, try one more time with the absolute path
+if (!process.env.SUPABASE_URL) {
+  console.log('🔄 Attempting final load with absolute path...');
+  const finalPath = 'C:\\Users\\Jonas\\Desktop\\NestMapRepo\\.env';
+  if (fs.existsSync(finalPath)) {
+    dotenv.config({ path: finalPath, override: true });
+    console.log(`🔄 Final attempt result - SUPABASE_URL: ${process.env.SUPABASE_URL ? 'SET' : 'NOT SET'}`);
+  }
+}
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import http from 'http';
-import { logger } from './utils/logger.js';
+import { logger } from './utils/logger';
 
 // Import authentication middleware
-import { authenticate } from './middleware/secureAuth.js';
+import { authenticate } from './middleware/secureAuth';
 
 // Import route handlers
-import authRoutes from './routes/auth-simple.js';
-import flightRoutes from './routes/flights.js';
-import organizationRoutes from './routes/organizations.js';
-import tripRoutes from './routes/trips-simple.js';
-import aiRoutes from './routes/ai-routes.js';
-import enterpriseRoutes from './routes/enterprise-routes.js';
-import comprehensiveRoutes from './routes/comprehensive-routes.js';
-import onboardingFeedbackRoutes from './routes/onboarding-feedback.js';
+import authRoutes from './routes/auth-simple';
+import flightRoutes from './routes/flights';
+import organizationRoutes from './routes/organizations';
+import tripRoutes from './routes/trips-simple';
+import aiRoutes from './routes/ai-routes';
+import enterpriseRoutes from './routes/enterprise-routes';
+import comprehensiveRoutes from './routes/comprehensive-routes';
+import onboardingFeedbackRoutes from './routes/onboarding-feedback';
 
 // Phase 1 Innovation Roadmap Routes
-import voiceRoutes from './routes/voice.js';
-import disruptionAlertsRoutes from './routes/disruption-alerts.js';
-import offlineRoutes from './routes/offline.js';
+import voiceRoutes from './routes/voice';
+import disruptionAlertsRoutes from './routes/disruption-alerts';
+import offlineRoutes from './routes/offline';
 
 // Phase 2 Innovation Roadmap Routes
-import advancedAnalyticsRoutes from './routes/advanced-analytics.js';
-import customReportingRoutes from './routes/custom-reporting.js';
-import enterpriseIntegrationRoutes from './routes/enterprise-integration.js';
+import advancedAnalyticsRoutes from './routes/advanced-analytics';
+import customReportingRoutes from './routes/custom-reporting';
+import enterpriseIntegrationRoutes from './routes/enterprise-integration';
 
 // Phase 3 Innovation Roadmap Routes (Market Domination)
-import platformEcosystemRoutes from './routes/platform-ecosystem.js';
-import predictiveBusinessIntelligenceRoutes from './routes/predictive-business-intelligence.js';
-import iotSmartCityRoutes from './routes/iot-smart-city.js';
-import automationOrchestrationRoutes from './routes/automation-orchestration.js';
+import platformEcosystemRoutes from './routes/platform-ecosystem';
+import predictiveBusinessIntelligenceRoutes from './routes/predictive-business-intelligence';
+import iotSmartCityRoutes from './routes/iot-smart-city';
+import automationOrchestrationRoutes from './routes/automation-orchestration';
 
 // Create Express app
 const app = express();

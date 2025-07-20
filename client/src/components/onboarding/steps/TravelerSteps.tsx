@@ -12,13 +12,12 @@ import {
   Calendar,
   Mic,
   MessageSquare,
-  MapPin,
-  Clock,
+
   AlertCircle,
   Zap,
   Star,
   Shield,
-  DollarSign,
+
   Building
 } from 'lucide-react';
 import { OnboardingStep } from '@/contexts/OnboardingContext';

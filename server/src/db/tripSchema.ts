@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, timestamp, boolean, integer, jsonb, pgEnum, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import { users, organizations } from './schema.js';
+import { users, organizations } from './schema';
 
 // Trip status enum
 export const tripStatusEnum = pgEnum('trip_status', ['draft', 'planned', 'active', 'completed', 'cancelled']);

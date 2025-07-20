@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { db } from './db-connection.js';
-import { users, trips, activities } from '../shared/src/schema.js';
+import { db } from './db-connection';
+import { users, trips, activities } from '../shared/src/schema';
 import { eq, and, or, inArray, gte, lte } from 'drizzle-orm';
-import { auditLogger } from './auditLogger.js';
+import { auditLogger } from './auditLogger';
 import crypto from 'crypto';
 
 export interface ComplianceFramework {

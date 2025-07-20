@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { validate } from '../utils/validation.js';
+import { validate } from '../utils/validation';
 
 const router = Router();
 

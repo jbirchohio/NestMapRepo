@@ -2,8 +2,10 @@
  * Auth Service Implementation
  * Implements the IAuthService interface
  */
-import { compare } from 'bcrypt';
-import { sign, decode, verify } from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+const { compare } = bcrypt;
+import jwt from 'jsonwebtoken';
+const { sign, decode, verify } = jwt;
 import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
@@ -11,7 +13,7 @@ import { IAuthService } from './interfaces/auth.service.interface';
 import { LoginDto, RefreshTokenDto, AuthResponse, UserRole as AuthDtoUserRole } from './dtos/auth.dto';
 import { UserRole } from '../types';
 import { Logger } from '../utils/logger';
-import { redisClient } from '../utils/redis';
+// Redis removed for simplified deployment
 
 export class AuthService implements IAuthService {
   private readonly logger = new Logger('AuthService');
@@ -102,8 +104,8 @@ export class AuthService implements IAuthService {
       const decoded = decode(token, { json: true }) as { jti?: string } | null;
       if (!decoded?.jti) return false;
 
-      const result = await redisClient.get(`revoked:${decoded.jti}`);
-      return !!result;
+      // Token revocation not implemented in simplified version
+      return false;
     } catch (error) {
       this.logger.error('Error checking token revocation:', error);
       return false;
@@ -113,9 +115,10 @@ export class AuthService implements IAuthService {
   /**
    * Revoke a token by adding it to the blacklist
    */
-  private async revokeToken(tokenId: string, ttl: number): Promise<void> {
+  private async revokeToken(tokenId: string, _ttl: number): Promise<void> {
     try {
-      await redisClient.set(`revoked:${tokenId}`, '1', 'EX', ttl);
+      // Token revocation not implemented in simplified version
+      this.logger.info(`Token revocation requested for: ${tokenId} (not implemented)`);
     } catch (error) {
       this.logger.error('Error revoking token:', error);
       throw new Error('Failed to revoke token');

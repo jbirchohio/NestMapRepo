@@ -1,9 +1,9 @@
 import { Response, NextFunction } from 'express';
-import { UserRole } from '../src/types/auth-user.js';
-import { AuthenticatedRequest } from '../types/custom-request.js';
+import { UserRole } from '../src/types/auth-user';
+import { AuthenticatedRequest } from '../types/custom-request';
 
 // Re-export the types for convenience
-export { AuthenticatedRequest } from '../types/custom-request.js';
+export { AuthenticatedRequest } from '../types/custom-request';
 
 /**
  * Middleware to extend the Request object with custom methods

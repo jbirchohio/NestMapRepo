@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { BookingController } from '../controllers/booking.controller.js';
-import { BookingService } from '../services/booking.service.js';
-import { RepositoriesModule } from '../repositories/repositories.module.js';
+import { BookingController } from '../controllers/booking.controller';
+import { BookingService } from '../services/booking.service';
+import { RepositoriesModule } from '../repositories/repositories.module';
 
 /**
  * Module for booking feature

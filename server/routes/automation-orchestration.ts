@@ -1,8 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
-import AdvancedAutomationOrchestrationService from '../services/advancedAutomationOrchestration.js';
-import { secureAuth } from '../middleware/secureAuth.js';
-import { organizationScoping } from '../middleware/organizationScoping.js';
+import AdvancedAutomationOrchestrationService from '../services/advancedAutomationOrchestration';
+import { secureAuth } from '../middleware/secureAuth';
+import { organizationScoping } from '../middleware/organizationScoping';
 
 const router = express.Router();
 const automationService = new AdvancedAutomationOrchestrationService();

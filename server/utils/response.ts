@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { ApiResponse, PaginatedApiResponse } from '../../shared/src/schema.js';
+import { ApiResponse, PaginatedApiResponse } from '../../shared/src/schema';
 
 /**
  * Response utility for sending standardized API responses

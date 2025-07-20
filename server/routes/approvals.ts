@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { eq, and, desc, or, isNull } from 'drizzle-orm';
-import { db } from '../db/db.js';
+import { db } from '../db/db';
 import { 
   approvalRequests, 
   approvalRules, 
@@ -9,11 +9,11 @@ import {
   users,
   insertApprovalRequestSchema,
   insertApprovalRuleSchema 
-} from '../db/schema.js';
+} from '../db/schema';
 import { z } from 'zod';
-import { authenticate } from '../middleware/secureAuth.js';
-import { asyncHandler } from '../utils/routeHelpers.js';
-import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext.js';
+import { authenticate } from '../middleware/secureAuth';
+import { asyncHandler } from '../utils/routeHelpers';
+import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { EnhancedApprovalWorkflow } from '../enhancedApprovalWorkflow';
 import { CommunicationIntegrationService } from '../communicationIntegration';
 import { auditLogger } from '../auditLogger';

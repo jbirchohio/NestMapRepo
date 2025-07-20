@@ -1,8 +1,8 @@
 import { config } from 'dotenv';
 import path from 'path';
-import app from './app.js';
-import { logger } from './utils/logger.js';
-import { connectDatabase } from './db/connection.js';
+import app from './app';
+import { logger } from './utils/logger';
+import { connectDatabase } from './db/connection';
 
 // Load environment variables from parent directory
 config({ path: path.resolve(process.cwd(), '../.env') });
