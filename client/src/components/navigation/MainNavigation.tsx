@@ -13,6 +13,7 @@ interface MainNavigationProps {
   onSignOut: () => Promise<void>;
   onNotificationClick: (id: string) => Promise<void>;
   onMarkAllAsRead: () => Promise<void>;
+  onSignIn?: () => void;
 }
 
 export const MainNavigation: React.FC<MainNavigationProps> = ({
@@ -22,6 +23,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   onSignOut,
   onNotificationClick,
   onMarkAllAsRead,
+  onSignIn,
 }) => {
   const navigate = useNavigate();
   
@@ -35,8 +37,39 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
 
-  // Navigation items - simplified for enterprise landing page
-  const navigationItems: NavigationItem[] = [
+  // Navigation items - enterprise landing page
+  const navigationItems: NavigationItem[] = isAuthenticated ? [
+    // Authenticated user navigation
+    {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: <HomeIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Dashboard',
+      requiresAuth: true
+    },
+    {
+      name: 'Analytics',
+      href: '/analytics',
+      icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Analytics',
+      requiresAuth: true
+    },
+    {
+      name: 'Reports',
+      href: '/custom-reports',
+      icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Reports',
+      requiresAuth: true
+    },
+    {
+      name: 'Enterprise',
+      href: '/enterprise-integration',
+      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Enterprise Integration',
+      requiresAuth: true
+    },
+  ] : [
+    // Public/enterprise landing navigation
     {
       name: 'Home',
       href: '/',
@@ -46,30 +79,23 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
     },
     {
       name: 'Features',
-      href: '#features',
+      href: '/#features',
       icon: <BarChartIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Features',
       requiresAuth: false
     },
     {
       name: 'Pricing',
-      href: '#pricing',
+      href: '/#pricing',
       icon: <FileTextIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
       ariaLabel: 'Pricing',
       requiresAuth: false
     },
     {
-      name: 'About',
-      href: '#about',
-      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'About',
-      requiresAuth: false
-    },
-    {
       name: 'Contact',
-      href: '#contact',
-      icon: <HomeIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
-      ariaLabel: 'Contact',
+      href: 'mailto:sales@nestmap.com?subject=Discovery Call Request',
+      icon: <CheckIcon className="h-5 w-5" aria-hidden="true" /> as ReactNode,
+      ariaLabel: 'Contact Sales',
       requiresAuth: false
     },
   ];
@@ -196,6 +222,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({
             onMarkAllAsRead={handleMarkAllAsRead}
             onSignOut={handleSignOut}
             onCloseAllMenus={closeAllMenus}
+            onSignIn={onSignIn}
           />
         </div>
       </div>

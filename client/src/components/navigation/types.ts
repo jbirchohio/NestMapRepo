@@ -35,6 +35,7 @@ export interface NavigationProps {
   onSignOut: () => Promise<void>;
   onNotificationClick: (id: string) => Promise<void>;
   onMarkAllAsRead: () => Promise<void>;
+  onSignIn?: () => void;
 }
 
 export interface MobileMenuProps extends NavigationProps {

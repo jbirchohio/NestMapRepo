@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from './auth/AuthContext';
+import { useSession } from 'next-auth/react';
 
 export type UserRole = 'admin' | 'travel_manager' | 'traveler';
 
@@ -159,7 +159,8 @@ interface OnboardingProviderProps {
 }
 
 export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const [flow, setFlow] = useState<OnboardingFlow | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

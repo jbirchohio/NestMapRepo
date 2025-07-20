@@ -95,6 +95,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               });
             }
           }}
+          onSignIn={() => {
+            navigate('/login');
+          }}
         />
       )}
       <main className="flex-1">

@@ -14,7 +14,7 @@ import {
   Users, 
   DollarSign, 
   MessageSquare, 
-  Sync, 
+  RefreshCw as Sync, 
   CheckCircle, 
   AlertCircle,
   Settings,

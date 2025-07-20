@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, X } from 'lucide-react';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useSession } from 'next-auth/react';
 import { useOnboarding, UserRole } from '@/contexts/OnboardingContext';
 import { RoleSelectionModal } from './RoleSelectionModal';
 import { OnboardingWizard } from './OnboardingWizard';
@@ -18,7 +18,8 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
   showChecklist = true,
   compactChecklist = false
 }) => {
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const { flow, initializeOnboarding, trackEvent } = useOnboarding();
   
   // Modal states
