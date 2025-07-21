@@ -3,6 +3,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import apiRoutes from "./routes/index";
+import { getDatabaseUrl } from "./config";
 
 // Security middleware imports
 import { preventSQLInjection, configureCORS } from "./middleware/secureAuth";
@@ -42,7 +43,7 @@ const app = express();
 // Initialize PostgreSQL session store
 const PgSession = connectPgSimple(session);
 const sessionStore = new PgSession({
-  conString: process.env.DATABASE_URL,
+  conString: getDatabaseUrl(),
   tableName: 'session',
   createTableIfMissing: true
 });
