@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from "./db/schema";
-import config from './config';
+import config, { getDatabaseUrl } from './config';
 import { logger } from './utils/logger';
 
 // Debug environment variables
@@ -47,11 +47,11 @@ export async function initializeDatabase(): Promise<DatabaseConnection> {
   if (!hasValidSupabaseUrl || !hasValidServiceKey || !hasValidDbPassword) {
     throw new Error('Missing required database credentials');
   }
-  // Get database URL from environment variables
-  const databaseUrl = process.env.DATABASE_URL;
+  // Get database URL from environment or Supabase credentials
+  const databaseUrl = getDatabaseUrl();
   
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is not set');
+    throw new Error('Database connection information is not set');
   }
 
   // Parse the database URL to extract connection details
@@ -78,7 +78,7 @@ export async function initializeDatabase(): Promise<DatabaseConnection> {
       ssl: 'enabled'
     });
   } catch (error) {
-    throw new Error(`Invalid DATABASE_URL: ${error.message}`);
+    throw new Error(`Invalid database URL: ${error.message}`);
   }
 
   try {

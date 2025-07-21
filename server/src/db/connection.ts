@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { logger } from '../utils/logger';
 import * as schema from './schema';
 import * as tripSchema from './tripSchema';
+import { getDatabaseUrl } from '../config';
 
 // Combine all schemas
 const allSchemas = { ...schema, ...tripSchema };
@@ -13,10 +14,10 @@ let client: postgres.Sql | null = null;
 
 const connectDatabase = async (): Promise<void> => {
   try {
-    const connectionString = process.env.DATABASE_URL;
+    const connectionString = getDatabaseUrl();
     
     if (!connectionString) {
-      throw new Error('DATABASE_URL environment variable is required');
+      throw new Error('Database connection information is required');
     }
 
     // Create postgres client

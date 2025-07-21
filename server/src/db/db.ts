@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { getDatabaseUrl } from '../config';
 import * as schema from './schema';
 import * as invoiceSchema from './invoiceSchema';
 import * as proposalSchema from './proposalSchema';
@@ -7,7 +8,7 @@ import * as superadminSchema from './superadminSchema';
 
 // Create a connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: getDatabaseUrl(),
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 

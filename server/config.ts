@@ -51,8 +51,19 @@ function getSessionSecret(): string {
 }
 
 // Database configuration
+function getDatabaseUrl(): string | undefined {
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
+  }
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_DB_PASSWORD) {
+    const supabaseUrl = new URL(process.env.SUPABASE_URL);
+    return `postgresql://postgres.${supabaseUrl.hostname.split('.')[0]}:${process.env.SUPABASE_DB_PASSWORD}@${supabaseUrl.hostname}:5432/postgres`;
+  }
+  return undefined;
+}
+
 export const DB_CONFIG = {
-  url: process.env.DATABASE_URL,
+  url: getDatabaseUrl(),
   connectionPoolSize: parseInt(process.env.DB_POOL_SIZE || '10', 10)
 };
 
@@ -99,7 +110,7 @@ export function validateConfig() {
   const env = process.env.NODE_ENV || 'development';
   
   const requiredVars = [
-    { name: 'DATABASE_URL', value: DB_CONFIG.url },
+    { name: 'DATABASE_URL or SUPABASE_URL/SUPABASE_DB_PASSWORD', value: DB_CONFIG.url },
     { name: 'VITE_MAPBOX_TOKEN', value: SERVICES_CONFIG.mapbox.token }
   ];
 
@@ -148,3 +159,5 @@ export default {
   jwt: JWT_CONFIG,
   validate: validateConfig
 };
+
+export { getDatabaseUrl };
