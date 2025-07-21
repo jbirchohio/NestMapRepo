@@ -9,7 +9,7 @@ import {
   resetPasswordSchema, 
   logoutSchema 
 } from './validation/auth.schemas';
-import { validateRequest, type AnyZodObject } from './middleware/validation.middleware';
+import { validateRequest, type ValidationSchema } from './middleware/validation.middleware';
 import { authenticate } from '../middleware/authenticate';
 import { JwtAuthService } from './services/jwtAuthService';
 
@@ -66,7 +66,7 @@ const createRouteHandler = (
 const createValidatedRoute = (
   method: 'get' | 'post' | 'put' | 'delete',
   path: string,
-  validationSchema: AnyZodObject | null,
+  validationSchema: ValidationSchema | null,
   handlers: HandlerFunction | Array<HandlerFunction>,
   middlewares: RouteMiddleware = []
 ): void => {

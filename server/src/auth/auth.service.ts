@@ -10,7 +10,7 @@ import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { IAuthService } from './interfaces/auth.service.interface';
-import { LoginDto, RefreshTokenDto, AuthResponse, UserRole as AuthDtoUserRole } from './dtos/auth.dto';
+import { LoginDto, RefreshTokenDto, RegisterDto, AuthResponse, UserRole as AuthDtoUserRole } from './dtos/auth.dto';
 import { UserRole } from '../types';
 import { Logger } from '../utils/logger';
 // Redis removed for simplified deployment
@@ -179,6 +179,73 @@ export class AuthService implements IAuthService {
         emailVerified: user.emailVerified || false,
         createdAt: user.createdAt || new Date(),
         updatedAt: user.updatedAt || new Date()
+      }
+    };
+  }
+
+  /**
+   * Register a new user
+   */
+  async register(registerData: RegisterDto, ip: string, userAgent: string): Promise<AuthResponse> {
+    const { email, password, firstName, lastName } = registerData;
+
+    // Check if user already exists
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, email)
+    });
+
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    // Create new user
+    const [newUser] = await db.insert(users).values({
+      email,
+      passwordHash,
+      firstName: firstName || null,
+      lastName: lastName || null,
+      role: 'user',
+      emailVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+
+    if (!newUser) {
+      throw new Error('Failed to create user');
+    }
+
+    // Generate tokens
+    const tokens = await this.generateAuthTokens(
+      newUser.id,
+      newUser.email,
+      (newUser.role as UserRole) || 'user',
+      newUser.organizationId || undefined
+    );
+
+    // Log the registration
+    this.logger.info(`New user registered: ${newUser.email} from ${ip} using ${userAgent}`);
+
+    // Return response
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      accessTokenExpiresAt: Date.now() + tokens.expiresIn * 1000,
+      refreshTokenExpiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      tokenType: 'Bearer',
+      expiresIn: tokens.expiresIn,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        role: newUser.role as unknown as AuthDtoUserRole,
+        firstName: newUser.firstName || null,
+        lastName: newUser.lastName || null,
+        emailVerified: newUser.emailVerified || false,
+        createdAt: newUser.createdAt || new Date(),
+        updatedAt: newUser.updatedAt || new Date()
       }
     };
   }

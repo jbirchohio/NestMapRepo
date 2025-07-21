@@ -24,7 +24,7 @@ const createRateLimiter = (options: {
     standardHeaders: options.standardHeaders ?? true,
     legacyHeaders: options.legacyHeaders ?? false,
     skip: options.skip || (() => false),
-    handler: options.handler || ((req: Request, res: Response) => {
+    handler: options.handler || ((_req: Request, res: Response) => {
       res.status(429).json({
         success: false,
         error: 'Too many requests, please try again later.',
@@ -54,7 +54,7 @@ const generalLimiter = createRateLimiter({
 const authLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // limit each IP to 10 requests per windowMs for auth endpoints
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     res.status(429).json({
       success: false,
       error: 'Too many authentication attempts, please try again later.',
@@ -68,7 +68,7 @@ const authLimiter = createRateLimiter({
 const passwordResetLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // limit each IP to 3 password reset requests per hour
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     res.status(429).json({
       success: false,
       error: 'Too many password reset attempts, please try again later.',
@@ -89,7 +89,7 @@ const apiKeyLimiter = createRateLimiter({
                    req.ip || 'unknown';
     return `api_${apiKey}`;
   },
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     res.status(429).json({
       success: false,
       error: 'API rate limit exceeded. Please upgrade your plan for higher limits.',
@@ -103,7 +103,7 @@ const apiKeyLimiter = createRateLimiter({
 const uploadLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 50, // limit each IP to 50 uploads per hour
-  handler: (req: Request, res: Response) => {
+  handler: (_req: Request, res: Response) => {
     res.status(429).json({
       success: false,
       error: 'Upload rate limit exceeded, please try again later.',

@@ -13,21 +13,7 @@ import {
 import { Request, Response } from 'express';
 
 // Types and interfaces
-// import { Booking } from '@shared/src/types/bookings';
-interface Booking {
-  id: string;
-  userId: string;
-  organizationId: string;
-  type: string;
-  provider: string;
-  providerBookingId: string;
-  status: string;
-  bookingReference: string;
-  bookingData: any;
-  passengerData: any;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Booking } from '../../db/schema';
 
 // Services and utilities
 import { BookingService } from '../services/booking.service';
@@ -175,11 +161,25 @@ export class BookingController {
       }
 
       // Ensure the booking is associated with the authenticated user
-      const bookingDataWithUser = {
-        ...bookingData,
+      const bookingDataWithUser: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'> = {
+        tripId: bookingData.tripId || '',
         userId: req.user.id,
-        organizationId: req.user.organizationId
-      } as Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>;
+        organizationId: req.user.organizationId || null,
+        type: (bookingData.type as 'flight' | 'hotel' | 'car' | 'train' | 'activity' | 'other') || 'other',
+        provider: bookingData.provider || 'manual',
+        providerBookingId: bookingData.providerBookingId || null,
+        status: (bookingData.status as 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'failed') || 'pending',
+        bookingData: bookingData.bookingData || {},
+        totalAmount: bookingData.totalAmount || null,
+        currency: bookingData.currency || 'USD',
+        passengerDetails: bookingData.passengerDetails || {},
+        bookingReference: bookingData.bookingReference || null,
+        cancellationPolicy: bookingData.cancellationPolicy || null,
+        departureDate: bookingData.departureDate || null,
+        returnDate: bookingData.returnDate || null,
+        checkInDate: bookingData.checkInDate || null,
+        checkOutDate: bookingData.checkOutDate || null
+      };
 
       const booking = await this.bookingService.createBooking(bookingDataWithUser);
       return ResponseFormatter.created(res, { booking });
@@ -214,7 +214,7 @@ export class BookingController {
         return ResponseFormatter.forbidden(res, 'Not authorized to update this booking');
       }
 
-      const booking = await this.bookingService.updateBooking(id, updateData);
+      const booking = await this.bookingService.updateBooking(id, updateData as Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>>);
       return ResponseFormatter.success(res, { booking });
     } catch (error) {
       console.error(`Error updating booking ${id}`, error);

@@ -1,5 +1,5 @@
 import { IAuthService } from '../interfaces/auth.service.interface';
-import { AuthResponse, LoginDto, RefreshTokenDto, UserRole } from '../dtos/auth.dto';
+import { AuthResponse, LoginDto, RefreshTokenDto, RegisterDto, UserRole } from '../dtos/auth.dto';
 import { RefreshTokenRepository } from '../interfaces/refresh-token.repository.interface';
 import { IUserRepository } from '../repositories/user.repository';
 import logger from '../../utils/logger';
@@ -62,6 +62,71 @@ export class AuthService implements IAuthService {
         emailVerified: user.emailVerified || false,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
+      },
+      tokenType: 'Bearer',
+      expiresIn
+    };
+  }
+
+  async register(registerData: RegisterDto, ip: string, userAgent: string): Promise<AuthResponse> {
+    const { email, password, firstName, lastName } = registerData;
+
+    // Check if user already exists
+    const existingUser = await this.userRepository.findByEmail(email);
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
+
+    // Hash password using bcrypt
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    // Create new user
+    const newUser = await this.userRepository.create({
+      email,
+      username: email, // Use email as username for now
+      passwordHash,
+      firstName: firstName || null,
+      lastName: lastName || null,
+      role: 'user' as UserRole,
+      organizationId: null,
+      emailVerified: false,
+      lastLoginAt: null,
+      passwordChangedAt: null,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+      resetToken: null,
+      resetTokenExpires: null,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      mfaSecret: null,
+      lastLoginIp: null,
+      isActive: true
+    });
+
+    // Generate tokens
+    const accessToken = this.generateAccessToken(newUser.id, newUser.role as UserRole);
+    const refreshTokenString = await this.createRefreshToken(newUser.id, ip, userAgent);
+
+    const now = Math.floor(Date.now() / 1000);
+    const expiresIn = 15 * 60; // 15 minutes in seconds
+
+    this.logger.info(`New user registered: ${newUser.email} from ${ip}`);
+
+    return {
+      accessToken,
+      refreshToken: refreshTokenString,
+      accessTokenExpiresAt: now + expiresIn,
+      refreshTokenExpiresAt: now + this.REFRESH_TOKEN_EXPIRES_IN,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        role: newUser.role as UserRole,
+        firstName: newUser.firstName || null,
+        lastName: newUser.lastName || null,
+        emailVerified: newUser.emailVerified || false,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt
       },
       tokenType: 'Bearer',
       expiresIn

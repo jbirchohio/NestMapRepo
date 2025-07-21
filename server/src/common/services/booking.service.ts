@@ -1,7 +1,7 @@
 import { Inject } from '@nestjs/common';
 import { Logger } from '@nestjs/common/services/logger.service';
 import { BookingRepository } from '../repositories/booking/booking.repository.interface';
-import Booking from '../../../../shared/types/bookings';
+import { Booking } from '../../db/schema';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces';
 import { Injectable } from '@nestjs/common/decorators/core/index';
 
@@ -21,7 +21,7 @@ export class BookingService {
   /**
    * Get a booking by ID
    */
-  async getBookingById(id: string): Promise<typeof Booking | null> {
+  async getBookingById(id: string): Promise<Booking | null> {
     this.logger.log(`Getting booking by ID: ${id}`);
     return this.bookingRepository.findById(id);
   }
@@ -29,7 +29,7 @@ export class BookingService {
   /**
    * Get all bookings
    */
-  async getAllBookings(): Promise<typeof Booking[]> {
+  async getAllBookings(): Promise<Booking[]> {
     this.logger.log('Getting all bookings');
     return this.bookingRepository.findAll();
   }
@@ -37,7 +37,7 @@ export class BookingService {
   /**
    * Get all bookings for a user
    */
-  async getBookingsByUserId(userId: string): Promise<typeof Booking[]> {
+  async getBookingsByUserId(userId: string): Promise<Booking[]> {
     this.logger.log(`Getting bookings for user: ${userId}`);
     return this.bookingRepository.findByUserId(userId);
   }
@@ -45,7 +45,7 @@ export class BookingService {
   /**
    * Get all bookings for a trip
    */
-  async getBookingsByTripId(tripId: string): Promise<typeof Booking[]> {
+  async getBookingsByTripId(tripId: string): Promise<Booking[]> {
     this.logger.log(`Getting bookings for trip: ${tripId}`);
     return this.bookingRepository.findByTripId(tripId);
   }
@@ -53,7 +53,7 @@ export class BookingService {
   /**
    * Create a new booking
    */
-  async createBooking(bookingData: Omit<typeof Booking, 'id' | 'createdAt' | 'updatedAt'>): Promise<typeof Booking> {
+  async createBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Promise<Booking> {
     this.logger.log('Creating new booking');
     return this.bookingRepository.create(bookingData);
   }
@@ -61,7 +61,7 @@ export class BookingService {
   /**
    * Update a booking
    */
-  async updateBooking(id: string, bookingData: Partial<Omit<typeof Booking, 'id' | 'createdAt' | 'updatedAt'>>): Promise<typeof Booking | null> {
+  async updateBooking(id: string, bookingData: Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Booking | null> {
     this.logger.log(`Updating booking: ${id}`);
     return this.bookingRepository.update(id, bookingData);
   }
@@ -77,7 +77,7 @@ export class BookingService {
   /**
    * Confirm a booking
    */
-  async confirmBooking(id: string, confirmationDetails: BookingConfirmationDetails): Promise<typeof Booking | null> {
+  async confirmBooking(id: string, confirmationDetails: BookingConfirmationDetails): Promise<Booking | null> {
     this.logger.log(`Confirming booking: ${id}`);
     return this.bookingRepository.confirmBooking(id, confirmationDetails);
   }
@@ -85,7 +85,7 @@ export class BookingService {
   /**
    * Cancel a booking
    */
-  async cancelBooking(id: string, cancellationReason: string): Promise<typeof Booking | null> {
+  async cancelBooking(id: string, cancellationReason: string): Promise<Booking | null> {
     this.logger.log(`Cancelling booking: ${id}, reason: ${cancellationReason}`);
     return this.bookingRepository.cancelBooking(id, cancellationReason);
   }
