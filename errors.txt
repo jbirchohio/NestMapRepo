@@ -1,4 +1,0 @@
-lots of typescript errors.
-
-client might have tsconfig issues that are causing 1500 errors
-

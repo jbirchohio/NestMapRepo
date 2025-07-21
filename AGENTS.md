@@ -1,1 +1,0 @@
-mono repo with pnpm workspaces
