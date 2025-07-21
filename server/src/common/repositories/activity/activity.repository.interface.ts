@@ -1,5 +1,5 @@
-import Activity from '../../db/schema';
-type ActivityType = typeof Activity;
+import { activities } from '../../../db/schema';
+type ActivityType = typeof activities.$inferSelect;
 import { BaseRepository } from '../base.repository.interface';
 
 export interface ActivityRepository extends BaseRepository<ActivityType, string, Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>, Partial<Omit<ActivityType, 'id' | 'createdAt' | 'updatedAt'>>> {

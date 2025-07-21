@@ -1,14 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { z, ZodError, AnyZodObject } from 'zod';
+import { z, ZodError, AnyZodObject, ZodEffects } from 'zod';
 
 // Export the AnyZodObject type so it can be imported by other modules
 export type { AnyZodObject };
+
+// Type for validation schemas that can be either regular ZodObject or ZodEffects
+type ValidationSchema = AnyZodObject | ZodEffects<any, any, any>;
+export type { ValidationSchema };
 
 /**
  * Real validation middleware using Zod
  * Validates request body, query parameters, and URL parameters
  */
-export const validateRequest = (schema: AnyZodObject): ((req: Request, res: Response, next: NextFunction) => void | Response) => {
+export const validateRequest = (schema: ValidationSchema): ((req: Request, res: Response, next: NextFunction) => void | Response) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       // Validate the entire request object including body, query, and params

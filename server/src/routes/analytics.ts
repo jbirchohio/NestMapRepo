@@ -18,7 +18,7 @@ type ApiResponse<T = any> = {
 };
 
 // GET /api/analytics - General analytics (requires permission)
-router.get('/', requireRole(['admin', 'manager', 'superadmin_owner', 'superadmin_staff']), async (req: Request, res: Response) => {
+router.get('/', requireRole(['admin', 'manager', 'superadmin_owner', 'superadmin_staff']), async (_req: Request, res: Response) => {
   try {
     // Mock analytics data
     const analytics = {
@@ -118,7 +118,7 @@ router.get('/agency', requireRole(['admin', 'manager', 'superadmin_owner', 'supe
 });
 
 // GET /api/analytics/corporate - Corporate-specific analytics
-router.get('/corporate', requireRole(['admin', 'manager', 'superadmin_owner', 'superadmin_staff']), async (req: Request, res: Response) => {
+router.get('/corporate', requireRole(['admin', 'manager', 'superadmin_owner', 'superadmin_staff']), async (_req: Request, res: Response) => {
   try {
     // Mock corporate analytics data
     const corporateAnalytics = {

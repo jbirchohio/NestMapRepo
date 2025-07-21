@@ -2,7 +2,7 @@ import { pgTable, uuid, text, timestamp, integer, jsonb, pgEnum, index } from 'd
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { organizations, users } from './schema';
-import InvoiceItem from '../../shared/types/invoice';
+import { InvoiceItem } from '@shared/src/types/invoice';
 
 // Import proposals from schema
 const proposals = pgTable('proposals', {

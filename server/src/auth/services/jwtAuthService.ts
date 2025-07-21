@@ -168,8 +168,7 @@ export class JwtAuthService implements IAuthService {
         emailVerified: false,
         createdAt: new Date(),
         updatedAt: new Date()
-      },
-      ...tokens
+      }
     };
   }
 

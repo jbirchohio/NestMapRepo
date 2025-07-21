@@ -86,7 +86,7 @@ router.get('/pending', async (req: Request, res: Response) => {
 });
 
 // GET /api/approvals/rules
-router.get('/rules', async (req: Request, res: Response) => {
+router.get('/rules', async (_req: Request, res: Response) => {
   try {
     // Mock approval rules
     const approvalRules = [

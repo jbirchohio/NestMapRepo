@@ -1,5 +1,4 @@
 import { Router, Request, Response } from 'express';
-import { eq } from 'drizzle-orm';
 import { getDatabase } from '../db/connection';
 import { users, organizations } from '../db/schema';
 import { logger } from '../utils/logger';
@@ -22,7 +21,7 @@ type ApiResponse<T = any> = {
 };
 
 // GET /api/admin/analytics
-router.get('/analytics', async (req: Request, res: Response) => {
+router.get('/analytics', async (_req: Request, res: Response) => {
   try {
     const db = getDatabase();
 
