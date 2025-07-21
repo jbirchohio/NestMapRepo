@@ -28,23 +28,87 @@ export const supabase = (hasValidSupabaseUrl && hasValidServiceKey)
   ? createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
   : null;
 
-// Create database connections only if valid credentials are available
+// Database connection state
 let pool: Pool | null = null;
-let db: any = null;
+let db: ReturnType<typeof drizzle> | null = null;
 
-if (hasValidSupabaseUrl && hasValidServiceKey && hasValidDbPassword) {
-  // Extract database URL from Supabase
-  const supabaseUrl = new URL(process.env.SUPABASE_URL!);
-  const databaseUrl = `postgresql://postgres.${supabaseUrl.hostname.split('.')[0]}:${process.env.SUPABASE_DB_PASSWORD}@${supabaseUrl.hostname}:5432/postgres`;
+// Type for the database connection state
+export interface DatabaseConnection {
+  db: ReturnType<typeof drizzle>;
+  pool: Pool;
+}
 
-  // Create PostgreSQL connection pool
-  pool = new Pool({
-    connectionString: databaseUrl,
-    max: 20, // Maximum number of clients in the pool
-    idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-    connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
-    maxUses: 7500, // Close and remove a connection after it has been used 7500 times
-  });
+/**
+ * Initialize the database connection
+ * @returns Promise that resolves when the database is connected
+ * @throws Error if connection fails
+ */
+export async function initializeDatabase(): Promise<DatabaseConnection> {
+  if (!hasValidSupabaseUrl || !hasValidServiceKey || !hasValidDbPassword) {
+    throw new Error('Missing required database credentials');
+  }
+  // Get database URL from environment variables
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL environment variable is not set');
+  }
+
+  // Parse the database URL to extract connection details
+  let dbConfig;
+  try {
+    const url = new URL(databaseUrl);
+    dbConfig = {
+      host: url.hostname,
+      port: parseInt(url.port) || 5432,
+      database: url.pathname.replace(/^\/+/, '') || 'postgres',
+      user: url.username || 'postgres',
+      password: url.password || '',
+      ssl: {
+        rejectUnauthorized: false
+      }
+    };
+    
+    logger.debug('Database connection configuration:', {
+      host: dbConfig.host,
+      port: dbConfig.port,
+      database: dbConfig.database,
+      user: dbConfig.user,
+      password: '***',
+      ssl: 'enabled'
+    });
+  } catch (error) {
+    throw new Error(`Invalid DATABASE_URL: ${error.message}`);
+  }
+
+  try {
+    // Create PostgreSQL connection pool with enhanced configuration
+    pool = new Pool({
+      ...dbConfig,
+      max: 10, // Reduced max connections to prevent overwhelming the database
+      idleTimeoutMillis: 10000, // Close idle clients after 10 seconds
+      connectionTimeoutMillis: 10000, // Increase timeout to 10 seconds
+      maxUses: 1000, // Close and remove a connection after it has been used 1000 times
+      keepAlive: true, // Keep connections alive
+      keepAliveInitialDelayMillis: 10000 // Wait 10 seconds before sending the first keepalive
+    });
+
+    // Add error handling for the pool
+    pool.on('error', (err: Error) => {
+      logger.error('Unexpected error on idle client', err);
+      // In a production environment, you might want to implement reconnection logic here
+    });
+
+    // Test the connection
+    const client = await pool.connect();
+    client.release();
+    logger.info('Successfully connected to the database');
+
+  } catch (error) {
+    logger.error('Failed to connect to the database:', error);
+    // Re-throw the error to be handled by the application
+    throw new Error(`Database connection failed: ${error.message}`);
+  }
 
   // Create Drizzle ORM instance
   db = drizzle(pool, { 
@@ -52,6 +116,19 @@ if (hasValidSupabaseUrl && hasValidServiceKey && hasValidDbPassword) {
     logger: config.server.env === 'development' 
       ? { logQuery: (query, params) => logger.debug('Query:', { query, params }) }
       : false
+  });
+  
+  if (!pool || !db) {
+    throw new Error('Database connection failed to initialize');
+  }
+  
+  return { db, pool };
+}
+
+// Initialize the database connection when this module is imported
+if (hasValidSupabaseUrl && hasValidServiceKey && hasValidDbPassword) {
+  initializeDatabase().catch(error => {
+    logger.error('Failed to initialize database:', error);
   });
 }
 

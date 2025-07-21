@@ -81,6 +81,7 @@ router.post('/', async (req, res) => {
  * @access Private (requires JWT)
  */
 router.get('/health', (_req, res) => {
+  console.log('Health check endpoint hit');
   res.json({
     status: 'healthy',
     service: 'metrics',

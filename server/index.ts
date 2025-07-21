@@ -83,7 +83,14 @@ import aiRoutes from './routes/ai-routes';
 import enterpriseRoutes from './routes/enterprise-routes';
 import comprehensiveRoutes from './routes/comprehensive-routes';
 import onboardingFeedbackRoutes from './routes/onboarding-feedback';
-import metricsRoutes from './routes/metrics';
+import metricsRoutes from './routes/metrics.js'; // Added .js extension for ES modules
+
+// Debug: Log route imports
+console.log('\n🔧 Route Registration Debug:');
+console.log('✅ Metrics routes module loaded');
+console.log('📝 Registering routes...');
+console.log('  - POST /api/metrics - Metrics collection');
+console.log('  - GET  /api/metrics/health - Health check');
 
 // Phase 1 Innovation Roadmap Routes
 import voiceRoutes from './routes/voice';
@@ -105,10 +112,10 @@ import automationOrchestrationRoutes from './routes/automation-orchestration';
 const app = express();
 
 // Configuration
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || 'localhost';
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173'];
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5000', 'http://localhost:5173'];
 
 // Basic security middleware
 app.use(helmet({
@@ -162,7 +169,23 @@ app.use('/api/ai', authenticate, aiRoutes);
 app.use('/api/enterprise', authenticate, enterpriseRoutes);
 app.use('/api/comprehensive', authenticate, comprehensiveRoutes);
 app.use('/api/onboarding-feedback', authenticate, onboardingFeedbackRoutes);
-app.use('/api/metrics', authenticate, metricsRoutes);
+
+// Mount metrics routes with debug logging
+console.log('\n🔧 Mounting metrics routes...');
+app.use('/api/metrics', (req, res, next) => {
+  console.log(`📡 Metrics route hit: ${req.method} ${req.originalUrl}`);
+  next();
+}, metricsRoutes);
+
+// Test route (no auth required)
+app.get('/test-route', (req, res) => {
+  console.log('✅ Test route hit!');
+  res.json({ 
+    success: true, 
+    message: 'Test route works!',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Phase 1 Innovation Roadmap Routes (Voice-First Interface)
 app.use('/api/voice', authenticate, voiceRoutes);
@@ -180,15 +203,35 @@ app.use('/api/predictive-business-intelligence', authenticate, predictiveBusines
 app.use('/api/iot-smart-city', authenticate, iotSmartCityRoutes);
 app.use('/api/automation-orchestration', authenticate, automationOrchestrationRoutes);
 
+// Debug: Log registered routes
+console.log('\nRegistered routes:');
+const printRoutes = (router: any, prefix = '') => {
+  router.stack.forEach((layer: any) => {
+    if (layer.route) {
+      const methods = Object.keys(layer.route.methods).join(', ').toUpperCase();
+      console.log(`  ${methods} ${prefix}${layer.route.path}`);
+    } else if (layer.name === 'router' && layer.handle.stack) {
+      const newPrefix = prefix + (layer.regexp.toString().replace(/^\/\^\\([^\]]*)\\/, '') + '/').replace(/\?<[^>]+>/g, '').replace(/\?/g, '').replace(/\//g, '');
+      printRoutes(layer.handle, newPrefix);
+    }
+  });
+};
+
+printRoutes(app._router);
+
 // Health check route
 app.get('/health', (_req, res) => {
-  res.json({
-    status: 'healthy',
+  res.status(200).json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    environment: NODE_ENV
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
   });
 });
+
+// Database health check route
+import dbHealthRouter from './routes/db-health';
+app.use('/health', dbHealthRouter);
 
 // Global error handler
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -247,13 +290,32 @@ app.use((_req: Request, res: Response) => {
 // Create HTTP server
 const server = http.createServer(app);
 
-// Start server
-server.listen(Number(PORT), HOST, () => {
-  logger.info(`Server running on ${HOST}:${PORT}`);
-  logger.info(`Environment: ${NODE_ENV}`);
-  logger.info(`Health check: http://${HOST}:${PORT}/health`);
-  logger.info('Using SecureAuth as JWT authentication source of truth');
-});
+// Import the database initialization function
+import { initializeDatabase } from './db-connection';
+
+// Start server with database initialization
+async function startServer() {
+  try {
+    // Initialize database connection
+    logger.info('Initializing database connection...');
+    await initializeDatabase();
+    logger.info('Database connection established successfully');
+
+    // Start the server
+    server.listen(Number(PORT), HOST, () => {
+      logger.info(`Server running on http://${HOST}:${PORT}`);
+      logger.info(`Environment: ${NODE_ENV}`);
+      logger.info(`Health check: http://${HOST}:${PORT}/health`);
+      logger.info('Using SecureAuth as JWT authentication source of truth');
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the application
+startServer();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

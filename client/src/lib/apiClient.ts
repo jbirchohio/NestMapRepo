@@ -1,6 +1,10 @@
 import { ApiResponse, ApiErrorResponse } from '@/types/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+// In development, use relative path to leverage Vite's proxy
+// In production, use the environment variable if set, otherwise use relative path
+const API_BASE_URL = import.meta.env.PROD 
+  ? (import.meta.env.VITE_API_URL || '/api')
+  : '/api';
 
 export class ApiClient {
   private static instance: ApiClient;
