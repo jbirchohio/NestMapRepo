@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common/index';
 import { eq } from 'drizzle-orm';
 import { db } from '../../../db';
-import { bookings } from '../../../db/bookingSchema';
-import { type Booking } from '../../../db/bookingSchema';
+import { bookings, type Booking } from '../../../db/schema';
 import { users } from '../../../db/schema';
 import { BookingRepository, type BookingConfirmationDetails } from './booking.repository.interface';
 import { BaseRepositoryImpl } from '../base.repository';
@@ -41,7 +40,7 @@ export class BookingRepositoryImpl extends BaseRepositoryImpl<Booking, string, O
     const [booking] = await db
       .select()
       .from(bookings)
-      .where(eq(bookings.providerReferenceId, providerReferenceId))
+      .where(eq(bookings.providerBookingId, providerReferenceId))
       .limit(1);
     
     return booking || null;
