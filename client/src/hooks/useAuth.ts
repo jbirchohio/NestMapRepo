@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { jwtAuth, type User as JWTUser } from '@/lib/jwtAuth';
+import { jwtAuth } from '@/lib/jwtAuth';
 import config from '@/config/env';
 
 // Map JWT User to our expected User interface
@@ -145,7 +145,7 @@ export function useAuth() {
 
   const signInWithProvider = async (
     provider: 'google' | 'github' | 'microsoft',
-    options: { callbackUrl?: string } = {}
+    _options: { callbackUrl?: string } = {}
   ) => {
     // For now, provider auth is not implemented with JWT
     throw new Error(`${provider} authentication not yet implemented`);

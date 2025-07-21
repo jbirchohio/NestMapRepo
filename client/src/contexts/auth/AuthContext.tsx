@@ -91,9 +91,9 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
   };
 
   // Mock functions for compatibility (not implemented in JWT auth)
-  const getLoginAttempts = (email: string): number => 0;
-  const incrementLoginAttempts = (email: string): void => {};
-  const setAccountLockout = (email: string): void => {};
+  const getLoginAttempts = (_email: string): number => 0;
+  const incrementLoginAttempts = (_email: string): void => {};
+  const setAccountLockout = (_email: string): void => {};
   const validatePassword = () => ({ isValid: true });
 
   // Context value
@@ -111,7 +111,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }): React.ReactE
     incrementLoginAttempts,
     setAccountLockout,
     isAuthenticated: () => jwtAuth.isAuthenticated,
-    hasPermission: (permission: string) => false, // Not implemented in JWT auth
+    hasPermission: (_permission: string) => false, // Not implemented in JWT auth
     isLoading: jwtAuth.isLoading,
     validatePassword,
   };
