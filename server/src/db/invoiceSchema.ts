@@ -2,7 +2,6 @@ import { pgTable, uuid, text, timestamp, integer, jsonb, pgEnum, index } from 'd
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import { organizations, users } from './schema';
-import { InvoiceItem } from '@shared/src/types/invoice';
 
 // Import proposals from schema
 const proposals = pgTable('proposals', {
@@ -40,7 +39,7 @@ export const invoices = pgTable('invoices', {
   currency: text('currency').default('usd'),
   description: text('description'),
   // Invoice items validation schema
-  items: jsonb('items').$type<Array<typeof InvoiceItem>>().default([]),
+  items: jsonb('items').$type<Array<Record<string, any>>>().default([]),
   dueDate: timestamp('due_date'),
   paidAt: timestamp('paid_at'),
   viewedAt: timestamp('viewed_at'),

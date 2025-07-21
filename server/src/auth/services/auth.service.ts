@@ -84,11 +84,24 @@ export class AuthService implements IAuthService {
     // Create new user
     const newUser = await this.userRepository.create({
       email,
+      username: email, // Use email as username for now
       passwordHash,
       firstName: firstName || null,
       lastName: lastName || null,
       role: 'user' as UserRole,
-      emailVerified: false
+      organizationId: null,
+      emailVerified: false,
+      lastLoginAt: null,
+      passwordChangedAt: null,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+      resetToken: null,
+      resetTokenExpires: null,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+      mfaSecret: null,
+      lastLoginIp: null,
+      isActive: true
     });
 
     // Generate tokens

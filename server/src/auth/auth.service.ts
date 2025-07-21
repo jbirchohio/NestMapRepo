@@ -3,7 +3,7 @@
  * Implements the IAuthService interface
  */
 import bcrypt from 'bcrypt';
-const { compare, hash } = bcrypt;
+const { compare } = bcrypt;
 import jwt from 'jsonwebtoken';
 const { sign, decode, verify } = jwt;
 import { db } from '../db';
