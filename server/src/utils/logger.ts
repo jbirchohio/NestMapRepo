@@ -70,20 +70,35 @@ const stream: StreamOptions = {
 export class Logger {
   constructor(private context: string) {}
   
+  private formatMessage(message: string, meta?: Record<string, unknown>): string {
+    return meta 
+      ? `[${this.context}] ${message} ${JSON.stringify(meta)}`
+      : `[${this.context}] ${message}`;
+  }
+  
   info(message: string, meta?: Record<string, unknown>): void {
-    logger.info(meta ? `[${this.context}] ${message} ${JSON.stringify(meta)}` : `[${this.context}] ${message}`);
+    logger.info(this.formatMessage(message, meta));
   }
   
   error(message: string, error?: unknown): void {
-    logger.error(`[${this.context}] ${message}`, error);
+    if (error) {
+      logger.error(this.formatMessage(message, { error }));
+    } else {
+      logger.error(this.formatMessage(message));
+    }
   }
   
   warn(message: string, meta?: Record<string, unknown>): void {
-    logger.warn(meta ? `[${this.context}] ${message} ${JSON.stringify(meta)}` : `[${this.context}] ${message}`);
+    logger.warn(this.formatMessage(message, meta));
   }
   
-  log(message: string, meta?: Record<string, unknown>): void {
-    logger.info(meta ? `[${this.context}] ${message} ${JSON.stringify(meta)}` : `[${this.context}] ${message}`);
+  log(level: 'info' | 'warn' | 'error' | 'debug', message: string, meta?: Record<string, unknown>): void {
+    const logMessage = this.formatMessage(message, meta);
+    logger.log(level, logMessage);
+  }
+  
+  debug(message: string, meta?: Record<string, unknown>): void {
+    logger.debug(this.formatMessage(message, meta));
   }
 }
 

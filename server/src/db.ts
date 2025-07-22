@@ -1,116 +1,118 @@
-
-import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres, { Sql } from 'postgres';
+import postgres, { type Sql } from 'postgres';
 import * as schema from "./db/schema";
-// import * as superadminSchema from "@shared/src/schema";
-// For now, use empty object to avoid import issues
-const superadminSchema = {};
 
-// Check if Supabase credentials are available (allow graceful degradation)
-const hasSupabaseCredentials = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Simple logger
+const logger = {
+  info: (message: string) => console.log(`[INFO] ${new Date().toISOString()} - ${message}`),
+  error: (message: string, error?: unknown) => {
+    if (error instanceof Error) {
+      console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error.message);
+    } else {
+      console.error(`[ERROR] ${new Date().toISOString()} - ${message}`, error);
+    }
+  }
+};
 
-if (!hasSupabaseCredentials) {
-  console.warn('⚠️  Supabase credentials not found in src/db.ts - database features will be limited');
-}
-
-// Create Supabase client for auth and realtime features (only if credentials are available)
-export const supabase = hasSupabaseCredentials 
-  ? createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-  : null;
+type DatabaseClient = Sql;
 
 // Database connection variables
-let db: any = null;
-let client: Sql | null = null;
+let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
+let client: DatabaseClient | null = null;
 
 /**
  * Initialize database connection
  */
 async function initializeDatabase() {
   try {
-    // Use DATABASE_URL from environment if available, otherwise construct it
-    let databaseUrl = process.env.DATABASE_URL;
+    // Get Supabase connection details from environment variables
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabasePassword = process.env.SUPABASE_DB_PASSWORD;
     
-    if (!databaseUrl && hasSupabaseCredentials && process.env.SUPABASE_DB_PASSWORD) {
-      // Construct the connection URL as fallback
-      const dbUser = 'postgres';
-      const dbPassword = encodeURIComponent(process.env.SUPABASE_DB_PASSWORD);
-      const dbHost = 'db.yjgbbssrybxqpcrzqefb.supabase.co';
-      const dbPort = '6543'; // Use pgbouncer port for better connection pooling
-      const dbName = 'postgres';
-      
-      databaseUrl = `postgresql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?pgbouncer=true`;
+    if (!supabaseUrl || !supabasePassword) {
+      throw new Error('SUPABASE_URL and SUPABASE_DB_PASSWORD environment variables are required');
     }
+
+    // Extract project reference from Supabase URL
+    const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+    const dbHost = `db.${projectRef}.supabase.co`;
     
-    if (!databaseUrl) {
-      console.warn('⚠️ No database URL found. Server will start without database.');
-      return null;
-    }
+    // Log connection info
+    logger.info(`Connecting to Supabase database at: ${dbHost}`);
+
+    // Create the database client with connection string
+    const connectionString = `postgres://postgres:${encodeURIComponent(supabasePassword)}@${dbHost}:5432/postgres`;
     
-    console.log('🔌 Attempting to connect to database (non-blocking)...');
-    
-    // Create PostgreSQL connection with very aggressive timeouts
-    client = postgres(databaseUrl, {
+    client = postgres(connectionString, {
+      max: 10,                   // Maximum number of connections in the pool
+      idle_timeout: 20,          // Reduced idle timeout for better connection recycling
+      connect_timeout: 10,       // Connection timeout in seconds
+      max_lifetime: 60 * 10,     // Shorter max lifetime for better load balancing
       ssl: {
-        rejectUnauthorized: false, // Required for Supabase
+        rejectUnauthorized: false // Required for Supabase
       },
-      max: 2, // Very small pool size
-      idle_timeout: 5, // Very short idle timeout
-      connect_timeout: 3, // Very short connection timeout (3 seconds)
-      max_lifetime: 10 * 60, // 10 minutes max lifetime
-      debug: false, // Disable debug to reduce noise
-      prepare: false, // Disable prepared statements for pgbouncer compatibility
+      prepare: false,            // Disable prepared statements for Supabase
+      debug: process.env.NODE_ENV === 'development',
       transform: {
-        // Convert column names to camelCase
-        column: (name: string) => {
-          return name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        // Ensure proper type handling for timestamps
+        value: (val: unknown) => {
+          if (val instanceof Date) {
+            return val.toISOString();
+          }
+          return val;
         }
-      }
+      },
+      onnotice: (notice: { [key: string]: unknown }) => logger.info(`DB Notice: ${JSON.stringify(notice)}`),
+      onparameter: (key: string, value: unknown) => logger.info(`DB Parameter: ${key} = ${String(value)}`),
+      onclose: () => logger.info('DB Connection closed')
     });
     
-    // Test the connection with very short timeout
-    const testQuery = client`SELECT 1`;
-    const timeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection test timeout after 2 seconds')), 2000)
-    );
-    
-    await Promise.race([testQuery, timeout]);
-    
-    // Initialize Drizzle
+    // Test the connection
+    try {
+      logger.info('Testing database connection...');
+      const startTime = Date.now();
+      await client`SELECT 1`;
+      const endTime = Date.now();
+      logger.info(`✅ Database connection successful (${endTime - startTime}ms)`);
+    } catch (testError) {
+      logger.error('Database connection test failed', testError);
+      throw testError;
+    }
+
+    // Initialize Drizzle ORM with the PostgreSQL client and schema
     db = drizzle(client, { 
-      schema: { ...schema, ...superadminSchema },
-      logger: false // Disable logging to reduce noise
+      schema,
+      logger: process.env.NODE_ENV === 'development'
     });
     
-    console.log('✅ Database connection established successfully');
-    return db;
+    logger.info('✅ Database client and ORM initialized successfully');
+    return { db, client };
   } catch (error) {
-    console.warn('⚠️ Database connection failed - continuing without database:');
+    logger.error('❌ Failed to initialize database', error);
     
     if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
-        console.warn('💡 Database connection timed out. Server starting in offline mode.');
-      } else if (error.message.includes('ENOTFOUND')) {
-        console.warn('💡 Database host not found. Server starting in offline mode.');
-      } else if (error.message.includes('authentication')) {
-        console.warn('💡 Database authentication failed. Server starting in offline mode.');
-      } else {
-        console.warn('💡 Database error:', error.message);
+      const errorMessage = error.message;
+      if (errorMessage.includes('timeout')) {
+        logger.error('Database connection timed out');
+      } else if (errorMessage.includes('ENOTFOUND')) {
+        logger.error('Database host not found');
+      } else if (errorMessage.includes('authentication')) {
+        logger.error('Database authentication failed');
       }
     }
     
     // Clean up client if it was created
-    if (client) {
+    const clientToClose = client;
+    client = null;
+    if (clientToClose) {
       try {
-        await client.end();
+        await clientToClose.end();
       } catch (cleanupError) {
         // Ignore cleanup errors
       }
-      client = null;
     }
     
-    console.log('🚀 Server will start without database connection. API endpoints will return mock data.');
-    return null;
+    throw error; // Re-throw to be handled by the caller
   }
 }
 
@@ -132,14 +134,22 @@ export async function getDatabase() {
 
 // For backward compatibility
 export const pool = {
-  query: async (text: string, params?: any[]) => {
+  /**
+   * Execute a raw SQL query with parameters
+   * @template T - The expected return type (defaults to any[])
+   * @param text - The SQL query string
+   * @param params - Array of query parameters
+   * @returns Promise containing the query results
+   */
+  query: async <T = any[]>(text: string, params: (string | number | boolean | Date | null)[] = []): Promise<T[]> => {
     if (!client) {
       await getDatabase();
+      if (!client) {
+        throw new Error('Database connection not available');
+      }
     }
-    if (!client) {
-      throw new Error('Database connection not available');
-    }
-    return client.unsafe(text, params || []);
+    // Type assertion is safe here as we've typed the params array
+    return client.unsafe<T[]>(text, params as any[]);
   }
 };
 
@@ -150,6 +160,5 @@ export { db };
 export default {
   getDatabase,
   db,
-  pool,
-  supabase
+  pool
 };
