@@ -2,7 +2,7 @@ export interface JwtPayload {
   sub: string;
   email: string;
   name: string;
-  exp: number;
+  exp?: number; // Made optional since jsonwebtoken sets this when using expiresIn
   iat: number;
   jti: string;
   permissions: string[];

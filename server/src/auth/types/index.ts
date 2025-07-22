@@ -9,7 +9,7 @@ export interface TokenPayload {
   role: UserRole;
   type: TokenType;
   iat: number; // Issued at
-  exp: number; // Expiration time
+  exp?: number; // Expiration time - made optional since jsonwebtoken sets this when using expiresIn
   organizationId?: string;
   sessionId?: string;
 }

@@ -17,7 +17,7 @@ export interface TokenPayload {
   jti: string;
   sub: string;
   iat: number;
-  exp: number;
+  exp?: number; // Made optional since jsonwebtoken sets this when using expiresIn
   type: TokenType;
   role?: string;
   email?: string;

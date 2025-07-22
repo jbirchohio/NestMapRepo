@@ -10,7 +10,7 @@ export interface JWTUser {
   displayName?: string;
   jti: string;
   iat: number;
-  exp: number;
+  exp?: number; // Made optional since jsonwebtoken sets this when using expiresIn
 }
 
 declare global {
@@ -33,7 +33,7 @@ export interface TokenPayload {
   email: string;
   role: UserRole;
   iat: number;
-  exp: number;
+  exp?: number; // Made optional since jsonwebtoken sets this when using expiresIn
 }
 
 export interface AuthTokens {
