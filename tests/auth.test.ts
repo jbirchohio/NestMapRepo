@@ -178,7 +178,7 @@ describe('Organization Scoping in Auth', () => {
       email: 'org@example.com',
       password: 'password123',
       username: 'orguser',
-      organizationId: 1
+      organizationId: '1' // Fix: organizationId should be string, not number
     };
 
     const response = await request(app)
@@ -186,7 +186,7 @@ describe('Organization Scoping in Auth', () => {
       .send(userData)
       .expect(201);
 
-    expect(response.body.user.organizationId).toBe(userData.organizationId);
+    expect(response.body.user.organizationId).toBe('1');
   });
 
   it('should enforce organization access in protected routes', async () => {
