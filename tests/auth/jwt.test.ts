@@ -16,7 +16,7 @@ const mockLogger = {
   debug: jest.fn()
 };
 
-jest.mock('../../server/src/utils/logger', () => ({
+jest.mock('../../server/src/utils/logger.ts', () => ({
   default: mockLogger,
   __esModule: true
 }));

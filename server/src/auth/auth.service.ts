@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 const { compare } = bcrypt;
 import jwt from 'jsonwebtoken';
 const { sign, decode, verify } = jwt;
-import { db } from '../db';
+import { db, getDatabase } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { IAuthService } from './interfaces/auth.service.interface';
@@ -131,6 +131,12 @@ export class AuthService implements IAuthService {
   async login(loginData: LoginDto, ip: string, userAgent: string): Promise<AuthResponse> {
     const { email, password } = loginData;
 
+    // Ensure database connection is initialized
+    await getDatabase();
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
+
     // Find user by email
     const user = await db.query.users.findFirst({
       where: eq(users.email, email)
@@ -188,6 +194,11 @@ export class AuthService implements IAuthService {
    */
   async register(registerData: RegisterDto, ip: string, userAgent: string): Promise<AuthResponse> {
     const { email, password, firstName, lastName } = registerData;
+
+    await getDatabase();
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
 
     // Check if user already exists
     const existingUser = await db.query.users.findFirst({
@@ -255,6 +266,11 @@ export class AuthService implements IAuthService {
    */
   async refreshToken(data: RefreshTokenDto, ip: string, userAgent: string): Promise<AuthResponse> {
     const { refreshToken } = data;
+
+    await getDatabase();
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
 
     // Verify refresh token
     const result = await this.verifyToken(refreshToken);
@@ -344,6 +360,9 @@ export class AuthService implements IAuthService {
    * Request a password reset for a user
    */
   async requestPasswordReset(email: string): Promise<void> {
+    await getDatabase();
+    if (!db) return;
+
     const user = await db.query.users.findFirst({
       where: eq(users.email, email)
     });

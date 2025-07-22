@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { Sql } from 'postgres';
 import * as schema from "./db/schema";
+import { getDatabaseUrl } from '../config';
 // import * as superadminSchema from "@shared/src/schema";
 // For now, use empty object to avoid import issues
 const superadminSchema = {};
@@ -30,16 +31,9 @@ async function initializeDatabase() {
   try {
     // Use DATABASE_URL from environment if available, otherwise construct it
     let databaseUrl = process.env.DATABASE_URL;
-    
+
     if (!databaseUrl && hasSupabaseCredentials && process.env.SUPABASE_DB_PASSWORD) {
-      // Construct the connection URL as fallback
-      const dbUser = 'postgres';
-      const dbPassword = encodeURIComponent(process.env.SUPABASE_DB_PASSWORD);
-      const dbHost = 'db.yjgbbssrybxqpcrzqefb.supabase.co';
-      const dbPort = '6543'; // Use pgbouncer port for better connection pooling
-      const dbName = 'postgres';
-      
-      databaseUrl = `postgresql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?pgbouncer=true`;
+      databaseUrl = getDatabaseUrl();
     }
     
     if (!databaseUrl) {
