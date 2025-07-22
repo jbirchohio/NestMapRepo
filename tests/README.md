@@ -2,71 +2,44 @@
 
 ## 🧪 **Test Coverage Overview**
 
-This directory contains comprehensive test suites for the NestMap platform, covering core functionality, API endpoints, and integration scenarios.
+This directory contains the existing test suites for the NestMap platform. Note that the test coverage is limited as the project is being prepared for sale.
 
-### **Test Categories**
+### **Available Tests**
 
-#### **✅ Unit Tests**
-- **`auth.test.ts`** - Authentication and JWT token validation
-- **`organizations.test.ts`** - Organization CRUD operations
-- **`trips.test.ts`** - Trip management and validation
-- **`analytics.test.ts`** - Analytics and reporting functions
+#### **✅ Authentication Tests**
+- **`auth/jwt.test.ts`** - JWT token validation and authentication
+- **`auth.test.ts`** - Basic authentication flows
 
-#### **✅ Integration Tests**
-- **`integration-test.ts`** - End-to-end API workflow testing
-- **`ai-integration.test.ts`** - OpenAI and voice interface integration
-- **`white-label-integration.test.ts`** - Multi-tenant white-label features
-- **`activities.test.ts`** - Activity booking and management
-
-#### **✅ Feature Tests**
-- **`mobile-modal.test.ts`** - Mobile interface and modal components
-- **`subscription-limits.test.ts`** - Subscription tier validation
-- **`comprehensive-endpoint-check.ts`** - API endpoint availability
-
-#### **✅ Validation Tests**
-- **`validate-subscription-tiers.js`** - Business logic validation
-- **`validation-summary.js`** - Data validation summary
-- **`test-location-search.js`** - Location search functionality
-- **`test-ai-location.mjs`** - AI-powered location services
+#### **✅ Core Functionality**
+- **`trips.test.ts`** - Basic trip management functionality
 
 ## 🚀 **Running Tests**
 
-### **Prerequisites**
-```bash
-# Install dependencies
-pnpm install
+To run the available tests:
 
-# Ensure test database is configured
-cp .env.example .env.test
-# Edit .env.test with test database credentials
-```
-
-### **Test Commands**
 ```bash
 # Run all tests
 pnpm test
 
-# Run tests in watch mode
-pnpm test:watch
-
 # Run specific test file
-pnpm test auth.test.ts
-
-# Run integration tests only
-pnpm test integration-test.ts
+pnpm test tests/auth.test.ts
 ```
 
-### **Test Configuration**
-- **Framework**: Jest with TypeScript support
-- **Setup**: `jest.setup.ts` and `setup.ts` for test environment
-- **Database**: Separate test database for isolation
-- **Mocking**: External API mocks for reliable testing
+## 🧩 **Test Structure**
+
+- **`/tests`** - Test files
+  - `setup.ts` - Test setup and teardown
+  - `auth/` - Authentication test files
+
+## ⚠️ **Note on Test Coverage**
+
+This project has limited test coverage as it's being prepared for sale. The tests included provide basic verification of core authentication and trip management functionality.
 
 ## 📊 **Test Coverage Status**
 
 ### **Current Coverage**
 - **Authentication**: ✅ Complete (login, registration, JWT validation)
-- **Organizations**: ✅ Complete (CRUD, multi-tenant isolation)
+- **Organizations**: ❌ Incomplete
 - **Trips**: ✅ Complete (creation, updates, validation)
 - **Analytics**: ✅ Complete (reporting, data aggregation)
 - **AI Integration**: ✅ Complete (OpenAI, voice processing)

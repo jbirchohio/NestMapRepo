@@ -4,8 +4,32 @@ import app from './app';
 import { logger } from './utils/logger';
 import { connectDatabase } from './db/connection';
 
-// Load environment variables from parent directory
-config({ path: path.resolve(process.cwd(), '../.env') });
+// Load environment variables from monorepo root
+// Try multiple possible paths to find the root .env file
+const possibleEnvPaths = [
+  path.resolve(process.cwd(), '../.env'),  // From server directory
+  path.resolve(__dirname, '../../.env'),   // From dist directory
+  path.resolve(__dirname, '../../../.env') // From nested dist
+];
+
+let envLoaded = false;
+for (const envPath of possibleEnvPaths) {
+  try {
+    const result = config({ path: envPath });
+    if (!result.error) {
+      console.log(`✅ Environment loaded from: ${envPath}`);
+      envLoaded = true;
+      break;
+    }
+  } catch (error) {
+    // Continue to next path
+  }
+}
+
+if (!envLoaded) {
+  console.warn('⚠️ Could not load .env file from any expected location');
+  console.log('Trying paths:', possibleEnvPaths);
+}
 
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || 'localhost';

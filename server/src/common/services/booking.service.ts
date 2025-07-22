@@ -1,9 +1,9 @@
-import { Inject } from '@nestjs/common';
-import { Logger } from '@nestjs/common/services/logger.service';
+import { Inject } from 'injection-js';
+import Logger from 'winston';
 import { BookingRepository } from '../repositories/booking/booking.repository.interface';
 import { Booking } from '../../db/schema';
 import { BookingConfirmationDetails } from '../interfaces/booking.interfaces';
-import { Injectable } from '@nestjs/common/decorators/core/index';
+import { Injectable } from 'injection-js';
 
 /**
  * Service for managing bookings
@@ -11,7 +11,7 @@ import { Injectable } from '@nestjs/common/decorators/core/index';
  */
 @Injectable()
 export class BookingService {
-  private readonly logger = new Logger(BookingService.name);
+  private readonly logger = Logger.createLogger(BookingService.name);
 
   constructor(
     @Inject('BookingRepository')

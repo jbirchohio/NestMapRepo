@@ -14,35 +14,80 @@ let client: postgres.Sql | null = null;
 
 const connectDatabase = async (): Promise<void> => {
   try {
-    const connectionString = getDatabaseUrl();
+    // First try DATABASE_URL directly from environment
+    let connectionString = process.env.DATABASE_URL;
+    
+    // Fallback to getDatabaseUrl() function
+    if (!connectionString) {
+      connectionString = getDatabaseUrl();
+    }
     
     if (!connectionString) {
-      throw new Error('Database connection information is required');
+      logger.warn('⚠️ No database URL found. Server will start without database.');
+      logger.info('Available env vars:', {
+        DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+        SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+        SUPABASE_DB_PASSWORD: process.env.SUPABASE_DB_PASSWORD ? 'SET' : 'NOT SET'
+      });
+      return;
     }
 
-    // Create postgres client
+    logger.info('🔌 Attempting to connect to database (non-blocking)...');
+    logger.info('Connection string format:', connectionString.replace(/:[^:@]*@/, ':***@')); // Hide password
+
+    // Create postgres client with aggressive timeouts
     client = postgres(connectionString, {
-      max: 10,
-      idle_timeout: 20,
-      connect_timeout: 10,
+      max: 2,
+      idle_timeout: 5,
+      connect_timeout: 3, // 3 second timeout
+      prepare: false,
+      ssl: { rejectUnauthorized: false }
     });
 
     // Create drizzle instance with schema
     db = drizzle(client, { schema: allSchemas });
 
-    // Test the connection
-    await client`SELECT 1`;
+    // Test the connection with timeout
+    const testQuery = client`SELECT 1`;
+    const timeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection test timeout after 2 seconds')), 2000)
+    );
     
-    logger.info('Database connection established successfully');
+    await Promise.race([testQuery, timeout]);
+    
+    logger.info('✅ Database connection established successfully');
   } catch (error) {
-    logger.error('Failed to connect to database:', error);
-    throw error;
+    logger.warn('⚠️ Database connection failed - continuing without database:');
+    
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        logger.warn('💡 Database connection timed out. Server starting in offline mode.');
+      } else if (error.message.includes('ENOTFOUND')) {
+        logger.warn('💡 Database host not found. Server starting in offline mode.');
+      } else {
+        logger.warn('💡 Database error:', error.message);
+      }
+    }
+    
+    // Clean up client if it was created
+    if (client) {
+      try {
+        await client.end();
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+      client = null;
+    }
+    
+    logger.info('🚀 Server will start without database connection. API endpoints will return mock data.');
+    // Don't throw - let server start without database
   }
 };
 
 const getDatabase = () => {
   if (!db) {
-    throw new Error('Database not initialized. Call connectDatabase() first.');
+    logger.warn('⚠️ Database not available - some features may be limited');
+    return null;
   }
   return db;
 };

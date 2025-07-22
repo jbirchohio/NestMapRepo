@@ -1,16 +1,5 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Body, 
-  Param, 
-  Delete, 
-  UseGuards, 
-  Req, 
-  Res
-} from '@nestjs/common';
-import { Request, Response } from 'express';
+import express, { Request, Response } from 'express';
+import asyncHandler from 'express-async-handler';
 
 // Types and interfaces
 import { Booking } from '../../db/schema';
@@ -27,368 +16,284 @@ interface ConfirmationDetails {
   notes?: string;
 }
 
-interface CancellationDetails {
-  reason?: string;
-}
 
 /**
  * Controller for booking endpoints
- * Demonstrates how to use services and repositories through dependency injection
  */
-@Controller('bookings')
-@UseGuards(requireAuth, requireOrgContext)
 export class BookingController {
-  constructor(
-    private readonly bookingService: BookingService
-  ) {}
+  public router: express.Router;
+  
+  constructor(private readonly bookingService: BookingService) {
+    this.router = express.Router();
+    this.initializeRoutes();
+  }
+
+  private initializeRoutes(): void {
+    // Apply auth and org context middleware to all routes
+    this.router.use(requireAuth);
+    this.router.use(requireOrgContext);
+
+    // Register routes with proper binding to maintain 'this' context
+    this.router.get('/', this.getAllBookings.bind(this));
+    this.router.get('/:id', this.getBookingById.bind(this));
+    this.router.get('/trip/:tripId', this.getBookingsByTripId.bind(this));
+    this.router.get('/user/:userId', this.getBookingsByUserId.bind(this));
+    this.router.post('/', this.createBooking.bind(this));
+    this.router.put('/:id', this.updateBooking.bind(this));
+    this.router.delete('/:id', this.deleteBooking.bind(this));
+    this.router.post('/:id/confirm', this.confirmBooking.bind(this));
+    this.router.post('/:id/cancel', this.cancelBooking.bind(this));
+    this.router.get('/statistics', this.getBookingStatistics.bind(this));
+  }
 
   /**
    * Get a booking by ID
    */
-  @Get(':id')
-  @UseGuards(requireAuth, requireOrgContext)
-  async getBookingById(
-    @Param('id') id: string,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      const booking = await this.bookingService.getBookingById(id);
-      if (!booking) {
-        return ResponseFormatter.notFound(res, 'Booking not found');
-      }
-
-      if (booking.userId !== req.user.id && !req.user.isAdmin) {
-        return ResponseFormatter.forbidden(res, 'Not authorized to view this booking');
-      }
-
-      return ResponseFormatter.success(res, { booking });
-    } catch (error) {
-      console.error(`Error getting booking ${id}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while fetching the booking');
+  private getBookingById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const { id } = req.params;
+    const booking = await this.bookingService.getBookingById(id);
+    
+    if (!booking) {
+      ResponseFormatter.notFound(res, 'Booking not found');
+      return;
+    }
+
+    // Check if user has access to this booking
+    if (booking.userId !== req.user.id && !req.user.isAdmin) {
+      ResponseFormatter.forbidden(res, 'Not authorized to view this booking');
+      return;
+    }
+
+    ResponseFormatter.success(res, { booking });
+  });
 
   /**
    * Get all bookings
    */
-  @Get()
-  @UseGuards(requireAuth, requireOrgContext)
-  async getAllBookings(
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      const bookings = await this.bookingService.getAllBookings();
-      return ResponseFormatter.success(res, { bookings });
-    } catch (error) {
-      console.error('Error getting all bookings', error);
-      return ResponseFormatter.serverError(res, 'An error occurred while fetching bookings');
+  private getAllBookings = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const bookings = await this.bookingService.getAllBookings();
+    ResponseFormatter.success(res, { bookings });
+  });
 
   /**
    * Get bookings by trip ID
    */
-  @Get('trip/:tripId')
-  @UseGuards(requireAuth, requireOrgContext)
-  async getBookingsByTripId(
-    @Param('tripId') tripId: string,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      const bookings = await this.bookingService.getBookingsByTripId(tripId);
-      return ResponseFormatter.success(res, { bookings });
-    } catch (error) {
-      console.error(`Error getting bookings for trip ${tripId}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while fetching bookings');
+  private getBookingsByTripId = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const { tripId } = req.params;
+    const bookings = await this.bookingService.getBookingsByTripId(tripId);
+    ResponseFormatter.success(res, { bookings });
+  });
 
   /**
    * Get bookings by user ID
    */
-  @Get('user/:userId')
-  @UseGuards(requireAuth, requireOrgContext)
-  async getBookingsByUserId(
-    @Param('userId') userId: string,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      if (userId !== req.user.id && !req.user.isAdmin) {
-        return ResponseFormatter.forbidden(res, 'Not authorized to access these bookings');
-      }
-
-      const bookings = await this.bookingService.getBookingsByUserId(userId);
-      return ResponseFormatter.success(res, { bookings });
-    } catch (error) {
-      console.error(`Error getting bookings for user ${userId}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while fetching bookings');
+  private getBookingsByUserId = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const { userId } = req.params;
+    
+    if (userId !== req.user.id && !req.user.isAdmin) {
+      ResponseFormatter.forbidden(res, 'Not authorized to access these bookings');
+      return;
+    }
+
+    const bookings = await this.bookingService.getBookingsByUserId(userId);
+    ResponseFormatter.success(res, { bookings });
+  });
 
   /**
    * Create a new booking
    */
-  @Post()
-  @UseGuards(requireAuth, requireOrgContext)
-  async createBooking(
-    @Body() bookingData: Partial<Booking>,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      // Ensure the booking is associated with the authenticated user
-      const bookingDataWithUser: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'> = {
-        tripId: bookingData.tripId || '',
-        userId: req.user.id,
-        organizationId: req.user.organizationId || null,
-        type: (bookingData.type as 'flight' | 'hotel' | 'car' | 'train' | 'activity' | 'other') || 'other',
-        provider: bookingData.provider || 'manual',
-        providerBookingId: bookingData.providerBookingId || null,
-        status: (bookingData.status as 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'failed') || 'pending',
-        bookingData: bookingData.bookingData || {},
-        totalAmount: bookingData.totalAmount || null,
-        currency: bookingData.currency || 'USD',
-        passengerDetails: bookingData.passengerDetails || {},
-        bookingReference: bookingData.bookingReference || null,
-        cancellationPolicy: bookingData.cancellationPolicy || null,
-        departureDate: bookingData.departureDate || null,
-        returnDate: bookingData.returnDate || null,
-        checkInDate: bookingData.checkInDate || null,
-        checkOutDate: bookingData.checkOutDate || null
-      };
-
-      const booking = await this.bookingService.createBooking(bookingDataWithUser);
-      return ResponseFormatter.created(res, { booking });
-    } catch (error) {
-      console.error('Error creating booking', error);
-      return ResponseFormatter.serverError(res, 'An error occurred while creating the booking');
+  private createBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const bookingData = req.body as Partial<Booking>;
+    
+    // Ensure the booking is associated with the authenticated user
+    const bookingDataWithUser: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'> = {
+      tripId: bookingData.tripId || '',
+      userId: req.user.id,
+      organizationId: req.user.organizationId || null,
+      type: (bookingData.type as 'flight' | 'hotel' | 'car' | 'train' | 'activity' | 'other') || 'other',
+      provider: bookingData.provider || 'manual',
+      providerBookingId: bookingData.providerBookingId || null,
+      status: (bookingData.status as 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'failed') || 'pending',
+      bookingData: bookingData.bookingData || {},
+      totalAmount: bookingData.totalAmount || null,
+      currency: bookingData.currency || 'USD',
+      passengerDetails: bookingData.passengerDetails || {},
+      bookingReference: bookingData.bookingReference || null,
+      cancellationPolicy: bookingData.cancellationPolicy || null,
+      departureDate: bookingData.departureDate || null,
+      returnDate: bookingData.returnDate || null,
+      checkInDate: bookingData.checkInDate || null,
+      checkOutDate: bookingData.checkOutDate || null
+    };
+
+    const booking = await this.bookingService.createBooking(bookingDataWithUser);
+    ResponseFormatter.created(res, { booking });
+  });
 
   /**
    * Update a booking
    */
-  @Put(':id')
-  @UseGuards(requireAuth, requireOrgContext)
-  async updateBooking(
-    @Param('id') id: string,
-    @Body() updateData: Partial<Booking>,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      const existingBooking = await this.bookingService.getBookingById(id);
-      if (!existingBooking) {
-        return ResponseFormatter.notFound(res, 'Booking not found');
-      }
-
-      if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
-        return ResponseFormatter.forbidden(res, 'Not authorized to update this booking');
-      }
-
-      const booking = await this.bookingService.updateBooking(id, updateData as Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>>);
-      return ResponseFormatter.success(res, { booking });
-    } catch (error) {
-      console.error(`Error updating booking ${id}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while updating the booking');
+  private updateBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const { id } = req.params;
+    const updateData = req.body as Partial<Booking>;
+
+    const existingBooking = await this.bookingService.getBookingById(id);
+    if (!existingBooking) {
+      ResponseFormatter.notFound(res, 'Booking not found');
+      return;
+    }
+
+    if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
+      ResponseFormatter.forbidden(res, 'Not authorized to update this booking');
+      return;
+    }
+
+    const booking = await this.bookingService.updateBooking(id, updateData as Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>>);
+    ResponseFormatter.success(res, { booking });
+  });
 
   /**
    * Delete a booking
    */
-  @Delete(':id')
-  @UseGuards(requireAuth, requireOrgContext)
-  async deleteBooking(
-    @Param('id') id: string,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      const existingBooking = await this.bookingService.getBookingById(id);
-      if (!existingBooking) {
-        return ResponseFormatter.notFound(res, 'Booking not found');
-      }
-
-      if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
-        return ResponseFormatter.forbidden(res, 'Not authorized to delete this booking');
-      }
-
-      await this.bookingService.deleteBooking(id);
-      return ResponseFormatter.noContent(res);
-    } catch (error) {
-      console.error(`Error deleting booking ${id}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while deleting the booking');
+  private deleteBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const { id } = req.params;
+    const existingBooking = await this.bookingService.getBookingById(id);
+    
+    if (!existingBooking) {
+      ResponseFormatter.notFound(res, 'Booking not found');
+      return;
+    }
+
+    if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
+      ResponseFormatter.forbidden(res, 'Not authorized to delete this booking');
+      return;
+    }
+
+    await this.bookingService.deleteBooking(id);
+    ResponseFormatter.noContent(res);
+  });
 
   /**
    * Confirm a booking
    */
-  @Put(':id/confirm')
-  @UseGuards(requireAuth, requireOrgContext)
-  async confirmBooking(
-    @Param('id') id: string,
-    @Body() confirmationDetails: ConfirmationDetails,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      const existingBooking = await this.bookingService.getBookingById(id);
-      if (!existingBooking) {
-        return ResponseFormatter.notFound(res, 'Booking not found');
-      }
-
-      if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
-        return ResponseFormatter.forbidden(res, 'Not authorized to confirm this booking');
-      }
-
-      const booking = await this.bookingService.confirmBooking(id, confirmationDetails);
-      return ResponseFormatter.success(res, { booking });
-    } catch (error) {
-      console.error(`Error confirming booking ${id}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while confirming the booking');
+  private confirmBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const { id } = req.params;
+    const confirmationDetails = req.body as ConfirmationDetails;
+    
+    const existingBooking = await this.bookingService.getBookingById(id);
+    if (!existingBooking) {
+      ResponseFormatter.notFound(res, 'Booking not found');
+      return;
+    }
+
+    if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
+      ResponseFormatter.forbidden(res, 'Not authorized to confirm this booking');
+      return;
+    }
+
+    const booking = await this.bookingService.confirmBooking(id, confirmationDetails);
+    ResponseFormatter.success(res, { booking });
+  });
 
   /**
    * Cancel a booking
    */
-  @Put(':id/cancel')
-  @UseGuards(requireAuth, requireOrgContext)
-  async cancelBooking(
-    @Param('id') id: string,
-    @Body() cancellationDetails: CancellationDetails,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      const existingBooking = await this.bookingService.getBookingById(id);
-      if (!existingBooking) {
-        return ResponseFormatter.notFound(res, 'Booking not found');
-      }
-
-      if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
-        return ResponseFormatter.forbidden(res, 'Not authorized to cancel this booking');
-      }
-
-      const booking = await this.bookingService.cancelBooking(id, cancellationDetails.reason || '');
-      return ResponseFormatter.success(res, { booking });
-    } catch (error) {
-      console.error(`Error cancelling booking ${id}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while cancelling the booking');
+  private cancelBooking = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const { id } = req.params;
+    const { reason } = req.body as { reason?: string };
+
+    const existingBooking = await this.bookingService.getBookingById(id);
+    if (!existingBooking) {
+      ResponseFormatter.notFound(res, 'Booking not found');
+      return;
+    }
+
+    if (existingBooking.userId !== req.user.id && !req.user.isAdmin) {
+      ResponseFormatter.forbidden(res, 'Not authorized to cancel this booking');
+      return;
+    }
+
+    const booking = await this.bookingService.cancelBooking(id, reason || '');
+    if (booking) {
+      ResponseFormatter.success(res, { booking });
+    } else {
+      ResponseFormatter.error(res, 'Failed to cancel booking');
+    }
+  });
 
   /**
-   * Get booking stats for a user
+   * Get booking statistics
    */
-  @Get('stats/user/:userId')
-  @UseGuards(requireAuth, requireOrgContext)
-  async getBookingStatsByUserId(
-    @Param('userId') userId: string,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      if (userId !== req.user.id && !req.user.isAdmin) {
-        return ResponseFormatter.forbidden(res, 'Not authorized to view these stats');
-      }
-
-      const stats = await this.bookingService.getBookingStatsByUserId(userId);
-      
-      // If no stats found, return empty stats object
-      const finalStats = stats || {
-        total: 0,
-        confirmed: 0,
-        pending: 0,
-        cancelled: 0
-      };
-      
-      return ResponseFormatter.success(res, { stats: finalStats });
-    } catch (error) {
-      console.error(`Error getting booking stats for user ${userId}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while fetching booking stats');
+  private getBookingStatistics = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      ResponseFormatter.unauthorized(res, 'Authentication required');
+      return;
     }
-  }
+
+    const { userId, orgId } = req.query;
+    
+    if (userId) {
+      const stats = await this.bookingService.getBookingStatsByUserId(userId as string);
+      ResponseFormatter.success(res, { stats });
+    } else if (orgId) {
+      const stats = await this.bookingService.getBookingStatsByOrgId(orgId as string);
+      ResponseFormatter.success(res, { stats });
+    } else {
+      ResponseFormatter.badRequest(res, 'Either userId or orgId query parameter is required');
+    }
+  });
+
+
 
   /**
-   * Get booking stats for an organization
+   * Get the router instance
    */
-  @Get('stats/org/:orgId')
-  @UseGuards(requireAuth, requireOrgContext)
-  async getBookingStatsByOrgId(
-    @Param('orgId') orgId: string,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    try {
-      if (!req.user) {
-        return ResponseFormatter.unauthorized(res, 'Authentication required');
-      }
-
-      if (orgId !== req.user.organizationId && !req.user.isAdmin) {
-        return ResponseFormatter.forbidden(res, 'Not authorized to view these stats');
-      }
-
-      const stats = await this.bookingService.getBookingStatsByOrgId(orgId);
-      
-      // If no stats found, return empty stats object
-      const finalStats = stats || {
-        total: 0,
-        confirmed: 0,
-        pending: 0,
-        cancelled: 0
-      };
-      
-      return ResponseFormatter.success(res, { stats: finalStats });
-    } catch (error) {
-      console.error(`Error getting booking stats for organization ${orgId}`, error);
-      return ResponseFormatter.serverError(res, 'An error occurred while fetching booking stats');
-    }
+  public getRouter(): express.Router {
+    return this.router;
   }
 }

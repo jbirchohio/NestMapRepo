@@ -1,6 +1,6 @@
-import { Logger } from '@nestjs/common/services/logger.service';
+import { logger } from '../../utils/logger';
 import { ApiError, ErrorType, createApiError } from '../types/index';
-import { Injectable } from '@nestjs/common/decorators/index';
+import { Injectable } from 'injection-js';
 
 /**
  * Centralized service for error handling and creation
@@ -8,7 +8,7 @@ import { Injectable } from '@nestjs/common/decorators/index';
  */
 @Injectable()
 export class ErrorService {
-  private readonly logger = new Logger(ErrorService.name);
+  private readonly logger = logger;
 
   /**
    * Create an unauthorized error
@@ -17,7 +17,7 @@ export class ErrorService {
    * @returns ApiError
    */
   createUnauthorizedError(message = 'Authentication required', details?: Record<string, unknown>): ApiError {
-    this.logger.warn(`[UNAUTHORIZED] ${message}`, details);
+    this.logger.warn(`[UNAUTHORIZED] ${message} - Details: ${JSON.stringify(details)}`);
     return createApiError(ErrorType.UNAUTHORIZED, message, details);
   }
 
@@ -28,7 +28,7 @@ export class ErrorService {
    * @returns ApiError
    */
   createForbiddenError(message = 'Access denied', details?: Record<string, unknown>): ApiError {
-    this.logger.warn(`[FORBIDDEN] ${message}`, details);
+    this.logger.warn(`[FORBIDDEN] ${message} - Details: ${JSON.stringify(details)}`);
     return createApiError(ErrorType.FORBIDDEN, message, details);
   }
 
@@ -39,7 +39,7 @@ export class ErrorService {
    * @returns ApiError
    */
   createNotFoundError(message = 'Resource not found', details?: Record<string, unknown>): ApiError {
-    this.logger.warn(`[NOT_FOUND] ${message}`, details);
+    this.logger.warn(`[NOT_FOUND] ${message} - Details: ${JSON.stringify(details)}`);
     return createApiError(ErrorType.NOT_FOUND, message, details);
   }
 
@@ -50,7 +50,7 @@ export class ErrorService {
    * @returns ApiError
    */
   createBadRequestError(message = 'Invalid request', details?: Record<string, unknown>): ApiError {
-    this.logger.warn(`[BAD_REQUEST] ${message}`, details);
+    this.logger.warn(`[BAD_REQUEST] ${message} - Details: ${JSON.stringify(details)}`);
     return createApiError(ErrorType.BAD_REQUEST, message, details);
   }
 
@@ -61,7 +61,7 @@ export class ErrorService {
    * @returns ApiError
    */
   createConflictError(message = 'Resource conflict', details?: Record<string, unknown>): ApiError {
-    this.logger.warn(`[CONFLICT] ${message}`, details);
+    this.logger.warn(`[CONFLICT] ${message} - Details: ${JSON.stringify(details)}`);
     return createApiError(ErrorType.CONFLICT, message, details);
   }
 
@@ -78,7 +78,7 @@ export class ErrorService {
       error.stack = stack;
     }
     
-    this.logger.error(`[INTERNAL_SERVER_ERROR] ${message}`, stack);
+    this.logger.error(JSON.stringify({ message: `[INTERNAL_SERVER_ERROR] ${message}`, details, stack }));
     return error;
   }
 

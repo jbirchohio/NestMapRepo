@@ -1,131 +1,99 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-// Enable verbose logging for debugging
-console.debug = jest.fn();
-
-// Mock the modules before importing the code under test
-const mockSign = jest.fn();
-const mockRedis = {
-  set: jest.fn(),
-  get: jest.fn(),
-  del: jest.fn(),
-};
-
 // Mock the jsonwebtoken module
-jest.mock('jsonwebtoken', () => ({
-  __esModule: true,
-  default: { sign: mockSign },
-  sign: mockSign
-}));
+const mockSign = jest.fn();
+const mockVerify = jest.fn();
 
-// Mock the Redis module
-jest.mock('../../server/src/utils/redis', () => ({
-  redis: mockRedis,
-  __esModule: true,
-  default: mockRedis
+jest.mock('jsonwebtoken', () => ({
+  sign: mockSign,
+  verify: mockVerify
 }));
 
 // Mock the logger
+const mockLogger = {
+  error: jest.fn().mockImplementation(console.error),
+  info: jest.fn(),
+  debug: jest.fn()
+};
+
 jest.mock('../../server/src/utils/logger', () => ({
-  error: jest.fn().mockImplementation(console.error)
+  default: mockLogger,
+  __esModule: true
 }));
 
 // Import the function to test after setting up mocks
-import { generateToken } from '../../server/src/auth/jwt';
+import { generateToken, TokenType, verifyToken } from '../../server/src/auth/jwt';
 
-describe('JWT Utility', () => {
-  const mockUserId = '123';
-  const mockEmail = 'test@example.com';
-  const mockRole = 'user';
+describe('JWT Utils', () => {
+  const testPayload = { userId: '123', email: 'test@example.com', type: 'access' as TokenType };
+  const testToken = 'test.jwt.token';
 
   beforeEach(() => {
-    console.debug('=== Resetting mocks ===');
     jest.clearAllMocks();
     
-    // Default mock implementation
-    mockSign.mockImplementation((payload, secret, options, callback) => {
-      console.debug('mockSign called with:', { payload, options });
-      if (typeof callback === 'function') {
-        console.debug('Calling callback with success');
-        process.nextTick(() => {
-          callback(null, 'mocked.jwt.token');
-        });
-      }
-      return 'mocked.jwt.token';
+    // Default mock implementations
+    mockSign.mockImplementation((payload, secret, options) => {
+      return testToken;
     });
-
-    mockRedis.set.mockResolvedValue('OK');
-    mockRedis.get.mockResolvedValue(null);
-    mockRedis.del.mockResolvedValue(1);
+    
+    mockVerify.mockImplementation((token, secret) => {
+      return {
+        ...testPayload,
+        type: 'access',
+        exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+      };
+    });
   });
 
-  it('should generate a JWT token', async () => {
-    console.debug('=== Starting test: should generate a JWT token ===');
-    
-    // Call the function
-    console.debug('Calling generateToken...');
-    const token = await generateToken({
-      sub: mockUserId,
-      email: mockEmail,
-      role: mockRole,
-      type: 'access' as const
+  describe('generateToken', () => {
+    it('should generate a token with default expiration', () => {
+      const token = generateToken(testPayload);
+      
+      expect(token).toBe(testToken);
+      expect(mockSign).toHaveBeenCalledWith(
+        testPayload,
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' }
+      );
     });
 
-    console.debug('Token generated:', token);
-    
-    // Verify the token is returned
-    expect(token).toBe('mocked.jwt.token');
-    
-    // Verify sign was called with the correct arguments
-    expect(mockSign).toHaveBeenCalled();
-    
-    const call = mockSign.mock.calls[0];
-    expect(call[0]).toMatchObject({
-      sub: mockUserId,
-      email: mockEmail,
-      role: mockRole,
-      type: 'access',
-      jti: expect.any(String)
+    it('should generate a token with custom expiration', () => {
+      const token = generateToken(testPayload, '2h');
+      
+      expect(token).toBe(testToken);
+      expect(mockSign).toHaveBeenCalledWith(
+        testPayload,
+        process.env.JWT_SECRET,
+        { expiresIn: '2h' }
+      );
     });
-    
-    expect(call[1]).toBe(process.env.JWT_SECRET || 'your-secret-key');
-    
-    expect(call[2]).toMatchObject({
-      issuer: expect.any(String),
-      audience: expect.any(String),
-      algorithm: 'HS256',
-      expiresIn: '15m'
-    });
-    
-    expect(typeof call[3]).toBe('function'); // callback
   });
 
-  it('should reject if token generation fails', async () => {
-    console.debug('=== Starting test: should reject if token generation fails ===');
-    
-    // Setup the mock to fail
-    const error = new Error('Token generation failed');
-    mockSign.mockImplementationOnce((payload, secret, options, callback) => {
-      console.debug('Failing mockSign called');
-      if (typeof callback === 'function') {
-        process.nextTick(() => {
-          console.debug('Calling callback with error');
-          callback(error);
-        });
-      }
-      return 'mocked.jwt.token';
+  describe('verifyToken', () => {
+    it('should verify a valid token', async () => {
+      const payload = await verifyToken(testToken, (process.env.JWT_SECRET || 'default-secret') as TokenType);
+      
+      expect(payload).toEqual({
+        ...testPayload,
+        exp: expect.any(Number)
+      });
+      expect(mockVerify).toHaveBeenCalledWith(
+        testToken,
+        process.env.JWT_SECRET
+      );
     });
 
-    console.debug('Calling generateToken with failing mock...');
-    await expect(
-      generateToken({
-        sub: mockUserId,
-        email: mockEmail,
-        role: mockRole,
-        type: 'access' as const
-      })
-    ).rejects.toThrow('Token generation failed');
-    
-    console.debug('Test completed');
+    it('should handle token verification errors', async () => {
+      const error = new Error('Invalid token');
+      mockVerify.mockImplementationOnce(() => {
+        throw error;
+      });
+      
+      await expect(verifyToken('invalid-token', (process.env.JWT_SECRET || 'default-secret') as TokenType)).rejects.toThrow('Invalid token');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error verifying token:',
+        expect.any(Error)
+      );
+    });
   });
 });

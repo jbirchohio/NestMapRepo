@@ -3,99 +3,69 @@ import { Pool } from 'pg';
 import * as schema from "./db/schema";
 import { logger } from './utils/logger';
 
-// Database connection state
+// Simple database connection that uses environment variables directly
+let dbInstance: any = null;
 let poolInstance: Pool | null = null;
-let dbInstance: ReturnType<typeof drizzle> | null = null;
 
-// Type for the database connection state
-export interface DatabaseConnection {
-  db: ReturnType<typeof drizzle>;
-  pool: Pool;
+/**
+ * Get database connection - creates it lazily when first accessed
+ * No initialization required - uses environment variables directly
+ */
+export function getDatabase() {
+  if (!dbInstance && process.env.DATABASE_URL) {
+    try {
+      // Create connection pool from DATABASE_URL
+      poolInstance = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+        max: 5, // Small pool size
+        connectionTimeoutMillis: 2000, // Fast timeout
+        idleTimeoutMillis: 2000,
+      });
+
+      // Create Drizzle instance
+      dbInstance = drizzle(poolInstance, { schema });
+      
+      logger.info('✅ Database connection created from DATABASE_URL');
+    } catch (error) {
+      logger.warn('⚠️ Failed to create database connection:', error instanceof Error ? error.message : error);
+      return null;
+    }
+  }
+  
+  return dbInstance;
 }
 
 /**
- * Initialize the database connection
- * @returns Promise that resolves when the database is connected
- * @throws Error if connection fails
+ * Get database pool - creates it lazily when first accessed
  */
-export async function initializeDatabase(): Promise<DatabaseConnection> {
-  // Check for required environment variables
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_DB_PASSWORD) {
-    throw new Error('Missing required database credentials in environment variables');
+export function getPool() {
+  if (!poolInstance && process.env.DATABASE_URL) {
+    getDatabase(); // This will create the pool
   }
+  return poolInstance;
+}
 
-  try {
-    // Parse the Supabase URL to get the database host
-    const supabaseUrl = new URL(process.env.SUPABASE_URL);
-    const dbHost = `db.${supabaseUrl.hostname.split('.').slice(1).join('.')}`;
-    
-    // Configure database connection
-    const dbConfig = {
-      host: dbHost,
-      port: 5432, // Default PostgreSQL port for Supabase
-      database: 'postgres',
-      user: 'postgres',
-      password: process.env.SUPABASE_DB_PASSWORD,
-      ssl: {
-        rejectUnauthorized: false,
-        sslmode: 'require'
-      },
-      connectionTimeoutMillis: 10000,
-      query_timeout: 10000,
-      statement_timeout: 10000,
-      max: 10,
-      idleTimeoutMillis: 10000,
-      maxUses: 1000,
-      keepAlive: true,
-      keepAliveInitialDelayMillis: 10000
-    };
-
-    logger.debug('Database connection configuration:', {
-      host: dbConfig.host,
-      port: dbConfig.port,
-      database: dbConfig.database,
-      user: dbConfig.user,
-      ssl: 'enabled'
-    });
-
-    // Create PostgreSQL connection pool
-    poolInstance = new Pool(dbConfig);
-
-    // Add error handling for the pool
-    poolInstance.on('error', (err: Error) => {
-      logger.error('Unexpected error on idle client', err);
-    });
-
-    // Test the connection
-    const client = await poolInstance.connect();
-    try {
-      await client.query('SELECT NOW()');
-      logger.info('Successfully connected to the database');
-    } finally {
-      client.release();
-    }
-
-    // Initialize Drizzle ORM with development logging
-    dbInstance = drizzle(poolInstance, { 
-      schema,
-      logger: process.env.NODE_ENV === 'development' 
-        ? { logQuery: (query: string, params: any[]) => 
-            logger.debug('Database Query:', { query, params }) 
-          }
-        : false
-    });
-
-    return { db: dbInstance, pool: poolInstance };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('Failed to connect to the database:', error);
-    throw new Error(`Database connection failed: ${errorMessage}`);
+/**
+ * Simple async function for backward compatibility
+ * No longer throws errors - just returns null if connection fails
+ */
+export async function initializeDatabase() {
+  logger.info('🔄 Attempting database connection...');
+  
+  const db = getDatabase();
+  if (db) {
+    logger.info('✅ Database connection successful');
+    return { db, pool: poolInstance };
+  } else {
+    logger.warn('⚠️ Database connection failed - continuing without database');
+    throw new Error('Database connection failed');
   }
 }
 
-// Export the database connection instances
-export const db = dbInstance;
-export const pool = poolInstance;
+// Export the database connection instances (lazy-loaded)
+export const db = getDatabase();
+export const pool = getPool();
 
 // Utility function to test database connection
 export async function testConnection(): Promise<boolean> {

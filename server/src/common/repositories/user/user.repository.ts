@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common/index';
+import { Injectable } from 'injection-js';
 import { eq } from 'drizzle-orm';
 import { db } from '../../../db';
 import { users, organizationMembers } from '../../../db/schema';

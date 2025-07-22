@@ -1,4 +1,4 @@
-import { Provider } from '@nestjs/common';
+import { Provider } from 'injection-js';
 import { TripRepositoryImpl } from '../../trips/repositories/trip.repository';
 import { OrganizationRepositoryImpl } from './organization/organization.repository';
 import { ActivityRepositoryImpl } from './activity/activity.repository';

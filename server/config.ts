@@ -51,7 +51,7 @@ function getSessionSecret(): string {
 }
 
 // Database configuration
-function getDatabaseUrl(): string | undefined {
+export function getDatabaseUrl(): string | undefined {
   if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL;
   }
@@ -159,5 +159,3 @@ export default {
   jwt: JWT_CONFIG,
   validate: validateConfig
 };
-
-export { getDatabaseUrl };

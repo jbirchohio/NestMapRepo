@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common/index';
+import { Injectable } from 'injection-js';
 import { db } from '../../../db/db';
 import * as schema from '../../../db/schema';
 import { OrganizationRepository } from './organization.repository.interface';

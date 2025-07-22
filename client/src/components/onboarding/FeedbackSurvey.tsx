@@ -294,7 +294,6 @@ export const FeedbackSurvey: React.FC<FeedbackSurveyProps> = ({
             {/* Would Recommend */}
             <div className="flex items-center space-x-2">
               <Checkbox
-                id="recommend"
                 checked={feedback.wouldRecommend}
                 onCheckedChange={(checked) =>
                   setFeedback(prev => ({ ...prev, wouldRecommend: checked as boolean }))

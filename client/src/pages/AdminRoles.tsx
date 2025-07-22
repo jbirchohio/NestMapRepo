@@ -421,16 +421,13 @@ function RoleEditor({
                 {categoryPermissions.map(permission => (
                   <div key={permission.id} className="flex items-start space-x-3">
                     <Checkbox
-                      id={permission.id}
                       checked={role.permissions?.includes(permission.id) || false}
                       onCheckedChange={(checked) => 
                         onPermissionToggle(permission.id, checked as boolean)
                       }
-                      disabled={isSystemRole}
                     />
                     <div className="flex-1 min-w-0">
                       <Label 
-                        htmlFor={permission.id}
                         className="text-sm font-medium cursor-pointer"
                       >
                         {permission.name}

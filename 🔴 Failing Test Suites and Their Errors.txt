@@ -1,0 +1,85 @@
+🔴 Failing Test Suites and Their Errors
+✅ 1️⃣ Suite: tests/auth/jwt.test.ts
+
+Error:
+
+
+Cannot find module '../../server/src/utils/redis' from 'tests/setup.ts'
+🔹 Likely cause: You removed Redis, but the test or setup file still tries to mock or import it.
+
+✅ 2️⃣ Suite: tests/subscription-limits.test.ts
+
+Error:
+
+
+Cannot find module '../shared/schema'
+🔹 Likely cause: The test depends on ../shared/schema, which might not exist anymore.
+
+Additional repeated errors:
+
+
+ReferenceError: You are trying to `import` a file after the Jest environment has been torn down.
+✅ 3️⃣ Suite: tests/white-label-integration.test.ts
+
+Error:
+
+
+Cannot find module '../shared/schema'
+Additional repeated errors:
+
+ReferenceError: You are trying to `import` a file after the Jest environment has been torn down.
+✅ 4️⃣ Suite: tests/mobile-modal.test.ts
+
+Errors:
+
+Assertion mismatch:
+
+Expected: "0 auto"
+Received: "0px auto"
+Assertion mismatch:
+
+
+Expected: "0"
+Received: "0px"
+🔹 Likely cause: Unit test needs adjustment for CSS value formatting differences.
+
+✅ 5️⃣ Suite: tests/analytics.test.ts
+
+Errors:
+
+API route test failures due to wrong status codes:
+
+Expected 200 OK but received:
+
+403 Forbidden for /api/analytics
+
+404 Not Found for /api/analytics/personal
+
+404 Not Found for /api/analytics/export/csv
+
+🔹 Likely cause: Missing API routes, auth issues, or test setup incomplete (e.g., no seeded data).
+
+✅ 6️⃣ Suite: tests/organizations.test.ts
+
+Errors:
+
+Expected 200 OK but received 500 Internal Server Error for:
+
+GET /api/organizations
+
+PUT /api/organizations/:id
+
+GET /api/organizations/members
+
+🔹 Likely cause:
+
+
+Database not initialized. Call connectDatabase() first.
+Summary Table:
+Test Suite	Primary Errors
+auth/jwt.test.ts	Missing module (utils/redis) after removing Redis
+subscription-limits.test.ts	Missing ../shared/schema; teardown import errors
+white-label-integration.test.ts	Missing ../shared/schema; teardown import errors
+mobile-modal.test.ts	CSS assertion mismatch: "0 auto" vs "0px auto", "0" vs "0px"
+analytics.test.ts	API returned 403/404 instead of 200; likely bad setup/auth
+organizations.test.ts	API returned 500 (DB not initialized)

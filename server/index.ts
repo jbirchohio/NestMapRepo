@@ -14,54 +14,43 @@ console.log('Script filename:', __filename);
 
 // For bundled builds, try more aggressive path resolution
 const possibleEnvPaths = [
-  // Absolute path first
-  'C:\\Users\\Jonas\\Desktop\\NestMapRepo\\.env',
-  // Relative to current working directory
-  path.resolve(process.cwd(), '.env'),
-  path.resolve(process.cwd(), '../.env'),
-  // Relative to script location (may not work in bundled builds)
-  path.resolve(__dirname, '../.env'),
-  path.resolve(__dirname, '../../.env'),
-  path.join(__dirname, '..', '.env'),
-  path.join(__dirname, '..', '..', '.env')
+  // Correct root path for this project
+  'c:\\Users\\jbirc\\Desktop\\NestleIn\\NestMapRepo\\.env',
+  // Relative paths as fallback
+  path.join(process.cwd(), '..', '.env'),
+  path.join(__dirname, '..', '..', '.env'),
 ];
 
 let envLoaded = false;
-console.log('🔍 Checking for .env file in the following paths:');
 for (const envPath of possibleEnvPaths) {
-  const exists = fs.existsSync(envPath);
-  console.log(`   ${envPath}: ${exists ? '✅ EXISTS' : '❌ NOT FOUND'}`);
-  if (exists) {
+  if (fs.existsSync(envPath)) {
     console.log(`📁 Loading .env from: ${envPath}`);
-    const result = dotenv.config({ path: envPath });
-    if (result.error) {
-      console.error(`❌ Error loading .env: ${result.error}`);
-    } else {
-      console.log(`✅ Environment loaded successfully`);
-      envLoaded = true;
-      break;
-    }
+    dotenv.config({ path: envPath });
+    envLoaded = true;
+    break;
   }
 }
 
-if (!envLoaded) {
-  console.warn('⚠️  No .env file found in any of the expected locations');
-  console.warn('⚠️  Trying to load from process.env directly...');
+if (envLoaded) {
+  console.log('✅ Environment loaded successfully');
+} else {
+  console.log('⚠️ No .env file found in any expected location');
 }
 
-// Final check
-console.log(`📋 Final environment check:`);
-console.log(`   SUPABASE_URL: ${process.env.SUPABASE_URL ? 'SET' : 'NOT SET'}`);
-console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'undefined'}`);
-console.log(`   PORT: ${process.env.PORT || 'undefined'}`);
+console.log(`📋 Final environment check:
+   DATABASE_URL: ${process.env.DATABASE_URL ? 'SET ✅' : 'NOT SET ❌'}
+   SUPABASE_URL: ${process.env.SUPABASE_URL ? 'SET' : 'NOT SET'}
+   NODE_ENV: ${process.env.NODE_ENV || 'not set'}
+   PORT: ${process.env.PORT || 'not set'}`);
+console.log('');
 
 // If still not loaded, try one more time with the absolute path
-if (!process.env.SUPABASE_URL) {
+if (!process.env.DATABASE_URL) {
   console.log('🔄 Attempting final load with absolute path...');
-  const finalPath = 'C:\\Users\\Jonas\\Desktop\\NestMapRepo\\.env';
+  const finalPath = 'c:\\Users\\jbirc\\Desktop\\NestleIn\\NestMapRepo\\.env';
   if (fs.existsSync(finalPath)) {
     dotenv.config({ path: finalPath, override: true });
-    console.log(`🔄 Final attempt result - SUPABASE_URL: ${process.env.SUPABASE_URL ? 'SET' : 'NOT SET'}`);
+    console.log(`🔄 Final attempt result - DATABASE_URL: ${process.env.DATABASE_URL ? 'SET' : 'NOT SET'}`);
   }
 }
 
@@ -293,23 +282,40 @@ const server = http.createServer(app);
 // Import the database initialization function
 import { initializeDatabase } from './db-connection';
 
-// Start server with database initialization
+// Start server with optional database initialization
 async function startServer() {
   try {
-    // Initialize database connection
-    logger.info('Initializing database connection...');
-    await initializeDatabase();
-    logger.info('Database connection established successfully');
+    // Attempt database connection (non-blocking)
+    logger.info('Attempting database connection...');
+    try {
+      await initializeDatabase();
+      logger.info('✅ Database connection established successfully');
+    } catch (dbError) {
+      logger.warn('⚠️ Database connection failed - starting server without database:');
+      logger.warn('Database error:', dbError instanceof Error ? dbError.message : dbError);
+      logger.info('🚀 Server will start with limited functionality (API endpoints will return mock data)');
+    }
 
-    // Start the server
+    // Start the server (always start, regardless of database status)
     server.listen(Number(PORT), HOST, () => {
-      logger.info(`Server running on http://${HOST}:${PORT}`);
-      logger.info(`Environment: ${NODE_ENV}`);
-      logger.info(`Health check: http://${HOST}:${PORT}/health`);
-      logger.info('Using SecureAuth as JWT authentication source of truth');
+      logger.info(`🚀 Server running on http://${HOST}:${PORT}`);
+      logger.info(`🌍 Environment: ${NODE_ENV}`);
+      logger.info(`📊 Health check: http://${HOST}:${PORT}/health`);
+      logger.info(`🔐 Authentication: JWT (SecureAuth)`);
+      logger.info(`📊 API Documentation: http://${HOST}:${PORT}/api`);
+      
+      // Log available environment variables for debugging
+      const envStatus = {
+        DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+        SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+        SUPABASE_DB_PASSWORD: process.env.SUPABASE_DB_PASSWORD ? 'SET' : 'NOT SET',
+        JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'
+      };
+      logger.info('📝 Environment variables status:', envStatus);
     });
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    logger.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 }

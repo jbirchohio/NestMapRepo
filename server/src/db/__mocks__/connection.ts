@@ -1,7 +1,7 @@
 /**
  * Mock database connection for tests
  */
-
+/// <reference types="jest" />
 const mockUser = {
   id: 1,
   email: 'test@example.com',

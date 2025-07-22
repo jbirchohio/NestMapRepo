@@ -141,9 +141,14 @@ export class ApiClient {
     this.client.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
         try {
-          // Start performance monitoring
-          const metrics = await this.performanceMonitor.startRequest(config);
-          (config as InternalAxiosRequestConfig & { metrics?: PerformanceMetrics }).metrics = metrics;
+          // Skip performance monitoring for metrics and error endpoints to prevent recursion
+          const skipMonitoring = config.url?.includes('/metrics') || config.url?.includes('/errors');
+          
+          if (!skipMonitoring) {
+            // Start performance monitoring
+            const metrics = await this.performanceMonitor.startRequest(config);
+            (config as InternalAxiosRequestConfig & { metrics?: PerformanceMetrics }).metrics = metrics;
+          }
 
           // Add basic security headers
           config.headers.set('X-Requested-With', 'XMLHttpRequest');
@@ -177,8 +182,9 @@ export class ApiClient {
     this.client.interceptors.response.use(
       (response: AxiosResponse<ApiResponse>) => {
         try {
-          // End performance monitoring
-          if (response.config?.metrics) {
+          // End performance monitoring (skip for metrics/error endpoints)
+          const skipMonitoring = response.config.url?.includes('/metrics') || response.config.url?.includes('/errors');
+          if (!skipMonitoring && response.config?.metrics) {
             this.performanceMonitor.endRequest(response.config.metrics, response);
           }
 
@@ -196,8 +202,9 @@ export class ApiClient {
       },
       async (error: AxiosError<ApiResponse>) => {
         try {
-          // End performance monitoring on error
-          if (error.config?.metrics) {
+          // End performance monitoring on error (skip for metrics/error endpoints)
+          const skipMonitoring = error.config?.url?.includes('/metrics') || error.config?.url?.includes('/errors');
+          if (!skipMonitoring && error.config?.metrics) {
             this.performanceMonitor.endWithError(error.config.metrics, error);
           }
 

@@ -1,8 +1,8 @@
-import { Provider } from '@nestjs/common';
 import { TripServiceImpl } from './services/trip.service';
+import { TripRepositoryImpl } from './repositories/trip.repository';
 
-// Define the provider using standard NestJS pattern
-export const TripServiceProvider: Provider = {
-  provide: 'TripService',
-  useClass: TripServiceImpl,
-};
+// Initialize repository
+const tripRepository = new TripRepositoryImpl();
+
+// Initialize service with its dependencies
+export const tripService = new TripServiceImpl(tripRepository);

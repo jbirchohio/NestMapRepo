@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler as ExpressRequestHandler } from 'express';
-import { Logger } from '@nestjs/common/services/logger.service';
+import Logger from 'winston'; // Example: Replace with a logger like Winston or use console
 
 /**
  * Wraps an async route handler to catch any unhandled promise rejections
@@ -15,7 +15,7 @@ export function asyncHandler<Req extends Request = Request, Res extends Response
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(handler(req as Req, res as Res, next)).catch((error) => {
       if (logger) {
-        logger.error(`Async handler error: ${error.message}`, error.stack);
+        logger?.error(`Async handler error: ${error.message}`, { stack: error.stack });
       }
       next(error);
     });
