@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { getDb } from '../../db';
 import { users } from '../../db/schema';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../../db/schema';
@@ -60,6 +60,7 @@ export interface IUserRepository {
 export class UserRepositoryImpl implements IUserRepository {
   async findByEmail(email: string): Promise<IUser | null> {
     if (!email) return null;
+    const db = getDb();
     // Use the correct query approach
     const result = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.email, email.toLowerCase().trim())
@@ -69,6 +70,7 @@ export class UserRepositoryImpl implements IUserRepository {
 
   async findById(id: string): Promise<IUser | null> {
     if (!id) return null;
+    const db = getDb();
     // Use the correct query approach
     const result = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.id, id)
@@ -77,12 +79,14 @@ export class UserRepositoryImpl implements IUserRepository {
   }
 
   async findAll(): Promise<IUser[]> {
+    const db = getDb();
     // Use the correct query approach
     const result = await db.select().from(users);
     return result as IUser[];
   }
 
   async findByOrganizationId(organizationId: string): Promise<IUser[]> {
+    const db = getDb();
     // Use the correct property name
     const result = await db.select().from(users).where(
       eq(users.organizationId, organizationId)
@@ -91,6 +95,7 @@ export class UserRepositoryImpl implements IUserRepository {
   }
 
   async findByResetToken(token: string): Promise<IUser | null> {
+    const db = getDb();
     // In a real implementation, we'd query by reset token and expiration
     const result = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.resetToken, token)
@@ -100,7 +105,7 @@ export class UserRepositoryImpl implements IUserRepository {
   }
 
   async setPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void> {
-    // Use the correct query approach
+    const db = getDb();
     await db
       .update(users)
       .set({
@@ -111,6 +116,7 @@ export class UserRepositoryImpl implements IUserRepository {
   }
 
   async clearPasswordResetToken(userId: string): Promise<void> {
+    const db = getDb();
     await db
       .update(users)
       .set({
@@ -137,6 +143,7 @@ export class UserRepositoryImpl implements IUserRepository {
     }
 
     // Update the user
+    const db = getDb();
     await db
       .update(users)
       .set({
@@ -147,6 +154,7 @@ export class UserRepositoryImpl implements IUserRepository {
   }
 
   async resetFailedLoginAttempts(userId: string): Promise<void> {
+    const db = getDb();
     await db
       .update(users)
       .set({
@@ -162,6 +170,7 @@ export class UserRepositoryImpl implements IUserRepository {
   }
 
   async lockAccount(userId: string, lockedUntil: Date): Promise<void> {
+    const db = getDb();
     await db
       .update(users)
       .set({
@@ -191,6 +200,7 @@ export class UserRepositoryImpl implements IUserRepository {
 
     try {
       // Insert into database and return the created user
+      const db = getDb();
       const [insertedUser] = await db
         .insert(users)
         .values(userToInsert)
@@ -229,6 +239,7 @@ export class UserRepositoryImpl implements IUserRepository {
     };
 
     // Update in the database
+    const db = getDb();
     await db
       .update(users)
       .set(updatedUser)
@@ -243,6 +254,7 @@ export class UserRepositoryImpl implements IUserRepository {
       const user = await this.findById(id);
       if (!user) return false;
       
+      const db = getDb();
       await db.delete(users).where(eq(users.id, id));
       return true;
     } catch (error) {
@@ -253,6 +265,7 @@ export class UserRepositoryImpl implements IUserRepository {
 
   async verifyEmail(userId: string): Promise<boolean> {
     try {
+      const db = getDb();
       await db
         .update(users)
         .set({
@@ -272,6 +285,7 @@ export class UserRepositoryImpl implements IUserRepository {
   async findByIds(ids: string[]): Promise<IUser[]> {
     if (ids.length === 0) return [];
     
+    const db = getDb();
     const result = await db
       .select()
       .from(users)
@@ -281,6 +295,7 @@ export class UserRepositoryImpl implements IUserRepository {
   }
 
   async count(): Promise<number> {
+    const db = getDb();
     const result = await db.select({ count: sql`COUNT(*)` }).from(users);
     return Number(result[0]?.count || 0);
   }

@@ -60,87 +60,43 @@ export class AuthService implements IAuthService {
     const expiresIn = 15 * 60; // 15 minutes in seconds
     const now = Math.floor(Date.now() / 1000);
 
-    const payload = {
-      sub: userId,
-      email,
-      role,
-      orgId: organizationId || '',
-      jti: tokenId,
-      type: 'access' as const,
-      iat: now,
-      exp: now + expiresIn
-    } satisfies JwtPayload;
+    // For access token, let the sign function handle the expiration
+    const accessToken = sign(
+      {
+        sub: userId,
+        email,
+        role,
+        orgId: organizationId || '',
+        jti: tokenId,
+        type: 'access' as const,
+        iat: now
+      },
+      this.JWT_SECRET,
+      { expiresIn: this.ACCESS_TOKEN_EXPIRY }
+    );
 
-    const accessToken = sign(payload, this.JWT_SECRET, {
-      expiresIn: this.ACCESS_TOKEN_EXPIRY
-    });
-
-    const refreshPayload = {
-      sub: userId,
-      email,
-      role,
-      orgId: organizationId || '',
-      jti: uuidv4(),
-      type: 'refresh' as const,
-      iat: now,
-      exp: now + 7 * 24 * 60 * 60 // 7 days
-    } satisfies JwtPayload;
-
-    const refreshToken = sign(refreshPayload, this.REFRESH_TOKEN_SECRET, {
-      expiresIn: this.REFRESH_TOKEN_EXPIRY
-    });
+    // For refresh token, also let the sign function handle the expiration
+    const refreshTokenId = uuidv4();
+    const refreshToken = sign(
+      {
+        sub: userId,
+        email,
+        role,
+        orgId: organizationId || '',
+        jti: refreshTokenId,
+        type: 'refresh' as const,
+        iat: now
+      },
+      this.REFRESH_TOKEN_SECRET,
+      { expiresIn: this.REFRESH_TOKEN_EXPIRY }
+    );
 
     return { accessToken, refreshToken, expiresIn };
   }
 
-  /**
-   * Helper method to verify JWT tokens
-   */
-  // Marked as private and used internally
-  private async verifyToken(
-    token: string, 
-    ignoreExpiration = false
-  ): Promise<{ valid: boolean; payload?: JwtPayload; error?: string }> {
-    try {
-      const payload = verify(token, this.JWT_SECRET, { ignoreExpiration }) as JwtPayload;
-      return { valid: true, payload };
-    } catch (error) {
-      return { 
-        valid: false, 
-        error: error instanceof Error ? error.message : 'Invalid token' 
-      };
-    }
-  }
+  // Removed unused private verifyToken method
 
-  /**
-   * Check if token is in blacklist
-   */
-  // Marked as private and used internally
-  private async isTokenRevoked(tokenId: string): Promise<boolean> {
-    const db = await getDatabase();
-    if (!db) {
-      throw new Error('Database connection not available');
-    }
-    
-    // Log the token ID being checked
-    this.logger.debug(`Checking if token is revoked`, { tokenId });
-    
-    try {
-      // Note: In a real implementation, this would query a token blacklist table
-      // This is a placeholder implementation checking the users table as an example
-      const [revokedToken] = await db.db
-        .select()
-        .from(users)
-        .where(eq(users.id, tokenId))
-        .limit(1);
-        
-      return !!revokedToken;
-    } catch (error) {
-      this.logger.error('Error checking token revocation status', { error });
-      // Fail closed - if we can't verify, assume token is revoked
-      return true;
-    }
-  }
+  // Removed unused private isTokenRevoked method
 
   /**
    * Revoke a token by adding it to the blacklist
@@ -210,7 +166,7 @@ export class AuthService implements IAuthService {
    * Handle registration when database is not available (demo/offline mode)
    */
   private async handleOfflineRegistration(registerDto: RegisterDto): Promise<AuthResponse> {
-    const { email, password, firstName, lastName, organizationId } = registerDto;
+    const { email, firstName, lastName, organizationId } = registerDto;
     
     this.logger.info(`Offline registration for: ${email}`);
     
@@ -254,7 +210,7 @@ export class AuthService implements IAuthService {
    * Handle login when database is not available (demo/offline mode)
    */
   private async handleOfflineLogin(loginDto: LoginDto): Promise<AuthResponse> {
-    const { email, password } = loginDto;
+    const { email } = loginDto;
     
     // For demo/development, accept specific test credentials
     const validTestCredentials = [
@@ -264,7 +220,7 @@ export class AuthService implements IAuthService {
     ];
     
     const isValidCredential = validTestCredentials.some(
-      cred => cred.email === email && cred.password === password
+      cred => cred.email === email && cred.password === loginDto.password
     );
     
     if (!isValidCredential) {
@@ -314,7 +270,7 @@ export class AuthService implements IAuthService {
    * Authenticate a user and generate tokens
    */
   async login(loginDto: LoginDto): Promise<AuthResponse> {
-    const { email, password } = loginDto;
+    const { email } = loginDto;
     const db = await getDatabase();
     if (!db) {
       this.logger.warn('Database not available, checking for demo/test mode');

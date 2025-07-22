@@ -11,12 +11,12 @@ router.use(authenticateJWT);
 router.use(requireRole(['admin', 'superadmin_owner', 'superadmin_staff']));
 
 // Type for API response to ensure consistency
-type ApiResponse<T = any> = {
+type ApiResponse<T = unknown> = {
   success: boolean;
   data?: T;
   error?: {
     message: string;
-    details?: any;
+    details?: unknown;
   };
 };
 
@@ -24,6 +24,10 @@ type ApiResponse<T = any> = {
 router.get('/analytics', async (_req: Request, res: Response) => {
   try {
     const db = getDatabase();
+
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
 
     // Get basic analytics data
     const totalUsers = await db.select().from(users).then(users => users.length);

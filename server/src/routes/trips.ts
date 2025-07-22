@@ -60,6 +60,13 @@ router.get('/', async (req: Request, res: Response) => {
     }
     
     const db = getDatabase();
+    if (!db) {
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Database connection not available' },
+      };
+      return res.status(500).json(response);
+    }
     const user = req.user;
 
     // Users can see trips they created or are collaborators on, within their organization
@@ -134,6 +141,13 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     const db = getDatabase();
+    if (!db) {
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Database connection not available' },
+      };
+      return res.status(500).json(response);
+    }
 
     // Create trip
     const [newTrip] = await db.insert(trips).values({
@@ -202,6 +216,13 @@ router.get('/:id', async (req: Request, res: Response) => {
     const user = req.user;
 
     const db = getDatabase();
+    if (!db) {
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Database connection not available' },
+      };
+      return res.status(500).json(response);
+    }
 
     const [trip] = await db
       .select()
@@ -272,6 +293,13 @@ router.put('/:id', async (req: Request, res: Response) => {
     const user = req.user;
 
     const db = getDatabase();
+    if (!db) {
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Database connection not available' },
+      };
+      return res.status(500).json(response);
+    }
 
     // Check if trip exists
     const [trip] = await db
@@ -372,6 +400,13 @@ router.delete('/:id', async (req: Request, res: Response) => {
     const user = req.user;
 
     const db = getDatabase();
+    if (!db) {
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Database connection not available' },
+      };
+      return res.status(500).json(response);
+    }
 
     // Check if trip exists
     const [trip] = await db
