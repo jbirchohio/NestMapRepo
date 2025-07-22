@@ -32,8 +32,11 @@ const connectDatabase = async (): Promise<void> => {
       return;
     }
 
-    logger.info('🔌 Attempting to connect to database (non-blocking)...');
-    logger.info('Connection string format:', connectionString.replace(/:[^:@]*@/, ':***@')); // Hide password
+    logger.info('🔄 Attempting database connection...');
+    logger.info('🔄 Connection details:', {
+      host: connectionString.includes('@') ? connectionString.split('@')[1].split(':')[0] : 'unknown',
+      database: connectionString.includes('/') ? connectionString.split('/').pop() : 'unknown'
+    });
 
     // Create postgres client with aggressive timeouts
     client = postgres(connectionString, {
@@ -55,6 +58,7 @@ const connectDatabase = async (): Promise<void> => {
     
     await Promise.race([testQuery, timeout]);
     
+    logger.info('✅ Database connection successful');
     logger.info('✅ Database connection established successfully');
   } catch (error) {
     logger.warn('⚠️ Database connection failed - continuing without database:');

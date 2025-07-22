@@ -57,7 +57,8 @@ export function getDatabaseUrl(): string | undefined {
   }
   if (process.env.SUPABASE_URL && process.env.SUPABASE_DB_PASSWORD) {
     const supabaseUrl = new URL(process.env.SUPABASE_URL);
-    return `postgresql://postgres.${supabaseUrl.hostname.split('.')[0]}:${process.env.SUPABASE_DB_PASSWORD}@${supabaseUrl.hostname}:5432/postgres`;
+    const projectRef = supabaseUrl.hostname.split('.')[0];
+    return `postgresql://postgres:${process.env.SUPABASE_DB_PASSWORD}@db.${projectRef}.supabase.co:5432/postgres`;
   }
   return undefined;
 }
