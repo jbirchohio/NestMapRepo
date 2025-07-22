@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import request from 'supertest';
-import { app } from '../server/index';
+import { app } from '../server/test-app';
 import { db } from '../server/db';
-import { organizations, users, whiteLabelSettings } from '../shared/schema';
+import { organizations, users, whiteLabelSettings } from '../server/src/db/schema';
 import { eq } from 'drizzle-orm';
 
 describe('White Label Integration', () => {
