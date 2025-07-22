@@ -25,7 +25,16 @@ const registerSchema = z.object({
 });
 
 // JWT helper functions
-const generateToken = (user: any) => {
+interface TokenUser {
+  id: string | number;
+  organizationId?: string | number | null;
+  email: string;
+  role: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
+const generateToken = (user: TokenUser): string => {
   const payload = { 
     userId: user.id, 
     organizationId: user.organizationId,
@@ -34,79 +43,208 @@ const generateToken = (user: any) => {
     firstName: user.firstName,
     lastName: user.lastName
   };
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '24h' });
+  
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
 };
 
 // POST /api/auth/login
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { email, password } = loginSchema.parse(req.body);
+    logger.info('Login attempt started', { email: req.body.email });
+    
+    // Validate request body
+    let loginData;
+    try {
+      loginData = loginSchema.parse(req.body);
+    } catch (validationError) {
+      logger.warn('Login validation failed', { error: validationError });
+      return res.status(400).json({
+        success: false,
+        error: { 
+          message: 'Validation error',
+          details: validationError.errors 
+        },
+      });
+    }
+    
+    const { email, password } = loginData;
     
     // In test environment, use mock data
     if (process.env.NODE_ENV === 'test') {
+      logger.debug('Using test environment login handler');
       // Mock successful login for test emails
       if (email.includes('test@') || email.includes('login@') || email.includes('auth@') || email.includes('logout@')) {
-        const mockUser = {
-          id: 1,
+        const mockUser: TokenUser = {
+          id: '1',
           email: email,
-          username: email.split('@')[0],
           firstName: 'Test',
           lastName: 'User',
           role: 'member',
-          organizationId: 1,
+          organizationId: '1',
         };
         
-        const token = generateToken(mockUser);
+        let token;
+        try {
+          token = generateToken(mockUser);
+        } catch (tokenError) {
+          logger.error('Failed to generate token in test mode', { error: tokenError });
+          return res.status(500).json({
+            success: false,
+            error: { message: 'Failed to generate authentication token' },
+          });
+        }
         
         // Set cookie for session management (test compatibility)
         res.cookie('sessionId', `mock-session-${Date.now()}`, { 
           httpOnly: true, 
-          maxAge: 24 * 60 * 60 * 1000 // 24 hours
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
         });
         
-        return res.json({
+        const response = {
           success: true,
-          data: { token, user: mockUser },
-          user: mockUser, // For test compatibility
-        });
+          data: { 
+            token, 
+            user: {
+              ...mockUser,
+              username: 'testuser',
+              passwordHash: 'mock-hash',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+          },
+          user: {
+            ...mockUser,
+            username: 'testuser',
+            passwordHash: 'mock-hash',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        };
+        
+        logger.info('Test login successful', { email });
+        return res.json(response);
       } else {
         // Return 401 for non-test emails
+        logger.warn('Test login failed - invalid test email', { email });
         return res.status(401).json({
           success: false,
           error: { message: 'Invalid credentials' },
-          message: 'Invalid credentials',
         });
       }
     }
     
+    // Get database connection
     const db = getDatabase();
+    if (!db) {
+      const errorMsg = 'Database connection not available';
+      logger.error(errorMsg);
+      return res.status(503).json({
+        success: false,
+        error: { message: 'Service unavailable. Please try again later.' },
+      });
+    }
     
     // Find user by email
-    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
-
-    if (!user) {
-      return res.status(401).json({
+    let dbUser;
+    try {
+      logger.debug('Querying database for user', { email });
+      const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      dbUser = result[0];
+      logger.debug('User query result', { userFound: !!dbUser });
+    } catch (error) {
+      logger.error('Database query error during login', { error, email });
+      return res.status(500).json({
         success: false,
-        error: { message: 'Invalid credentials' },
+        error: { 
+          message: 'Internal server error during login',
+          code: 'DB_QUERY_ERROR'
+        },
       });
     }
 
-    // Verify password using passwordHash field
-    const isValidPassword = await bcrypt.compare(password, user.passwordHash || '');
+    if (!dbUser) {
+      logger.warn('Login failed - user not found', { email });
+      return res.status(401).json({
+        success: false,
+        error: { 
+          message: 'Invalid credentials',
+          code: 'INVALID_CREDENTIALS'
+        },
+      });
+    }
+
+    // Verify password
+    let isValidPassword = false;
+    try {
+      logger.debug('Verifying password');
+      isValidPassword = await bcrypt.compare(password, dbUser.passwordHash || '');
+    } catch (bcryptError) {
+      logger.error('Password verification error', { error: bcryptError });
+      return res.status(500).json({
+        success: false,
+        error: { 
+          message: 'Internal server error during login',
+          code: 'PASSWORD_VERIFICATION_ERROR'
+        },
+      });
+    }
+
     if (!isValidPassword) {
+      logger.warn('Login failed - invalid password', { email });
       return res.status(401).json({
         success: false,
-        error: { message: 'Invalid credentials' },
+        error: { 
+          message: 'Invalid credentials',
+          code: 'INVALID_CREDENTIALS'
+        },
       });
     }
+    
+    // Map database user to TokenUser type
+    const user: TokenUser = {
+      id: dbUser.id,
+      email: dbUser.email,
+      role: dbUser.role,
+      firstName: dbUser.firstName || undefined,
+      lastName: dbUser.lastName || undefined,
+      organizationId: dbUser.organizationId || undefined
+    };
 
     // Generate JWT token
-    const token = generateToken(user);
+    let token;
+    try {
+      logger.debug('Generating JWT token');
+      token = generateToken(user);
+    } catch (tokenError) {
+      logger.error('Failed to generate JWT token', { error: tokenError, userId: user.id });
+      return res.status(500).json({
+        success: false,
+        error: { 
+          message: 'Failed to generate authentication token',
+          code: 'TOKEN_GENERATION_ERROR'
+        },
+      });
+    }
 
     // Update last login
-    await db.update(users).set({
-      lastLoginAt: new Date(),
-    }).where(eq(users.id, user.id));
+    try {
+      logger.debug('Updating last login timestamp', { userId: user.id });
+      await db.update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, user.id));
+    } catch (updateError) {
+      logger.error('Failed to update last login timestamp', { 
+        error: updateError, 
+        userId: user.id 
+      });
+      // Continue execution even if this fails
+    }
 
     logger.info(`User ${user.email} logged in successfully`);
 
@@ -167,29 +305,59 @@ router.post('/register', async (req: Request, res: Response) => {
     
     // In test environment, use mock data
     if (process.env.NODE_ENV === 'test') {
-      const mockUser = {
-        id: 1,
+      const mockUser: TokenUser = {
+        id: '1',
         email: email,
-        username: username,
         firstName: firstName || 'Test',
         lastName: lastName || 'User',
         role: 'member',
-        organizationId: organizationId || 1,
+        organizationId: organizationId ? String(organizationId) : '1',
       };
       
       const token = generateToken(mockUser);
       
       return res.status(201).json({
         success: true,
-        data: { token, user: mockUser },
-        user: mockUser, // For test compatibility
+        data: { 
+          token, 
+          user: {
+            ...mockUser,
+            username,
+            passwordHash: 'mock-hash',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          } 
+        },
+        user: {
+          ...mockUser,
+          username,
+          passwordHash: 'mock-hash',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
       });
     }
     
     const db = getDatabase();
+    if (!db) {
+      logger.error('Database connection not available');
+      return res.status(503).json({
+        success: false,
+        error: { message: 'Service unavailable. Please try again later.' },
+      });
+    }
     
     // Check if user already exists
-    const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    let existingUser;
+    try {
+      [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    } catch (error) {
+      logger.error('Database query error:', error);
+      return res.status(500).json({
+        success: false,
+        error: { message: 'Internal server error during registration' },
+      });
+    }
 
     if (existingUser) {
       return res.status(409).json({
@@ -202,25 +370,40 @@ router.post('/register', async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
-    const [newUser] = await db.insert(users).values({
-      email,
-      passwordHash: hashedPassword,
-      username: username,
-      firstName: firstName || '',
-      lastName: lastName || '',
-      organizationId,
-      role: 'member',
-      isActive: true,
-      emailVerified: false,
-    }).returning({
-      id: users.id,
-      email: users.email,
-      username: users.username,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      role: users.role,
-      organizationId: users.organizationId,
-    });
+    let newUser;
+    try {
+      const userValues = {
+        email,
+        passwordHash: hashedPassword,
+        username,
+        role: 'member' as const,
+        isActive: true,
+        emailVerified: false,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        organizationId: organizationId || null,
+      };
+
+      const result = await db.insert(users)
+        .values(userValues)
+        .returning({
+          id: users.id,
+          email: users.email,
+          username: users.username,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          organizationId: users.organizationId,
+        });
+
+      newUser = result[0];
+    } catch (error) {
+      logger.error('Error creating user:', error);
+      return res.status(500).json({
+        success: false,
+        error: { message: 'Failed to create user' },
+      });
+    }
 
     // Generate JWT token
     const token = generateToken(newUser);

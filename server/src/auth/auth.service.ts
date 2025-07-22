@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { sign, verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 
 interface JwtPayload {
@@ -61,7 +61,7 @@ export class AuthService implements IAuthService {
     const now = Math.floor(Date.now() / 1000);
 
     // For access token, let the sign function handle the expiration
-    const accessToken = sign(
+    const accessToken = jwt.sign(
       {
         sub: userId,
         email,
@@ -77,7 +77,7 @@ export class AuthService implements IAuthService {
 
     // For refresh token, also let the sign function handle the expiration
     const refreshTokenId = uuidv4();
-    const refreshToken = sign(
+    const refreshToken = jwt.sign(
       {
         sub: userId,
         email,
