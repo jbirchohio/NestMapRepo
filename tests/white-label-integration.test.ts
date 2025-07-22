@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import request from 'supertest';
-import { app } from '../server/index';
-import { db } from '../server/db';
-import { organizations, users, whiteLabelSettings } from '../shared/schema';
+import { app } from '../server/test-app';
+import { getDatabase } from '../server/src/db/connection';
+import { organizations, users, whiteLabelSettings } from '../server/src/db/schema';
 import { eq } from 'drizzle-orm';
+
+const db = getDatabase();
 
 describe('White Label Integration', () => {
   let authToken: string;
