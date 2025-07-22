@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 const { sign, verify, decode } = jwt;
 type SignOptions = jwt.SignOptions;
 // Redis removed for simplified deployment
@@ -45,16 +45,16 @@ export const generateToken = async (
   
   const expiresAt = new Date(Date.now() + expiresInMs);
   const iat = Math.floor(Date.now() / 1000);
-  const exp = Math.floor(expiresAt.getTime() / 1000);
   
-  const payload: TokenPayload = {
+  // Remove manual exp setting to avoid conflict with expiresIn option
+  const payload = {
     jti,
     type,
     userId,
     email,
     role: (additionalPayload.role || 'user') as UserRole,
     iat,
-    exp,
+    // exp removed - let jsonwebtoken set this via expiresIn option
   };
 
   const token = sign(

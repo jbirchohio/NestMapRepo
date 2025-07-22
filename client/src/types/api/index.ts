@@ -23,7 +23,7 @@ export interface JwtPayload {
   role: string;
   organization_id: string;
   permissions: string[];
-  exp: number;
+  exp?: number; // Made optional since jsonwebtoken sets this when using expiresIn
   iat: number;
 }
 

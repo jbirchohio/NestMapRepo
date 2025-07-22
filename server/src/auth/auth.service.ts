@@ -10,7 +10,7 @@ interface JwtPayload {
   jti: string;
   type: 'access' | 'refresh';
   iat: number;
-  exp: number;
+  exp?: number; // Made optional since jsonwebtoken sets this when using expiresIn
 }
 
 import { eq } from 'drizzle-orm';

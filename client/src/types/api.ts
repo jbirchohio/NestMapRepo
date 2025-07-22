@@ -14,7 +14,7 @@ export interface ApiErrorResponse {
 }
 
 export interface JwtPayload {
-  exp: number;
+  exp?: number; // Made optional since jsonwebtoken sets this when using expiresIn
   iat: number;
   sub: string;
   email: string;
