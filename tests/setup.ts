@@ -13,17 +13,13 @@ process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing';
 // Global test timeout
 jest.setTimeout(30000);
 
-// Enable manual mocks for database
+// Enable manual mocks
 jest.mock('../server/src/db/connection');
 
 // Setup before all tests
 beforeAll(async () => {
   // Initialize test database if needed
   console.log('Setting up test environment...');
-  
-  // Mock the connectDatabase function to ensure it's available
-  const { connectDatabase } = await import('../server/src/db/connection');
-  await connectDatabase();
 });
 
 // Cleanup after all tests

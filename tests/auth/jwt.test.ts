@@ -5,12 +5,24 @@ console.debug = jest.fn();
 
 // Mock the modules before importing the code under test
 const mockSign = jest.fn();
+const mockRedis = {
+  set: jest.fn(),
+  get: jest.fn(),
+  del: jest.fn(),
+};
 
 // Mock the jsonwebtoken module
 jest.mock('jsonwebtoken', () => ({
   __esModule: true,
   default: { sign: mockSign },
   sign: mockSign
+}));
+
+// Mock the Redis module
+jest.mock('../../server/src/utils/redis', () => ({
+  redis: mockRedis,
+  __esModule: true,
+  default: mockRedis
 }));
 
 // Mock the logger

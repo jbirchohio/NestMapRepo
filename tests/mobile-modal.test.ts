@@ -79,7 +79,7 @@ describe('Mobile Modal Positioning', () => {
       expect(dialogContent.style.maxWidth).toBe('400px');
       expect(dialogContent.style.maxHeight).toBe('calc(100vh - 20px)');
       expect(dialogContent.style.overflow).toBe('auto');
-      expect(dialogContent.style.margin).toBe('0px auto');
+      expect(dialogContent.style.margin).toBe('0 auto');
       expect(dialogContent.style.zIndex).toBe('50');
     });
 
@@ -123,10 +123,10 @@ describe('Mobile Modal Positioning', () => {
 
       // Verify overlay covers full viewport
       expect(overlay.style.position).toBe('fixed');
-      expect(overlay.style.top).toBe('0px');
-      expect(overlay.style.left).toBe('0px');
-      expect(overlay.style.right).toBe('0px');
-      expect(overlay.style.bottom).toBe('0px');
+      expect(overlay.style.top).toBe('0');
+      expect(overlay.style.left).toBe('0');
+      expect(overlay.style.right).toBe('0');
+      expect(overlay.style.bottom).toBe('0');
     });
   });
 

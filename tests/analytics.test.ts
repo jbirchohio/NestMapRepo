@@ -11,12 +11,11 @@ describe('Analytics API', () => {
   let testUserId: number;
 
   beforeAll(async () => {
-    // Create and authenticate test user with admin role
+    // Create and authenticate test user
     const userData = {
       email: 'analytics-test@example.com',
       password: 'password123',
-      username: 'analyticsuser',
-      role: 'admin' // Ensure user has admin role for analytics access
+      username: 'analyticsuser'
     };
 
     await request(app)
