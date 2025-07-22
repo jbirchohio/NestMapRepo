@@ -172,6 +172,9 @@
     "testMatch": [
       "**/tests/**/*.test.ts"
     ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.ts"
+    ],
     "collectCoverageFrom": [
       "**/server/src/**/*.ts"
     ],
