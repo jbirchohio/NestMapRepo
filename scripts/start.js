@@ -21,11 +21,7 @@ console.log(`Starting NestMap in ${NODE_ENV} mode on port ${PORT}`);
 // Check for required environment variables
 const requiredVars = [
   'DATABASE_URL',
-  'OPENAI_API_KEY',
-  'MAPBOX_TOKEN',
-  'VITE_MAPBOX_TOKEN',
-  'VITE_SUPABASE_URL',
-  'VITE_SUPABASE_ANON_KEY'
+  'JWT_SECRET'
 ];
 
 const missingVars = requiredVars.filter(varName => !process.env[varName]);
@@ -40,11 +36,11 @@ if (missingVars.length > 0) {
 // Load the appropriate script based on environment
 if (NODE_ENV === 'production') {
   console.log('Loading production server...');
-  require('../dist/server/index.js');
+  require('../server/dist/main.mjs');
 } else {
   console.log('Loading development server...');
   // Use dynamic import for ESM compatibility
-  import('../server/index.js').catch(err => {
+  import('../server/src/main.js').catch(err => {
     console.error('Failed to start development server:', err);
     process.exit(1);
   });

@@ -1,0 +1,87 @@
+# Server Structure
+
+This document outlines the cleaned up server structure for the NestMap application.
+
+## Entry Points
+
+The server now has a single, clean entry point structure:
+
+### Main Entry Point
+- **`src/main.ts`** - Primary application entry point
+  - Handles environment variable loading
+  - Initializes database connection
+  - Starts the Express server
+  - Handles graceful shutdown
+
+### Server Configuration
+- **`src/server.ts`** - Express application configuration
+  - Express app setup and middleware
+  - Security headers (Helmet)
+  - CORS configuration  
+  - Route setup
+  - Health check endpoint
+  - Server startup and shutdown logic
+
+## Removed Files
+
+The following redundant server entry points were removed during cleanup:
+
+- ~~`server/index.ts`~~ - Legacy server entry point with complex env loading
+- ~~`server/src/index.ts`~~ - Duplicate server entry point 
+- ~~`server/src/app.ts`~~ - Duplicate Express app configuration
+- ~~`server/start.js`~~ - JavaScript fallback server
+
+## Build Configuration
+
+- **Entry**: `src/main.ts`  
+- **Output**: `dist/main.mjs`
+- **Build tool**: tsup with ES modules
+- **Target**: es2022
+
+## Scripts
+
+```json
+{
+  "build": "tsup",
+  "dev": "dotenv -e ../.env npx tsx src/main.ts", 
+  "start": "dotenv -e ../.env node dist/main.mjs",
+  "dev:watch": "dotenv -e ../.env tsup --watch & nodemon --watch dist --exec npm start"
+}
+```
+
+## Environment Loading
+
+The server tries to load `.env` files from multiple locations:
+1. `../../../.env` (monorepo root from dist)
+2. `../../.env` (monorepo root from src)  
+3. `../.env` (parent directory)
+
+## Key Features
+
+- ✅ Single entry point for clarity
+- ✅ Proper error handling and logging
+- ✅ Graceful shutdown support  
+- ✅ Database connection with fallback
+- ✅ Environment variable validation
+- ✅ Development and production modes
+- ✅ Health check endpoint
+
+## Starting the Server
+
+### Development
+```bash
+pnpm dev
+```
+
+### Production  
+```bash
+pnpm build
+pnpm start
+```
+
+### From monorepo root
+```bash
+pnpm dev
+# or
+pnpm start
+```

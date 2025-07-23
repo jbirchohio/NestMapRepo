@@ -3,17 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "dist/main.mjs",
+  "module": "dist/main.mjs",
+  "types": "dist/main.d.ts",
   "scripts": {
     "build": "tsup",
     "dev": "dotenv -e ../.env npx tsx src/main.ts",
     "start": "dotenv -e ../.env node dist/main.mjs",
     "dev:watch": "dotenv -e ../.env tsup --watch & nodemon --watch dist --exec npm start",
     "clean": "node ../scripts/clean.mjs server",
-    "typecheck": "tsc --noEmit",
-    "serve": "node dist/main.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/config": "^4.0.2",
