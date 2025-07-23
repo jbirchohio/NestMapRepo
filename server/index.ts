@@ -63,16 +63,8 @@ import { logger } from './utils/logger';
 // Import authentication middleware
 import { authenticate } from './middleware/secureAuth';
 
-// Import route handlers
-import authRoutes from './routes/auth-simple';
-import flightRoutes from './routes/flights';
-import organizationRoutes from './routes/organizations';
-import tripRoutes from './routes/trips-simple';
-import aiRoutes from './routes/ai-routes';
-import enterpriseRoutes from './routes/enterprise-routes';
-import comprehensiveRoutes from './routes/comprehensive-routes';
-import onboardingFeedbackRoutes from './routes/onboarding-feedback';
-import metricsRoutes from './routes/metrics.js'; // Added .js extension for ES modules
+// Import metrics routes (special case with .js extension)
+import metricsRoutes from './routes/metrics.js';
 
 // Debug: Log route imports
 console.log('\n🔧 Route Registration Debug:');
@@ -147,17 +139,9 @@ if (NODE_ENV === 'development') {
   });
 }
 
-// Public routes (no authentication required)
-app.use('/api/auth', authRoutes);
-
-// Protected routes (require JWT authentication)
-app.use('/api/flights', authenticate, flightRoutes);
-app.use('/api/organizations', authenticate, organizationRoutes);
-app.use('/api/trips', authenticate, tripRoutes);
-app.use('/api/ai', authenticate, aiRoutes);
-app.use('/api/enterprise', authenticate, enterpriseRoutes);
-app.use('/api/comprehensive', authenticate, comprehensiveRoutes);
-app.use('/api/onboarding-feedback', authenticate, onboardingFeedbackRoutes);
+// Import and mount the main router which includes all API routes
+import mainRouter from './routes';
+app.use('/api', mainRouter);
 
 // Mount metrics routes with debug logging
 console.log('\n🔧 Mounting metrics routes...');

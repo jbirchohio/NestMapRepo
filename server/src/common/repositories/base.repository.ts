@@ -1,7 +1,8 @@
 import { logger } from '../../utils/logger';
 import { BaseRepository } from './base.repository.interface';
 import { eq } from 'drizzle-orm';
-import { db } from '../../db';
+import { getDatabase } from '../../db/connection';
+import { ServiceUnavailableError } from '../../common/errors';
 
 /**
  * Base repository implementation with common CRUD operations
@@ -16,6 +17,12 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
   ) {}
 
   async findById(id: ID): Promise<T | null> {
+    const db = getDatabase();
+    if (!db) {
+      this.logger.error('Database connection not available');
+      throw new ServiceUnavailableError('Database connection not available');
+    }
+    
     try {
       const [result] = await db
         .select()
@@ -25,21 +32,33 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
       return result as T || null;
     } catch (error) {
       this.logger.error(`Error finding ${this.entityName} by ID ${id}:`, { error });
-      return null;
+      throw new ServiceUnavailableError(`Failed to find ${this.entityName} by ID`);
     }
   }
 
   async findAll(): Promise<T[]> {
+    const db = getDatabase();
+    if (!db) {
+      this.logger.error('Database connection not available');
+      throw new ServiceUnavailableError('Database connection not available');
+    }
+    
     try {
       const results = await db.select().from(this.table);
       return results as T[];
     } catch (error) {
       this.logger.error(`Error finding all ${this.entityName}:`, { error });
-      return [];
+      throw new ServiceUnavailableError(`Failed to find all ${this.entityName}`);
     }
   }
 
   async create(data: CreateData): Promise<T> {
+    const db = getDatabase();
+    if (!db) {
+      this.logger.error('Database connection not available');
+      throw new ServiceUnavailableError('Database connection not available');
+    }
+    
     try {
       const [result] = await db
         .insert(this.table)
@@ -48,11 +67,17 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
       return result;
     } catch (error) {
       this.logger.error(`Error creating ${this.entityName}:`, { error });
-      throw error;
+      throw new ServiceUnavailableError(`Failed to create ${this.entityName}`, { cause: error });
     }
   }
 
   async update(id: ID, data: UpdateData): Promise<T | null> {
+    const db = getDatabase();
+    if (!db) {
+      this.logger.error('Database connection not available');
+      throw new ServiceUnavailableError('Database connection not available');
+    }
+    
     try {
       const [result] = await db
         .update(this.table)
@@ -62,11 +87,17 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
       return result || null;
     } catch (error) {
       this.logger.error(`Error updating ${this.entityName} with ID ${id}:`, { error });
-      return null;
+      throw new ServiceUnavailableError(`Failed to update ${this.entityName} with ID ${id}`, { cause: error });
     }
   }
 
   async delete(id: ID): Promise<boolean> {
+    const db = getDatabase();
+    if (!db) {
+      this.logger.error('Database connection not available');
+      throw new ServiceUnavailableError('Database connection not available');
+    }
+    
     try {
       const result = await db
         .delete(this.table)
@@ -75,18 +106,24 @@ export abstract class BaseRepositoryImpl<T, ID, CreateData extends Record<string
       return result && Object.keys(result).length > 0;
     } catch (error) {
       this.logger.error(`Error deleting ${this.entityName} with ID ${id}:`, { error });
-      return false;
+      throw new ServiceUnavailableError(`Failed to delete ${this.entityName} with ID ${id}`, { cause: error });
     }
   }
 
   async count(_filter?: Partial<T>): Promise<number> {
+    const db = getDatabase();
+    if (!db) {
+      this.logger.error('Database connection not available');
+      throw new ServiceUnavailableError('Database connection not available');
+    }
+    
     try {
       // For now, return simple count - can be enhanced with filters
       const results = await db.select().from(this.table);
       return results.length;
     } catch (error) {
       this.logger.error(`Error counting ${this.entityName}:`, { error });
-      return 0;
+      throw new ServiceUnavailableError(`Failed to count ${this.entityName}`, { cause: error });
     }
   }
 

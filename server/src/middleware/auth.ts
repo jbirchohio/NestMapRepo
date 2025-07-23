@@ -143,4 +143,4 @@ export const requireOrganization = (req: Request, res: Response, next: NextFunct
   next();
 };
 
-export default { authenticateJWT, requireRole, requireOrganization };
+export { authenticateJWT, requireRole, requireOrganization };

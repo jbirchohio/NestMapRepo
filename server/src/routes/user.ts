@@ -32,6 +32,13 @@ router.get('/permissions', async (req: Request, res: Response) => {
         error: { message: 'Authentication required' },
       });
     }
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: { message: 'Authentication required' },
+      });
+    }
 
     // Get user permissions based on role
     let permissions = {};
@@ -137,6 +144,10 @@ router.get('/profile', async (req: Request, res: Response) => {
     }
 
     const db = getDatabase();
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
+    
     const [user] = await db
       .select({
         id: users.id,
@@ -199,6 +210,10 @@ router.put('/profile', async (req: Request, res: Response) => {
 
     const updateData = updateSchema.parse(req.body);
     const db = getDatabase();
+    
+    if (!db) {
+      throw new Error('Database connection not available');
+    }
 
     const [updatedUser] = await db
       .update(users)

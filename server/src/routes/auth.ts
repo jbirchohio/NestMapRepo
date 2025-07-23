@@ -32,6 +32,7 @@ interface TokenUser {
   role: string;
   firstName?: string | null;
   lastName?: string | null;
+  username?: string;
 }
 
 const generateToken = (user: TokenUser): string => {
@@ -66,7 +67,7 @@ router.post('/login', async (req: Request, res: Response) => {
         success: false,
         error: { 
           message: 'Validation error',
-          details: validationError.errors 
+          details: validationError instanceof z.ZodError ? validationError.errors : [] 
         },
       });
     }
@@ -102,7 +103,7 @@ router.post('/login', async (req: Request, res: Response) => {
         res.cookie('sessionId', `mock-session-${Date.now()}`, { 
           httpOnly: true, 
           maxAge: 24 * 60 * 60 * 1000, // 24 hours
-          secure: process.env.NODE_ENV === 'production',
+          secure: (process.env.NODE_ENV as string) === 'production',
           sameSite: 'lax'
         });
         
@@ -551,6 +552,13 @@ router.post('/signup', async (req: Request, res: Response) => {
     }
     
     const db = getDatabase();
+    if (!db) {
+      logger.error('Database connection not available');
+      return res.status(503).json({
+        success: false,
+        error: { message: 'Service unavailable. Please try again later.' },
+      });
+    }
     
     // Check if user already exists
     const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);

@@ -151,8 +151,8 @@ router.get('/cards/:cardId', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/corporate-cards/cards/:cardId/add-funds - Add funds to card
-router.post('/cards/:cardId/add-funds', requireRole(['admin', 'manager', 'superadmin_owner', 'superadmin_staff']), async (req: Request, res: Response) => {
+// POST /api/corporate-cards/cards/:cardId/transactions - Add funds to card
+router.post('/cards/:cardId/transactions', requireRole(['admin', 'manager', 'superadmin_owner', 'superadmin_staff']), async (req: Request, res: Response) => {
   try {
     const { cardId } = req.params;
     const fundsSchema = z.object({

@@ -174,6 +174,15 @@ router.post('/:templateId/create-trip', async (req: Request, res: Response) => {
     endDate.setDate(endDate.getDate() + template.duration - 1);
     
     const db = getDatabase();
+    if (!db) {
+      logger.error('Database connection not available');
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Database connection not available' }
+      };
+      return res.status(503).json(response);
+    }
+
     const [newTrip] = await db.insert(trips).values({
       title: template.title,
       description: template.description,

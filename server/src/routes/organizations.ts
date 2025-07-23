@@ -6,6 +6,7 @@ import { getDatabase } from '../db/connection';
 import { organizations } from '../db/schema';
 import { logger } from '../utils/logger';
 import { authenticateJWT } from '../middleware/auth';
+import slugify from 'slugify';
 
 // Type for API response to ensure consistency
 type ApiResponse<T = any> = {
@@ -55,24 +56,31 @@ const updateOrganizationSchema = z.object({
 router.get('/', async (req: Request, res: Response) => {
   try {
     const db = getDatabase();
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: { message: 'Database connection not available' },
+      });
+    }
+    
     const user = req.user; // Set by JWT middleware
 
-    // Get organizations based on user role
-    let orgs;
+    let organizationsList: any[];
     if (user.role === 'superadmin_owner' || user.role === 'superadmin_staff') {
       // Superadmins can see all organizations
-      orgs = await db.select().from(organizations);
+      organizationsList = await db.select().from(organizations);
     } else {
       // Regular users can only see their organization
-      orgs = await db.select().from(organizations).where(
+      organizationsList = await db.select().from(organizations).where(
         eq(organizations.id, user.organizationId)
       );
     }
 
-    const response: ApiResponse<typeof orgs> = {
+    const response: ApiResponse<typeof organizationsList> = {
       success: true,
-      data: orgs,
+      data: organizationsList,
     };
+    return res.json(response);
     return res.json(response);
 
   } catch (error) {
@@ -100,6 +108,12 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     const db = getDatabase();
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: { message: 'Database connection not available' },
+      });
+    }
 
     // Check if organization with same name already exists
     const [existingOrg] = await db
@@ -116,7 +130,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Create organization
-    const slug = organizationData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const slug = slugify(organizationData.name, { lower: true, strict: true, locale: 'en' });
     const [newOrganization] = await db.insert(organizations).values({
       name: organizationData.name,
       slug: slug,
@@ -124,7 +138,7 @@ router.post('/', async (req: Request, res: Response) => {
       settings: organizationData.settings || null,
     }).returning();
 
-    logger.info(`New organization created: ${newOrganization.name} by user ${user.userId}`);
+    logger.info(`New organization created: ${newOrganization.name} (ID: ${newOrganization.id}) by user ${user.userId}`);
 
     const response: ApiResponse<typeof newOrganization> = {
       success: true,
@@ -157,6 +171,12 @@ router.put('/:id', async (req: Request, res: Response) => {
     const user = req.user;
 
     const db = getDatabase();
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: { message: 'Database connection not available' },
+      });
+    }
 
     // Check if organization exists
     const [organization] = await db
@@ -212,10 +232,6 @@ router.put('/:id', async (req: Request, res: Response) => {
       updatedAt: new Date().toISOString(),
     };
 
-    if (updateData.settings) {
-      updatePayload.settings = JSON.stringify(updateData.settings);
-    }
-
     const [updatedOrganization] = await db.update(organizations)
       .set(updatePayload)
       .where(eq(organizations.id, id))
@@ -253,6 +269,12 @@ router.get('/:id', async (req: Request, res: Response) => {
     const user = req.user;
 
     const db = getDatabase();
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: { message: 'Database connection not available' },
+      });
+    }
 
     // Check permissions
     const canView = 

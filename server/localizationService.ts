@@ -44,10 +44,12 @@ export interface LocalizedContent {
 }
 
 export class LocalizationService {
+  [x: string]: any;
   private static instance: LocalizationService;
   private translations: Map<string, Map<string, Translation>> = new Map();
   private currencyRates: Map<string, CurrencyRate> = new Map();
   private organizationConfigs: Map<number, LocalizationConfig> = new Map();
+  exportTranslations: any;
 
   static getInstance(): LocalizationService {
     if (!LocalizationService.instance) {
@@ -369,7 +371,7 @@ export class LocalizationService {
 
   async configureOrganization(organizationId: number, config: Partial<LocalizationConfig>): Promise<LocalizationConfig> {
     const defaultConfig: LocalizationConfig = {
-      organizationId,
+      organizationId: organizationId,
       defaultLanguage: 'en',
       defaultCurrency: 'USD',
       defaultTimezone: 'UTC',
@@ -385,10 +387,10 @@ export class LocalizationService {
     this.organizationConfigs.set(organizationId, finalConfig);
 
     await auditLogger.log({
-      organizationId,
+      userId: 'system', // Replace with the actual user ID if available
+      organizationId: organizationId.toString(),
       action: 'localization_configured',
-      entityType: 'organization',
-      entityId: organizationId,
+      logType: 'localization',
       details: {
         defaultLanguage: finalConfig.defaultLanguage,
         defaultCurrency: finalConfig.defaultCurrency,

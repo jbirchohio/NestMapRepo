@@ -36,6 +36,15 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     }
 
     const db = getDatabase();
+    if (!db) {
+      logger.error('Database connection not available');
+      const response: ApiResponse = {
+        success: false,
+        error: { message: 'Database connection not available' }
+      };
+      return res.status(503).json(response);
+    }
+
     const tripsList = await db
       .select()
       .from(trips)

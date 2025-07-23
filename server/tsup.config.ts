@@ -1,7 +1,14 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['index.ts'],
+  // Include all TypeScript files in the src directory and the root index.ts
+  entry: [
+    'index.ts',
+    'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.ts',
+    '!src/**/*.spec.ts'
+  ],
   format: ['esm'],
   dts: false, // Disable dts for now to isolate the issue
   sourcemap: true,
@@ -43,9 +50,15 @@ export default defineConfig({
   skipNodeModulesBundle: true,
   watch: process.env.NODE_ENV === 'development',
   bundle: true,
+  esbuildOptions(options, { format }) {
+    // Ensure proper path resolution
+    options.resolveExtensions = ['.ts', '.js', '.json'];
+    options.mainFields = ['module', 'main'];
+    return options;
+  },
   outExtension() {
     return {
-      js: '.mjs',
+      js: '.mjs'
     };
-  },
+  }
 });

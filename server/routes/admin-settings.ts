@@ -1,9 +1,28 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction, RequestHandler } from "express";
 import { db } from "../db";
 import { eq, count } from "drizzle-orm";
-import { adminSettings, adminAuditLog } from "../shared/src/schema";
+import { adminSettings, adminAuditLog, users } from "../db/schema";
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
+import type { User } from '../db/schema';
+
+// Extend Express Request type to include user
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: User & {
+      id: string;
+      userId: string;
+      role: string;
+      [key: string]: any;
+    };
+  }
+}
+
+type AuthenticatedRequest = Request;
+
+// Type-safe middleware type for authenticated requests
+type Middleware = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
+type AuthMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => void | Promise<void>;
 
 interface SystemSettings {
   general: {
@@ -71,18 +90,18 @@ const defaultSettings: SystemSettings = {
 
 export function registerAdminSettingsRoutes(app: Express) {
   // Apply middleware to all admin settings routes
-  app.use('/api/admin/settings', validateJWT);
-  app.use('/api/admin/settings', injectOrganizationContext);
-  app.use('/api/admin/settings', validateOrganizationAccess);
+  app.use('/api/admin/settings', validateJWT as unknown as Middleware);
+  app.use('/api/admin/settings', injectOrganizationContext as unknown as Middleware);
+  app.use('/api/admin/settings', validateOrganizationAccess as unknown as Middleware);
   
   // Apply middleware to admin logs routes
-  app.use('/api/admin/logs', validateJWT);
-  app.use('/api/admin/logs', injectOrganizationContext);
-  app.use('/api/admin/logs', validateOrganizationAccess);
+  app.use('/api/admin/logs', validateJWT as unknown as Middleware);
+  app.use('/api/admin/logs', injectOrganizationContext as unknown as Middleware);
+  app.use('/api/admin/logs', validateOrganizationAccess as unknown as Middleware);
   // Get system settings
-  app.get("/api/admin/settings", async (req, res) => {
+  app.get("/api/admin/settings", (async (req: AuthenticatedRequest, res: Response) => {
     try {
-      if (!req.user || req.user?.role !== 'admin') {
+      if (!req.user || req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -104,12 +123,12 @@ export function registerAdminSettingsRoutes(app: Express) {
       console.error("Error fetching admin settings:", error);
       res.status(500).json({ error: "Failed to fetch settings" });
     }
-  });
+  }) as RequestHandler);
 
   // Update system settings
-  app.put("/api/admin/settings", async (req, res) => {
+  app.put("/api/admin/settings", (async (req: AuthenticatedRequest, res: Response) => {
     try {
-      if (!req.user || req.user?.role !== 'admin') {
+      if (!req.user || req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -148,7 +167,7 @@ export function registerAdminSettingsRoutes(app: Express) {
 
       // Log the change
       await db.insert(adminAuditLog).values({
-        admin_user_id: req.user.id,
+        admin_user_id: req.user.userId,
         action_type: 'SYSTEM_SETTINGS_UPDATE',
         action_data: { updatedSettings },
         ip_address: req.ip || req.connection.remoteAddress || 'unknown',
@@ -159,12 +178,12 @@ export function registerAdminSettingsRoutes(app: Express) {
       console.error("Error updating admin settings:", error);
       res.status(500).json({ error: "Failed to update settings" });
     }
-  });
+  }) as RequestHandler);
 
   // Test email configuration
-  app.post("/api/admin/settings/test-email", async (req, res) => {
+  app.post("/api/admin/settings/test-email", (async (req: AuthenticatedRequest, res: Response) => {
     try {
-      if (!req.user || req.user?.role !== 'admin') {
+      if (!req.user || req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -188,7 +207,7 @@ export function registerAdminSettingsRoutes(app: Express) {
 
       // Log the test
       await db.insert(adminAuditLog).values({
-        admin_user_id: req.user.id,
+        admin_user_id: req.user.userId,
         action_type: 'EMAIL_TEST',
         action_data: { smtpHost: emailConfig.smtpHost, fromEmail: emailConfig.fromEmail },
         ip_address: req.ip || req.connection.remoteAddress || 'unknown',
@@ -200,12 +219,12 @@ export function registerAdminSettingsRoutes(app: Express) {
       console.error("Error testing email configuration:", error);
       res.status(500).json({ error: "Failed to send test email" });
     }
-  });
+  }) as RequestHandler);
 
   // Get admin logs endpoint
-  app.get("/api/admin/logs", async (req, res) => {
+  app.get("/api/admin/logs", (async (req: AuthenticatedRequest, res: Response) => {
     try {
-      if (!req.user || req.user?.role !== 'admin') {
+      if (!req.user || req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -216,7 +235,7 @@ export function registerAdminSettingsRoutes(app: Express) {
       const logs = await db
         .select()
         .from(adminAuditLog)
-        .orderBy(adminAuditLog.timestamp)
+        .orderBy(adminAuditLog.createdAt)
         .limit(limit)
         .offset(offset);
 
@@ -239,19 +258,19 @@ export function registerAdminSettingsRoutes(app: Express) {
       console.error("Error fetching admin logs:", error);
       res.status(500).json({ error: "Failed to fetch logs" });
     }
-  });
+  }) as RequestHandler);
 
   // Export admin logs as CSV
-  app.get("/api/admin/logs/export", async (req, res) => {
+  app.get("/api/admin/logs/export", (async (req: AuthenticatedRequest, res: Response) => {
     try {
-      if (!req.user || req.user?.role !== 'admin') {
+      if (!req.user || req.user.role !== 'admin' && req.user.role !== 'super_admin') {
         return res.status(403).json({ error: "Admin access required" });
       }
 
       const logs = await db
         .select()
         .from(adminAuditLog)
-        .orderBy(adminAuditLog.timestamp);
+        .orderBy(adminAuditLog.createdAt);
 
       // Generate CSV content
       const csvHeader = 'ID,Admin User ID,Action,IP Address,Timestamp,Details\n';
@@ -269,5 +288,5 @@ export function registerAdminSettingsRoutes(app: Express) {
       console.error("Error exporting admin logs:", error);
       res.status(500).json({ error: "Failed to export logs" });
     }
-  });
+  }) as RequestHandler);
 }

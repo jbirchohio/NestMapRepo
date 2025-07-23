@@ -1,4 +1,4 @@
-import { getDb } from '../../db';
+import { getDatabase } from '../../db';
 import { users } from '../../db/schema';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '../../db/schema';
@@ -58,70 +58,85 @@ export interface IUserRepository {
  * Implements user-specific operations for data access
  */
 export class UserRepositoryImpl implements IUserRepository {
+  private async getDb() {
+    const db = await getDatabase();
+    if (!db) {
+      throw new Error('Database connection not initialized');
+    }
+    return db;
+  }
+
   async findByEmail(email: string): Promise<IUser | null> {
     if (!email) return null;
-    const db = getDb();
-    // Use the correct query approach
-    const result = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.email, email.toLowerCase().trim())
-    });
-    return result as IUser | null;
+    const db = await this.getDb();
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase().trim()))
+      .limit(1);
+    return (user as IUser) || null;
   }
 
   async findById(id: string): Promise<IUser | null> {
     if (!id) return null;
-    const db = getDb();
-    // Use the correct query approach
-    const result = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.id, id)
-    });
-    return result as IUser | null;
+    const db = await this.getDb();
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    return (user as IUser) || null;
   }
 
   async findAll(): Promise<IUser[]> {
-    const db = getDb();
-    // Use the correct query approach
-    const result = await db.select().from(users);
+    const db = await this.getDb();
+    const result = await db
+      .select()
+      .from(users);
     return result as IUser[];
   }
 
   async findByOrganizationId(organizationId: string): Promise<IUser[]> {
-    const db = getDb();
-    // Use the correct property name
-    const result = await db.select().from(users).where(
-      eq(users.organizationId, organizationId)
-    );
+    if (!organizationId) return [];
+    const db = await this.getDb();
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.organizationId, organizationId));
     return result as IUser[];
   }
 
   async findByResetToken(token: string): Promise<IUser | null> {
-    const db = getDb();
-    // In a real implementation, we'd query by reset token and expiration
-    const result = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.resetToken, token)
-    });
-    
-    return result as IUser | null;
+    if (!token) return null;
+    const db = await this.getDb();
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.resetToken, token))
+      .limit(1);
+    return (user as IUser) || null;
   }
 
   async setPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void> {
-    const db = getDb();
+    const db = await this.getDb();
     await db
       .update(users)
       .set({
         resetToken: token,
-        resetTokenExpires: expiresAt
+        resetTokenExpires: expiresAt,
+        updatedAt: new Date()
       })
       .where(eq(users.id, userId));
   }
 
   async clearPasswordResetToken(userId: string): Promise<void> {
-    const db = getDb();
+    const db = await this.getDb();
     await db
       .update(users)
       .set({
         resetToken: null,
-        resetTokenExpires: null
+        resetTokenExpires: null,
+        updatedAt: new Date()
       })
       .where(eq(users.id, userId));
   }
@@ -143,24 +158,26 @@ export class UserRepositoryImpl implements IUserRepository {
     }
 
     // Update the user
-    const db = getDb();
+    const db = await this.getDb();
     await db
       .update(users)
       .set({
         failedLoginAttempts: failedAttempts,
-        lockedUntil: lockedUntil
+        lockedUntil: lockedUntil,
+        updatedAt: new Date()
       })
       .where(eq(users.id, userId));
   }
 
   async resetFailedLoginAttempts(userId: string): Promise<void> {
-    const db = getDb();
+    const db = await this.getDb();
     await db
       .update(users)
       .set({
         failedLoginAttempts: 0,
         lockedUntil: null,
-        lastLoginAt: new Date()
+        lastLoginAt: new Date(),
+        updatedAt: new Date()
       })
       .where(eq(users.id, userId));
   }
@@ -170,7 +187,7 @@ export class UserRepositoryImpl implements IUserRepository {
   }
 
   async lockAccount(userId: string, lockedUntil: Date): Promise<void> {
-    const db = getDb();
+    const db = await this.getDb();
     await db
       .update(users)
       .set({
@@ -200,7 +217,7 @@ export class UserRepositoryImpl implements IUserRepository {
 
     try {
       // Insert into database and return the created user
-      const db = getDb();
+      const db = await this.getDb();
       const [insertedUser] = await db
         .insert(users)
         .values(userToInsert)
@@ -239,7 +256,7 @@ export class UserRepositoryImpl implements IUserRepository {
     };
 
     // Update in the database
-    const db = getDb();
+    const db = await this.getDb();
     await db
       .update(users)
       .set(updatedUser)
@@ -254,7 +271,7 @@ export class UserRepositoryImpl implements IUserRepository {
       const user = await this.findById(id);
       if (!user) return false;
       
-      const db = getDb();
+      const db = await this.getDb();
       await db.delete(users).where(eq(users.id, id));
       return true;
     } catch (error) {
@@ -265,7 +282,7 @@ export class UserRepositoryImpl implements IUserRepository {
 
   async verifyEmail(userId: string): Promise<boolean> {
     try {
-      const db = getDb();
+      const db = await this.getDb();
       await db
         .update(users)
         .set({
@@ -285,23 +302,44 @@ export class UserRepositoryImpl implements IUserRepository {
   async findByIds(ids: string[]): Promise<IUser[]> {
     if (ids.length === 0) return [];
     
-    const db = getDb();
+    const db = await this.getDb();
+    // Use parameterized query for better security
+    const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
     const result = await db
       .select()
       .from(users)
-      .where(sql`${users.id} IN (${ids.join(',')})`);
+      .where(sql`${users.id} IN (${sql.raw(placeholders)})`, [...ids]);
       
     return result as IUser[];
   }
 
-  async count(): Promise<number> {
-    const db = getDb();
-    const result = await db.select({ count: sql`COUNT(*)` }).from(users);
-    return Number(result[0]?.count || 0);
+  async count(filter?: Partial<Record<string, unknown>>): Promise<number> {
+    const db = await this.getDb();
+    let query = db.select({ count: sql<number>`count(*)` }).from(users);
+    
+    // Apply filters if provided
+    if (filter) {
+      const conditions = Object.entries(filter).map(([key, value]) => {
+        return sql`${users[key as keyof typeof users]} = ${value}`;
+      });
+      
+      if (conditions.length > 0) {
+        query = query.where(sql.join(conditions, ' AND '));
+      }
+    }
+    
+    const result = await query;
+    return result[0]?.count ?? 0;
   }
 
   async exists(id: string): Promise<boolean> {
-    const user = await this.findById(id);
-    return !!user;
+    if (!id) return false;
+    const db = await this.getDb();
+    const [result] = await db
+      .select({ exists: sql<boolean>`1` })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    return !!result?.exists;
   }
 }

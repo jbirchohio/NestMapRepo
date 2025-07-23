@@ -20,7 +20,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "clean": "rm -rf dist",
+    "clean": "node ../scripts/clean.mjs shared",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit"
   },

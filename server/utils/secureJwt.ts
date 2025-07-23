@@ -1,6 +1,4 @@
-import * as jwt from 'jsonwebtoken';
-const { sign, verify, decode } = jwt;
-type SignOptions = jwt.SignOptions;
+import { sign, verify, decode, SignOptions } from 'jsonwebtoken';
 // Redis removed for simplified deployment
 import { logger } from './logger';
 import { v4 as uuidv4 } from 'uuid';

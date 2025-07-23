@@ -119,7 +119,7 @@ export class AuthService implements IAuthService {
     
     try {
       // Verify refresh token
-      const payload = verify(refreshToken, this.REFRESH_TOKEN_SECRET) as JwtPayload;
+      const payload = jwt.verify(refreshToken, this.REFRESH_TOKEN_SECRET) as JwtPayload;
       
       // Check token type
       if (payload.type !== 'refresh') {
@@ -430,7 +430,7 @@ export class AuthService implements IAuthService {
 
     try {
       // Verify refresh token
-      const payload = verify(refreshToken, this.REFRESH_TOKEN_SECRET) as JwtPayload;
+      const payload = jwt.verify(refreshToken, this.REFRESH_TOKEN_SECRET) as JwtPayload;
       
       // Check token type
       if (payload.type !== 'refresh') {
@@ -502,7 +502,7 @@ export class AuthService implements IAuthService {
 
     try {
       // Verify the token to get its ID for blacklisting
-      const decoded = verify(refreshToken, this.REFRESH_TOKEN_SECRET) as JwtPayload;
+      const decoded = jwt.verify(refreshToken, this.REFRESH_TOKEN_SECRET) as JwtPayload;
       
       // Add token to blacklist
       await this.revokeToken(decoded.jti, decoded.exp || 0);

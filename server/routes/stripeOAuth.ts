@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
 import { db } from '../db';
-import { organizations } from '../shared/src/schema';
+import { organizations } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 const router = Router();
@@ -11,7 +11,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-05-28.basil",
+  apiVersion: "2025-06-30.basil" as const,
 });
 
 /**
@@ -35,7 +35,7 @@ router.get('/oauth/callback', async (req, res) => {
 
     // If state parameter contains organization ID, update the organization
     if (state) {
-      const organizationId = parseInt(state as string);
+      const organizationId = state as string;
       
       await db
         .update(organizations)
