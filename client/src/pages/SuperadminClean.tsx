@@ -50,42 +50,50 @@ export default function SuperadminClean() {
   // Individual API queries for each section (original working approach)
   const { data: organizations = [] } = useQuery<Organization[]>({
     queryKey: ['/api/superadmin/organizations'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/organizations'),
     retry: false
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ['/api/superadmin/users'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/users'),
     retry: false
   });
 
   const { data: activeSessions = [] } = useQuery<any[]>({
     queryKey: ['/api/superadmin/sessions'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/sessions'),
     retry: false
   });
 
   const { data: backgroundJobs = [] } = useQuery<any[]>({
     queryKey: ['/api/superadmin/jobs'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/jobs'),
     retry: false
   });
 
   const { data: auditLogs = [] } = useQuery<AuditLog[]>({
     queryKey: ['/api/superadmin/activity'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/activity'),
     retry: false
   });
 
   const { data: billingData = [] } = useQuery<any[]>({
     queryKey: ['/api/superadmin/billing'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/billing'),
     retry: false
   });
 
   const { data: featureFlags = [] } = useQuery<any[]>({
     queryKey: ['/api/superadmin/flags'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/flags'),
     retry: false
   });
 
   // Use dashboard query only for overview metrics
   const { isLoading: dashboardLoading, error: dashboardError } = useQuery({
     queryKey: ['/api/superadmin/dashboard'],
+    queryFn: () => apiRequest('GET', '/api/superadmin/dashboard'),
     enabled: activeSection === 'overview',
     staleTime: 1000 * 60 * 5,
   });

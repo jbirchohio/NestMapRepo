@@ -122,6 +122,11 @@ export class PerformanceMonitor {
 
   private async sendMetricsToBackend(metrics: PerformanceMetrics): Promise<void> {
     try {
+      // Don't send metrics for auth endpoints to avoid circular dependencies
+      if (metrics.url.includes('/auth/') || metrics.url.includes('/login')) {
+        return;
+      }
+      
       // apiClient.post will handle JSON.stringify internally for object payloads
       await getApiClient().post('/metrics', metrics);
     } catch (error: unknown) {

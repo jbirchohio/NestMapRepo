@@ -15,6 +15,7 @@ import OnboardingManager from '@/components/onboarding/OnboardingManager';
 const Home = lazy(() => import('@/pages/Home'));
 const Login = lazy(() => import('@/pages/Login'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const SuperadminClean = lazy(() => import('@/pages/SuperadminClean'));
 const MainLayout = lazy(() => import('@/layouts/MainLayout'));
 
 // Import Phase 1-3 Components
@@ -51,15 +52,16 @@ const ProtectedRoute = () => {
 
 // Public Only Route Component (for login/signup when already authenticated)
 const PublicOnlyRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return <PageLoading />;
   }
 
   if (isAuthenticated) {
-    // Redirect to dashboard if already authenticated
-    return <Navigate to="/dashboard" replace />;
+    // Redirect based on user role
+    const redirectPath = user?.role === 'super_admin' ? '/superadmin' : '/dashboard';
+    return <Navigate to={redirectPath} replace />;
   }
 
   return <Outlet />;
@@ -93,6 +95,7 @@ function App() {
                       {/* Protected routes - require authentication */}
                       <Route element={<ProtectedRoute />}>
                         <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+                        <Route path="/superadmin" element={<MainLayout><SuperadminClean /></MainLayout>} />
                         
                         {/* Phase 1: Voice Interface & AI Features */}
                         <Route path="/voice-assistant" element={<MainLayout><VoiceAssistant /></MainLayout>} />

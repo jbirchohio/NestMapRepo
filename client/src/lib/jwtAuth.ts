@@ -33,17 +33,31 @@ class JWTAuth {
     if (!this.token) return;
     
     try {
+      // Validate token format
+      const tokenParts = this.token.split('.');
+      if (tokenParts.length !== 3) {
+        throw new Error('Invalid JWT format');
+      }
+
       // Decode JWT payload (basic decode without verification - server will verify)
-      const payload = JSON.parse(atob(this.token.split('.')[1]));
+      const payload = JSON.parse(atob(tokenParts[1]));
+      
+      // Validate that the payload has required properties
+      if (!payload.id || !payload.email || !payload.role) {
+        console.warn('JWT payload missing required properties:', payload);
+        throw new Error('Invalid JWT payload structure');
+      }
+
       this.user = {
         id: payload.id,
         email: payload.email,
-        username: payload.username,
+        username: payload.username || payload.email,
         role: payload.role,
         organization_id: payload.organization_id
       };
     } catch (error) {
       console.warn('Failed to decode token:', error);
+      console.warn('Token that failed:', this.token?.substring(0, 50) + '...');
       this.signOut();
     }
   }

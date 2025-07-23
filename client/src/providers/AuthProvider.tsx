@@ -86,10 +86,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Set the user state
       setUser(result.user);
       
-      // Get the redirect path from URL search params or use default
+      // Get the redirect path from URL search params or use role-based default
       const searchParams = new URLSearchParams(window.location.search);
       const redirectPath = searchParams.get('redirect');
-      const from = redirectPath || '/dashboard';
+      
+      // Determine default path based on user role
+      let defaultPath = '/dashboard';
+      if (result.user.role === 'super_admin') {
+        defaultPath = '/superadmin';
+      }
+      
+      const from = redirectPath || defaultPath;
       
       // Navigate to the target page
       navigate(from, { replace: true });

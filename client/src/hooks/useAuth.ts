@@ -34,11 +34,25 @@ export function useAuth() {
       const token = jwtAuth.getToken();
       
       if (jwtUser && token) {
+        // Validate that jwtUser has required properties
+        if (!jwtUser.id || !jwtUser.email || !jwtUser.role) {
+          console.warn('JWT user object is missing required properties:', jwtUser);
+          // Clear invalid auth state
+          jwtAuth.signOut();
+          setState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          });
+          return;
+        }
+
         // Map JWT user to our User interface
         const user: User = {
           id: jwtUser.id.toString(),
           email: jwtUser.email,
-          name: jwtUser.username,
+          name: jwtUser.username || jwtUser.email,
           role: jwtUser.role,
           organizationId: jwtUser.organization_id,
           accessToken: token,

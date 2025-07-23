@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 
-export type UserRole = 'admin' | 'travel_manager' | 'traveler';
+export type UserRole = 'admin' | 'travel_manager' | 'traveler' | 'super_admin';
 
 export interface OnboardingStep {
   id: string;
@@ -41,8 +41,8 @@ interface OnboardingContextType {
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-// Define onboarding flows for each role
-const ONBOARDING_FLOWS: Record<UserRole, Omit<OnboardingFlow, 'currentStepIndex' | 'completedSteps' | 'isComplete'>> = {
+// Define onboarding flows for each role (excluding super_admin which doesn't need onboarding)
+const ONBOARDING_FLOWS: Record<Exclude<UserRole, 'super_admin'>, Omit<OnboardingFlow, 'currentStepIndex' | 'completedSteps' | 'isComplete'>> = {
   admin: {
     role: 'admin',
     totalSteps: 5,
@@ -192,7 +192,12 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
   };
 
   const initializeOnboarding = (role: UserRole) => {
-    const baseFlow = ONBOARDING_FLOWS[role];
+    // Super admin users don't need onboarding
+    if (role === 'super_admin') {
+      return;
+    }
+    
+    const baseFlow = ONBOARDING_FLOWS[role as keyof typeof ONBOARDING_FLOWS];
     const newFlow: OnboardingFlow = {
       ...baseFlow,
       currentStepIndex: 0,
@@ -307,7 +312,7 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
     const eventData = {
       event: eventName,
       userId: user?.id,
-      organizationId: user?.organizationId,
+      organizationId: user?.organization_id,
       timestamp: new Date().toISOString(),
       ...properties,
     };

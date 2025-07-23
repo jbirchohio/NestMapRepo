@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, X } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 import { useOnboarding, UserRole } from '@/contexts/OnboardingContext';
 import { RoleSelectionModal } from './RoleSelectionModal';
 import { OnboardingWizard } from './OnboardingWizard';
@@ -30,6 +30,11 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
   // Check if user needs onboarding
   useEffect(() => {
     if (user && !flow) {
+      // Skip onboarding for super_admin users
+      if (user.role === 'super_admin') {
+        return;
+      }
+      
       // Check if user has completed onboarding before
       const hasCompletedOnboarding = localStorage.getItem(`onboarding_completed_${user.id}`);
       
@@ -98,6 +103,11 @@ export const OnboardingManager: React.FC<OnboardingManagerProps> = ({
 
   // Don't render anything if user is not authenticated
   if (!user) {
+    return null;
+  }
+
+  // Don't render onboarding for super_admin users
+  if (user.role === 'super_admin') {
     return null;
   }
 
