@@ -11,7 +11,7 @@ import {
   organizations,
   approvalRequests,
   activities
-} from '../shared/src/schema';
+} from '../src/db/schema';
 
 const router = Router();
 

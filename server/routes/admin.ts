@@ -6,7 +6,7 @@ import { sql, eq, and, or, desc, gte, lte } from 'drizzle-orm';
 import { db } from '../db/db';
 import { users, organizations, customDomains, userActivityLogs, OrganizationRole } from '../db/schema';
 import { authenticate as validateJWT, requireRole } from '../middleware/secureAuth';
-import { validateAndSanitizeRequest } from '../middleware/validation';
+import { validateRequest as validateAndSanitizeRequest } from '../middleware/validation';
 import { auditLogger } from '../auditLogger';
 import { AuthenticatedRequest, AuthenticatedUser } from '../types/auth';
 

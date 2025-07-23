@@ -6,7 +6,7 @@ import { authenticate } from '../middleware/secureAuth';
 import { injectOrganizationContext } from '../middleware/organizationScoping';
 import { eq, and, desc } from 'drizzle-orm';
 import { logUserActivity } from '../utils/activityLogger';
-import { tripController } from '../src/trips/trip.container';
+import tripController from '../src/trips/controllers/trip.controller';
 
 // Zod schema for validating numeric ID parameters
 const idParamSchema = z.object({

@@ -1,4 +1,4 @@
-import { sendEmail } from './emailService';
+import { sendNotificationEmail as sendEmail } from './emailService';
 
 interface ProposalNotificationData {
   proposalId: number;
@@ -375,3 +375,15 @@ Best regards,
 The NestMap Team
   `.trim();
 }
+
+// Export all functions as a service object
+export const notificationService = {
+  sendProposalSentNotification,
+  sendProposalViewedNotification,
+  generateProposalSentEmailHTML,
+  generateProposalSentEmailText,
+  generateAgentConfirmationHTML,
+  generateAgentConfirmationText,
+  generateViewedNotificationHTML,
+  generateViewedNotificationText
+};

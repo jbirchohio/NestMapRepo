@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from './db-connection';
-import { users } from '../shared/src/schema';
+import { users } from './src/db/schema';
 import { eq } from 'drizzle-orm';
 import { auditLogger } from './auditLogger';
 import crypto from 'crypto';

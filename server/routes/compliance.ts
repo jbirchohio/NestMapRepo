@@ -2,7 +2,7 @@ import express from 'express';
 import { PolicyEngine } from '../policyEngine';
 import { ComplianceService } from '../complianceService';
 import { EnhancedApprovalWorkflow } from '../enhancedApprovalWorkflow';
-import { requireAuth, requireRole } from '../middleware/auth';
+import { authenticateJWT as requireAuth, requireRole } from '../src/middleware/auth';
 import { auditLogger } from '../auditLogger';
 
 const router = express.Router();
