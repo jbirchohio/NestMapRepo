@@ -5,7 +5,7 @@ import { AnimatedCard } from "@/components/ui/animated-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/providers/AuthProvider";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { motion } from "framer-motion";

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { analyticsService } from '../services/api/analyticsService';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 import { AnalyticsFilterParams, AgencyAnalyticsDTO, CorporateAnalyticsDTO } from '../types/dtos/analytics';
 
 export const useAnalytics = (params?: AnalyticsFilterParams) => {

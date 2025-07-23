@@ -1,5 +1,5 @@
 // Hooks
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/providers/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
 
 // UI Components

@@ -16,7 +16,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface FeedbackData {
   setupEase: number; // 1-5 rating

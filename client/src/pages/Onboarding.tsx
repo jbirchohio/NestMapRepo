@@ -1,5 +1,5 @@
 import { useLocation } from 'wouter';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { useAuth } from '@/providers/AuthProvider';
 import OnboardingWizard from '@/components/OnboardingWizard';
 import { motion } from 'framer-motion';
 

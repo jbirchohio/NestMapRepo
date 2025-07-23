@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/providers/AuthProvider";
 import AuthModal from "@/components/auth/AuthModal";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { AnimatedCard } from "@/components/ui/animated-card";

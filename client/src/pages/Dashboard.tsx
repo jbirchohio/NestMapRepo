@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Calendar, Building2, DollarSign, Users, Clock, FileText, Target, User } from 'lucide-react';
 import NewTripModal from "@/components/NewTripModal";
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 import { useTrips } from '@/hooks/useTrips';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { TripStatus, UserRole } from '@/types/dtos/common';

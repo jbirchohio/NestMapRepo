@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { useAuth } from "@/providers/AuthProvider";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

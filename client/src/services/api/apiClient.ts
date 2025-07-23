@@ -59,12 +59,18 @@ export class ApiClient {
       // Don't modify request headers (important for CORS)
       transformRequest: [(data, headers) => {
         // Don't overwrite headers if they're already set
-        if (!headers['Content-Type']) {
+        if (!headers['Content-Type'] && !(data instanceof FormData)) {
           headers['Content-Type'] = 'application/json';
         }
         if (!headers['Accept']) {
           headers['Accept'] = 'application/json';
         }
+        
+        // Properly serialize data for JSON requests
+        if (data && typeof data === 'object' && !(data instanceof FormData) && !(data instanceof URLSearchParams)) {
+          return JSON.stringify(data);
+        }
+        
         return data;
       }]
     });
@@ -235,6 +241,12 @@ export class ApiClient {
 
           // Add Authorization token from JWT auth
           const token = jwtAuth.getToken();
+          console.log('🔐 Token Debug:', {
+            hasToken: !!token,
+            tokenType: typeof token,
+            tokenLength: token?.length || 0,
+            url: config.url
+          });
           if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
           }
@@ -306,8 +318,10 @@ export class ApiClient {
                 }
                 break;
               case 401:
-                // Redirect to login if not already there
-                if (window.location.pathname !== '/login') {
+                // Only redirect to login for auth-critical endpoints, not for metrics/errors
+                if (!error.config?.url?.includes('/metrics') && 
+                    !error.config?.url?.includes('/errors') &&
+                    window.location.pathname !== '/login') {
                   window.location.href = '/login';
                 }
                 break;
@@ -421,7 +435,7 @@ export const createApiClient = (navigate?: NavigateFunction): ApiClient => {
   }
   
   return new ApiClient({
-    baseUrl: '', // Use empty string for relative URLs
+    baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
     timeout: 30000,
     navigate,
     headers: {

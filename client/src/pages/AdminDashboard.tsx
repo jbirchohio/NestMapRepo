@@ -5,7 +5,7 @@ import { CardContent } from "@/components/ui/card";
 import { AnimatedCard } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/providers/AuthProvider";
 import { 
   Shield, 
   Users, 

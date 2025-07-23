@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWhiteLabel } from '@/contexts/WhiteLabelContext';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 // User type from next-auth is not needed as we're using our own AuthUser type
 import { useNotifications } from '@/hooks/useNotifications';
 import MainNavigation from '@/components/MainNavigation';

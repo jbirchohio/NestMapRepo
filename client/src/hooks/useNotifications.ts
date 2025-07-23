@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Notification } from '@/types/notification';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface UseNotificationsReturn {
   notifications: Notification[];

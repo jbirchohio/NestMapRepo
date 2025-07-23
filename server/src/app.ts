@@ -34,7 +34,15 @@ const app = express();
 const corsOptions: cors.CorsOptions = {
   origin: ['http://localhost:9000', 'http://localhost:3000', 'http://127.0.0.1:9000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept',
+    'Cache-Control',
+    'Pragma',
+    'Expires'
+  ],
   exposedHeaders: ['Authorization'],
   credentials: true,
   preflightContinue: false,

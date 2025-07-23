@@ -38,6 +38,7 @@ import policiesRoutes from './policies';
 import mfaRoutes from './mfa';
 import localizationRoutes from './localization';
 import communicationRoutes from './communication';
+import errorsRoutes from './errors';
 
 // Test routes (development only)
 import testRoutes from './test.routes';
@@ -83,6 +84,7 @@ router.use('/health', healthRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/flights', flightRoutes);
 router.use('/export', exportRoutes);
+router.use('/errors', errorsRoutes);
 
 // Enterprise feature routes
 router.use('/compliance', complianceRoutes);
