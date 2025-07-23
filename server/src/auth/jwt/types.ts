@@ -1,30 +1,34 @@
-// Define JwtPayload type if not available from 'jsonwebtoken'
-type BaseJwtPayload = {
-  iss?: string;
-  sub?: string;
-  aud?: string | string[];
-  exp?: number;
-  nbf?: number;
-  iat?: number;
-  jti?: string;
-  key: string;
-};
+// Base JWT payload interface extending standard JWT claims
+interface BaseJwtPayload {
+  iss?: string; // Issuer
+  sub?: string; // Subject (user ID)
+  aud?: string | string[]; // Audience
+  exp?: number; // Expiration time
+  nbf?: number; // Not before
+  iat?: number; // Issued at
+  jti?: string; // JWT ID
+  key: string; // Required key for our implementation
+  [key: string]: unknown; // Allow additional properties
+}
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'guest';
 export type TokenType = 'access' | 'refresh' | 'password_reset';
 
-// Extend JwtPayload but override the role to be required
-interface CustomJwtPayload extends Omit<BaseJwtPayload, 'role'> {
+// Custom JWT payload with required role
+interface CustomJwtPayload extends BaseJwtPayload {
   role: UserRole;
 }
 
+// Token payload interface with all required fields
 export interface TokenPayload extends CustomJwtPayload {
-  [key: string]: unknown;
-  sub: string;
-  email: string;
-  jti: string;
-  type: TokenType;
-  organizationId?: string;
+  sub: string; // User ID (required)
+  email: string; // User email (required)
+  jti: string; // Token ID (required)
+  type: TokenType; // Token type (required)
+  role: UserRole; // User role (required)
+  organizationId?: string; // Optional organization ID
+  iat: number; // Issued at timestamp (required)
+  exp?: number; // Expiration timestamp (optional, set by JWT library)
 }
 
 export interface TokenVerificationResult<T = TokenPayload> {

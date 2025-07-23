@@ -30,6 +30,21 @@ config();
 // Create Express app
 const app = express();
 
+// CORS configuration
+const corsOptions: cors.CorsOptions = {
+  origin: ['http://localhost:9000', 'http://localhost:3000', 'http://127.0.0.1:9000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Authorization'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+// Apply CORS before other middleware
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
@@ -53,14 +68,6 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
-
-// CORS configuration
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
 
 // Logging middleware
 app.use(morgan('combined', {

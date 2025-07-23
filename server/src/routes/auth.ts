@@ -255,31 +255,26 @@ router.post('/login', async (req: Request, res: Response) => {
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
 
-    res.json({
-      success: true,
+    // Format response to match client expectations
+    const responseData = {
       data: {
-        token,
         user: {
           id: user.id,
           email: user.email,
-          username: user.username,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          username: user.username || '',
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
           role: user.role,
-          organizationId: user.organizationId,
+          organization_id: user.organizationId,
+          accessToken: token,
+          // Include any other required fields
         },
+        token: token
       },
-      // Also include user directly for test compatibility
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        organizationId: user.organizationId,
-      },
-    });
+      success: true
+    };
+
+    res.json(responseData);
   } catch (error) {
     logger.error('Login error:', error);
     
@@ -398,56 +393,60 @@ router.post('/register', async (req: Request, res: Response) => {
         });
 
       newUser = result[0];
+      
+      // Generate JWT token
+      const token = generateToken({
+        id: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+        firstName: newUser.firstName || undefined,
+        lastName: newUser.lastName || undefined,
+        organizationId: newUser.organizationId || undefined
+      });
+
+      logger.info(`New user registered: ${newUser.email}`);
+
+      // Format response to match client expectations
+      const responseData = {
+        data: {
+          user: {
+            id: newUser.id,
+            email: newUser.email,
+            username: newUser.username || '',
+            firstName: newUser.firstName || '',
+            lastName: newUser.lastName || '',
+            role: newUser.role,
+            organization_id: newUser.organizationId,
+            accessToken: token,
+          },
+          token: token
+        },
+        success: true
+      };
+
+      return res.status(201).json(responseData);
     } catch (error) {
-      logger.error('Error creating user:', error);
+      logger.error('Registration error:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Invalid input', details: error.errors },
+        });
+      }
+
       return res.status(500).json({
         success: false,
-        error: { message: 'Failed to create user' },
+        error: { message: 'Internal server error' },
       });
     }
-
-    // Generate JWT token
-    const token = generateToken(newUser);
-
-    logger.info(`New user registered: ${newUser.email}`);
-
-    res.status(201).json({
-      success: true,
-      data: {
-        token,
-        user: newUser,
-      },
-      // Also include user directly for test compatibility
-      user: newUser,
-    });
   } catch (error) {
     logger.error('Registration error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Invalid input', details: error.errors },
-      });
-    }
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: { message: 'Internal server error' },
     });
   }
-});
-
-// POST /api/auth/logout
-router.post('/logout', (_req: Request, res: Response) => {
-  // With JWT, logout is handled client-side by removing the token
-  // We could implement a token blacklist here if needed
-  
-  logger.info('User logged out');
-  
-  res.json({
-    success: true,
-    message: 'Logged out successfully',
-  });
 });
 
 // POST /api/auth/guest-access

@@ -50,7 +50,15 @@ export const authenticateJWT = async (
     
     const authHeader = req.headers.authorization;
     
+    logger.debug('Auth headers:', { 
+      authorization: authHeader ? 'present' : 'missing',
+      method: req.method,
+      path: req.path,
+      headers: req.headers
+    });
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      logger.warn('Missing or invalid authorization header');
       return res.status(401).json({
         success: false,
         error: { message: 'Access token required' },
@@ -68,7 +76,15 @@ export const authenticateJWT = async (
     }
 
     // Verify JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) as JWTPayload;
+    logger.debug('Verifying JWT token...');
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET) as JWTPayload;
+      logger.debug('Token verified successfully', { userId: decoded.userId });
+    } catch (verifyError) {
+      logger.error('Token verification failed', { error: verifyError });
+      throw verifyError;
+    }
     
     // Set user information from token
     req.user = {

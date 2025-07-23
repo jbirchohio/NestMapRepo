@@ -20,10 +20,52 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       proxy: {
         // Proxy all API requests to the backend server
-        '/api': {
+        '^/api': {
           target: env.API_URL || 'http://localhost:5000',
           changeOrigin: true,
           secure: false,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+          configure: (proxy, _options) => {
+            proxy.on('error', (err, _req, _res) => {
+              console.error('Proxy error:', err);
+            });
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              console.log('Sending Request to the Target:', req.method, req.url);
+              proxyReq.setHeader('Access-Control-Allow-Origin', 'http://localhost:9000');
+              proxyReq.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+              proxyReq.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+              proxyReq.setHeader('Access-Control-Allow-Credentials', 'true');
+            });
+            proxy.on('proxyRes', (proxyRes, req, _res) => {
+              console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+              proxyRes.headers['Access-Control-Allow-Origin'] = 'http://localhost:9000';
+              proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
+            });
+          }
+        },
+        // Handle auth routes
+        '^/auth': {
+          target: env.API_URL || 'http://localhost:5000',
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              proxyReq.setHeader('Access-Control-Allow-Origin', 'http://localhost:9000');
+              proxyReq.setHeader('Access-Control-Allow-Credentials', 'true');
+            });
+          }
+        },
+        // Handle metrics
+        '^/metrics': {
+          target: env.API_URL || 'http://localhost:5000',
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              proxyReq.setHeader('Access-Control-Allow-Origin', 'http://localhost:9000');
+              proxyReq.setHeader('Access-Control-Allow-Credentials', 'true');
+            });
+          }
         }
       }
     },

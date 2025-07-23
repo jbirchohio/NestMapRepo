@@ -1,16 +1,10 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  // Include all TypeScript files in the src directory and the root index.ts
-  entry: [
-    'index.ts',
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/**/*.test.ts',
-    '!src/**/*.spec.ts'
-  ],
+  // Single entry point for Express server
+  entry: ['src/main.ts'],
   format: ['esm'],
-  dts: false, // Disable dts for now to isolate the issue
+  dts: false,
   sourcemap: true,
   clean: true,
   outDir: 'dist',
@@ -23,6 +17,9 @@ export default defineConfig({
     'node:fs',
     'node:fs/promises',
     'node:url',
+    'node:http',
+    'node:crypto',
+    'node:util',
     // External dependencies
     '@shared/schema',
     'drizzle-orm',
@@ -37,12 +34,17 @@ export default defineConfig({
     'zod',
     'postgres',
     'express-rate-limit',
+    'express-async-handler',
     'handlebars',
     'nodemailer',
     'puppeteer',
     'uuid',
     'csv-stringify',
-    'dotenv'
+    'dotenv',
+    'axios',
+    'multer',
+    'slugify',
+    'injection-js'
   ],
   noExternal: [],
   minify: false,
@@ -50,10 +52,11 @@ export default defineConfig({
   skipNodeModulesBundle: true,
   watch: process.env.NODE_ENV === 'development',
   bundle: true,
-  esbuildOptions(options, { format }) {
-    // Ensure proper path resolution
+  esbuildOptions(options) {
+    // Ensure proper path resolution for Express server
     options.resolveExtensions = ['.ts', '.js', '.json'];
     options.mainFields = ['module', 'main'];
+    options.platform = 'node';
     return options;
   },
   outExtension() {

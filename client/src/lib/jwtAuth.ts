@@ -50,37 +50,55 @@ class JWTAuth {
 
   async signIn(email: string, password: string): Promise<{ user: User | null; error: Error | null }> {
     try {
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+
       const apiClient = getApiClient();
-      const response = await apiClient.post<{ data: AuthResponse }>('/auth/login', {
-        email,
-        password
+      const response = await apiClient.post<AuthResponse>('/auth/login', {
+        email: email.trim(),
+        password: password.trim()
       });
       
-      const responseData = response.data;
-      if (!responseData) {
-        throw new Error('No response data received');
+      // The response data should already be typed as AuthResponse
+      const authData = response;
+      
+      if (!authData || !authData.token || !authData.user) {
+        throw new Error('Invalid authentication response format');
       }
       
-      // The actual response structure from the API
-      const authData = (responseData as any).data || responseData;
-      if (!authData.token || !authData.user) {
-        throw new Error('Invalid response format from server');
+      // Validate token format
+      const tokenParts = authData.token.split('.');
+      if (tokenParts.length !== 3) {
+        throw new Error('Invalid token format');
       }
       
+      // Update auth state
       this.token = authData.token;
       this.user = authData.user;
       
+      // Store token securely
       if (this.token) {
         localStorage.setItem('auth_token', this.token);
-        this.updateAuthState(this.user, this.token);
       }
       
+      // Update application state and notify listeners
+      this.updateAuthState(this.user, this.token);
+      
       return { user: this.user, error: null };
+      
     } catch (error) {
-      this.updateAuthState(null, null);
+      // Clear any partial auth state on error
+      this.signOut();
+      
+      // Normalize error response
+      const normalizedError = error instanceof Error 
+        ? error 
+        : new Error('Login failed. Please try again.');
+        
       return { 
         user: null, 
-        error: error instanceof Error ? error : new Error('Login failed') 
+        error: normalizedError
       };
     }
   }
@@ -124,10 +142,19 @@ class JWTAuth {
   }
 
   signOut(): void {
+    // Clear all auth-related data
     this.token = null;
     this.user = null;
+    
+    // Remove token from storage
     localStorage.removeItem('auth_token');
+    
+    // Notify listeners and update state
     this.updateAuthState(null, null);
+    
+    // Clear any pending requests
+    // Note: This would require access to the API client's cancelSources
+    // which should be implemented in the API client
   }
 
   getUser(): User | null {
@@ -163,11 +190,27 @@ class JWTAuth {
 
   // Update internal state and notify listeners
   private updateAuthState(user: User | null, token: string | null) {
-    this.user = user;
-    this.token = token;
-    this.notifyListeners();
+    // Only update if state has actually changed
+    if (this.user !== user || this.token !== token) {
+      this.user = user;
+      this.token = token;
+      
+      // Update axios default headers if needed
+      // This would be handled by the API client's interceptor
+      
+      // Notify all listeners
+      this.notifyListeners();
+      
+      // Additional cleanup if logging out
+      if (!token) {
+        // Clear any cached data or perform other cleanup
+      }
+    }
   }
 }
 
-export const jwtAuth = new JWTAuth();
+// Create and export a single instance
+const jwtAuth = new JWTAuth();
+export { jwtAuth };
+
 export type { User };

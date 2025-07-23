@@ -107,7 +107,7 @@ export interface DatabaseMetrics {
 
 class MetricsService {
   private static instance: MetricsService;
-  private basePath = '/metrics';
+  private basePath = '/api/metrics';
 
   private constructor() {}
 

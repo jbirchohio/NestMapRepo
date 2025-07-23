@@ -1,4 +1,4 @@
-import { sign, verify, decode, SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 // Redis removed for simplified deployment
 import { logger } from './logger';
 import { v4 as uuidv4 } from 'uuid';
@@ -55,11 +55,11 @@ export const generateToken = async (
     // exp removed - let jsonwebtoken set this via expiresIn option
   };
 
-  const token = sign(
+  const token = jwt.sign(
     payload,
     JWT_SECRET,
-    { expiresIn: typeof expiresIn === 'string' ? expiresIn : `${expiresIn}s` } as SignOptions
-  );
+    { expiresIn: typeof expiresIn === 'string' ? expiresIn : `${expiresIn}s` }
+  ) as string;
   
   // Note: In production, you may want to store refresh tokens in a database
   // for revocation capabilities. For simplicity, we're using stateless tokens.
@@ -75,7 +75,7 @@ export const verifyToken = async (
   type: TokenType
 ): Promise<VerifyTokenResult | null> => {
   try {
-    const decoded = verify(token, JWT_SECRET) as TokenPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
     
     // Verify token type
     if (decoded.type !== type) {
@@ -101,7 +101,7 @@ export const verifyToken = async (
     };
   } catch (error: unknown) {
     if (error instanceof Error && error.name === 'TokenExpiredError') {
-      const payload = decode(token) as TokenPayload;
+      const payload = jwt.decode(token) as TokenPayload;
       if (!payload) return null;
       
       return { 

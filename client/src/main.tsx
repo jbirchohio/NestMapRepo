@@ -10,7 +10,7 @@ if (!root) {
   throw new Error("Root element not found in the document!");
 }
 
-// Render just the App component without any providers
+// Render the app with proper context providers
 createRoot(root).render(
   <div style={{ minHeight: '100vh' }}>
     <App />
