@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { notifications } from '../../shared/src/schema';
+import { notifications } from '../src/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';

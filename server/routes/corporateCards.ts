@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { db } from "../db";
-import { corporateCards, cardTransactions, users } from "../shared/src/schema";
+import { corporateCards, cardTransactions, users } from "../src/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';

@@ -1,6 +1,6 @@
 import express from 'express';
 import { MFAService } from '../mfaService';
-import { requireAuth } from '../middleware/auth';
+import { authenticateJWT as requireAuth } from '../src/middleware/auth';
 import { auditLogger } from '../auditLogger';
 
 const router = express.Router();

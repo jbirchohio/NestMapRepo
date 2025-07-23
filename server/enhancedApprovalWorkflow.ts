@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from './db-connection';
-import { users, trips, activities } from '../shared/src/schema';
+import { users, trips, activities } from './src/db/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
 import { auditLogger } from './auditLogger';
 import { policyEngine } from './policyEngine';

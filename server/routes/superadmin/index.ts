@@ -1,5 +1,5 @@
 import express, { Request, Response, RequestHandler } from 'express';
-import { authenticate } from '../../shared/src/schema';
+import { authenticateJWT as authenticate } from '../../src/middleware/auth';
 import { requireSuperadmin } from './middleware/superadmin';
 import { injectOrganizationContext } from './middleware/organizationContext';
 

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { desc } from 'drizzle-orm';
 import { db } from '../db';
-import { expenses, trips, users } from '../shared/src/schema';
+import { expenses, trips, users } from '../src/db/schema';
 import { authenticate as validateJWT } from '../middleware/secureAuth';
 import { injectOrganizationContext, validateOrganizationAccess } from '../middleware/organizationContext';
 import { z } from 'zod';
